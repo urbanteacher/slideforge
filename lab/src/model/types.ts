@@ -175,6 +175,9 @@ export interface SlideGame {
   /** Multiple choice's and true or false's look: buttons (two by two, or two doors), lit green where
    *  they stand, as SlideForge's quiz has them; or the lab's walls, the answer on the slide after. */
   look?: GameLook;
+  /** Where the Buttons looks write the answer's reason: under the question (as the other games), under
+   *  the buttons, or in the notes only. */
+  reason?: 'question' | 'buttons' | 'notes';
 }
 export type GameLook = 'buttons' | 'walls';
 export interface GameSettings {

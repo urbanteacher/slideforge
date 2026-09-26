@@ -369,10 +369,11 @@ test('a lesson’s Check comes in as SlideForge showed it: four buttons, the rig
     // Where it stood: the same box on the question and the answer, so the reveal lights it in place.
     assert.deepEqual(buttons(answer)[q.correct].params.morph, buttons(ask)[q.correct].params.morph);
     buttons(answer).forEach((b, k) => assert.deepEqual(b.box, buttons(ask)[k].box, 'every button stands where it stood'));
-    const reason = answer.layers.find((l) => l.name === 'Reason');
-    assert.ok(reason, 'and the reason is on the answer');
-    const lowest = Math.max(...buttons(answer).map((b) => b.box.y + b.box.h));
-    assert.ok(reason.box.y >= lowest, 'under the buttons, not across them');
+    // The reason under the question, as the other games have it (the default), clear of the buttons.
+    const why = answer.layers.find((l) => l.name === 'Why');
+    assert.ok(why, 'and the reason is on the answer');
+    const highest = Math.min(...buttons(answer).map((b) => b.box.y));
+    assert.ok(why.box.y + why.box.h <= highest, 'above the buttons, not across them');
     const words = ask.layers.find((l) => l.name === 'Button 1 — words');
     assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the question at the buttons’ size');
   });
@@ -420,8 +421,8 @@ test('true or false has the same two looks: two doors lit green where they stand
       assert.equal(door(answer, k).params.fill === RIGHT_GREEN, k === q.correct, 'the right door lit, where it stood');
       assert.deepEqual(door(answer, k).box, door(ask, k).box);
     });
-    const reason = answer.layers.find((l) => l.name === 'Reason');
-    if (q.explanation) assert.ok(reason && reason.box.y >= door(answer, 0).box.y + door(answer, 0).box.h, 'the reason under the doors, not across them');
+    const why = answer.layers.find((l) => l.name === 'Why');
+    if (q.explanation) assert.ok(why && why.box.y + why.box.h <= door(answer, 0).box.y, 'the reason under the question, clear of the doors');
     const words = ask.layers.find((l) => l.name === 'Door 1 — words');
     assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the statement at the doors’ size');
     assert.equal(ask.game.look, 'buttons');
@@ -469,4 +470,30 @@ test('the Quiz studio and Activities are views of the open lesson: its games, it
   assert.equal(useStore.getState().slideId, games[3].id, 'a game is a slide of the lesson too: it stays');
   api.setView('activities');
   assert.equal(useStore.getState().slideId, games[3].id, 'no activities yet: nothing to move to, the lesson slide stays under the empty studio');
+});
+
+test('the reason goes where the Game panel says: under the question, under the buttons, or the notes only', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const { relookGame } = await bundle('src/model/gameLook.ts');
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const check = src.slides.find((s) => s.type === 'game');
+  const place = (reason) => {
+    const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+    const id = deck.slides.find((s) => s.sourceSlideId === check.id).game.id;
+    if (reason !== 'question') relookGame(deck, id, 'buttons', reason);
+    const [ask, answer] = deck.slides.filter((s) => s.sourceSlideId === check.id);
+    const btn = (s, k) => s.layers.find((l) => l.name === `Button ${k + 1}`);
+    [0, 1, 2, 3].forEach((k) => assert.deepEqual(btn(answer, k).box, btn(ask, k).box, reason + ': the buttons stand where they stood'));
+    return { answer, top: Math.min(...[0, 1, 2, 3].map((k) => btn(answer, k).box.y)), foot: Math.max(...[0, 1, 2, 3].map((k) => btn(answer, k).box.y + btn(answer, k).box.h)) };
+  };
+  const q = place('question');
+  const why = q.answer.layers.find((l) => l.name === 'Why');
+  assert.ok(why && why.box.y + why.box.h <= q.top, 'under the question');
+  const b = place('buttons');
+  const reason = b.answer.layers.find((l) => l.name === 'Reason');
+  assert.ok(reason && reason.box.y >= b.foot, 'under the buttons');
+  const n = place('notes');
+  assert.ok(!n.answer.layers.some((l) => l.name === 'Why' || l.name === 'Reason'), 'nothing on the wall');
+  assert.ok(n.answer.notes.includes(SF_GAME(src, check).explanation.slice(0, 20)), 'the reason in the notes, to say');
+  assert.equal(n.answer.game.reason, 'notes');
 });

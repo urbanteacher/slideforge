@@ -6,7 +6,7 @@ import { rebuildSlide, RECIPE_NAMES } from '../model/recipes';
 import { slideOf, useStore } from '../model/store';
 import { applyGameSettings } from '../model/gameSettings';
 import { canWrite, replaceGame, writeGame } from '../model/gameAI';
-import { GAME_LOOKS, relookGame } from '../model/gameLook';
+import { GAME_LOOKS, REASONS, relookGame } from '../model/gameLook';
 import { HAS_LOOKS } from '../model/designs/formats';
 import { applyActivitySettings, ensureActivitySettings, type ActivityChange } from '../model/activitySettings';
 import { looksOf, type ActivityData, type ActivityEntry } from '../model/designs';
@@ -372,6 +372,15 @@ export function GamePanel() {
           <Select value={g.look ?? 'walls'} options={GAME_LOOKS} onChange={(v) => {
             let first = '';
             useStore.getState().mutate((d) => { first = relookGame(d, g.id, v as 'buttons' | 'walls')[0]?.id ?? ''; });
+            if (first) useStore.setState({ slideId: first, selectedId: null });
+          }} />
+        </Row>
+      )}
+      {HAS_LOOKS.has(g.format) && (g.look ?? 'walls') === 'buttons' && (
+        <Row label="Reason" info="Where the answer's reason goes: under the question, as the other games have it; under the buttons; or kept to the notes, for you to say. The buttons stand in the same place on the question and its answer whichever you choose. Its words are edited on the answer slide.">
+          <Select value={g.reason ?? 'question'} options={REASONS} onChange={(v) => {
+            let first = '';
+            useStore.getState().mutate((d) => { first = relookGame(d, g.id, 'buttons', v as 'question' | 'buttons' | 'notes')[0]?.id ?? ''; });
             if (first) useStore.setState({ slideId: first, selectedId: null });
           }} />
         </Row>

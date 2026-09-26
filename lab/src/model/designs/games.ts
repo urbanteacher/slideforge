@@ -36,7 +36,7 @@ export interface GameQuestion {
   min?: number; max?: number; step?: number; target?: number; tolerance?: number; unit?: string;
 }
 /** One of SlideForge's showcase games, as tools/lab-games.mjs writes it. */
-export interface ShowcaseGame { format: string; style: string; label: string; styleLabel: string; aim: string; howToPlay: string[]; title: string; slides: GameQuestion[]; /** Multiple choice's look (types.ts GameLook); the walls when not said. */ look?: 'buttons' | 'walls' }
+export interface ShowcaseGame { format: string; style: string; label: string; styleLabel: string; aim: string; howToPlay: string[]; title: string; slides: GameQuestion[]; /** Multiple choice's look (types.ts GameLook); the walls when not said. */ look?: 'buttons' | 'walls'; /** Where the Buttons looks write the reason (ReasonAt); under the question when not said. */ reason?: ReasonAt }
 /** A game from the activity catalogue. */
 export interface Question { question: string; options: string[]; correct: number; explanation: string }
 export interface GameDef { title: string; style: string; styleLabel: string; steps: string[]; questions: Question[]; /** What the cover says under the title, when not a count of questions. */ count?: string }
@@ -215,6 +215,19 @@ function underWhy(st: LayoutStyle, q: GameQuestion): { h: number; params: Params
   const params: Params = { font: st.body, size: 40, color: st.muted, lineHeight: 1.2 };
   return { h: why ? Math.min(120, textHeight(why, W - LEFT * 2, params) + 6) + 24 : 0, params };
 }
+/** Where a Buttons look writes its answer's reason (the Game panel's Reason): under the question, as the
+ *  other games have it; under the buttons; or in the notes only, for the teacher to say. */
+export type ReasonAt = 'question' | 'buttons' | 'notes';
+/** Under the question: the reason's room is kept under the question on both slides, so the buttons
+ *  stand where they stood; it is written on the answer, where the other walls write their Why. */
+function reasonOver(st: LayoutStyle, q: GameQuestion, o: ReturnType<typeof opening>, answer: boolean) {
+  const why = q.explanation ?? '';
+  if (!why) return;
+  const p: Params = { font: st.body, size: 44, color: st.muted, lineHeight: 1.2 };
+  const h = Math.min(120, textHeight(why, W - LEFT * 2, p) + 6);
+  if (answer) o.layers.push(txt('Why', why, box(LEFT, o.qn.bottom + 12, W - LEFT * 2, h), p, { type: 'fade', duration: 0.6, delay: 0.3 }));
+  o.top = o.qn.bottom + 12 + h + 24;
+}
 function whyLayer(q: GameQuestion, under: { params: Params }, y: number): Layer[] {
   return q.explanation ? [txt('Reason', q.explanation, box(LEFT, y + 24, W - LEFT * 2, 120), under.params, { type: 'fade', duration: 0.6, delay: 0.3 })] : [];
 }
@@ -222,15 +235,16 @@ function whyLayer(q: GameQuestion, under: { params: Params }, y: number): Layer[
 /** True or false, the Buttons look: SlideForge's two doors (css/app.css .present-truefalse .tf-duo).
  *  The statement centred over two tall rounded doors side by side, True's edge touched with green and
  *  False's with red; on the answer the right door is green where it stood and the other goes quiet. */
-export function doorsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, hold = true): Slide {
+export function doorsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, hold = true, reason: ReasonAt = 'question'): Slide {
   const opts = (q.options?.length ? q.options : ['True', 'False']).slice(0, 2);
   const under = underWhy(st, q);
   const { o, set } = matched((sizes) => {
     const o = opening(st, q, tag('True or false', hold ? 'vote, then hold' : 'vote', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [140, 120, 104, 88], maxH: 360, why: '' });
     o.qn.layer.params.align = 'center';
-    return { o, set: doors(st, opts, o.top, Math.min(o.qn.size, 96), answer ? q.correct : undefined, under.h) };
+    if (reason === 'question') reasonOver(st, q, o, answer);
+    return { o, set: doors(st, opts, o.top, Math.min(o.qn.size, 96), answer ? q.correct : undefined, reason === 'buttons' ? under.h : 0) };
   });
-  o.layers.push(...set.layers, ...(answer ? whyLayer(q, under, set.bottom) : []));
+  o.layers.push(...set.layers, ...(answer && reason === 'buttons' ? whyLayer(q, under, set.bottom) : []));
   const held = 'After the vote: show the room its split; each phone may switch once. Then Next for the answer.';
   return slideOf(named(name, i, answer), o.layers, st, answer || !hold ? note(q) : held);
 }
@@ -285,15 +299,16 @@ export function choiceWall(st: LayoutStyle, name: string, q: GameQuestion, i: nu
 /** SlideForge's quiz, the Buttons look: the options as buttons, two by two, a letter on each. On the
  *  answer the right one is green where it stood and the rest go quiet, the reason under the question,
  *  so the reveal reads as the button lighting up. */
-export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false): Slide {
+export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, reason: ReasonAt = 'question'): Slide {
   const opts = (q.options ?? []).slice(0, 6);
   const cells: Cell[] = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct, quiet: answer && k !== q.correct }));
   const under = underWhy(st, q);
   const { o, set } = matched((sizes) => {
     const o = opening(st, q, tag('Multiple choice', 'choose one', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80], why: '' });
-    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size, 88), under.h) };
+    if (reason === 'question') reasonOver(st, q, o, answer);
+    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size, 88), reason === 'buttons' ? under.h : 0) };
   });
-  o.layers.push(...set.layers, ...(answer ? whyLayer(q, under, set.bottom) : []));
+  o.layers.push(...set.layers, ...(answer && reason === 'buttons' ? whyLayer(q, under, set.bottom) : []));
   return slideOf(named(name, i, answer), o.layers, st, note(q));
 }
 
@@ -550,7 +565,8 @@ export function showcaseSlides(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   const cover = gameCover(st, { title: g.label, style: g.style, styleLabel: g.styleLabel, steps: g.howToPlay, questions: qs.map((q) => ({ question: q.question ?? '', options: q.options ?? [], correct: q.correct ?? -1, explanation: q.explanation ?? '' })) });
   cover.notes = [g.aim, cover.notes].filter(Boolean).join('\n\n');
   if (g.format === 'beat-the-clock') return finishGame([cover, sprintWall(st, g.label, qs), sprintAnswers(st, g.label, qs)], g.format, g.label);
-  const wall = g.format === 'true-false' && g.look === 'buttons' ? doorsWall : SHOWCASE_WALLS[g.format] ?? spotWall;
+  const doorsHere: Wall = (s, nm, q, i, n, a) => doorsWall(s, nm, q, i, n, a, true, g.reason);
+  const wall = g.format === 'true-false' && g.look === 'buttons' ? doorsHere : SHOWCASE_WALLS[g.format] ?? spotWall;
   return finishGame([cover, ...paired(wall, g.label, st, qs)], g.format, g.label);
 }
 

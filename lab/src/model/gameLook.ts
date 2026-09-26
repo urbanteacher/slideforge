@@ -1,6 +1,6 @@
 import { syncFrameCounters } from './frame';
 import { gameSlides, HAS_LOOKS } from './designs/formats';
-import type { GameQuestion, ShowcaseGame } from './designs/games';
+import type { GameQuestion, ReasonAt, ShowcaseGame } from './designs/games';
 import { setFrame } from './designs/kit';
 import { syncHeaderFooter } from './headerFooter';
 import { LAYOUT_STYLES, themeOf } from './layouts';
@@ -17,15 +17,24 @@ export const GAME_LOOKS: { value: GameLook; label: string }[] = [
   { value: 'walls', label: 'Question, then answer on the next slide' },
 ];
 
-/** The game's slides built again in `look`. The new slides, or none when there is nothing to build. */
-export function relookGame(d: Deck, gameId: string, look: GameLook): Slide[] {
+/** Where a Buttons look writes the reason, as it is chosen. */
+export const REASONS: { value: ReasonAt; label: string }[] = [
+  { value: 'question', label: 'Under the question' },
+  { value: 'buttons', label: 'Under the buttons' },
+  { value: 'notes', label: 'Notes only — said, not shown' },
+];
+
+/** The game's slides built again in `look`, with its reason `reason` (kept when not given). The new
+ *  slides, or none when there is nothing to build. */
+export function relookGame(d: Deck, gameId: string, look: GameLook, reason?: ReasonAt): Slide[] {
   const old = d.slides.filter((s) => s.game?.id === gameId);
   const g0 = old[0]?.game;
-  if (!g0 || !HAS_LOOKS.has(g0.format) || (g0.look ?? 'walls') === look) return [];
+  const reasonAt = reason ?? g0?.reason ?? 'question';
+  if (!g0 || !HAS_LOOKS.has(g0.format) || ((g0.look ?? 'walls') === look && (g0.reason ?? 'question') === reasonAt)) return [];
   const questions = old.filter((s) => s.game?.role === 'question' && s.game.quiz).map((s) => ({ ...(s.game!.quiz as GameQuestion), type: 'quiz' }));
   if (!questions.length) return [];
   const tf = g0.format !== 'choice';
-  const game: ShowcaseGame = { format: g0.format, style: tf ? 'truefalse' : 'choice', label: g0.label, styleLabel: tf ? 'True or false' : 'Multiple choice', aim: '', howToPlay: [], title: g0.label, slides: questions, look };
+  const game: ShowcaseGame = { format: g0.format, style: tf ? 'truefalse' : 'choice', label: g0.label, styleLabel: tf ? 'True or false' : 'Multiple choice', aim: '', howToPlay: [], title: g0.label, slides: questions, look, reason: reasonAt };
   setFrame(!!d.headerFooter?.enabled || d.slides.some((s) => s.layers.some((l) => typeof l.params.hfSlot === 'string')));
   let made = gameSlides(game, themeOf(d) ?? LAYOUT_STYLES[0]);
   if (!old.some((s) => s.game?.role === 'cover')) made = made.filter((s) => s.game?.role !== 'cover');

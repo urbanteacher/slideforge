@@ -687,7 +687,7 @@ export const HAS_LOOKS = new Set(['choice', 'truefalse', 'true-false']);
 export function gameSlides(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   const slides = withLiveBoard(g, gameSlidesOf(g, st));
   // A game with two looks remembers its look, so the Game panel can show it and build the other.
-  if (HAS_LOOKS.has(g.format)) for (const s of slides) if (s.game) s.game.look = g.look ?? 'walls';
+  if (HAS_LOOKS.has(g.format)) for (const s of slides) if (s.game) { s.game.look = g.look ?? 'walls'; s.game.reason = g.reason ?? 'question'; }
   return slides;
 }
 function gameSlidesOf(g: ShowcaseGame, st: LayoutStyle): Slide[] {
@@ -702,8 +702,8 @@ function gameSlidesOf(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   const line = (timeline: boolean): Wall => (s, name, q, i, n, answer) => lineWall(s, name, q as Q, i, n, answer, timeline);
   let body: Slide[] = [];
   switch (g.format) {
-    case 'choice': body = paired(g.look === 'buttons' ? buttonsWall : choiceWall, g.label, st, qs); break;
-    case 'truefalse': body = paired(g.look === 'buttons' ? doorsWall : trueFalseWall, g.label, st, qs); break;
+    case 'choice': body = paired(g.look === 'buttons' ? (s, nm, q, i, n, a) => buttonsWall(s, nm, q, i, n, a, g.reason) : choiceWall, g.label, st, qs); break;
+    case 'truefalse': body = paired(g.look === 'buttons' ? (s, nm, q, i, n, a) => doorsWall(s, nm, q, i, n, a, true, g.reason) : trueFalseWall, g.label, st, qs); break;
     case 'type': body = paired(typedWall, g.label, st, qs); break;
     case 'slider': body = paired(line(false), g.label, st, qs); break;
     case 'time-traveler': body = [...paired(line(true), g.label, st, qs), ...(qs.length ? [timelineEnd(st, g, qs[qs.length - 1])] : [])]; break;
