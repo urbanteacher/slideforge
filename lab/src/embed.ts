@@ -258,9 +258,13 @@ export const labApi = {
   present() { useStore.getState().set({ presenting: true }); },
   currentSlideId: () => useStore.getState().slideId,
   /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
-   *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. */
+   *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. Entering the
+   *  Quiz studio or Activities opens Engage, once. */
   setView(view: LabView) {
     const st = useStore.getState();
+    // The shell draws its studio again after most things done in it (js/shell.js); only a change of
+    // studio moves the slide or opens Engage, or every press would snap the panel back to Engage.
+    if (st.view === view) return;
     const cur = st.deck.slides.find((s) => s.id === st.slideId);
     const first = st.deck.slides.find((s) => inView(s, view));
     useStore.setState({ view, addOpen: false, ...(cur && inView(cur, view) ? {} : first ? { slideId: first.id, selectedId: null } : {}),
