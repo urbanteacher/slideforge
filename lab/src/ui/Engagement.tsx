@@ -3,8 +3,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { ActivityData, ActivityEntry, ActivityOption, ShowcaseGame } from '../model/designs';
 import { LAYOUT_STYLES, themeOf } from '../model/layouts';
 import { fontString } from '../engine/raster';
-import { slideOf, useStore } from '../model/store';
-import type { Deck, FeedbackKind } from '../model/types';
+import { enterView, slideOf, useStore, type LabView } from '../model/store';
+import type { Deck, FeedbackKind, Slide } from '../model/types';
 import { Section, Tip } from './controls';
 import { FeedbackSettings } from './special';
 
@@ -52,6 +52,24 @@ export function EngagementPanel() {
   );
 }
 
+/** SlideForge, when the lab is its studios (js/lab-engine.js). */
+type Host = { SF?: { LabEngine?: { showStudio?: (view: LabView) => void } } };
+
+/** A game or activity added from the lesson is edited where games and activities are: it goes on to
+ *  the Quiz studio or Activities, on its first slide. One place to edit each, whichever tab added it.
+ *  Embedded, SlideForge's own tab is switched, so the header says where you are; alone, the lab's view. */
+export function editWhereItLives(slides: Slide[]) {
+  const st = useStore.getState();
+  if (st.view !== 'lesson' || !slides.length) return;
+  const view: LabView | null = slides.some((s) => s.game) ? 'quiz' : slides.some((s) => s.activity) ? 'activities' : null;
+  if (!view) return;
+  useStore.setState({ slideId: slides[0].id, selectedId: null });
+  let host: Host | null = null;
+  try { host = window.parent !== window ? (window.parent as unknown as Host) : null; } catch { host = null; }
+  const show = host?.SF?.LabEngine?.showStudio;
+  if (show) show(view); else enterView(view);
+}
+
 /** Whether the deck wears a header and footer, which the designs keep clear of; without one they bleed to the edge. */
 const framed = (deck: Deck) => !!deck.headerFooter?.enabled || deck.slides.some((s) => s.layers.some((l) => typeof l.params.hfSlot === 'string'));
 
@@ -86,6 +104,7 @@ function ActivityPicker({ done, only }: { done: () => void; only?: 'games' | 'ac
     slides.forEach((s) => addSlide(s));
     showToast(`${a.title} (${o.label}) added: ${slides.length} ${slides.length === 1 ? 'slide' : 'slides'}. Edit it on the slide; how to run it is in the notes.`);
     done();
+    editWhereItLives(slides);
   };
   const addGame = async (g: ShowcaseGame) => {
     await faces(useStore.getState().deck);
@@ -95,6 +114,7 @@ function ActivityPicker({ done, only }: { done: () => void; only?: 'games' | 'ac
     slides.forEach((s) => addSlide(s));
     showToast(`${g.label} added: ${slides.length} slides. Each click moves the game on; the answers and the reasons are in the notes.`);
     done();
+    editWhereItLives(slides);
   };
   return (
     <div className="engage-picker">

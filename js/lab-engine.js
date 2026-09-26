@@ -672,6 +672,11 @@
 
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
+    /* The lab added a game or activity in the lesson: its studio's tab, where it is edited. */
+    showStudio: function (view) {
+      var key = { lesson: 'deck', quiz: 'game', activities: 'plan' }[view];
+      if (key && SF.Shell && SF.Shell.activate) SF.Shell.activate(key, { toast: false });
+    },
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
     openLesson: openLesson, openKey: openKey,
     /** The id of the lesson open in the lab: the Library's card for it. */

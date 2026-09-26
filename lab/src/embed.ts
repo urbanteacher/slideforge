@@ -2,7 +2,7 @@ import { blankDeck } from './model/defaults';
 import { CARRIED, carryDeckArt, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
-import { inView, useStore, type LabView } from './model/store';
+import { enterView, useStore, type LabView } from './model/store';
 import type { Deck, Slide } from './model/types';
 import { idbDelete, idbGet, idbSet } from './persist/idb';
 
@@ -260,16 +260,7 @@ export const labApi = {
   /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
    *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. Entering the
    *  Quiz studio or Activities opens Engage, once. */
-  setView(view: LabView) {
-    const st = useStore.getState();
-    // The shell draws its studio again after most things done in it (js/shell.js); only a change of
-    // studio moves the slide or opens Engage, or every press would snap the panel back to Engage.
-    if (st.view === view) return;
-    const cur = st.deck.slides.find((s) => s.id === st.slideId);
-    const first = st.deck.slides.find((s) => inView(s, view));
-    useStore.setState({ view, addOpen: false, ...(cur && inView(cur, view) ? {} : first ? { slideId: first.id, selectedId: null } : {}),
-      ...(view === 'lesson' ? {} : { inspectorTab: 'engage' as const }) });
-  },
+  setView(view: LabView) { enterView(view); },
   /** Go to one of the deck's slides by its id (the show ended on it); false when the deck has none. */
   showSlide(id: string): boolean {
     const st = useStore.getState();
