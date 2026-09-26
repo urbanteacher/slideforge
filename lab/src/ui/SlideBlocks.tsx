@@ -16,7 +16,8 @@ function numberedLayers(source: Layer[], current: Layer[], count: number, width:
   const rgb = Number.parseInt(hex, 16);
   const dark = Number.isFinite(rgb) && (0.299 * ((rgb >> 16) & 255) + 0.587 * ((rgb >> 8) & 255) + 0.114 * (rgb & 255)) < 110;
   const ink = dark ? '#F6F4ED' : '#231F20';
-  const accent = '#00BEDD';
+  // The numbers keep the colour the block already has (a lesson's strand colour); cyan, Safe's, for a new block.
+  const accent = String(source.find((l) => l.name === '01 · number')?.params.color ?? current.find((l) => l.name === '01 · number')?.params.color ?? '#00BEDD');
   const compact = count > 3;
   const stride = compact ? 104 : 216;
   return Array.from({ length: count }, (_, i) => {

@@ -35,9 +35,8 @@ const GROUND: Record<string, Ground> = { title: 'loud', statement: 'loud', keyfa
 
 interface Source { type: string; title?: string; subtitle?: string; body?: string; bullets?: string[]; design?: Record<string, unknown> }
 
-/** Which compositions this builds: every one the 2027 decks use but the takeaways, which the lab's own
- *  numbered steps already set as the lesson wants them. */
-const BUILT = new Set(['title', 'quote', 'cards', 'statement', 'iceberg', 'compare', 'sourcecheck', 'spectrum', 'keyfact']);
+/** Which compositions this builds: every one the 2027 decks use. */
+const BUILT = new Set(['title', 'quote', 'cards', 'statement', 'iceberg', 'compare', 'sourcecheck', 'spectrum', 'journey', 'keyfact']);
 
 /** Whether this is a 2027 campaign slide this module builds. */
 export function builds27(theme: string | undefined, s: Source): boolean {
@@ -111,20 +110,24 @@ export function aiad27Slide(s: Source, theme: string): { slide: Slide; ground: G
       // and on the phones alike.
       heading(48);
       const colW = (WIDTH - 38) / 2, rowH = 180, gap = 36, top = TOP + 72 + 36;
-      lines.slice(0, 6).forEach((line, i) => {
+      // Named as the lab's choice block names its parts (ui/SlideBlocks.tsx), so the canvas's + adds a
+      // choice and its grip reorders them, as on any ballot made in the lab.
+      lines.slice(0, 4).forEach((line, i) => {
         const [term, def = ''] = parts(line);
+        const L = 'ABCD'[i];
         const x = LEFT + (i % 2) * (colW + 38), y = top + Math.floor(i / 2) * (rowH + gap);
-        bar(`Choice ${i + 1} rule`, x, y, colW, 2, fg);
+        const mark = (l: Layer) => { l.params.blockRole = 'choices'; return l; };
+        mark(layers[layers.push(createLayer('shape', { name: `${L} · rule`, box: box(x, y, colW, 2), anim: still, params: { shape: 'rect', radius: 0, fill: fg, strokeWidth: 0 } })) - 1]);
         const tile = 76, ty = y + (rowH - tile) / 2;
         const chamfer = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="0,0 78,0 100,22 100,100 0,100" fill="${strand.color}"/></svg>`;
-        layers.push(createLayer('image', { name: `Choice ${i + 1} tile`, box: box(x, ty, tile, tile), anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(chamfer), fit: 'fill' } }));
-        text(`Choice ${i + 1} letter`, 'ABCDEF'[i], box(x, ty + 12, tile, 52), 50, { weight: '700', lineHeight: 1, align: 'center', color: INK });
+        mark(layers[layers.push(createLayer('image', { name: `${L} · tile`, box: box(x, ty, tile, tile), anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(chamfer), fit: 'fill' } })) - 1]);
+        mark(text(`${L} · letter`, L, box(x, ty + 12, tile, 52), 50, { weight: '700', lineHeight: 1, align: 'center', color: INK }));
         const cx = x + tile + 22, cw = colW - tile - 22;
         const h3 = { weight: '700', lineHeight: 1.06, tracking: -0.02 };
         const th = tall(term, cw, 29, h3), dh = def ? tall(def, cw, 24, { lineHeight: 1.15 }) : 0;
         const cy = y + (rowH - (th + (def ? 9 + dh : 0))) / 2;
-        text(`Choice ${i + 1}`, term, box(cx, cy, cw, th), 29, h3);
-        if (def) text(`Choice ${i + 1} detail`, def, box(cx, cy + th + 9, cw, dh), 24, { lineHeight: 1.15 });
+        mark(text(`${L} · choice`, term, box(cx, cy, cw, th), 29, h3));
+        if (def) mark(text(`${L} · detail`, def, box(cx, cy + th + 9, cw, dh), 24, { lineHeight: 1.15 }));
       });
       // The prompt under the choices, clear of the foot (SlideForge's ran into it by a row).
       if (s.body) text('Prompt', s.body, box(LEFT, top + 2 * rowH + gap + 4, WIDTH, 30), 24, { weight: '500' });
@@ -230,6 +233,28 @@ export function aiad27Slide(s: Source, theme: string): { slide: Slide; ground: G
         });
       });
       source(TOP + 72 + 396 + 14);
+      break;
+    }
+    case 'journey': {
+      // rules: the heading, then three numbered rows of four lattice rows each, ruled over, the number
+      // in the strand's colour; the line that sums them up under the last. Built as the lab's numbered
+      // block (ui/SlideBlocks.tsx names its parts 01 · rule, 01 · number…), so the canvas's + adds a
+      // point and its grip reorders them, renumbering as it goes.
+      heading();
+      const top = TOP + 72, rowH = 144;
+      const mark = (l: Layer) => { l.params.blockRole = 'numbered'; return l; };
+      lines.slice(0, 6).forEach((line, i) => {
+        const [term, def = ''] = parts(line);
+        const n = String(i + 1).padStart(2, '0'), y = top + i * rowH;
+        mark(layers[layers.push(createLayer('shape', { name: `${n} · rule`, box: box(LEFT, y, WIDTH, 1), anim: still, params: { shape: 'rect', radius: 0, fill: rule, strokeWidth: 0 } })) - 1]);
+        mark(text(`${n} · number`, n, box(LEFT, y + (rowH - 66) / 2, 105, 66), 66, { weight: '700', lineHeight: 1, tracking: -0.05, color: strand.color }));
+        const cx = LEFT + 105 + 25, cw = WIDTH - 105 - 25;
+        const hh = tall(term, cw, 33, { weight: '700', lineHeight: 1.07 }), dh = def ? tall(def, Math.min(cw, 960), 25, { lineHeight: 1.17 }) : 0;
+        const cy = y + (rowH - (hh + (def ? 8 + dh : 0))) / 2;
+        mark(text(`${n} · heading`, term, box(cx, cy, cw, hh), 33, { weight: '700', lineHeight: 1.07 }));
+        if (def) mark(text(`${n} · detail`, def, box(cx, cy + hh + 8, Math.min(cw, 960), dh), 25, { lineHeight: 1.17 }));
+      });
+      if (s.subtitle) text('Closing line', s.subtitle, box(LEFT, top + Math.min(lines.length, 3) * rowH, WIDTH, 36), 20, { weight: '600', color: accent });
       break;
     }
     case 'keyfact': {
