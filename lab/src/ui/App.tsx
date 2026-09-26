@@ -18,6 +18,7 @@ import { addMediaFile } from './insert';
 import { groupOf } from './snap';
 import { moveInOrder } from './order';
 import { slideClipboard } from './SlideMenu';
+import { BrowsePanel, focusBrowse } from './Browse';
 
 const isTyping = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -160,7 +161,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
   return (
     <div className={`app${embedded ? ' embedded' : ''}${panelHidden ? ' no-panel' : ''}`}>
       <TopBar embedded={embedded} />
-      {view === 'lesson' ? <LeftPanel /> : <aside className="left vacant" aria-label={view === 'quiz' ? 'Quiz studio' : 'Activities'} />}
+      {view === 'lesson' ? <LeftPanel /> : <BrowsePanel kind={view === 'quiz' ? 'games' : 'activities'} />}
       <main className="center">
         <Stage />
         {view !== 'lesson' && !anyInView && <EmptyView view={view} />}
@@ -176,15 +177,14 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
 }
 
 /** A studio with nothing in it yet: the Quiz studio before the lesson has a game, Activities before it
- *  has an activity. Its + button, on the canvas bar, adds one after the slide the lesson was on. */
+ *  has an activity. Browse, on the left, adds one after the slide the lesson was on. */
 function EmptyView({ view }: { view: LabView }) {
-  const set = useStore((s) => s.set);
   const quiz = view === 'quiz';
   return (
     <div className="empty-view">
       <b>{quiz ? 'No games in this lesson yet' : 'No activities in this lesson yet'}</b>
-      <span>{quiz ? 'A game made here goes into this lesson, after the slide you were on.' : 'An activity made here goes into this lesson, after the slide you were on.'}</span>
-      <button className="btn-soft accent" onClick={() => set({ addOpen: true, inspectorTab: 'engage' })}>{quiz ? '+ Game' : '+ Activity'}</button>
+      <span>Pick one in Browse, on the left: it goes into this lesson after the slide you were on.</span>
+      <button className="btn-soft accent" onClick={focusBrowse}>{quiz ? 'Browse games' : 'Browse activities'}</button>
     </div>
   );
 }

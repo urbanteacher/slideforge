@@ -46,7 +46,6 @@ interface State {
    *  lesson's games) or Activities (its activities). One lesson, three views of it. */
   view: LabView;
   /** Engage's list of games and activities to add is open (the canvas bar's + Game opens it). */
-  addOpen: boolean;
   galleryTab: 'layouts' | 'designs';
   clipboard: Layer | null;
   toast: string | null;
@@ -115,7 +114,6 @@ export const useStore = create<State>((set, get) => ({
   presenting: false,
   backOf: null,
   view: 'lesson',
-  addOpen: false,
   playToken: 0,
   editingTextId: null,
   partId: null,
@@ -341,6 +339,6 @@ export function enterView(view: LabView) {
   if (st.view === view) return;
   const cur = st.deck.slides.find((s) => s.id === st.slideId);
   const first = st.deck.slides.find((s) => inView(s, view));
-  useStore.setState({ view, addOpen: false, ...(cur && inView(cur, view) ? {} : first ? { slideId: first.id, selectedId: null } : {}),
+  useStore.setState({ view, ...(cur && inView(cur, view) ? {} : first ? { slideId: first.id, selectedId: null } : {}),
     ...(view === 'lesson' ? {} : { inspectorTab: 'engage' as const }) });
 }
