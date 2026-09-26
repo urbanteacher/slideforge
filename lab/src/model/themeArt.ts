@@ -13,6 +13,11 @@ import dome from '../assets/ukbt/objects/ukbt-dome.png?url';
 import knot from '../assets/ukbt/objects/ukbt-knot.png?url';
 import shell from '../assets/ukbt/objects/ukbt-shell.png?url';
 import torus from '../assets/ukbt/objects/ukbt-torus.png?url';
+import badgeSafe from '../assets/aiad26/aiad26-safe.svg?raw';
+import badgeSmart from '../assets/aiad26/aiad26-smart.svg?raw';
+import badgeCreative from '../assets/aiad26/aiad26-creative.svg?raw';
+import badgeResponsible from '../assets/aiad26/aiad26-responsible.svg?raw';
+import badgeFuture from '../assets/aiad26/aiad26-future.svg?raw';
 import { createLayer } from './defaults';
 import type { Box, Layer, Slide } from './types';
 
@@ -30,14 +35,17 @@ export const ART = 'Theme · ';
 export const hasThemeArt = (s: Slide) => s.layers.some((l) => l.name.startsWith(ART));
 
 /** What a slide's artwork depends on: its theme, where it sits in the lesson (and of how many), the lesson's name. */
-export interface ArtContext { theme: string; index: number; deckTitle: string; total?: number }
+export interface ArtContext { theme: string; index: number; deckTitle: string; total?: number;
+  /** The lesson's slides, for the artwork that depends on the slides around this one (AI Awareness
+   *  Day's ANSWER label goes on the cards that answer the last discussion question). */
+  slides?: ArtSlide[] }
 /** Where an author moved one of the theme's shapes on one slide (SlideForge's Artwork face,
  *  src/render/art.js): its corner in SlideForge's slide px, its size, whether it shows, which side
  *  of the words it is on. */
 export interface ArtPose { x?: number; y?: number; scale?: number; hidden?: boolean; order?: 'back' | 'front' }
 /** The SlideForge slide the artwork is for: its type, for a poster cover its picture, and the poses
  *  its author gave the theme's shapes. */
-interface ArtSlide { type: string; image?: string; art?: { poses?: Record<string, ArtPose> } }
+interface ArtSlide { type: string; image?: string; subtitle?: string; art?: { poses?: Record<string, ArtPose> } }
 
 const X = 1.5; // SlideForge's slide px to the lab's
 const at = (x: number, y: number, w: number, h: number): Box => ({ x: x * X, y: y * X, w: w * X, h: h * X, rot: 0 });
@@ -76,6 +84,28 @@ export function themeGround(theme: string, type: string): Ground | undefined {
 
 /** AI Awareness Day 2026's accent per strand (css/aiad26.css --aiad-accent). */
 const AIAD26: Record<string, string> = { safe: '#00c4ee', smart: '#ff6734', creative: '#795bff', responsible: '#00a896', future: '#ff7eed' };
+/** The campaign badge per strand (assets/brand/aiad26/): five drawings, not one recoloured — each puts
+ *  its dark wedge and its word somewhere of its own. Carries both grounds, so never inverted. */
+const BADGES: Record<string, string> = { safe: badgeSafe, smart: badgeSmart, creative: badgeCreative, responsible: badgeResponsible, future: badgeFuture };
+const AIAD_INK = '#1a1a2e';
+const AIAD_FONT = 'Poppins';
+
+/** The label the campaign's PowerPoints put over a slide, in the strand's colour: DID YOU KNOW? over
+ *  the numbers (the stats slide's subtitle), THINK & DISCUSS over the question, and ANSWER over the
+ *  cards that answer it — the first cards after a discussion question, before any other cards. The
+ *  two about the room's thinking carry the round ? mark. */
+function aiadLabel(s: ArtSlide, ctx: ArtContext): { text: string; mark: boolean } | null {
+  if (s.type === 'statement') return { text: 'Think & discuss', mark: true };
+  if (s.type === 'stats' && s.subtitle?.trim()) return { text: s.subtitle.trim(), mark: false };
+  if (s.type === 'cards' && ctx.slides) {
+    for (let i = ctx.index - 1; i >= 0; i--) {
+      const t = ctx.slides[i]?.type;
+      if (t === 'cards') return null;
+      if (t === 'statement') return { text: 'Answer', mark: true };
+    }
+  }
+  return null;
+}
 
 // UK Black Tech's 3D objects: one per slide, in the order of its place in the lesson (css/ukbt.css,
 // data-art-index = index % 4). The small one sits in one of five places (data-art-slot = index % 5).
@@ -148,15 +178,46 @@ function pieces(s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): Piec
     }
   } else if (id === 'aiad26') {
     const accent = AIAD26[strand] ?? AIAD26.safe;
+    const cover = t === 'title' || t === 'section';
+    const dark = t === 'section';
     // The strand's rule down the left edge of every slide, in front of the words as the theme has it.
     out.push({ front: true, layer: createLayer('shape', { name: ART + 'Edge', box: at(0, 0, 10, 720), anim: still, params: { shape: 'rect', radius: 0, fill: accent, strokeWidth: 0 } }) });
-    if (t === 'title' || t === 'section') {
+    if (cover) {
       // The fold: the corner of a square turned up, cropped by the slide's edges.
       const fold = `<svg xmlns="http://www.w3.org/2000/svg" width="630" height="285" viewBox="860 530 420 190"><polygon points="1090,530 860,530 860,645 975,760 1320,760" fill="${accent}"/></svg>`;
       out.push({ key: 'aiad-fold', layer: createLayer('image', { name: ART + 'Fold', box: at(860, 530, 420, 190), opacity: t === 'section' ? 0.3 : 0.2, anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(fold), fit: 'contain' } }) });
       // The seam: a 3px line from the fold's corner to the slide's (as css/aiad26.css means it to be).
       const seam = `<svg xmlns="http://www.w3.org/2000/svg" width="285" height="285" viewBox="1090 530 190 190"><line x1="1090" y1="530" x2="1280" y2="720" stroke="${accent}" stroke-width="3"/></svg>`;
       out.push({ key: 'aiad-seam', layer: createLayer('image', { name: ART + 'Seam', box: at(1090, 530, 190, 190), opacity: 0.5, anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(seam), fit: 'contain' } }) });
+    }
+    // The badge on every slide, where the campaign's PowerPoints have it: top left on a cover (the fold
+    // has the corner), bottom right on the rest, 72px square as SlideForge's theme sets it
+    // (css/aiad26.css .slide-logo), with the campaign's hashtag under it.
+    const badge = BADGES[strand] ?? BADGES.safe;
+    const tag = (text: string, box: Box, align: 'left' | 'right', color: string) =>
+      createLayer('text', { name: ART + (align === 'left' ? 'Footer' : 'Hashtag'), box, anim: still, params: {
+        text, font: AIAD_FONT, weight: '700', size: 18, color, align, uppercase: true, tracking: 0.04, lineHeight: 1.2, fit: 'shrink' } });
+    const ink = dark ? '#ffffff' : AIAD_INK;
+    if (cover) {
+      out.push({ front: true, key: 'aiad-badge', layer: picture('Badge', 'data:image/svg+xml;base64,' + btoa(badge), at(34, 30, 72, 72)) });
+      out.push({ front: true, layer: tag('AI Awareness Day 2026 · 5-minute lesson starter', at(34, 684, 560, 16), 'left', ink) });
+      if (!dark) out.push({ front: true, layer: tag('#AIAwarenessDay26', at(930, 684, 316, 16), 'right', ink) });
+    } else {
+      out.push({ front: true, key: 'aiad-badge', layer: picture('Badge', 'data:image/svg+xml;base64,' + btoa(badge), at(1174, 604, 72, 72)) });
+      out.push({ front: true, layer: tag('#AIAwarenessDay26', at(1030, 682, 216, 14), 'right', ink) });
+    }
+    // The slide's label over its heading (a statement's inside its frame), in the strand's colour.
+    const label = aiadLabel(s, ctx);
+    if (label) {
+      const [lx, ly] = t === 'statement' ? [104, 100] : [52, 36];
+      const mark = label.mark ? 38 : 0;
+      if (label.mark) {
+        out.push({ front: true, layer: createLayer('shape', { name: ART + 'Label mark', box: at(lx, ly, 32, 32), anim: still, params: { shape: 'ellipse', fill: accent, strokeWidth: 0 } }) });
+        out.push({ front: true, layer: createLayer('text', { name: ART + 'Label mark, ?', box: at(lx, ly + 2, 32, 30), anim: still, params: {
+          text: '?', font: AIAD_FONT, weight: '800', size: 33, color: '#ffffff', align: 'center', lineHeight: 1, fit: 'shrink' } }) });
+      }
+      out.push({ front: true, layer: createLayer('text', { name: ART + 'Label', box: at(lx + mark, ly, 700, 34), anim: still, params: {
+        text: label.text, font: AIAD_FONT, weight: '800', size: 42, color: accent, uppercase: true, tracking: 0, lineHeight: 1.1, fit: 'shrink' } }) });
     }
   } else if (id === 'aiad27' && t === 'title' && s.image) {
     // The campaign's poster cover: the strand's chamfered panel and glyph, beside the title.
@@ -187,7 +248,37 @@ function posed(p: Piece, pose: ArtPose) {
  *  where the theme paints it there. A piece drawn for another ground than the slide's is left out,
  *  and so is one the slide already has (by its name), so a copy given its artwork before a piece
  *  was added gets that piece and keeps what it has, moved or restyled. How many layers were added. */
+/** AI Awareness Day 2026's type on a slide's words: the campaign's face, Poppins, throughout, and its
+ *  headlines — the title, the headings, the discussion question — heavy and in capitals, as every
+ *  headline in its PowerPoints is (css/aiad26.css sets h1 and h2 so). A lab copy made before carries
+ *  the lab's first faces for this palette, Space Grotesk and Inter, which it takes over. Only those:
+ *  a face an author chose stays. The words themselves are not changed, only how they are set. */
+function campaignType(slide: Slide) {
+  for (const l of slide.layers) {
+    if (l.kind !== 'text' || l.name.startsWith(ART)) continue;
+    const p = l.params;
+    if (p.font === 'Space Grotesk' || p.font === 'Inter') p.font = AIAD_FONT;
+    const headline = l.name === 'Hero' || l.name === 'Statement' || (l.name === 'Heading' && Number(p.size) >= 80);
+    if (headline && p.font === AIAD_FONT) {
+      p.uppercase = true; p.weight = '800'; p.tracking = -0.01;
+      // Capitals take more room than the same words in lower case: the box shrinks them to fit
+      // rather than growing past the slide.
+      if (p.fit === 'grow') p.fit = 'shrink';
+      // And a heading given one line's height has the room down to what is under it, so a headline
+      // that now takes two lines keeps its size (a gap of 24 to the words below; no more than twice).
+      if (l.name === 'Heading' && l.box) {
+        const b = l.box;
+        const below = slide.layers.filter((o) => o !== l && o.box && !o.name.startsWith(ART) && o.kind !== 'solid' && o.box.y >= b.y + b.h - 1
+          && o.box.x < b.x + b.w && o.box.x + o.box.w > b.x).map((o) => o.box!.y);
+        const floor = below.length ? Math.min(...below) - 24 : b.y + b.h;
+        b.h = Math.max(b.h, Math.min(b.h * 2, floor - b.y));
+      }
+    }
+  }
+}
+
 export function addThemeArt(slide: Slide, s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): number {
+  if (family(ctx.theme).id === 'aiad26') campaignType(slide);
   const ground = slide.ground ?? 'working';
   const have = new Set(slide.layers.map((l) => l.name));
   const list = pieces(s, ctx, img).filter((p) => (!p.ground || p.ground === ground) && !have.has(p.layer.name));

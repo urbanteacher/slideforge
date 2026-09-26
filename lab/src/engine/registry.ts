@@ -38,6 +38,8 @@ export const FONTS = [
   'Alpha Lyrae',
   // Installed on every Mac: Northeastern University London's display serif.
   'Iowan Old Style',
+  // AI Awareness Day's face.
+  'Poppins',
 ];
 
 export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [

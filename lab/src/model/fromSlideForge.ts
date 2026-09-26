@@ -12,6 +12,7 @@ import { syncHeaderFooter } from './headerFooter';
 import { addThemeArt, themeGround, type ArtContext } from './themeArt';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
 import { gameSlides } from './designs/formats';
+import { fitSize } from './designs/kit';
 import type { ShowcaseGame } from './designs/games';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
@@ -108,13 +109,27 @@ function photo(st: LayoutStyle, src: string, caption: string, credit: string): S
   return s;
 }
 
-/** A statement in SlideForge's framed composition. */
+/** A statement in SlideForge's framed composition. SlideForge's statements are often a whole
+ *  question, a sentence or two (AI Awareness Day's discussion questions): the line is set in the
+ *  frame's width, sized so it fits above its credit, and shrinks to fit rather than growing past the
+ *  frame and over the credit. */
 function statement(st: LayoutStyle, line: string, credit: string): Slide {
   const s = LAYOUTS.find((l) => l.id === 'statement-frame')!.make(st);
-  s.layers.find((l) => l.name === 'Statement')!.params.text = line;
-  const c = s.layers.find((l) => l.name === 'Credit')!;
-  if (credit) c.params.text = credit; else s.layers = s.layers.filter((l) => l !== c);
+  const l = s.layers.find((x) => x.name === 'Statement')!;
+  l.params.text = line;
+  fitStatement(l, !!credit);
+  const c = s.layers.find((x) => x.name === 'Credit')!;
+  if (credit) c.params.text = credit; else s.layers = s.layers.filter((x) => x !== c);
   return s;
+}
+
+/** The statement frame's line: the frame's width less its margins, down to the credit (or the frame's
+ *  foot without one), at the largest size that fits, and shrinking to fit what the measure misses. */
+export function fitStatement(l: Slide['layers'][number], credit: boolean) {
+  const box = { x: 210, y: 250, w: 1500, h: credit ? 430 : 600, rot: 0 };
+  l.box = box;
+  l.params.size = fitSize([String(l.params.text ?? '')], box.w, box.h, { ...l.params }, 168, 72);
+  l.params.fit = 'shrink';
 }
 
 type Ground = 'working' | 'quiet' | 'loud';
@@ -378,9 +393,9 @@ export function convertsSlide(s: SFSlide): boolean {
 }
 
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
- *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. A copy made at an older version is brought up to date when it
+ *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. */
-export const CARRIED = 5;
+export const CARRIED = 6;
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
@@ -438,7 +453,7 @@ export function carryDeckArt(deck: Deck, source: SFSlide[], from: ArtSource): nu
   for (const slide of deck.slides) {
     const i = slide.sourceSlideId ? at.get(slide.sourceSlideId) : undefined;
     if (i === undefined) continue;
-    if (addThemeArt(slide, source[i], { theme: from.theme, index: i, deckTitle: from.title, total: source.length }, (p) => p ?? '')) n++;
+    if (addThemeArt(slide, source[i], { theme: from.theme, index: i, deckTitle: from.title, total: source.length, slides: source }, (p) => p ?? '')) n++;
   }
   return n;
 }
@@ -472,7 +487,7 @@ export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul
       continue;
     }
     if (!s.id || !types.has(s.type)) continue;
-    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title, total: source.length }, games);
+    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title, total: source.length, slides: source }, games);
     if (!made.length) continue;
     deck.slides.splice(at, 0, ...made.map((x, j) => finishSlide(x, at + j)));
     have.add(s.id);
@@ -491,7 +506,7 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { fram
   const slides: Slide[] = [];
   let skipped = 0;
   data.slides.forEach((s, index) => {
-    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title, total: data.slides.length }, data.games);
+    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title, total: data.slides.length, slides: data.slides }, data.games);
     if (made.length) slides.push(...made); else skipped++;
   });
   const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };
