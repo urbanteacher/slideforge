@@ -7,7 +7,7 @@ function setup() {
   const scope = { document: { getElementById: () => null }, console,
     localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, String(v)) } };
   scope.window = scope; vm.createContext(scope);
-  for (const file of ['model', 'editor', 'activities', 'live-activities']) vm.runInContext(fs.readFileSync(require.resolve('../js/' + file + '.js'), 'utf8'), scope);
+  for (const file of ['model', 'lesson-runtime', 'live-activities']) vm.runInContext(fs.readFileSync(require.resolve('../js/' + file + '.js'), 'utf8'), scope);
   const SF = scope.SF;
   const deck = SF.makeDeck('Original lesson'); deck.slides = [SF.makeSlide('content'), SF.makeSlide('content')];
   SF.Store.save(deck);

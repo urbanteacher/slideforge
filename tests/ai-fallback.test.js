@@ -122,13 +122,6 @@ test('an activity with no heading box says so rather than writing nowhere', asyn
   assert.equal(res.values, undefined);
 });
 
-test('the caller is told, because the toast reads the notice', () => {
-  const fs = require('node:fs');
-  const activities = fs.readFileSync(path.join(__dirname, '..', 'js', 'activities.js'), 'utf8');
-  assert.match(activities, /SF\.toast\(res\.notice \|\| 'Written/,
-    'a fallback draft must not be announced as "Written"');
-});
-
 test('a timeout is not described as two refusals', async () => {
   /* The 30s ceiling produces exactly one attempt — a timeout has no budget
      left for a retry — so the notice must not claim the provider "turned this

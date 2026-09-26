@@ -106,11 +106,11 @@ test('there is exactly one demo, and one thing that opens it', () => {
      the list and the count, and opening it drops the copy it replaces. */
   assert.match(studio, /libraryGroup !== SF\.DEMO_LIBRARY_GROUP/,
     'the Library picker still lists the demo document');
-  const editor = fs.readFileSync(path.join(ROOT, 'js', 'editor.js'), 'utf8');
-  assert.equal((editor.match(/SF\.keepOneDemoCopy\(/g) || []).length, 2,
+  const lab = fs.readFileSync(path.join(ROOT, 'js', 'lab-engine.js'), 'utf8');
+  assert.equal((lab.match(/SF\.keepOneDemoCopy\(/g) || []).length, 2,
     'both routes to the demo — the button and the ?lesson= link — must keep one copy');
   assert.match(studio, /btnTemplate\.onclick = openDemo/, 'the demo button is wired to something else');
-  assert.match(studio, /SF\.Editor\.useLesson\(DEMO_KEY\)/, 'openDemo does not open the named demo');
+  assert.match(studio, /SF\.LabEngine\.openKey\(DEMO_KEY\)/, 'openDemo does not open the named demo');
 
   /* One demo. The server used to build a second one on demand, which meant
      the deck most often shown to somebody else was the one deck a file://
@@ -122,20 +122,16 @@ test('there is exactly one demo, and one thing that opens it', () => {
 });
 
 test('a blank first visit, with the Library one click from the canvas', () => {
-  const editor = fs.readFileSync(path.join(ROOT, 'js', 'editor.js'), 'utf8');
+  const runtime = fs.readFileSync(path.join(ROOT, 'js', 'lesson-runtime.js'), 'utf8');
+  const lab = fs.readFileSync(path.join(ROOT, 'js', 'lab-engine.js'), 'utf8');
   const studio = fs.readFileSync(path.join(ROOT, 'js', 'studio.js'), 'utf8');
 
-  /* The question has to be asked before the Library is seeded, or eleven
-     brand packs make every visit look like a returning one. */
-  assert.match(editor, /var firstEverVisit = !last && !SF\.Store\.list\(\)\.length/);
-  assert.match(editor, /if \(SF\.seedLibrary\) SF\.seedLibrary\(\);/);
-  assert.ok(editor.indexOf('var firstEverVisit') < editor.indexOf('if (SF.seedLibrary)'),
-    'firstEverVisit must be decided before seeding, not after');
-
-  /* A first visit opens an empty deck rather than the 74-slide lecture. */
-  assert.match(editor, /if \(!loaded && firstEverVisit\)[\s\S]{0,120}SF\.makeDeck\('Untitled lesson'\)/);
-  assert.ok(!/loaded = SF\.Studio\.makeLesson\('ipdv-intro'\)/.test(editor),
-    'the cold start must not land in somebody else’s lecture');
+  /* The Library's packs are seeded as the page starts. */
+  assert.match(runtime, /if \(SF\.seedLibrary\) SF\.seedLibrary\(\);/);
+  /* A first visit opens the lab's blank lesson, not somebody else's lecture:
+     only a ?lesson= link builds a lesson as the page starts. */
+  assert.ok(!/makeLesson\('ipdv-intro'\)/.test(lab + runtime), 'the cold start must not land in somebody else’s lecture');
+  assert.match(lab, /var asked = askedLesson\(askedKey\);/);
 
   /* And the templates are reachable without knowing they live under File. */
   assert.match(html, /id="btnLibraryOpen"[^>]*>[^<]*Library/);

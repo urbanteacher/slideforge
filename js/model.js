@@ -7333,7 +7333,7 @@
         });
         row.appendChild(btnRun);
         row.appendChild(btnRefresh);
-        row.appendChild(btnBack);
+        if (!helpers.alone) row.appendChild(btnBack);
         bodyEl.appendChild(row);
         line(logEl, "info", "Panel open — probing status…");
         refreshStatus(statusCard, logEl, false);

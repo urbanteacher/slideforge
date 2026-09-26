@@ -1544,7 +1544,7 @@
             if (it.id.indexOf('open:') === 0) { window.open(it.id.slice(5), '_blank', 'noopener'); return; }
 
             if (it.id === 'ai-test') {
-              if (SF.Editor && SF.Editor.openAiSmokeTest) SF.Editor.openAiSmokeTest();
+              if (SF.openAiSmokeTest) SF.openAiSmokeTest();
               else SF.toast('AI smoke test is not available in this build.');
               return;
             }
@@ -1568,7 +1568,7 @@
             if (it.id === 'refresh') {
               var lesson = lessonBehind();
               if (!lesson) return;
-              if (!(SF.LabEngine && SF.LabEngine.openKey(lesson.key))) SF.Editor.useLesson(lesson.key);
+              if (!SF.LabEngine || !SF.LabEngine.openKey(lesson.key)) return;
               SF.toast('“' + lesson.title + '” reloaded from this version of the app. Your previous copy is in the Library.');
               return;
             }
@@ -1642,14 +1642,6 @@
       docFolder.onclick = function () {
         if (SF.Studio && SF.Studio.openLessons) SF.Studio.openLessons();
         else SF.toast('The Library is not available in this workspace.');
-      };
-    }
-
-    var btnFind = $('btnFind');
-    if (btnFind) {
-      btnFind.onclick = function () {
-        if (SF.Editor && SF.Editor.findInDeck) SF.Editor.findInDeck();
-        else SF.toast('Open a presentation to search it.');
       };
     }
 
@@ -1851,16 +1843,12 @@
       };
     }
 
-    // engines register themselves when their script runs
-    SF.Editor.install();
-    SF.Games.install();
+    /* The Library, a show running when the page reloaded, a room being hosted (js/lesson-runtime.js). */
+    if (SF.startLessons) SF.startLessons();
     /* The lab is SlideForge's three studios (js/lab-engine.js): the Lesson
-       studio, the Quiz studio and Activities. After the classic editor and
-       Quiz studio, so its 'deck' and 'game' are the ones registered. */
+       studio, the Quiz studio and Activities. */
     if (SF.LabEngine) SF.LabEngine.install();
     SF.installNotesStrip();
-    if (SF.Artwork) SF.Artwork.install();
-    if (SF.Arrange) SF.Arrange.install();
 
     var want = null;
     try { want = localStorage.getItem(LAST_WS); } catch (e) {}

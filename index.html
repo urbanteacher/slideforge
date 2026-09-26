@@ -196,7 +196,6 @@ html:not([data-ready]) body { background: #0a0a0b; }
   <!-- ---------------------------------------------------------- stage -->
   <div class="stage-area">
     <div class="stage-wrap">
-      <div id="demoBanner" class="demo-banner" hidden><span id="demoBannerText">Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class.</span> <button type="button" id="btnDemoPlayer" class="btn ghost" title="Present this demo in the presentation player">▷ Full presentation demo</button> <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
       <div id="previewBox"></div>
     </div>
     <!-- Canvas bar: the status strip every slide tool has along the bottom.
@@ -204,28 +203,11 @@ html:not([data-ready]) body { background: #0a0a0b; }
          right, because that panel is the thing the zoom is competing with
          for width. -->
     <div class="canvas-bar">
-      <!-- Adding an activity inserts a slide into this deck at this point, so
-           it belongs to the canvas rather than to the whole presentation — the
-           topbar's Build cluster keeps Library and See the demo, which act on
-           the lesson as a document. It is the same catalogue as the rail's
-           ＋ Activity and the Engagement pane's, all three calling
-           openLibrary('all'); this is the door that sits with the slide you
-           are looking at. -->
-      <button class="btn primary canvas-add" data-ws="deck" id="btnActivities" title="Games, quizzes and audience prompts — inserted into this lesson. Same catalogue as ＋ Activity in the rail.">＋ Add activity</button>
       <label class="btn canvas-add canvas-add-item" data-ws="deck" title="Put one thing on this slide — a heading, some text, a picture, a chart. The slide itself stays as it is.">＋ Item
         <select id="canvasAddItem" aria-label="Add an item to this slide">
           <option value="">＋ Item…</option>
         </select>
       </label>
-      <!-- Quiz studio and Activities: add a question or an activity, as the lab's canvas bar adds to a slide.
-           js/games.js and js/activities.js give it its words and its action. -->
-      <button class="btn primary canvas-add" data-ws="game plan" id="btnCanvasAdd" type="button">＋ Add</button>
-      <!-- Quiz studio: another quiz, beside adding a question to this one. -->
-      <button class="btn canvas-add" data-ws="game" id="btnActivitiesGame" type="button">＋ Browse quizzes</button>
-      <button class="btn canvas-add" data-ws="plan" id="btnBrowseActivities" type="button" title="Browse the 54 pedagogical activities catalogue">＋ Browse activities</button>
-      <!-- The green play, as the lab's: try the game with a sample class, or showcase the activity. -->
-      <button class="canvas-play" data-ws="game" id="btnDemoGame" type="button" title="Try demo: rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)" aria-label="Try demo">▶</button>
-      <button class="canvas-play" data-ws="plan" id="btnDemoActivity" type="button" title="Showcase this activity in the player without playing the whole lesson" aria-label="Showcase activity">▶</button>
       <div class="canvas-zoom" role="group" aria-label="Canvas zoom">
         <button class="canvas-bar-btn" id="btnZoomOut" type="button" title="Zoom out (⌘⌥−)" aria-label="Zoom out">−</button>
         <select class="canvas-zoom-level" id="zoomLevel" aria-label="Zoom level">
@@ -583,13 +565,13 @@ html:not([data-ready]) body { background: #0a0a0b; }
 SF.installExperiments(SF);
 SF.installExplore(SF);
 </script>
-<script src="js/render.js?v=70"></script>
+<script src="js/render.js?v=71"></script>
 <script src="js/review.js?v=3"></script>
 <script src="js/demo.js?v=3"></script>
 <script src="js/player.js?v=18"></script>
 <script src="lab-app/stage.js?v=3"></script>
 <script src="js/lab-stage.js?v=3"></script>
-<script src="js/live.js?v=14"></script>
+<script src="js/live.js?v=15"></script>
 <script src="js/ai.js?v=9"></script>
 <script src="js/quick-poll.js?v=1"></script>
 <script src="js/teaching.js?v=3"></script>
@@ -598,16 +580,13 @@ SF.installExplore(SF);
 <script src="js/rounds.js?v=1"></script>
 <script src="js/print.js?v=5"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=12"></script>
+<script src="js/shell.js?v=13"></script>
 <script src="js/palette.js?v=1"></script>
 <script src="js/content-tools.js?v=5"></script>
 <script src="js/slide-clip.js?v=1"></script>
-<script src="js/editor.js?v=69"></script>
-<script src="js/lab-engine.js?v=28"></script>
-<script src="js/lesson-strip.js?v=1"></script>
-<script src="js/games.js?v=12"></script>
-<script src="js/studio.js?v=17"></script>
-<script src="js/activities.js?v=13"></script>
+<script src="js/lesson-runtime.js?v=1"></script>
+<script src="js/lab-engine.js?v=29"></script>
+<script src="js/studio.js?v=18"></script>
 <script src="js/live-activities.js?v=1"></script>
 <script src="js/adapt.js?v=2"></script>
 <script src="js/reports.js?v=3"></script>

@@ -21,8 +21,8 @@ function load() {
     setItem: (k, v) => { store[k] = String(v); },
     removeItem: (k) => { delete store[k]; }
   };
-  /* navigator.webdriver keeps lab-engine.js from mounting the lab's frame: there is no page here. */
-  const context = { window: {}, console, localStorage, Date, JSON, Set, Promise, location: { search: '' }, navigator: { webdriver: true } };
+  /* No #app element, so lab-engine.js does not mount the lab's frame: there is no page here. */
+  const context = { window: {}, console, localStorage, Date, JSON, Set, Promise, location: { search: '' }, document: { getElementById: () => null } };
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(dir, 'js/model.js'), 'utf8'), context);

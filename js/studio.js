@@ -30,12 +30,10 @@
    */
   function openDemo() {
     var spec = (SF.LESSONS || []).filter(function (l) { return l.key === DEMO_KEY; })[0];
-    var lab = SF.LabEngine && SF.LabEngine.enabled();
-    if (!spec || (!lab && !(SF.Editor && SF.Editor.useLesson))) {
+    if (!spec || !SF.LabEngine || !SF.LabEngine.openKey(DEMO_KEY)) {
       SF.toast('The demo is missing from this build.');
       return;
     }
-    if (!(lab && SF.LabEngine.openKey(DEMO_KEY))) SF.Editor.useLesson(DEMO_KEY);
     SF.toast('Demo opened — ' + (spec.slides || []).length +
       ' slides. It is not filed in the Library; press Demo again for a fresh copy.');
   }
@@ -78,36 +76,17 @@
       return new Date(at).toLocaleDateString([], { day: 'numeric', month: 'short' });
     }
 
-    /* The lab is the studio: the open lesson is the lab's, and its card has the lab deck's id. */
-    function inLab() { return !!(SF.LabEngine && SF.LabEngine.enabled()); }
+    /* The open lesson is the lab's, and its card has the lab deck's id. */
+    function currentId() { return SF.LabEngine ? SF.LabEngine.currentId() : ''; }
 
-    function currentId() {
-      if (inLab()) return SF.LabEngine.currentId();
-      return (SF.Editor && SF.Editor.deck && SF.Editor.deck()) ? SF.Editor.deck().id : '';
-    }
-
-    /* The Library renamed or moved the open lesson: the studio's copy takes it too. */
-    function openTakes(patch) {
-      if (inLab()) { SF.LabEngine.retitle(patch); return; }
-      var open = SF.Editor && SF.Editor.deck && SF.Editor.deck();
-      if (open) Object.assign(open, patch);
-    }
+    /* The Library renamed or moved the open lesson: the lab's copy takes it too. */
+    function openTakes(patch) { if (SF.LabEngine) SF.LabEngine.retitle(patch); }
 
     function openDoc(id) {
-      if (inLab()) {
-        var picked = SF.Store.get(id);
-        if (!picked || !SF.LabEngine.openLesson(picked)) return;
-        dlg.close();
-        SF.toast('Opened “' + (picked.title || 'lesson') + '”. Save writes this same document.');
-        return;
-      }
-      if (!SF.Editor || !SF.Editor.openDeck) return;
-      var ws = SF.Editor.workspace;
-      if (ws && ws.flush) ws.flush();
-      SF.Editor.openDeck(id);
+      var picked = SF.Store.get(id);
+      if (!picked || !SF.LabEngine || !SF.LabEngine.openLesson(picked)) return;
       dlg.close();
-      var d = SF.Store.get(id);
-      SF.toast('Opened “' + ((d && d.title) || 'lesson') + '”. Save writes this same document.');
+      SF.toast('Opened “' + (picked.title || 'lesson') + '”. Save writes this same document.');
     }
 
     function renameDoc(deck) {
@@ -240,28 +219,15 @@
           var row = SF.Store.get(id);
           if (row && row.sourceKey && SF.dismissLibrarySeed) SF.dismissLibrarySeed(row.sourceKey);
         });
-        /* Cancel autosave first: a pending timer would write the deleted deck
-           back a moment later. Then remove. Then switch away without flush —
-           openDeck's normal path saves the document you leave. */
-        if (doomedOpen && SF.Editor && SF.Editor.cancelPendingSave) {
-          SF.Editor.cancelPendingSave();
-        }
         ids.forEach(function (id) { SF.Store.remove(id); if (SF.LabEngine) SF.LabEngine.forget(id); });
         picked = Object.create(null);
-        if (doomedOpen && inLab()) {
-          /* The lab has already put a blank lesson up (SF.LabEngine.forget); whatever is left in the Library beats it. */
-          var left = SF.Store.list().filter(function (d) { return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP; })[0];
+        if (doomedOpen && SF.LabEngine) {
+          /* The lab has already put a blank lesson up (SF.LabEngine.forget); the
+             next lesson the Library lists beats it. */
+          var left = SF.Store.list().filter(function (d) {
+            return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP && !SF.LabEngine.hasCopy(d.id);
+          })[0];
           if (left) SF.LabEngine.openLesson(left);
-        } else if (doomedOpen) {
-          var leftover = SF.Store.list()[0];
-          if (leftover && SF.Editor && SF.Editor.openDeck) {
-            SF.Editor.openDeck(leftover.id, { abandon: true });
-          } else if (SF.Editor && SF.Editor.workspace && SF.Editor.workspace.blank) {
-            var blank = SF.Editor.workspace.blank();
-            SF.Editor.workspace.setDoc(blank);
-            if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
-            if (SF.Editor.workspace.draw) SF.Editor.workspace.draw();
-          }
         }
         draw();
       });
@@ -275,9 +241,7 @@
         .filter(function (d) { return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP; })
         /* A lesson now edited in the lab shows once, as the lab's card; the
            original is kept, unlisted, for the games the lab does not run. */
-        .filter(function (d) { return !(SF.LabEngine && SF.LabEngine.hasCopy(d.id)); })
-        /* And with the classic studio showing, the lab's cards stay off it. */
-        .filter(function (d) { return !(SF.LabEngine && SF.LabEngine.isHiddenCard && SF.LabEngine.isHiddenCard(d)); });
+        .filter(function (d) { return !(SF.LabEngine && SF.LabEngine.hasCopy(d.id)); });
       var openId = currentId();
       var q = searchQuery.trim().toLowerCase();
       var collapsed = (SF.LibraryFolders && SF.LibraryFolders.collapsed)
@@ -463,361 +427,7 @@
     dlg.showModal();
   }
 
-  /** The tabs the library can open on. Anything else means "everything". */
-  var LIBRARY_FILTERS = [
-    ['all', 'All activities'],
-    ['check', 'Knowledge checks'],
-    ['quiz', 'Quick quizzes'],
-    ['game', 'Games'],
-    ['memory', 'Memory'],
-    ['word', 'Word'],
-    ['talk', 'Discuss'],
-    ['feedback', 'Gather feedback']
-  ];
-  var LIBRARY_TABS = LIBRARY_FILTERS.map(function (t) { return t[0]; });
-  var libraryQuery = '';
-
-  /* Extra facets on top of kind (check vs feedback). A format can sit in
-     more than one — Beat the Clock is a game and a quick quiz. */
-  var ACTIVITY_GROUPS = {
-    'choice': ['quiz'],
-    'truefalse': ['quiz'],
-    'type': ['quiz'],
-    'slider': ['quiz'],
-    'poll': [],
-    'wordcloud': ['word'],
-    'brainstorm': ['talk'],
-    'scale': [],
-    'true-false': ['game', 'quiz'],
-    'low-stakes-quiz': ['quiz'],
-    'quiz-bowl': ['game'],
-    'beat-the-clock': ['game', 'quiz'],
-    'boss-battle': ['game'],
-    'horse-race': ['game'],
-    'memory-flip': ['memory'],
-    'memory-match': ['memory'],
-    'memory-maze': ['memory'],
-    'bingo': ['game'],
-    'knowledge-flip': ['memory'],
-    'definition-challenge': ['memory', 'word'],
-    'emoji-guess': ['word'],
-    'word-reveal': ['word'],
-    'fill-in-the-blanks': ['quiz', 'word'],
-    'heads-up': ['talk', 'word'],
-    'spin-explain': ['talk'],
-    'spot-the-error': ['quiz'],
-    'ranking': ['quiz'],
-    'odd-one-out': ['talk'],
-    'compare-contrast': ['talk'],
-    'predict-outcome': ['quiz'],
-    'time-traveler': ['quiz'],
-    'connection-maker': ['talk'],
-    'question-cube': ['talk'],
-    'random-challenge': ['talk'],
-    'concept-chain': ['talk']
-  };
-
-  /**
-   * @param {string} [filter] one of LIBRARY_TABS
-   *
-   * The filter is checked rather than trusted because this is wired straight
-   * to a button's onclick, which hands the handler a PointerEvent. An event
-   * is truthy, so `filter || 'all'` kept it, matched no category, and opened
-   * the library on an empty grid reading "0 formats here".
-   */
-  function openLibrary(filter) {
-    returnFocus = document.activeElement;
-    libraryQuery = '';
-    var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('activityModal'));
-    if (modal) modal.showModal();
-    /* Quiz studio opens on the checks, because feedback prompts attach to a
-       slide and there is no slide here to attach them to. */
-    drawLibrary(LIBRARY_TABS.indexOf(String(filter)) > -1 ? String(filter) : 'all');
-  }
-
-  /* One-click presentation shapes — fill the pits after they land. */
-  /* Built from the layout table, so + Slide and the layout picker can never
-     again offer different sets. A starter is a title, a blurb and the fields to
-     lay over a fresh slide of that type. */
-  var starters = (function () {
-    var list = [];
-    Object.keys(SF.SLIDE_TYPES).forEach(function (type) {
-      (SF.SLIDE_TYPES[type].starters || []).forEach(function (st) {
-        list.push({
-          icon: SF.SLIDE_TYPES[type].icon,
-          title: st.title,
-          blurb: st.blurb,
-          build: function () {
-            var s = SF.makeSlide(type);
-            if (SF.prepareLayout) SF.prepareLayout(s, type);
-            Object.keys(st.seed || {}).forEach(function (f) {
-              s[f] = Array.isArray(st.seed[f]) ? st.seed[f].slice() : st.seed[f];
-            });
-            return s;
-          }
-        });
-      });
-    });
-    return list;
-  })();
-
-
-  function openStarters() {
-    returnFocus = document.activeElement;
-    var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('starterModal'));
-    var body = document.getElementById('starterBody');
-    if (!modal || !body) return;
-    body.replaceChildren();
-    body.appendChild(el('p', 'library-note', 'Pick a shape to insert after the selected slide. You can change Layout any time in the right panel.'));
-    var grid = el('div', 'activity-grid starters-grid');
-    var fits = [];
-    /* Games and activities are slides too, so the one "+ Slide" in the rail
-       offers them first rather than the rail carrying a second button for the
-       same catalogue. It opens the library everything else opens. */
-    var act = el('button', 'activity-card check starter-card starter-activity');
-    act.type = 'button';
-    act.id = 'starterActivity';
-    act.appendChild(el('div', 'starter-activity-mark', '◇'));
-    act.appendChild(el('strong', 'starter-title', 'A game or activity'));
-    act.appendChild(el('span', 'activity-description',
-      'Quizzes, polls, word games, discussion — the room answers from their phones.'));
-    act.appendChild(el('span', 'activity-tag', 'OPEN CATALOGUE  ↗'));
-    act.onclick = function () {
-      if (modal) modal.close();
-      openLibrary('all');
-    };
-    grid.appendChild(act);
-    starters.forEach(function (st) {
-      var b = el('button', 'activity-card check starter-card');
-      b.type = 'button';
-      /* The shape itself, rendered, rather than a letter standing for it. "K"
-         and "•" say nothing about what you are about to insert, and the layout
-         picker in the inspector has always shown real miniatures — this is the
-         same thing at the point of creation rather than after it. */
-      var frame = el('div', 'variant-frame starter-frame');
-      var node = SF.renderSlide(SF.Editor.deck(), st.build(), { index: 0, total: 1, chrome: false });
-      frame.appendChild(node);
-      b.appendChild(frame);
-      fits.push([frame, node]);
-      /* Named, because the preview inside the card contains <strong> of its
-         own — a keyword term, a mind-map branch — and an unqualified
-         querySelector('strong') now finds the slide rather than the title. */
-      b.appendChild(el('strong', 'starter-title', st.title));
-      b.appendChild(el('span', 'activity-description', st.blurb));
-      b.appendChild(el('span', 'activity-tag', 'INSERT SLIDE  ↗'));
-      b.onclick = function () {
-        if (modal) modal.close();
-        SF.Editor.insertStarter(st.build());
-        SF.toast(st.title + ' added. Layout is in the right panel.');
-      };
-      grid.appendChild(b);
-    });
-    body.appendChild(grid);
-    modal.showModal();
-    /* Measured after the dialog is up: a frame inside a closed <dialog> has
-       no width, and SF.fit would scale every preview down to nothing. */
-    requestAnimationFrame(function () {
-      fits.forEach(function (pair) { SF.fit(pair[0], pair[1]); });
-    });
-  }
-
-  /* Starter banks live in the model, alongside their format definitions. */
-  var presets = SF.GAME_FORMAT_PRESETS || {};
-
-  /* Discussion formats inserted as a prompt beside a slide. Question Cube
-     was one until it became a game (23 Sep 2026); none are left, but the
-     insert path still reads this map. */
-  /** @type {Record<string, any>} */
-  var feedbackPresets = {};
-
-
-  /* [id, icon, title, blurb, kind, enabled] — Memory Maze stays out of scope. */
-  var activities = [
-    ['choice','?','Multiple choice','Check an idea. Discuss the why.','check',true],
-    ['truefalse','½','True / False','Uncover a common misconception.','check',true],
-    ['type','Aa','Type answer','Recall it without the clues — no options to pick from.','check',true],
-    ['slider','↔','Slider','Estimate a value on a line — near enough counts.','check',true],
-    ['poll','▤','Poll','Take the pulse of the room.','feedback',true],
-    ['wordcloud','✳','Word cloud','Turn individual thoughts into patterns.','feedback',true],
-    ['brainstorm','✎','Brainstorm','Make space for everyone’s ideas.','feedback',true],
-    ['scale','≋','Scale','Explore confidence and agreement.','feedback',true],
-    ['true-false','⚡','True/False Showdown','Fast retrieval under time pressure.','check',true],
-    ['low-stakes-quiz','◎','Low-Stakes Quiz','Timed paper retrieval. Reveal answers when the clock ends — no scoreboard.','check',true],
-    ['quiz-bowl','▦','Quiz Bowl','A category and value board. Pick an unused cell, answer aloud, the teacher awards it.','check',true],
-    ['beat-the-clock','◷','Beat the Clock','Speeded multiple-choice fluency.','check',true],
-    ['boss-battle','▲','Boss Battle','Shared goal: bring the boss HP down.','check',true],
-    ['horse-race','♘','Horse Race','Team race across quick competitive rounds.','check',true],
-    ['memory-flip','🂠','Memory Flip','Study the board, then build one class collection. Teacher checks each recall.','check',true],
-    ['memory-match','⧉','Memory Match','Study, choose a hidden card, explain and claim. Teams rotate; misses can be retried.','check',true],
-    ['memory-maze','⎇','Memory Maze','Hold a sequence, then navigate it.','check',false],
-    ['bingo','▣','Bingo','Call a definition; the team holding that term explains it to claim the square. A line wins — no points.','check',true],
-    ['knowledge-flip','↺','Knowledge Flip','Choose a visible keyword, explain it and collect the card. No study timer.','check',true],
-    ['definition-challenge','¶','Definition Challenge','Read a passage, then answer from memory once it clears.','check',true],
-    ['emoji-guess','☺','Emoji Guess','Decode a concept from symbols. Release the letter pattern, then a hint, as they get stuck.','check',true],
-    ['word-reveal','…','Word Reveal','Guess from letters as they drip in.','check',true],
-    ['fill-in-the-blanks','_','Fill in the Blanks','Type the missing word in a sentence, then discuss why it fits.','check',true],
-    ['heads-up','↑','Heads Up','Describe a term; peers retrieve it.','check',true],
-    ['spin-explain','◉','Spin & Explain','Spin a concept; explain it aloud.','check',true],
-    ['spot-the-error','✗','Spot the Error','Find the mistake; explain the fix.','check',true],
-    ['ranking','↕','Ranking Challenge','Order items by criteria — part marks on the scoreboard.','check',true],
-    ['odd-one-out','◇','Odd One Out','Four equal items. Discuss the rule, then reveal the prepared odd one. No score.','check',true],
-    ['compare-contrast','⇄','Compare & Contrast','Two equal items. Discuss alike and differ, then reveal prepared points. No score.','check',true],
-    ['predict-outcome','→','Predict the Outcome','Choose what happens next, and why.','check',true],
-    ['time-traveler','☽','Time Traveler','Recall events from year or clue.','check',true],
-    ['connection-maker','⚭','Connection Maker','Link two ideas; explain the bridge.','check',true],
-    ['question-cube','⚀','Question Cube','Roll a face — Define, Compare, Why, Example, What if, Benefits — and answer it aloud.','check',true],
-    ['random-challenge','✦','Random Challenge','Draw varied open challenges. Count only — no scoreboard.','check',true],
-    ['concept-chain','⛓','Concept Chain','Grow a justified chain. Type the link, Accept — it appears on the wall.','check',true]
-  ];
-  function activityMatches(a, filter, ignoreQuery) {
-    if (filter === 'check' || filter === 'feedback') {
-      if (a[4] !== filter) return false;
-    } else if (filter && filter !== 'all') {
-      var groups = ACTIVITY_GROUPS[a[0]] || [];
-      if (groups.indexOf(filter) < 0) return false;
-    }
-    if (!ignoreQuery && libraryQuery) {
-      var q = libraryQuery.toLowerCase();
-      var hay = (a[0] + ' ' + a[2] + ' ' + a[3]).toLowerCase();
-      if (hay.indexOf(q) < 0) return false;
-    }
-    return true;
-  }
-
-  function drawLibrary(filter) {
-    var body = document.getElementById('activityBody');
-    if (!body) return;
-    var focused = /** @type {HTMLInputElement|null} */ (document.activeElement);
-    var keepFind = !!focused && focused.id === 'activityFind';
-    var caret = keepFind && focused ? (focused.selectionStart || 0) : 0;
-    body.replaceChildren();
-    var tabs = el('div','library-tabs');
-    tabs.setAttribute('role', 'tablist');
-    tabs.setAttribute('aria-label', 'Activity filters');
-    LIBRARY_FILTERS.forEach(function (t) {
-      var n = activities.filter(function (a) { return activityMatches(a, t[0], true); }).length;
-      var b = SF.Shell.UI.button(t[1] + ' (' + n + ')', filter === t[0] ? 'active' : '', function () {drawLibrary(t[0]);});
-      b.setAttribute('role', 'tab');
-      b.setAttribute('aria-selected', filter === t[0] ? 'true' : 'false');
-      tabs.appendChild(b);
-    });
-    body.appendChild(tabs);
-    var find = el('input', 'library-find');
-    find.id = 'activityFind';
-    find.type = 'search';
-    find.placeholder = 'Find a format…';
-    find.setAttribute('aria-label', 'Find a format');
-    find.value = libraryQuery;
-    find.oninput = function () {
-      libraryQuery = String(find.value || '');
-      drawLibrary(filter);
-    };
-    body.appendChild(find);
-    /* Say the numbers. "I cannot see the 27" is unanswerable from a grid you
-       have to count yourself, and a tab filter quietly hides three of them —
-       so the note states how many are here, how many are ready, and where
-       the rest went. */
-    var shown = activities.filter(function (a) { return activityMatches(a, filter); });
-    var ready = shown.filter(function (a) { return a[5]; }).length;
-    var tabCount = activities.filter(function (a) { return activityMatches(a, filter, true); }).length;
-    var hidden = activities.length - tabCount;
-    var note = shown.length + ' formats here \u00b7 ' + ready + ' ready to use, ' +
-      (shown.length - ready) + ' planned.';
-    if (hidden) note += ' ' + hidden + ' more on the other tabs.';
-    if (libraryQuery && !shown.length) note = 'No formats match \u201c' + libraryQuery + '\u201d. Clear the search or pick another filter.';
-    else note += ' Choose a format, add your lesson content, then try its demo. Memory Maze is not yet available.';
-    body.appendChild(el('p','library-note', note));
-    var grid = el('div','activity-grid');
-    shown.forEach(function (a) {
-      var b = el('button','activity-card ' + a[4]); b.disabled = !a[5];
-      b.appendChild(el('span','activity-icon',a[1]));
-      b.appendChild(el('strong',null,a[2])); b.appendChild(el('span','activity-description',a[3]));
-      var book = SF.Playbook && SF.Playbook.forKey(a[0]);
-      var setup = SF.Playbook && SF.Playbook.setupForKey(a[0]);
-      if (setup) b.appendChild(el('span', 'activity-howto', setup.participation));
-      else if (book && book.howToPlay && book.howToPlay[0]) b.appendChild(el('span', 'activity-howto', book.howToPlay[0]));
-      if (a[5] && a[4] === 'check') {
-        var style = SF.gameStyle((SF.formatStyle && SF.formatStyle(a[0])) || a[0]);
-        var badges = SF.roomBadges(style && style.plays);
-        if (badges) b.appendChild(badges);
-      }
-      b.appendChild(el('span','activity-tag',a[5] ? (a[4] === 'check' ? 'BETWEEN SLIDES  ↗' : 'BESIDE YOUR SLIDE  ↗') : 'PLANNED FORMAT'));
-      /* Planned cards stay disabled — never call insert with an unimplemented style id. */
-      if (a[5]) b.onclick = function () {
-        var actModal = /** @type {HTMLDialogElement|null} */ (document.getElementById('activityModal'));
-        if (actModal) actModal.close();
-        if (a[4] === 'check') {
-          var raw = presets[String(a[0])];
-          var pre = raw ? {
-            style: raw.style,
-            title: raw.title,
-            settings: raw.settings ? Object.assign({}, raw.settings) : undefined,
-            seed: raw.seed ? Object.assign({}, raw.seed) : undefined,
-            /* A format whose one question cannot show it seeds a whole set. */
-            seeds: raw.seeds ? raw.seeds.map(function (q) { return Object.assign({}, q); }) : undefined
-          } : {
-            style: (SF.formatStyle && SF.formatStyle(a[0])) || a[0],
-            title: a[2]
-          };
-          /* Catalogue id is always the format — even when the card is a bare
-             engine — so Game settings lock to the right activity instead of
-             offering Beat the Clock beside True/False. */
-          pre.format = a[0];
-          /* `.key`, not the workspace itself. Shell.current() hands back the
-             workspace object, so `=== 'game'` was never true and this branch
-             never ran: picking a format in Quiz studio built the game, filed
-             it in the deck, left you editing the one you already had, and
-             said "customize it in the right panel" about something the right
-             panel was not showing. */
-          var ws = SF.Shell && SF.Shell.current && SF.Shell.current();
-          if (ws && ws.key === 'game') {
-            var curG = SF.Games && SF.Games.game && SF.Games.game();
-            var g = SF.createPresetGame(pre.style || a[0], pre, curG ? curG.theme : 'midnight');
-            if (SF.Games && SF.Games.openGame) SF.Games.openGame(g.id);
-            SF.toast('Switched to ' + a[2] + '. Customize it in the right panel.');
-          } else {
-            SF.Editor.insertNewGame(pre.style || a[0], pre);
-            SF.toast(a[2] + ' added. Customize it in the right panel.');
-          }
-        } else {
-          var fp = feedbackPresets[String(a[0])];
-          SF.Editor.attachFeedback(fp ? fp.kind : a[0], fp);
-          /* The feedback branch's own toast. It used to share an
-             unconditional one below, which also fired after the two above and
-             overwrote whichever had just run. */
-          SF.toast(a[2] + ' added. Customize it in the right panel.');
-        }
-      };
-      grid.appendChild(b);
-    });
-    body.appendChild(grid);
-    if (keepFind) {
-      find.focus();
-      try { find.setSelectionRange(caret, caret); } catch (e) {}
-    }
-  }
   function init() {
-    var modal = el('dialog','activity-modal'); modal.id = 'activityModal';
-    modal.setAttribute('aria-labelledby','activityTitle');
-    modal.innerHTML = '<header><div><span class="eyebrow">LESS WATCHING. MORE THINKING.</span><h2 id="activityTitle">Bring the room into the lesson.</h2></div><button class="btn ghost" aria-label="Close activity library">✕</button></header><div id="activityBody"></div><footer><span class="local-dot"></span> Design & preview locally · Planned formats are not yet available</footer>';
-    document.body.appendChild(modal);
-    modal.querySelector('header button').onclick = function () {modal.close();};
-    modal.addEventListener('click', function (e) {if (e.target === modal) {var r = modal.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) modal.close();}});
-    modal.addEventListener('close',function () {if (returnFocus) returnFocus.focus();});
-
-    var startersModal = el('dialog', 'activity-modal'); startersModal.id = 'starterModal';
-    startersModal.setAttribute('aria-labelledby', 'starterTitle');
-    startersModal.innerHTML = '<header><div><span class="eyebrow">START FROM A SHAPE.</span><h2 id="starterTitle">Slide starters</h2></div><button class="btn ghost" aria-label="Close slide starters">✕</button></header><div id="starterBody"></div><footer><span class="local-dot"></span> Boilerplates only — customise after they land</footer>';
-    document.body.appendChild(startersModal);
-    startersModal.querySelector('header button').onclick = function () { startersModal.close(); };
-    startersModal.addEventListener('click', function (e) {
-      if (e.target === startersModal) {
-        var r = startersModal.getBoundingClientRect();
-        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) startersModal.close();
-      }
-    });
-    startersModal.addEventListener('close', function () { if (returnFocus) returnFocus.focus(); });
-
     var lessonModal = el('dialog', 'activity-modal'); lessonModal.id = 'lessonModal';
     lessonModal.innerHTML = '<header><div><span class="eyebrow">YOUR LIBRARY</span><h2 id="lessonTitle">Library</h2></div><button class="btn ghost" aria-label="Close library">✕</button></header><div id="lessonBody"></div><footer><span class="local-dot"></span> Saved in this browser — Export or Share for a copy that leaves this machine</footer>';
     document.body.appendChild(lessonModal);
@@ -830,14 +440,6 @@
     });
     lessonModal.addEventListener('close', function () { if (returnFocus) returnFocus.focus(); });
 
-    var btnActivities = document.getElementById('btnActivities');
-    /* Wrapped, not passed: onclick hands its handler the event, and this one
-       takes a tab name. */
-    if (btnActivities) btnActivities.onclick = function () { openLibrary('all'); };
-    /* The same library from Quiz studio. One list, so a format cannot exist
-       in one studio and not the other. */
-    var gameLib = document.getElementById('btnActivitiesGame');
-    if (gameLib) gameLib.onclick = function () { openLibrary('check'); };
     /* The demo, and the only thing that opens it. This button used to be a
        second copy of File → Library with a different label on it, which is
        two names for one list and no way at all to reach the demo. */
@@ -858,5 +460,5 @@
       });
     });
   }
-  SF.Studio = {init:init,makeLesson:makeLesson,DEMO_KEY:DEMO_KEY,openDemo:openDemo,openLibrary:openLibrary,openStarters:openStarters,openLessons:openLessons};
+  SF.Studio = {init:init,makeLesson:makeLesson,DEMO_KEY:DEMO_KEY,openDemo:openDemo,openLessons:openLessons};
 })();

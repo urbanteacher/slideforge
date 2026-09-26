@@ -9,31 +9,20 @@
    The Library, the demo, New, File → reload and the address (?lesson=) open
    a lesson in the lab directly (openLesson, openKey). The lab opens its own
    copy: converted the first time, with an id of its own, so the original
-   lesson is never written to by the lab. The classic Lesson studio
-   (js/editor.js) still loads, hidden, until its code is taken out; nothing
-   opens a lesson through it.
+   lesson is never written to by the lab.
 
-   The lab is SlideForge's three studios, for everyone. The classic studios
-   are not offered: no address or setting brings them back (see enabled()).
+   The lab is SlideForge's three studios, for everyone: the classic studios
+   (js/editor.js, js/games.js, js/activities.js) are gone. What the room still
+   needed from them is in js/lesson-runtime.js.
    */
 (function (global) {
   'use strict';
   /** @type {any} */
   var SF = global.SF = global.SF || {};
 
-  /* The lab is the Lesson studio, the Quiz studio and Activities. The classic
-     studios were one address away (?classic=1) while the lab caught up with
-     them; the owner has retired them, so nothing a teacher can do brings them
-     back. The one exception is the browser smokes (tools/smoke/): under
-     automation they still drive the classic studios' rail, stage and
-     inspector, until they are rewritten for the lab; a smoke written for the
-     lab opts in with ?classic=0. */
-  function enabled() {
-    try {
-      if (/[?&]classic=0\b/.test(location.search)) return true;
-      return !navigator.webdriver;
-    } catch (e) { return true; }
-  }
+  /* The lab is the Lesson studio, the Quiz studio and Activities, always. Kept
+     as a question because the Library and the start ask it. */
+  function enabled() { return true; }
 
   /** @type {any} */ var api = null;
   /** @type {HTMLIFrameElement|null} */ var frame = null;
@@ -42,8 +31,7 @@
   var placeholder = { id: '', title: 'Untitled lesson', slides: [] };
 
   /* A lesson asked for on the address (?lesson=, the link a lesson is shared
-     and bookmarked by). Read now, before the classic editor takes the
-     parameter off the address; install() opens it. */
+     and bookmarked by). Read as the page loads; install() opens it. */
   var askedKey = null;
   try { askedKey = new URLSearchParams(location.search).get('lesson'); } catch (e) {}
 
@@ -84,7 +72,14 @@
 
   function refreshSaved() {
     if (!api) return;
-    api.listSaved().then(function (rows) { saved = rows || []; });
+    api.listSaved().then(function (rows) {
+      /* The lesson on screen may not be written yet: read back before it is, the
+         list would drop it, and the Library would show its original a moment. */
+      var cur = api.getDeck().id;
+      var mine = saved.filter(function (r) { return r.id === cur; });
+      saved = rows || [];
+      if (mine.length && !saved.some(function (r) { return r.id === cur; })) saved = mine.concat(saved);
+    });
   }
 
   /* The shell reads doc() often (the title field, the folder chip) and sets
@@ -208,6 +203,10 @@
     if (api && SF.History && SF.History.ready() && api.getDeck().slides.length) {
       SF.History.snapshot(doc(), 'Before opening another lesson');
     }
+    /* Lessons written before questions moved into games still hold quiz
+       slides: they are lifted into a game once, so the lab builds it. */
+    var made = SF.migrateDeckQuizzes ? SF.migrateDeckQuizzes(d, function (g) { SF.GameStore.save(g); }) : null;
+    if (made) SF.toast('Questions moved into a game: \u201c' + made.title + '\u201d');
     /* The last opened, so the Library puts it first. */
     if (SF.Store && SF.Store.save) SF.Store.save(d);
     open(JSON.parse(JSON.stringify(d)));
@@ -570,10 +569,12 @@
         if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
       } catch (e) {}
     }
-    /* Present is the lab's show. The classic editor wired this button to its
-       own player when it installed; the lab engine installs after it. */
-    var btnPresent = document.getElementById('btnPresent');
-    if (btnPresent) btnPresent.onclick = function () { ws.play(); };
+    /* Present is the lab's show. */
+    /* The Quiz studio's and Activities' Present too: one lesson, one show. */
+    ['btnPresent', 'btnPlay', 'btnPresentPlan'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.onclick = function () { ws.play(); };
+    });
     followShow();
     /* File → Open saved lesson: the lab's decks, through the shell's own Open list. */
     var btnOpenLesson = document.getElementById('btnOpenLesson');
@@ -605,7 +606,7 @@
     var lastDeck = a.getDeck();
     a.subscribe(function () {
       var d = a.getDeck();
-      /* An edit: the shell's Save has something to write, as with the classic editor. */
+      /* An edit: the shell's Save has something to write. */
       if (d !== lastDeck) {
         /* The name and folder are the shell's chrome. Only when they change: rewriting
            the title field on every edit would move the caret of someone typing in it. */
@@ -716,6 +717,10 @@
       });
     },
     lastShowDeck: function () { return lastShowDeck; },
+    /* For the page's start (js/lesson-runtime.js): the show a held room is walked back into, as Host live ran it. */
+    heldRoomDeck: function () {
+      return new Promise(function (resolve, reject) { whenReady(function () { buildShow().then(function (s) { resolve(s.run); }, reject); }); });
+    },
     /* For Activities' Host live: the lesson's, whichever studio is on screen. */
     hostLive: function () { hostLive(); },
     /* For the live stage (js/lab-stage.js): the lab deck as it is now, and the
@@ -733,41 +738,8 @@
         : document.getElementById(ids[name] || '');
       if (el && /** @type {HTMLElement} */ (el).click) /** @type {HTMLElement} */ (el).click();
     },
-    /* For the lesson strip in Quiz studio and Activities (js/lesson-strip.js):
-       the lesson in the show's order, small. Each lab slide is a picture; the
-       games and activities are SlideForge's own slides, from the copy those
-       two studios are editing when it is this lesson's. */
-    stripDeck: function () {
-      return new Promise(function (resolve, reject) {
-        whenReady(function (a) {
-          a.stills(288, undefined, 0.72).then(function (stills) {
-            var labDeck = a.getDeck();
-            var editing = SF.Editor && SF.Editor.deck && SF.Editor.deck();
-            var source = editing && editing.id === labDeck.sourceId ? editing : sourceLesson(labDeck);
-            resolve({
-              deck: source, title: labDeck.title,
-              slides: ordered(stills, function (st) {
-                return { lab: true, id: st.id, sourceSlideId: st.sourceSlideId, image: st.image, name: st.name, hidden: st.hidden };
-              }, source)
-            });
-          }, reject);
-        });
-      });
-    },
     /* For the Library (js/studio.js). */
     hasCopy: function (id) { return enabled() && hasCopy(id); },
-    /* A lab lesson's card, which the classic studio cannot open: the Library
-       leaves it out while the classic studio is the Lesson studio, so it does
-       not sit beside its own original looking like a lesson of one slide.
-       Cards written before they said so are known by their one slide and
-       the lab's ids: lab-<id> for a lesson's copy, and the lab's own eight
-       characters (lab/src/model/defaults.ts uid) where SlideForge's have
-       twelve (js/model.js uid adds four from the clock). */
-    isHiddenCard: function (d) {
-      if (!d || enabled()) return false;
-      if (d.labCard) return true;
-      return (d.slides || []).length <= 1 && /^(lab-.+|[a-z0-9]{8})$/.test(String(d.id));
-    },
     forget: function (id) {
       if (!enabled() || !api || !saved.some(function (r) { return r.id === id; })) return;
       /* Deleting the lesson on screen leaves a blank one, not a deleted one still being edited. */

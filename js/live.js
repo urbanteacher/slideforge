@@ -916,6 +916,12 @@
 
   /* Called at boot with whatever deck was open. Walks back into a room this
      tab was hosting before a reload, if the server is still holding it. */
+  /** Whether the server is holding a room this tab was hosting, to walk back into. */
+  Live.hasHeldRoom = function () {
+    var held = heldRoom();
+    return !!(held && held.pin && held.token);
+  };
+
   Live.resumeHeldRoom = function (deck) {
     var held = heldRoom();
     if (!held || !held.pin || !held.token) return false;

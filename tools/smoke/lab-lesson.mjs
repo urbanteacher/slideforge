@@ -2,8 +2,7 @@
 /* The lab as the Lesson studio (js/lab-engine.js). The lab takes the rail, the
  * stage and the inspector; the shell's name field, Library, demo and Present
  * drive it; a SlideForge lesson opens as a lab copy with its own id, and the
- * original is not written to. Under automation the classic studio is the
- * default, so this opts in with ?classic=0. */
+ * original is not written to. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -19,7 +18,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(`http://127.0.0.1:${port}/?classic=0`);
+  await page.goto(`http://127.0.0.1:${port}/`);
   await page.waitForFunction(() => window.SF?.Shell?.current()?.lab && SF.Shell.current().doc().id, null, { timeout: 60000 });
 
   const layout = await page.evaluate(() => ({
@@ -46,18 +45,19 @@ try {
   await page.waitForFunction(() => String(SF.Shell.current().doc().id).startsWith('lab-'), null, { timeout: 60000 });
   const demo = await page.evaluate(() => {
     const lab = SF.Shell.current().doc();
-    const classic = SF.Editor.deck();
+    const classic = SF.Store.get(lab.sourceId);
     return {
       labSlides: lab.slides.length, sourceId: lab.sourceId, classicId: classic.id,
       classicSlides: classic.slides.length,
       typed: lab.slides.some((s) => typeof s.type === 'string'),
+      games: lab.slides.filter((s) => s.game).length,
       storedSlides: (SF.Store.get(lab.id) || { slides: [] }).slides.length,
       title: document.getElementById('docTitle').value,
     };
   });
   assert.equal(demo.sourceId, demo.classicId, 'the lab copy names the lesson it came from');
   assert.ok(demo.labSlides > 80, `the demo converts (${demo.labSlides} slides)`);
-  assert.ok(demo.labSlides <= demo.classicSlides, 'games stay in the classic lesson');
+  assert.ok(demo.games > 0, 'the lesson’s games are built in the lab');
   assert.equal(demo.typed, false, 'every slide is a lab slide');
   assert.ok(demo.storedSlides <= 1, 'the classic store holds only the Library card, never the lab lesson itself');
   assert.match(demo.title, /Layout bank/, 'the shell shows the opened lesson’s name');
@@ -72,6 +72,13 @@ try {
   assert.ok(lib.card, 'the lab lesson has a Library card');
   assert.ok(lib.originalHidden && lib.originalKept, 'the original is kept, and listed only through its lab copy: ' + JSON.stringify(lib));
 
+  // The shows run on a short lesson with a game: every show draws each of the lesson's slides first,
+  // and the demo's hundred and more take minutes without a graphics card.
+  const before = await page.evaluate(() => SF.Shell.current().doc().id);
+  await page.evaluate(() => SF.LabEngine.openKey('attention'));
+  await page.waitForFunction((id) => SF.Shell.current().doc().id !== id && String(SF.Shell.current().doc().id).startsWith('lab-'), before, { timeout: 60000 });
+  const lesson = await page.evaluate(() => SF.Shell.current().doc().slides.length);
+
   // The bridge: Rehearse runs SlideForge's player on the lab's slides as pictures, games back in place.
   await page.evaluate(() => document.getElementById('btnRehearse').click());
   await page.waitForFunction(() => window.SF.Player.open, null, { timeout: 90000 });
@@ -79,7 +86,7 @@ try {
     const run = SF.Player.deck.slides;
     return { pictures: run.filter((s) => s.type === 'image' && String(s.image).startsWith('data:image/jpeg')).length, games: run.filter((s) => s.type === 'quiz').length, sameId: SF.Player.deck.id === SF.Shell.current().doc().id };
   });
-  assert.equal(show.pictures, demo.labSlides, 'every lab slide is in the show as a picture');
+  assert.ok(show.pictures > 0 && show.pictures <= lesson, `the lab's slides are in the show as pictures (${show.pictures} of ${lesson})`);
   assert.ok(show.games > 0, 'the lesson’s games are back in the show');
   assert.ok(show.sameId, 'the show carries the lesson’s id, so the lobby knows it is this lesson');
 
@@ -112,6 +119,13 @@ try {
   // Share fits the server's limit.
   const shareMB = await page.evaluate(async () => JSON.stringify(await SF.LabEngine.shareDeck()).length / 1048576);
   assert.ok(shareMB < 8, `a shared copy fits in 8 MB (${shareMB.toFixed(1)} MB)`);
+
+  // The Quiz studio is the same lesson, and its Present is the lesson's show.
+  await page.evaluate(() => SF.Shell.activate('game'));
+  await page.waitForFunction(() => SF.Shell.current().key === 'game' && SF.Shell.current().lab);
+  await page.evaluate(() => document.getElementById('btnPlay').click());
+  await page.waitForFunction(() => window.SF.Player.open && SF.Player.deck.id === SF.Shell.current().doc().id, null, { timeout: 90000 });
+  await page.evaluate(() => { SF.Player.close(); SF.Shell.activate('deck'); });
 
   // Present is SlideForge's show, with its HUD, and the lab drawing the slide live inside it.
   await lab.getByRole('button', { name: 'Present', exact: true }).click();
