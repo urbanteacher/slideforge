@@ -58,3 +58,15 @@ export function relookGame(d: Deck, gameId: string, look: GameLook, reason?: Rea
   if (d.headerFooter?.enabled) syncHeaderFooter(d);
   return made;
 }
+
+/** A deck opened with Buttons games built before the Reason setting: each built again, its reason
+ *  under the question, as a game made now is. Their reason was written under the buttons and a game's
+ *  centring left it behind, across them. The deck is copied when there is anything to do; otherwise
+ *  it is handed back as it was. */
+export function repairGames(d: Deck): Deck {
+  const stale = [...new Set(d.slides.filter((s) => s.game && HAS_LOOKS.has(s.game.format) && s.game.look === 'buttons' && !s.game.reason).map((s) => s.game!.id))];
+  if (!stale.length) return d;
+  const copy = structuredClone(d);
+  for (const id of stale) relookGame(copy, id, 'buttons', 'question');
+  return copy;
+}

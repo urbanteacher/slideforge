@@ -7,6 +7,7 @@ import { blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck } from './def
 import { hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters } from './frame';
 import { themeOf } from './layouts';
 import { themeSlide } from './theme';
+import { repairGames } from './gameLook';
 import type { Deck, Layer, Slide } from './types';
 
 export type LeftTab = 'layers' | 'add';
@@ -162,7 +163,9 @@ export const useStore = create<State>((set, get) => ({
     });
   },
 
-  loadDeck: (d) => {
+  loadDeck: (d0) => {
+    // Games built by an older lab brought up to date as the deck opens (model/gameLook.ts).
+    const d = repairGames(d0);
     set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null });
     refitAllText(); // a deck saved before a box type measured itself gets its heights now
   },

@@ -497,3 +497,23 @@ test('the reason goes where the Game panel says: under the question, under the b
   assert.ok(n.answer.notes.includes(SF_GAME(src, check).explanation.slice(0, 20)), 'the reason in the notes, to say');
   assert.equal(n.answer.game.reason, 'notes');
 });
+
+test('a Buttons game an older lab built is set right as its lesson opens', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const { relookGame, repairGames } = await bundle('src/model/gameLook.ts');
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  const check = src.slides.find((s) => s.type === 'game');
+  const id = deck.slides.find((s) => s.sourceSlideId === check.id).game.id;
+  // As an older lab left it: the reason under the buttons, and no Reason setting.
+  relookGame(deck, id, 'buttons', 'buttons');
+  deck.slides.forEach((s) => { if (s.game && s.game.id === id) delete s.game.reason; });
+  const fixed = repairGames(deck);
+  assert.notEqual(fixed, deck, 'a copy, the deck handed in left alone');
+  const answer = fixed.slides.filter((s) => s.sourceSlideId === check.id)[1];
+  assert.equal(answer.game.reason, 'question');
+  const why = answer.layers.find((l) => l.name === 'Why');
+  const top = Math.min(...answer.layers.filter((l) => /^Button \d$/.test(l.name)).map((l) => l.box.y));
+  assert.ok(why && why.box.y + why.box.h <= top, 'the reason under the question, clear of the buttons');
+  assert.equal(repairGames(fixed), fixed, 'and nothing more to do once it is');
+});
