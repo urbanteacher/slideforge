@@ -39,6 +39,7 @@ const ENTRANCES: { value: EntranceType; label: string }[] = [
 const TEXT_ENTRANCES: { value: EntranceType; label: string }[] = [
   { value: 'letters', label: 'Letter by letter' }, { value: 'words', label: 'Word by word' },
   { value: 'lines', label: 'Line reveal (masked)' }, { value: 'typewriter', label: 'Typewriter' },
+  { value: 'scramble', label: 'Scramble — letters decode into place' }, { value: 'count', label: 'Count up — the numbers run up' },
 ];
 const EASINGS: { value: Easing; label: string }[] = [
   { value: 'easyEase', label: 'Easy Ease — SlideForge’s words' },
@@ -561,6 +562,8 @@ function LayerAnimate({ layer }: { layer: Layer }) {
         <Row label="Effect"><Select value={a.type} options={options} onChange={(v) => up((x) => {
           x.type = v;
           if (v === 'draw') { x.duration = 0.7; x.stagger = 0.12; x.easing = 'cubicOut'; }
+          // A count takes long enough to read the numbers rising, slowing as it lands.
+          else if (v === 'count') { x.duration = 1.6; x.stagger = 0; x.easing = 'expoOut'; }
           // Words, letters and lines start on SlideForge's defaults, Medium and Wave, unless already on a preset.
           else if (isTextUnit(v) && !presetOf(x)) Object.assign(x, presetTiming(v, 'medium', 'wave'));
           else if (v !== 'none' && x.duration < 0.1) x.duration = 0.9;
@@ -580,7 +583,7 @@ function LayerAnimate({ layer }: { layer: Layer }) {
             <Row label="Duration"><Scrub value={a.duration} min={0.1} max={4} step={0.05} unit=" s" onChange={(v, m) => up((x) => { x.duration = v; }, m)} /></Row>
             <Row label="Delay"><Scrub value={a.delay} min={0} max={5} step={0.05} unit=" s" onChange={(v, m) => up((x) => { x.delay = v; }, m)} /></Row>
             <Row label="Easing"><Select value={a.easing} options={EASINGS} onChange={(v) => up((x) => { x.easing = v; })} /></Row>
-            {isTextUnit(a.type) && !(a.build && a.build !== 'none') && (
+            {isTextUnit(a.type) && a.type !== 'count' && !(a.build && a.build !== 'none') && (
               <>
                 <Row label="Speed" info="Moves the whole thing together: each word, and the wave between them.">
                   <Select value={pre?.speed ?? 'custom'} options={pre ? SPEED_OPTIONS : [...SPEED_OPTIONS, { value: 'custom', label: 'Custom — set below' }]}
@@ -592,11 +595,16 @@ function LayerAnimate({ layer }: { layer: Layer }) {
                 </Row>}
               </>
             )}
-            {(isTextUnit(a.type) || a.type === 'draw') && !a.plan?.length && <Row label="Stagger" info={a.type === 'draw' ? 'Time between each bar, point or wedge.' : 'Time between each letter, word or line. Speed and Spacing set this for you.'}><Scrub value={a.stagger} min={0} max={a.type === 'draw' ? 1 : 0.4} step={0.005} decimals={3} unit=" s" onChange={(v, m) => up((x) => { x.stagger = v; }, m)} /></Row>}
-            {isTextUnit(a.type) && !(a.build && a.build !== 'none') && (a.stagger > 0 || !!a.plan?.length) && (
+            {((isTextUnit(a.type) && a.type !== 'count') || a.type === 'draw') && !a.plan?.length && <Row label="Stagger" info={a.type === 'draw' ? 'Time between each bar, point or wedge.' : 'Time between each letter, word or line. Speed and Spacing set this for you.'}><Scrub value={a.stagger} min={0} max={a.type === 'draw' ? 1 : 0.4} step={0.005} decimals={3} unit=" s" onChange={(v, m) => up((x) => { x.stagger = v; }, m)} /></Row>}
+            {a.type === 'typewriter' && (
+              <Row label="Cursor" info="A cursor follows the typing, then blinks for three seconds once the line is typed.">
+                <Toggle value={!!a.caret} onChange={(v) => up((x) => { if (v) x.caret = true; else delete x.caret; })} />
+              </Row>
+            )}
+            {isTextUnit(a.type) && a.type !== 'count' && !(a.build && a.build !== 'none') && (a.stagger > 0 || !!a.plan?.length) && (
               <>
                 {!a.plan?.length && <Row label="Order" info="Which end the wave starts from. From the centre sends it outwards both ways at once.">
-                  <Select value={a.order ?? 'first'} options={[{ value: 'first', label: 'From the first' }, { value: 'last', label: 'From the last' }, { value: 'center', label: 'From the centre' }]}
+                  <Select value={a.order ?? 'first'} options={[{ value: 'first', label: 'From the first' }, { value: 'last', label: 'From the last' }, { value: 'center', label: 'From the centre' }, { value: 'random', label: 'In a random order' }]}
                     onChange={(v) => up((x) => { if (v === 'first') delete x.order; else x.order = v; })} />
                 </Row>}
                 <Row label="Leave again" info="Arrive, hold, leave the way they came, and round again: for a cover on screen while the room fills. SlideForge's timing: in by a tenth of the cycle, held to about half, out by seven-eighths, then a pause — 13, 7 or 3.6 seconds at Gentle, Medium and Quick.">
