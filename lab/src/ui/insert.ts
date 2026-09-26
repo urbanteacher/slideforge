@@ -157,7 +157,7 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
       const layer = createLayer('video', { name: 'Video', params: { src: '', fit: 'cover', frame: '16:9', muted: true } as never, box: { x: (st.deck.width - w) / 2, y: (st.deck.height - h) / 2, w, h, rot: 0 }, anim: { type: 'fade', duration: 0.6 } });
       st.insertLayer(layer);
       st.set({ inspectorTab: 'video' });
-      st.showToast('Paste a YouTube, Vimeo or .mp4 address in the Video tab, then choose full screen or framed.');
+      st.showToast('In the Video tab, choose a file or paste a YouTube, Vimeo or .mp4 address, then full screen or framed.');
       return;
     }
     // A ring in the corner the room can read from the back, in the slide's own colours.
