@@ -395,9 +395,9 @@ export function convertsSlide(s: SFSlide): boolean {
 }
 
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
- *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. A copy made at an older version is brought up to date when it
+ *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. 8: AI Awareness Day 2027 wears its frame (strand, lockup, campaign line, page number) and its labels over the words. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. */
-export const CARRIED = 7;
+export const CARRIED = 8;
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
@@ -444,6 +444,16 @@ function buildSlides(s: SFSlide, k: Kit, img: (p?: string) => string, art: ArtCo
   if (g) return buildGame(s, g, k, img, art);
   const one = buildSlide(s, k, img, art);
   return one ? [one] : [];
+}
+
+/** AI Awareness Day 2027's page number, bottom right on every slide but the cover ("2 / 7"): the
+ *  deck's own footer, so it follows the slides as they move. The rest of its frame is the theme's
+ *  artwork (themeArt.ts). */
+export function pageNumbers(d: Deck): Deck {
+  if (d.headerFooter?.enabled) return d;
+  d.headerFooter = { enabled: true, hideOnCover: true, slots: { 'footer-right': { kind: 'pages' } } };
+  syncHeaderFooter(d);
+  return d;
 }
 
 /** A lab copy made before version 7 showed every slide, the ones SlideForge keeps out of the show too:
@@ -524,6 +534,7 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { fram
     if (made.length) slides.push(...made); else skipped++;
   });
   const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };
+  if (data.theme?.startsWith('aiad27')) return pageNumbers(deck);
   if (opts.frame === false) return deck;
   // A NU London lesson wears SlideForge's frame; the lab's own NU decks keep theirs.
   return data.theme.startsWith('northeastern') ? lessonFrame(deck, k.guide.marks[0]?.src ?? '') : framed(deck, k.guide.marks[0]?.src ?? '', 'Northeastern University London');

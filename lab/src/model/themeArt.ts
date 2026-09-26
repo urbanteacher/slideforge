@@ -18,6 +18,13 @@ import badgeSmart from '../assets/aiad26/aiad26-smart.svg?raw';
 import badgeCreative from '../assets/aiad26/aiad26-creative.svg?raw';
 import badgeResponsible from '../assets/aiad26/aiad26-responsible.svg?raw';
 import badgeFuture from '../assets/aiad26/aiad26-future.svg?raw';
+import icon27Safe from '../assets/aiad27/icon-safe.svg?raw';
+import icon27Smart from '../assets/aiad27/icon-smart.svg?raw';
+import icon27Creative from '../assets/aiad27/icon-creative.svg?raw';
+import icon27Responsible from '../assets/aiad27/icon-responsible.svg?raw';
+import icon27Future from '../assets/aiad27/icon-future.svg?raw';
+import lockup27 from '../assets/aiad27/aiad27-lockup.svg?raw';
+import lockup27Reverse from '../assets/aiad27/aiad27-lockup-reverse.svg?raw';
 import { createLayer } from './defaults';
 import type { Box, Layer, Slide } from './types';
 
@@ -88,6 +95,18 @@ const AIAD26: Record<string, string> = { safe: '#00c4ee', smart: '#ff6734', crea
  *  its dark wedge and its word somewhere of its own. Carries both grounds, so never inverted. */
 const BADGES: Record<string, string> = { safe: badgeSafe, smart: badgeSmart, creative: badgeCreative, responsible: badgeResponsible, future: badgeFuture };
 const AIAD_INK = '#1a1a2e';
+
+/** AI Awareness Day 2027 (css/aiad27.css): each strand's colour and name, its icon, and the three
+ *  grounds its slides are set on — cream paper, the strand's colour (the cover, the discussion and the
+ *  commitment) and ink (the scenario and the takeaways) — with the type and rule each one takes. */
+const AIAD27: Record<string, { color: string; name: string; icon: string }> = {
+  safe: { color: '#00bedd', name: 'Safe', icon: icon27Safe }, smart: { color: '#ff7038', name: 'Smart', icon: icon27Smart },
+  creative: { color: '#ac91ff', name: 'Creative', icon: icon27Creative }, responsible: { color: '#63df93', name: 'Responsible', icon: icon27Responsible },
+  future: { color: '#fa83eb', name: 'Future', icon: icon27Future },
+};
+const A27 = { font: 'Uncut Sans', ink: '#231f20', paper: '#f6f4ed', dim: '#54504e', rule: '#c9c6be', darkRule: '#686366' };
+// The lockup's words have an em dash in them: encoded as UTF-8 first, which btoa alone cannot take.
+const b64 = (raw: string) => 'data:image/svg+xml;base64,' + btoa(String.fromCharCode(...new TextEncoder().encode(raw)));
 const AIAD_FONT = 'Poppins';
 
 /** The label the campaign's PowerPoints put over a slide, in the strand's colour: DID YOU KNOW? over
@@ -219,9 +238,30 @@ function pieces(s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): Piec
       out.push({ front: true, layer: createLayer('text', { name: ART + 'Label', box: at(lx + mark, ly, 700, 34), anim: still, params: {
         text: label.text, font: AIAD_FONT, weight: '800', size: 42, color: accent, uppercase: true, tracking: 0, lineHeight: 1.1, fit: 'shrink' } }) });
     }
-  } else if (id === 'aiad27' && t === 'title' && s.image) {
-    // The campaign's poster cover: the strand's chamfered panel and glyph, beside the title.
-    out.push({ layer: picture('Poster', img(s.image), at(733.5, 124, 493.7, 504)) });
+  } else if (id === 'aiad27') {
+    if (t === 'title' && s.image) {
+      // The campaign's poster cover: the strand's chamfered panel and glyph, beside the title.
+      out.push({ layer: picture('Poster', img(s.image), at(733.5, 124, 493.7, 504)) });
+    }
+    // The frame every slide of the design wears (css/customize.css .cp-header and .cp-footer, inside the
+    // slide's 32 / 52 / 24 padding): the strand's icon and name top left, the campaign's lockup top
+    // right, and a rule over the foot with the campaign line on it. The page number is the deck's own
+    // footer (headerFooter), so it follows the slides as they move.
+    const strandOf = AIAD27[strand] ?? AIAD27.safe;
+    const g = themeGround(ctx.theme, t) ?? 'working';
+    const fg = g === 'quiet' ? A27.paper : A27.ink;
+    const rule = g === 'loud' ? A27.ink : g === 'quiet' ? A27.darkRule : A27.rule;
+    // The icon is drawn in the strand's colour; on the strand's own ground it is set in ink, as the theme does.
+    const icon = g === 'loud' ? strandOf.icon.replace(/fill="#[0-9a-f]{6}"/i, `fill="${A27.ink}"`) : strandOf.icon;
+    const word = (name: string, text: string, box: Box, size: number, align: 'left' | 'right' = 'left') =>
+      createLayer('text', { name: ART + name, box, anim: still, params: { text, font: A27.font, weight: '700', size: size * X, color: fg, align, lineHeight: 1.2, fit: 'shrink' } });
+    out.push(
+      { front: true, key: 'aiad27-icon', layer: picture('Strand mark', b64(icon), at(52, 49, 22, 22)) },
+      { front: true, layer: word('Strand', strandOf.name, at(84, 45, 300, 30), 20) },
+      { front: true, key: 'aiad27-lockup', layer: picture('Lockup', b64(g === 'quiet' ? lockup27Reverse : lockup27), at(928, 32, 300, 56)) },
+      { front: true, layer: createLayer('shape', { name: ART + 'Foot rule', box: at(52, 664, 1176, 1), anim: still, params: { shape: 'rect', radius: 0, fill: rule, strokeWidth: 0 } }) },
+      { front: true, layer: word('Campaign line', 'Keep humans in the loop', at(52, 671, 560, 26), 20) },
+    );
   }
   return out;
 }
@@ -277,8 +317,44 @@ function campaignType(slide: Slide) {
   }
 }
 
+/** AI Awareness Day 2027's labels, above the words as the design sets them (css/customize.css
+ *  .cp-eyebrow): STARTER ACTIVITY over the cover's question, THE SCENARIO · 30 SECONDS over the voice,
+ *  DISCUSS IN PAIRS over the discussion question, YOUR CHOICE over the commitment. SlideForge keeps
+ *  each as the slide's subtitle, and the lab's layouts set a subtitle under the words; here it goes
+ *  over them, small, spaced and in capitals — white on the strand's colour, the strand's colour on ink.
+ *  Where there is no room above (the commitment's heading is at the top of the grid), what is under it
+ *  moves down to make it. Once: the label is named, so a copy is not moved twice. */
+function campaignLabels27(slide: Slide, s: ArtSlide, ctx: ArtContext) {
+  const t = s.type;
+  const pick: Record<string, [string, string]> = { title: ['Text', 'Hero'], quote: ['Attribution', 'Heading'], statement: ['Credit', 'Statement'], keyfact: ['Text', 'Heading'] };
+  const names = pick[t];
+  if (!names || slide.layers.some((l) => l.name === ART + 'Eyebrow')) return;
+  const label = slide.layers.find((l) => l.name === names[0] && l.kind === 'text');
+  const words = slide.layers.find((l) => l.name === names[1] && l.kind === 'text');
+  if (!label?.box || !words?.box) return;
+  const text = String(label.params.text ?? '').replace(/^[—–-]\s*/, '').trim();
+  if (!text) return;
+  const g = themeGround(ctx.theme, t) ?? 'working';
+  const strandColour = (AIAD27[family(ctx.theme).strand] ?? AIAD27.safe).color;
+  const size = t === 'title' ? 27 : t === 'quote' ? 30 : 36;
+  const h = Math.round(size * 1.4);
+  const top = 132;
+  let y = words.box.y - h - 24;
+  if (y < top) {
+    // Room for the label at the top of the grid: everything from the words down moves under it.
+    const shift = top + h + 24 - words.box.y;
+    for (const l of slide.layers) if (l.box && l !== label && !l.name.startsWith(ART) && l.kind !== 'solid' && l.box.y >= words.box.y - 1) l.box.y += shift;
+    y = top;
+  }
+  label.name = ART + 'Eyebrow';
+  label.box = { x: words.box.x, y, w: Math.max(words.box.w, 900), h, rot: 0 };
+  Object.assign(label.params, { text, font: A27.font, weight: t === 'quote' ? '600' : '700', size, color: g === 'quiet' ? strandColour : g === 'loud' ? '#ffffff' : A27.dim,
+    uppercase: true, tracking: 0.14, align: 'left', lineHeight: 1.2, fit: 'shrink' });
+}
+
 export function addThemeArt(slide: Slide, s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): number {
   if (family(ctx.theme).id === 'aiad26') campaignType(slide);
+  if (family(ctx.theme).id === 'aiad27') campaignLabels27(slide, s, ctx);
   const ground = slide.ground ?? 'working';
   const have = new Set(slide.layers.map((l) => l.name));
   const list = pieces(s, ctx, img).filter((p) => (!p.ground || p.ground === ground) && !have.has(p.layer.name));

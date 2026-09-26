@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { CARRIED, carryDeckArt, carryDeckHidden, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
+import { CARRIED, carryDeckArt, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { enterView, useStore, type LabView } from './model/store';
@@ -135,7 +135,8 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   carryDeckMissing(copy, source.slides, palette, Math.max(1, from), set, art, source.labGames);
   // The artwork first: a poster it adds comes with SlideForge's address, which the repair then fixes.
   // Pieces a copy already has stay as they are, so a copy from version 3 or 4 takes only the new ones.
-  if (from < 6) carryDeckArt(copy, source.slides, art);
+  if (from < 8) carryDeckArt(copy, source.slides, art);
+  if (from < 8 && (source.theme ?? '').startsWith('aiad27')) pageNumbers(copy);
   // A statement set before version 6 grew past its frame when its line was a question: it fits now.
   if (from < 6) for (const sl of copy.slides) {
     const line = sl.layers.find((l) => l.name === 'Statement' && l.params.fit === 'grow');
