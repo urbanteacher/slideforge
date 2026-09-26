@@ -4,6 +4,9 @@
  * Two real windows, because that is the whole point: the teacher is looking
  * at the desk and the ink has to come out on the projector. A single-window
  * test would prove nothing about the part that was broken.
+ *
+ * The lesson is built with SF.buildLesson and started on SF.Player directly:
+ * ?lesson= opened it in the classic editor, which went with the classic studios.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -20,9 +23,12 @@ try {
   const wall = await browser.newPage({ viewport: { width: 1280, height: 820 } });
   const errors = [];
   wall.on('pageerror', (e) => errors.push('wall: ' + e.message));
-  await wall.goto(`http://127.0.0.1:${port}/?lesson=ipdv-intro`);
-  await wall.waitForFunction(() => window.SF?.Editor?.deck());
-  await wall.evaluate(() => SF.Editor.workspace.play());
+  await wall.goto(`http://127.0.0.1:${port}/`);
+  await wall.waitForFunction(() => window.SF?.Player && SF.buildLesson && SF.buildRunDeck);
+  await wall.evaluate(() => {
+    const deck = SF.buildLesson('ipdv-intro');
+    SF.Player.start(SF.buildRunDeck(deck, (id) => SF.GameStore.get(id)), 0, { fullscreen: false });
+  });
   await wall.waitForFunction(() => SF.Player.open && document.querySelector('.teaching-ink'));
 
   /* The desk is a popup of the wall — that opener link is what carries every
