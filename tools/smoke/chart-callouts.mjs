@@ -6,6 +6,9 @@
  * lookup finds the right band and that the zoom keeps the label in frame —
  * the first version centred on the bars and cut the labels off the bottom,
  * which turns "look at 2020" into a crop of an unnamed bar.
+ *
+ * Each deck goes straight to SF.Player: the classic editor that used to hold
+ * and play it went with the classic studios.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -27,13 +30,12 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}/`);
-  await page.waitForFunction(() => window.SF?.Editor?.deck());
+  await page.waitForFunction(() => window.SF?.Player && SF.Callouts);
 
   /* --- the walk ---------------------------------------------------------- */
   await page.evaluate((table) => {
     const deck = Object.assign(SF.makeDeck('callouts'), { theme: 'northeastern' });
-    SF.Editor.workspace.setDoc(deck);
-    const d = SF.Editor.deck();
+    const d = deck;
     d.slides = [
       SF.normalizeSlide(Object.assign(SF.makeSlide('chart'), {
         chartKind: 'bar', title: 'Santander Cycle hires by year', body: table,
@@ -44,8 +46,7 @@ try {
       })),
       SF.normalizeSlide(Object.assign(SF.makeSlide('content'), { title: 'After' }))
     ];
-    SF.Editor.selectSlide(d.slides[0].id);
-    SF.Editor.workspace.play({ fullscreen: false });
+    SF.Player.start(d, 0, { fullscreen: false });
   }, TABLE);
   await page.waitForFunction(() => window.SF?.Player?.open);
   await page.waitForTimeout(500);
@@ -73,13 +74,21 @@ try {
     };
   });
 
+  /* The zoom is a CSS transition, and fixed pauses read it mid-flight on a
+     loaded machine. So each read waits, up to a few seconds, for the state it
+     expects, and the checks below then say what was actually there. */
+  const settle = async (ok) => {
+    let seen = await look();
+    for (let k = 0; k < 50 && !ok(seen); k++) { await page.waitForTimeout(100); seen = await look(); }
+    return seen;
+  };
+
   const whole = await look();
   if (whole.zoomed) problems.push('the chart starts zoomed');
   if (whole.visible.length !== 6) problems.push('the whole chart should show all six labels — ' + whole.visible.join(','));
 
   await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(800);
-  const first = await look();
+  const first = await settle((r) => r.zoomed && /Lockdown year/.test(r.note) && r.visible.includes('2020') && r.visible.length <= 4);
   if (!first.zoomed) problems.push('the first press did not zoom');
   if (first.at !== 0) problems.push('the walk is not at the first callout — ' + first.at);
   if (!/Lockdown year/.test(first.note)) problems.push('the note did not arrive — ' + first.note);
@@ -95,27 +104,23 @@ try {
   console.log('✓ First press zooms to 2020 and keeps', first.visible.join(', '), 'in frame');
 
   await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(700);
-  const second = await look();
+  const second = await settle((r) => r.at === 1 && /drop worth explaining/.test(r.note) && r.visible.includes('2023'));
   if (second.at !== 1 || !/drop worth explaining/.test(second.note)) {
     problems.push('the second callout did not arrive — ' + JSON.stringify(second));
   }
   if (!second.visible.includes('2023')) problems.push('the second callout lost its label');
 
   await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(700);
-  const back = await look();
+  const back = await settle((r) => !r.zoomed && !r.shown);
   if (back.zoomed) problems.push('the closing press should put the whole chart back');
   if (back.shown) problems.push('the note should clear with the zoom it describes');
   if (back.idx !== 0) problems.push('the closing press should not also change slide');
   console.log('✓ The closing press hands the whole chart back, without changing slide');
 
   await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(600);
-  if ((await look()).idx !== 1) problems.push('the press after the walk did not move the deck');
+  if ((await settle((r) => r.idx === 1)).idx !== 1) problems.push('the press after the walk did not move the deck');
   await page.keyboard.press('ArrowLeft');
-  await page.waitForTimeout(600);
-  const returned = await look();
+  const returned = await settle((r) => r.idx === 0 && r.at === 2 && !r.zoomed);
   if (returned.at !== 2 || returned.zoomed) {
     problems.push('coming back to the slide should show the whole chart — ' + JSON.stringify(returned));
   }
@@ -124,15 +129,13 @@ try {
   /* --- the spotlight build ---------------------------------------------- */
   const spot = await page.evaluate(async () => {
     const deck = Object.assign(SF.makeDeck('spot'), { theme: 'midnight' });
-    SF.Editor.workspace.setDoc(deck);
-    const d = SF.Editor.deck();
+    const d = deck;
     d.slides[0] = SF.normalizeSlide(Object.assign(SF.makeSlide('content'), {
       title: 'Why that pie fails',
       bullets: ['Wrong question', 'Angles are hard', 'COVID vanishes', 'Seasons vanish'],
       progressive: true, buildMode: 'spot'
     }));
-    SF.Editor.selectSlide(d.slides[0].id);
-    SF.Editor.workspace.play({ fullscreen: false });
+    SF.Player.start(d, 0, { fullscreen: false });
     const wait = (ms) => new Promise((go) => setTimeout(go, ms));
     await wait(400);
     const read = () => {
@@ -150,8 +153,10 @@ try {
        reports a feature that works as broken. */
     SF.Player.next(); await wait(750);
     const one = read();
-    SF.Player.next(); SF.Player.next(); await wait(400);
-    const three = read();
+    SF.Player.next(); SF.Player.next();
+    /* Wait for the fade to land rather than a fixed pause: on a loaded machine the live point is still coming up at 400ms. */
+    let three = read();
+    for (let k = 0; k < 40 && !(three.opacities[2] === 1 && three.opacities.filter((o) => o > 0 && o < 0.6).length === 2); k++) { await wait(100); three = read(); }
     return { before: before, one: one, three: three };
   });
   if (!spot.before.marked) problems.push('the slide is not marked as a spotlight build');
@@ -170,8 +175,7 @@ try {
   const morph = await page.evaluate(async (table) => {
     if (typeof document.startViewTransition !== 'function') return { unsupported: true };
     const deck = Object.assign(SF.makeDeck('morph'), { theme: 'northeastern' });
-    SF.Editor.workspace.setDoc(deck);
-    const d = SF.Editor.deck();
+    const d = deck;
     d.slides = [
       SF.normalizeSlide(Object.assign(SF.makeSlide('chart'),
         { chartKind: 'bar', title: 'Six years', body: table, transition: 'morph' })),
@@ -181,8 +185,7 @@ try {
       SF.normalizeSlide(Object.assign(SF.makeSlide('content'),
         { title: 'Something else entirely', bullets: ['x'], transition: 'morph' }))
     ];
-    SF.Editor.selectSlide(d.slides[0].id);
-    SF.Editor.workspace.play({ fullscreen: false });
+    SF.Player.start(d, 0, { fullscreen: false });
     const wait = (ms) => new Promise((go) => setTimeout(go, ms));
     await wait(400);
     const named = () => Array.from(document.querySelectorAll('#player .slide *'))
