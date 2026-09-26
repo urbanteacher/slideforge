@@ -62,11 +62,15 @@
 
   /** A lab lesson the Library shows as a card. */
   function isCard(id) {
-    return saved.some(function (r) { return r.id === id; }) && !!(SF.Store && SF.Store.get(id));
+    var onScreen = !!api && api.getDeck().id === id;
+    return (onScreen || saved.some(function (r) { return r.id === id; })) && !!(SF.Store && SF.Store.get(id));
   }
 
-  /** A SlideForge lesson whose lab copy has a card: the Library shows the card only. */
+  /** A SlideForge lesson whose lab copy has a card: the Library shows the card only. The lesson on
+      screen counts before the lab has filed it: a big lesson is on screen seconds before that. */
   function hasCopy(id) {
+    var cur = api ? api.getDeck() : null;
+    if (cur && cur.sourceId === id && SF.Store && SF.Store.get(cur.id)) return true;
     return saved.some(function (r) { return r.sourceId === id && SF.Store && SF.Store.get(r.id); });
   }
 

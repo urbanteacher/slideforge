@@ -19,6 +19,7 @@ import { groupOf } from './snap';
 import { moveInOrder } from './order';
 import { slideClipboard } from './SlideMenu';
 import { BrowsePanel, focusBrowse } from './Browse';
+import { blankDeck } from '../model/defaults';
 
 const isTyping = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -49,6 +50,12 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       if (isLabDeck(saved?.deck)) {
         useStore.getState().loadDeck(saved.deck);
         if (saved.slideId && saved.deck.slides.some((s) => s.id === saved.slideId)) useStore.setState({ slideId: saved.slideId });
+        useStore.setState({ saveState: 'saved' });
+      } else if (embedded) {
+        // A first visit to SlideForge opens a blank lesson, not somebody else's finished one: a stranger's
+        // sample invites typing over it. The Library, one click away, has the lessons and the demo.
+        // (The lab on its own, its playground, still opens on its demo.)
+        useStore.getState().loadDeck(blankDeck());
         useStore.setState({ saveState: 'saved' });
       }
       ready = true;
