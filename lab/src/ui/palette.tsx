@@ -1,5 +1,5 @@
 import { Pipette } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { paletteOf } from '../model/guide';
 import { themeOf } from '../model/layouts';
 import { useStore } from '../model/store';
@@ -67,13 +67,32 @@ export function PalettePopover({ value, onPick, onClose, align = 'left' }: { val
     addEventListener('keydown', esc, true);
     return () => { clearTimeout(t); removeEventListener('pointerdown', out); removeEventListener('keydown', esc, true); };
   }, []);
+  // Placed on the screen from the swatch that opened it and kept inside the window, not inside the
+  // panel: set absolutely, it was clipped by the side panel it opened from (the right pane cut off a
+  // palette that opened leftwards off its edge). Below the swatch, or above it when there is no room.
+  const [pos, setPos] = useState<CSSProperties | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current, anchor = el?.parentElement;
+    if (!el || !anchor) return;
+    const place = () => {
+      const a = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, m = 8;
+      const left = Math.max(m, Math.min(align === 'right' ? a.right - w : a.left, innerWidth - w - m));
+      let top = a.bottom + 6;
+      if (top + h > innerHeight - m) top = Math.max(m, a.top - 6 - h);
+      setPos({ position: 'fixed', left, top, right: 'auto' });
+    };
+    place();
+    addEventListener('resize', place);
+    addEventListener('scroll', place, true);
+    return () => { removeEventListener('resize', place); removeEventListener('scroll', place, true); };
+  }, [align]);
   const pick = (c: string) => { rememberColour(c); onPick(c); onClose(); };
   const chip = (s: Swatch, i: number) => (
     <button key={`${s.value}-${i}`} className={`pal-chip${norm(value) === norm(s.value) ? ' on' : ''}`} style={{ background: s.value }} title={`${s.name} · ${s.value}`}
       onPointerDown={(e) => e.preventDefault()} onClick={() => pick(s.value)} />
   );
   return (
-    <div ref={ref} className={`pal-pop ${align}`} onPointerDown={(e) => e.stopPropagation()}>
+    <div ref={ref} className={`pal-pop ${align}`} style={pos ?? { visibility: 'hidden' }} onPointerDown={(e) => e.stopPropagation()}>
       <div className="pal-label">{deck.theme === 'guide' && deck.styleGuide ? deck.styleGuide.name : 'Theme colours'}</div>
       <div className="pal-grid">{main.map(chip)}</div>
       {more.length > 0 && <><div className="pal-label">More from the theme</div><div className="pal-grid">{more.map(chip)}</div></>}
