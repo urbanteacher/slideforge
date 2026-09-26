@@ -20,9 +20,27 @@ const STRANDS: Record<string, { color: string; deep: string }> = {
   creative: { color: '#ac91ff', deep: '#6441b8' }, responsible: { color: '#63df93', deep: '#176e3b' },
   future: { color: '#fa83eb', deep: '#983488' },
 };
-const INK = '#231f20', PAPER = '#f6f4ed', DIM = '#54504e', RULE = '#c9c6be';
-const DARK = { fg: '#f6f4ed', dim: '#d5d0cc', rule: '#686366' };
-const FONT = 'Uncut Sans';
+/** The colours and faces a composition is drawn in: the campaign's own, or a theme's (as a layout). */
+export interface Look {
+  ink: string; paper: string; dim: string; rule: string;
+  dark: { ground: string; fg: string; dim: string; rule: string };
+  /** The strand's colour (a theme's accent) and its deep. */
+  color: string; deep: string;
+  display: string; body: string;
+  /** Whether the cover, the discussion and the commitment go on the strand's colour and the scenario and
+   *  the takeaways on ink, as the campaign has them; a theme's layout keeps every slide on its ground. */
+  grounds: boolean;
+}
+const INK = '#231f20';
+const CAMPAIGN = (strand: { color: string; deep: string }): Look => ({
+  ink: INK, paper: '#f6f4ed', dim: '#54504e', rule: '#c9c6be', dark: { ground: INK, fg: '#f6f4ed', dim: '#d5d0cc', rule: '#686366' },
+  color: strand.color, deep: strand.deep, display: 'Uncut Sans', body: 'Uncut Sans', grounds: true,
+});
+/** A theme's colours and faces, for a composition used as a layout in any deck. */
+export function themeLook(st: { ground: string; ink: string; muted: string; accent: string; display: string; body: string }): Look {
+  return { ink: st.ink, paper: st.ground, dim: st.muted, rule: st.muted + '66', dark: { ground: st.ground, fg: st.ink, dim: st.muted, rule: st.muted + '66' },
+    color: st.accent, deep: st.accent, display: st.display, body: st.body, grounds: false };
+}
 
 /** The body's top: the pad's 32 and the header's 56, then the body's own 36 of padding. */
 const TOP = 32 + 56 + 36;
@@ -48,26 +66,29 @@ export function builds27(theme: string | undefined, s: Source): boolean {
 const parts = (line = '') => String(line).split(/\t|\s+\|\s+/).map((x) => x.trim());
 
 /** The slide, and the ground it is on, for one of the 2027 compositions. */
-export function aiad27Slide(s: Source, theme: string): { slide: Slide; ground: Ground; note?: string } {
-  const strand = STRANDS[/^aiad27-([a-z]+)/.exec(theme)?.[1] ?? 'safe'] ?? STRANDS.safe;
-  const ground = GROUND[s.type] ?? 'working';
-  const bg = ground === 'loud' ? strand.color : ground === 'quiet' ? INK : PAPER;
-  const fg = ground === 'quiet' ? DARK.fg : INK;
-  const dim = ground === 'quiet' ? DARK.dim : DIM;
-  const rule = ground === 'quiet' ? DARK.rule : RULE;
+export function aiad27Slide(s: Source, theme: string, look?: Look): { slide: Slide; ground: Ground; note?: string } {
+  const P = look ?? CAMPAIGN(STRANDS[/^aiad27-([a-z]+)/.exec(theme)?.[1] ?? 'safe'] ?? STRANDS.safe);
+  const strand = { color: P.color, deep: P.deep };
+  const ground: Ground = P.grounds ? GROUND[s.type] ?? 'working' : 'working';
+  const bg = ground === 'loud' ? strand.color : ground === 'quiet' ? P.dark.ground : P.paper;
+  const fg = ground === 'quiet' ? P.dark.fg : P.ink;
+  const dim = ground === 'quiet' ? P.dark.dim : P.dim;
+  const rule = ground === 'quiet' ? P.dark.rule : P.rule;
+  const FONT = P.body;
   // --s-accent: the strand's colour on ink, its deep on paper and on the strand's own colour.
   const accent = ground === 'quiet' ? strand.color : strand.deep;
   const layers: Layer[] = [createLayer('solid', { name: 'Ground', params: { color: bg } })];
 
   /** Words at SlideForge's size, in its box, shrinking to fit what the measure misses. */
   const text = (name: string, value: string, b: Box, size: number, extra: Params = {}) => {
-    const l = createLayer('text', { name, box: b, params: { text: value, font: FONT, weight: '400', size: size * X, color: fg, lineHeight: 1.2, tracking: 0, align: 'left', fit: 'shrink', ...extra } });
+    const face = Number(extra.weight ?? 400) >= 600 ? P.display : FONT;
+    const l = createLayer('text', { name, box: b, params: { text: value, font: face, weight: '400', size: size * X, color: fg, lineHeight: 1.2, tracking: 0, align: 'left', fit: 'shrink', ...extra } });
     layers.push(l);
     return l;
   };
   /** How tall words set like this come out at this width, in SlideForge px. */
   const tall = (value: string, w: number, size: number, extra: Params = {}) =>
-    measureTextHeight({ text: value, font: FONT, weight: '400', size: size * X, lineHeight: 1.2, tracking: 0, ...extra }, w * X) / X;
+    measureTextHeight({ text: value, font: Number(extra.weight ?? 400) >= 600 ? P.display : FONT, weight: '400', size: size * X, lineHeight: 1.2, tracking: 0, ...extra }, w * X) / X;
   const bar = (name: string, x: number, y: number, w: number, h: number, color: string) =>
     layers.push(createLayer('shape', { name, box: box(x, y, w, h), anim: still, params: { shape: 'rect', radius: 0, fill: color, strokeWidth: 0 } }));
   /** The label over the words (.cp-eyebrow): small, spaced capitals. White on the strand's colour,
@@ -179,7 +200,7 @@ export function aiad27Slide(s: Source, theme: string): { slide: Slide; ground: G
       [heads[0] ?? '', heads[1] ?? ''].forEach((h, k) => {
         const i = first + k, w = cols[i] * unit;
         layers.push(createLayer('shape', { name: `Column ${k + 1} head ground`, box: box(xs[i], top, w, 72), anim: still, params: { shape: 'rect', radius: 0, fill: k ? fg : strand.color, strokeWidth: 0 } }));
-        text(`Column ${k + 1} head`, h, box(xs[i] + 22, top + 18, w - 44, 36), 27, { weight: '700', color: k ? (ground === 'quiet' ? INK : PAPER) : INK });
+        text(`Column ${k + 1} head`, h, box(xs[i] + 22, top + 18, w - 44, 36), 27, { weight: '700', color: k ? bg : P.ink });
       });
       lines.forEach((line, r) => {
         const p = parts(line);

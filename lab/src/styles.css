@@ -398,7 +398,13 @@ input, select, textarea { font: inherit; color: inherit; }
 .block-preview.numbered-preview small { margin: 2px 0 0 43px; font-size: 11px; }
 
 /* Left panel: Layers above, Layouts below; each folds on its header. */
-.fold { display: flex; flex-direction: column; min-height: 0; border-bottom: 1px solid var(--line); }
+.fold { display: flex; flex-direction: column; min-height: 0; border-bottom: 1px solid var(--line); overflow: hidden; }
+/* An open section keeps room for its heading and a little of what is in it, so it is never squeezed to
+   nothing between the others; the layers keep room for a few rows and their tools, so the tools never sit
+   over the next section's heading. When the open sections need more than the pane has, the pane scrolls. */
+.fold.open { min-height: 132px; }
+.fold.open.fold-layers { min-height: 150px; }
+aside.left:not(.browse-pane) { overflow-y: auto; }
 .fold.open.fold-layers { flex: 1 1 50%; }
 .fold.open.fold-layouts { flex: 1 1 50%; }
 .fold:not(.open) { flex: 0 0 auto; }

@@ -15,6 +15,7 @@ import { layerOf, slideOf, useStore } from '../model/store';
 import { Tip } from './controls';
 import { CAT_ICON, KindIcon } from './icons';
 import { useKindThumbs } from './thumbs';
+import type { Slide } from '../model/types';
 
 export function LeftPanel() {
   return <aside className="left"><Sections /></aside>;
@@ -87,9 +88,16 @@ function LayoutsPanel() {
   const { addSlide, showToast, mutate } = useStore.getState();
   const themeId = useStore((s) => s.deck.theme);
   const guide = useStore((s) => s.deck.styleGuide);
-  const st = themeOf({ theme: themeId, styleGuide: guide }) ?? LAYOUT_STYLES[0];
+  // Once per theme: a style guide's style is a new object each time it is read, and the thumbnails
+  // below start again whenever the entries change, so an unmemoised style never let one finish.
+  const st = useMemo(() => themeOf({ theme: themeId, styleGuide: guide }) ?? LAYOUT_STYLES[0], [themeId, guide]);
   const entries = useMemo(() => LAYOUTS.map((l) => ({ id: l.id, layout: l, slide: l.make(st) })), [st]);
   const thumbs = useThumbs(entries);
+  // The campaign's structures (aiad27.ts), in the deck's theme: the ballot, the discussion, the tables.
+  const [structures, setStructures] = useState<{ id: string; name: string; blurb: string; make: () => Slide }[]>([]);
+  useEffect(() => { let live = true; import('../model/campaignDesigns').then((m) => { if (live) setStructures(m.compositionLayouts(st)); }); return () => { live = false; }; }, [st]);
+  const structureEntries = useMemo(() => structures.map((x) => ({ id: x.id, slide: x.make() })), [structures]);
+  const structureThumbs = useThumbs(structureEntries);
   const piece = (icon: ReactNode, label: string, run: () => void, hint?: string) => (
     <button className="piece" onClick={run} title={hint}>{icon}<span>{label}</span></button>
   );
@@ -131,6 +139,17 @@ function LayoutsPanel() {
           </button>
         ))}
       </div>
+      {structures.length > 0 && <>
+        <div className="lp-label">Structures · from AI Awareness Day 2027</div>
+        <div className="lp-grid">
+          {structures.map((x) => (
+            <button key={x.id} className="lp-card" title={x.blurb} onClick={() => { addSlide(x.make()); showToast(`Inserted “${x.name}”`); }}>
+              <div className="lp-thumb">{structureThumbs[x.id] && <img src={structureThumbs[x.id]} alt="" />}</div>
+              <span>{x.name}</span>
+            </button>
+          ))}
+        </div>
+      </>}
     </div>
   );
 }
