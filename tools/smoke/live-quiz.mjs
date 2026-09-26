@@ -217,30 +217,21 @@ async function run() {
   ];
 
   try {
-    // 1. Navigate to SlideForge and switch to Quiz Studio
+    // 1. Navigate to SlideForge
     await page.goto(serverInfo.url, { waitUntil: 'domcontentloaded', timeout: 20000 });
-    await page.waitForSelector('#wsSwitch', { timeout: 10000 });
+    await page.waitForFunction(() => window.SF?.starterGame && SF.Live && SF.GameStore, null, { timeout: 20000 });
 
-    await page.click('button[data-go="game"]');
-    await page.waitForSelector('body.ws-game', { timeout: 5000 });
-
-    // Ensure a scored quiz game with scoreSlide: true is active
+    /* 2. Host a scored quiz game with scoreSlide: true. The classic Quiz
+       studio that opened it and whose Host live did this is gone; the room
+       hosts the game's run deck directly, as that button did. */
     await page.evaluate(() => {
       const g = window.SF.starterGame();
       g.settings.scoreSlide = true;
       g.settings.scoreboard = true;
       window.SF.GameStore.save(g);
-      if (window.SF.Shell?.current()?.setDoc) {
-        window.SF.Shell.current().setDoc(g);
-        window.SF.Shell.current().draw();
-      }
+      window.SF.Live.host(window.SF.gameToRunDeck(g));
     });
-    logStep('Switched to Quiz Studio with scored sample quiz');
-
-    // 2. Click "Host live" to open the lobby
-    const btnLive = page.locator('#btnLive');
-    await btnLive.waitFor({ state: 'visible', timeout: 5000 });
-    await btnLive.click();
+    logStep('Hosted a scored sample quiz');
 
     // 3. Wait for lobby modal and extracted PIN
     await page.waitForSelector('#lobby.on', { timeout: 8000 });
