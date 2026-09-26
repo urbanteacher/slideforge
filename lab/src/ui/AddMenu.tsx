@@ -14,32 +14,35 @@ export function AddMenu() {
   const imageRef = useRef<HTMLInputElement>(null);
   return (
     <>
-        <Menu trigger={(open, t) => <button className={`tb-btn${open ? ' active' : ''}`} onClick={t}><Plus size={15} />Add<ChevronDown size={13} /></button>}>
+        <Menu className="add-menu" trigger={(open, t) => <button className={`tb-btn${open ? ' active' : ''}`} onClick={t}><Plus size={15} />Add<ChevronDown size={13} /></button>}>
           {(close) => {
             const add = (id: string) => () => { addLayer(id); close(); };
             const item = (id: Parameters<typeof addItem>[0]) => () => { addItem(id); close(); };
             return (
               <>
-                <button onClick={item('heading')}><Heading size={15} />Heading</button>
-                <button onClick={item('text')}><Type size={15} />Text<small>T</small></button>
-                <button onClick={item('bullets')}><List size={15} />Bullet points</button>
-                <button onClick={item('numbers')}><ListOrdered size={15} />Numbered list</button>
-                <button onClick={item('quote')}><Quote size={15} />Quote</button>
-                <button onClick={item('note')}><StickyNote size={15} />Note</button>
-                <hr />
-                <button onClick={() => { imageRef.current?.click(); close(); }}><ImagePlus size={15} />Image…</button>
-                <button onClick={item('video')}><Video size={15} />Video</button>
-                <button onClick={item('chart')}><ChartColumn size={15} />Chart</button>
-                <button onClick={item('table')}><Table size={15} />Table</button>
-                <hr />
-                <button onClick={() => { addTextImage(); close(); }}><SquareSplitHorizontal size={15} />Text + image</button>
-                <button onClick={() => { insertBlock('cards'); close(); }}><LayoutGrid size={15} />Cards</button>
-                <button onClick={() => { insertBlock('numbered'); close(); }}><ListOrdered size={15} />Numbered points</button>
-                <button onClick={() => { insertBlock('choices'); close(); }}><Rows2 size={15} />Choice boxes · A–D</button>
-                <hr />
-                <button onClick={item('timer')}><Timer size={15} />Timer</button>
-                <button onClick={add('shape')}><Shapes size={15} />Shape</button>
-                <button onClick={item('line')}><Minus size={15} />Line</button>
+                <div className="add-col">
+                  <button onClick={item('heading')}><Heading size={15} />Heading</button>
+                  <button onClick={item('text')}><Type size={15} />Text<small>T</small></button>
+                  <button onClick={item('bullets')}><List size={15} />Bullet points</button>
+                  <button onClick={item('numbers')}><ListOrdered size={15} />Numbered list</button>
+                  <button onClick={item('quote')}><Quote size={15} />Quote</button>
+                  <button onClick={item('note')}><StickyNote size={15} />Note</button>
+                  <hr />
+                  <button onClick={() => { imageRef.current?.click(); close(); }}><ImagePlus size={15} />Image…</button>
+                  <button onClick={item('video')}><Video size={15} />Video</button>
+                  <button onClick={item('chart')}><ChartColumn size={15} />Chart</button>
+                  <button onClick={item('table')}><Table size={15} />Table</button>
+                </div>
+                <div className="add-col">
+                  <button onClick={() => { addTextImage(); close(); }}><SquareSplitHorizontal size={15} />Text + image</button>
+                  <button onClick={() => { insertBlock('cards'); close(); }}><LayoutGrid size={15} />Cards</button>
+                  <button onClick={() => { insertBlock('numbered'); close(); }}><ListOrdered size={15} />Numbered points</button>
+                  <button onClick={() => { insertBlock('choices'); close(); }}><Rows2 size={15} />Choice boxes · A–D</button>
+                  <hr />
+                  <button onClick={item('timer')}><Timer size={15} />Timer</button>
+                  <button onClick={add('shape')}><Shapes size={15} />Shape</button>
+                  <button onClick={item('line')}><Minus size={15} />Line</button>
+                </div>
               </>
             );
           }}

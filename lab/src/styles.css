@@ -626,6 +626,11 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .canvas-bar .zoom-val.fit { color: var(--text); }
 /* Menus from the canvas bar open upward: below it is the slide strip. */
 .canvas-bar .menu { top: auto; bottom: calc(100% + 6px); }
+/* Add: two columns (the words and pictures; the blocks and drawing), so the kit fits above the canvas
+   bar on a laptop; and never taller than the window, scrolling rather than running off the top. */
+.menu.add-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 0 6px; min-width: 460px; max-height: calc(100vh - 150px); overflow-y: auto; }
+.add-col { display: flex; flex-direction: column; min-width: 0; }
+.add-col button { white-space: nowrap; }
 .strip-tools { display: flex; gap: 2px; }
 /* Animate: a green block with a white play mark (ui/AddMenu.tsx). */
 .btn-play { flex: none; width: 24px; height: 24px; display: inline-grid; place-items: center; border-radius: 6px; background: #1f9d5a; color: #fff; margin: 0 2px; transition: background .15s, transform .15s var(--ease); }
