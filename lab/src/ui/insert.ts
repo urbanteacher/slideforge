@@ -2,7 +2,7 @@ import { kind } from '../engine/registry';
 import { createLayer } from '../model/defaults';
 import { hasFlagshipTextImage, textImageForSlide } from '../model/frame';
 import { headingClock } from '../model/designs/kit';
-import { LAYOUT_STYLES, cell, gridFor, slideStyle, themeOf } from '../model/layouts';
+import { LAYOUT_STYLES, cell, gridFor, itemStyle, slideStyle, themeOf } from '../model/layouts';
 import type { Slide } from '../model/types';
 import { useStore } from '../model/store';
 import { fileToDataUrl, readDataUrl } from './Inspector';
@@ -74,10 +74,12 @@ export function addTextImage() {
   }
   const source = st.deck.slides.find(hasFlagshipTextImage);
   const ink = luminance(slide.background) < 0.45 ? '#f6f4ed' : '#231f20';
+  const face = slideStyle(themeOf(useStore.getState().deck) ?? LAYOUT_STYLES[0], slide);
   const layers = source ? textImageForSlide(source, slide) : [
-    createLayer('text', { name: 'Eyebrow', params: { blockRole: 'text-image', blockField: 'eyebrow', text: 'YOUR TOPIC', size: 28, weight: '700', color: '#ffffff', uppercase: true }, box: { x: 78, y: 348, w: 1007, h: 36 } }),
-    createLayer('text', { name: 'Title', params: { blockRole: 'text-image', blockField: 'title', text: 'A clear headline goes here.', size: 128, weight: '700', color: ink, fit: 'shrink' }, box: { x: 78, y: 402, w: 1007, h: 275 } }),
-    createLayer('text', { name: 'Body', params: { blockRole: 'text-image', blockField: 'body', text: 'One sentence that supports the idea.', size: 42, color: ink, fit: 'shrink' }, box: { x: 78, y: 726, w: 1007, h: 60 } }),
+    createLayer('text', { name: 'Eyebrow', params: { blockRole: 'text-image', blockField: 'eyebrow', text: 'YOUR TOPIC', size: 28, font: face.body, weight: '700', color: face.accent, uppercase: true, tracking: 0.14 }, box: { x: 78, y: 348, w: 1007, h: 36 } }),
+    // In the lesson's faces, as the layouts set a heading and its line (itemStyle).
+    createLayer('text', { name: 'Title', params: { blockRole: 'text-image', blockField: 'title', text: 'A clear headline goes here.', size: 128, font: face.display, weight: face.displayWeight, color: ink, lineHeight: 1.05, fit: 'shrink' }, box: { x: 78, y: 402, w: 1007, h: 275 } }),
+    createLayer('text', { name: 'Body', params: { blockRole: 'text-image', blockField: 'body', text: 'One sentence that supports the idea.', size: 48, font: face.body, color: ink, lineHeight: 1.3, fit: 'shrink' }, box: { x: 78, y: 726, w: 1007, h: 64 } }),
     createLayer('image', { name: 'Image — replace me', params: { blockRole: 'text-image', blockField: 'image', src: '', fit: 'contain' }, box: { x: 1100, y: 186, w: 743, h: 756 } }),
   ];
   st.mutate((d) => {
@@ -134,17 +136,15 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
   const slide = st.deck.slides.find((s) => s.id === st.slideId) ?? st.deck.slides[0];
   const dark = luminance(slide.background || '#ffffff') < 0.45;
   const ink = dark ? '#f5f4f2' : '#161616';
-  const panel = dark ? toward(slide.background, 255, 0.1) : '#f3efe8';
-  const colours = { textColor: ink };
   // The words in the lesson's own faces: a heading in its display face, the rest in its body face.
   const face = slideStyle(themeOf(st.deck) ?? LAYOUT_STYLES[0], slide);
-  // One type scale for everything Add puts on a slide (slide px on the 1920 slide), so a heading, a
-  // paragraph, a note and a table inserted together read as one slide, and none arrives too small to read.
-  const SCALE = { heading: 88, body: 44, quote: 72, note: 40, table: 34, chart: 30 };
-  const make = (kindId: string, name: string, params: Record<string, unknown>, box?: Record<string, number>) => {
+  // What Add puts on a slide is set as the demo slides set it (the layouts' itemStyle): the same face,
+  // size, colour, spacing and entrance, in this slide's colours, so it reads as one the layouts drew.
+  const kit = itemStyle(face);
+  const make = (kindId: string, name: string, params: Record<string, unknown>, box?: Record<string, number>, anim: Record<string, unknown> = { type: 'fade', duration: 0.7 }) => {
     const cols = WIDE.has(id) ? 12 : id === 'quote' ? 10 : 11;
     const at = cell(id === 'quote' ? 2 : 1, 1, cols, 1, gridFor(st.deck));
-    const layer = createLayer(kindId, { name, params: params as never, box: { ...box, x: at.x, w: at.w }, anim: { type: 'fade', duration: 0.7 } });
+    const layer = createLayer(kindId, { name, params: params as never, box: { ...box, x: at.x, w: at.w }, anim: anim as never });
     const y = freeRow(slide, layer.box!.h, layer.id);
     if (y !== null) layer.box!.y = y;
     else st.showToast('There is no room left on this slide, so it has gone on top. Move it, make it smaller, or start a new slide.');
@@ -152,14 +152,14 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     if (id === 'bullets' || id === 'numbers') st.showToast('Double-click to edit. Press Enter for each new point; the list buttons switch between bullets and numbers.');
   };
   switch (id) {
-    case 'heading': return make('text', 'Heading', { text: 'Heading', font: face.display, weight: face.displayWeight, size: SCALE.heading, color: ink, lineHeight: 1.05, tracking: -0.01 }, { x: 160, y: 140, w: 1600 });
-    case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', font: face.body, weight: '400', size: SCALE.body, color: ink, lineHeight: 1.35, tracking: 0 }, { x: 160, y: 420, w: 1200 });
-    case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', font: face.body, weight: '400', size: SCALE.body, color: ink, list: 'bullets', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
-    case 'numbers': return make('text', 'Numbered list', { text: 'First step\nSecond step\nThird step', font: face.body, weight: '400', size: SCALE.body, color: ink, list: 'numbers', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
+    case 'heading': return make('text', 'Heading', { text: 'Heading', ...kit.heading.params }, { x: 160, y: 140, w: 1600 }, kit.heading.anim);
+    case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', ...kit.text.params }, { x: 160, y: 420, w: 1200 }, kit.text.anim);
+    case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', ...kit.bullets.params, list: 'bullets' }, { x: 160, y: 360, w: 1400 }, kit.bullets.anim);
+    case 'numbers': return make('text', 'Numbered list', { text: 'First step\nSecond step\nThird step', ...kit.bullets.params, list: 'numbers' }, { x: 160, y: 360, w: 1400 }, kit.bullets.anim);
     // A rule across the grid: the divider between two parts of a slide.
-    case 'line': return make('shape', 'Line', { shape: 'rect', radius: 0, fill: dark ? toward(slide.background, 255, 0.35) : '#c9c6be', strokeWidth: 0 }, { x: 160, y: 540, w: 1600, h: 3 });
-    case 'table': return make('table', 'Table', { textColor: ink, font: face.body, size: SCALE.table });
-    case 'note': return make('note', 'Note', { ...colours, fill: panel, font: face.body, size: SCALE.note });
+    case 'line': return make('shape', 'Line', { ...kit.rule.params }, { x: 160, y: 540, w: 1600, h: 3 }, kit.rule.anim);
+    case 'table': return make('table', 'Table', { ...kit.table.params }, undefined, kit.table.anim);
+    case 'note': return make('note', 'Note', { ...kit.note.params }, undefined, kit.note.anim);
     // An empty video at 16:9 in the middle of the slide, with its Video tab open for the address.
     case 'video': {
       const g = gridFor(st.deck), w = (g.right - g.left) * 0.7, h = (w * 9) / 16;
@@ -196,8 +196,7 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
       return;
     }
     // A quote in the display face; a note and a chart's labels in the body face.
-    default: return make(id, id[0].toUpperCase() + id.slice(1), { ...(id === 'chart' ? { textColor: ink } : colours), font: id === 'quote' ? face.display : face.body,
-      size: id === 'quote' ? SCALE.quote : SCALE.chart });
+    default: return make(id, id[0].toUpperCase() + id.slice(1), { ...(id === 'quote' ? kit.quote.params : kit.chart.params) }, undefined, id === 'quote' ? kit.quote.anim : kit.chart.anim);
   }
 }
 

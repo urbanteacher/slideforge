@@ -142,6 +142,22 @@ const body = (st: LayoutStyle, value: string, box: Box, size = 48, extra: Params
   text('Text', value, box, { font: st.body, weight: '400', size, color: st.muted, lineHeight: 1.3, fit: 'fill', ...extra }, after(delay));
 const bullets = (st: LayoutStyle, lines: string[], box: Box, size = 48) =>
   text('Bullet points', lines.join('\n'), box, { font: st.body, weight: '400', size, color: st.ink, list: 'bullets', lineHeight: 1.45, fit: 'fill' }, after(0.2));
+/** The type and colours the layouts set each kind of thing in, for what Add puts on a slide (ui/insert.ts):
+ *  so a heading, a paragraph or a table added by hand reads as one the layouts drew — the same face,
+ *  size, colour, spacing and entrance. */
+export function itemStyle(st: LayoutStyle) {
+  return {
+    heading: { params: { font: st.display, weight: st.displayWeight, size: 88, color: st.ink, lineHeight: 1.05, tracking: -0.01 }, anim: rise },
+    text: { params: { font: st.body, weight: '400', size: 48, color: st.muted, lineHeight: 1.3, tracking: 0 }, anim: after(0.15) },
+    bullets: { params: { font: st.body, weight: '400', size: 48, color: st.ink, lineHeight: 1.45, tracking: 0 }, anim: after(0.2) },
+    quote: { params: { ...colours(st), font: st.display, size: 92 }, anim: after(0) },
+    note: { params: { ...colours(st), font: st.body, fill: st.panel, size: 40 }, anim: after(0.2) },
+    table: { params: { font: st.body, size: 36, textColor: st.ink, accent: st.accent }, anim: after(0.2) },
+    chart: { params: { color: st.accent, color2: st.muted, textColor: st.ink, font: st.body, size: 36 }, anim: { type: 'draw' as const, duration: 0.9 } },
+    rule: { params: { shape: 'rect', radius: 0, fill: st.muted, strokeWidth: 0 }, anim: after(0.15) },
+  };
+}
+
 const bar = (st: LayoutStyle, box: Box) =>
   createLayer('shape', { name: 'Accent bar', box, params: { shape: 'rect', radius: 0, fill: st.accent, strokeWidth: 0 }, anim: { type: 'wipeRight', duration: 0.7 } });
 const item = (kindId: string, name: string, box: Box, params: Params, delay = 0.2) =>
