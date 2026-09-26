@@ -515,8 +515,10 @@ export class Renderer {
       if (k.content) {
         const box = layer.box!;
         const total = animTotal(layer);
-        // A text that leaves again keeps its clock running; the rest settle once they have arrived.
-        const textT = layer.anim.leave || st.textT < total ? st.textT : Infinity;
+        // A text that leaves again keeps its clock running, and a typewriter's cursor blinks on for
+        // three seconds after the typing; the rest settle once they have arrived.
+        const blinking = layer.anim.type === 'typewriter' && layer.anim.caret && st.textT < total + 3;
+        const textT = layer.anim.leave || blinking || st.textT < total ? st.textT : Infinity;
         if (opts.interactive) {
           if (layer.interact.parallax) {
             st.dx += (opts.mouse[0] - 0.5) * layer.interact.parallax * 90;

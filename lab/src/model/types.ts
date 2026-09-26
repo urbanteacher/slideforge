@@ -22,6 +22,8 @@ export type EntranceType =
   | 'pop' | 'blur' | 'wipeUp' | 'wipeRight' | 'spin'
   // text-only, per-unit
   | 'letters' | 'words' | 'lines' | 'typewriter'
+  // text-only: letters decode from scrambled stand-ins; the numbers in the text count up to their value
+  | 'scramble' | 'count'
   // chart-only: bars rise from the axis, a line draws along, wedges sweep round
   | 'draw';
 
@@ -46,7 +48,9 @@ export interface Anim {
   loopSpeed: number;
   loopAmount: number;
   /** Text: which end the letters, words or lines start from — SlideForge's "Direction". */
-  order?: 'first' | 'last' | 'center';
+  order?: 'first' | 'last' | 'center' | 'random';
+  /** Typewriter: a cursor follows the typing, and blinks for a few seconds once it is done. */
+  caret?: boolean;
   /** Text: arrive, hold four seconds, leave, and round again — SlideForge's "And leave again". */
   leave?: boolean;
   /** Text: one line (one bullet) per click, optionally dimming the lines before it, or dimming them

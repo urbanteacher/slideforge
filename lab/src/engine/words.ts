@@ -49,10 +49,25 @@ export const liftFor = (duration: number) => through(duration, [[0.32, 0.34], [0
 /** One loop, arrive → hold → leave → pause: 3.6, 7 and 13 s at the three speeds. */
 export const cycleFor = (duration: number) => through(duration, [[0.32, 3.6], [0.7, 7], [1.3, 13]]);
 
+const shuffles = new Map<number, number[]>();
+/** A fixed shuffle of n units — each unit's place in it — the same every time the slide plays. */
+export function shuffledRank(i: number, n: number): number {
+  let r = shuffles.get(n);
+  if (!r) {
+    const keys = Array.from({ length: n }, (_, j) => ({ j, h: (Math.sin((j + 1) * 12.9898) * 43758.5453) % 1 }));
+    keys.sort((x, y) => x.h - y.h);
+    r = new Array<number>(n);
+    keys.forEach((k, pos) => { r![k.j] = pos; });
+    shuffles.set(n, r);
+  }
+  return r[i] ?? i;
+}
+
 /** Where a unit sits in the wave, 0 first to 1 last, by which end it starts from. */
 function waveAt(a: Anim, i: number, last: number) {
   if (!last) return 0;
   if (a.order === 'last') return 1 - i / last;
+  if (a.order === 'random') return shuffledRank(i, last + 1) / last;
   if (a.order === 'center') return Math.abs(i - last / 2) / (last / 2);
   return i / last;
 }

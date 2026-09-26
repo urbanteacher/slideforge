@@ -2,7 +2,7 @@ import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../mode
 import { experimentStates } from './experiment';
 import { sceneSteps } from './scene';
 import { beatsOf, isTableKind } from './chartKinds';
-import { isWordMotion, wordsTotal } from './words';
+import { isWordMotion, shuffledRank, wordsTotal } from './words';
 
 /** A CSS cubic-bezier(x1, y1, x2, y2) as a function of progress: solve x for t, return y. */
 function bezier(x1: number, y1: number, x2: number, y2: number) {
@@ -33,7 +33,7 @@ export const EASE: Record<Easing, (t: number) => number> = {
   spring: (t) => (t >= 1 ? 1 : 1 - Math.exp(-6.5 * t) * Math.cos(t * 11)),
 };
 
-export const TEXT_UNIT_TYPES: EntranceType[] = ['letters', 'words', 'lines', 'typewriter'];
+export const TEXT_UNIT_TYPES: EntranceType[] = ['letters', 'words', 'lines', 'typewriter', 'scramble', 'count'];
 export const isTextUnit = (t: EntranceType) => TEXT_UNIT_TYPES.includes(t);
 
 export const defaultAnim = (): Anim => ({
@@ -53,6 +53,7 @@ export function textUnitCount(layer: Layer): number {
   switch (layer.anim.type) {
     case 'letters':
     case 'typewriter':
+    case 'scramble':
       return Math.max(1, text.replace(/\s/g, '').length + items * (layer.params.list === 'numbers' ? 2 : 1));
     case 'words':
       return Math.max(1, text.split(/\s+/).filter(Boolean).length + items);
@@ -103,7 +104,7 @@ export type Speed = keyof typeof SPEEDS;
 export type Spacing = keyof typeof SPACINGS;
 /** The gap between two units at Medium, Wave: a word's step is longer than a letter's. */
 function unitGap(type: EntranceType) {
-  return type === 'letters' || type === 'typewriter' ? 0.048 : type === 'lines' ? 0.2 : 0.13;
+  return type === 'letters' || type === 'typewriter' || type === 'scramble' ? 0.048 : type === 'lines' ? 0.2 : 0.13;
 }
 export function presetTiming(type: EntranceType, speed: Speed, spacing: Spacing) {
   const sp = SPEEDS[speed];
@@ -406,6 +407,7 @@ export function unitProgress(layer: Layer, index: number, textT: number): number
   // Direction: from the first unit, from the last, or from the middle outwards. With an even count
   // the middle two share the first beat.
   const k = a.order === 'last' ? n - 1 - index
+    : a.order === 'random' ? shuffledRank(index, n)
     : a.order === 'center' ? Math.abs(index - (n - 1) / 2) - ((n - 1) % 2 ? 0.5 : 0)
     : index;
   let t = textT;
@@ -421,6 +423,8 @@ export function unitProgress(layer: Layer, index: number, textT: number): number
   }
   const local = t - k * a.stagger;
   if (a.type === 'typewriter') return local >= 0 ? 1 : 0;
+  // A scramble runs evenly: its stand-ins last the duration, whatever the easing.
+  if (a.type === 'scramble') return local <= 0 ? 0 : Math.min(1, local / Math.max(0.01, a.duration));
   const raw = Math.max(0, Math.min(1, local / Math.max(0.01, a.duration)));
   return EASE[a.easing](raw);
 }
