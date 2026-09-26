@@ -137,38 +137,40 @@
      (SF.compileGame) and described as the lab's own games are
      (tools/lab-games.mjs): its format, name, and how to play. The lab then
      builds each one on its own game walls (lab/src/model/fromSlideForge.ts). */
-  function lessonGames(d) {
-    if (!d || !Array.isArray(d.slides) || !SF.GameStore || !SF.compileGame) return d;
+  /** One of SlideForge's games as the lab builds it: compiled by SlideForge, described as the lab's
+      own games are, and looking as SlideForge showed it (buttons for multiple choice and true or
+      false). */
+  function gameForLab(g) {
     var drop = { id: 1, transition: 1, layers: 1, gameId: 1 };
     var clean = function (v) { return JSON.parse(JSON.stringify(v, function (k, x) { return drop[k] ? undefined : x; })); };
-    var formatOf = function (g) {
-      if (g.format) return g.format;
-      var map = SF.FORMAT_STYLE || {};
-      if (map[g.style] === g.style) return g.style;
-      return Object.keys(map).filter(function (f) { return map[f] === g.style; })[0] || g.style;
+    var map = SF.FORMAT_STYLE || {};
+    var format = g.format || (map[g.style] === g.style ? g.style : Object.keys(map).filter(function (f) { return map[f] === g.style; })[0] || g.style);
+    var style = SF.gameStyle ? SF.gameStyle(g.style) : null;
+    var book = SF.Playbook && SF.Playbook.forGame ? SF.Playbook.forGame(g) : null;
+    var set = g.settings || {};
+    return {
+      format: format, style: g.style,
+      label: g.title || (style && style.label) || format,
+      styleLabel: (style && style.label) || g.style,
+      aim: (book && book.aim) || '',
+      howToPlay: (book && book.howToPlay) || [],
+      title: g.title || '',
+      cover: !!(set.intro || set.howTo),
+      /* A lesson's multiple choice and true or false come in looking as SlideForge showed them:
+         buttons, the right one lit green where it stands. The Game panel's Look switches it to the lab's walls. */
+      look: /^(choice|truefalse|true-false)$/.test(format) ? 'buttons' : undefined,
+      slides: clean(SF.compileGame(g))
     };
+  }
+
+  function lessonGames(d) {
+    if (!d || !Array.isArray(d.slides) || !SF.GameStore || !SF.compileGame) return d;
     var games = {}, any = false;
     d.slides.forEach(function (s) {
       if (s.type !== 'game' || !s.gameId || games[s.gameId]) return;
       var g = SF.GameStore.get(s.gameId);
       if (!g) return;
-      var format = formatOf(g);
-      var style = SF.gameStyle ? SF.gameStyle(g.style) : null;
-      var book = SF.Playbook && SF.Playbook.forGame ? SF.Playbook.forGame(g) : null;
-      var set = g.settings || {};
-      games[s.gameId] = {
-        format: format, style: g.style,
-        label: g.title || (style && style.label) || format,
-        styleLabel: (style && style.label) || g.style,
-        aim: (book && book.aim) || '',
-        howToPlay: (book && book.howToPlay) || [],
-        title: g.title || '',
-        cover: !!(set.intro || set.howTo),
-        /* A lesson's multiple choice and true or false come in looking as SlideForge showed them:
-           buttons, the right one lit green where it stands. The Game panel's Look switches it to the lab's walls. */
-        look: /^(choice|truefalse|true-false)$/.test(format) ? 'buttons' : undefined,
-        slides: clean(SF.compileGame(g))
-      };
+      games[s.gameId] = gameForLab(g);
       any = true;
     });
     return any ? Object.assign({}, d, { labGames: games }) : d;
