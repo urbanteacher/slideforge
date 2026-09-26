@@ -30,7 +30,8 @@ export function relookGame(d: Deck, gameId: string, look: GameLook, reason?: Rea
   const old = d.slides.filter((s) => s.game?.id === gameId);
   const g0 = old[0]?.game;
   const reasonAt = reason ?? g0?.reason ?? 'question';
-  if (!g0 || !HAS_LOOKS.has(g0.format) || ((g0.look ?? 'walls') === look && (g0.reason ?? 'question') === reasonAt)) return [];
+  // A game built before it had a reason setting is built again whichever is chosen: its reason may sit across its buttons.
+  if (!g0 || !HAS_LOOKS.has(g0.format) || ((g0.look ?? 'walls') === look && g0.reason === reasonAt)) return [];
   const questions = old.filter((s) => s.game?.role === 'question' && s.game.quiz).map((s) => ({ ...(s.game!.quiz as GameQuestion), type: 'quiz' }));
   if (!questions.length) return [];
   const tf = g0.format !== 'choice';
