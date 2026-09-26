@@ -1853,10 +1853,11 @@
 
     // engines register themselves when their script runs
     SF.Editor.install();
-    /* The lab takes the Lesson studio's place (js/lab-engine.js). After the
-       classic editor, so its 'deck' is the one registered. */
-    if (SF.LabEngine) SF.LabEngine.install();
     SF.Games.install();
+    /* The lab is SlideForge's three studios (js/lab-engine.js): the Lesson
+       studio, the Quiz studio and Activities. After the classic editor and
+       Quiz studio, so its 'deck' and 'game' are the ones registered. */
+    if (SF.LabEngine) SF.LabEngine.install();
     SF.installNotesStrip();
     if (SF.Artwork) SF.Artwork.install();
     if (SF.Arrange) SF.Arrange.install();
