@@ -502,7 +502,7 @@ vec4 effect(vec2 uv) {
     // slide that moves in SlideForge moves the same way here. Every colour is laid over the ground
     // at low strength, so it is pale on paper and a glow on midnight.
     id: 'backdrop', name: 'Backdrop motion', category: 'generate', featured: true,
-    description: 'Drift, Grid or Glow — slow motion behind the words, made from the slide’s own colours.',
+    description: 'Drift, Grid or Glow — slow motion behind the words, made from the slide’s own colours. Speed 1 is SlideForge’s own pace, a cycle of half a minute or more; it starts faster, so the movement shows.',
     defaultBlend: 'normal',
     params: [
       { key: 'mode', label: 'Motion', type: 'select', options: [{ value: 'drift', label: 'Drift — colour moving slowly' }, { value: 'grid', label: 'Grid — a ruled plane travelling' }, { value: 'glow', label: 'Glow — one slow breath' }], default: 'drift', group: 'Motion' },
@@ -510,7 +510,10 @@ vec4 effect(vec2 uv) {
       { key: 'accent2', label: 'Second accent', type: 'color', default: '#ffb199', group: 'Colours' },
       { key: 'ink', label: 'Ink', type: 'color', default: '#161616', group: 'Colours', info: 'The text colour: the third wash and the grid lines.' },
       { key: 'strength', label: 'Strength', type: 'number', min: 0, max: 2.5, step: 0.01, default: 1, group: 'Motion', decimals: 2 },
-      { key: 'speed', label: 'Speed', type: 'number', min: 0, max: 4, step: 0.01, default: 1, group: 'Motion', decimals: 2 },
+      // SlideForge's periods (31, 43, 37 and 19 s) move a colour a few pixels a second: behind a lecture
+      // that is the point, but on the canvas it reads as a still picture. It starts at 2.5×, a cycle of
+      // 12 to 17 s; 1 is SlideForge's own pace.
+      { key: 'speed', label: 'Speed', type: 'number', min: 0, max: 6, step: 0.01, default: 2.5, group: 'Motion', decimals: 2, info: '1 is SlideForge’s own pace: a cycle of half a minute or more.' },
     ],
     glsl: `uniform float u_mode; uniform vec3 u_accent; uniform vec3 u_accent2; uniform vec3 u_ink; uniform float u_strength; uniform float u_speed;
 // ease-in-out there and back over one period, as the CSS keyframes do
