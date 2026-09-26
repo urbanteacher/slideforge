@@ -6,6 +6,7 @@ import { fontString } from '../engine/raster';
 import { renderStill } from '../export/exporters';
 import { useStore } from '../model/store';
 import type { Deck, Slide } from '../model/types';
+import { Fold } from './LeftPanel';
 
 // Browse: the Quiz studio's games and Activities' activities, in the left pane the lesson's layers
 // have in the Lesson studio. The one place a game or an activity is chosen: each card is the design
@@ -120,8 +121,36 @@ function usePictures(cards: Card[], deck: Deck, ready: boolean) {
   return pics;
 }
 
-/** The Quiz studio's and Activities' left pane. */
+/** Whether Browse is open, kept between visits: the pane holds it as one section, beside others to come. */
+const OPEN_KEY = 'sf-browse-open';
+const OPEN_EVENT = 'sf-browse-open';
+function useOpen() {
+  const [open, setOpen] = useState(() => { try { return localStorage.getItem(OPEN_KEY) !== '0'; } catch { return true; } });
+  useEffect(() => { try { localStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch { /* private mode */ } }, [open]);
+  // Asked for by the studio's + buttons and Engage (focusBrowse): open, then the search takes the keys.
+  useEffect(() => {
+    const ask = () => setOpen(true);
+    window.addEventListener(OPEN_EVENT, ask);
+    return () => window.removeEventListener(OPEN_EVENT, ask);
+  }, []);
+  return [open, setOpen] as const;
+}
+
+/** The Quiz studio's and Activities' left pane: Browse, as one section that folds away. */
 export function BrowsePanel({ kind }: { kind: 'games' | 'activities' }) {
+  const [shown, setShown] = useOpen();
+  const games = kind === 'games';
+  return (
+    <aside className="left" aria-label={games ? 'Quiz studio' : 'Activities'}>
+      <Fold title={games ? 'Browse games' : 'Browse activities'} className="fold-browse" open={shown} onToggle={() => setShown(!shown)}>
+        <Browse kind={kind} />
+      </Fold>
+    </aside>
+  );
+}
+
+/** The games or the activities, found, filtered, pictured and added. */
+function Browse({ kind }: { kind: 'games' | 'activities' }) {
   const deck = useStore((s) => s.deck);
   const [lib, setLib] = useState<Lib | null>(null);
   const [fonts, setFonts] = useState(false);
@@ -165,8 +194,8 @@ export function BrowsePanel({ kind }: { kind: 'games' | 'activities' }) {
   const games = kind === 'games';
   const filters = games ? GAME_FILTERS : ACTIVITY_TYPES;
   return (
-    <aside className="left browse" aria-label={games ? 'Browse games' : 'Browse activities'}>
-      <div className="panel-head"><b>{games ? 'Browse games' : 'Browse activities'}</b><span>{lib ? `${cards.length} of ${all.length}` : ''}</span></div>
+    <div className="browse" aria-label={games ? 'Browse games' : 'Browse activities'}>
+      <div className="browse-count">{lib ? `${cards.length} of ${all.length}` : ''}</div>
       <label className="browse-find"><Search size={13} /><input type="search" placeholder={games ? 'Find a game…' : 'Find an activity…'} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={games ? 'Find a game' : 'Find an activity'} /></label>
       <div className="browse-chips" role="radiogroup" aria-label={games ? 'Kind of game' : 'Kind of activity'}>
         {filters.map(([id, label]) => <button key={id} role="radio" aria-checked={filter === id} className={filter === id ? 'on' : ''} onClick={() => setFilter(id)}>{label}</button>)}
@@ -208,11 +237,12 @@ export function BrowsePanel({ kind }: { kind: 'games' | 'activities' }) {
           );
         })}
       </div>
-    </aside>
+    </div>
   );
 }
 
 /** Focus Browse's search: the studio's empty view, and Engage in the Lesson studio, send you here. */
 export function focusBrowse() {
-  requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.browse-find input')?.focus());
+  window.dispatchEvent(new Event(OPEN_EVENT));
+  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.browse-find input')?.focus()));
 }

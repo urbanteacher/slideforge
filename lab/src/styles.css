@@ -677,6 +677,9 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .engage-browse .btn-soft { justify-content: center; }
 
 /* ── Browse: the Quiz studio's games and Activities' activities, in the left pane ── */
+.fold.open.fold-browse { flex: 1 1 100%; }
+.browse { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.browse-count { padding: 0 14px 6px; color: var(--dim); font-size: 11px; }
 .browse-find { display: flex; align-items: center; gap: 7px; margin: 0 12px 8px; padding: 0 9px; height: 30px; border-radius: 7px; background: var(--field); border: 1px solid var(--line-2); color: var(--dim); }
 .browse-find:focus-within { border-color: var(--accent); }
 .browse-find input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text); }

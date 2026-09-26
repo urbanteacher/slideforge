@@ -28,7 +28,8 @@ function useFolds() {
   return [open, (k: 'layers' | 'layouts' | 'designs' | 'headerFooter' | 'images' | 'effects' | 'guide', to?: boolean) => setOpen((o) => ({ ...o, [k]: to ?? !o[k] }))] as const;
 }
 
-function Fold({ title, open, onToggle, right, children, className }: { title: string; open: boolean; onToggle: () => void; right?: ReactNode; children: ReactNode; className: string }) {
+/** A section of a side pane that folds away: the Lesson studio's layers and layouts, and Browse. */
+export function Fold({ title, open, onToggle, right, children, className }: { title: string; open: boolean; onToggle: () => void; right?: ReactNode; children: ReactNode; className: string }) {
   return (
     <section className={`fold ${className}${open ? ' open' : ''}`}>
       <div className="panel-head fold-head">
