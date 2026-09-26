@@ -18,6 +18,13 @@
   /** @type {any} */
   var SF = global.SF;
 
+  /* A slide's authored formatting — bold, italic, colour, highlight, links,
+     slide jumps — and its per-slide alignment, background and text colour.
+     js/render.js and src/render/lattice.js reach SF.Custom as they draw, on
+     the wall, in print and in a shared copy. The classic editor installed it;
+     without it every surface drew plain text. */
+  SF.installCustom(SF);
+
   /** The lesson open in the studio, as the shell has it. */
   function openLesson() {
     var ws = SF.Shell && SF.Shell.current && SF.Shell.current();
