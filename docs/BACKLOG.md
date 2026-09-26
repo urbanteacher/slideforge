@@ -766,6 +766,7 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-03 | New flagship slides start with editable text at left and an image at right | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-04 | Add one to four A–D choice boxes at the flagship’s fixed grid positions | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
+| LAB-06 | Text effects and a text block: outline, outline only, gradient fill, shadows, glow, highlighter, word spacing; Scramble and Count up entrances, a typewriter cursor, random order; Safari draws the blur and white logos | Done · 26 Sep 2026 · `a9c0c5c` |
 
 ## The lab as the engine
 
@@ -776,6 +777,10 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026; the lesson side next |
 
 ## Change log
+
+### 26 September 2026 — Text effects and the text block in the lab
+
+- **LAB-06:** A text layer's Design tab has **Effects** (fill as one colour or a gradient, outline outside the letters, outline only, a soft, hard or long shadow, glow, highlighter) and **Block** (fill the box, hug the words, or a band behind each line, with padding, corners and a border). Word spacing sits in Spacing. Animate adds **Scramble** and **Count up**, a **Cursor** for the typewriter, and **In a random order** for the waves (`a9c0c5c`). The block grows outwards from the words, so turning it on never moves the text. Every effect uses canvas features Safari draws: `ctx.filter` does nothing there unless a setting is on, so the rising words' blur falls back to a shadow and a white logo is painted rather than filtered. Checked in Chrome, with the Safari fallback forced on; not yet run in Safari itself. Timings were checked against GSAP SplitText, Anime.js and Motion, and already match them.
 
 ### 25 September 2026 — Quiz studio and Activities in the Lesson studio's frame
 
