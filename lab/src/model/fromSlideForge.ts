@@ -13,6 +13,7 @@ import { addThemeArt, themeGround, type ArtContext } from './themeArt';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
 import { gameSlides } from './designs/formats';
 import { fitSize } from './designs/kit';
+import { aiad27Slide, builds27 } from './aiad27';
 import type { ShowcaseGame } from './designs/games';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
@@ -395,9 +396,9 @@ export function convertsSlide(s: SFSlide): boolean {
 }
 
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
- *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. 8: AI Awareness Day 2027 wears its frame (strand, lockup, campaign line, page number) and its labels over the words. A copy made at an older version is brought up to date when it
+ *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. 8: AI Awareness Day 2027 wears its frame (strand, lockup, campaign line, page number) and its labels over the words. 9: AI Awareness Day 2027's compositions are built as its design draws them. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. */
-export const CARRIED = 8;
+export const CARRIED = 9;
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
@@ -408,7 +409,8 @@ type Kit = ReturnType<typeof kit>;
 
 /** One SlideForge slide as the lab slide a fresh conversion makes of it, or null for what the lab leaves out. */
 function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtContext): Slide | null {
-  const out = convert(s, k.on, img, k.guide.marks[1]?.src ?? k.guide.marks[0]?.src ?? '', art?.theme);
+  // AI Awareness Day 2027's compositions are built as the design draws them (aiad27.ts).
+  const out = art && builds27(art.theme, s) ? aiad27Slide(s, art.theme) : convert(s, k.on, img, k.guide.marks[1]?.src ?? k.guide.marks[0]?.src ?? '', art?.theme);
   if (!out) return null;
   const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
   const made = k.put(out.slide, out.ground, notes);
@@ -454,6 +456,26 @@ export function pageNumbers(d: Deck): Deck {
   d.headerFooter = { enabled: true, hideOnCover: true, slots: { 'footer-right': { kind: 'pages' } } };
   syncHeaderFooter(d);
   return d;
+}
+
+/** A lab copy of an AI Awareness Day 2027 lesson made before version 9: each slide from a composition
+ *  aiad27.ts builds is built again, in its place, keeping its id and whether it is hidden. Slides the
+ *  author added, and the takeaways, stay as they are. How many. */
+export function carryDeck27(deck: Deck, source: SFSlide[], from: ArtSource, paletteId: string, set?: string): number {
+  if (!from.theme.startsWith('aiad27')) return 0;
+  const k = kit(paletteId, set);
+  const byId = new Map(source.map((s, i) => [s.id, i] as const));
+  let n = 0;
+  deck.slides = deck.slides.map((old) => {
+    const i = old.sourceSlideId ? byId.get(old.sourceSlideId) : undefined;
+    if (i === undefined || !builds27(from.theme, source[i])) return old;
+    const made = buildSlide(source[i], k, (p) => p ?? '', { theme: from.theme, index: i, deckTitle: from.title, total: source.length, slides: source });
+    if (!made) return old;
+    n++;
+    return Object.assign(made, { id: old.id, name: old.name, hidden: old.hidden, notes: old.notes, transition: old.transition });
+  });
+  if (n && deck.headerFooter?.enabled) syncHeaderFooter(deck);
+  return n;
 }
 
 /** A lab copy made before version 7 showed every slide, the ones SlideForge keeps out of the show too:

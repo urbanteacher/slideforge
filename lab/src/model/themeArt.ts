@@ -328,7 +328,7 @@ function campaignLabels27(slide: Slide, s: ArtSlide, ctx: ArtContext) {
   const t = s.type;
   const pick: Record<string, [string, string]> = { title: ['Text', 'Hero'], quote: ['Attribution', 'Heading'], statement: ['Credit', 'Statement'], keyfact: ['Text', 'Heading'] };
   const names = pick[t];
-  if (!names || slide.layers.some((l) => l.name === ART + 'Eyebrow')) return;
+  if (!names || slide.layers.some((l) => l.name === ART + 'Eyebrow' || l.name === 'Eyebrow')) return;
   const label = slide.layers.find((l) => l.name === names[0] && l.kind === 'text');
   const words = slide.layers.find((l) => l.name === names[1] && l.kind === 'text');
   if (!label?.box || !words?.box) return;
