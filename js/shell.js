@@ -1568,7 +1568,7 @@
             if (it.id === 'refresh') {
               var lesson = lessonBehind();
               if (!lesson) return;
-              SF.Editor.useLesson(lesson.key);
+              if (!(SF.LabEngine && SF.LabEngine.openKey(lesson.key))) SF.Editor.useLesson(lesson.key);
               SF.toast('“' + lesson.title + '” reloaded from this version of the app. Your previous copy is in the Library.');
               return;
             }

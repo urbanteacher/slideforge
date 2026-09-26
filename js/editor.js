@@ -2317,9 +2317,6 @@
 
   function repaint() { drawPreview(); drawRail(); }
   function draw() {
-    /* With the lab as the Lesson studio (js/lab-engine.js), a lesson handed to
-       this editor — by the Library, the demo, New — opens in the lab. */
-    if (SF.LabEngine && SF.Shell.current && SF.Shell.current() !== ws) SF.LabEngine.classicDeck(deck);
     /* An open fallback form would be torn down by the redraw; keep its words
        and record them as an edit first. */
     if (SF.Custom && SF.Custom.endCanvasEditor && SF.Custom.endCanvasEditor()) touched();

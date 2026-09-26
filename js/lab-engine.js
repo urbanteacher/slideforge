@@ -6,11 +6,12 @@
    with the shell as the 'deck' engine. The shell keeps what it always had: the
    title, File, the Library, Save, restore points, Present.
 
-   The classic Lesson studio (js/editor.js) still loads, hidden, because the
-   Library, the demo, New and the Activities and Quiz studios open lessons
-   through it. When it is handed a lesson, it tells the lab, and the lab opens
-   its own copy: converted the first time, with an id of its own, so the
-   original lesson is never written to by the lab.
+   The Library, the demo, New, File → reload and the address (?lesson=) open
+   a lesson in the lab directly (openLesson, openKey). The lab opens its own
+   copy: converted the first time, with an id of its own, so the original
+   lesson is never written to by the lab. The classic Lesson studio
+   (js/editor.js) still loads, hidden, until its code is taken out; nothing
+   opens a lesson through it.
 
    The lab is SlideForge's three studios, for everyone. The classic studios
    are not offered: no address or setting brings them back (see enabled()).
@@ -38,16 +39,13 @@
   /** @type {HTMLIFrameElement|null} */ var frame = null;
   /** @type {Array<function(any):void>} */ var waiting = [];
   /** @type {Array<any>} */ var saved = [];
-  var lastClassic = null;
   var placeholder = { id: '', title: 'Untitled lesson', slides: [] };
 
   /* A lesson asked for on the address (?lesson=, the link a lesson is shared
-     and bookmarked by). The classic editor opens it while the shell starts,
-     before install() has registered the lab, so its hand-over (classicDeck)
-     finds another workspace current and does nothing — and the lab showed
-     whatever it last had open, the demo on a first visit. Read now, before
-     the editor takes the parameter off the address; install() hands it over. */
-  var askedLesson = /[?&]lesson=/.test(location.search);
+     and bookmarked by). Read now, before the classic editor takes the
+     parameter off the address; install() opens it. */
+  var askedKey = null;
+  try { askedKey = new URLSearchParams(location.search).get('lesson'); } catch (e) {}
 
   function whenReady(fn) { if (api) fn(api); else waiting.push(fn); }
 
@@ -195,6 +193,54 @@
         }
       });
     });
+  }
+
+  /* ------------------------------------------- opening a lesson directly
+
+     The Library, the demo, File → reload and the address hand the lab a
+     SlideForge lesson (or a lab lesson's Library card), and the lab opens it. */
+
+  /** Open a lesson from SlideForge's store in the lab. False when the lab is not the studio. */
+  function openLesson(d) {
+    if (!enabled() || !d || !d.id) return false;
+    if (api) api.flush();
+    /* A restore point before another lesson replaces the one on screen. */
+    if (api && SF.History && SF.History.ready() && api.getDeck().slides.length) {
+      SF.History.snapshot(doc(), 'Before opening another lesson');
+    }
+    /* The last opened, so the Library puts it first. */
+    if (SF.Store && SF.Store.save) SF.Store.save(d);
+    open(JSON.parse(JSON.stringify(d)));
+    return true;
+  }
+
+  /** Build a lesson from the bank (SF.LESSONS) afresh, file it, and open it: the demo, File → reload. */
+  function openKey(key) {
+    if (!enabled() || !SF.Studio || !SF.Studio.makeLesson) return false;
+    var d = SF.Studio.makeLesson(key);
+    if (!d) return false;
+    /* Opening a factory pack again is a deliberate restore: the Library shows it again. */
+    if (d.sourceKey && SF.restoreLibrarySeed) SF.restoreLibrarySeed(d.sourceKey);
+    SF.Store.save(d, { force: true });
+    /* One copy of the demo, however it is reached, not a pile of unlisted ones. */
+    if (SF.keepOneDemoCopy) SF.keepOneDemoCopy(d);
+    return openLesson(d);
+  }
+
+  /* The lesson a ?lesson= link names. The copy already in the Library, if
+     there is one, rather than a new one each time the link is followed; the
+     most recently worked on when there are several (Store.list is sorted by
+     modified). A new build is stamped with its key so the next follow finds it. */
+  function askedLesson(key) {
+    if (!key || !SF.Studio || !SF.Studio.makeLesson || !SF.Store) return null;
+    if (SF.seedLibrary) SF.seedLibrary();
+    var mine = SF.Store.list().filter(function (d) { return d && d.sourceKey === key; })[0] || null;
+    var d = mine || SF.Studio.makeLesson(key);
+    if (!d) return null;
+    if (!d.sourceKey) d.sourceKey = key;
+    SF.Store.save(d, { force: true });
+    if (!mine && SF.keepOneDemoCopy) SF.keepOneDemoCopy(d);
+    return d;
   }
 
   /* ------------------------------------------------ the bridge to the room
@@ -516,11 +562,13 @@
     SF.Shell.register(studioView('game', 'quiz', 'Games'));
     SF.Shell.register(studioView('plan', 'activities', 'Activities'));
     document.documentElement.classList.add('lab-engine');
-    /* The lesson the address asked for, which the editor has already opened. */
-    var asked = askedLesson && SF.Editor && SF.Editor.workspace ? SF.Editor.workspace.doc() : null;
-    if (asked && asked.id) {
-      lastClassic = asked.id;
+    /* The lesson the address asked for. */
+    var asked = askedLesson(askedKey);
+    if (asked) {
       open(JSON.parse(JSON.stringify(asked)));
+      try {
+        if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
+      } catch (e) {}
     }
     /* Present is the lab's show. The classic editor wired this button to its
        own player when it installed; the lab engine installs after it. */
@@ -576,18 +624,6 @@
     if (SF.Shell && SF.Shell.syncChrome && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
   }
 
-  /* The classic editor calls this when it draws: a lesson it has just been
-     handed (from the Library, the demo, New) opens in the lab. Only a new
-     lesson — edits the Activities or Quiz studio make to the classic copy of
-     one already open are not pulled over the lab's. */
-  function classicDeck(d) {
-    if (!enabled() || !d || !d.id) return;
-    if (!SF.Shell || !SF.Shell.current || !isLabStudio(SF.Shell.current())) return;
-    if (d.id === lastClassic && api && (api.getDeck().sourceId === d.id || api.getDeck().id === d.id)) return;
-    lastClassic = d.id;
-    open(JSON.parse(JSON.stringify(d)));
-  }
-
   /* The editor follows the show: out of a show, the lab is on the slide the
      show ended on, so Present again goes on from there, as it would in
      Keynote or PowerPoint, rather than from wherever editing had left it. A
@@ -636,7 +672,18 @@
 
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
-    classicDeck: classicDeck,
+    /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
+    openLesson: openLesson, openKey: openKey,
+    /** The id of the lesson open in the lab: the Library's card for it. */
+    currentId: function () { return enabled() && api ? api.getDeck().id : ''; },
+    /* The Library renamed or moved the lesson that is open: the lab's deck takes it. */
+    retitle: function (patch) {
+      whenReady(function (a) {
+        if (patch.title != null && patch.title !== a.getDeck().title) a.setTitle(patch.title);
+        if (patch.libraryGroup != null && patch.libraryGroup !== a.getDeck().libraryGroup) a.setGroup(patch.libraryGroup);
+        if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
+      });
+    },
     /* For the tests: which slides print from their SlideForge original, the picture a lab slide becomes, and a lesson's games as the lab gets them. */
     printsAsPages: printsAsPages, pictureSlide: pictureSlide, lessonGames: lessonGames,
     /* For Share (js/shell.js): the lesson as SlideForge's player shows it. */

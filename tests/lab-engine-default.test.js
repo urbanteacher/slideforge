@@ -48,3 +48,49 @@ test('with the classic studio showing, the lab’s cards stay out of the Library
   // With the lab showing, the cards are the Library's way to its lessons.
   assert.equal(engine('').LabEngine.isHiddenCard({ id: 'x', labCard: true, slides: one }), false);
 });
+
+/* The Library, the demo, File → reload and a ?lesson= link open a lesson in
+   the lab directly; nothing goes through the classic editor. */
+function withBank(search, automated = false) {
+  const saves = [], calls = [];
+  const docs = [{ id: 'mine', title: 'Week 2', sourceKey: 'week-2', slides: [{ type: 'title' }] }];
+  const context = {
+    window: { setTimeout: () => 0 }, console, URLSearchParams, localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    location: { search, pathname: '/', hash: '' }, history: { replaceState: (a, b, url) => calls.push(['url', url]) },
+    navigator: { webdriver: automated }, setTimeout: () => 0,
+    document: { getElementById: () => null, querySelectorAll: () => [], createElement: () => ({ setAttribute() {}, classList: { add() {} } }), documentElement: { classList: { add() {}, toggle() {} } } }
+  };
+  context.globalThis = context;
+  vm.createContext(context);
+  const SF = context.window.SF = {
+    Store: { save: (d) => saves.push(d.id), list: () => docs, get: (id) => docs.find((d) => d.id === id) || null },
+    Studio: { makeLesson: (key) => ({ id: 'built-' + key, title: key, sourceKey: key === 'layout-bank' ? key : undefined, slides: [] }) },
+    restoreLibrarySeed: (k) => calls.push(['restore', k]),
+    keepOneDemoCopy: (d) => calls.push(['one', d.id]),
+    seedLibrary: () => calls.push(['seed']),
+    Shell: { register: () => {} }
+  };
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/lab-engine.js'), 'utf8'), context);
+  return { LabEngine: SF.LabEngine, saves, calls };
+}
+
+test('the demo and File → reload build the lesson afresh, file it once, and open it in the lab', () => {
+  const { LabEngine, saves, calls } = withBank('');
+  assert.equal(LabEngine.openKey('layout-bank'), true);
+  assert.ok(saves.includes('built-layout-bank'), 'filed');
+  assert.deepEqual(calls.filter((c) => c[0] !== 'seed'), [['restore', 'layout-bank'], ['one', 'built-layout-bank']]);
+  assert.equal(LabEngine.openLesson(null), false, 'nothing to open');
+  // Under the smokes the classic studio is still the one, so the caller falls back to it.
+  assert.equal(withBank('', true).LabEngine.openKey('layout-bank'), false);
+  assert.equal(withBank('', true).LabEngine.openLesson({ id: 'mine' }), false);
+});
+
+test('a ?lesson= link reopens the Library’s copy rather than building another, and leaves the address clean', () => {
+  const again = withBank('?lesson=week-2');
+  again.LabEngine.install();
+  assert.deepEqual(again.saves, ['mine'], 'the copy already in the Library');
+  assert.ok(again.calls.some((c) => c[0] === 'url' && c[1] === '/'), 'the parameter comes off the address');
+  const fresh = withBank('?lesson=week-3');
+  fresh.LabEngine.install();
+  assert.deepEqual(fresh.saves, ['built-week-3'], 'a first follow builds it');
+});

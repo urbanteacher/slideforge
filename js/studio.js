@@ -30,11 +30,12 @@
    */
   function openDemo() {
     var spec = (SF.LESSONS || []).filter(function (l) { return l.key === DEMO_KEY; })[0];
-    if (!spec || !SF.Editor || !SF.Editor.useLesson) {
+    var lab = SF.LabEngine && SF.LabEngine.enabled();
+    if (!spec || (!lab && !(SF.Editor && SF.Editor.useLesson))) {
       SF.toast('The demo is missing from this build.');
       return;
     }
-    SF.Editor.useLesson(DEMO_KEY);
+    if (!(lab && SF.LabEngine.openKey(DEMO_KEY))) SF.Editor.useLesson(DEMO_KEY);
     SF.toast('Demo opened — ' + (spec.slides || []).length +
       ' slides. It is not filed in the Library; press Demo again for a fresh copy.');
   }
@@ -77,11 +78,29 @@
       return new Date(at).toLocaleDateString([], { day: 'numeric', month: 'short' });
     }
 
+    /* The lab is the studio: the open lesson is the lab's, and its card has the lab deck's id. */
+    function inLab() { return !!(SF.LabEngine && SF.LabEngine.enabled()); }
+
     function currentId() {
+      if (inLab()) return SF.LabEngine.currentId();
       return (SF.Editor && SF.Editor.deck && SF.Editor.deck()) ? SF.Editor.deck().id : '';
     }
 
+    /* The Library renamed or moved the open lesson: the studio's copy takes it too. */
+    function openTakes(patch) {
+      if (inLab()) { SF.LabEngine.retitle(patch); return; }
+      var open = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+      if (open) Object.assign(open, patch);
+    }
+
     function openDoc(id) {
+      if (inLab()) {
+        var picked = SF.Store.get(id);
+        if (!picked || !SF.LabEngine.openLesson(picked)) return;
+        dlg.close();
+        SF.toast('Opened “' + (picked.title || 'lesson') + '”. Save writes this same document.');
+        return;
+      }
       if (!SF.Editor || !SF.Editor.openDeck) return;
       var ws = SF.Editor.workspace;
       if (ws && ws.flush) ws.flush();
@@ -105,8 +124,7 @@
         next.title = title;
         SF.Store.save(next, { force: true });
         if (currentId() === next.id) {
-          var open = SF.Editor.deck();
-          if (open) open.title = title;
+          openTakes({ title: title });
           if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
         }
         draw();
@@ -132,10 +150,7 @@
         if (!next) return;
         next.libraryGroup = group;
         SF.Store.save(next, { force: true });
-        if (currentId() === next.id) {
-          var openMove = SF.Editor.deck();
-          if (openMove) openMove.libraryGroup = group;
-        }
+        if (currentId() === next.id) openTakes({ libraryGroup: group });
       });
       draw();
     }
@@ -201,10 +216,7 @@
           if (d.libraryGroup !== folder.id) return;
           d.libraryGroup = 'other';
           SF.Store.save(d, { force: true });
-          if (currentId() === d.id) {
-            var open = SF.Editor.deck();
-            if (open) open.libraryGroup = 'other';
-          }
+          if (currentId() === d.id) openTakes({ libraryGroup: 'other' });
         });
         if (SF.LibraryFolders) SF.LibraryFolders.remove(folder.id);
         draw();
@@ -236,7 +248,11 @@
         }
         ids.forEach(function (id) { SF.Store.remove(id); if (SF.LabEngine) SF.LabEngine.forget(id); });
         picked = Object.create(null);
-        if (doomedOpen) {
+        if (doomedOpen && inLab()) {
+          /* The lab has already put a blank lesson up (SF.LabEngine.forget); whatever is left in the Library beats it. */
+          var left = SF.Store.list().filter(function (d) { return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP; })[0];
+          if (left) SF.LabEngine.openLesson(left);
+        } else if (doomedOpen) {
           var leftover = SF.Store.list()[0];
           if (leftover && SF.Editor && SF.Editor.openDeck) {
             SF.Editor.openDeck(leftover.id, { abandon: true });
