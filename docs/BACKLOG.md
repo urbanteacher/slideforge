@@ -767,6 +767,7 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-04 | Add one to four A–D choice boxes at the flagship’s fixed grid positions | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-16 | Text effects and a text block: outline, outline only, gradient fill, shadows, glow, highlighter, word spacing; Scramble and Count up entrances, a typewriter cursor, random order; Safari draws the blur and white logos | Done · 26 Sep 2026 · `2885d4f` |
+| LAB-17 | Default slides move plainly: no blurred word motion or Blur in across the layouts, designs and the lab's originals; bullet lists build a point per click with the earlier points dimmed | Done · 26 Sep 2026 · `d8b981e` |
 
 ## The lab as the engine
 
@@ -777,6 +778,10 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026; the lesson side next |
 
 ## Change log
+
+### 26 September 2026 — Plain motion on default slides
+
+- **LAB-17:** The layouts, the design kit's headings, the rows and game headings, and the lab's seven original designs no longer use SlideForge's word motion (each word rising out of a blur) or Blur in. They rise or fade as one block; zooms no longer overshoot; the originals lose their pops, loops and shader transitions and change slides with a fade (`d8b981e`). Bullet lists, in the layouts and from Add, build a point per click with the earlier points dimmed, as the mind map does. Picking Word by word or Letter by letter in Animate now starts Plain, with no blur. The Motion lab is left as it is: it is the showcase of that motion. Checked by building every layout, original and SlideForge-derived design and listing their entrances, and by presenting a Bullets slide.
 
 ### 26 September 2026 — Text effects and the text block in the lab
 
