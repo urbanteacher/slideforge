@@ -1,10 +1,18 @@
-import { ArrowDown, ArrowLeftRight, ArrowUp, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowLeftRight, ArrowUp, Plus, RefreshCw, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { EXPERIMENTS, experimentStates, type ExpState } from '../engine/experiment';
 import { LOOKS, SCENES, sceneItems } from '../engine/scene';
 import { rebuildSlide, RECIPE_NAMES } from '../model/recipes';
 import { slideOf, useStore } from '../model/store';
-import type { Layer, ParamValue } from '../model/types';
+import { applyGameSettings } from '../model/gameSettings';
+import { canWrite, replaceGame, writeGame } from '../model/gameAI';
+import { GAME_LOOKS, REASONS, relookGame } from '../model/gameLook';
+import { HAS_LOOKS } from '../model/designs/formats';
+import { applyActivitySettings, ensureActivitySettings, type ActivityChange } from '../model/activitySettings';
+import { looksOf, type ActivityData, type ActivityEntry } from '../model/designs';
+import { CONSTRAINTS, canWriteActivity, writeActivity, type Audience } from '../model/activityAI';
+import type { ShowcaseGame } from '../model/designs/games';
+import type { GameSettings, Layer, ParamValue, SlideFeedback, StageJob } from '../model/types';
 import { ColorField, Row, Scrub, Section, Select, newGesture } from './controls';
 import { fileToDataUrl } from './Inspector';
 
@@ -213,8 +221,8 @@ function TimerPanel({ layer }: { layer: Layer }) {
     <>
       <div className="picture-head">It starts when the slide comes up in Preview and resets when you leave it.</div>
       <Section title="How long">
-        <Chips value={String(p.minutes ?? 5)} options={[1, 2, 3, 5, 10, 15, 20].map((m) => ({ value: String(m), label: `${m} min` }))} onChange={(v) => set('minutes', Number(v))} />
-        <Row label="Or exactly"><Scrub value={Number(p.minutes ?? 5)} min={0.5} max={120} step={0.5} decimals={1} unit=" min" onChange={(v, m) => useStore.getState().updateLayer(layer.id, (l) => { l.params.minutes = v; }, m)} /></Row>
+        <Chips value={String(p.minutes ?? 5)} options={[0.25, 0.5, 1, 2, 3, 5, 10, 15, 20].map((m) => ({ value: String(m), label: m < 1 ? `${m * 60} s` : `${m} min` }))} onChange={(v) => set('minutes', Number(v))} />
+        <Row label="Or exactly"><Scrub value={Number(p.minutes ?? 5)} min={0.1} max={120} step={0.25} decimals={2} unit=" min" onChange={(v, m) => useStore.getState().updateLayer(layer.id, (l) => { l.params.minutes = v; }, m)} /></Row>
       </Section>
       <Section title="Style">
         <Chips value={style} options={[{ value: 'game', label: 'Game clock' }, { value: 'ring', label: 'Ring' }, { value: 'digits', label: 'Time only' }, { value: 'bar', label: 'Bar' }]} onChange={(v) => set('style', v)} />
@@ -329,5 +337,282 @@ export function RecipePanel() {
       {body}
       <button className={`btn-soft tidy${dirty ? ' sp-dirty' : ''}`} disabled={!dirty} onClick={apply}><RefreshCw size={13} />{dirty ? 'Update the slide' : 'Up to date'}</button>
     </Section>
+  );
+}
+
+// ─── A game's settings ──────────────────────────────────────────────────────
+const ROLE_NAMES = { cover: 'its cover', question: 'a question', answer: 'an answer', board: 'its board', end: 'its end' } as const;
+const secs = (s: number) => (s >= 60 && s % 60 === 0 ? `${s / 60} min` : `${s} s`);
+
+/**
+ * What a game runs by and the wall cannot show: the time, the points, the difficulty, how close
+ * counts, the spellings that also count. A change goes to the question and its answer together, or
+ * from the cover to every question; the clock, the eyebrow and the rest of what shows it follow.
+ */
+export function GamePanel() {
+  const slide = useStore(slideOf);
+  const deck = useStore((s) => s.deck);
+  const g = slide.game;
+  const [accept, setAccept] = useState('');
+  useEffect(() => { setAccept((g?.settings.accept ?? []).join('\n')); }, [slide.id, g?.settings.accept]);
+  if (!g) return null;
+  const s = g.settings;
+  const apply = (change: GameSettings, every = false, merge?: string) => useStore.getState().mutate((d) => applyGameSettings(d, slide.id, change, every), merge);
+  const timed = (g.role === 'question' || g.role === 'board') && g.clock !== 'none' && (g.role === 'question' || s.seconds != null);
+  const canNone = g.role === 'question' && g.clock !== 'Round';
+  const times = [...(canNone ? [0] : []), 10, 15, 20, 30, 45, 60, 90, 120, 180];
+  const questions = deck.slides.filter((x) => x.game?.id === g.id && x.game.role === 'question' && x.game.clock !== 'none');
+  const first = questions[0]?.game?.settings.seconds ?? 0;
+  const levels = g.format === 'boss-battle' ? ['easy', 'medium', 'hard', 'boss'] : ['easy', 'medium', 'hard'];
+  return (
+    <Section title={`Game · ${g.label}`}>
+      <WriteGame gameId={g.id} format={g.format} label={g.label} />
+      {HAS_LOOKS.has(g.format) && (
+        <Row label="Look" info="Buttons: the options as buttons (two by two, or True and False as two doors), the right one lit green where it stands, as SlideForge's quiz does. Question, then answer: the options as rows, the answer and why on the slide after. The questions, their times and points stay as they are.">
+          <Select value={g.look ?? 'walls'} options={GAME_LOOKS} onChange={(v) => {
+            let first = '';
+            useStore.getState().mutate((d) => { first = relookGame(d, g.id, v as 'buttons' | 'walls')[0]?.id ?? ''; });
+            if (first) useStore.setState({ slideId: first, selectedId: null });
+          }} />
+        </Row>
+      )}
+      {HAS_LOOKS.has(g.format) && (g.look ?? 'walls') === 'buttons' && (
+        <Row label="Reason" info="Where the answer's reason goes: under the question, as the other games have it; under the buttons; or kept to the notes, for you to say. The buttons stand in the same place on the question and its answer whichever you choose. Its words are edited on the answer slide.">
+          <Select value={g.reason ?? 'question'} options={REASONS} onChange={(v) => {
+            let first = '';
+            useStore.getState().mutate((d) => { first = relookGame(d, g.id, 'buttons', v as 'question' | 'buttons' | 'notes')[0]?.id ?? ''; });
+            if (first) useStore.setState({ slideId: first, selectedId: null });
+          }} />
+        </Row>
+      )}
+      <div className="desc">This slide is {ROLE_NAMES[g.role]} of the game. These are how it runs, and what the wall shows follows them{g.key != null ? '; a question and its answer share them' : ''}.</div>
+      {timed && (
+        <>
+          <Row label={g.clock ?? 'Time limit'}>
+            <Chips value={String(s.seconds ?? 0)} options={times.map((t) => ({ value: String(t), label: t ? secs(t) : 'None' }))} onChange={(v) => apply({ seconds: Number(v) || undefined })} />
+          </Row>
+          <Row label="Or exactly"><Scrub value={s.seconds ?? 0} min={canNone ? 0 : 5} max={600} step={1} decimals={0} unit=" s" onChange={(v, m) => apply({ seconds: v || undefined }, false, m)} /></Row>
+        </>
+      )}
+      {g.role === 'cover' && questions.length > 0 && (
+        <Row label="Every question" info="The time for each question in the game, set at once. Each can still be changed on its own slide.">
+          <Chips value={String(first)} options={[0, 10, 15, 20, 30, 45, 60].map((t) => ({ value: String(t), label: t ? secs(t) : 'None' }))} onChange={(v) => { const d = useStore.getState().deck; const q = d.slides.find((x) => x.id === questions[0].id); if (q) useStore.getState().mutate((dd) => applyGameSettings(dd, q.id, { seconds: Number(v) || undefined }, true)); }} />
+        </Row>
+      )}
+      {s.difficulty != null && (
+        <Row label="Difficulty" info={g.format === 'boss-battle' ? 'Sets the hit a right answer deals: easy 1, medium 2, hard 3, boss 5.' : g.format === 'emoji-guess' ? 'Easy gives the letter pattern and the hint; medium the pattern only; hard neither.' : g.format === 'word-reveal' ? 'How much of the word shows before the drip: easy 60%, medium 40%, hard 20%.' : undefined}>
+          <Select value={s.difficulty} options={levels.map((l) => ({ value: l, label: l[0].toUpperCase() + l.slice(1) }))} onChange={(v) => apply({ difficulty: v })} />
+        </Row>
+      )}
+      {g.format === 'boss-battle' && s.damage != null && (
+        <Row label="Damage" info="What a right answer takes off the boss. The health bar re-divides across the game."><Scrub value={s.damage} min={1} max={10} step={1} decimals={0} onChange={(v, m) => apply({ damage: v }, false, m)} /></Row>
+      )}
+      {s.points != null && g.format !== 'quiz-bowl' && (
+        <Row label="Points"><Scrub value={s.points} min={0} max={5000} step={10} decimals={0} onChange={(v, m) => apply({ points: v }, false, m)} /></Row>
+      )}
+      {s.tolerance != null && (
+        <Row label="Counts within" info="How close an answer must be to score. The green band on the answer shows it."><Scrub value={s.tolerance} min={0} max={Math.max(1, s.range ? s.range[1] - s.range[0] : 100)} step={1} decimals={0} onChange={(v, m) => apply({ tolerance: v }, false, m)} /></Row>
+      )}
+      {s.words != null && <WordsRow slideId={slide.id} words={s.words} />}
+      {s.accept != null && (
+        <>
+          <div className="desc">Also accept — one spelling a line. Near spellings count too, in SlideForge’s live session.</div>
+          <Area rows={3} value={accept} onChange={(v) => { setAccept(v); apply({ accept: v.split('\n').map((x) => x.trim()).filter(Boolean) }, false, 'accept'); }} />
+        </>
+      )}
+    </Section>
+  );
+}
+
+/** Mind reveal's words: its content, so the slides are made again from them when they change. */
+function WordsRow({ slideId, words }: { slideId: string; words: string[] }) {
+  const [text, setText] = useState(words.join('\n'));
+  useEffect(() => { setText(words.join('\n')); }, [slideId, words]);
+  const next = text.split('\n').map((x) => x.trim()).filter(Boolean);
+  const dirty = next.join('|') !== words.join('|');
+  return (
+    <>
+      <div className="desc">The words to remember, one a line — up to 20. Updating makes the study, recall and answer slides again.</div>
+      <Area rows={6} value={text} onChange={setText} />
+      <button className={`btn-soft tidy${dirty ? ' sp-dirty' : ''}`} disabled={!dirty || !next.length} onClick={() => useStore.getState().mutate((d) => applyGameSettings(d, slideId, { words: next }))}><RefreshCw size={13} />{dirty ? `Update the slides (${next.length} words)` : 'Up to date'}</button>
+    </>
+  );
+}
+
+/**
+ * Write the game with AI, as Quiz studio does: a topic, and the game is made again from what comes
+ * back — the same format, in the deck's style, where it stood. SlideForge writes and checks the
+ * questions (js/ai.js); the lab designs them.
+ */
+function WriteGame({ gameId, format, label }: { gameId: string; format: string; label: string }) {
+  const [topic, setTopic] = useState('');
+  const [state, setState] = useState<{ busy?: boolean; msg?: string; bad?: boolean }>({});
+  const can = canWrite(format);
+  const run = async () => {
+    setState({ busy: true, msg: 'Writing the questions…' });
+    const [gj] = await Promise.all([import('../assets/games.json')]);
+    const all = ((gj as { default: { games: ShowcaseGame[] } }).default ?? (gj as unknown as { games: ShowcaseGame[] })).games;
+    const base = all.find((x) => x.format === format);
+    if (!base) { setState({ msg: `${label} is not written by AI yet.`, bad: true }); return; }
+    const res = await writeGame(base, topic);
+    if (!res.game) { setState({ msg: res.error, bad: true }); return; }
+    let first = '';
+    useStore.getState().mutate((d) => { first = replaceGame(d, gameId, res.game!)[0]?.id ?? ''; });
+    if (first) useStore.setState({ slideId: first, selectedId: null });
+    const n = res.game.slides.filter((s) => (s as { type?: string }).type === 'quiz').length;
+    setState({ msg: `${label} written on “${topic.trim()}”${n ? `: ${n} ${n === 1 ? 'question' : 'questions'}` : ''}${res.rejected ? ` (${res.rejected} set aside that did not fit the format)` : ''}. Undo brings the last one back.` });
+  };
+  if (can === 'no-format') return null;
+  return (
+    <div className="sp-write">
+      <div className="desc">{can === 'yes' ? 'Write this game with AI: give it a theme or topic. Its slides are made again from the questions; Undo brings the old ones back.' : 'Writing with AI works when the studio is open inside SlideForge, which holds the AI key.'}</div>
+      <Input value={topic} onChange={setTopic} placeholder="Topic, e.g. photosynthesis for Year 9" />
+      <button className="btn-soft accent tidy" disabled={can !== 'yes' || state.busy || !topic.trim()} onClick={run}><Sparkles size={13} />{state.busy ? 'Writing…' : 'Generate'}</button>
+      {state.msg && <div className={`desc${state.bad ? ' sp-bad' : ''}`}>{state.msg}</div>}
+    </div>
+  );
+}
+
+// ─── An activity's settings ─────────────────────────────────────────────────
+const JOB_OPTIONS: { value: StageJob | 'auto'; label: string }[] = [
+  { value: 'auto', label: 'From its name' }, { value: 'note', label: 'Write a private note' }, { value: 'talk', label: 'Talk it through' },
+  { value: 'send', label: 'Send to the idea box' }, { value: 'work', label: 'Work (Need help button)' }, { value: 'down', label: 'Phones down' },
+];
+const minLabel = (m: number) => (m >= 1 ? `${Math.round(m * 10) / 10} min` : `${Math.round(m * 60)} s`);
+let catalogue: Promise<ActivityEntry[]> | null = null;
+const loadCatalogue = () => (catalogue ??= import('../assets/activities.json').then((d) => ((d as { default: ActivityData }).default ?? (d as unknown as ActivityData)).activities));
+
+/**
+ * How an activity runs, which the slide cannot show: each stage's minutes and what the phones do in
+ * it, the slide's time when it is not a routine, and which of its two designs it wears. Its words are
+ * edited on the slide. A change goes to the clocks and times already on it; a new look builds the
+ * slide again, and Undo brings the old one back.
+ */
+export function ActivityPanel() {
+  const slide = useStore(slideOf);
+  const [entry, setEntry] = useState<ActivityEntry | null>(null);
+  const key = slide.activity?.key;
+  useEffect(() => {
+    let live = true;
+    setEntry(null);
+    if (key) loadCatalogue().then((all) => { if (live) setEntry(all.find((a) => a.key === key) ?? null); });
+    return () => { live = false; };
+  }, [key]);
+  // Slides added before their settings were recorded get them from the catalogue, once.
+  useEffect(() => {
+    if (entry && slide.activity && !slide.activity.settings) useStore.getState().mutate((d) => ensureActivitySettings(d, slide.id, entry));
+  }, [entry, slide.id, slide.activity]);
+  const set = slide.activity?.settings;
+  if (!slide.activity || slide.game || !entry || !set) return null;
+  const apply = (c: ActivityChange, merge?: string) => useStore.getState().mutate((d) => applyActivitySettings(d, slide.id, c), merge);
+  const [labLook, sfLook] = looksOf(entry);
+  const total = (set.stages ?? []).reduce((m, x) => m + x.minutes, 0);
+  return (
+    <Section title={`Activity · ${entry.title}`}>
+      {slide.activity.page === 0 && <WriteActivity slideId={slide.id} entry={entry} look={set.look} />}
+      <div className="desc">How it runs in the room. Its words are edited on the slide.</div>
+      {set.stages?.length ? (
+        <>
+          {set.stages.map((x, k) => (
+            <div key={k} className="sp-stage">
+              <Row label={`${k + 1} · ${x.name}`} info="How long this stage runs. Its clock starts when the stage comes up.">
+                <Scrub value={x.minutes} min={0} max={60} step={0.25} decimals={2} unit=" min" onChange={(v, m) => apply({ stage: k, minutes: v }, m)} />
+              </Row>
+              <Row label="Phones" info="What the phones do in this stage in a live SlideForge session: a private note, talk, send an idea to the box, work with a Need help button, or phones down.">
+                <Select value={x.job ?? 'auto'} options={JOB_OPTIONS} onChange={(v) => apply({ stage: k, job: v === 'auto' ? null : v })} />
+              </Row>
+            </div>
+          ))}
+          <div className="desc">The whole routine: {minLabel(total)}.</div>
+        </>
+      ) : (
+        <>
+          <Row label="Time on the slide" info="A clock at the end of the heading row, from when the slide comes up.">
+            <Chips value={String(set.seconds ?? 0)} options={[0, 60, 120, 180, 300, 600, 900].map((sec) => ({ value: String(sec), label: sec ? minLabel(sec / 60) : 'None' }))} onChange={(v) => apply({ seconds: Number(v) })} />
+          </Row>
+          <Row label="Or exactly"><Scrub value={set.seconds ?? 0} min={0} max={3600} step={5} decimals={0} unit=" s" onChange={(v, m) => apply({ seconds: v }, m)} /></Row>
+        </>
+      )}
+      <Row label="Look" info="Its two designs: the lab's, and SlideForge's own. Changing it builds the slide again from the activity, keeping its times, phones, background and header; Undo brings the old one back.">
+        <Chips value={set.look} options={[{ value: 'lab', label: labLook }, { value: 'slideforge', label: sfLook }]} onChange={(v) => { if (v !== set.look) apply({ look: v, entry }); }} />
+      </Row>
+    </Section>
+  );
+}
+
+// ─── What the phones are asked ──────────────────────────────────────────────
+/** The feedback a slide asks of the phones, beyond its kind: its question, options, scale, how many
+ *  each may send, where the room's answers show, and whether they wait until the teacher shows them. */
+export function FeedbackSettings() {
+  const slide = useStore(slideOf);
+  const f = slide.feedback;
+  const [options, setOptions] = useState('');
+  useEffect(() => { setOptions((f?.options ?? []).join('\n')); }, [slide.id, f?.options]);
+  if (!f) return null;
+  const set = (patch: Partial<SlideFeedback>, merge?: string) => useStore.getState().mutate((d) => {
+    const s = d.slides.find((x) => x.id === slide.id);
+    if (!s?.feedback) return;
+    s.feedback = { ...s.feedback, ...patch };
+    for (const k of Object.keys(patch) as (keyof SlideFeedback)[]) if (patch[k] === undefined || patch[k] === '') delete s.feedback[k];
+  }, merge);
+  return (
+    <>
+      <Row label="Question"><Input value={f.prompt ?? ''} onChange={(v) => set({ prompt: v }, 'fb-prompt')} placeholder={`The phones ask: ${slide.name}`} /></Row>
+      {f.kind === 'poll' && (
+        <>
+          <div className="desc">Options, one a line (2 to 6).</div>
+          <Area rows={4} value={options} onChange={(v) => { setOptions(v); set({ options: v.split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 6) }, 'fb-options'); }} />
+        </>
+      )}
+      {f.kind === 'scale' && (
+        <>
+          <Row label="Points"><Scrub value={f.points ?? 5} min={3} max={7} step={1} decimals={0} onChange={(v, m) => set({ points: v }, m)} /></Row>
+          <Row label="Low end"><Input value={f.lowLabel ?? ''} onChange={(v) => set({ lowLabel: v }, 'fb-low')} placeholder="Not at all" /></Row>
+          <Row label="High end"><Input value={f.highLabel ?? ''} onChange={(v) => set({ highLabel: v }, 'fb-high')} placeholder="Completely" /></Row>
+        </>
+      )}
+      {(f.kind === 'wordcloud' || f.kind === 'brainstorm') && (
+        <Row label="Each may send" info="How many answers each person can send."><Scrub value={f.max ?? 1} min={1} max={5} step={1} decimals={0} onChange={(v, m) => set({ max: v }, m)} /></Row>
+      )}
+      <Row label="Answers show">
+        <Chips value={f.presentAs ?? 'rail'} options={[{ value: 'rail', label: 'Beside the slide' }, { value: 'focus', label: 'Full screen' }]} onChange={(v) => set({ presentAs: v })} />
+      </Row>
+      {/* A split to hold back: SlideForge holds a poll's or a scale's (src/deck/feedback.js). */}
+      {(f.kind === 'poll' || f.kind === 'scale') && <label className="sp-check"><input type="checkbox" checked={!!f.hold} onChange={(e) => set({ hold: e.target.checked || undefined })} />Hold the split until I show it</label>}
+    </>
+  );
+}
+
+const YEARS = ['', 'Year 7', 'Year 8', 'Year 9', 'Year 10', 'Year 11', 'Year 12', 'Year 13', 'Undergraduate', 'Postgraduate', 'Adult learners'];
+
+/**
+ * Write the activity with AI, as SlideForge's Activities studio does: a topic, and who it is for.
+ * SlideForge writes its boxes (and refuses a draft that describes the material instead of being it);
+ * the lab designs the slide again from them, in its look, with its times and phones kept.
+ */
+function WriteActivity({ slideId, entry, look }: { slideId: string; entry: ActivityEntry; look: 'lab' | 'slideforge' }) {
+  const [topic, setTopic] = useState('');
+  const [who, setWho] = useState<Audience>({});
+  const [state, setState] = useState<{ busy?: boolean; msg?: string; bad?: boolean }>({});
+  const can = canWriteActivity(entry.key);
+  if (can === 'nothing') return null;
+  const run = async () => {
+    setState({ busy: true, msg: 'Writing it…' });
+    const res = await writeActivity(entry, topic, who);
+    if (!res.entry) { setState({ msg: res.error, bad: true }); return; }
+    useStore.getState().mutate((d) => applyActivitySettings(d, slideId, { look, entry: res.entry! }));
+    setState({ msg: res.notice || `Written on “${topic.trim()}”. Read it before you teach it; Undo brings the last one back.` });
+  };
+  const toggle = (c: string) => setWho((w) => ({ ...w, constraints: w.constraints?.includes(c) ? w.constraints.filter((x) => x !== c) : [...(w.constraints ?? []), c] }));
+  return (
+    <div className="sp-write">
+      <div className="desc">{can === 'yes' ? 'Write it with AI: a theme or topic, and who it is for. The slide is made again from what comes back; its times and phones stay.' : 'Writing with AI works when the studio is open inside SlideForge, which holds the AI key.'}</div>
+      <Input value={topic} onChange={setTopic} placeholder="Topic, e.g. osmosis in plant cells" />
+      <Row label="Year group"><Select value={who.yearGroup ?? ''} options={YEARS.map((y) => ({ value: y, label: y || 'Any' }))} onChange={(v) => setWho((w) => ({ ...w, yearGroup: v || undefined }))} /></Row>
+      <Row label="They get wrong" info="A misconception the activity should bring out, if there is one."><Input value={who.misconceptions ?? ''} onChange={(v) => setWho((w) => ({ ...w, misconceptions: v }))} placeholder="e.g. water moves towards salt" /></Row>
+      <div className="sp-chips">{CONSTRAINTS.map((c) => <button key={c} className={`sp-chip${who.constraints?.includes(c) ? ' on' : ''}`} onClick={() => toggle(c)}>{c}</button>)}</div>
+      <button className="btn-soft accent tidy" disabled={can !== 'yes' || state.busy || !topic.trim()} onClick={run}><Sparkles size={13} />{state.busy ? 'Writing…' : 'Generate'}</button>
+      {state.msg && <div className={`desc${state.bad ? ' sp-bad' : ''}`}>{state.msg}</div>}
+    </div>
   );
 }

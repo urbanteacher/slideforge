@@ -329,7 +329,9 @@ export function createDeckSettings(SF, helpers) {
       });
       row.appendChild(btnRun);
       row.appendChild(btnRefresh);
-      row.appendChild(btnBack);
+      /* Opened on its own (Lecture setup, js/lesson-runtime.js), there is no
+         presentation settings sheet to go back to: the lab has its own. */
+      if (!helpers.alone) row.appendChild(btnBack);
       bodyEl.appendChild(row);
 
       line(logEl, 'info', 'Panel open — probing status…');

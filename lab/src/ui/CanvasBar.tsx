@@ -1,6 +1,7 @@
 import { Minus, PanelRightClose, PanelRightOpen, Plus } from 'lucide-react';
 import { useStore } from '../model/store';
 import { AddMenu, AnimateButton } from './AddMenu';
+import { focusBrowse } from './Browse';
 
 // The bar along the foot of the canvas, above the slide strip, as SlideForge's: what acts on the slide
 // on the left (Add), Animate, the panel button (fold the right-hand panel away), and the
@@ -9,6 +10,7 @@ export function CanvasBar() {
   const zoomSetting = useStore((s) => s.zoom);
   const fitZoom = useStore((s) => s.fitZoom);
   const panelHidden = useStore((s) => s.panelHidden);
+  const view = useStore((s) => s.view);
   const { set } = useStore.getState();
   // The old studio's "◨ Panel": fold the right-hand panel away for the whole width, and back.
   const togglePanel = () => {
@@ -20,7 +22,10 @@ export function CanvasBar() {
   const stepZoom = (k: number) => set({ zoom: Math.max(0.1, Math.min(4, Math.round(zoom * k * 20) / 20)) });
   return (
     <div className="canvas-bar" role="toolbar" aria-label="Slide and zoom">
-      <AddMenu />
+      {view === 'lesson' ? <AddMenu /> : (
+        // The Quiz studio and Activities add what they make: Engage's list, on the right, opens on it.
+        <button className="tb-btn add-view" onClick={focusBrowse} title={view === 'quiz' ? 'Browse the games, on the left' : 'Browse the activities, on the left'}><Plus size={15} />{view === 'quiz' ? 'Game' : 'Activity'}</button>
+      )}
       <div className="spacer" />
       <AnimateButton />
       <span className="fmt-sep" />

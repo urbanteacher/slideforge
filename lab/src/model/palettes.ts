@@ -132,7 +132,8 @@ const CAMPAIGNS: PalettePreset[] = [
       { loud: '#00c4ee', deep: '#1a1a2e' }, { loud: '#ff6734', deep: '#1a1a2e' }, { loud: '#795bff', deep: '#1a1a2e' },
       { loud: '#00a896', deep: '#1a1a2e' }, { loud: '#ff7eed', deep: '#1a1a2e' },
     ],
-    display: 'Space Grotesk', displayWeight: '700', body: 'Inter',
+    // The campaign's face, heavy for its headlines (css/aiad26.css --s-font).
+    display: 'Poppins', displayWeight: '800', body: 'Poppins',
   },
 ];
 

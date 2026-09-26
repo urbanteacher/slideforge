@@ -23,10 +23,16 @@ try {
   const wall = await browser.newPage({ viewport: { width: 1280, height: 820 } });
   const errors = [];
   wall.on('pageerror', (e) => errors.push('wall: ' + e.message));
-  await wall.goto(`http://127.0.0.1:${port}/?lesson=ipdv-intro`);
-  await wall.waitForFunction(() => window.SF?.Editor?.deck());
+  await wall.goto(`http://127.0.0.1:${port}/`);
+  await wall.waitForFunction(() => window.SF?.buildLesson && SF.Live);
 
-  await wall.locator('#btnLive').click();
+  /* The room hosts the lesson directly: the classic editor's Live, which did
+     the same, is gone, and the lab's Live draws every slide as a still first. */
+  await wall.evaluate(() => {
+    const deck = SF.buildLesson('ipdv-intro');
+    SF.Store.save(deck);
+    SF.Live.host(SF.buildRunDeck(deck, (id) => SF.GameStore.get(id)));
+  });
   await wall.waitForSelector('#lobby.on');
   await wall.waitForFunction(() => /^\d{4,6}$/.test((document.getElementById('lobbyPin')?.textContent || '').trim()));
   const pin = (await wall.locator('#lobbyPin').innerText()).trim();

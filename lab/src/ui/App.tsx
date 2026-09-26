@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cloneLayer } from '../model/defaults';
-import { layerOf, refitAllText, slideOf, useStore } from '../model/store';
+import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '../model/store';
 import type { Deck } from '../model/types';
 import { idbGet } from '../persist/idb';
 import { isLabDeck, saveCurrent } from '../embed';
@@ -18,6 +18,8 @@ import { addMediaFile } from './insert';
 import { groupOf } from './snap';
 import { moveInOrder } from './order';
 import { slideClipboard } from './SlideMenu';
+import { BrowsePanel, focusBrowse } from './Browse';
+import { blankDeck } from '../model/defaults';
 
 const isTyping = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -48,6 +50,12 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       if (isLabDeck(saved?.deck)) {
         useStore.getState().loadDeck(saved.deck);
         if (saved.slideId && saved.deck.slides.some((s) => s.id === saved.slideId)) useStore.setState({ slideId: saved.slideId });
+        useStore.setState({ saveState: 'saved' });
+      } else if (embedded) {
+        // A first visit to SlideForge opens a blank lesson, not somebody else's finished one: a stranger's
+        // sample invites typing over it. The Library, one click away, has the lessons and the demo.
+        // (The lab on its own, its playground, still opens on its demo.)
+        useStore.getState().loadDeck(blankDeck());
         useStore.setState({ saveState: 'saved' });
       }
       ready = true;
@@ -154,13 +162,16 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
     return () => { removeEventListener('keydown', on); removeEventListener('paste', onPaste); };
   }, []);
 
+  const view = useStore((s) => s.view);
+  const anyInView = useStore((s) => s.deck.slides.some((x) => inView(x, s.view)));
   if (!restored) return <div className="app app-loading" aria-busy="true" />;
   return (
     <div className={`app${embedded ? ' embedded' : ''}${panelHidden ? ' no-panel' : ''}`}>
       <TopBar embedded={embedded} />
-      <LeftPanel />
+      {view === 'lesson' ? <LeftPanel /> : <BrowsePanel kind={view === 'quiz' ? 'games' : 'activities'} />}
       <main className="center">
         <Stage />
+        {view !== 'lesson' && !anyInView && <EmptyView view={view} />}
         <CanvasBar />
         <Filmstrip />
       </main>
@@ -168,6 +179,19 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       {presenting && <Present />}
       {galleryOpen && <Gallery />}
       {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+/** A studio with nothing in it yet: the Quiz studio before the lesson has a game, Activities before it
+ *  has an activity. Browse, on the left, adds one after the slide the lesson was on. */
+function EmptyView({ view }: { view: LabView }) {
+  const quiz = view === 'quiz';
+  return (
+    <div className="empty-view">
+      <b>{quiz ? 'No games in this lesson yet' : 'No activities in this lesson yet'}</b>
+      <span>Pick one in Browse, on the left: it goes into this lesson after the slide you were on.</span>
+      <button className="btn-soft accent" onClick={focusBrowse}>{quiz ? 'Browse games' : 'Browse activities'}</button>
     </div>
   );
 }

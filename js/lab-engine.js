@@ -6,38 +6,34 @@
    with the shell as the 'deck' engine. The shell keeps what it always had: the
    title, File, the Library, Save, restore points, Present.
 
-   The classic Lesson studio (js/editor.js) still loads, hidden, because the
-   Library, the demo, New and the Activities and Quiz studios open lessons
-   through it. When it is handed a lesson, it tells the lab, and the lab opens
-   its own copy: converted the first time, with an id of its own, so the
-   original lesson is never written to by the lab.
+   The Library, the demo, New, File → reload and the address (?lesson=) open
+   a lesson in the lab directly (openLesson, openKey). The lab opens its own
+   copy: converted the first time, with an id of its own, so the original
+   lesson is never written to by the lab.
 
-   ?classic=1 on the address, or SF.LabEngine.useClassic(true), brings the
-   classic studio back for this browser. */
+   The lab is SlideForge's three studios, for everyone: the classic studios
+   (js/editor.js, js/games.js, js/activities.js) are gone. What the room still
+   needed from them is in js/lesson-runtime.js.
+   */
 (function (global) {
   'use strict';
   /** @type {any} */
   var SF = global.SF = global.SF || {};
-  var KEY = 'sf.lessonEngine';
 
-  function enabled() {
-    try {
-      if (/[?&]classic=1\b/.test(location.search)) return false;
-      if (/[?&]classic=0\b/.test(location.search)) return true;
-      /* The browser smokes (tools/smoke/) drive the classic studio's rail,
-         stage and inspector, so under automation the classic studio is the
-         one on screen. A smoke written for the lab opts in with ?classic=0. */
-      if (navigator.webdriver) return false;
-      return localStorage.getItem(KEY) !== 'classic';
-    } catch (e) { return true; }
-  }
+  /* The lab is the Lesson studio, the Quiz studio and Activities, always. Kept
+     as a question because the Library and the start ask it. */
+  function enabled() { return true; }
 
   /** @type {any} */ var api = null;
   /** @type {HTMLIFrameElement|null} */ var frame = null;
   /** @type {Array<function(any):void>} */ var waiting = [];
   /** @type {Array<any>} */ var saved = [];
-  var lastClassic = null;
   var placeholder = { id: '', title: 'Untitled lesson', slides: [] };
+
+  /* A lesson asked for on the address (?lesson=, the link a lesson is shared
+     and bookmarked by). Read as the page loads; install() opens it. */
+  var askedKey = null;
+  try { askedKey = new URLSearchParams(location.search).get('lesson'); } catch (e) {}
 
   function whenReady(fn) { if (api) fn(api); else waiting.push(fn); }
 
@@ -53,7 +49,7 @@
     var s = SF.makeSlide('title');
     s.title = labDeck.title || 'Untitled lesson';
     return SF.normalizeDeck({
-      id: labDeck.id, title: labDeck.title, theme: source && source.theme,
+      id: labDeck.id, title: labDeck.title, theme: source && source.theme, labCard: true,
       libraryGroup: labDeck.libraryGroup || (source && source.libraryGroup) || undefined,
       modified: Date.now(), slides: [s]
     });
@@ -66,17 +62,28 @@
 
   /** A lab lesson the Library shows as a card. */
   function isCard(id) {
-    return saved.some(function (r) { return r.id === id; }) && !!(SF.Store && SF.Store.get(id));
+    var onScreen = !!api && api.getDeck().id === id;
+    return (onScreen || saved.some(function (r) { return r.id === id; })) && !!(SF.Store && SF.Store.get(id));
   }
 
-  /** A SlideForge lesson whose lab copy has a card: the Library shows the card only. */
+  /** A SlideForge lesson whose lab copy has a card: the Library shows the card only. The lesson on
+      screen counts before the lab has filed it: a big lesson is on screen seconds before that. */
   function hasCopy(id) {
+    var cur = api ? api.getDeck() : null;
+    if (cur && cur.sourceId === id && SF.Store && SF.Store.get(cur.id)) return true;
     return saved.some(function (r) { return r.sourceId === id && SF.Store && SF.Store.get(r.id); });
   }
 
   function refreshSaved() {
     if (!api) return;
-    api.listSaved().then(function (rows) { saved = rows || []; });
+    api.listSaved().then(function (rows) {
+      /* The lesson on screen may not be written yet: read back before it is, the
+         list would drop it, and the Library would show its original a moment. */
+      var cur = api.getDeck().id;
+      var mine = saved.filter(function (r) { return r.id === cur; });
+      saved = rows || [];
+      if (mine.length && !saved.some(function (r) { return r.id === cur; })) saved = mine.concat(saved);
+    });
   }
 
   /* The shell reads doc() often (the title field, the folder chip) and sets
@@ -110,6 +117,51 @@
     }
   };
 
+  /* A lesson's games, compiled for the lab. They live in SlideForge's game
+     store, not in the lesson, and the lab has no store of its own; so the
+     lesson goes over with each game its slides play, compiled by SlideForge
+     (SF.compileGame) and described as the lab's own games are
+     (tools/lab-games.mjs): its format, name, and how to play. The lab then
+     builds each one on its own game walls (lab/src/model/fromSlideForge.ts). */
+  /** One of SlideForge's games as the lab builds it: compiled by SlideForge, described as the lab's
+      own games are, and looking as SlideForge showed it (buttons for multiple choice and true or
+      false). */
+  function gameForLab(g) {
+    var drop = { id: 1, transition: 1, layers: 1, gameId: 1 };
+    var clean = function (v) { return JSON.parse(JSON.stringify(v, function (k, x) { return drop[k] ? undefined : x; })); };
+    var map = SF.FORMAT_STYLE || {};
+    var format = g.format || (map[g.style] === g.style ? g.style : Object.keys(map).filter(function (f) { return map[f] === g.style; })[0] || g.style);
+    var style = SF.gameStyle ? SF.gameStyle(g.style) : null;
+    var book = SF.Playbook && SF.Playbook.forGame ? SF.Playbook.forGame(g) : null;
+    var set = g.settings || {};
+    return {
+      format: format, style: g.style,
+      label: g.title || (style && style.label) || format,
+      styleLabel: (style && style.label) || g.style,
+      aim: (book && book.aim) || '',
+      howToPlay: (book && book.howToPlay) || [],
+      title: g.title || '',
+      cover: !!(set.intro || set.howTo),
+      /* A lesson's multiple choice and true or false come in looking as SlideForge showed them:
+         buttons, the right one lit green where it stands. The Game panel's Look switches it to the lab's walls. */
+      look: /^(choice|truefalse|true-false)$/.test(format) ? 'buttons' : undefined,
+      slides: clean(SF.compileGame(g))
+    };
+  }
+
+  function lessonGames(d) {
+    if (!d || !Array.isArray(d.slides) || !SF.GameStore || !SF.compileGame) return d;
+    var games = {}, any = false;
+    d.slides.forEach(function (s) {
+      if (s.type !== 'game' || !s.gameId || games[s.gameId]) return;
+      var g = SF.GameStore.get(s.gameId);
+      if (!g) return;
+      games[s.gameId] = gameForLab(g);
+      any = true;
+    });
+    return any ? Object.assign({}, d, { labGames: games }) : d;
+  }
+
   function open(d) {
     whenReady(function (a) {
       var fromCard = d && !d.labSaved && isCard(d.id);
@@ -117,7 +169,7 @@
          made before the converter kept feedback and timers can take them, once. */
       var row = d && saved.filter(function (x) { return x.id === d.id; })[0];
       var source = row && row.sourceId && SF.Store && SF.Store.get ? SF.Store.get(row.sourceId) : null;
-      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, source) : a.open(d);
+      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, lessonGames(source)) : a.open(lessonGames(d));
       Promise.resolve(run).then(function (r) {
         if (r === false) { refreshSaved(); SF.toast('That lesson could not be opened here.'); return; }
         /* Known at once, not after the list is read back: the Library may be
@@ -140,6 +192,58 @@
         }
       });
     });
+  }
+
+  /* ------------------------------------------- opening a lesson directly
+
+     The Library, the demo, File → reload and the address hand the lab a
+     SlideForge lesson (or a lab lesson's Library card), and the lab opens it. */
+
+  /** Open a lesson from SlideForge's store in the lab. False when the lab is not the studio. */
+  function openLesson(d) {
+    if (!enabled() || !d || !d.id) return false;
+    if (api) api.flush();
+    /* A restore point before another lesson replaces the one on screen. */
+    if (api && SF.History && SF.History.ready() && api.getDeck().slides.length) {
+      SF.History.snapshot(doc(), 'Before opening another lesson');
+    }
+    /* Lessons written before questions moved into games still hold quiz
+       slides: they are lifted into a game once, so the lab builds it. */
+    var made = SF.migrateDeckQuizzes ? SF.migrateDeckQuizzes(d, function (g) { SF.GameStore.save(g); }) : null;
+    if (made) SF.toast('Questions moved into a game: \u201c' + made.title + '\u201d');
+    /* The last opened, so the Library puts it first. */
+    if (SF.Store && SF.Store.save) SF.Store.save(d);
+    open(JSON.parse(JSON.stringify(d)));
+    return true;
+  }
+
+  /** Build a lesson from the bank (SF.LESSONS) afresh, file it, and open it: the demo, File → reload. */
+  function openKey(key) {
+    if (!enabled() || !SF.Studio || !SF.Studio.makeLesson) return false;
+    var d = SF.Studio.makeLesson(key);
+    if (!d) return false;
+    /* Opening a factory pack again is a deliberate restore: the Library shows it again. */
+    if (d.sourceKey && SF.restoreLibrarySeed) SF.restoreLibrarySeed(d.sourceKey);
+    SF.Store.save(d, { force: true });
+    /* One copy of the demo, however it is reached, not a pile of unlisted ones. */
+    if (SF.keepOneDemoCopy) SF.keepOneDemoCopy(d);
+    return openLesson(d);
+  }
+
+  /* The lesson a ?lesson= link names. The copy already in the Library, if
+     there is one, rather than a new one each time the link is followed; the
+     most recently worked on when there are several (Store.list is sorted by
+     modified). A new build is stamped with its key so the next follow finds it. */
+  function askedLesson(key) {
+    if (!key || !SF.Studio || !SF.Studio.makeLesson || !SF.Store) return null;
+    if (SF.seedLibrary) SF.seedLibrary();
+    var mine = SF.Store.list().filter(function (d) { return d && d.sourceKey === key; })[0] || null;
+    var d = mine || SF.Studio.makeLesson(key);
+    if (!d) return null;
+    if (!d.sourceKey) d.sourceKey = key;
+    SF.Store.save(d, { force: true });
+    if (!mine && SF.keepOneDemoCopy) SF.keepOneDemoCopy(d);
+    return d;
   }
 
   /* ------------------------------------------------ the bridge to the room
@@ -181,7 +285,7 @@
       var kind = typeof f === 'string' ? f : f.kind;
       s.feedback = SF.makeFeedback(kind);
       if (typeof f === 'object') {
-        ['prompt', 'max', 'presentAs', 'points', 'lowLabel', 'highLabel'].forEach(function (k) {
+        ['prompt', 'max', 'presentAs', 'points', 'lowLabel', 'highLabel', 'hold'].forEach(function (k) {
           if (f[k] != null && f[k] !== '') s.feedback[k] = f[k];
         });
         if (Array.isArray(f.options) && f.options.length) s.feedback.options = f.options.slice();
@@ -220,7 +324,11 @@
   /* One slide per lab slide, made by `make`, with the lesson's games and
      activities back in their places: the order the show runs. */
   function ordered(items, make, source) {
-    var keep = source ? api.cannotBuild(source.slides) : [];
+    /* What the lab cannot build, less what it has: a lesson's game the lab
+       built from its compiled copy plays as the lab's, not a second time. */
+    var built = {};
+    items.forEach(function (s) { if (s.sourceSlideId) built[s.sourceSlideId] = true; });
+    var keep = source ? api.cannotBuild(source.slides).filter(function (id) { return !built[id]; }) : [];
     var after = carried(source, keep);
     /* A deck converted before slides remembered their source: match them in
        order, when the counts say nothing has been added or taken away. */
@@ -231,7 +339,8 @@
     var slides = (after[''] || []).slice();
     delete after[''];
     items.forEach(function (item) {
-      slides.push(make(item));
+      /* One slide, or a game's board compiled as several (src/deck/labshow.js). */
+      slides = slides.concat(make(item));
       var more = item.sourceSlideId && after[item.sourceSlideId];
       if (more) { slides = slides.concat(more); delete after[item.sourceSlideId]; }
     });
@@ -257,9 +366,55 @@
     return api.stills(width || 1600, function (done) {
       if (total > 12 && done - shown >= 10) { shown = done; SF.toast('Preparing the show \u2014 ' + done + ' of ' + total + ' slides'); }
     }, quality || 0.9).then(function (stills) {
-      var deck = lessonFrom(stills, pictureSlide);
+      /* The lab's games play as SlideForge's own: its quiz slides under the lab's drawing, its
+         boards where the room's state is kept (src/deck/labshow.js). The rest are pictures. */
+      var items = SF.labShowSlides ? SF.labShowSlides(stills) : stills;
+      var deck = lessonFrom(items, function (/** @type {any} */ it) { return it.sf || pictureSlide(it); });
       if (!width || width === 1600) lastShowDeck = deck;
       return deck;
+    });
+  }
+
+  /* The handout. SlideForge prints a slide that moves as the pages it moves
+     through (js/print.js): an experiment two states to a page, each with what
+     changes, what stays fixed and the takeaway; a picture with facts on its
+     back as the picture, then the facts; a before-and-after as each side. A
+     picture of the lab's slide is one state, so Week 2's 70 slides printed as
+     70 pages where SlideForge's handout had 102. A slide SlideForge's handout
+     gives more pages than the lab's picture of it prints from its SlideForge
+     original, which is what the lab slide was made from; the rest are the
+     lab's pictures. The handout itself decides, so a kind of slide it learns
+     to print as pages is followed here without a list to keep. */
+  function printsAsPages(original, picture) {
+    if (!original) return false;
+    /* A game prints its questions for the room to answer on paper, as SlideForge's handout does. */
+    if (original.type === 'game') return true;
+    /* An experiment prints all its states, side by side, even when they fit one page. */
+    if (original.type === 'experiment') return true;
+    var pages = function (s) { return SF.Print.pagesFor({ slides: [s] }).length; };
+    return pages(original) > pages(picture);
+  }
+
+  function buildPrintDeck() {
+    return buildShowDeck().then(function (deck) {
+      var source = sourceLesson(api.getDeck());
+      if (!source || !SF.Print || !SF.Print.pagesFor) return deck;
+      var original = {};
+      source.slides.forEach(function (s) { original[s.id] = s; });
+      var from = {};
+      api.getDeck().slides.forEach(function (s) { if (s.sourceSlideId) from[s.id] = s.sourceSlideId; });
+      var changed = false, printed = {};
+      var slides = [];
+      deck.slides.forEach(function (s) {
+        var o = original[from[s.id]];
+        if (!printsAsPages(o, s)) { slides.push(s); return; }
+        changed = true;
+        /* A game is several lab slides (its cover, its questions): its original prints once. */
+        if (printed[o.id]) return;
+        printed[o.id] = true;
+        slides.push(Object.assign(JSON.parse(JSON.stringify(o)), { hidden: s.hidden }));
+      });
+      return changed ? SF.normalizeDeck(Object.assign({}, deck, { slides: slides })) : deck;
     });
   }
 
@@ -326,7 +481,7 @@
     doc: doc,
     setDoc: open,
     blank: function () { return api ? api.blank() : placeholder; },
-    draw: function () { showFrame(true); },
+    draw: function () { showFrame(true); whenReady(function (a) { if (a.setView) a.setView('lesson'); }); },
     describe: function (d) {
       var n = d && d.slides ? d.slides.length : 0;
       return n + (n === 1 ? ' slide' : ' slides');
@@ -375,9 +530,9 @@
     loading.classList.add('failed');
     loading.innerHTML = '<span>The lesson studio did not start.</span>' +
       '<span class="lab-loading-sub">' + (why === 'webgl'
-        ? 'It draws with WebGL2, which this browser has switched off \u2014 often after the graphics card ran out of memory. Quit and reopen the browser, or '
-        : 'Reload the page, or ') +
-      '<a href="?classic=1">open the classic Lesson studio</a>.</span>';
+        ? 'It draws with WebGL2, which this browser has switched off \u2014 often after the graphics card ran out of memory. Quit and reopen the browser. '
+        : 'Reload the page. If it still does not start, ') +
+      'quit and reopen the browser.</span>';
   }
 
   function hideLoading() {
@@ -403,11 +558,28 @@
     if (!enabled() || !SF.Shell) return;
     mount();
     SF.Shell.register(ws);
+    /* The Quiz studio and Activities are the lab too: the same lesson, in the
+       same frame, shown as its games or its activities (lab/src/model/store.ts
+       LabView). What is made there goes into the lesson; the classic studios'
+       panes and canvas are not used. */
+    SF.Shell.register(studioView('game', 'quiz', 'Games'));
+    SF.Shell.register(studioView('plan', 'activities', 'Activities'));
     document.documentElement.classList.add('lab-engine');
-    /* Present is the lab's show. The classic editor wired this button to its
-       own player when it installed; the lab engine installs after it. */
-    var btnPresent = document.getElementById('btnPresent');
-    if (btnPresent) btnPresent.onclick = function () { ws.play(); };
+    /* The lesson the address asked for. */
+    var asked = askedLesson(askedKey);
+    if (asked) {
+      open(JSON.parse(JSON.stringify(asked)));
+      try {
+        if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
+      } catch (e) {}
+    }
+    /* Present is the lab's show. */
+    /* The Quiz studio's and Activities' Present too: one lesson, one show. */
+    ['btnPresent', 'btnPlay', 'btnPresentPlan'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.onclick = function () { ws.play(); };
+    });
+    followShow();
     /* File → Open saved lesson: the lab's decks, through the shell's own Open list. */
     var btnOpenLesson = document.getElementById('btnOpenLesson');
     var btnOpen = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnOpen'));
@@ -438,14 +610,14 @@
     var lastDeck = a.getDeck();
     a.subscribe(function () {
       var d = a.getDeck();
-      /* An edit: the shell's Save has something to write, as with the classic editor. */
+      /* An edit: the shell's Save has something to write. */
       if (d !== lastDeck) {
         /* The name and folder are the shell's chrome. Only when they change: rewriting
            the title field on every edit would move the caret of someone typing in it. */
         var chrome = d.title !== lastDeck.title || d.libraryGroup !== lastDeck.libraryGroup || d.id !== lastDeck.id;
         lastDeck = d; ws._dirty = true;
         if (chrome) writeCard(d);
-        if (chrome && SF.Shell && SF.Shell.current && SF.Shell.current() === ws) SF.Shell.syncChrome();
+        if (chrome && SF.Shell && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
       }
       /* Out of the show: out of full screen with it. */
       if (!a.isPresenting() && frame && document.fullscreenElement === frame) {
@@ -454,24 +626,49 @@
     });
     var run = waiting; waiting = [];
     run.forEach(function (fn) { fn(a); });
-    if (SF.Shell && SF.Shell.syncChrome && SF.Shell.current && SF.Shell.current() === ws) SF.Shell.syncChrome();
+    if (SF.Shell && SF.Shell.syncChrome && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
   }
 
-  /* The classic editor calls this when it draws: a lesson it has just been
-     handed (from the Library, the demo, New) opens in the lab. Only a new
-     lesson — edits the Activities or Quiz studio make to the classic copy of
-     one already open are not pulled over the lab's. */
-  function classicDeck(d) {
-    if (!enabled() || !d || !d.id) return;
-    if (!SF.Shell || !SF.Shell.current || SF.Shell.current() !== ws) return;
-    if (d.id === lastClassic && api && (api.getDeck().sourceId === d.id || api.getDeck().id === d.id)) return;
-    lastClassic = d.id;
-    open(JSON.parse(JSON.stringify(d)));
+  /* The editor follows the show: out of a show, the lab is on the slide the
+     show ended on, so Present again goes on from there, as it would in
+     Keynote or PowerPoint, rather than from wherever editing had left it. A
+     SlideForge slide the lab has not got (a game it did not build) leaves the
+     lab on the lab slide before it. */
+  var lastShown = null;
+  function followShow() {
+    if (!SF.Player || !SF.Player.on) return;
+    SF.Player.on('slide', function (e) {
+      var d = SF.Player.deck;
+      if (!api || !d || d.id !== api.getDeck().id) { lastShown = null; return; }
+      var ids = api.getDeck().slides.map(function (s) { return s.id; });
+      for (var i = e && e.index != null ? e.index : SF.Player.idx; i >= 0; i--) {
+        var s = d.slides[i];
+        if (s && ids.indexOf(s.id) >= 0) { lastShown = s.id; return; }
+      }
+    });
+    SF.Player.on('close', function () {
+      if (lastShown && api && api.showSlide) api.showSlide(lastShown);
+      lastShown = null;
+    });
   }
 
-  function useClassic(on) {
-    try { localStorage.setItem(KEY, on ? 'classic' : 'lab'); } catch (e) {}
-    location.reload();
+  /** The shell's studios the lab is: the Lesson studio and its views. */
+  var studios = [];
+  function isLabStudio(w) { return w === ws || studios.indexOf(w) >= 0; }
+
+  /** The Lesson studio's workspace as another of the shell's studios: the lab's frame, in a view. */
+  function studioView(key, view, label) {
+    var v = Object.assign({}, ws, {
+      key: key, railLabel: label,
+      draw: function () { showFrame(true); whenReady(function (a) { if (a.setView) a.setView(view); }); }
+    });
+    /* One lesson, so one unsaved state: an edit in any of the three studios is
+       the lesson's, and Save in any of them clears it (js/shell.js reads and
+       resets active._dirty). */
+    delete v._dirty;
+    Object.defineProperty(v, '_dirty', { get: function () { return ws._dirty; }, set: function (x) { ws._dirty = x; } });
+    studios.push(v);
+    return v;
   }
 
   /* Start the lab loading now, while the rest of the page's scripts run and the
@@ -480,10 +677,32 @@
 
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
-    classicDeck: classicDeck, useClassic: useClassic,
+    /* The lab added a game or activity in the lesson: its studio's tab, where it is edited. */
+    showStudio: function (view) {
+      var key = { lesson: 'deck', quiz: 'game', activities: 'plan' }[view];
+      if (key && SF.Shell && SF.Shell.activate) SF.Shell.activate(key, { toast: false });
+    },
+    /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
+    openLesson: openLesson, openKey: openKey,
+    /** The id of the lesson open in the lab: the Library's card for it. */
+    currentId: function () { return enabled() && api ? api.getDeck().id : ''; },
+    /* The Library renamed or moved the lesson that is open: the lab's deck takes it. */
+    retitle: function (patch) {
+      whenReady(function (a) {
+        if (patch.title != null && patch.title !== a.getDeck().title) a.setTitle(patch.title);
+        if (patch.libraryGroup != null && patch.libraryGroup !== a.getDeck().libraryGroup) a.setGroup(patch.libraryGroup);
+        if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
+      });
+    },
+    /* For the tests: which slides print from their SlideForge original, the picture a lab slide becomes, and a lesson's games as the lab gets them. */
+    printsAsPages: printsAsPages, pictureSlide: pictureSlide, lessonGames: lessonGames,
     /* For Share (js/shell.js): the lesson as SlideForge's player shows it. */
     showDeck: function () {
       return new Promise(function (resolve, reject) { whenReady(function () { buildShowDeck().then(resolve, reject); }); });
+    },
+    /* The handout's lesson: the show, with the slides SlideForge prints as pages from their originals. */
+    printDeck: function () {
+      return new Promise(function (resolve, reject) { whenReady(function () { buildPrintDeck().then(resolve, reject); }); });
     },
     /* A shared copy has to fit the server's limit (8 MB, MAX_DOC in
        server/server.js), so its pictures step down until it does. */
@@ -502,6 +721,10 @@
       });
     },
     lastShowDeck: function () { return lastShowDeck; },
+    /* For the page's start (js/lesson-runtime.js): the show a held room is walked back into, as Host live ran it. */
+    heldRoomDeck: function () {
+      return new Promise(function (resolve, reject) { whenReady(function () { buildShow().then(function (s) { resolve(s.run); }, reject); }); });
+    },
     /* For Activities' Host live: the lesson's, whichever studio is on screen. */
     hostLive: function () { hostLive(); },
     /* For the live stage (js/lab-stage.js): the lab deck as it is now, and the
@@ -518,27 +741,6 @@
         ? document.querySelector('[data-rehearse-size="' + Number(arg) + '"]')
         : document.getElementById(ids[name] || '');
       if (el && /** @type {HTMLElement} */ (el).click) /** @type {HTMLElement} */ (el).click();
-    },
-    /* For the lesson strip in Quiz studio and Activities (js/lesson-strip.js):
-       the lesson in the show's order, small. Each lab slide is a picture; the
-       games and activities are SlideForge's own slides, from the copy those
-       two studios are editing when it is this lesson's. */
-    stripDeck: function () {
-      return new Promise(function (resolve, reject) {
-        whenReady(function (a) {
-          a.stills(288, undefined, 0.72).then(function (stills) {
-            var labDeck = a.getDeck();
-            var editing = SF.Editor && SF.Editor.deck && SF.Editor.deck();
-            var source = editing && editing.id === labDeck.sourceId ? editing : sourceLesson(labDeck);
-            resolve({
-              deck: source, title: labDeck.title,
-              slides: ordered(stills, function (st) {
-                return { lab: true, id: st.id, sourceSlideId: st.sourceSlideId, image: st.image, name: st.name, hidden: st.hidden };
-              }, source)
-            });
-          }, reject);
-        });
-      });
     },
     /* For the Library (js/studio.js). */
     hasCopy: function (id) { return enabled() && hasCopy(id); },

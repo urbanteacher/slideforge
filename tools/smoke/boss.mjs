@@ -24,19 +24,16 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
 
-  await page.goto(`http://127.0.0.1:${port}/?lesson=layout-bank`);
-  await page.waitForFunction(() => window.SF?.Editor?.deck());
+  await page.goto(`http://127.0.0.1:${port}/`);
+  await page.waitForFunction(() => window.SF?.createPresetGame && SF.Demo && SF.Playbook);
+  /* The classic Quiz studio's Try demo is gone; it ran SF.Demo.start on the
+     game's run deck, in the mode the playbook gives the format, and so does this. */
   const title = await page.evaluate(() => {
-    const deck = SF.Editor.deck();
-    const slide = deck.slides.find((s) => s.type === 'game' && /boss/i.test(s.gameTitle || ''));
-    SF.Editor.selectSlide(slide.id);
-    SF.Games.openGame(slide.gameId);
-    SF.Shell.activate('game', { toast: false });
-    return slide.gameTitle;
+    const g = SF.createPresetGame('boss', structuredClone(SF.GAME_FORMAT_PRESETS['boss-battle']), null);
+    SF.Demo.start(SF.gameToRunDeck(g), { fullscreen: false, mode: SF.Playbook.demoKind(g) });
+    return g.title;
   });
   assert.match(title, /boss/i);
-
-  await page.click('#btnDemoGame');
   await page.waitForSelector('#player.on', { timeout: 15000 });
 
   /* The demo opens on the rules slide and waits for the teacher, as it should. */

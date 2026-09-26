@@ -1,5 +1,5 @@
 /* Visual and behavioural audit for reusable compositions and refreshed demos.
-   Run with the server: npm start; node tools/smoke-design-foundations.mjs
+   Run with: node tools/smoke/run.mjs design-foundations
    Screenshots are review artifacts, not pixel baselines. */
 import { chromium } from 'playwright';
 import fs from 'node:fs';
@@ -79,23 +79,7 @@ try{
  });
  assert.deepEqual(controls,{scales:true,aligned:'right',date:'2027-03-01',quoteKeys:2,cells:['Row name','Left','Right']});
 
- const inspector=await page.evaluate(()=>{
-  const checks=[];
-  for(const type of ['title','cards']){
-   const d=SF.makeDeck('Composition inspector check');d.theme='aiad27-safe';d.slides=[SF.makeSlide(type)];SF.Store.save(d);SF.Editor.openDeck(d.id);
-   const label=[...document.querySelectorAll('#inspector label')].find(n=>n.textContent===(type==='title'?'Supporting line':'Voting instruction'));
-   const input=label?.control;if(!input)throw Error('Missing composition content field '+type);
-   input.value='Editable supporting copy';input.dispatchEvent(new Event('input',{bubbles:true}));
-   checks.push(SF.Editor.deck().slides[0].body==='Editable supporting copy');
-   const look=[...document.querySelectorAll('#inspector [role="tab"]')].find(n=>n.textContent.includes('Look'));look.click();
-   const compositionLabel=[...document.querySelectorAll('#inspector label')].find(n=>n.textContent==='Composition');
-   const select=compositionLabel?.control;if(!select)throw Error('Missing composition control');
-   select.value='none';select.dispatchEvent(new Event('change',{bubbles:true}));
-   checks.push(SF.Editor.deck().slides[0].design.composition==='none');
-  }
-  return checks;
- });
- assert.deepEqual(inspector,[true,true,true,true]);
+ // The classic inspector's composition fields went with the classic studios; the lab edits slides now.
  // A stale composition must not leak onto a different slide type; campaign
  // compositions keep their own contract. Settings survive the JSON round trip.
  const contract=await page.evaluate(()=>{const slide=SF.normalizeSlide(JSON.parse(JSON.stringify({type:'title',title:'Example',design:{composition:'poster'}})));return{saved:slide.design.composition,unsupported:SF.compositionOptions({type:'chart'},'product').length,campaign:SF.compositionOptions({type:'title'},'aiad27-safe').length}});

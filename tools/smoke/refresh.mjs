@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-/* Real browser regression for item 20: reload the editor, wall and phones. */
+/* Real browser regression for item 20: reload the wall, the live host and phones.
+   The deck is built and run directly (SF.Player, SF.Live), since the show and
+   the room are what reloads; the lab builds its own shows the same way. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -18,29 +20,21 @@ try {
   const host = await context.newPage();
   host.on('pageerror', e => errors.push(e.message));
   await host.goto(base);
-  await host.waitForFunction(() => window.SF?.Editor?.deck());
-  await host.evaluate(() => {
+  await host.waitForFunction(() => window.SF?.Player && SF.Shell?.current()?.doc()?.id, null, { timeout: 60000 });
+  // The classic editor's selection restore went with the classic studios; the lab keeps its own slide.
+  const deckId = await host.evaluate(() => {
     const d = SF.makeDeck('Refresh regression');
     const g = SF.makeGame('Embedded check', 'choice');
     g.settings.defaultTime = 0;
     SF.GameStore.save(g);
     const embed = SF.makeSlide('game'); embed.gameId = g.id;
     d.slides = [SF.makeSlide('title'), SF.makeSlide('content'), embed, SF.makeSlide('content')];
-    SF.Store.save(d); SF.Editor.openDeck(d.id);
-    SF.Editor.selectSlide(d.slides[2].id); SF.Editor.workspace.draw();
+    SF.Store.save(d);
+    return d.id;
   });
-  const selected = await host.evaluate(() => SF.Editor.deck().slides[SF.Editor.selected()].id);
-  await host.reload();
-  assert.equal(await host.evaluate(() => SF.Editor.deck().slides[SF.Editor.selected()].id), selected);
-  await host.evaluate(() => {
-    const d = SF.Editor.deck();
-    d.slides.reverse(); SF.Store.save(d);
-  });
-  await host.reload();
-  assert.equal(await host.evaluate(() => SF.Editor.deck().slides[SF.Editor.selected()].id), selected);
-  console.log('✓ Editor restores selection by id after reload and reorder');
+  const runDeck = (id) => SF.buildRunDeck(SF.Store.get(id), (g) => SF.GameStore.get(g));
 
-  await host.evaluate(() => SF.Editor.workspace.play());
+  await host.evaluate(`SF.Player.start((${runDeck})(${JSON.stringify(deckId)}), 0, { fullscreen: false })`);
   await host.evaluate(() => SF.Player.goTo(2));
   const wall = await host.evaluate(() => ({ id: SF.Player.deck.slides[SF.Player.idx].id, index: SF.Player.idx }));
   await host.reload();
@@ -51,7 +45,7 @@ try {
   assert.equal(await host.evaluate(() => SF.Player.open), false);
   console.log('✓ Compiled presentation and position survive; explicit exit stays exited');
 
-  await host.evaluate(() => SF.Editor.workspace.hostLive());
+  await host.evaluate(`SF.Live.host((${runDeck})(${JSON.stringify(deckId)}))`);
   await host.waitForFunction(() => SF.Live.pin);
   const pin = await host.evaluate(() => SF.Live.pin);
   const phone = await context.newPage();

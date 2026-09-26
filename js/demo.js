@@ -343,6 +343,8 @@
     paintRail();
     if (host.stopMusic) host.stopMusic();
     if (host.syncPresenter) host.syncPresenter();
+    /* A lab game's question draws the lab's own answer slide (js/lab-stage.js), as in the live room. */
+    if (SF.LabStage && SF.LabStage.reveal) SF.LabStage.reveal(slide);
     SF.toast('Demo reveal — sample scores only');
   }
 

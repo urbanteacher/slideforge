@@ -1,13 +1,20 @@
 import { createLayer, uid } from './defaults';
 import { CHART_DARK, CHART_LIGHT } from '../engine/chartKinds';
+import { EXPERIMENTS } from '../engine/experiment';
 import {
-  LAYOUTS, beforeAfterSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide,
+  LAYOUTS, beforeAfterSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide,
   gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide,
   railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, type LayoutStyle,
 } from './layouts';
 import { gameClock } from './layouts';
 import type { Deck, FeedbackKind, Slide, SlideFeedback } from './types';
-import { finish, framed, kit } from './ukbtDeck';
+import { syncHeaderFooter } from './headerFooter';
+import { addThemeArt, themeGround, type ArtContext } from './themeArt';
+import { finish, finishSlide, framed, kit } from './ukbtDeck';
+import { gameSlides } from './designs/formats';
+import { fitSize } from './designs/kit';
+import { aiad27Slide, builds27 } from './aiad27';
+import type { ShowcaseGame } from './designs/games';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
 // a table, chart data — and the lab has a layout for each type, on its own standard rules. This
@@ -20,8 +27,19 @@ import { finish, framed, kit } from './ukbtDeck';
 export interface SFSlide {
   id?: string;
   type: string;
+  /** Kept out of the show: a teacher's preparation, an extension held back. */
+  hidden?: boolean;
   /** The room's say on the slide: a poll, word cloud, brainstorm or scale, with its settings. */
   feedback?: Record<string, unknown> | null;
+  /** How a picture fills its box (contain shows it whole), and which side of a split it is on. */
+  imageFit?: string;
+  imageSide?: string;
+  /** A title slide's date (2026-09-21), which SlideForge sets under the subtitle. */
+  date?: string;
+  /** Where the author moved the theme's shapes on this slide (src/render/art.js), by shape. */
+  art?: { poses?: Record<string, { x?: number; y?: number; scale?: number; hidden?: boolean; order?: 'back' | 'front' }> };
+  /** A game slide's game, in SlideForge's game store (the lesson brings it compiled: SFDeck.games). */
+  gameId?: string;
   /** Seconds the slide is timed for: SlideForge draws its game clock and counts it down. */
   timeLimit?: number;
   title?: string;
@@ -34,13 +52,18 @@ export interface SFSlide {
   chartSource?: string;
   design?: Record<string, unknown>;
   exploration?: Record<string, unknown>;
+  /** A "Transform the chart" experiment: its preset, prediction prompt, states and step time. */
+  experiment?: { preset?: string; prompt?: string; states?: unknown[]; duration?: number };
   progressive?: boolean;
   code?: string;
   language?: string;
   typewrite?: boolean;
   videoPoster?: string;
 }
-export interface SFDeck { key: string; title: string; theme: string; slides: SFSlide[]; images: Record<string, string> }
+/** A lesson's game, compiled by SlideForge (js/lab-engine.js, SF.compileGame) as the lab's own games
+ *  are (tools/lab-games.mjs), and whether it opens with a cover (its intro or How to play). */
+export type LessonGame = ShowcaseGame & { cover?: boolean };
+export interface SFDeck { key: string; title: string; theme: string; slides: SFSlide[]; images: Record<string, string>; games?: Record<string, LessonGame> }
 
 const cells = (line: string) => line.split('\t').map((c) => c.trim());
 const pairs = (b: string[] = []) => b.filter((l) => l.trim()).map((l) => { const [a = '', c = ''] = cells(l); return [a, c] as [string, string]; });
@@ -89,28 +112,112 @@ function photo(st: LayoutStyle, src: string, caption: string, credit: string): S
   return s;
 }
 
-/** A statement in SlideForge's framed composition. */
+/** A statement in SlideForge's framed composition. SlideForge's statements are often a whole
+ *  question, a sentence or two (AI Awareness Day's discussion questions): the line is set in the
+ *  frame's width, sized so it fits above its credit, and shrinks to fit rather than growing past the
+ *  frame and over the credit. */
 function statement(st: LayoutStyle, line: string, credit: string): Slide {
   const s = LAYOUTS.find((l) => l.id === 'statement-frame')!.make(st);
-  s.layers.find((l) => l.name === 'Statement')!.params.text = line;
-  const c = s.layers.find((l) => l.name === 'Credit')!;
-  if (credit) c.params.text = credit; else s.layers = s.layers.filter((l) => l !== c);
+  const l = s.layers.find((x) => x.name === 'Statement')!;
+  l.params.text = line;
+  fitStatement(l, !!credit);
+  const c = s.layers.find((x) => x.name === 'Credit')!;
+  if (credit) c.params.text = credit; else s.layers = s.layers.filter((x) => x !== c);
   return s;
 }
 
+/** The statement frame's line: the frame's width less its margins, down to the credit (or the frame's
+ *  foot without one), at the largest size that fits, and shrinking to fit what the measure misses. */
+export function fitStatement(l: Slide['layers'][number], credit: boolean) {
+  const box = { x: 210, y: 250, w: 1500, h: credit ? 430 : 600, rot: 0 };
+  l.box = box;
+  l.params.size = fitSize([String(l.params.text ?? '')], box.w, box.h, { ...l.params }, 168, 72);
+  l.params.fit = 'shrink';
+}
+
 type Ground = 'working' | 'quiet' | 'loud';
+
+/** A picture shown whole where SlideForge shows it whole (imageFit: contain), not cropped to its box. */
+function fitted(slide: Slide, fit?: string): Slide {
+  if (fit === 'contain') for (const l of slide.layers) if (l.kind === 'image' && l.name === 'Picture') l.params.fit = 'contain';
+  return slide;
+}
+
+/** A split's picture at its share of the width (SlideForge's Image share: 35, 50 or 65%), the words
+ *  given the rest. Their column runs from the slide's margin to the grid's gutter short of the
+ *  picture, so a narrow one wastes none of its width; and a narrow one beside a picture on the right,
+ *  where the page number sits over the picture, runs down to the rail, its points set closer, so the
+ *  words keep the lab's reading size (36px, never less) rather than running off the slide. */
+function shareSplit(slide: Slide, pic: Slide['layers'][number], side: 'left' | 'right', share: number) {
+  if (![35, 65].includes(share) || !pic.box) return;
+  const M = 78, G = 54, w = Math.round(1920 * share / 100);
+  pic.box = { ...pic.box, w, x: side === 'right' ? 1920 - w : 0 };
+  const left = side === 'right' ? M : w + G, right = side === 'right' ? 1920 - w - G : 1920 - M;
+  const narrow = share === 65;
+  for (const l of slide.layers) {
+    if (l === pic || !l.box || l.name === 'Ground' || l.params.hfSlot) continue;
+    // The short accent bar keeps its length; the heading and the points take the column.
+    if (l.box.w <= 240) { l.box = { ...l.box, x: left }; continue; }
+    l.box = { ...l.box, x: left, w: right - left };
+    if (narrow && l.name === 'Bullet points') {
+      l.params.lineHeight = 1.2;
+      if (side === 'right') l.box.h = 1050 - l.box.y;
+    }
+  }
+}
+
+/** A contained picture on a split that is not full (SlideForge's media ground): the picture on a
+ *  white card in its half, inset from its edges, over a quiet ground (css/northeastern.css
+ *  .layout-split .split-media: NU London's navy mist; the theme's panel elsewhere). */
+function cardSplit(slide: Slide, pic: Slide['layers'][number], st: LayoutStyle, theme: string) {
+  if (!pic.box) return;
+  const half = { ...pic.box };
+  const inset = 42, card = { ...half, x: half.x + inset, y: half.y + inset, w: half.w - inset * 2, h: half.h - inset * 2 };
+  const nul = theme.startsWith('northeastern');
+  const mist = createLayer('shape', { name: 'Picture ground', box: half, anim: { type: 'none', duration: 0 },
+    params: nul ? { shape: 'rect', radius: 0, fill: '#e8eef4', gradient: true, fill2: '#d9e3ec', angle: 70, strokeWidth: 0 } : { shape: 'rect', radius: 0, fill: st.panel, strokeWidth: 0 } });
+  const back = createLayer('shape', { name: 'Picture card', box: card, anim: { type: 'none', duration: 0 },
+    params: { shape: 'rect', radius: 21, fill: '#ffffff', stroke: '#0c3354', strokeOpacity: 0.12, strokeWidth: 1.5 } });
+  pic.box = { ...card, x: card.x + 12, y: card.y + 12, w: card.w - 24, h: card.h - 24 };
+  pic.params.radius = 12;
+  slide.layers.splice(slide.layers.indexOf(pic), 0, mist, back);
+}
+
+/** A title slide's date under its subtitle, as SlideForge sets it (js/render.js, en-GB: 21 September
+ *  2026): NU London's in small tracked capitals in its sky blue (css/northeastern.css), others in the
+ *  quiet text at the size SlideForge gives it (css/app.css .slide-date). */
+function datedTitle(slide: Slide, date: string | undefined, st: LayoutStyle, theme: string) {
+  const when = date ? new Date(`${date}T12:00:00`) : null;
+  if (!when || Number.isNaN(when.getTime())) return;
+  const text = when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const words = slide.layers.filter((l) => l.kind === 'text' && l.box && !l.params.hfSlot);
+  const under = words.sort((a, b) => (b.box!.y + b.box!.h) - (a.box!.y + a.box!.h))[0];
+  if (!under?.box) return;
+  const nul = theme.startsWith('northeastern');
+  slide.layers.push(createLayer('text', {
+    name: 'Date', box: { x: under.box.x, y: under.box.y + under.box.h + (nul ? 42 : 36), w: under.box.w, h: nul ? 40 : 56, rot: 0 },
+    anim: { type: 'fade', duration: 0.7, delay: 0.28 },
+    params: nul
+      ? { text, font: st.body, weight: '600', size: 22, color: '#7fa6c6', tracking: 0.22, uppercase: true, lineHeight: 1.2, fit: 'shrink' }
+      : { text, font: st.body, weight: '400', size: 38, color: st.muted, lineHeight: 1.2, fit: 'shrink' },
+  }));
+}
 /** Where a SlideForge theme sets a type on its dark ground (Northeastern: title, section, quote). */
 const QUIET = new Set(['title', 'section', 'quote']);
 
 /** One SlideForge slide as a lab slide, or null for what the lab leaves out (games). */
-function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) => string, mark: string): { slide: Slide; ground: Ground; note?: string } | null {
-  const g: Ground = QUIET.has(s.type) && s.design?.composition !== 'sidecar' ? 'quiet' : 'working';
+function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) => string, mark: string, theme = ''): { slide: Slide; ground: Ground; note?: string } | null {
+  // The theme's own ground for the type where it has one (NU London's red section breaks), else the rule.
+  const g: Ground = themeGround(theme, s.type) ?? (QUIET.has(s.type) && s.design?.composition !== 'sidecar' ? 'quiet' : 'working');
   const st = on(g);
   const t = s.title ?? '', sub = s.subtitle ?? '', b = s.bullets ?? [];
   const comp = String(s.design?.composition ?? '');
   switch (s.type) {
-    case 'title':
-      return { slide: comp === 'sidecar' ? sidecarTitleSlide(st, t, sub, mark) : titleSlide(st, t, sub), ground: g };
+    case 'title': {
+      const slide = comp === 'sidecar' ? sidecarTitleSlide(st, t, sub, mark) : titleSlide(st, t, sub);
+      datedTitle(slide, s.date, st, theme);
+      return { slide, ground: g };
+    }
     case 'statement': return { slide: statement(st, s.body ?? t, sub), ground: g };
     case 'section': return { slide: sectionSlide(st, t, sub), ground: g };
     case 'introduction': return { slide: introductionSlide(st, t, sub, s.body ?? ''), ground: g };
@@ -173,13 +280,19 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       const facts = String(s.body ?? '').trim();
       if (frame || facts) {
         const cap = (s.design as { capStyle?: string } | undefined)?.capStyle === 'bar' ? 'bar' : 'plain';
-        return { slide: framedPictureSlide(st, t, sub, img(s.image), frame || '4:3', cap, facts), ground: g };
+        return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), frame || '4:3', cap, facts), s.imageFit), ground: g };
       }
-      return { slide: photo(st, img(s.image), t, sub), ground: g };
+      return { slide: fitted(photo(st, img(s.image), t, sub), s.imageFit), ground: g };
     }
     case 'split': {
-      const slide = splitSlide(st, t, b, s.design?.imageSide === 'left' ? 'left' : 'right');
-      Object.assign(slide.layers.find((l) => l.kind === 'image')!.params, { src: img(s.image), fit: 'cover' });
+      // SlideForge keeps the side on the slide (imageSide), not in its design.
+      const side = (s.imageSide ?? s.design?.imageSide) === 'left' ? 'left' : 'right';
+      const slide = splitSlide(st, t, b, side);
+      const pic = slide.layers.find((l) => l.kind === 'image')!;
+      const contain = s.imageFit === 'contain';
+      Object.assign(pic.params, { src: img(s.image), fit: contain ? 'contain' : 'cover' });
+      shareSplit(slide, pic, side, Number(s.design?.imageShare));
+      if (contain && s.design?.mediaGround !== 'full') cardSplit(slide, pic, st, theme);
       return { slide, ground: g };
     }
     case 'gallery': {
@@ -198,6 +311,11 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       const spots = ((s.exploration?.spots ?? []) as { x: number; y: number; zoom?: number; title: string; body?: string }[]);
       const src = img(s.image);
       return { slide: exploreSlide(st, t, src, spots, aspectOf(src)), ground: g };
+    }
+    case 'experiment': {
+      // The lab's experiment layer runs SlideForge's presets and states: predict, then Next through them.
+      const e = s.experiment ?? {}, preset = EXPERIMENTS[e.preset ?? ''] ? e.preset! : 'polling';
+      return { slide: experimentSlide(st, t, e.prompt || EXPERIMENTS[preset].prompt, { preset, data: s.body || EXPERIMENTS[preset].data, states: e.states?.length ? JSON.stringify(e.states) : '', duration: e.duration }, s.chartSource ?? ''), ground: g };
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
@@ -226,6 +344,7 @@ export function feedbackOf(f: SFSlide['feedback']): SlideFeedback | null {
   if (Number(f.points) > 0) out.points = Number(f.points);
   if (typeof f.lowLabel === 'string') out.lowLabel = f.lowLabel;
   if (typeof f.highLabel === 'string') out.highLabel = f.highLabel;
+  if ((f as { hold?: unknown }).hold === true) out.hold = true;
   return out;
 }
 
@@ -251,8 +370,8 @@ export function carryLive(s: SFSlide, slide: Slide, st: LayoutStyle): boolean {
 /** A lab copy made before converted slides kept their feedback and timers, given them from its
  *  SlideForge lesson: each lab slide matched to its source by `sourceSlideId`, or, for a copy older
  *  than that, in order when the counts agree. How many slides took something. */
-export function carryDeckLive(deck: Deck, source: SFSlide[], paletteId = 'nul'): number {
-  const { on } = kit(paletteId);
+export function carryDeckLive(deck: Deck, source: SFSlide[], paletteId = 'nul', set?: string): number {
+  const { on } = kit(paletteId, set);
   const byId = new Map(source.filter((s) => s.id).map((s) => [s.id as string, s]));
   let pairs: [Slide, SFSlide][] = [];
   if (deck.slides.some((s) => s.sourceSlideId)) {
@@ -276,23 +395,171 @@ export function convertsSlide(s: SFSlide): boolean {
   try { return !!convert(s, probe.on, (p) => p ?? '', ''); } catch { return false; }
 }
 
+/** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
+ *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. 8: AI Awareness Day 2027 wears its frame (strand, lockup, campaign line, page number) and its labels over the words. 9: AI Awareness Day 2027's compositions are built as its design draws them. 10: its takeaways are the lab's numbered block, its ballot the lab's choice block. A copy made at an older version is brought up to date when it
+ *  next opens (embed.ts), taking only what that version could not build. */
+export const CARRIED = 10;
+
+/** The SlideForge slide types each version of the converter first built. A lab copy made before a
+ *  version gets those slides when it next opens. Only those: a slide the lab could already build is
+ *  missing from a copy because its author deleted it, and it stays deleted. */
+const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'] };
+
+type Kit = ReturnType<typeof kit>;
+
+/** One SlideForge slide as the lab slide a fresh conversion makes of it, or null for what the lab leaves out. */
+function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtContext): Slide | null {
+  // AI Awareness Day 2027's compositions are built as the design draws them (aiad27.ts).
+  const out = art && builds27(art.theme, s) ? aiad27Slide(s, art.theme) : convert(s, k.on, img, k.guide.marks[1]?.src ?? k.guide.marks[0]?.src ?? '', art?.theme);
+  if (!out) return null;
+  const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
+  const made = k.put(out.slide, out.ground, notes);
+  if (s.id) made.sourceSlideId = s.id;
+  // A slide SlideForge keeps out of the show stays out of it: a teacher's preparation is not for the wall.
+  if (s.hidden) made.hidden = true;
+  carryLive(s, made, k.on(out.ground));
+  if (art) addThemeArt(made, s, art, img);
+  return made;
+}
+
+/** A lesson's game slide as the lab's game: built by the same code as the lab's own games
+ *  (designs/formats.ts gameSlides), so each question carries what the live room plays it by
+ *  (src/deck/labshow.js) and is answered on the slide after. SlideForge plays a game without its
+ *  cover when its intro and How to play are off, as the Checks in a lecture are; so does the lab.
+ *  Every slide is filed under the game's SlideForge slide, and the first carries its notes. */
+function buildGame(s: SFSlide, g: LessonGame, k: Kit, img: (p?: string) => string, art?: ArtContext): Slide[] {
+  const slides = gameSlides(g, k.on('working')).filter((x) => g.cover || x.game?.role !== 'cover');
+  slides.forEach((x, i) => {
+    if (s.id) x.sourceSlideId = s.id;
+    if (s.hidden) x.hidden = true;
+    if (i === 0 && s.notes) x.notes = [s.notes, x.notes ?? ''].filter(Boolean).join('\n\n');
+    // The theme's artwork, as on SlideForge's quiz slides (UK Black Tech's waves, AI Awareness's rule).
+    if (art) addThemeArt(x, { type: 'quiz' }, art, img);
+  });
+  return slides;
+}
+
+/** One SlideForge slide as lab slides: one for most, a game's question and answer (and its cover)
+ *  for a game the lesson brought compiled, none for what the lab leaves out. */
+function buildSlides(s: SFSlide, k: Kit, img: (p?: string) => string, art: ArtContext | undefined, games: SFDeck['games']): Slide[] {
+  const g = s.type === 'game' && s.gameId ? games?.[s.gameId] : undefined;
+  if (g) return buildGame(s, g, k, img, art);
+  const one = buildSlide(s, k, img, art);
+  return one ? [one] : [];
+}
+
+/** AI Awareness Day 2027's page number, bottom right on every slide but the cover ("2 / 7"): the
+ *  deck's own footer, so it follows the slides as they move. The rest of its frame is the theme's
+ *  artwork (themeArt.ts). */
+export function pageNumbers(d: Deck): Deck {
+  if (d.headerFooter?.enabled) return d;
+  d.headerFooter = { enabled: true, hideOnCover: true, slots: { 'footer-right': { kind: 'pages' } } };
+  syncHeaderFooter(d);
+  return d;
+}
+
+/** A lab copy of an AI Awareness Day 2027 lesson made before version 9: each slide from a composition
+ *  aiad27.ts builds is built again, in its place, keeping its id and whether it is hidden. Slides the
+ *  author added, and the takeaways, stay as they are. How many. */
+export function carryDeck27(deck: Deck, source: SFSlide[], from: ArtSource, paletteId: string, set?: string): number {
+  if (!from.theme.startsWith('aiad27')) return 0;
+  const k = kit(paletteId, set);
+  const byId = new Map(source.map((s, i) => [s.id, i] as const));
+  let n = 0;
+  deck.slides = deck.slides.map((old) => {
+    const i = old.sourceSlideId ? byId.get(old.sourceSlideId) : undefined;
+    if (i === undefined || !builds27(from.theme, source[i])) return old;
+    const made = buildSlide(source[i], k, (p) => p ?? '', { theme: from.theme, index: i, deckTitle: from.title, total: source.length, slides: source });
+    if (!made) return old;
+    n++;
+    return Object.assign(made, { id: old.id, name: old.name, hidden: old.hidden, notes: old.notes, transition: old.transition });
+  });
+  if (n && deck.headerFooter?.enabled) syncHeaderFooter(deck);
+  return n;
+}
+
+/** A lab copy made before version 7 showed every slide, the ones SlideForge keeps out of the show too:
+ *  each slide from a hidden one is hidden. A slide shown in SlideForge is left as it is. How many. */
+export function carryDeckHidden(deck: Deck, source: SFSlide[]): number {
+  const hidden = new Set(source.filter((s) => s.hidden && s.id).map((s) => s.id));
+  let n = 0;
+  for (const sl of deck.slides) if (sl.sourceSlideId && hidden.has(sl.sourceSlideId) && !sl.hidden) { sl.hidden = true; n++; }
+  return n;
+}
+
+/** The lesson a lab copy came from, for its artwork: its theme and name. */
+export interface ArtSource { theme: string; title: string }
+
+/** A lab copy made before the converter drew themes' artwork, given it: each slide that came from the
+ *  lesson and has none gets its theme's, for its type and its place in the lesson. Only the pieces
+ *  drawn for the ground the slide is on. How many slides took some. */
+export function carryDeckArt(deck: Deck, source: SFSlide[], from: ArtSource): number {
+  const at = new Map(source.map((s, i) => [s.id, i] as const));
+  let n = 0;
+  for (const slide of deck.slides) {
+    const i = slide.sourceSlideId ? at.get(slide.sourceSlideId) : undefined;
+    if (i === undefined) continue;
+    if (addThemeArt(slide, source[i], { theme: from.theme, index: i, deckTitle: from.title, total: source.length, slides: source }, (p) => p ?? '')) n++;
+  }
+  return n;
+}
+
+/** SlideForge's frame for a converted NU London lesson (css/northeastern.css): the logo top right and
+ *  the page number bottom right, nothing else; off on the covers, which carry their own logo. */
+function lessonFrame(d: Deck, logo: string): Deck {
+  d.headerFooter = { enabled: true, hideOnCover: true, slots: { 'header-right': { kind: 'logo', src: logo }, 'footer-right': { kind: 'pages' } } };
+  syncHeaderFooter(d);
+  return d;
+}
+
+/** A lab copy made at converter version `from`, given the slides later versions build: each one built
+ *  as a fresh conversion would, and put after the lab slide of the SlideForge slide before it. Needs
+ *  the copy's slides to know their source (`sourceSlideId`); an older copy is left as it is. How many
+ *  slides came in. */
+export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul', from = 1, set?: string, art?: ArtSource, games?: SFDeck['games']): number {
+  const types = new Set(Object.entries(FIRST_BUILT).filter(([v]) => Number(v) > from).flatMap(([, t]) => t));
+  if (!types.size || !deck.slides.some((s) => s.sourceSlideId)) return 0;
+  const have = new Set(deck.slides.map((s) => s.sourceSlideId).filter(Boolean));
+  const k = kit(paletteId, set);
+  const img = (p?: string) => p ?? '';
+  let n = 0;
+  // Where the next slide goes: after the lab slide of the last source slide the copy has, or first.
+  let at = 0;
+  for (const s of source) {
+    if (s.id && have.has(s.id)) {
+      // After the last of its slides: a game is several.
+      const i = deck.slides.map((x) => x.sourceSlideId).lastIndexOf(s.id);
+      if (i >= 0) at = i + 1;
+      continue;
+    }
+    if (!s.id || !types.has(s.type)) continue;
+    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title, total: source.length, slides: source }, games);
+    if (!made.length) continue;
+    deck.slides.splice(at, 0, ...made.map((x, j) => finishSlide(x, at + j)));
+    have.add(s.id);
+    at += made.length;
+    n += made.length;
+  }
+  // The deck's header and footer onto the new slides, as framing a fresh conversion puts them.
+  if (n && deck.headerFooter?.enabled) syncHeaderFooter(deck);
+  return n;
+}
+
 /** A SlideForge deck, built in the lab in a palette (NU London's for the Northeastern theme). */
-export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { frame?: boolean; games?: string } = {}): Deck {
-  const { guide, on, put } = kit(paletteId);
+export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { frame?: boolean; games?: string; set?: string } = {}): Deck {
+  const k = kit(paletteId, opts.set);
   const img = (p?: string) => (p && data.images[p]) || '';
   const slides: Slide[] = [];
   let skipped = 0;
-  for (const s of data.slides) {
-    const out = convert(s, on, img, guide.marks[1]?.src ?? guide.marks[0]?.src ?? '');
-    if (!out) { skipped++; continue; }
-    const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
-    const made = put(out.slide, out.ground, notes);
-    if (s.id) made.sourceSlideId = s.id;
-    carryLive(s, made, on(out.ground));
-    slides.push(made);
-  }
-  const deck: Deck = { carried: 1, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) };
-  return opts.frame === false ? deck : framed(deck, guide.marks[0]?.src ?? '', 'Northeastern University London');
+  data.slides.forEach((s, index) => {
+    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title, total: data.slides.length, slides: data.slides }, data.games);
+    if (made.length) slides.push(...made); else skipped++;
+  });
+  const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };
+  if (data.theme?.startsWith('aiad27')) return pageNumbers(deck);
+  if (opts.frame === false) return deck;
+  // A NU London lesson wears SlideForge's frame; the lab's own NU decks keep theirs.
+  return data.theme.startsWith('northeastern') ? lessonFrame(deck, k.guide.marks[0]?.src ?? '') : framed(deck, k.guide.marks[0]?.src ?? '', 'Northeastern University London');
 }
 
 /** One of the Slide designs: a SlideForge slide with a special feature, built natively in the lab. */

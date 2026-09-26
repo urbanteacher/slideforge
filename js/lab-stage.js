@@ -28,12 +28,46 @@
   var lastWall = -1;
   /** @type {MutationObserver|null} */ var railWatch = null;
   var fontsCopied = false;
+  /* A lab game's question on the wall (src/deck/labshow.js) draws its own answer slide once it is
+     revealed, and its second drawing (Definition challenge's recall) once SlideForge asks. */
+  /** @type {Record<string, string>} */ var shown = {};
 
   function available() {
     return !!(global.SFLabStage && SF.LabEngine && SF.LabEngine.enabled && SF.LabEngine.enabled());
   }
 
   function isLabSlide(s) { return !!(s && s.design && s.design.labStill); }
+
+  /* Revealed in the live room, or by SlideForge's own player (Present, Rehearse: answers[id] is set once shown). */
+  function liveRevealed(s) {
+    if (SF.Live && SF.Live.active) return !!(SF.Live.revealed && SF.Live.revealed[s.id]);
+    return !!(SF.Player.answers && SF.Player.answers[s.id] != null);
+  }
+
+  /** Which of the lab's slides this one draws now: its answer once revealed, its recall once asked. */
+  function drawnIndex(s) {
+    var d = s.design || {};
+    if (d.labReveal && byId[d.labReveal] != null && (shown[s.id] === 'answer' || liveRevealed(s))) return byId[d.labReveal];
+    var asked = shown[s.id] === 'ask' || (s.style === 'definition' && SF.Player.definitionPhase && SF.Player.definitionPhase(s) !== 'reading');
+    if (d.labAsk && byId[d.labAsk] != null && asked) return byId[d.labAsk];
+    return byId[s.id];
+  }
+
+  /** Move the drawing on to one of the lab's other slides (the answer, the recall), as the lab's
+      own Next would: its transition plays, so what the two share travels. */
+  function drawPart(s, part, id) {
+    shown[s.id] = part;
+    if (!player || !onLab || id == null || byId[id] == null) return;
+    var cur = SF.Player.wallSlide ? SF.Player.wallSlide() : SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    if (!cur || cur.id !== s.id) return;
+    var i = byId[id];
+    if (player.state().index !== i) player.goto(i, 1);
+  }
+
+  /** The question is revealed (the room's Live reveal, or Next in Present): draw its answer. */
+  function reveal(s) {
+    if (s && s.design && s.design.labReveal) drawPart(s, 'answer', s.design.labReveal);
+  }
 
   /* The lab's type, in this page: its web fonts, the typefaces of its own
      stylesheet, and the deck's style-guide fonts. Text drawn before they
@@ -102,7 +136,7 @@
     if (railWatch) { railWatch.disconnect(); railWatch = null; }
     if (player) { try { player.destroy(); } catch (e) {} }
     if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
-    player = null; canvas = null; byId = {}; deckId = ''; onLab = false; lastWall = -1;
+    player = null; canvas = null; byId = {}; deckId = ''; onLab = false; lastWall = -1; shown = {};
   }
 
   function onSlide(e) {
@@ -120,7 +154,7 @@
       return;
     }
     if (!player && !start()) return;
-    var i = byId[slide.id];
+    var i = drawnIndex(slide);
     if (i == null) { onLab = false; player.pause(); return; }
     node.appendChild(canvas);
     node.classList.add('has-lab-live');
@@ -221,7 +255,15 @@
     if (!player || !onLab || dir < 0) return false;
     var s = P.deck && P.deck.slides[P.idx];
     if (!isLabSlide(s)) return false;
-    return player.build();
+    if (player.build()) return true;
+    /* Present on its own, with no room to mark it: once the question's builds are shown, Next shows
+       the lab's answer. Live, the room's reveal does (js/live.js revealNow). A question read before
+       it is asked (Definition challenge) is asked first, by SlideForge's own Next. */
+    var d = s.design || {};
+    if (!d.labReveal || shown[s.id] === 'answer' || (SF.Live && SF.Live.active)) return false;
+    if (d.labAsk && shown[s.id] !== 'ask') return false;
+    reveal(s);
+    return true;
   }
 
   function install() {
@@ -229,6 +271,18 @@
     SF.Player.on('slide', onSlide);
     SF.Player.on('slide', function () { if (notesOn) paintNotes(); });
     SF.Player.on('close', stop);
+    /* Without a live room (Present, Rehearse) the player marks the question itself: a pick on the
+       wall or its clock running out shows the lab's answer. Live, revealNow does (js/live.js). */
+    function playerRevealed(e) {
+      var s = e && e.slide;
+      if (s && !(SF.Live && SF.Live.active) && !(e.round)) setTimeout(function () { if (liveRevealed(s)) reveal(s); }, 0);
+    }
+    SF.Player.on('answer', playerRevealed);
+    SF.Player.on('timeup', playerRevealed);
+    SF.Player.on('definitionAsk', function (e) {
+      var s = e && e.slide;
+      if (s && s.design && s.design.labAsk) drawPart(s, 'ask', s.design.labAsk);
+    });
     SF.Player.on('close', function () { if (notesCard) notesCard.hidden = true; });
     SF.Player.on('open', paintNotes);
     document.addEventListener('keydown', onKey);
@@ -243,7 +297,7 @@
     });
   }
 
-  SF.LabStage = { install: install, step: step, stop: stop, active: function () { return !!player && onLab; },
+  SF.LabStage = { install: install, step: step, stop: stop, reveal: reveal, active: function () { return !!player && onLab; },
     /* For the smokes and for debugging: the lab player on the wall. */
     player: function () { return player; }, notes: toggleNotes };
   install();

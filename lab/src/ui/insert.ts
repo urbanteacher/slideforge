@@ -1,7 +1,8 @@
 import { kind } from '../engine/registry';
 import { createLayer } from '../model/defaults';
 import { hasFlagshipTextImage, textImageForSlide } from '../model/frame';
-import { cell, gridFor } from '../model/layouts';
+import { headingClock } from '../model/designs/kit';
+import { LAYOUT_STYLES, cell, gridFor, itemStyle, slideStyle, themeOf } from '../model/layouts';
 import type { Slide } from '../model/types';
 import { useStore } from '../model/store';
 import { fileToDataUrl, readDataUrl } from './Inspector';
@@ -73,10 +74,12 @@ export function addTextImage() {
   }
   const source = st.deck.slides.find(hasFlagshipTextImage);
   const ink = luminance(slide.background) < 0.45 ? '#f6f4ed' : '#231f20';
+  const face = slideStyle(themeOf(useStore.getState().deck) ?? LAYOUT_STYLES[0], slide);
   const layers = source ? textImageForSlide(source, slide) : [
-    createLayer('text', { name: 'Eyebrow', params: { blockRole: 'text-image', blockField: 'eyebrow', text: 'YOUR TOPIC', size: 28, weight: '700', color: '#ffffff', uppercase: true }, box: { x: 78, y: 348, w: 1007, h: 36 } }),
-    createLayer('text', { name: 'Title', params: { blockRole: 'text-image', blockField: 'title', text: 'A clear headline goes here.', size: 128, weight: '700', color: ink, fit: 'shrink' }, box: { x: 78, y: 402, w: 1007, h: 275 } }),
-    createLayer('text', { name: 'Body', params: { blockRole: 'text-image', blockField: 'body', text: 'One sentence that supports the idea.', size: 42, color: ink, fit: 'shrink' }, box: { x: 78, y: 726, w: 1007, h: 60 } }),
+    createLayer('text', { name: 'Eyebrow', params: { blockRole: 'text-image', blockField: 'eyebrow', text: 'YOUR TOPIC', size: 28, font: face.body, weight: '700', color: face.accent, uppercase: true, tracking: 0.14 }, box: { x: 78, y: 348, w: 1007, h: 36 } }),
+    // In the lesson's faces, as the layouts set a heading and its line (itemStyle).
+    createLayer('text', { name: 'Title', params: { blockRole: 'text-image', blockField: 'title', text: 'A clear headline goes here.', size: 128, font: face.display, weight: face.displayWeight, color: ink, lineHeight: 1.05, fit: 'shrink' }, box: { x: 78, y: 402, w: 1007, h: 275 } }),
+    createLayer('text', { name: 'Body', params: { blockRole: 'text-image', blockField: 'body', text: 'One sentence that supports the idea.', size: 48, font: face.body, color: ink, lineHeight: 1.3, fit: 'shrink' }, box: { x: 78, y: 726, w: 1007, h: 64 } }),
     createLayer('image', { name: 'Image — replace me', params: { blockRole: 'text-image', blockField: 'image', src: '', fit: 'contain' }, box: { x: 1100, y: 186, w: 743, h: 756 } }),
   ];
   st.mutate((d) => {
@@ -123,9 +126,9 @@ function freeRow(slide: Slide, h: number, skip: string): number | null {
   }
   return y + h <= g.foot ? y : null;
 }
-const WIDE = new Set(['chart', 'note', 'heading']);
+const WIDE = new Set(['chart', 'note', 'heading', 'table', 'line']);
 
-export const ITEMS = ['heading', 'text', 'note', 'bullets', 'image', 'video', 'quote', 'chart', 'timer'] as const;
+export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'table', 'line', 'timer'] as const;
 export type ItemId = (typeof ITEMS)[number];
 
 export function addItem(id: Exclude<ItemId, 'image'>) {
@@ -133,35 +136,54 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
   const slide = st.deck.slides.find((s) => s.id === st.slideId) ?? st.deck.slides[0];
   const dark = luminance(slide.background || '#ffffff') < 0.45;
   const ink = dark ? '#f5f4f2' : '#161616';
-  const panel = dark ? toward(slide.background, 255, 0.1) : '#f3efe8';
-  const colours = { textColor: ink };
-  const make = (kindId: string, name: string, params: Record<string, unknown>, box?: Record<string, number>) => {
+  // The words in the lesson's own faces: a heading in its display face, the rest in its body face.
+  const face = slideStyle(themeOf(st.deck) ?? LAYOUT_STYLES[0], slide);
+  // What Add puts on a slide is set as the demo slides set it (the layouts' itemStyle): the same face,
+  // size, colour, spacing and entrance, in this slide's colours, so it reads as one the layouts drew.
+  const kit = itemStyle(face);
+  const make = (kindId: string, name: string, params: Record<string, unknown>, box?: Record<string, number>, anim: Record<string, unknown> = { type: 'fade', duration: 0.7 }) => {
     const cols = WIDE.has(id) ? 12 : id === 'quote' ? 10 : 11;
     const at = cell(id === 'quote' ? 2 : 1, 1, cols, 1, gridFor(st.deck));
-    const layer = createLayer(kindId, { name, params: params as never, box: { ...box, x: at.x, w: at.w }, anim: { type: 'fade', duration: 0.7 } });
+    const layer = createLayer(kindId, { name, params: params as never, box: { ...box, x: at.x, w: at.w }, anim: anim as never });
     const y = freeRow(slide, layer.box!.h, layer.id);
     if (y !== null) layer.box!.y = y;
     else st.showToast('There is no room left on this slide, so it has gone on top. Move it, make it smaller, or start a new slide.');
     st.insertLayer(layer);
-    if (id === 'bullets') st.showToast('Double-click to edit. Press Enter for each new bullet; use the list buttons to switch style.');
+    if (id === 'bullets' || id === 'numbers') st.showToast('Double-click to edit. Press Enter for each new point; the list buttons switch between bullets and numbers.');
   };
   switch (id) {
-    case 'heading': return make('text', 'Heading', { text: 'Heading', font: 'Fraunces', weight: '600', size: 88, color: ink, lineHeight: 1.05, tracking: -0.01 }, { x: 160, y: 140, w: 1600 });
-    case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', font: 'Inter', weight: '400', size: 40, color: ink, lineHeight: 1.35, tracking: 0 }, { x: 160, y: 420, w: 1200 });
-    case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', font: 'Inter', weight: '400', size: 42, color: ink, list: 'bullets', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
-    case 'note': return make('note', 'Note', { ...colours, fill: panel });
+    case 'heading': return make('text', 'Heading', { text: 'Heading', ...kit.heading.params }, { x: 160, y: 140, w: 1600 }, kit.heading.anim);
+    case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', ...kit.text.params }, { x: 160, y: 420, w: 1200 }, kit.text.anim);
+    case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', ...kit.bullets.params, list: 'bullets' }, { x: 160, y: 360, w: 1400 }, kit.bullets.anim);
+    case 'numbers': return make('text', 'Numbered list', { text: 'First step\nSecond step\nThird step', ...kit.bullets.params, list: 'numbers' }, { x: 160, y: 360, w: 1400 }, kit.bullets.anim);
+    // A rule across the grid: the divider between two parts of a slide.
+    case 'line': return make('shape', 'Line', { ...kit.rule.params }, { x: 160, y: 540, w: 1600, h: 3 }, kit.rule.anim);
+    case 'table': return make('table', 'Table', { ...kit.table.params }, undefined, kit.table.anim);
+    case 'note': return make('note', 'Note', { ...kit.note.params }, undefined, kit.note.anim);
     // An empty video at 16:9 in the middle of the slide, with its Video tab open for the address.
     case 'video': {
       const g = gridFor(st.deck), w = (g.right - g.left) * 0.7, h = (w * 9) / 16;
       const layer = createLayer('video', { name: 'Video', params: { src: '', fit: 'cover', frame: '16:9', muted: true } as never, box: { x: (st.deck.width - w) / 2, y: (st.deck.height - h) / 2, w, h, rot: 0 }, anim: { type: 'fade', duration: 0.6 } });
       st.insertLayer(layer);
       st.set({ inspectorTab: 'video' });
-      st.showToast('Paste a YouTube, Vimeo or .mp4 address in the Video tab, then choose full screen or framed.');
+      st.showToast('In the Video tab, choose a file or paste a YouTube, Vimeo or .mp4 address, then full screen or framed.');
       return;
     }
     // A ring in the corner the room can read from the back, in the slide's own colours.
     // SlideForge's game clock, in the top right corner where its quiz and activity slides keep it.
     case 'timer': {
+      // A designed slide (a game, an activity) keeps its clock in the heading row, flush right, where
+      // its own clocks go: digits the height of the row, clear of the question under it.
+      const eyebrowRow = slide.layers.find((l) => l.kind === 'text' && l.name === 'Eyebrow' && l.box && !l.params.hfSlot);
+      if (eyebrowRow?.box) {
+        if (slide.layers.some((l) => l.kind === 'timer')) { st.showToast('This slide already has its clock, in the heading row. Set its minutes in the panel.'); return; }
+        // In the heading's own type and colour, at the end of its line.
+        const theme = slideStyle(themeOf(st.deck) ?? LAYOUT_STYLES[0], slide);
+        const layer = headingClock(theme, 5, eyebrowRow.box, String(eyebrowRow.params.color ?? theme.accent), st.deck.width);
+        st.insertLayer(layer);
+        st.showToast('The clock sits at the end of the heading row and starts when this slide comes up while presenting. Set its minutes in the panel.');
+        return;
+      }
       // Level with the slide's heading when it has one, its right edge on the heading's; else the grid's corner.
       const g = gridFor(st.deck), size = Math.round(st.deck.width * (195 / 1920));
       const head = slide.layers.find((l) => l.kind === 'text' && l.box && /heading|title/i.test(l.name) && !l.params.hfSlot);
@@ -173,7 +195,8 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
       st.showToast('The timer starts when this slide comes up while presenting. Set its minutes in the panel.');
       return;
     }
-    default: return make(id, id[0].toUpperCase() + id.slice(1), id === 'chart' ? { textColor: ink } : colours);
+    // A quote in the display face; a note and a chart's labels in the body face.
+    default: return make(id, id[0].toUpperCase() + id.slice(1), { ...(id === 'quote' ? kit.quote.params : kit.chart.params) }, undefined, id === 'quote' ? kit.quote.anim : kit.chart.anim);
   }
 }
 

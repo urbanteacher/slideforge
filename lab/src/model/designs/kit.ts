@@ -1,4 +1,5 @@
 import { layoutText, measureTextHeight } from '../../engine/raster';
+import type { StageJob } from '../types';
 import { createLayer, createSlide } from '../defaults';
 import { cell, groundParams, type LayoutStyle } from '../layouts';
 import type { Anim, Box, Layer, Params, Slide } from '../types';
@@ -74,7 +75,7 @@ export const eyebrow = (st: LayoutStyle, value: string, b?: Box) =>
 export const display = (v: string) => v.replace(/\u2212/g, '\u2013');
 
 /** A heading or question in display type, as large as its region allows. */
-export const hero = (st: LayoutStyle, name: string, value: string, b: Box, size = 120, anim: Partial<Anim> = { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.1 }) =>
+export const hero = (st: LayoutStyle, name: string, value: string, b: Box, size = 120, anim: Partial<Anim> = { type: 'rise', duration: 0.8 }) =>
   txt(name, display(value), b, { font: st.display, weight: st.displayWeight, size, color: st.ink, lineHeight: 1.03, tracking: -0.015, fit: 'fill', balance: true }, anim);
 
 /**
@@ -83,20 +84,28 @@ export const hero = (st: LayoutStyle, name: string, value: string, b: Box, size 
  * height it needs, and stepped down only if that is more than `maxH`. `bottom` is where it ends, so
  * the answers below it can take everything else.
  */
-export function sizedHero(st: LayoutStyle, name: string, value: string, x: number, y: number, w: number, o: { sizes?: number[]; maxH?: number; anim?: Partial<Anim> } = {}) {
+export function sizedHero(st: LayoutStyle, name: string, value: string, x: number, y: number, w: number, o: { sizes?: number[]; maxH?: number; anim?: Partial<Anim>; lines?: number } = {}) {
   const v = display(value);
   const sizes = o.sizes ?? [132, 112, 96, 84];
   const maxH = o.maxH ?? 420;
   const start = v.length <= 50 ? 0 : v.length <= 90 ? 1 : v.length <= 140 ? 2 : 3;
   const params = { font: st.display, weight: st.displayWeight, color: st.ink, lineHeight: 1.03, tracking: -0.015, balance: true };
+  // At most `lines` lines, where asked: a size that would take another line is too big.
+  const fits = (size: number, h: number) => h <= maxH && (!o.lines || h <= size * params.lineHeight * (o.lines + 0.5));
   let size = sizes[Math.min(start, sizes.length - 1)], h = 0;
   for (let k = Math.min(start, sizes.length - 1); k < sizes.length; k++) {
     size = sizes[k];
     h = measureTextHeight({ ...params, text: v, size }, w);
-    if (h <= maxH) break;
+    if (fits(size, h)) break;
+  }
+  // Past the smallest size given, a capped question keeps stepping down until it is back within its
+  // lines, to the smallest type the slides use for reading (48px).
+  while (o.lines && !fits(size, h) && size > 48) {
+    size = Math.max(48, size - 4);
+    h = measureTextHeight({ ...params, text: v, size }, w);
   }
   h = Math.min(maxH, h) + 8;
-  const layer = txt(name, v, box(x, y, w, h), { ...params, size, fit: 'shrink' }, o.anim ?? { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.1 });
+  const layer = txt(name, v, box(x, y, w, h), { ...params, size, fit: 'shrink' }, o.anim ?? { type: 'rise', duration: 0.8 });
   return { layer, bottom: y + h, size };
 }
 
@@ -106,13 +115,25 @@ export { clamp };
 /** The largest size, from `max` down to `min`, at which every one of `texts` fits `w` by `h` — a set
  *  of answers shares one size, as large as the tightest allows. */
 export function fitSize(texts: string[], w: number, h: number, params: Params, max: number, min = 48): number {
+  // A word cannot wrap, so the longest must fit across too, or the one cell would shrink on its own.
+  const words = [...new Set(texts.flatMap((v) => v.split(/\s+/)).filter(Boolean))];
   for (let size = max; size > min; size -= 4) {
-    if (texts.every((v) => measureTextHeight({ ...params, text: v, size }, w) <= h)) return size;
+    if (texts.every((v) => measureTextHeight({ ...params, text: v, size }, w) <= h) && words.every((x) => textWidth(x, { ...params, size }) <= w)) return size;
   }
   return min;
 }
 
 /** How tall `value` sets at its size in `w`. */
+/** Where each word of `value` sets in a box `w` wide, in reading order, relative to the box: for a
+ *  mark drawn on one word of a passage (Spot the error's strike). */
+export function wordBoxes(value: string, w: number, params: Params): Box[] {
+  const L = layoutText({ lineHeight: 1.15, ...params, text: value }, w);
+  const align = String(params.align ?? 'left');
+  return L.lines.flatMap((line, li) => {
+    const ox = align === 'center' ? (w - line.width) / 2 : align === 'right' ? w - line.width : 0;
+    return line.words.filter((x) => !x.marker).map((x) => box(ox + x.x, li * L.lineH, x.w, L.lineH));
+  });
+}
 /** How wide text sets on one line, for rules and strikes drawn to its length. */
 export const textWidth = (value: string, params: Params) => Math.ceil(Math.max(0, ...layoutText({ lineHeight: 1.15, ...params, text: value }, 1e5).lines.map((l) => l.width)));
 export const textHeight = (value: string, w: number, params: Params) => measureTextHeight({ lineHeight: 1.15, ...params, text: value }, w);
@@ -158,6 +179,17 @@ export const clock = (st: LayoutStyle, name: string, minutes: number, b: Box, an
     minutes, style: ring ? 'game' : 'digits', label: '', done: '0:00', font: st.body, size: ring ? 60 : 64, textColor: st.ink, accent: st.accent, track: rgba(st.ink, 0.18),
   }, anim });
 
+/** A clock in a heading row, set as the heading is — its face, weight, size, tracking and colour —
+ *  flush right, level with its words: the time reads as the end of the heading's line. `row` is the
+ *  heading's box; the colour is the heading's (the accent, or reversed out on a cover). */
+export function headingClock(st: LayoutStyle, minutes: number, row: Box = box(LEFT, EY, 1100, 50), color = st.accent, deckW = W, name = 'Clock'): Layer {
+  const w = 260, h = 68, size = 40;
+  return createLayer('timer', {
+    name, box: box(deckW - row.x - w, row.y + (size * 1.15) / 2 - h / 2, w, h), anim: { type: 'fade', duration: 0.5 },
+    params: { minutes, style: 'digits', label: '', done: '0:00', font: st.body, weight: '600', size, tracking: 0.12, align: 'right', textColor: color, accent: color, track: rgba(st.ink, 0.18) },
+  });
+}
+
 export type StepMode = 'on' | 'dim' | 'spot' | 'swap' | 'pile';
 /** One part of a set built a part per click: the first `upFront` parts are up with the slide, each
  *  later one arrives on a click, led by its first layer; the rest of the part comes with it. */
@@ -173,10 +205,10 @@ export function part(set: string, i: number, mode: StepMode, upFront = 1) {
 
 /** A row of SlideForge's content: "Label · 3 min [talk]<TAB>What to do". `job` is what the room does,
  *  from SlideForge's declared job ([note], [talk], [send], [work], [down]) or its "every 4 min". */
-export interface Row { label: string; text: string; minutes: number; job?: string }
+export interface Row { label: string; text: string; minutes: number; job?: string; /** The phone job it declares ([note] …). */ jobKey?: StageJob }
 const TIME = /\s*[·•\-–—|,]\s*(every\s+)?(\d+(?:\.\d+)?)\s*(min|mins|minutes|m|s|sec|secs|seconds)\s*$/i;
 const JOB = /\s*\[(note|talk|send|work|down)\]\s*$/i;
-const JOBS: Record<string, string> = { note: 'A private note on your phone', talk: 'Talk it through', send: 'Send it from your phone', work: 'Work on it', down: 'Phones down' };
+export const JOBS: Record<string, string> = { note: 'A private note on your phone', talk: 'Talk it through', send: 'Send it from your phone', work: 'Work on it', down: 'Phones down' };
 export function rowsOf(bullets: string[] = []): Row[] {
   return bullets.filter((l) => l.trim()).map((l) => {
     const [rawA = '', rawB = ''] = l.split('\t');
@@ -186,7 +218,7 @@ export function rowsOf(bullets: string[] = []): Row[] {
     const n = m ? Number(m[2]) : 0;
     const minutes = m ? (/^s/i.test(m[3]) ? n / 60 : n) : 0;
     const job = m?.[1] ? `Every ${m[2]} min` : declared ? JOBS[declared] : undefined;
-    return { label: m ? a.slice(0, m.index).trim() : a, text: b, minutes, job };
+    return { label: m ? a.slice(0, m.index).trim() : a, text: b, minutes, job, ...(declared ? { jobKey: declared as StageJob } : {}) };
   });
 }
 

@@ -10,29 +10,17 @@ function note(m) { log.push(m); console.log('✓', m); }
 
 try {
   await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 20000 });
-  await page.waitForSelector('#wsSwitch', { timeout: 10000 });
+  await page.waitForFunction(() => window.SF?.createPresetGame && SF.Player, null, { timeout: 20000 });
 
-  await page.click('button[data-go="game"]');
-  await page.waitForTimeout(300);
-  await page.click('#btnActivitiesGame');
-  const card = page.locator('.activity-card', { hasText: 'Low-Stakes Quiz' });
-  await card.waitFor({ timeout: 8000 });
-  await card.click();
-  note('Low-Stakes Quiz added from library');
+  /* The classic Quiz studio (its library card, editor and Play) is gone: the
+     game is built from its preset and played in the player, as Play did. */
+  await page.evaluate(() => {
+    const g = SF.createPresetGame('lowstakes', structuredClone(SF.GAME_FORMAT_PRESETS['low-stakes-quiz']), null);
+    SF.Player.start(SF.gameToRunDeck(g), 0, { fullscreen: false });
+  });
+  note('Low-Stakes Quiz built from its preset');
+  /* The editor preview's worksheet count went with the editor; the same count runs on the player's board below. */
 
-  /* Picking a format inside Quiz studio now opens that game here, so there is
-     no hop through the deck. Tolerate both: older decks may still have the
-     game filed as a slide. */
-  const edit = page.getByRole('button', { name: /Edit in Quiz studio/ });
-  if (await edit.count()) await edit.click();
-  note('Opened game editor');
-
-  await page.waitForSelector('#previewBox .lowstakes-board-slide, #previewBox .lsq-list', { timeout: 10000 });
-  const previewQs = await page.locator('#previewBox .lsq-question').count();
-  if (previewQs < 3) throw new Error('expected worksheet questions, got ' + previewQs);
-  note('Editor preview worksheet: ' + previewQs + ' questions');
-
-  await page.click('#btnPlay');
   await page.waitForSelector('#player .deck-viewport .slide', { timeout: 10000 });
   note('Play view opened (intro or board)');
 
@@ -44,6 +32,10 @@ try {
   }
   await page.waitForSelector('#player .lsq-list', { timeout: 8000 });
   note('On the low-stakes board');
+
+  const boardQs = await page.locator('#player .lsq-question').count();
+  if (boardQs < 3) throw new Error('expected worksheet questions, got ' + boardQs);
+  note('Worksheet: ' + boardQs + ' questions');
 
   await page.locator('#player button', { hasText: 'Start the quiz' }).click();
   await page.waitForTimeout(400);

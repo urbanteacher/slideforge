@@ -34,10 +34,13 @@ try {
   const wallErrors = [];
   wall.on('pageerror', (e) => wallErrors.push(e.message));
 
-  await wall.goto(`http://127.0.0.1:${port}/?lesson=layout-bank`);
-  await wall.waitForFunction(() => window.SF?.Editor?.deck());
-  const slides = await wall.evaluate(() => SF.Editor.deck().slides.length);
-  await wall.evaluate(() => SF.Editor.workspace.play({ fullscreen: false }));
+  await wall.goto(`http://127.0.0.1:${port}/`);
+  await wall.waitForFunction(() => window.SF?.Player && SF.buildLesson && SF.buildRunDeck);
+  const slides = await wall.evaluate(() => {
+    const deck = SF.buildLesson('layout-bank');
+    SF.Player.start(SF.buildRunDeck(deck, (id) => SF.GameStore.get(id)), 0, { fullscreen: false });
+    return deck.slides.length;
+  });
   await wall.waitForFunction(() => window.SF?.Player?.open, { timeout: 15000 });
   console.log('✓ Demo on the wall —', slides, 'slides');
 

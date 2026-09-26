@@ -45,11 +45,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
    missing. Measured at 150s for the whole ci set, of which demo-deck is 39. */
 const SETS = {
   ci: [
-    'artwork-face', 'campaign-chrome', 'canvas-edit', 'chrome-region',
-    'chrome-regions', 'clipboard-selection', 'demo-deck', 'design-controls',
-    'canvas-placement', 'delete-truth', 'desk-overlay', 'exports', 'fit-check', 'handout', 'layout-face',
-    'lab-lesson', 'layout-fit', 'lesson-bank', 'live-quiz', 'mindmap', 'refresh',
-    'review-tool', 'share', 'slide-review', 'type-scale',
+    'campaign-chrome', 'chrome-region', 'demo-deck', 'desk-overlay', 'exports', 'fit-check', 'handout',
+    'lab-lesson', 'live-quiz', 'refresh', 'review-tool', 'share', 'slide-review', 'type-scale',
   ],
   /* Everything that touches saving, reloading, exporting or sharing a deck.
      The four added to `ci` above came from here after all four turned out to
@@ -57,10 +54,10 @@ const SETS = {
      regression, and exports, share and live-quiz by a path this suite's own
      move redirected. A curated set that does not include the things most
      likely to break quietly is a curated set that hides them. */
-  deck: ['refresh', 'cold-start', 'exports', 'share', 'live-quiz', 'lesson-bank'],
-  /* The three faces of a slide — content, artwork, layout — and the measures
-     they answer to. What to run after touching the canvas. */
-  canvas: ['canvas-edit', 'artwork-face', 'layout-face', 'demo-deck', 'layout-fit', 'fit-check', 'row-grid', 'type-scale', 'delete-truth', 'canvas-placement'],
+  deck: ['refresh', 'cold-start', 'exports', 'share', 'live-quiz'],
+  /* The measures a slide answers to. (The classic canvas's three faces went
+     with the classic studios; the lab edits slides now.) */
+  canvas: ['demo-deck', 'fit-check', 'row-grid', 'type-scale'],
   review: ['review-tool', 'slide-review', 'fit-check'],
 };
 

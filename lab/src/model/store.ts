@@ -1,16 +1,22 @@
 import { produce } from 'immer';
 import { create } from 'zustand';
-import { contentHeight } from '../engine/raster';
+import { contentHeight, shrinks } from '../engine/raster';
 import { reflowCards } from './cards';
 import { kind } from '../engine/registry';
 import { blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck } from './defaults';
 import { hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters } from './frame';
 import { themeOf } from './layouts';
 import { themeSlide } from './theme';
+import { repairGames } from './gameLook';
 import type { Deck, Layer, Slide } from './types';
 
 export type LeftTab = 'layers' | 'add';
 export type InspectorTab = 'design' | 'picture' | 'video' | 'special' | 'animate' | 'interact' | 'engage';
+
+/** SlideForge's three studios, as views of the lesson open in the lab. */
+export type LabView = 'lesson' | 'quiz' | 'activities';
+/** Whether a slide belongs to a view: every slide to the lesson, a game's to the Quiz studio, an activity's to Activities. */
+export const inView = (s: Slide, view: LabView) => view === 'lesson' || (view === 'quiz' ? !!s.game : !!s.activity && !s.game);
 
 interface State {
   deck: Deck;
@@ -34,6 +40,12 @@ interface State {
   sorterOpen: boolean;
   /** The right-hand panel folded away, so the canvas has the width (the canvas bar's panel button). Remembered in this browser. */
   panelHidden: boolean;
+  /** The slide whose back (its Flip to facts face) the canvas shows, to edit it there; null for the fronts. */
+  backOf: string | null;
+  /** Which of SlideForge's studios the lab is: the Lesson studio (every slide), the Quiz studio (the
+   *  lesson's games) or Activities (its activities). One lesson, three views of it. */
+  view: LabView;
+  /** Engage's list of games and activities to add is open (the canvas bar's + Game opens it). */
   galleryTab: 'layouts' | 'designs';
   clipboard: Layer | null;
   toast: string | null;
@@ -100,6 +112,8 @@ export const useStore = create<State>((set, get) => ({
   lastMerge: null,
   saveState: 'saved',
   presenting: false,
+  backOf: null,
+  view: 'lesson',
   playToken: 0,
   editingTextId: null,
   partId: null,
@@ -147,7 +161,9 @@ export const useStore = create<State>((set, get) => ({
     });
   },
 
-  loadDeck: (d) => {
+  loadDeck: (d0) => {
+    // Games built by an older lab brought up to date as the deck opens (model/gameLook.ts).
+    const d = repairGames(d0);
     set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null });
     refitAllText(); // a deck saved before a box type measured itself gets its heights now
   },
@@ -184,8 +200,17 @@ export const useStore = create<State>((set, get) => ({
       const s = d.slides.find((x) => x.id === slideId)!;
       const l = s.layers.find((x) => x.id === id);
       if (!l) return;
+      const was = Number(l.params.size ?? 0);
       recipe(l);
       refitText(l);
+      // A size the author sets is the size they get. Text that shrinks to fit its box was drawn at the
+      // smaller of its size and what the box holds, so a bigger size typed into a box already full did
+      // nothing: 100 still looked small. Its box grows, downwards, to hold the words at the new size.
+      const now = Number(l.params.size ?? 0);
+      if (now > was && shrinks(l) && l.box) {
+        const need = contentHeight({ ...l, params: { ...l.params, fit: 'grow' } }, l.box.w);
+        if (need && need > l.box.h) l.box.h = Math.min(need, d.height - l.box.y);
+      }
       // A card's words changed or its box moved: the whole set of cards follows the fullest one.
       if (l.params.cardSet) reflowCards(s, d.height);
     }, merge);
@@ -311,4 +336,19 @@ if (import.meta.hot) {
     const st = useStore.getState() as unknown as Record<string, unknown>;
     data.state = Object.fromEntries(Object.entries(st).filter(([, v]) => typeof v !== 'function'));
   });
+}
+
+/** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
+ *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. The right
+ *  pane stays on the tab it was on: games and activities are chosen in Browse, on the left, and set in
+ *  Design, so no studio needs Engage opened for it — and a page reload restoring the studio must not
+ *  move the panel either. */
+export function enterView(view: LabView) {
+  const st = useStore.getState();
+  // The shell draws its studio again after most things done in it (js/shell.js); only a change of
+  // studio moves the slide.
+  if (st.view === view) return;
+  const cur = st.deck.slides.find((s) => s.id === st.slideId);
+  const first = st.deck.slides.find((s) => inView(s, view));
+  useStore.setState({ view, ...(cur && inView(cur, view) ? {} : first ? { slideId: first.id, selectedId: null } : {}) });
 }

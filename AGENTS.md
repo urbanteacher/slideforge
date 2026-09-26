@@ -36,7 +36,7 @@ A style is one file in `src/games/`. It is registered in these places:
 4. `presets.js`;
 5. `types.d.ts`;
 6. the `src/model.js` export;
-7. the activity catalogue card in `js/studio.js` (the starter bank itself stays in `presets.js`);
+7. the lab's Browse: the format in `GAMES` in `lab/src/model/designs/formats.ts` (and its kind in `GAME_GROUPS` in `lab/src/ui/Browse.tsx`), and `lab/src/assets/games.json` rebuilt with `tools/lab-games.mjs` (the starter bank itself stays in `presets.js`);
 8. `tests/game-style-contract.test.js`;
 9. `js/playbook.js`, including the override block after the entries (`Object.assign(BOOK[...])`). Overrides win over the entries, so a stale one hides a rebuilt game's description;
 10. `js/ai.js` `AI_SPECS`, so Quiz studio can write it. Keyed by style, or by format for a format with its own shape (Question Cube). `toQuestion` must set every field the style's starter (`make()`) fills, or the starter's content comes along with the AI's;

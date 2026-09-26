@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Smoke: Try demo opens a SAMPLE class with fake players on a MCQ quiz. */
+/* Smoke: a sample class (SF.Demo) with fake players on a multiple-choice quiz. */
 import { chromium } from 'playwright';
 
 const BASE = process.env.SF_URL || 'http://127.0.0.1:8787/';
@@ -8,18 +8,13 @@ const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
 
 try {
   await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 20000 });
-  await page.click('button[data-go="game"]');
-  await page.waitForTimeout(300);
-  await page.click('#btnActivitiesGame');
-  await page.locator('.activity-card', { hasText: 'Multiple choice' }).first().click().catch(async () => {
-    await page.locator('.activity-card').first().click();
+  await page.waitForFunction(() => window.SF?.createPresetGame && SF.Demo && SF.Player, null, { timeout: 20000 });
+  /* The classic Quiz studio's Try demo is gone; its route was SF.Demo.start on
+     the game's run deck, which is what stays. */
+  await page.evaluate(() => {
+    const g = SF.createPresetGame('choice', structuredClone(SF.GAME_FORMAT_PRESETS.choice), null);
+    SF.Demo.start(SF.gameToRunDeck(g), { fullscreen: false, mode: 'class' });
   });
-  /* If library added to lesson, open Edit; else we may already be in quiz studio with a game. */
-  const edit = page.getByRole('button', { name: /Edit in Quiz studio/ });
-  if (await edit.count()) await edit.click();
-  await page.waitForTimeout(500);
-
-  await page.click('#btnDemoGame');
   await page.waitForSelector('#player.on', { timeout: 10000 });
   console.log('✓ Demo player opened');
 

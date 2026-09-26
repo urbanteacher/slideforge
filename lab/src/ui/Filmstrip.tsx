@@ -4,8 +4,9 @@ import { FEEDBACK } from './Engagement';
 import { useEffect, useRef, useState } from 'react';
 import { renderStill } from '../export/exporters';
 import { getAssetVersion } from '../engine/raster';
-import { useStore } from '../model/store';
+import { inView, useStore } from '../model/store';
 import type { Slide } from '../model/types';
+import { focusBrowse } from './Browse';
 
 /** Slide thumbnails are rendered by the real engine, lazily, only when a slide (or its assets) change. */
 const thumbCache = new Map<string, { ref: Slide; url: string; asset: number }>();
@@ -36,7 +37,10 @@ function useSlideThumbs(slides: Slide[]) {
 }
 
 export function Filmstrip() {
-  const slides = useStore((s) => s.deck.slides);
+  const all = useStore((s) => s.deck.slides);
+  const view = useStore((s) => s.view);
+  // The Quiz studio and Activities show the lesson's games or activities, each at its place in the lesson.
+  const slides = view === 'lesson' ? all : all.filter((s) => inView(s, view));
   const slideId = useStore((s) => s.slideId);
   const { selectSlide, addSlide, duplicateSlide, deleteSlide, moveSlide } = useStore.getState();
   const thumb = useSlideThumbs(slides);
@@ -80,7 +84,7 @@ export function Filmstrip() {
         </div>
       </div>
       {sorter && <SlideSorter close={() => setSorter(false)} thumb={thumb} />}
-      {slides.map((s, i) => (
+      {slides.map((s) => { const i = all.indexOf(s); return (
         <div
           key={s.id}
           ref={s.id === slideId ? selRef : undefined}
@@ -102,8 +106,10 @@ export function Filmstrip() {
             <button title="Delete slide" onClick={() => deleteSlide(s.id)}><Trash2 size={12} /></button>
           </div>
         </div>
-      ))}
-      <button className="add-slide" title="New slide" onClick={() => addSlide()}><Plus size={18} /></button>
+      ); })}
+      {view === 'lesson'
+        ? <button className="add-slide" title="New slide" onClick={() => addSlide()}><Plus size={18} /></button>
+        : <button className="add-slide" title={view === 'quiz' ? 'A game, after the slide on screen' : 'An activity, after the slide on screen'} onClick={focusBrowse}><Plus size={18} /></button>}
       {menu}
     </div>
   );

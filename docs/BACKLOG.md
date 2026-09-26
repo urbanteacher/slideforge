@@ -766,7 +766,8 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-03 | New flagship slides start with editable text at left and an image at right | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-04 | Add one to four A–D choice boxes at the flagship’s fixed grid positions | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
-| LAB-16 | Text effects and a text block: outline, outline only, gradient fill, shadows, glow, highlighter, word spacing; Scramble and Count up entrances, a typewriter cursor, random order; Safari draws the blur and white logos | Done · 26 Sep 2026 · `a9c0c5c` |
+| LAB-16 | Text effects and a text block: outline, outline only, gradient fill, shadows, glow, highlighter, word spacing; Scramble and Count up entrances, a typewriter cursor, random order; Safari draws the blur and white logos | Done · 26 Sep 2026 · `2885d4f` |
+| LAB-17 | Default slides move plainly: no blurred word motion or Blur in across the layouts, designs and the lab's originals; bullet lists build a point per click with the earlier points dimmed | Done · 26 Sep 2026 · `d8b981e` |
 
 ## The lab as the engine
 
@@ -778,9 +779,13 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 26 September 2026 — Plain motion on default slides
+
+- **LAB-17:** The layouts, the design kit's headings, the rows and game headings, and the lab's seven original designs no longer use SlideForge's word motion (each word rising out of a blur) or Blur in. They rise or fade as one block; zooms no longer overshoot; the originals lose their pops, loops and shader transitions and change slides with a fade (`d8b981e`). Bullet lists, in the layouts and from Add, build a point per click with the earlier points dimmed, as the mind map does. Picking Word by word or Letter by letter in Animate now starts Plain, with no blur. The Motion lab is left as it is: it is the showcase of that motion. Checked by building every layout, original and SlideForge-derived design and listing their entrances, and by presenting a Bullets slide.
+
 ### 26 September 2026 — Text effects and the text block in the lab
 
-- **LAB-16:** A text layer's Design tab has **Effects** (fill as one colour or a gradient, outline outside the letters, outline only, a soft, hard or long shadow, glow, highlighter) and **Block** (fill the box, hug the words, or a band behind each line, with padding, corners and a border). Word spacing sits in Spacing. Animate adds **Scramble** and **Count up**, a **Cursor** for the typewriter, and **In a random order** for the waves (`a9c0c5c`). The block grows outwards from the words, so turning it on never moves the text. Every effect uses canvas features Safari draws: `ctx.filter` does nothing there unless a setting is on, so the rising words' blur falls back to a shadow and a white logo is painted rather than filtered. Checked in Chrome, with the Safari fallback forced on; not yet run in Safari itself. Timings were checked against GSAP SplitText, Anime.js and Motion, and already match them.
+- **LAB-16:** A text layer's Design tab has **Effects** (fill as one colour or a gradient, outline outside the letters, outline only, a soft, hard or long shadow, glow, highlighter) and **Block** (fill the box, hug the words, or a band behind each line, with padding, corners and a border). Word spacing sits in Spacing. Animate adds **Scramble** and **Count up**, a **Cursor** for the typewriter, and **In a random order** for the waves (`2885d4f`). The block grows outwards from the words, so turning it on never moves the text. Every effect uses canvas features Safari draws: `ctx.filter` does nothing there unless a setting is on, so the rising words' blur falls back to a shadow and a white logo is painted rather than filtered. Checked in Chrome, with the Safari fallback forced on; not yet run in Safari itself. Timings were checked against GSAP SplitText, Anime.js and Motion, and already match them.
 
 ### 25 September 2026 — Quiz studio and Activities in the Lesson studio's frame
 

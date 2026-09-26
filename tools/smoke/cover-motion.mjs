@@ -12,6 +12,10 @@
  * with a gradient in it is invalid, so the blobs computed to transparent on
  * exactly the themes with the most interesting grounds, and the feature did
  * nothing while looking implemented.
+ *
+ * Each show goes straight to SF.Player, and the probes render against a deck
+ * of their own: the classic editor that used to hold both went with the
+ * classic studios.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -30,7 +34,9 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}/`);
-  await page.waitForFunction(() => window.SF?.Editor?.deck());
+  await page.waitForFunction(() => window.SF?.Player && SF.renderSlide);
+  /* The deck the off-screen probes render against. */
+  await page.evaluate(() => { window.__probeDeck = Object.assign(SF.makeDeck('w'), { theme: 'midnight' }); });
 
   /** Render one cover off-screen and report what the backdrop resolved to. */
   const cover = (theme, backdrop, type = 'title') => page.evaluate(({ theme, backdrop, type }) => {
@@ -155,31 +161,23 @@ try {
   }
   console.log('✓ Words arrive in an eased wave —', words.delays.join('ms, ') + 'ms, formatting intact');
 
-  /* In the show they animate; in the editor they hold still, because the line
-     is rebuilt on every keystroke. */
+  /* In the show they animate. (That they held still in the classic editor's
+     #previewBox is no longer checked: that editor went with the classic studios,
+     and the lab draws its own canvas.) */
   const playing = await page.evaluate(async () => {
-    const deck = Object.assign(SF.makeDeck('w'), { theme: 'midnight' });
-    SF.Editor.workspace.setDoc(deck);
-    const d = SF.Editor.deck();
+    const d = Object.assign(SF.makeDeck('w'), { theme: 'midnight' });
     d.slides[0] = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
       { body: 'Every chart is a choice', design: { words: 'rise' } }));
-    SF.Editor.selectSlide(d.slides[0].id);
-    SF.Editor.workspace.draw();
-    const inEditor = Array.from(document.querySelectorAll('#previewBox .statement .w'))
-      .map((w) => getComputedStyle(w).animationName);
-    SF.Editor.workspace.play({ fullscreen: false });
+    SF.Player.start(d, 0, { fullscreen: false });
     await new Promise((go) => setTimeout(go, 200));
     const onWall = Array.from(document.querySelectorAll('#player .statement .w'))
       .map((w) => getComputedStyle(w).animationName);
-    return { inEditor: inEditor, onWall: onWall };
+    return { onWall: onWall };
   });
-  if (playing.inEditor.some((n) => n && n !== 'none')) {
-    problems.push('words: the entrance replays in the editor — ' + playing.inEditor.join(','));
-  }
   if (!playing.onWall.length || !playing.onWall.every((n) => n === 'sf-word-rise')) {
     problems.push('words: the entrance does not run in the show — ' + playing.onWall.join(','));
   }
-  console.log('✓ It plays on the wall and holds still in the editor');
+  console.log('✓ It plays on the wall');
 
   /* --- and it still reads as a sentence ---------------------------------- */
   /* Splitting text into LETTERS is an accessibility disaster — Roselli tested
@@ -192,7 +190,7 @@ try {
     const build = (design) => {
       const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
         { body: 'Every chart is a choice', subtitle: 'LDSCI6253', design: design }));
-      const node = SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 });
+      const node = SF.renderSlide(window.__probeDeck, slide, { index: 0, total: 1 });
       const line = node.querySelector('.statement');
       return { spans: line.querySelectorAll('.w').length, text: line.textContent };
     };
@@ -210,7 +208,7 @@ try {
     Object.assign(frame.style, { position: 'fixed', inset: '0', width: '1280px', height: '720px' });
     const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
       { body: 'Every chart is a choice', subtitle: 'LDSCI6253' }));
-    frame.appendChild(SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 }));
+    frame.appendChild(SF.renderSlide(window.__probeDeck, slide, { index: 0, total: 1 }));
     document.body.appendChild(frame);
     return true;
   }), await page.locator('#a11y-probe').ariaSnapshot());
@@ -221,7 +219,7 @@ try {
     Object.assign(frame.style, { position: 'fixed', inset: '0', width: '1280px', height: '720px' });
     const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
       { body: 'Every chart is a choice', subtitle: 'LDSCI6253', design: { words: 'rise' } }));
-    frame.appendChild(SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 }));
+    frame.appendChild(SF.renderSlide(window.__probeDeck, slide, { index: 0, total: 1 }));
     document.body.appendChild(frame);
     return true;
   }), await page.locator('#a11y-probe').ariaSnapshot());
@@ -237,7 +235,7 @@ try {
     const read = (design) => {
       const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
         { body: 'Every chart is a choice', design: design }));
-      const line = SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 })
+      const line = SF.renderSlide(window.__probeDeck, slide, { index: 0, total: 1 })
         .querySelector('.statement');
       return {
         dur: line.style.getPropertyValue('--w-dur'),
@@ -272,7 +270,7 @@ try {
     const delays = (from) => {
       const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
         { body: 'Every chart is a choice', design: { words: 'rise', wordStagger: 'one', wordFrom: from } }));
-      const line = SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 })
+      const line = SF.renderSlide(window.__probeDeck, slide, { index: 0, total: 1 })
         .querySelector('.statement');
       return Array.from(line.querySelectorAll('.w'))
         .map((w) => parseInt(w.style.getPropertyValue('--d'), 10));
@@ -297,13 +295,10 @@ try {
      back. An entrance that only runs once looks identical for the first six
      seconds and then stops for good. */
   const cycle = await page.evaluate(async () => {
-    const deck = Object.assign(SF.makeDeck('loop'), { theme: 'midnight' });
-    SF.Editor.workspace.setDoc(deck);
-    const d = SF.Editor.deck();
+    const d = Object.assign(SF.makeDeck('loop'), { theme: 'midnight' });
     d.slides[0] = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
       { body: 'Every chart is a choice', design: { words: 'rise', wordsLoop: true } }));
-    SF.Editor.selectSlide(d.slides[0].id);
-    SF.Editor.workspace.play({ fullscreen: false });
+    SF.Player.start(d, 0, { fullscreen: false });
     const first = () => document.querySelector('#player .statement .w');
     const wait = (ms) => new Promise((go) => setTimeout(go, ms));
     await wait(150);
@@ -341,16 +336,13 @@ try {
      gets there, and only a browser can answer whether it really does it. */
   const staged = async (plan, line) => {
     await page.evaluate(([plan, line]) => {
-      const deck = Object.assign(SF.makeDeck('arc'), { theme: 'midnight' });
-      SF.Editor.workspace.setDoc(deck);
-      const d = SF.Editor.deck();
+      const d = Object.assign(SF.makeDeck('arc'), { theme: 'midnight' });
       d.slides[0] = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'), {
         body: line,
         design: Object.assign({ words: 'rise', wordSpeed: 'gentle' },
           plan ? { wordPlan: plan } : {})
       }));
-      SF.Editor.selectSlide(d.slides[0].id);
-      SF.Editor.workspace.play({ fullscreen: false });
+      SF.Player.start(d, 0, { fullscreen: false });
     }, [plan, line]);
     await page.waitForTimeout(140);
   };

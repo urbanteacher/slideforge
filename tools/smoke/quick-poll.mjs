@@ -5,7 +5,11 @@
  * belongs to the moment rather than to a slide, so the teacher can keep moving
  * through the deck behind it while the room answers, and only ending it takes
  * it down. Two separate code paths used to close it on a slide change, and a
- * third left the node in place but invisible. */
+ * third left the node in place but invisible.
+ *
+ * The deck goes straight to SF.Player: the classic editor's Present that used
+ * to start it went with the classic studios, and the lab's Present draws every
+ * slide as a still first. */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 
@@ -16,7 +20,7 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(BASE);
-  await page.waitForFunction(() => window.SF?.Editor?.workspace && window.SF?.Live?.startCustomPrompt);
+  await page.waitForFunction(() => window.SF?.Player && window.SF?.Live?.startCustomPrompt);
 
   await page.evaluate(() => {
     const deck = SF.makeDeck('Quick poll smoke');
@@ -27,11 +31,8 @@ try {
       return s;
     });
     SF.Store.save(deck);
-    SF.Editor.workspace.setDoc(deck);
-    SF.Shell.activate('deck');
-    SF.Editor.workspace.draw();
+    SF.Player.start(deck, 0, { fullscreen: false });
   });
-  await page.locator('#btnPresent').click();
   await page.waitForFunction(() => SF.Player.open);
 
   /* V opens the sheet for a teacher with one screen. */

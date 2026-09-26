@@ -1,8 +1,8 @@
-/* The slide review dialog, driven the way an author reaches it.
+/* The slide review dialog, opened on a deck and driven by hand.
  *
  * This is the AiAd27 preview page and check-fit.mjs generalised to any deck:
  * the same grid of real renders, and the same "does it leave the stage"
- * measurement, reached from Look instead of a terminal. The campaign scripts
+ * measurement, opened on any deck instead of from a terminal. The campaign scripts
  * proved the idea on five fixed decks; this proves it on an arbitrary one.
  *
  * The deck below carries a slide that cannot fit on purpose. A fit checker
@@ -26,7 +26,7 @@ try {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}`);
-  await page.waitForFunction(() => window.SF?.Editor && window.SF?.Review);
+  await page.waitForFunction(() => window.SF?.Review && SF.Shell?.current()?.doc()?.id, null, { timeout: 60000 });
 
   await page.evaluate(() => {
     const d = SF.makeDeck('Review tool');
@@ -40,19 +40,13 @@ try {
       }),
       SF.normalizeSlide({ type: 'content', title: 'A hidden one', bullets: ['x'], hidden: true })
     ];
-    SF.Store.save(d); SF.Editor.openDeck(d.id);
+    SF.Store.save(d);
+    /* 1. The classic canvas's Review button went with the classic studios, so
+       the dialog is opened on the stored deck directly. */
+    SF.Review.open(SF.Store.get(d.id));
   });
-  await page.waitForFunction(() => SF.Editor.deck()?.slides?.length === 4);
-  await page.evaluate(() => SF.Editor.selectSlide(0));
-
-  /* 1. Reached from the presentation row, not from a terminal — the point of
-     the change. It sat in Look until the row existed; a deck-wide audit in a
-     pane that customises one slide was the wrong drawer. */
-  const button = page.locator('.canvas-faces button', { hasText: 'Review' });
-  await button.waitFor({ timeout: 10000 });
   checked++;
 
-  await button.click();
   const dialog = page.locator('dialog.slide-review');
   await dialog.waitFor();
 

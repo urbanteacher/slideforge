@@ -79,6 +79,8 @@ export interface Interact {
   hover: HoverType;
   click: ClickAction;
   gotoSlide: number; // 1-based
+  /** The slide to go to by its id, which holds wherever the slide moves; wins over gotoSlide. */
+  gotoId?: string;
   url: string;
 }
 
@@ -104,6 +106,14 @@ export type TransitionType = 'none' | 'fade' | 'push' | 'zoom' | 'ripple' | 'dis
 export type FeedbackKind = 'poll' | 'wordcloud' | 'brainstorm' | 'scale';
 /** SlideForge's audience feedback on a slide (src/deck/feedback.js): the kind, and the settings a
  *  SlideForge lesson brings with it. Only the kind is set in the lab so far; the rest is carried. */
+/** What a stage asks of the phones, as SlideForge names it: a private note, talk, send to the idea
+ *  box, work (with Need help), phones down. None: SlideForge reads it from the stage's name. */
+export type StageJob = 'note' | 'talk' | 'send' | 'work' | 'down';
+export interface ActivityStage { name: string; minutes: number; job?: StageJob }
+/** How an activity runs, which the slide cannot show: each stage's time and phone job, the time of a
+ *  slide that is not a routine, and which of its two designs it wears. Its words are on the slide. */
+export interface ActivitySettings { look: 'lab' | 'slideforge'; stages?: ActivityStage[]; seconds?: number }
+
 export interface SlideFeedback {
   kind: FeedbackKind;
   prompt?: string;
@@ -115,6 +125,8 @@ export interface SlideFeedback {
   points?: number;
   lowLabel?: string;
   highLabel?: string;
+  /** Keep the room's results off the wall until the teacher shows them. */
+  hold?: boolean;
 }
 
 export interface Slide {
@@ -130,7 +142,7 @@ export interface Slide {
    *  put the lesson's games back after the slide they followed. */
   sourceSlideId?: string;
   /** Which of SlideForge's activities this slide was made from, and which of its slides it is. */
-  activity?: { key: string; page: number };
+  activity?: { key: string; page: number; settings?: ActivitySettings };
   /** What a slide design was built from (hotspots, pictures, facts, callouts), so the Slide panel
    *  can edit it and build the slide again in the deck's style. */
   recipe?: { kind: string; args: Record<string, unknown> };
@@ -142,6 +154,50 @@ export interface Slide {
   ground?: string;
   /** This slide's own header and footer, when it differs from the deck's. */
   headerFooter?: HeaderFooter;
+  /** A game's slide: which game, what part of it, and the settings the room's session plays it by. */
+  game?: SlideGame;
+}
+
+/**
+ * A slide of a game (designs/games.ts, designs/formats.ts). Every slide of one game shares its `id`;
+ * a question and its answer share a `key`. The settings are what the wall cannot show but the game
+ * runs by — the time, the points, the difficulty — edited in the Slide panel's Game section.
+ */
+export interface SlideGame {
+  id: string;
+  format: string;
+  label: string;
+  role: 'cover' | 'question' | 'answer' | 'board' | 'end';
+  key?: string;
+  /** What this slide's clock times, when it has one: "Time limit", "Study time", "Round". */
+  clock?: string;
+  settings: GameSettings;
+  /** A question: SlideForge's own question, as its game compiles it, for the live room to ask. */
+  quiz?: Record<string, unknown>;
+  /** A board or a round played in one go: the slides SlideForge plays it on, compiled as it compiles them. */
+  board?: Record<string, unknown>[];
+  /** Multiple choice's and true or false's look: buttons (two by two, or two doors), lit green where
+   *  they stand, as SlideForge's quiz has them; or the lab's walls, the answer on the slide after. */
+  look?: GameLook;
+  /** Where the Buttons looks write the answer's reason: under the question (as the other games), under
+   *  the buttons, or in the notes only. */
+  reason?: 'question' | 'buttons' | 'notes';
+}
+export type GameLook = 'buttons' | 'walls';
+export interface GameSettings {
+  /** The clock on this slide, in seconds; 0 or absent is none. */
+  seconds?: number;
+  points?: number;
+  difficulty?: string;
+  /** Boss battle: what a right answer takes off the boss. */
+  damage?: number;
+  /** A number line: how close counts, and the line it is on ([min, max, target]). */
+  tolerance?: number;
+  range?: [number, number, number];
+  /** A typed answer: the spellings that also count. */
+  accept?: string[];
+  /** Mind reveal: the words to remember. */
+  words?: string[];
 }
 
 /** SlideForge's six chrome slots. What goes in each is set in the side panel; its words are typed on the slide. */

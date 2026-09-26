@@ -38,6 +38,8 @@ export const FONTS = [
   'Alpha Lyrae',
   // Installed on every Mac: Northeastern University London's display serif.
   'Iowan Old Style',
+  // AI Awareness Day's face.
+  'Poppins',
 ];
 
 export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [
@@ -120,6 +122,8 @@ const KINDS: KindDef[] = [
       { key: 'src', label: 'Image', type: 'image', default: '', group: 'Image' },
       { key: 'fit', label: 'Fit', type: 'select', options: opt('cover', 'contain'), default: 'contain', group: 'Image' },
       { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 400, step: 1, default: 0, group: 'Image', unit: 'px', decimals: 0 },
+      { key: 'border', label: 'Border', type: 'number', min: 0, max: 40, step: 1, default: 0, group: 'Image', unit: 'px', decimals: 0, info: 'A line round the picture, inside its edge, following its corners. Round the picture itself when it is contained.' },
+      { key: 'borderColor', label: 'Border colour', type: 'color', default: '#ffffff', group: 'Image', when: (p) => Number(p.border) > 0 },
       // SlideForge's picture settings, from "Logo sits on" down.
       { key: 'frame', label: 'Image frame', type: 'select', group: 'Picture', default: 'free', info: 'Reshapes the box to a fixed ratio, or fills the slide. Drag its handles afterwards to change it again.',
         options: [{ value: 'free', label: 'As drawn' }, { value: 'bleed', label: 'Full bleed — the whole slide' }, { value: '16:9', label: '16:9 landscape' }, { value: '4:3', label: '4:3 landscape' }, { value: '1:1', label: '1:1 square' }, { value: '4:5', label: '4:5 portrait' }] },
@@ -275,7 +279,7 @@ const KINDS: KindDef[] = [
     id: 'timer', name: 'Timer', category: 'source', content: 'timer',
     description: 'A countdown that starts when its slide comes up and resets when you leave it.',
     params: [
-      { key: 'minutes', label: 'Minutes', type: 'number', min: 0.5, max: 120, step: 0.5, default: 5, group: 'Timer', decimals: 1, unit: ' min', info: 'Up to two hours. It starts when the slide appears while presenting.' },
+      { key: 'minutes', label: 'Minutes', type: 'number', min: 0.1, max: 120, step: 0.25, default: 5, group: 'Timer', decimals: 2, unit: ' min', info: 'From a few seconds to two hours. It starts when the slide appears while presenting.' },
       { key: 'style', label: 'Style', type: 'select', default: 'ring', group: 'Timer', options: [{ value: 'game', label: 'Game clock — SlideForge’s countdown ring' }, { value: 'ring', label: 'Ring and time' }, { value: 'digits', label: 'Time only' }, { value: 'bar', label: 'Bar and time' }] },
       { key: 'label', label: 'Label', type: 'text', default: 'Time left', group: 'Timer', info: 'Leave empty for none.' },
       { key: 'done', label: 'When it ends', type: 'text', default: 'Time’s up', group: 'Timer' },
@@ -522,7 +526,7 @@ vec4 effect(vec2 uv) {
     // slide that moves in SlideForge moves the same way here. Every colour is laid over the ground
     // at low strength, so it is pale on paper and a glow on midnight.
     id: 'backdrop', name: 'Backdrop motion', category: 'generate', featured: true,
-    description: 'Drift, Grid or Glow — slow motion behind the words, made from the slide’s own colours.',
+    description: 'Drift, Grid or Glow — slow motion behind the words, made from the slide’s own colours. Speed 1 is SlideForge’s own pace, a cycle of half a minute or more; it starts faster, so the movement shows.',
     defaultBlend: 'normal',
     params: [
       { key: 'mode', label: 'Motion', type: 'select', options: [{ value: 'drift', label: 'Drift — colour moving slowly' }, { value: 'grid', label: 'Grid — a ruled plane travelling' }, { value: 'glow', label: 'Glow — one slow breath' }], default: 'drift', group: 'Motion' },
@@ -530,7 +534,10 @@ vec4 effect(vec2 uv) {
       { key: 'accent2', label: 'Second accent', type: 'color', default: '#ffb199', group: 'Colours' },
       { key: 'ink', label: 'Ink', type: 'color', default: '#161616', group: 'Colours', info: 'The text colour: the third wash and the grid lines.' },
       { key: 'strength', label: 'Strength', type: 'number', min: 0, max: 2.5, step: 0.01, default: 1, group: 'Motion', decimals: 2 },
-      { key: 'speed', label: 'Speed', type: 'number', min: 0, max: 4, step: 0.01, default: 1, group: 'Motion', decimals: 2 },
+      // SlideForge's periods (31, 43, 37 and 19 s) move a colour a few pixels a second: behind a lecture
+      // that is the point, but on the canvas it reads as a still picture. It starts at 2.5×, a cycle of
+      // 12 to 17 s; 1 is SlideForge's own pace.
+      { key: 'speed', label: 'Speed', type: 'number', min: 0, max: 6, step: 0.01, default: 2.5, group: 'Motion', decimals: 2, info: '1 is SlideForge’s own pace: a cycle of half a minute or more.' },
     ],
     glsl: `uniform float u_mode; uniform vec3 u_accent; uniform vec3 u_accent2; uniform vec3 u_ink; uniform float u_strength; uniform float u_speed;
 // ease-in-out there and back over one period, as the CSS keyframes do

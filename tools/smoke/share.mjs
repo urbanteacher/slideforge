@@ -32,18 +32,19 @@ let failed = 0;
 const ok = (c, label, extra = '') => { console.log(`  ${c ? '✓' : '✗'} ${label}${extra ? ` — ${extra}` : ''}`); if (!c) failed++; };
 
 try {
-  /* The host page is opened first and its own deck is what gets shared, so
-     the copy a spectator renders has exactly the slides the presenter is
-     moving through. Sharing a hand-built deck instead makes slide 3 on one
+  /* The host page is opened first and the deck it runs is what gets shared,
+     so the copy a spectator renders has exactly the slides the presenter is
+     moving through. Sharing a different deck instead makes slide 3 on one
      side a different slide 3 on the other, which is the drift this whole
-     feature has to avoid. */
+     feature has to avoid. The deck is the lesson as SlideForge builds it, run
+     directly: the classic editor it used to be opened in is gone, and the lab
+     would first draw every slide as a picture, with no Build-on-Next to follow. */
   const host = await browser.newPage();
   await host.goto(`${base}/`, { waitUntil: 'networkidle' });
-  await host.waitForFunction('window.SF && SF.Live && SF.Editor && SF.LESSONS', null, { timeout: 20000 });
-  const doc = await host.evaluate(async () => {
-    SF.Editor.useLesson('ukbt-institute-template');
-    await new Promise((r) => setTimeout(r, 1500));
-    return JSON.parse(JSON.stringify(SF.Editor.deck()));
+  await host.waitForFunction('window.SF && SF.Live && SF.LESSONS && SF.Shell && SF.Shell.current() && SF.Shell.current().doc().id', null, { timeout: 60000 });
+  const doc = await host.evaluate(() => {
+    window.__shared = SF.buildLesson('ukbt-institute-template');
+    return JSON.parse(JSON.stringify(window.__shared));
   });
   ok(doc && doc.slides && doc.slides.length > 3, 'host loaded a deck', (doc.slides || []).length + ' slides');
 
@@ -64,25 +65,17 @@ try {
   await reader.screenshot({ path: path.join(outDir, 'read-only.png') });
 
   /* ---- follow-along: the presenter drives ---- */
-  /* Hosted through the real button, so the smoke test exercises the path a
-     teacher actually takes rather than an API shortcut. */
-  await host.click('#btnLive');
-  await host.waitForTimeout(900);
-  /* Host live asks before it opens a room. Answer it if it did. */
-  const confirmed = await host.evaluate(() => {
-    const b = [...document.querySelectorAll('#askBox button, dialog button')]
-      .find((x) => /host|start|open|yes|go live/i.test(x.textContent || ''));
-    if (b) { b.click(); return (b.textContent || '').trim(); }
-    return null;
-  });
-  if (confirmed) console.log('    (answered the pre-flight: "' + confirmed + '")');
+  /* Hosted as Host live hosts a show: the room gets the run deck built from
+     the lesson (the lab's Host live does the same with its own show). */
+  await host.evaluate(() => SF.Live.host(SF.buildRunDeck(window.__shared, (id) => SF.GameStore.get(id))));
   /* Host live opens a lobby and connects; the room is not LIVE until the
      lesson is begun from it. Live.active only flips in goLiveLocally, which
      lobbyStart triggers — and Live.watchOn refuses while active is false, so
-     the big-screen link genuinely is a mid-lesson thing. */
+     the big-screen link genuinely is a mid-lesson thing. Start does nothing
+     until the relay has handed the room its PIN. */
   await host.waitForFunction(() => {
     const b = document.getElementById('lobbyStart');
-    return b && !b.disabled && b.offsetParent !== null;
+    return SF.Live.pin && b && !b.disabled && b.offsetParent !== null;
   }, null, { timeout: 15000 }).catch(() => {});
   await host.evaluate(() => {
     const b = document.getElementById('lobbyStart');
@@ -95,7 +88,7 @@ try {
       else if (++tries > 80) { clearInterval(t); resolve({ active: false }); }
     }, 200);
   }));
-  ok(live.active, 'a room is hosted from the Host live button',
+  ok(live.active, 'a room is hosted from the lesson',
     live.pin ? 'pin ' + live.pin : 'could not host — follow checks skipped');
 
   if (live.active) {
@@ -103,7 +96,7 @@ try {
     ok(registered === true, 'share registered as the big screen');
 
     await host.evaluate(() => {
-      if (!SF.Player.open) SF.Player.start(SF.buildRunDeck(SF.Editor.deck(), () => null), 0, {});
+      if (!SF.Player.open) SF.Player.start(SF.buildRunDeck(window.__shared, () => null), 0, {});
     });
     await host.waitForTimeout(800);
 

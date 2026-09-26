@@ -1,6 +1,6 @@
 import chevron from '../assets/ukbt/ukbt-chevron.svg?raw';
 import { createLayer, uid } from './defaults';
-import { fromPreset } from './guide';
+import { chooseSet, fromPreset } from './guide';
 import { syncHeaderFooter } from './headerFooter';
 import { cardsSlide, guideStyle, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, slideStyle, tableSlide, titleSlide, type LayoutStyle } from './layouts';
 import { paletteGroups } from './palettes';
@@ -13,8 +13,10 @@ import type { Deck, Slide } from './types';
 type Ground = 'working' | 'quiet' | 'loud';
 
 /** The palette, the style each ground wears, and a helper that files a slide's ground and notes. */
-export function kit(id: string) {
+export function kit(id: string, set?: string) {
   const guide = fromPreset(paletteGroups()[0].presets.find((p) => p.id === id)!);
+  // A campaign strand (AI Awareness Day's Safe, Smart…) leads with its own colour set.
+  if (set && guide.sets.includes(set)) chooseSet(guide, set);
   const base = guideStyle(guide);
   const on = (g: Ground): LayoutStyle => slideStyle(base, { ground: g === 'working' ? undefined : g });
   const put = (s: Slide, g: Ground, notes: string) => {
@@ -27,15 +29,20 @@ export function kit(id: string) {
 
 /** Slide names from their titles, and one transition throughout. */
 export function finish(slides: Slide[]) {
-  slides.forEach((s, i) => {
-    const title = s.layers.find((l) => l.kind === 'text' && (l.name === 'Heading' || l.name === 'Hero'));
-    // A section break says so in its name: the header's section slot reads it, and the header stays off it.
-    // A closing picture is a cover too: its artwork runs to the edges, so the header and footer stay off.
-    const kind = s.name === 'Section' ? 'Section · ' : s.name === 'Closer' ? 'Cover · ' : '';
-    s.name = `${i + 1} · ${kind}${String(title?.params.text ?? s.name).replace(/\s+/g, ' ')}`;
-    s.transition = { type: 'fade', duration: 0.6 };
-  });
+  slides.forEach((s, i) => finishSlide(s, i));
   return slides;
+}
+
+/** One slide named for its place and given the deck's transition, as `finish` does for a whole set. */
+export function finishSlide(s: Slide, i: number) {
+  const title = s.layers.find((l) => l.kind === 'text' && (l.name === 'Heading' || l.name === 'Hero'));
+  // A section break says so in its name: the header's section slot reads it, and the header stays off it.
+  // A closing picture is a cover too: its artwork runs to the edges, so the header and footer stay off.
+  const kind = s.name === 'Section' ? 'Section · ' : s.name === 'Closer' ? 'Cover · ' : '';
+  s.name = `${i + 1} · ${kind}${String(title?.params.text ?? s.name).replace(/\s+/g, ' ')}`;
+  // A game's slides morph from one step to the next (designs/games.ts finishGame); the rest fade.
+  if (!s.game) s.transition = { type: 'fade', duration: 0.6 };
+  return s;
 }
 
 /** The deck's header and footer: the brand's logo and the section top, its name and the page along

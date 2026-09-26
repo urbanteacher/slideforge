@@ -15,6 +15,8 @@ import { layerOf, slideOf, useStore } from '../model/store';
 import { Tip } from './controls';
 import { CAT_ICON, KindIcon } from './icons';
 import { useKindThumbs } from './thumbs';
+import type { Slide } from '../model/types';
+import { createLayer } from '../model/defaults';
 
 export function LeftPanel() {
   return <aside className="left"><Sections /></aside>;
@@ -28,7 +30,8 @@ function useFolds() {
   return [open, (k: 'layers' | 'layouts' | 'designs' | 'headerFooter' | 'images' | 'effects' | 'guide', to?: boolean) => setOpen((o) => ({ ...o, [k]: to ?? !o[k] }))] as const;
 }
 
-function Fold({ title, open, onToggle, right, children, className }: { title: string; open: boolean; onToggle: () => void; right?: ReactNode; children: ReactNode; className: string }) {
+/** A section of a side pane that folds away: the Lesson studio's layers and layouts, and Browse. */
+export function Fold({ title, open, onToggle, right, children, className }: { title: string; open: boolean; onToggle: () => void; right?: ReactNode; children: ReactNode; className: string }) {
   return (
     <section className={`fold ${className}${open ? ' open' : ''}`}>
       <div className="panel-head fold-head">
@@ -86,9 +89,16 @@ function LayoutsPanel() {
   const { addSlide, showToast, mutate } = useStore.getState();
   const themeId = useStore((s) => s.deck.theme);
   const guide = useStore((s) => s.deck.styleGuide);
-  const st = themeOf({ theme: themeId, styleGuide: guide }) ?? LAYOUT_STYLES[0];
+  // Once per theme: a style guide's style is a new object each time it is read, and the thumbnails
+  // below start again whenever the entries change, so an unmemoised style never let one finish.
+  const st = useMemo(() => themeOf({ theme: themeId, styleGuide: guide }) ?? LAYOUT_STYLES[0], [themeId, guide]);
   const entries = useMemo(() => LAYOUTS.map((l) => ({ id: l.id, layout: l, slide: l.make(st) })), [st]);
   const thumbs = useThumbs(entries);
+  // The campaign's structures (aiad27.ts), in the deck's theme: the ballot, the discussion, the tables.
+  const [structures, setStructures] = useState<{ id: string; name: string; blurb: string; make: () => Slide }[]>([]);
+  useEffect(() => { let live = true; import('../model/campaignDesigns').then((m) => { if (live) setStructures(m.compositionLayouts(st)); }); return () => { live = false; }; }, [st]);
+  const structureEntries = useMemo(() => structures.map((x) => ({ id: x.id, slide: x.make() })), [structures]);
+  const structureThumbs = useThumbs(structureEntries);
   const piece = (icon: ReactNode, label: string, run: () => void, hint?: string) => (
     <button className="piece" onClick={run} title={hint}>{icon}<span>{label}</span></button>
   );
@@ -130,6 +140,17 @@ function LayoutsPanel() {
           </button>
         ))}
       </div>
+      {structures.length > 0 && <>
+        <div className="lp-label">Structures · from AI Awareness Day 2027</div>
+        <div className="lp-grid">
+          {structures.map((x) => (
+            <button key={x.id} className="lp-card" title={x.blurb} onClick={() => { addSlide(x.make()); showToast(`Inserted “${x.name}”`); }}>
+              <div className="lp-thumb">{structureThumbs[x.id] && <img src={structureThumbs[x.id]} alt="" />}</div>
+              <span>{x.name}</span>
+            </button>
+          ))}
+        </div>
+      </>}
     </div>
   );
 }
@@ -214,6 +235,35 @@ function LayersPanel() {
 
 /** Backgrounds and effects: layers that work on the whole slide, stacked above what is selected.
  *  Items — text, pictures, charts — are in the Add menu, so Sources is not repeated here. */
+/** SlideForge's backdrop loops (assets/backdrop/, made by tools/video/): slow, dark, silent, seamless,
+ *  so they move enough to look alive and too little to be read instead of the slide. Recorded, not
+ *  drawn: each plays the same everywhere, where the generators above are drawn live and restyle. */
+const BACKDROPS = [
+  { id: 'ink-silk', name: 'Ink silk', blurb: 'Light moving through ink: three blended light fields and two soft ribbons. Twelve seconds.' },
+  { id: 'ink-drift', name: 'Ink drift', blurb: 'Three soft blobs drifting over a faint travelling grid. Eight seconds.' },
+];
+/** A file SlideForge serves, from the lab's page (lab-app/ is a folder down from the site). */
+const site = (path: string) => { try { return new URL('../' + path, location.href).pathname; } catch { return path; } };
+
+/** The loop behind everything on the slide: just above its ground, the whole slide, muted, looping. */
+function addBackdrop(id: string, name: string) {
+  const { mutate, showToast } = useStore.getState();
+  const layer = createLayer('video', {
+    name: `Backdrop · ${name}`,
+    params: { src: site(`assets/backdrop/${id}.mp4`), poster: site(`assets/backdrop/${id}-poster.jpg`), frame: 'bleed', fit: 'cover', muted: true, autoplay: true, loop: true },
+  });
+  mutate((d) => {
+    const st = useStore.getState();
+    const slide = d.slides.find((x) => x.id === st.slideId);
+    if (!slide) return;
+    layer.box = { x: 0, y: 0, w: d.width, h: d.height, rot: 0 };
+    const base = slide.layers[0] && slide.layers[0].kind === 'solid' ? 1 : 0;
+    slide.layers.splice(base, 0, layer);
+  });
+  useStore.setState({ selectedId: layer.id });
+  showToast(`${name} is behind this slide. Its still shows until it plays; the Video tab sets how it plays.`);
+}
+
 function EffectsPanel() {
   const cats = CATEGORIES.filter((c) => c.id !== 'source');
   const [cat, setCat] = useState<Category | 'featured'>('featured');
@@ -224,6 +274,15 @@ function EffectsPanel() {
   const thumb = useKindThumbs([...new Set([...kinds.map((k) => k.id), ...allIds])], 0);
   return (
     <div className="panel-scroll effects-panel">
+      <div className="lp-label">Backdrop videos · behind the slide</div>
+      <div className="fx-grid">
+        {BACKDROPS.map((v) => (
+          <button key={v.id} className="fx-card" onClick={() => addBackdrop(v.id, v.name)} title={`Add ${v.name} behind this slide`}>
+            <div className="fx-thumb"><img src={site(`assets/backdrop/${v.id}-poster.jpg`)} alt="" draggable={false} /></div>
+            <div className="fx-label">{v.name}<Tip text={v.blurb} /></div>
+          </button>
+        ))}
+      </div>
       <div className="fx-note">Whole slide · adds {sel ? <>above <b>{sel.name}</b></> : <>on top of <b>this slide</b></>}</div>
       <div className="fx-cats">
         {cats.map((c) => {

@@ -1,7 +1,7 @@
 import { Image as ImageIcon, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, MonitorPlay, Play, RotateCcw, Shuffle, WandSparkles } from 'lucide-react';
 import { setVideoLayout, videoLayoutOf, type VideoLayout } from './video';
 import { videoService } from '../model/video';
-import { RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
+import { ActivityPanel, GamePanel, RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
 import { RECIPE_NAMES } from '../model/recipes';
 import { EngagementPanel } from './Engagement';
 import { backdropOf, setBackdrop, type BackdropMode } from '../model/backdrop';
@@ -61,8 +61,9 @@ const TRANSITIONS: { value: TransitionType; label: string }[] = [
   { value: 'morph', label: 'Morph — carry what the slides share' },
 ];
 const FEELS: { value: 'rise' | 'fade' | 'reveal' | 'plain'; label: string }[] = [
-  { value: 'rise', label: 'Rise — up from below, blur clearing' }, { value: 'fade', label: 'Fade — no movement' },
-  { value: 'reveal', label: 'Reveal — wiped up from behind its line' }, { value: 'plain', label: 'Plain — a short rise, no blur' },
+  { value: 'plain', label: 'Plain — a short rise, no blur' },
+  { value: 'rise', label: 'Rise — up from below, blur clearing' }, { value: 'fade', label: 'Fade — blur clearing, no movement' },
+  { value: 'reveal', label: 'Reveal — wiped up from behind its line' },
 ];
 const CHART_ENTRANCES: { value: EntranceType; label: string }[] = [{ value: 'draw', label: 'Draws itself' }];
 const SPEED_OPTIONS: { value: Speed | 'custom'; label: string }[] = [
@@ -78,6 +79,22 @@ const CLICKS: { value: ClickAction; label: string }[] = [
   { value: 'none', label: 'Advance (default)' }, { value: 'next', label: 'Next slide' }, { value: 'prev', label: 'Previous slide' },
   { value: 'goto', label: 'Go to slide…' }, { value: 'link', label: 'Open link…' }, { value: 'flip', label: 'Flip to facts — turn the slide over' },
 ];
+
+/** Front | Back, on a slide with Flip to facts: which face the canvas shows, so the back's heading and
+ *  words are edited where they are, on the canvas, like the front's. The show still turns it over on a
+ *  click. Only which face is in view changes here; nothing on the slide does. */
+function FaceRow() {
+  const slide = useStore(slideOf);
+  const backOf = useStore((s) => s.backOf);
+  const set = useStore((s) => s.set);
+  if (!slide.layers.some((l) => l.face === 'back')) return null;
+  return (
+    <Row label="Showing" info="A slide with Flip to facts has a back. Show it to edit its words on the canvas; the show turns it over when its Flip layer is clicked.">
+      <Select value={backOf === slide.id ? 'back' : 'front'} options={[{ value: 'front', label: 'Front' }, { value: 'back', label: 'Back — the facts' }]}
+        onChange={(v) => set({ backOf: v === 'back' ? slide.id : null, selectedId: null })} />
+    </Row>
+  );
+}
 
 export function Inspector() {
   const layer = useStore(layerOf);
@@ -183,6 +200,15 @@ function LayerDesign({ layer, picture = false }: { layer: Layer; picture?: boole
       {layer.kind === 'video' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'video' })}><ImageIcon size={13} />The address, full screen or framed, how it plays and its caption are in the <b>Video</b> tab</button>}
       {SPECIAL_TABS[layer.kind] && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'special' })}><ImageIcon size={13} />What it shows and how it behaves are in the <b>{SPECIAL_TABS[layer.kind]}</b> tab</button>}
       <RecipeLink />
+      {layer.kind === 'image' && (
+        // What a picture most often needs, where the picture is selected: how it fills its box, a
+        // border, its corners. Its frame, caption and motion stay in the Picture tab.
+        <Section title="Picture">
+          {['fit', 'border', 'borderColor', 'radius'].map((key) => k.params.find((d) => d.key === key))
+            .filter((d): d is ParamDef => !!d && (!d.when || d.when(layer.params)))
+            .map((d) => <ParamRow key={d.key} layer={layer} def={d} setParam={setParam} />)}
+        </Section>
+      )}
       <Section title="Layer">
         <Row label="Opacity"><Scrub value={layer.opacity * 100} min={0} max={100} step={1} decimals={0} unit=" %" onChange={(v, m) => up((l) => { l.opacity = v / 100; }, m)} /></Row>
         <Row label="Blend" info="How this layer combines with everything below it."><Select value={layer.blend} options={BLENDS} onChange={(v) => up((l) => { l.blend = v; })} /></Row>
@@ -489,10 +515,13 @@ function SlideDesign() {
   return (
     <>
       <RecipePanel />
+      <GamePanel />
+      <ActivityPanel />
       <Section title="Slide">
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>
         <GroundRow />
+        <FaceRow />
         <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
       <Section title="Speaker notes">
@@ -540,7 +569,7 @@ function LayerAnimate({ layer }: { layer: Layer }) {
           else if (isTextUnit(v) && !presetOf(x)) Object.assign(x, presetTiming(v, 'medium', 'wave'));
           else if (v !== 'none' && x.duration < 0.1) x.duration = 0.9;
           // Words and letters arrive SlideForge's way, Rise on Easy Ease, unless already set otherwise.
-          if ((v === 'words' || v === 'letters') && !x.feel && !x.plan) { x.feel = 'rise'; x.easing = 'easyEase'; }
+          // Words and letters start Plain: a short rise with no blur. Rise, Fade and Reveal are there to choose.
           if (v !== 'words' && v !== 'letters') { delete x.feel; delete x.plan; }
         })} /></Row>
         {(a.type === 'words' || a.type === 'letters') && !a.plan?.length && !(a.build && a.build !== 'none') && (
@@ -703,7 +732,9 @@ function LayerInteract({ layer }: { layer: Layer }) {
   const k = kind(layer.kind);
   const update = useStore((s) => s.updateLayer);
   const n = useStore((s) => s.deck.slides.length);
+  // A link made by id (a game board's cells) shows the slide it reaches now.
   const it = layer.interact;
+  const linked = useStore((s) => (it.gotoId ? s.deck.slides.findIndex((x) => x.id === it.gotoId) + 1 : 0));
   const up = (fn: (x: Layer['interact']) => void, m?: string) => update(layer.id, (l) => fn(l.interact), m);
   return (
     <>
@@ -722,7 +753,7 @@ function LayerInteract({ layer }: { layer: Layer }) {
           </Section>
           <Section title="Click">
             <Row label="Action"><Select value={it.click} options={CLICKS} onChange={(v) => up((x) => { x.click = v; })} /></Row>
-            {it.click === 'goto' && <Row label="Slide"><Scrub value={it.gotoSlide} min={1} max={Math.max(1, n)} step={1} decimals={0} onChange={(v, m) => up((x) => { x.gotoSlide = v; }, m)} /></Row>}
+            {it.click === 'goto' && <Row label="Slide"><Scrub value={linked || it.gotoSlide} min={1} max={Math.max(1, n)} step={1} decimals={0} onChange={(v, m) => up((x) => { x.gotoSlide = v; delete x.gotoId; }, m)} /></Row>}
             {it.click === 'link' && <Row label="URL"><input className="text-input" placeholder="https://…" value={it.url} onChange={(e) => up((x) => { x.url = e.target.value; }, 'url')} onKeyDown={(e) => e.stopPropagation()} /></Row>}
           </Section>
           <Section title="Flip to facts">

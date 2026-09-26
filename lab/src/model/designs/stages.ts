@@ -1,5 +1,5 @@
 import type { LayoutStyle } from '../layouts';
-import type { Layer, Slide } from '../types';
+import type { Layer, Slide, StageJob } from '../types';
 import { BASE, FOOT, HEAD, HY, LEFT, LIFT, PAD, W, box, clock, eyebrow, fmtMin, ground, hero, part, rect, rgba, slideOf, tint, txt } from './kit';
 
 // Timed routines — Think · Pair · Share, Jigsaw, I do · We do · You do, a Socratic seminar — in two
@@ -8,7 +8,7 @@ import { BASE, FOOT, HEAD, HY, LEFT, LIFT, PAD, W, box, clock, eyebrow, fmtMin, 
 // SlideForge's: the stages as pills across the top and one clock, a cover first, then each stage in
 // the body in turn.
 
-export interface Stage { name: string; task: string; minutes: number; job?: string }
+export interface Stage { name: string; task: string; minutes: number; job?: string; jobKey?: StageJob }
 export interface Routine { title: string; prompt: string; stages: Stage[]; notes?: string; /** What the prompt is ("Discussion prompt"), beside the title above it. */ label?: string }
 
 /** The band: up to five stages share the width with nothing between them, and run off the foot. */

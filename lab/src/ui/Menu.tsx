@@ -13,13 +13,13 @@ function useOutside(open: boolean, close: () => void) {
   return ref;
 }
 
-export function Menu({ trigger, children, right }: { trigger: (open: boolean, toggle: () => void) => ReactNode; children: (close: () => void) => ReactNode; right?: boolean }) {
+export function Menu({ trigger, children, right, className = '' }: { trigger: (open: boolean, toggle: () => void) => ReactNode; children: (close: () => void) => ReactNode; right?: boolean; className?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useOutside(open, () => setOpen(false));
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       {trigger(open, () => setOpen(!open))}
-      {open && <div className={`menu${right ? ' right' : ''}`}>{children(() => setOpen(false))}</div>}
+      {open && <div className={`menu${right ? ' right' : ''}${className ? ' ' + className : ''}`}>{children(() => setOpen(false))}</div>}
     </div>
   );
 }

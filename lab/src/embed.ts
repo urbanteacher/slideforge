@@ -1,8 +1,8 @@
 import { blankDeck } from './model/defaults';
-import { carryDeckLive, convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
+import { CARRIED, carryDeck27, carryDeckArt, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
-import { useStore } from './model/store';
+import { enterView, useStore, type LabView } from './model/store';
 import type { Deck, Slide } from './model/types';
 import { idbDelete, idbGet, idbSet } from './persist/idb';
 
@@ -49,28 +49,64 @@ export async function saveCurrent(): Promise<void> {
   await persistDeck(st.deck);
 }
 
-/** The campaign palette nearest a SlideForge theme, and whether it wears NU London's frame. */
-function paletteFor(theme = ''): { palette: string; frame: boolean } {
+/** AI Awareness Day's five strands, in the order their palettes list the colour sets. */
+const STRANDS = ['safe', 'smart', 'creative', 'responsible', 'future'];
+
+/** The campaign palette nearest a SlideForge theme, whether it wears NU London's frame, and for a
+ *  campaign strand (aiad26-smart), the colour set that leads: Smart is orange, not the first set. */
+function paletteFor(theme = ''): { palette: string; frame: boolean; set?: string } {
   if (theme.startsWith('northeastern')) return { palette: 'nul', frame: true };
   if (theme.startsWith('ukbt-institute')) return { palette: 'ukbt-institute', frame: false };
   if (theme.startsWith('ukbt')) return { palette: 'ukbt', frame: false };
-  if (theme.startsWith('aiad27')) return { palette: 'aiad27', frame: false };
-  if (theme.startsWith('aiad26')) return { palette: 'aiad26', frame: false };
+  const m = /^(aiad2[67])(?:-([a-z]+))?/.exec(theme);
+  if (m) {
+    const i = STRANDS.indexOf(m[2] ?? '');
+    return { palette: m[1], frame: false, set: i >= 0 ? String(i + 1) : undefined };
+  }
   return { palette: 'nul', frame: false };
 }
 
-interface ClassicDeck { id: string; title?: string; theme?: string; slides?: SFSlide[]; libraryGroup?: string }
+/** A SlideForge lesson as the shell hands it over, with its games compiled (js/lab-engine.js): the
+ *  games live in SlideForge's game store, not in the lesson, and the lab has no store of its own. */
+interface ClassicDeck { id: string; title?: string; theme?: string; slides?: SFSlide[]; libraryGroup?: string; labGames?: Record<string, LessonGame> }
+
+/** A picture's address as SlideForge wrote it, made to work from here. SlideForge's are relative to
+ *  its own page (assets/lesson/…), and the lab runs a folder down (lab-app/), where the same words
+ *  name a file that is not there: every lesson picture came into the lab missing. A relative address
+ *  is read from the page that loads the lab, and kept as a path from the site's root, so a deck
+ *  saved here still works wherever the site is served from. */
+export function siteAddress(src: string): string {
+  if (!src || /^(data:|blob:|[a-z][a-z0-9+.-]*:|\/|#)/i.test(src)) return src;
+  try {
+    const page = window.parent && window.parent !== window ? window.parent.location.href : new URL('..', location.href).href;
+    return new URL(src, page).pathname;
+  } catch { return src; }
+}
 
 /** A SlideForge lesson as a new lab deck. Its pictures are addresses on the slide (a URL or a data URL),
- *  not keys into a table as the Layout bank's are, so every lookup answers with the address itself. */
-const addresses = new Proxy({} as Record<string, string>, { get: (_, k) => (typeof k === 'string' ? k : undefined) });
+ *  not keys into a table as the Layout bank's are, so every lookup answers with the address, made to work here. */
+const addresses = new Proxy({} as Record<string, string>, { get: (_, k) => (typeof k === 'string' ? siteAddress(k) : undefined) });
+
+/** The picture and video addresses on a copy made before they were resolved: made to work here. */
+function repairAddresses(d: Deck): number {
+  let n = 0;
+  for (const slide of d.slides) for (const l of slide.layers) {
+    for (const key of ['src', 'poster'] as const) {
+      const v = (l.params as Record<string, unknown>)[key];
+      if (typeof v !== 'string') continue;
+      const fixed = siteAddress(v);
+      if (fixed !== v) { (l.params as Record<string, unknown>)[key] = fixed; n++; }
+    }
+  }
+  return n;
+}
 
 export function convertClassic(c: ClassicDeck): Deck {
   const slides = Array.isArray(c.slides) ? c.slides : [];
   const images = addresses;
-  const data: SFDeck = { key: c.id, title: c.title || 'Untitled lesson', theme: c.theme || '', slides, images };
-  const { palette, frame } = paletteFor(c.theme);
-  const deck = deckFromSlideForge(data, palette, { frame, games: '' });
+  const data: SFDeck = { key: c.id, title: c.title || 'Untitled lesson', theme: c.theme || '', slides, images, games: c.labGames };
+  const { palette, frame, set } = paletteFor(c.theme);
+  const deck = deckFromSlideForge(data, palette, { frame, games: '', set });
   deck.id = `lab-${c.id}`;
   deck.sourceId = c.id;
   if (c.libraryGroup) deck.libraryGroup = c.libraryGroup;
@@ -86,12 +122,30 @@ export const isLabDeck = (d: unknown): d is Deck => {
     slides.every((s) => Array.isArray(s?.layers) && typeof (s as { type?: unknown }).type !== 'string');
 };
 
-/** A lab copy older than the converter's feedback and timers takes them from its lesson, once. */
+/** A lab copy made by an older converter brought up to date from its lesson, once per version: the
+ *  feedback and timers version 1 carries, the slides later versions build (experiments), and at
+ *  version 3 the theme's artwork and picture addresses that work from the lab. */
 function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
-  if (d.carried || !source || !Array.isArray(source.slides)) return d;
+  const from = d.carried ?? 0;
+  if (from >= CARRIED || !source || !Array.isArray(source.slides)) return d;
   const copy = structuredClone(d);
-  carryDeckLive(copy, source.slides, paletteFor(source.theme).palette);
-  copy.carried = 1;
+  const { palette, set } = paletteFor(source.theme);
+  const art = { theme: source.theme || '', title: source.title || '' };
+  if (from < 1) carryDeckLive(copy, source.slides, palette, set);
+  carryDeckMissing(copy, source.slides, palette, Math.max(1, from), set, art, source.labGames);
+  // The artwork first: a poster it adds comes with SlideForge's address, which the repair then fixes.
+  // Pieces a copy already has stay as they are, so a copy from version 3 or 4 takes only the new ones.
+  if (from < 8) carryDeckArt(copy, source.slides, art);
+  if (from < 8 && (source.theme ?? '').startsWith('aiad27')) pageNumbers(copy);
+  if (from < 10) carryDeck27(copy, source.slides, art, palette, set);
+  // A statement set before version 6 grew past its frame when its line was a question: it fits now.
+  if (from < 6) for (const sl of copy.slides) {
+    const line = sl.layers.find((l) => l.name === 'Statement' && l.params.fit === 'grow');
+    if (line && sl.layers.some((l) => l.name === 'Frame')) fitStatement(line, sl.layers.some((l) => l.name === 'Credit'));
+  }
+  if (from < 3) repairAddresses(copy);
+  if (from < 7) carryDeckHidden(copy, source.slides);
+  copy.carried = CARRIED;
   return copy;
 }
 
@@ -102,7 +156,7 @@ function show(d: Deck) {
 
 /** One slide as a picture for SlideForge's player: what Host live, Teacher Presenter and Rehearse
  *  show until the lab has a live host of its own. */
-export interface Still { id: string; sourceSlideId?: string; image: string; notes: string; hidden: boolean; name: string; feedback?: Slide['feedback'] }
+export interface Still { id: string; sourceSlideId?: string; image: string; notes: string; hidden: boolean; name: string; feedback?: Slide['feedback']; /** A game's slide: what the live room plays it by (src/deck/labshow.js). */ game?: Slide['game'] }
 
 // A slide is immutable, so an unchanged one keeps its picture; the deck-wide things drawn on it
 // (the header and footer, the style guide, its page number) are checked too.
@@ -134,7 +188,7 @@ async function stills(width = 1600, onProgress?: (done: number, total: number) =
       // A breath between slides, so the page stays responsive while a long deck is drawn.
       await new Promise((r) => setTimeout(r, 0));
     }
-    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined });
+    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined, game: s.game ? structuredClone(s.game) : undefined });
     onProgress?.(i + 1, deck.slides.length);
   }
   return out;
@@ -211,6 +265,17 @@ export const labApi = {
   },
   present() { useStore.getState().set({ presenting: true }); },
   currentSlideId: () => useStore.getState().slideId,
+  /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
+   *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. Entering the
+   *  Quiz studio or Activities opens Engage, once. */
+  setView(view: LabView) { enterView(view); },
+  /** Go to one of the deck's slides by its id (the show ended on it); false when the deck has none. */
+  showSlide(id: string): boolean {
+    const st = useStore.getState();
+    if (!st.deck.slides.some((s) => s.id === id)) return false;
+    if (st.slideId !== id) useStore.setState({ slideId: id, selectedId: null });
+    return true;
+  },
   stills,
   outline,
   /** The slides of a SlideForge lesson the lab cannot build: its games and activities. */

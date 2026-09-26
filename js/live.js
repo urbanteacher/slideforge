@@ -916,6 +916,12 @@
 
   /* Called at boot with whatever deck was open. Walks back into a room this
      tab was hosting before a reload, if the server is still holding it. */
+  /** Whether the server is holding a room this tab was hosting, to walk back into. */
+  Live.hasHeldRoom = function () {
+    var held = heldRoom();
+    return !!(held && held.pin && held.token);
+  };
+
   Live.resumeHeldRoom = function (deck) {
     var held = heldRoom();
     if (!held || !held.pin || !held.token) return false;
@@ -3341,6 +3347,8 @@
     }
     if (chain) closeProposals();
     Live.revealed[s.id] = true;
+    /* A lab game's question draws the lab's own answer slide on the wall (js/lab-stage.js). */
+    if (SF.LabStage && SF.LabStage.reveal) SF.LabStage.reveal(s);
     stopDrip();
     /* The reasoning reaches the phones at the same moment they learn whether
        they were right, which is when they are most likely to read it. */

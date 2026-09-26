@@ -156,7 +156,7 @@
   SF.jumpToSlide = function (n) {
     var P = SF.Player;
     if (P && P.open && P.deck && P.deck.slides) {
-      var authored = (SF.Editor && SF.Editor.deck && SF.Editor.deck().slides) || P.deck.slides;
+      var authored = P.deck.slides;
       var want = authored[n - 1];
       if (!want) { if (SF.toast) SF.toast('There is no rail slide ' + n + ' (authoring order).'); return; }
       var at = -1;
@@ -166,12 +166,6 @@
       if (at < 0) { if (SF.toast) SF.toast('Rail slide ' + n + ' is not in this show — it may be hidden.'); return; }
       P.goTo(at, at > P.idx ? 1 : -1);
       return;
-    }
-    if (SF.Editor && SF.Editor.selectSlide) {
-      var d = SF.Editor.deck();
-      var target = d && d.slides[n - 1];
-      if (!target) { if (SF.toast) SF.toast('There is no rail slide ' + n + ' (authoring order).'); return; }
-      SF.Editor.selectSlide(target.id);
     }
   };
 
@@ -191,7 +185,6 @@
 
   function deckOf(node) {
     if (SF.Player && SF.Player.open && SF.Player.deck) return SF.Player.deck;
-    if (SF.Editor && SF.Editor.deck) { try { return SF.Editor.deck(); } catch (e) {} }
     return null;
   }
 

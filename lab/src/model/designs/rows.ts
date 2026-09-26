@@ -48,7 +48,7 @@ export function numberedRun(st: LayoutStyle, o: Labelled): Slide {
     rect('Accent column', box(0, TOPBAND, COL, BASE - TOPBAND), st.accent, { type: 'wipeUp', duration: 0.7 }),
     txt('Eyebrow', (o.eyebrow ?? 'Step by step').toUpperCase(), box(LEFT, EY + 20, COL - LEFT - 60, 50), { font: st.body, weight: '600', size: 38, color: st.ground, tracking: 0.12 }),
     txt('Heading', o.title, box(LEFT, HY + 34, COL - LEFT - 60, 560), { font: st.display, weight: st.displayWeight, size: 112, color: st.ground, lineHeight: 1.02, tracking: -0.015, fit: 'fill', balance: true },
-      { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.1 }),
+      { type: 'rise', duration: 0.8 }),
     txt('Count', `${n} ${n === 1 ? 'step' : 'steps'}`, box(LEFT, 860 - LIFT, COL - LEFT - 60, 60), { font: st.body, size: 44, color: st.ground }),
   ];
   const top = EY, bottom = FOOT - 20;

@@ -1403,8 +1403,16 @@
     fields = fields.slice(0, 6);
 
     var guard = classifyActivity(activity);
+    /* A box's name, as the model should read it: a stage row's label carries its time and its
+       phone job ("In this room · 3 min [send]"), which are how the room runs it, not what to write. */
+    var boxLabel = function (f) {
+      return String(f.label || '')
+        .replace(/\s*\[(note|talk|send|work|down)\]\s*$/i, '')
+        .replace(/\s*[·•\-–—|,]\s*(every\s+)?\d+(?:\.\d+)?\s*(min|mins|minutes|m|s|sec|secs|seconds)\s*$/i, '')
+        .trim() || String(f.label || '');
+    };
     var shape = {};
-    fields.forEach(function (f, i) { shape['f' + i] = f.label; });
+    fields.forEach(function (f, i) { shape['f' + i] = boxLabel(f); });
 
     var guardRules = guard && guard.rules
       ? String(guard.rules).slice(0, 320)
@@ -1414,13 +1422,17 @@
       'Write classroom activity content. Return ONLY JSON, no markdown, keys ' +
       JSON.stringify(Object.keys(shape)) + '. ' +
       'Each value is finished text for that box — no teacher instructions, no placeholders. ' +
-      guardRules;
+      guardRules +
+      /* A wall read from the back of the room, large (the lab's designs): a box is a line or two. */
+      (Number(opts.maxWords) > 0 ? ' Each value is at most ' + Math.round(Number(opts.maxWords)) + ' words.' : '');
 
     var user = 'Activity: ' + String(activity.title || '').slice(0, 80) + '.' +
       '\nTopic: ' + topic + '.' +
-      (opts.notes ? '\nNotes: ' + String(opts.notes).slice(0, 160) : '') +
+      /* Room for who it is for as well as what (the class, what they get wrong, what the room
+         allows): the lab's Write box sends them here. */
+      (opts.notes ? '\nNotes: ' + String(opts.notes).slice(0, 320) : '') +
       '\nBoxes:\n' +
-      fields.map(function (f, i) { return 'f' + i + ' = ' + f.label; }).join('\n') +
+      fields.map(function (f, i) { return 'f' + i + ' = ' + boxLabel(f); }).join('\n') +
       (activity.steps && activity.steps.length
         ? '\nRuns as:\n- ' + activity.steps.slice(0, 3).map(function (s) {
             return String(s).slice(0, 90);
