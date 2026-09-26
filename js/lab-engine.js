@@ -12,37 +12,26 @@
    its own copy: converted the first time, with an id of its own, so the
    original lesson is never written to by the lab.
 
-   The lab is the Lesson studio. A browser that asks for the classic studio
-   keeps it: ?classic=1 on the address turns it on and is remembered, ?lab=1
-   (or ?classic=0) turns the lab back on (see enabled() below). */
+   The lab is SlideForge's three studios, for everyone. The classic studios
+   are not offered: no address or setting brings them back (see enabled()).
+   */
 (function (global) {
   'use strict';
   /** @type {any} */
   var SF = global.SF = global.SF || {};
-  var KEY = 'sf.lessonEngine';
 
-  /* The lab is the Lesson studio, with its Engage: its games and activities
-     designed in the lab, the quizzes' two looks. It was the classic studio
-     for a day (26 Sep 2026) while converted lessons lost their pictures and
-     their theme's artwork; with those back, the owner took the lab again.
-     The classic studio is one address away, and a browser that asks for it
-     keeps it: ?classic=1 turns it on, ?lab=1 or ?classic=0 turns it off. */
+  /* The lab is the Lesson studio, the Quiz studio and Activities. The classic
+     studios were one address away (?classic=1) while the lab caught up with
+     them; the owner has retired them, so nothing a teacher can do brings them
+     back. The one exception is the browser smokes (tools/smoke/): under
+     automation they still drive the classic studios' rail, stage and
+     inspector, until they are rewritten for the lab; a smoke written for the
+     lab opts in with ?classic=0. */
   function enabled() {
     try {
-      var q = location.search;
-      if (/[?&]classic=1\b/.test(q)) { remember('classic'); return false; }
-      if (/[?&](classic=0|lab=1)\b/.test(q)) { remember('lab'); return true; }
-      /* The browser smokes (tools/smoke/) drive the classic studio's rail,
-         stage and inspector, so under automation the classic studio is the
-         one on screen. A smoke written for the lab opts in with ?classic=0. */
-      if (navigator.webdriver) return false;
-      return localStorage.getItem(KEY) !== 'classic';
+      if (/[?&]classic=0\b/.test(location.search)) return true;
+      return !navigator.webdriver;
     } catch (e) { return true; }
-  }
-
-  function remember(engine) {
-    /* Under automation a smoke's choice is for that page only, not the profile. */
-    try { if (!navigator.webdriver) localStorage.setItem(KEY, engine); } catch (e) {}
   }
 
   /** @type {any} */ var api = null;
@@ -492,9 +481,9 @@
     loading.classList.add('failed');
     loading.innerHTML = '<span>The lesson studio did not start.</span>' +
       '<span class="lab-loading-sub">' + (why === 'webgl'
-        ? 'It draws with WebGL2, which this browser has switched off \u2014 often after the graphics card ran out of memory. Quit and reopen the browser, or '
-        : 'Reload the page, or ') +
-      '<a href="?classic=1">open the classic Lesson studio</a>.</span>';
+        ? 'It draws with WebGL2, which this browser has switched off \u2014 often after the graphics card ran out of memory. Quit and reopen the browser. '
+        : 'Reload the page. If it still does not start, ') +
+      'quit and reopen the browser.</span>';
   }
 
   function hideLoading() {
@@ -641,18 +630,13 @@
     return v;
   }
 
-  function useClassic(on) {
-    try { localStorage.setItem(KEY, on ? 'classic' : 'lab'); } catch (e) {}
-    location.reload();
-  }
-
   /* Start the lab loading now, while the rest of the page's scripts run and the
      shell starts, rather than after: install() finds the frame already there. */
   if (enabled() && document.getElementById('app')) mount();
 
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
-    classicDeck: classicDeck, useClassic: useClassic,
+    classicDeck: classicDeck,
     /* For the tests: which slides print from their SlideForge original, the picture a lab slide becomes, and a lesson's games as the lab gets them. */
     printsAsPages: printsAsPages, pictureSlide: pictureSlide, lessonGames: lessonGames,
     /* For Share (js/shell.js): the lesson as SlideForge's player shows it. */
