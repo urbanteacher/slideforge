@@ -1,5 +1,10 @@
-/* Browser verification of Lesson studio's whole-lesson rehearsal. No user
- * data is used: Playwright gets a fresh, isolated browser context.
+/* Browser verification of the whole-lesson rehearsal. No user data is used:
+ * Playwright gets a fresh, isolated browser context.
+ *
+ * The lesson goes straight to SF.Demo.start, which is what Rehearse calls
+ * under the lab too. The classic editor's Present menu used to be the way in;
+ * it went with the classic studios, and the lab's Rehearse draws every slide
+ * as a still first, which is slow without a graphics card.
  *
  * The point of the rehearsal is that one run crosses formats. The thing worth
  * guarding is that the sample room follows the lesson rather than behaving one
@@ -15,7 +20,7 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(BASE);
-  await page.waitForFunction(() => window.SF?.Editor?.workspace);
+  await page.waitForFunction(() => window.SF?.Demo && SF.Player && SF.buildRunDeck);
 
   /* A lesson that mixes a scored check, a spoken explain, and an exit poll. */
   await page.evaluate(() => {
@@ -35,14 +40,11 @@ try {
       { prompt: 'How did that land?', options: ['Clear', 'Mostly', 'Lost'] });
     deck.slides = [intro, g1, g2, exit];
     SF.Store.save(deck);
-    SF.Editor.workspace.setDoc(deck);
-    SF.Shell.activate('deck');
-    SF.Editor.workspace.draw();
+    /* The same run the lesson's Rehearse starts: games expanded, the room following the lesson. */
+    const run = SF.buildRunDeck(deck, (id) => SF.GameStore.get(id));
+    SF.Demo.start(run, { fullscreen: false, startIndex: 0, auto: true });
   });
 
-  /* Rehearse lives under Present ▾ now. */
-  await page.locator('.present-more summary').click();
-  await page.locator('#btnRehearse').click();
   await page.waitForFunction(() => SF.Player.open && SF.Demo.active);
   assert.equal(await page.evaluate(() => !!document.fullscreenElement), false,
     'a dry run stays windowed, so Esc means stop rehearsing rather than leave fullscreen');
