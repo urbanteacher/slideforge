@@ -11,13 +11,17 @@ const isChoiceLayer = (layer: Layer) => choiceNames.test(layer.name);
 const numberedNames = /^0[1-6] · (rule|number|heading|detail)$/;
 const isNumberedLayer = (layer: Layer) => numberedNames.test(layer.name);
 
-function numberedLayers(source: Layer[], current: Layer[], count: number, width: number, height: number, background: string): Layer[] {
+/** The lesson's faces and accent, for a block made fresh (one copied keeps the style it has). */
+type BlockStyle = { display: string; body: string; accent: string };
+const FALLBACK: BlockStyle = { display: 'Uncut Sans', body: 'Uncut Sans', accent: '#00BEDD' };
+
+function numberedLayers(source: Layer[], current: Layer[], count: number, width: number, height: number, background: string, style: BlockStyle = FALLBACK): Layer[] {
   const hex = background.replace('#', '');
   const rgb = Number.parseInt(hex, 16);
   const dark = Number.isFinite(rgb) && (0.299 * ((rgb >> 16) & 255) + 0.587 * ((rgb >> 8) & 255) + 0.114 * (rgb & 255)) < 110;
   const ink = dark ? '#F6F4ED' : '#231F20';
   // The numbers keep the colour the block already has (a lesson's strand colour); cyan, Safe's, for a new block.
-  const accent = String(source.find((l) => l.name === '01 · number')?.params.color ?? current.find((l) => l.name === '01 · number')?.params.color ?? '#00BEDD');
+  const accent = String(source.find((l) => l.name === '01 · number')?.params.color ?? current.find((l) => l.name === '01 · number')?.params.color ?? style.accent);
   const compact = count > 3;
   const stride = compact ? 104 : 216;
   return Array.from({ length: count }, (_, i) => {
@@ -29,7 +33,7 @@ function numberedLayers(source: Layer[], current: Layer[], count: number, width:
         name,
         params: part === 'rule' ? { shape: 'rect', fill: dark ? '#686366' : '#8A8586', strokeWidth: 0 } : {
           text: part === 'number' ? number : part === 'heading' ? `Point ${number}` : 'Add a short explanation.',
-          font: 'Uncut Sans', size: part === 'number' ? 99 : part === 'heading' ? 50 : 38,
+          font: part === 'detail' ? style.body : style.display, size: part === 'number' ? 99 : part === 'heading' ? 50 : 38,
           weight: part === 'detail' ? '400' : '700', color: part === 'number' ? accent : ink, fit: 'shrink',
         },
         box: part === 'rule' ? { x: 78, y: 294, w: 1764, h: 2 } : part === 'number' ? { x: 78, y: 354, w: 183, h: 99 }
@@ -66,7 +70,7 @@ function numberedLayers(source: Layer[], current: Layer[], count: number, width:
   }).flat();
 }
 
-function choiceLayers(source: Layer[], current: Layer[], count: number, width: number, height: number, background: string): Layer[] {
+function choiceLayers(source: Layer[], current: Layer[], count: number, width: number, height: number, background: string, style: BlockStyle = FALLBACK): Layer[] {
   const value = (name: string, fallback: string) => String(current.find((l) => l.name === name)?.params.text ?? fallback);
   const hex = background.replace('#', '');
   const rgb = Number.parseInt(hex, 16);
@@ -87,10 +91,10 @@ function choiceLayers(source: Layer[], current: Layer[], count: number, width: n
     };
     const parts = [
       make('rule', () => createLayer('shape', { name: `${letter} · rule`, params: { shape: 'rect', fill: ink, strokeWidth: 0 }, box: { x, y, w: 854, h: 3 } })),
-      make('tile', () => createLayer('shape', { name: `${letter} · tile`, params: { shape: 'rect', fill: '#00BEDD', strokeWidth: 0 }, box: { x, y: y + 80, w: 114, h: 114 } })),
-      make('letter', () => createLayer('text', { name: `${letter} · letter`, params: { text: letter, font: 'Uncut Sans', size: 72, weight: '700', color: '#231F20', align: 'center', fit: 'shrink' }, box: { x, y: y + 96, w: 117, h: 90 } })),
-      make('choice', () => createLayer('text', { name: `${letter} · choice`, params: { text: `Choice ${letter}`, font: 'Uncut Sans', size: 41, weight: '700', color: ink, fit: 'shrink' }, box: { x: x + 147, y: y + 86, w: col ? 675 : 710, h: 50 } })),
-      make('detail', () => createLayer('text', { name: `${letter} · detail`, params: { text: 'Explain this option.', font: 'Uncut Sans', size: 31, color: ink, fit: 'shrink' }, box: { x: x + 147, y: y + 146, w: col ? 675 : 710, h: 82 } })),
+      make('tile', () => createLayer('shape', { name: `${letter} · tile`, params: { shape: 'rect', fill: style.accent, strokeWidth: 0 }, box: { x, y: y + 80, w: 114, h: 114 } })),
+      make('letter', () => createLayer('text', { name: `${letter} · letter`, params: { text: letter, font: style.display, size: 72, weight: '700', color: '#231F20', align: 'center', fit: 'shrink' }, box: { x, y: y + 96, w: 117, h: 90 } })),
+      make('choice', () => createLayer('text', { name: `${letter} · choice`, params: { text: `Choice ${letter}`, font: style.display, size: 41, weight: '700', color: ink, fit: 'shrink' }, box: { x: x + 147, y: y + 86, w: col ? 675 : 710, h: 50 } })),
+      make('detail', () => createLayer('text', { name: `${letter} · detail`, params: { text: 'Explain this option.', font: style.body, size: 31, color: ink, fit: 'shrink' }, box: { x: x + 147, y: y + 146, w: col ? 675 : 710, h: 82 } })),
     ];
     for (const layer of parts) {
       layer.params.blockRole = 'choices';
@@ -157,13 +161,18 @@ export function insertBlock(mode: BlockMode) {
     return;
   }
   const count = STARTING_COUNT[mode];
+  // The deck's theme when it has one; otherwise whichever reads on this slide's ground.
+  const bg = Number.parseInt(slide.background.replace('#', ''), 16);
+  const darkGround = Number.isFinite(bg) && (0.299 * ((bg >> 16) & 255) + 0.587 * ((bg >> 8) & 255) + 0.114 * (bg & 255)) < 110;
+  const theme = themeOf(st.deck) ?? LAYOUT_STYLES.find((s) => s.id === (darkGround ? 'midnight' : 'paper'))!;
+  const look: BlockStyle = { display: theme.display, body: theme.body, accent: theme.accent };
   let layers: Layer[];
   if (mode === 'numbered') {
     const source = st.deck.slides.find((s) => s.layers.some((l) => l.name === '01 · heading'))?.layers.filter(isNumberedLayer) ?? [];
-    layers = numberedLayers(source, [], count, st.deck.width, st.deck.height, slide.background);
+    layers = numberedLayers(source, [], count, st.deck.width, st.deck.height, slide.background, look);
   } else if (mode === 'choices') {
     const source = st.deck.slides.find((s) => choiceLetters.every((letter) => s.layers.some((l) => l.name === `${letter} · choice`)))?.layers.filter(isChoiceLayer) ?? [];
-    layers = choiceLayers(source, [], count, st.deck.width, st.deck.height, slide.background);
+    layers = choiceLayers(source, [], count, st.deck.width, st.deck.height, slide.background, look);
   } else {
     // The deck's theme when it has one; otherwise whichever reads on this slide's ground.
     const hex = slide.background.replace('#', '');

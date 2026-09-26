@@ -124,9 +124,9 @@ function freeRow(slide: Slide, h: number, skip: string): number | null {
   }
   return y + h <= g.foot ? y : null;
 }
-const WIDE = new Set(['chart', 'note', 'heading']);
+const WIDE = new Set(['chart', 'note', 'heading', 'table', 'line']);
 
-export const ITEMS = ['heading', 'text', 'note', 'bullets', 'image', 'video', 'quote', 'chart', 'timer'] as const;
+export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'table', 'line', 'timer'] as const;
 export type ItemId = (typeof ITEMS)[number];
 
 export function addItem(id: Exclude<ItemId, 'image'>) {
@@ -136,6 +136,11 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
   const ink = dark ? '#f5f4f2' : '#161616';
   const panel = dark ? toward(slide.background, 255, 0.1) : '#f3efe8';
   const colours = { textColor: ink };
+  // The words in the lesson's own faces: a heading in its display face, the rest in its body face.
+  const face = slideStyle(themeOf(st.deck) ?? LAYOUT_STYLES[0], slide);
+  // One type scale for everything Add puts on a slide (slide px on the 1920 slide), so a heading, a
+  // paragraph, a note and a table inserted together read as one slide, and none arrives too small to read.
+  const SCALE = { heading: 88, body: 44, quote: 72, note: 40, table: 34, chart: 30 };
   const make = (kindId: string, name: string, params: Record<string, unknown>, box?: Record<string, number>) => {
     const cols = WIDE.has(id) ? 12 : id === 'quote' ? 10 : 11;
     const at = cell(id === 'quote' ? 2 : 1, 1, cols, 1, gridFor(st.deck));
@@ -144,13 +149,17 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     if (y !== null) layer.box!.y = y;
     else st.showToast('There is no room left on this slide, so it has gone on top. Move it, make it smaller, or start a new slide.');
     st.insertLayer(layer);
-    if (id === 'bullets') st.showToast('Double-click to edit. Press Enter for each new bullet; use the list buttons to switch style.');
+    if (id === 'bullets' || id === 'numbers') st.showToast('Double-click to edit. Press Enter for each new point; the list buttons switch between bullets and numbers.');
   };
   switch (id) {
-    case 'heading': return make('text', 'Heading', { text: 'Heading', font: 'Fraunces', weight: '600', size: 88, color: ink, lineHeight: 1.05, tracking: -0.01 }, { x: 160, y: 140, w: 1600 });
-    case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', font: 'Inter', weight: '400', size: 40, color: ink, lineHeight: 1.35, tracking: 0 }, { x: 160, y: 420, w: 1200 });
-    case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', font: 'Inter', weight: '400', size: 42, color: ink, list: 'bullets', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
-    case 'note': return make('note', 'Note', { ...colours, fill: panel });
+    case 'heading': return make('text', 'Heading', { text: 'Heading', font: face.display, weight: face.displayWeight, size: SCALE.heading, color: ink, lineHeight: 1.05, tracking: -0.01 }, { x: 160, y: 140, w: 1600 });
+    case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', font: face.body, weight: '400', size: SCALE.body, color: ink, lineHeight: 1.35, tracking: 0 }, { x: 160, y: 420, w: 1200 });
+    case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', font: face.body, weight: '400', size: SCALE.body, color: ink, list: 'bullets', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
+    case 'numbers': return make('text', 'Numbered list', { text: 'First step\nSecond step\nThird step', font: face.body, weight: '400', size: SCALE.body, color: ink, list: 'numbers', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
+    // A rule across the grid: the divider between two parts of a slide.
+    case 'line': return make('shape', 'Line', { shape: 'rect', radius: 0, fill: dark ? toward(slide.background, 255, 0.35) : '#c9c6be', strokeWidth: 0 }, { x: 160, y: 540, w: 1600, h: 3 });
+    case 'table': return make('table', 'Table', { textColor: ink, font: face.body, size: SCALE.table });
+    case 'note': return make('note', 'Note', { ...colours, fill: panel, font: face.body, size: SCALE.note });
     // An empty video at 16:9 in the middle of the slide, with its Video tab open for the address.
     case 'video': {
       const g = gridFor(st.deck), w = (g.right - g.left) * 0.7, h = (w * 9) / 16;
@@ -186,7 +195,9 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
       st.showToast('The timer starts when this slide comes up while presenting. Set its minutes in the panel.');
       return;
     }
-    default: return make(id, id[0].toUpperCase() + id.slice(1), id === 'chart' ? { textColor: ink } : colours);
+    // A quote in the display face; a note and a chart's labels in the body face.
+    default: return make(id, id[0].toUpperCase() + id.slice(1), { ...(id === 'chart' ? { textColor: ink } : colours), font: id === 'quote' ? face.display : face.body,
+      size: id === 'quote' ? SCALE.quote : SCALE.chart });
   }
 }
 

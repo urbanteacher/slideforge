@@ -1,6 +1,6 @@
 import { produce } from 'immer';
 import { create } from 'zustand';
-import { contentHeight } from '../engine/raster';
+import { contentHeight, shrinks } from '../engine/raster';
 import { reflowCards } from './cards';
 import { kind } from '../engine/registry';
 import { blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck } from './defaults';
@@ -200,8 +200,17 @@ export const useStore = create<State>((set, get) => ({
       const s = d.slides.find((x) => x.id === slideId)!;
       const l = s.layers.find((x) => x.id === id);
       if (!l) return;
+      const was = Number(l.params.size ?? 0);
       recipe(l);
       refitText(l);
+      // A size the author sets is the size they get. Text that shrinks to fit its box was drawn at the
+      // smaller of its size and what the box holds, so a bigger size typed into a box already full did
+      // nothing: 100 still looked small. Its box grows, downwards, to hold the words at the new size.
+      const now = Number(l.params.size ?? 0);
+      if (now > was && shrinks(l) && l.box) {
+        const need = contentHeight({ ...l, params: { ...l.params, fit: 'grow' } }, l.box.w);
+        if (need && need > l.box.h) l.box.h = Math.min(need, d.height - l.box.y);
+      }
       // A card's words changed or its box moved: the whole set of cards follows the fullest one.
       if (l.params.cardSet) reflowCards(s, d.height);
     }, merge);
