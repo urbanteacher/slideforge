@@ -20,20 +20,24 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push('app: ' + e.message));
-  await page.goto(`http://127.0.0.1:${port}/?lesson=ipdv-intro`);
-  await page.waitForFunction(() => window.SF?.Editor?.deck());
+  await page.goto(`http://127.0.0.1:${port}/`);
+  await page.waitForFunction(() => window.SF?.Print && SF.Shell?.current()?.doc()?.id, null, { timeout: 60000 });
+  /* The handout is SlideForge's own print of the lecture, so it is built from
+     the lesson itself rather than through the lab, which would first draw
+     every one of its forty slides as a picture. */
+  await page.evaluate(() => { window.__lecture = SF.buildLesson('ipdv-intro'); });
   /* The lecture is edited often, so this checks it is the real one and big
      enough to be worth printing rather than pinning an exact count that goes
      stale every time a slide is added. */
   const lecture = await page.evaluate(() => ({
-    title: SF.Editor.deck().title, n: SF.Editor.deck().slides.length
+    title: window.__lecture.title, n: window.__lecture.slides.length
   }));
   assert.match(lecture.title, /Advanced Information Presentation/, 'the IPDV lecture is loaded');
   assert.ok(lecture.n >= 35, `the full lecture is loaded, got ${lecture.n} slides`);
 
   const [pdf] = await Promise.all([
     page.context().waitForEvent('page'),
-    page.evaluate(() => SF.Print.open(SF.Editor.deck()))
+    page.evaluate(() => SF.Print.open(window.__lecture))
   ]);
   pdf.on('pageerror', (e) => errors.push('handout: ' + e.message));
   await pdf.waitForSelector('.pdf-page');
@@ -134,7 +138,7 @@ try {
      six branches" was true when it was written and failed the day a third map
      of four was added — and being outside the smoke chain, nobody heard it.
      What has to hold is that every map arrives whole. */
-  const authored = await page.evaluate(() => SF.Editor.deck().slides
+  const authored = await page.evaluate(() => window.__lecture.slides
     .filter((s) => s.type === 'mindmap')
     .map((s) => (s.bullets || []).filter((b) => String(b).trim()).length)
     .sort((a, b) => a - b));
