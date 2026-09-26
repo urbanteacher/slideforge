@@ -75,7 +75,7 @@ export const eyebrow = (st: LayoutStyle, value: string, b?: Box) =>
 export const display = (v: string) => v.replace(/\u2212/g, '\u2013');
 
 /** A heading or question in display type, as large as its region allows. */
-export const hero = (st: LayoutStyle, name: string, value: string, b: Box, size = 120, anim: Partial<Anim> = { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.1 }) =>
+export const hero = (st: LayoutStyle, name: string, value: string, b: Box, size = 120, anim: Partial<Anim> = { type: 'rise', duration: 0.8 }) =>
   txt(name, display(value), b, { font: st.display, weight: st.displayWeight, size, color: st.ink, lineHeight: 1.03, tracking: -0.015, fit: 'fill', balance: true }, anim);
 
 /**
@@ -105,7 +105,7 @@ export function sizedHero(st: LayoutStyle, name: string, value: string, x: numbe
     h = measureTextHeight({ ...params, text: v, size }, w);
   }
   h = Math.min(maxH, h) + 8;
-  const layer = txt(name, v, box(x, y, w, h), { ...params, size, fit: 'shrink' }, o.anim ?? { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.1 });
+  const layer = txt(name, v, box(x, y, w, h), { ...params, size, fit: 'shrink' }, o.anim ?? { type: 'rise', duration: 0.8 });
   return { layer, bottom: y + h, size };
 }
 

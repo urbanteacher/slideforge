@@ -61,8 +61,9 @@ const TRANSITIONS: { value: TransitionType; label: string }[] = [
   { value: 'morph', label: 'Morph — carry what the slides share' },
 ];
 const FEELS: { value: 'rise' | 'fade' | 'reveal' | 'plain'; label: string }[] = [
-  { value: 'rise', label: 'Rise — up from below, blur clearing' }, { value: 'fade', label: 'Fade — no movement' },
-  { value: 'reveal', label: 'Reveal — wiped up from behind its line' }, { value: 'plain', label: 'Plain — a short rise, no blur' },
+  { value: 'plain', label: 'Plain — a short rise, no blur' },
+  { value: 'rise', label: 'Rise — up from below, blur clearing' }, { value: 'fade', label: 'Fade — blur clearing, no movement' },
+  { value: 'reveal', label: 'Reveal — wiped up from behind its line' },
 ];
 const CHART_ENTRANCES: { value: EntranceType; label: string }[] = [{ value: 'draw', label: 'Draws itself' }];
 const SPEED_OPTIONS: { value: Speed | 'custom'; label: string }[] = [
@@ -568,7 +569,7 @@ function LayerAnimate({ layer }: { layer: Layer }) {
           else if (isTextUnit(v) && !presetOf(x)) Object.assign(x, presetTiming(v, 'medium', 'wave'));
           else if (v !== 'none' && x.duration < 0.1) x.duration = 0.9;
           // Words and letters arrive SlideForge's way, Rise on Easy Ease, unless already set otherwise.
-          if ((v === 'words' || v === 'letters') && !x.feel && !x.plan) { x.feel = 'rise'; x.easing = 'easyEase'; }
+          // Words and letters start Plain: a short rise with no blur. Rise, Fade and Reveal are there to choose.
           if (v !== 'words' && v !== 'letters') { delete x.feel; delete x.plan; }
         })} /></Row>
         {(a.type === 'words' || a.type === 'letters') && !a.plan?.length && !(a.build && a.build !== 'none') && (

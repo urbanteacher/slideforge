@@ -121,8 +121,8 @@ function ground(st: LayoutStyle): Layer {
   return createLayer(g.kind, { name: 'Ground', params: g.params });
 }
 
-/** SlideForge's statement motion: word by word, each rising out of a blur, Medium and Wave, on Easy Ease. */
-const wordsIn: Partial<Anim> = { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.13 };
+/** A statement rises in as one block: the plain entrance every default slide uses. */
+const wordsIn: Partial<Anim> = { type: 'rise', duration: 0.8 };
 /** A statement: display type as big as the line allows, its breaks balanced. */
 const statement = (st: LayoutStyle, value: string, box: Box, size: number, align: 'left' | 'center') =>
   text('Statement', value, box, { font: st.display, weight: st.displayWeight === '400' ? '400' : '800', size, color: st.ink, align, lineHeight: 1.04, tracking: -0.035, balance: true, fit: 'grow' }, wordsIn);
@@ -140,8 +140,10 @@ const heading = (st: LayoutStyle, value: string, box: Box, size = 88, extra: Par
   text('Heading', value, box, { font: st.display, weight: st.displayWeight, size, color: st.ink, lineHeight: 1.05, tracking: -0.01, fit: 'fill', ...extra }, rise);
 const body = (st: LayoutStyle, value: string, box: Box, size = 48, extra: Params = {}, delay = 0.15) =>
   text('Text', value, box, { font: st.body, weight: '400', size, color: st.muted, lineHeight: 1.3, fit: 'fill', ...extra }, after(delay));
+/** A list builds a point per click, the points before it dimmed, so the room reads the one being talked about. */
+const pointByPoint: Partial<Anim> = { type: 'fade', duration: 0.6, delay: 0.2, build: 'dim' };
 const bullets = (st: LayoutStyle, lines: string[], box: Box, size = 48) =>
-  text('Bullet points', lines.join('\n'), box, { font: st.body, weight: '400', size, color: st.ink, list: 'bullets', lineHeight: 1.45, fit: 'fill' }, after(0.2));
+  text('Bullet points', lines.join('\n'), box, { font: st.body, weight: '400', size, color: st.ink, list: 'bullets', lineHeight: 1.45, fit: 'fill' }, pointByPoint);
 /** The type and colours the layouts set each kind of thing in, for what Add puts on a slide (ui/insert.ts):
  *  so a heading, a paragraph or a table added by hand reads as one the layouts drew — the same face,
  *  size, colour, spacing and entrance. */
@@ -149,7 +151,7 @@ export function itemStyle(st: LayoutStyle) {
   return {
     heading: { params: { font: st.display, weight: st.displayWeight, size: 88, color: st.ink, lineHeight: 1.05, tracking: -0.01 }, anim: rise },
     text: { params: { font: st.body, weight: '400', size: 48, color: st.muted, lineHeight: 1.3, tracking: 0 }, anim: after(0.15) },
-    bullets: { params: { font: st.body, weight: '400', size: 48, color: st.ink, lineHeight: 1.45, tracking: 0 }, anim: after(0.2) },
+    bullets: { params: { font: st.body, weight: '400', size: 48, color: st.ink, lineHeight: 1.45, tracking: 0 }, anim: pointByPoint },
     quote: { params: { ...colours(st), font: st.display, size: 92 }, anim: after(0) },
     note: { params: { ...colours(st), font: st.body, fill: st.panel, size: 40 }, anim: after(0.2) },
     table: { params: { font: st.body, size: 36, textColor: st.ink, accent: st.accent }, anim: after(0.2) },
@@ -302,7 +304,7 @@ export function keywordsSlide(st: LayoutStyle, title: string, pairs: Pair[]): Sl
 export function keyfactSlide(st: LayoutStyle, title: string, fact: string, caption: string, lines: string[]): Slide {
   return slide(st, 'Key fact', [
     heading(st, title, cell(1, 1, 12, 2), 56),
-    text('Key fact', fact, cell(1, 4, 12, 4), { font: st.display, weight: '700', size: 190, color: st.accent, lineHeight: 1, tracking: -0.03, fit: 'fill' }, { type: 'zoomIn', duration: 0.9, easing: 'backOut', delay: 0.2 }),
+    text('Key fact', fact, cell(1, 4, 12, 4), { font: st.display, weight: '700', size: 190, color: st.accent, lineHeight: 1, tracking: -0.03, fit: 'fill' }, { type: 'zoomIn', duration: 0.9, easing: 'cubicOut', delay: 0.2 }),
     body(st, caption, { ...cell(1, 9, 12, 2), h: 90 }, 48, { color: st.ink }),
     bullets(st, lines, cell(1, 11, 12, 5), 40),
   ]);
@@ -369,7 +371,7 @@ export function statsSlide(st: LayoutStyle, title: string, stats: Pair[], takeaw
       const b = { ...cell(1 + i * span, 5, span, 1), y: top, h: area };
       return [
         rule(st, b),
-        text('Number', num, inset(b, 0, 36, 190), { font: st.display, weight: '700', size: 170, color: st.accent, lineHeight: 1, tracking: -0.02, fit: 'fill', fitGroup: 'stat-numbers' }, { type: 'zoomIn', duration: 0.8, easing: 'backOut' }),
+        text('Number', num, inset(b, 0, 36, 190), { font: st.display, weight: '700', size: 170, color: st.accent, lineHeight: 1, tracking: -0.02, fit: 'fill', fitGroup: 'stat-numbers' }, { type: 'zoomIn', duration: 0.8, easing: 'cubicOut' }),
         body(st, label, inset(b, 0, 250, area - 260), 44, { color: st.ink, fitGroup: 'stat-labels' }),
       ];
     }),
@@ -486,7 +488,7 @@ export function mindmapSlide(st: LayoutStyle, title: string, items: Pair[]): Sli
   const nodeW = W * 0.29, nodeH = Math.min(230, H / rows - 36);
   const set = 'mind-' + Math.random().toString(36).slice(2, 9);
   const layers: Layer[] = [
-    shape('Centre', { x: cx - hubW / 2, y: cy - hubH / 2, w: hubW, h: hubH, rot: 0 }, { shape: 'ellipse', fill: st.ground, stroke: st.accent, strokeWidth: 6 }, { type: 'zoomIn', duration: 0.7, easing: 'backOut' }),
+    shape('Centre', { x: cx - hubW / 2, y: cy - hubH / 2, w: hubW, h: hubH, rot: 0 }, { shape: 'ellipse', fill: st.ground, stroke: st.accent, strokeWidth: 6 }, { type: 'zoomIn', duration: 0.7, easing: 'cubicOut' }),
     text('Heading', title, { x: cx - hubW / 2 + hubW * 0.14, y: cy - hubH * 0.3, w: hubW * 0.72, h: hubH * 0.6, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 54, color: st.ink, align: 'center', lineHeight: 1.12, fit: 'fill' }, rise),
   ];
   shown.forEach(([head, words], i) => {

@@ -60,7 +60,7 @@ export function gameCover(st: LayoutStyle, g: GameDef): Slide {
     rect('Accent ground', box(0, TOPBAND, W, BASE - TOPBAND), st.accent, { type: 'fade', duration: 0.6 }),
     txt('Eyebrow', `GAME · ${g.styleLabel.toUpperCase()}`, box(LEFT, EY + 20, 1400, 50), { font: st.body, weight: '600', size: 40, color: st.ground, tracking: 0.14 }),
     txt('Title', g.title, box(LEFT, HY + 44, W - LEFT * 2, 360), { font: st.display, weight: st.displayWeight, size: 170, color: st.ground, lineHeight: 0.98, tracking: -0.02, fit: 'fill', balance: true },
-      { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.8, stagger: 0.12 }),
+      { type: 'rise', duration: 0.8 }),
     txt('Count', g.count ?? `${n} ${n === 1 ? 'question' : 'questions'}`, box(LEFT, 640 - LIFT, 1200, 70), { font: st.body, weight: '600', size: 60, color: st.ground }, { type: 'fade', duration: 0.6, delay: 0.4 }),
   ];
   const rules = g.steps.slice(0, 3);
