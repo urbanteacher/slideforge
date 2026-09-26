@@ -10,39 +10,17 @@ function note(m) { log.push(m); console.log('✓', m); }
 
 try {
   await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 20000 });
-  await page.waitForSelector('#wsSwitch', { timeout: 10000 });
+  await page.waitForFunction(() => window.SF?.createPresetGame && SF.Player, null, { timeout: 20000 });
 
-  /* Prefer Quiz studio browse → still embeds on the lesson; then Edit this game. */
-  await page.click('button[data-go="game"]');
-  await page.waitForTimeout(300);
-  await page.click('#btnActivitiesGame');
-  const kf = page.locator('.activity-card', { hasText: 'Knowledge Flip' });
-  await kf.waitFor({ timeout: 8000 });
-  await kf.click();
-  note('Knowledge Flip added from library');
+  /* The classic Quiz studio (its library card, editor and Play) is gone: the
+     game is built from its preset and played in the player, as Play did. */
+  await page.evaluate(() => {
+    const g = SF.createPresetGame('knowledgeflip', structuredClone(SF.GAME_FORMAT_PRESETS['knowledge-flip']), null);
+    SF.Player.start(SF.gameToRunDeck(g), 0, { fullscreen: false });
+  });
+  note('Knowledge Flip built from its preset');
+  /* The editor preview's board checks went with the editor; the same checks run on the player's board below. */
 
-  /* Picking a format inside Quiz studio now opens that game here, so there is
-     no hop through the deck. Tolerate both: older decks may still have the
-     game filed as a slide. */
-  const edit = page.getByRole('button', { name: /Edit in Quiz studio/ });
-  if (await edit.count()) await edit.click();
-  note('Opened game editor');
-
-  await page.waitForSelector('#previewBox .memory-board-slide, #previewBox .mem-grid', { timeout: 10000 });
-  const preview = page.locator('#previewBox');
-  const cardCount = await preview.locator('.mem-card').count();
-  if (cardCount < 4) throw new Error('expected ≥4 keyword cards, got ' + cardCount);
-  note('Editor preview board: ' + cardCount + ' keyword cards');
-
-  const defOnBoard = await preview.locator('.mem-definition').count();
-  if (defOnBoard !== 0) throw new Error('definitions should stay off the preview board, found ' + defOnBoard);
-  note('Definitions stay off the board in preview');
-
-  const status = (await preview.locator('.mem-status strong').innerText()).trim();
-  note('Ready copy: ' + status.slice(0, 80));
-
-  await page.click('#btnPlay');
-  await page.waitForSelector('#player.on, #player.open, #player:not([hidden])', { timeout: 5000 }).catch(() => {});
   await page.waitForSelector('#player .deck-viewport .slide', { timeout: 10000 });
   note('Play view opened (intro or board)');
 
@@ -55,6 +33,15 @@ try {
   }
   await page.waitForSelector('#player .mem-grid', { timeout: 8000 });
   note('On the Knowledge Flip board');
+
+  const board = page.locator('#player');
+  const cardCount = await board.locator('.mem-card').count();
+  if (cardCount < 4) throw new Error('expected ≥4 keyword cards, got ' + cardCount);
+  note('Board: ' + cardCount + ' keyword cards');
+
+  const defOnBoard = await board.locator('.mem-definition').count();
+  if (defOnBoard !== 0) throw new Error('definitions should stay off the board, found ' + defOnBoard);
+  note('Definitions stay off the board');
 
   const openBtn = page.locator('#player button', { hasText: 'Open the board' });
   await openBtn.waitFor({ timeout: 5000 });
