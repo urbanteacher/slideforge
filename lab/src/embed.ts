@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { CARRIED, carryDeckArt, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
+import { CARRIED, carryDeckArt, carryDeckHidden, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { enterView, useStore, type LabView } from './model/store';
@@ -142,6 +142,7 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
     if (line && sl.layers.some((l) => l.name === 'Frame')) fitStatement(line, sl.layers.some((l) => l.name === 'Credit'));
   }
   if (from < 3) repairAddresses(copy);
+  if (from < 7) carryDeckHidden(copy, source.slides);
   copy.carried = CARRIED;
   return copy;
 }

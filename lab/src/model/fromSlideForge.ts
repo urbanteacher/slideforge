@@ -26,6 +26,8 @@ import type { ShowcaseGame } from './designs/games';
 export interface SFSlide {
   id?: string;
   type: string;
+  /** Kept out of the show: a teacher's preparation, an extension held back. */
+  hidden?: boolean;
   /** The room's say on the slide: a poll, word cloud, brainstorm or scale, with its settings. */
   feedback?: Record<string, unknown> | null;
   /** How a picture fills its box (contain shows it whole), and which side of a split it is on. */
@@ -393,9 +395,9 @@ export function convertsSlide(s: SFSlide): boolean {
 }
 
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
- *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. A copy made at an older version is brought up to date when it
+ *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. */
-export const CARRIED = 6;
+export const CARRIED = 7;
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
@@ -411,6 +413,8 @@ function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtCo
   const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
   const made = k.put(out.slide, out.ground, notes);
   if (s.id) made.sourceSlideId = s.id;
+  // A slide SlideForge keeps out of the show stays out of it: a teacher's preparation is not for the wall.
+  if (s.hidden) made.hidden = true;
   carryLive(s, made, k.on(out.ground));
   if (art) addThemeArt(made, s, art, img);
   return made;
@@ -425,6 +429,7 @@ function buildGame(s: SFSlide, g: LessonGame, k: Kit, img: (p?: string) => strin
   const slides = gameSlides(g, k.on('working')).filter((x) => g.cover || x.game?.role !== 'cover');
   slides.forEach((x, i) => {
     if (s.id) x.sourceSlideId = s.id;
+    if (s.hidden) x.hidden = true;
     if (i === 0 && s.notes) x.notes = [s.notes, x.notes ?? ''].filter(Boolean).join('\n\n');
     // The theme's artwork, as on SlideForge's quiz slides (UK Black Tech's waves, AI Awareness's rule).
     if (art) addThemeArt(x, { type: 'quiz' }, art, img);
@@ -439,6 +444,15 @@ function buildSlides(s: SFSlide, k: Kit, img: (p?: string) => string, art: ArtCo
   if (g) return buildGame(s, g, k, img, art);
   const one = buildSlide(s, k, img, art);
   return one ? [one] : [];
+}
+
+/** A lab copy made before version 7 showed every slide, the ones SlideForge keeps out of the show too:
+ *  each slide from a hidden one is hidden. A slide shown in SlideForge is left as it is. How many. */
+export function carryDeckHidden(deck: Deck, source: SFSlide[]): number {
+  const hidden = new Set(source.filter((s) => s.hidden && s.id).map((s) => s.id));
+  let n = 0;
+  for (const sl of deck.slides) if (sl.sourceSlideId && hidden.has(sl.sourceSlideId) && !sl.hidden) { sl.hidden = true; n++; }
+  return n;
 }
 
 /** The lesson a lab copy came from, for its artwork: its theme and name. */

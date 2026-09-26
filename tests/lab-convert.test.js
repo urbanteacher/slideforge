@@ -522,3 +522,19 @@ test('a Buttons game an older lab built is set right as its lesson opens', { ski
   assert.ok(why && why.box.y + why.box.h <= top, 'the reason under the question, clear of the buttons');
   assert.equal(repairGames(fixed), fixed, 'and nothing more to do once it is');
 });
+
+test('a slide hidden in SlideForge is hidden in the lab, and a copy made before is put right', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckHidden } = await converter();
+  const src = lesson('aiad27-safe');
+  const deck = deckFromSlideForge(asData(src), 'aiad27', { frame: false });
+  const hiddenIds = src.slides.filter((s) => s.hidden).map((s) => s.id);
+  assert.ok(hiddenIds.length >= 2, 'the teacher preparation and the key words are held back');
+  const from = (id) => deck.slides.filter((s) => s.sourceSlideId === id);
+  for (const id of hiddenIds) assert.ok(from(id).length && from(id).every((s) => s.hidden), 'hidden in the lab too');
+  const shown = src.slides.find((s) => s.type === 'title');
+  assert.ok(from(shown.id).every((s) => !s.hidden), 'the cover is shown');
+  // A copy made before version 7: every slide shown. Carried, the held-back ones are hidden again.
+  deck.slides.forEach((s) => delete s.hidden);
+  assert.equal(carryDeckHidden(deck, src.slides), hiddenIds.reduce((n, id) => n + from(id).length, 0));
+  assert.ok(from(shown.id).every((s) => !s.hidden), 'and nothing shown is hidden');
+});
