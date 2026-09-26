@@ -443,7 +443,7 @@
     doc: doc,
     setDoc: open,
     blank: function () { return api ? api.blank() : placeholder; },
-    draw: function () { showFrame(true); },
+    draw: function () { showFrame(true); whenReady(function (a) { if (a.setView) a.setView('lesson'); }); },
     describe: function (d) {
       var n = d && d.slides ? d.slides.length : 0;
       return n + (n === 1 ? ' slide' : ' slides');
@@ -520,6 +520,12 @@
     if (!enabled() || !SF.Shell) return;
     mount();
     SF.Shell.register(ws);
+    /* The Quiz studio and Activities are the lab too: the same lesson, in the
+       same frame, shown as its games or its activities (lab/src/model/store.ts
+       LabView). What is made there goes into the lesson; the classic studios'
+       panes and canvas are not used. */
+    SF.Shell.register(studioView('game', 'quiz', 'Games'));
+    SF.Shell.register(studioView('plan', 'activities', 'Activities'));
     document.documentElement.classList.add('lab-engine');
     /* The lesson the address asked for, which the editor has already opened. */
     var asked = askedLesson && SF.Editor && SF.Editor.workspace ? SF.Editor.workspace.doc() : null;
@@ -569,7 +575,7 @@
         var chrome = d.title !== lastDeck.title || d.libraryGroup !== lastDeck.libraryGroup || d.id !== lastDeck.id;
         lastDeck = d; ws._dirty = true;
         if (chrome) writeCard(d);
-        if (chrome && SF.Shell && SF.Shell.current && SF.Shell.current() === ws) SF.Shell.syncChrome();
+        if (chrome && SF.Shell && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
       }
       /* Out of the show: out of full screen with it. */
       if (!a.isPresenting() && frame && document.fullscreenElement === frame) {
@@ -578,7 +584,7 @@
     });
     var run = waiting; waiting = [];
     run.forEach(function (fn) { fn(a); });
-    if (SF.Shell && SF.Shell.syncChrome && SF.Shell.current && SF.Shell.current() === ws) SF.Shell.syncChrome();
+    if (SF.Shell && SF.Shell.syncChrome && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
   }
 
   /* The classic editor calls this when it draws: a lesson it has just been
@@ -587,7 +593,7 @@
      one already open are not pulled over the lab's. */
   function classicDeck(d) {
     if (!enabled() || !d || !d.id) return;
-    if (!SF.Shell || !SF.Shell.current || SF.Shell.current() !== ws) return;
+    if (!SF.Shell || !SF.Shell.current || !isLabStudio(SF.Shell.current())) return;
     if (d.id === lastClassic && api && (api.getDeck().sourceId === d.id || api.getDeck().id === d.id)) return;
     lastClassic = d.id;
     open(JSON.parse(JSON.stringify(d)));
@@ -614,6 +620,25 @@
       if (lastShown && api && api.showSlide) api.showSlide(lastShown);
       lastShown = null;
     });
+  }
+
+  /** The shell's studios the lab is: the Lesson studio and its views. */
+  var studios = [];
+  function isLabStudio(w) { return w === ws || studios.indexOf(w) >= 0; }
+
+  /** The Lesson studio's workspace as another of the shell's studios: the lab's frame, in a view. */
+  function studioView(key, view, label) {
+    var v = Object.assign({}, ws, {
+      key: key, railLabel: label,
+      draw: function () { showFrame(true); whenReady(function (a) { if (a.setView) a.setView(view); }); }
+    });
+    /* One lesson, so one unsaved state: an edit in any of the three studios is
+       the lesson's, and Save in any of them clears it (js/shell.js reads and
+       resets active._dirty). */
+    delete v._dirty;
+    Object.defineProperty(v, '_dirty', { get: function () { return ws._dirty; }, set: function (x) { ws._dirty = x; } });
+    studios.push(v);
+    return v;
   }
 
   function useClassic(on) {

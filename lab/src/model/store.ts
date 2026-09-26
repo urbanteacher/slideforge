@@ -12,6 +12,11 @@ import type { Deck, Layer, Slide } from './types';
 export type LeftTab = 'layers' | 'add';
 export type InspectorTab = 'design' | 'picture' | 'video' | 'special' | 'animate' | 'interact' | 'engage';
 
+/** SlideForge's three studios, as views of the lesson open in the lab. */
+export type LabView = 'lesson' | 'quiz' | 'activities';
+/** Whether a slide belongs to a view: every slide to the lesson, a game's to the Quiz studio, an activity's to Activities. */
+export const inView = (s: Slide, view: LabView) => view === 'lesson' || (view === 'quiz' ? !!s.game : !!s.activity && !s.game);
+
 interface State {
   deck: Deck;
   slideId: string;
@@ -36,6 +41,11 @@ interface State {
   panelHidden: boolean;
   /** The slide whose back (its Flip to facts face) the canvas shows, to edit it there; null for the fronts. */
   backOf: string | null;
+  /** Which of SlideForge's studios the lab is: the Lesson studio (every slide), the Quiz studio (the
+   *  lesson's games) or Activities (its activities). One lesson, three views of it. */
+  view: LabView;
+  /** Engage's list of games and activities to add is open (the canvas bar's + Game opens it). */
+  addOpen: boolean;
   galleryTab: 'layouts' | 'designs';
   clipboard: Layer | null;
   toast: string | null;
@@ -103,6 +113,8 @@ export const useStore = create<State>((set, get) => ({
   saveState: 'saved',
   presenting: false,
   backOf: null,
+  view: 'lesson',
+  addOpen: false,
   playToken: 0,
   editingTextId: null,
   partId: null,

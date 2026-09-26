@@ -429,3 +429,39 @@ test('true or false has the same two looks: two doors lit green where they stand
   relookGame(deck, id, 'buttons');
   assert.ok(deck.slides.filter((s) => s.game && s.game.role === 'question').every((s) => s.layers.some((l) => l.name === 'Door 1')));
 });
+
+/* Several of the lab's modules as one build, so they share one store; built inside the lab, where its
+   packages resolve. */
+async function together(name, code) {
+  measuringCanvas();
+  const entry = path.join(LAB, `.sf-test-${name}.ts`);
+  const out = path.join(LAB, 'node_modules', '.sf-test', name);
+  fs.writeFileSync(entry, code);
+  try {
+    execFileSync(process.execPath, [VITE, 'build', '--ssr', path.basename(entry), '--outDir', out, '--emptyOutDir', '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
+  } finally { fs.rmSync(entry, { force: true }); }
+  return import(pathToFileURL(path.join(out, `.sf-test-${name}.js`)).href);
+}
+
+test('the Quiz studio and Activities are views of the open lesson: its games, its activities', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const { labApi: api, useStore, inView } = await together('views', "export { labApi } from './src/embed';\nexport { useStore, inView } from './src/model/store';\n");
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  const games = deck.slides.filter((s) => inView(s, 'quiz'));
+  assert.equal(games.length, 10, 'the Quiz studio: the five Checks, each a question and its answer');
+  assert.equal(deck.slides.filter((s) => inView(s, 'lesson')).length, deck.slides.length, 'the Lesson studio: every slide');
+  assert.equal(deck.slides.filter((s) => inView(s, 'activities')).length, 0, 'Activities: none in Week 2 yet');
+  // The view the shell asks for (js/lab-engine.js): the slide on screen stays if it is in the view.
+  useStore.getState().loadDeck(deck);
+  useStore.setState({ slideId: deck.slides[0].id });
+  api.setView('quiz');
+  assert.equal(useStore.getState().view, 'quiz');
+  assert.equal(useStore.getState().slideId, games[0].id, 'off a lesson slide, onto the first game');
+  assert.equal(useStore.getState().inspectorTab, 'engage', 'with Engage open, where games are made');
+  useStore.setState({ slideId: games[3].id });
+  api.setView('lesson');
+  assert.equal(useStore.getState().slideId, games[3].id, 'a game is a slide of the lesson too: it stays');
+  api.setView('activities');
+  assert.equal(useStore.getState().slideId, games[3].id, 'no activities yet: nothing to move to, the lesson slide stays under the empty studio');
+});

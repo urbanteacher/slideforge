@@ -24,7 +24,9 @@ export const FEEDBACK: { value: FeedbackKind | 'none'; label: string; icon: Reac
 export function EngagementPanel() {
   const slide = useStore(slideOf);
   const { mutate } = useStore.getState();
-  const [adding, setAdding] = useState(false);
+  const adding = useStore((s) => s.addOpen);
+  const view = useStore((s) => s.view);
+  const setAdding = (v: boolean) => useStore.getState().set({ addOpen: v });
   const kind = slide.feedback?.kind ?? 'none';
 
   return (
@@ -32,7 +34,7 @@ export function EngagementPanel() {
       <div className="engage-eyebrow">Games and activities · designed in the lab</div>
       <Section title="Add a game or activity" right={<Tip text="Each of SlideForge's activities and games, designed in the lab from its own layers, goes in after this slide. Most come two ways: the lab's design, and SlideForge's." />}>
         <button className="btn-soft accent engage-add" aria-expanded={adding} onClick={() => setAdding(!adding)}><Sparkles size={13} />{adding ? 'Close' : '+ Add activity'}</button>
-        {adding && <ActivityPicker done={() => setAdding(false)} />}
+        {adding && <ActivityPicker done={() => setAdding(false)} only={view === 'quiz' ? 'games' : view === 'activities' ? 'activities' : undefined} />}
       </Section>
       <Section title="Audience feedback on this slide" right={<Tip text="Responses appear in the rail beside the slide during a live SlideForge session. The lab records the choice and marks the slide." />}>
         <div className="engage-kinds" role="radiogroup" aria-label="Audience feedback">
@@ -55,7 +57,7 @@ const framed = (deck: Deck) => !!deck.headerFooter?.enabled || deck.slides.some(
 
 /** SlideForge's activities and games by lesson phase, each with its designs: a press adds its slides,
  *  in the deck's style, after the slide on screen. Loaded the first time the list opens. */
-function ActivityPicker({ done }: { done: () => void }) {
+function ActivityPicker({ done, only }: { done: () => void; only?: 'games' | 'activities' }) {
   const [lib, setLib] = useState<{ data: ActivityData; games: ShowcaseGame[]; m: typeof import('../model/designs') } | null>(null);
   useEffect(() => {
     let live = true;
@@ -96,7 +98,7 @@ function ActivityPicker({ done }: { done: () => void }) {
   };
   return (
     <div className="engage-picker">
-      <div className="engage-phase">
+      {only !== 'activities' && <div className="engage-phase">
         <div className="engage-phase-label">◆ Games</div>
         {lib.games.map((g) => (
           <div key={g.format} className="engage-act" title={g.aim}>
@@ -104,8 +106,8 @@ function ActivityPicker({ done }: { done: () => void }) {
             <div className="engage-act-opts"><button className="on" onClick={() => addGame(g)}>Add</button></div>
           </div>
         ))}
-      </div>
-      {lib.m.byPhase(lib.data).map((g) => (
+      </div>}
+      {only !== 'games' && lib.m.byPhase(lib.data).map((g) => (
         <div key={g.phase} className="engage-phase">
           <div className="engage-phase-label">{g.icon} {g.label}</div>
           {g.items.map((a) => (

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cloneLayer } from '../model/defaults';
-import { layerOf, refitAllText, slideOf, useStore } from '../model/store';
+import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '../model/store';
 import type { Deck } from '../model/types';
 import { idbGet } from '../persist/idb';
 import { isLabDeck, saveCurrent } from '../embed';
@@ -154,13 +154,16 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
     return () => { removeEventListener('keydown', on); removeEventListener('paste', onPaste); };
   }, []);
 
+  const view = useStore((s) => s.view);
+  const anyInView = useStore((s) => s.deck.slides.some((x) => inView(x, s.view)));
   if (!restored) return <div className="app app-loading" aria-busy="true" />;
   return (
     <div className={`app${embedded ? ' embedded' : ''}${panelHidden ? ' no-panel' : ''}`}>
       <TopBar embedded={embedded} />
-      <LeftPanel />
+      {view === 'lesson' ? <LeftPanel /> : <aside className="left vacant" aria-label={view === 'quiz' ? 'Quiz studio' : 'Activities'} />}
       <main className="center">
         <Stage />
+        {view !== 'lesson' && !anyInView && <EmptyView view={view} />}
         <CanvasBar />
         <Filmstrip />
       </main>
@@ -168,6 +171,20 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       {presenting && <Present />}
       {galleryOpen && <Gallery />}
       {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+/** A studio with nothing in it yet: the Quiz studio before the lesson has a game, Activities before it
+ *  has an activity. Its + button, on the canvas bar, adds one after the slide the lesson was on. */
+function EmptyView({ view }: { view: LabView }) {
+  const set = useStore((s) => s.set);
+  const quiz = view === 'quiz';
+  return (
+    <div className="empty-view">
+      <b>{quiz ? 'No games in this lesson yet' : 'No activities in this lesson yet'}</b>
+      <span>{quiz ? 'A game made here goes into this lesson, after the slide you were on.' : 'An activity made here goes into this lesson, after the slide you were on.'}</span>
+      <button className="btn-soft accent" onClick={() => set({ addOpen: true, inspectorTab: 'engage' })}>{quiz ? '+ Game' : '+ Activity'}</button>
     </div>
   );
 }

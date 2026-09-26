@@ -9,6 +9,7 @@ export function CanvasBar() {
   const zoomSetting = useStore((s) => s.zoom);
   const fitZoom = useStore((s) => s.fitZoom);
   const panelHidden = useStore((s) => s.panelHidden);
+  const view = useStore((s) => s.view);
   const { set } = useStore.getState();
   // The old studio's "◨ Panel": fold the right-hand panel away for the whole width, and back.
   const togglePanel = () => {
@@ -20,7 +21,10 @@ export function CanvasBar() {
   const stepZoom = (k: number) => set({ zoom: Math.max(0.1, Math.min(4, Math.round(zoom * k * 20) / 20)) });
   return (
     <div className="canvas-bar" role="toolbar" aria-label="Slide and zoom">
-      <AddMenu />
+      {view === 'lesson' ? <AddMenu /> : (
+        // The Quiz studio and Activities add what they make: Engage's list, on the right, opens on it.
+        <button className="tb-btn add-view" onClick={() => set({ addOpen: true, inspectorTab: 'engage' })}><Plus size={15} />{view === 'quiz' ? 'Game' : 'Activity'}</button>
+      )}
       <div className="spacer" />
       <AnimateButton />
       <span className="fmt-sep" />
