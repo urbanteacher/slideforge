@@ -26,15 +26,16 @@ try {
   const host = await context.newPage({ viewport: { width: 1600, height: 900 } });
   host.on('pageerror', e => errors.push('host: ' + e.message));
   await host.goto(base);
-  await host.waitForFunction(() => window.SF?.Editor?.deck() && SF.Activities);
+  await host.waitForFunction(() => window.SF?.Live && SF.Activities);
   await host.evaluate(() => {
     const d = SF.makeDeck('Room output');
     const tps = SF.Activities.makeSlides(SF.Activities.activity('think-pair-share'))[0];
     const held = SF.Activities.makeSlides(SF.Activities.activity('structured-reflection-protocol'))[0];
     d.slides = [tps, held].map(s => Object.assign(s, { transition: 'none' }));
-    SF.Store.save(d); SF.Editor.openDeck(d.id);
+    /* Hosted directly, as the classic editor's Live did: saved, then its run deck. */
+    SF.Store.save(d);
+    SF.Live.host(SF.buildRunDeck(d, id => SF.GameStore.get(id)));
   });
-  await host.evaluate(() => SF.Editor.workspace.hostLive());
   await host.waitForFunction(() => SF.Live.pin);
   const pin = await host.evaluate(() => SF.Live.pin);
 
