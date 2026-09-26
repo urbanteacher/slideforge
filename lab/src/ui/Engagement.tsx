@@ -33,7 +33,7 @@ export function EngagementPanel() {
     <>
       <div className="engage-eyebrow">Games and activities · designed in the lab</div>
       <Section title="Add a game or activity" right={<Tip text="Each of SlideForge's activities and games, designed in the lab from its own layers, goes in after this slide. Most come two ways: the lab's design, and SlideForge's." />}>
-        <button className="btn-soft accent engage-add" aria-expanded={adding} onClick={() => setAdding(!adding)}><Sparkles size={13} />{adding ? 'Close' : '+ Add activity'}</button>
+        <button className="btn-soft accent engage-add" aria-expanded={adding} onClick={() => setAdding(!adding)}><Sparkles size={13} />{adding ? 'Close' : view === 'quiz' ? '+ Add a game' : '+ Add activity'}</button>
         {adding && <ActivityPicker done={() => setAdding(false)} only={view === 'quiz' ? 'games' : view === 'activities' ? 'activities' : undefined} />}
       </Section>
       <Section title="Audience feedback on this slide" right={<Tip text="Responses appear in the rail beside the slide during a live SlideForge session. The lab records the choice and marks the slide." />}>

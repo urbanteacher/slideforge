@@ -208,14 +208,15 @@ export function trueFalseWall(st: LayoutStyle, name: string, q: GameQuestion, i:
 
 /** The Buttons looks' reason: under the buttons, not under the question, so the buttons stand in the
  *  same place on the question and its answer and the reveal lights them where they are. Its room is
- *  kept on both slides; it is written on the answer. */
+ *  kept on both slides; it is written on the answer. It is "Reason", not "Why": the walls' Why stays
+ *  put under the question when a game is centred (centreGame), and this one moves with its buttons. */
 function underWhy(st: LayoutStyle, q: GameQuestion): { h: number; params: Params } {
   const why = q.explanation ?? '';
   const params: Params = { font: st.body, size: 40, color: st.muted, lineHeight: 1.2 };
   return { h: why ? Math.min(120, textHeight(why, W - LEFT * 2, params) + 6) + 24 : 0, params };
 }
 function whyLayer(q: GameQuestion, under: { params: Params }, y: number): Layer[] {
-  return q.explanation ? [txt('Why', q.explanation, box(LEFT, y + 24, W - LEFT * 2, 120), under.params, { type: 'fade', duration: 0.6, delay: 0.3 })] : [];
+  return q.explanation ? [txt('Reason', q.explanation, box(LEFT, y + 24, W - LEFT * 2, 120), under.params, { type: 'fade', duration: 0.6, delay: 0.3 })] : [];
 }
 
 /** True or false, the Buttons look: SlideForge's two doors (css/app.css .present-truefalse .tf-duo).

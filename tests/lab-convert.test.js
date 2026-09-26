@@ -369,7 +369,10 @@ test('a lesson’s Check comes in as SlideForge showed it: four buttons, the rig
     // Where it stood: the same box on the question and the answer, so the reveal lights it in place.
     assert.deepEqual(buttons(answer)[q.correct].params.morph, buttons(ask)[q.correct].params.morph);
     buttons(answer).forEach((b, k) => assert.deepEqual(b.box, buttons(ask)[k].box, 'every button stands where it stood'));
-    assert.ok(answer.layers.some((l) => l.name === 'Why'), 'and the reason is on the answer');
+    const reason = answer.layers.find((l) => l.name === 'Reason');
+    assert.ok(reason, 'and the reason is on the answer');
+    const lowest = Math.max(...buttons(answer).map((b) => b.box.y + b.box.h));
+    assert.ok(reason.box.y >= lowest, 'under the buttons, not across them');
     const words = ask.layers.find((l) => l.name === 'Button 1 — words');
     assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the question at the buttons’ size');
   });
@@ -417,6 +420,8 @@ test('true or false has the same two looks: two doors lit green where they stand
       assert.equal(door(answer, k).params.fill === RIGHT_GREEN, k === q.correct, 'the right door lit, where it stood');
       assert.deepEqual(door(answer, k).box, door(ask, k).box);
     });
+    const reason = answer.layers.find((l) => l.name === 'Reason');
+    if (q.explanation) assert.ok(reason && reason.box.y >= door(answer, 0).box.y + door(answer, 0).box.h, 'the reason under the doors, not across them');
     const words = ask.layers.find((l) => l.name === 'Door 1 — words');
     assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the statement at the doors’ size');
     assert.equal(ask.game.look, 'buttons');
