@@ -330,15 +330,16 @@ if (import.meta.hot) {
 }
 
 /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
- *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. Entering the
- *  Quiz studio or Activities opens Engage, once. */
+ *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. The right
+ *  pane stays on the tab it was on: games and activities are chosen in Browse, on the left, and set in
+ *  Design, so no studio needs Engage opened for it — and a page reload restoring the studio must not
+ *  move the panel either. */
 export function enterView(view: LabView) {
   const st = useStore.getState();
   // The shell draws its studio again after most things done in it (js/shell.js); only a change of
-  // studio moves the slide or opens Engage, or every press would snap the panel back to Engage.
+  // studio moves the slide.
   if (st.view === view) return;
   const cur = st.deck.slides.find((s) => s.id === st.slideId);
   const first = st.deck.slides.find((s) => inView(s, view));
-  useStore.setState({ view, ...(cur && inView(cur, view) ? {} : first ? { slideId: first.id, selectedId: null } : {}),
-    ...(view === 'lesson' ? {} : { inspectorTab: 'engage' as const }) });
+  useStore.setState({ view, ...(cur && inView(cur, view) ? {} : first ? { slideId: first.id, selectedId: null } : {}) });
 }

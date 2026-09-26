@@ -464,11 +464,12 @@ test('the Quiz studio and Activities are views of the open lesson: its games, it
   api.setView('quiz');
   assert.equal(useStore.getState().view, 'quiz');
   assert.equal(useStore.getState().slideId, games[0].id, 'off a lesson slide, onto the first game');
-  assert.equal(useStore.getState().inspectorTab, 'engage', 'with Engage open, where games are made');
-  // Staying in the studio (the shell draws it again after most presses) leaves the panel where it was put.
-  useStore.setState({ inspectorTab: 'design' });
-  api.setView('quiz');
-  assert.equal(useStore.getState().inspectorTab, 'design', 'no snapping back to Engage');
+  // The right pane stays on its tab: games are chosen in Browse, on the left, and set in Design. Entering
+  // a studio, staying in it (the shell draws it again after most presses) or a reload restoring it moves nothing.
+  assert.equal(useStore.getState().inspectorTab, 'design', 'entering the Quiz studio leaves the panel on its tab');
+  useStore.setState({ inspectorTab: 'animate' });
+  api.setView('lesson'); api.setView('quiz');
+  assert.equal(useStore.getState().inspectorTab, 'animate', 'no snapping to Engage');
   useStore.setState({ slideId: games[3].id });
   api.setView('lesson');
   assert.equal(useStore.getState().slideId, games[3].id, 'a game is a slide of the lesson too: it stays');
