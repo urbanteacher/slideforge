@@ -39,7 +39,27 @@
   function textPage(title, bullets, subtitle) {
     return copy(SF.makeSlide('content'), { title: title, bullets: bullets || [], subtitle: subtitle || '' });
   }
-  function pagesFor(deck) {
+  /* A check as its answer, for the teacher's copy: the question, the right answer as the fact and
+     its explanation under it (the keyfact layout). Null where a check has no single answer to print
+     (an order, a sort), which keeps its question page. */
+  function answerPage(q, label) {
+    var opts = q.options || [], k = q.correct, ans = '', letter = '';
+    if (typeof k === 'number' && opts[k] != null && String(opts[k]).trim()) { ans = String(opts[k]); letter = 'ABCDEF'.charAt(k); }
+    else if (q.target != null && q.target !== '') ans = String(q.target) + (q.unit || '');
+    else if (q.answer) ans = String(q.answer);
+    else if (q.accept && q.accept.length) ans = String(q.accept[0]);
+    if (!ans) return null;
+    return copy(SF.makeSlide('keyfact'), {
+      title: q.question || q.term || label || 'Question',
+      subtitle: 'Answer' + (letter ? ' · ' + letter : ''),
+      body: ans,
+      bullets: q.explanation ? [q.explanation] : []
+    });
+  }
+  /* opts.answers: the teacher's copy, each check printed as its answer only. Without it, the
+     student's: the question and its options, and no answer anywhere. */
+  function pagesFor(deck, opts) {
+    var answers = !!(opts && opts.answers);
     var pages = [];
     deck.slides.forEach(function (s, slideIndex) {
       /* A slide held back from the room is held back from the handout too.
@@ -64,11 +84,15 @@
           return;
         }
         (game.questions || []).forEach(function (q, i) {
+          var shown = answers && answerPage(q, game.title);
+          if (shown) { pages.push(shown); return; }
           var p = textPage(q.question || q.term || game.title, q.options || []);
           if (q.image) { p.type = 'split'; p.image = SF.safeMedia(q.image); p.imageFit = 'contain'; }
           p.subtitle = game.title + ' · Question ' + (i + 1);
           pages.push(p);
         });
+      } else if (s.type === 'quiz' && answers && answerPage(s, s.title)) {
+        pages.push(answerPage(s, s.title));
       } else if (s.type === 'quiz') {
         var question = textPage(s.question || s.title || 'Question', s.options || [], s.subtitle);
         if (s.image) { question.type = 'split'; question.image = s.image; question.imageFit = 'contain'; }
@@ -144,7 +168,8 @@
   }
   /* deck may be a promise (a lab lesson is drawn first, js/lab-engine.js): the
      window opens now, inside the click, or the browser blocks it as a pop-up. */
-  async function open(deck) {
+  async function open(deck, opts) {
+    var answers = !!(opts && opts.answers);
     var preview = window.open('', '_blank');
     if (!preview) { SF.toast('Allow pop-ups to open the student PDF preview.'); return; }
     var doc = preview.document;
@@ -196,18 +221,36 @@
       }, 50);
     };
     toolbar.appendChild(print);
+    /* Student copy or teacher copy: the same lesson, its checks as questions or as their answers. */
+    var copyPick = doc.createElement('button');
+    copyPick.type = 'button';
+    toolbar.appendChild(copyPick);
     var hint = doc.createElement('span');
     hint.className = 'pdf-hint';
-    hint.textContent = 'Choose Save as PDF. Experiments include numbered states, comparisons and takeaways. Other reveals are visible; private notes, live results and quiz answer keys are excluded. For A4 paper choose landscape and fit to page. Use ⌘P / Ctrl+P if needed.';
+    var hintFor = function () {
+      return 'Choose Save as PDF. ' + (answers
+        ? 'Teacher copy: each check is printed as its answer and explanation.'
+        : 'Student copy: checks show their options, and no answers are printed.') +
+        ' Experiments include numbered states, comparisons and takeaways; private notes and live results are excluded. For A4 paper choose landscape and fit to page. Use ⌘P / Ctrl+P if needed.';
+    };
+    hint.textContent = hintFor();
     toolbar.appendChild(hint); doc.body.appendChild(toolbar);
-    try {
-      var pages = pagesFor(deck);
+    var pages = [];
+    var draw = function () {
+      doc.querySelectorAll('.pdf-page').forEach(function (n) { n.remove(); });
+      pages = pagesFor(deck, { answers: answers });
       pages.forEach(function (s, i) {
         var page = doc.createElement('section'); page.className = 'pdf-page';
         page.appendChild(s._teachingPrint?teachingPage(doc,s):SF.renderSlide(deck, s, {index:(s._sourceSlide||i+1)-1,total:deck.slides.length,interactive:false}));
         var footer=doc.createElement('div');footer.className='pdf-page-reference';footer.textContent='Slide '+(s._sourceSlide||'?')+' / '+deck.slides.length+'  ·  PDF '+(i+1)+' / '+pages.length;page.appendChild(footer);
         doc.body.appendChild(page);
       });
+      copyPick.textContent = answers ? 'Teacher copy (answers) ▸ switch to student copy' : 'Student copy ▸ switch to teacher copy (answers)';
+      hint.textContent = hintFor();
+    };
+    copyPick.onclick = function () { answers = !answers; draw(); };
+    try {
+      draw();
       // Also preload background images used by the image and split layouts.
       var media = new Set();
       doc.querySelectorAll('img').forEach(function (img) { if (img.src) media.add(img.src); });

@@ -236,3 +236,24 @@ test('building the handout leaves the deck it was built from alone', () => {
   SF.Print.pagesFor(deck);
   assert.equal(JSON.stringify(deck), before, 'the authored deck is untouched');
 });
+
+test('the teacher copy prints a check as its answer, and the student copy still never does', () => {
+  const SF = load();
+  const deck = SF.normalizeDeck({
+    title: 'T',
+    slides: [{
+      type: 'quiz', question: 'Which encoding is most accurate?',
+      options: ['Angle', 'Position', 'Area', 'Colour'], correct: 1,
+      explanation: 'Position beats the rest.', notes: 'Do not read this out.'
+    }]
+  });
+  const [teacher] = SF.Print.pagesFor(deck, { answers: true });
+  assert.equal(teacher.type, 'keyfact', 'the answer as the fact');
+  assert.equal(teacher.title, 'Which encoding is most accurate?');
+  assert.equal(teacher.subtitle, 'Answer · B');
+  assert.equal(teacher.body, 'Position');
+  assert.deepEqual(plain(teacher.bullets), ['Position beats the rest.'], 'its explanation under it');
+  assert.ok(!JSON.stringify(teacher).includes('Do not read this out'), 'the notes still stay out');
+  const student = SF.Print.pagesFor(deck);
+  assert.ok(!JSON.stringify(student).includes('Position beats the rest'), 'no answer in the student copy');
+});

@@ -16,7 +16,7 @@ try{
  await page.waitForFunction(()=>window.SF?.Print&&window.SF?.Experiments);
  const startupErrors=errors.splice(0);
  const popupEvent=context.waitForEvent('page');
- await page.evaluate(key=>{if(!SF.LESSONS.some(l=>l.key===key))throw Error('Unknown lesson: '+key);window.exportDeck=SF.buildLesson(key);SF.Print.open(exportDeck);},lesson);
+ await page.evaluate(key=>{if(!SF.LESSONS.some(l=>l.key===key))throw Error('Unknown lesson: '+key);window.exportDeck=SF.buildLesson(key);SF.Print.open(exportDeck,{answers:true});},lesson);
  const preview=await popupEvent;
  await preview.waitForFunction(()=>document.documentElement.dataset.pdfReady,{},{timeout:30000});
  const audit=await preview.evaluate(()=>({
