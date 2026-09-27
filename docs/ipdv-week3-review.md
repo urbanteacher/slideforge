@@ -35,7 +35,7 @@ treatments. This file maps each item onto the lesson as it stands.
 | B5 | Ordering direction linked to colour scale | 27 Sep: the `scales` experiment, "Colour follows the ordering" |
 | B6 | Action–target pairs and the search matrix | 5a7167d: Why? slide, search matrix table, tasks experiment |
 | B7 | Amar's tasks linked to Munzner | 5a7167d: "Analytic task taxonomy, in songs" |
-| B8 | Bridge: expressiveness, effectiveness, channel ranking | 27 Sep: "From abstraction to idiom", live estimates, the `channels` experiment |
+| B8 | Bridge: expressiveness, effectiveness, channel ranking | 27 Sep: "From abstraction to idiom", live estimates, the `perception` experiment |
 | B9 | Derived attributes as a response to the task | 5a7167d: derive and tasks experiments |
 | B10 | Other dataset types | 27 Sep: "Tables are one of four dataset types", then the `network` experiment |
 | B11 | Takeaways and Lab preview | 27 Sep: "Takeaways"; the Lab 3 preview was already there |
@@ -57,7 +57,7 @@ treatments. This file maps each item onto the lesson as it stands.
 | Wide-to-long reshape | `reshape` experiment (5a7167d) |
 | Multidimensional cube assembling itself | Not built. "Keys and values" names the Fruit × Month → Quantity table instead |
 | 3D chart: rotate, then flatten | `rescue3d`: oblique 3D, then flattened, grouped and sorted (5a7167d). It does not rotate freely |
-| Live perception experiment (Cleveland & McGill) | 27 Sep: slider game "Estimate · B is what % of A?" (five mark pairs on the phones), then the `channels` experiment reveals each ratio and the ranking |
+| Live perception experiment (Cleveland & McGill) | 27 Sep: slider game "Estimate · B is what % of A?" (five mark pairs on the phones), then the `perception` experiment reveals each ratio and the ranking |
 | Pie-family morph | `pies` experiment (5a7167d) |
 | Colour-scale lab with colour blindness toggle | 27 Sep: `scales`: sequential, red–green, deuteranopia simulated (Machado et al. 2009), blue–orange, cyclic months |
 | Derived-attribute slider | `derive` experiment, in steps (5a7167d) |
@@ -67,16 +67,16 @@ treatments. This file maps each item onto the lesson as it stands.
 
 ## Cautions
 
-- **Canvas upload.** The handout already prints every state of every experiment side by side, and each game as questions on paper (`js/lab-engine.js` `printsAsPages`, `js/print.js`). The three new experiments paginate: `channels` 3 pages, `scales` 3, `network` 4.
+- **Canvas upload.** The handout already prints every state of every experiment side by side, and each game as questions on paper (`js/lab-engine.js` `printsAsPages`, `js/print.js`). The three new experiments paginate: `perception` 3 pages, `scales` 3, `network` 4.
 - **Accessibility.** Keyboard navigation works in the show. Question pictures carry alt text to the phones. The lab engine does not yet honour `prefers-reduced-motion`, although SlideForge's classic player and CSS do. This is open.
 - **Test on the room's machine.** Still to do: the lesson has not been run on the lecture-room PC or a mid-range laptop.
 - **One interactive per concept.** The lesson now has 13 experiments and 7 checks in 90 minutes. The speaker notes carry timings, and "Another route: feature models" is marked optional. Cut `idioms` or `emoji` if time runs short.
 
 ## What changed in code (27 Sep)
 
-- `lab/src/engine/experimentKinds.ts`: kinds `channels`, `scales` and `network`, with presets of the same names.
+- `lab/src/engine/experimentKinds.ts`: kinds `channels`, `scales` and `network`; the perception preset is now `perception`, distinct from the older `channels` preset.
 - `lab/src/model/designs/games.ts`, `formats.ts` and `fromSlideForge.ts`: an Estimate question's picture now reaches the lab. The lab had dropped every question image. It is drawn between the question and the line, and kept above the pin on the answer.
-- `tools/build-perception-images.mjs` draws the five mark pairs from the `channels` kind, without the answer, into `assets/lesson/ipdv/perception-*.svg`.
+- `tools/build-perception-images.mjs` draws the five mark pairs from the `channels` kind in the `perception` preset, without the answer, into `assets/lesson/ipdv/perception-*.svg`.
 - `tools/build-ipdv-week3.js` now embeds the games' pictures in the portable bundle too.
 - Tests: `tests/week3.test.js` (ratios, deuteranopia collapse, network communities) and `tests/lab-convert.test.js` (preset list, the Estimate picture).
 
@@ -94,3 +94,4 @@ Also: the seven references fit their slide, one line each (`6fad22f`), and the m
 ## Change log
 
 - **27 Sep 2026:** Clarified slide 3 so Chapter 5 is the assigned reading and Chapters 2 and 3 are optional context, matching slide 2 and the supplied lecture materials.
+- **27 Sep 2026:** Renamed Week 3's perception preset so saved Week 2 `channels` slides keep their original marks demonstration. Older Week 3 copies are recognized and upgraded on open.

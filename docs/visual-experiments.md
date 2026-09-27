@@ -30,13 +30,13 @@ study. Category, ordinal and redesign slides now use native editable examples.
 
 Presets cover polling, baseline distortion, clutter, aspect ratio and selected
 ranges, marks and channels, colour schemes, accessibility, dataset structures,
-attribute classification and overview/detail. Week 3 added six more: reshape
-(a table melted wide to long, its types named, a total derived), tasks (one
-table answering five questions), derive (the gap between two lines dropping
-into a balance, then a running total), rescue3d (a 3D default flattened,
-stacked, grouped and totalled), pies (pie, doughnut, exploded, polar area,
-bars) and units (words counted into frequency). The Week 2 lesson uses these
-alongside full-size reference images with the existing Flip to facts interaction.
+attribute classification and overview/detail. Week 3 adds demonstrations for
+reshaping, tasks, derived attributes, a 3D chart critique, pie variants, a nested
+model, icon units, idioms, clustering, frequency, perception, colour scales and
+networks. Its `perception` preset shows one ratio in five channels. The older
+`channels` preset still shows the marks-and-channels sequence used by Week 2.
+Saved Week 3 copies that used `channels` before the rename are recognized by
+their data or prompt and upgraded when the studio opens them.
 
 ## Teaching and data
 
