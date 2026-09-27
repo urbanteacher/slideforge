@@ -207,7 +207,9 @@ export class DeckPlayer {
     const W = this.deck.width, H = this.deck.height;
     const layers = slide.layers.map((l) => {
       const b = l.box;
-      if (!b || (b.x <= 2 && b.y <= 2 && b.x + b.w >= W - 2 && b.y + b.h >= H - 2)) return l;
+      // A picture that fills the slide is what the slide shows, not its ground: it stops short of
+      // the rail, as SlideForge's picture slides do (css/app.css .deck-viewport.railed .layout-image .img).
+      if (!b || (l.kind !== 'image' && b.x <= 2 && b.y <= 2 && b.x + b.w >= W - 2 && b.y + b.h >= H - 2)) return l;
       return { ...l, box: { ...b, x: b.x * k, w: b.w * k } };
     });
     const out = { ...slide, layers };
