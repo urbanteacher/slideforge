@@ -14,7 +14,10 @@
        and a duplicate `activity` member sat in Slide passing cleanly. With it
        off the only errors are real ones. */
     "skipLibCheck": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    /* src/render/experiments.js takes its Week 3 kinds from the lab's
+       engine (lab/src/engine/experimentKinds.ts), which esbuild bundles. */
+    "allowImportingTsExtensions": true
   },
   "include": [
     // Authored source. All of it is checked; keep it that way.

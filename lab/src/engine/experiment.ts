@@ -9,13 +9,14 @@
  */
 import type { Params } from '../model/types';
 import { drawRow, row, type Button } from './controls';
+import { KIND_GLYPHS, KIND_PRESETS, kindPicture, type KState } from './experimentKinds';
 
 type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
-export interface ExpState {
-  label: string; kind: string; explanation?: string; series?: number; all?: boolean; categorical?: boolean;
+export interface ExpState extends KState {
+  all?: boolean; categorical?: boolean;
   baseline?: number; clutter?: boolean; heavyGrid?: boolean; narrow?: boolean; start?: number; mono?: boolean;
-  palette?: string; example?: string; hideValues?: boolean;
+  palette?: string; example?: string;
 }
 interface Preset { label: string; prompt: string; data: string; states: ExpState[] }
 
@@ -67,6 +68,8 @@ export const EXPERIMENTS: Record<string, Preset> = {
     { label: 'Overview', kind: 'line', explanation: 'Start with the complete series.' },
     { label: 'Focus on Thu–Sat', kind: 'line', start: 3, explanation: 'This is a filtered detail, not missing data. The visible range is labelled and the vertical scale stays fixed.' },
     { label: 'Return to overview', kind: 'line', explanation: 'Restore the whole series to judge the detail in context.' }] },
+  // Week 3's demonstrations, on the kinds in experimentKinds.ts (shared with SlideForge).
+  ...KIND_PRESETS,
 };
 
 /** The states an experiment layer steps through: its own, else its preset's (up to eight). */
@@ -83,7 +86,7 @@ interface El {
   key?: string;
   pts?: number[][]; x?: number; y?: number; x2?: number; y2?: number; w?: number; h?: number;
   fill?: string; stroke?: string; sw?: number; fo?: number; so?: number;
-  text?: string; size?: number; anchor?: 'start' | 'middle' | 'end'; num?: boolean;
+  text?: string; size?: number; anchor?: 'start' | 'middle' | 'end'; num?: boolean; wt?: number;
 }
 
 const COLOURS = ['#0072b2', '#d55e00', '#009e73', '#cc79a7', '#8a6500', '#5b4ba8'];
@@ -110,6 +113,8 @@ function outline(kind: 'circle' | 'sector' | 'rect' | 'polygon', a: { cx?: numbe
 }
 
 function picture(p: Params, st: ExpState, ink: string): El[] {
+  const drawn = kindPicture(String(p.data ?? EXPERIMENTS[String(p.preset)]?.data ?? ''), st, ink);
+  if (drawn) return st.hideValues ? drawn.filter((e) => !/^(cell|val|value|tot|agg|bal|count)/.test(e.key ?? '') || e.tag !== 'text') : drawn;
   const els: El[] = [];
   const d = table(String(p.data ?? EXPERIMENTS[String(p.preset)]?.data ?? ''));
   const series = d.series;
@@ -273,7 +278,7 @@ function paint(ctx: Ctx, e: El, alpha: number, font: string, fs = 1) {
     ctx.globalAlpha *= e.so ?? 1; ctx.strokeStyle = e.stroke ?? '#000'; ctx.lineWidth = e.sw ?? 1;
     ctx.beginPath(); ctx.moveTo(e.x!, e.y!); ctx.lineTo(e.x2!, e.y2!); ctx.stroke();
   } else if (e.tag === 'text') {
-    ctx.font = `500 ${(e.size ?? 22) * fs}px "${font}", system-ui, sans-serif`;
+    ctx.font = `${e.wt ?? 500} ${(e.size ?? 22) * fs}px "${font}", system-ui, sans-serif`;
     ctx.textAlign = e.anchor === 'middle' ? 'center' : e.anchor === 'end' ? 'right' : 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = e.fill ?? '#000'; ctx.fillText(e.text ?? '', e.x!, e.y!);
@@ -302,6 +307,7 @@ function scene(ctx: Ctx, p: Params, states: ExpState[], from: number, to: number
 const GLYPH: Record<string, string> = {
   pie: '\u25d4', bar: '\u25ae', line: '\u2571', dot: '\u2022', bubbles: '\u25cb', hue: '\u25d0', shape: '\u25c6', tiles: '\u25a6',
   table: '\u25a4', network: '\u22c8', field: '\u25a9', geometry: '\u2b21', classification: '#',
+  ...KIND_GLYPHS,
 };
 
 type Rect = { x: number; y: number; w: number; h: number };

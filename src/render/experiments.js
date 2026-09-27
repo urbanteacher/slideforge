@@ -9,6 +9,8 @@
  *
  * Installed by src/model.js; nothing here runs at install.
  */
+import { KIND_PRESETS, kindPicture } from '../../lab/src/engine/experimentKinds.ts';
+
 export function installExperiments(SF) {
   var presets = {
     polling:{label:'Polling: pies to bars',prompt:'Which candidate gains most across the polls?',data:'Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17',states:[
@@ -59,6 +61,8 @@ export function installExperiments(SF) {
       {label:'Focus on Thu–Sat',kind:'line',start:3,explanation:'This is a filtered detail, not missing data. The visible range is labelled and the vertical scale stays fixed.'},
       {label:'Return to overview',kind:'line',explanation:'Restore the whole series to judge the detail in context.'}]}
   };
+  /* Week 3's demonstrations and their kinds are written once, in the lab's engine, for both. */
+  Object.keys(KIND_PRESETS).forEach(function(k){presets[k]=/** @type {any} */(KIND_PRESETS[k]);});
   function config(s) {
     var raw=s.experiment||{}, key=Object.prototype.hasOwnProperty.call(presets,raw.preset)?raw.preset:'polling', preset=presets[key];
     var states=Array.isArray(raw.states)?raw.states.filter(function(x){return x&&typeof x==='object'&&!Array.isArray(x);}):[];
@@ -83,6 +87,16 @@ export function installExperiments(SF) {
     return svg('polygon',{'data-motion':key,points:points.map(function(p){return p.join(',');}).join(' '),fill:a.fill,stroke:a.stroke||'none','stroke-width':a.stroke?2:0},parent);
   }
   var colours=['#0072b2','#d55e00','#009e73','#cc79a7','#8a6500','#5b4ba8'];
+  /* The shared kinds' elements as SVG. Opacities are always written so ChartMotion can tween them. */
+  function paintKinds(chart,els){
+    els.forEach(function(e){
+      var a=/** @type {Record<string,any>} */({});if(e.key)a['data-motion']=e.key;
+      if(e.tag==='poly'){a.points=(e.pts||[]).map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');a.fill=e.fill||'none';a['fill-opacity']=e.fo==null?1:e.fo;if(e.stroke){a.stroke=e.stroke;a['stroke-width']=e.sw||1;}svg('polygon',a,chart);}
+      else if(e.tag==='line'){a.x1=e.x;a.y1=e.y;a.x2=e.x2;a.y2=e.y2;a.stroke=e.stroke||'currentColor';a['stroke-width']=e.sw||1;a['stroke-opacity']=e.so==null?1:e.so;svg('line',a,chart);}
+      else if(e.tag==='rect'){a.x=e.x;a.y=e.y;a.width=e.w;a.height=e.h;a.fill=e.fill||'currentColor';svg('rect',a,chart);}
+      else{a.x=e.x;a.y=e.y;a.fill=e.fill||'currentColor';a['font-size']=e.size||22;a['text-anchor']=e.anchor||'start';if(e.wt)a['font-weight']=e.wt;if(e.num)a['data-number']='true';svg('text',a,chart,e.text||'');}
+    });
+  }
   function draw(host,s,c,state){
     var data=SF.chartData(s), series=data.series;
     var current=series[Math.max(0,Math.min(series.length-1,Number(state.series)||0))];
@@ -90,6 +104,8 @@ export function installExperiments(SF) {
     var chart=svg('svg',{viewBox:'0 0 1000 370',role:'img','aria-label':state.label||'Predict and compare'},host);
     svg('title',{},chart,(state.label||'Chart')+': '+rows.map(function(r){return r.name+' '+r.value;}).join(', '));
     var ink='currentColor';
+    var drawn=kindPicture(s.body||presets[c.preset].data,state,ink);
+    if(drawn){paintKinds(chart,drawn);return;}
     function text(x,y,value,size,anchor,key){var attrs={x:x,y:y,fill:ink,'font-size':size||22,'text-anchor':anchor||'start'};if(key)attrs['data-motion']=key;if(typeof value==='number')attrs['data-number']='true';return svg('text',attrs,chart,String(value));}
     function colour(i){return state.mono?'#636363':colours[i%colours.length];}
     if(state.kind==='classification'){text(500,150,state.example||'',36,'middle');text(500,220,state.label,26,'middle');return;}

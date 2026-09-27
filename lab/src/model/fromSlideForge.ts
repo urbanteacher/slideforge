@@ -238,7 +238,8 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
     case 'orgchart': return { slide: orgchartSlide(st, t, triples(b)), ground: g };
     case 'stats': return { slide: statsSlide(st, t, triples(b).map(([label, value, note]) => [value, note ? `${label} — ${note}` : label] as [string, string]), s.body ?? ''), ground: g };
     case 'compare': {
-      const heads = (sub.split('|').map((x) => x.trim()) as [string, string]);
+      // SlideForge writes the two headings with a tab between them; a hand-typed one may use a bar.
+      const heads = (sub.split(/\t|\|/).map((x) => x.trim()) as [string, string]);
       return { slide: compareSlide(st, t, [heads[0] ?? 'One', heads[1] ?? 'Two'], triples(b)), ground: g };
     }
     case 'funnel': return { slide: funnelSlide(st, t, sub, triples(b)), ground: g };

@@ -1053,7 +1053,7 @@
       });
       return n;
     }
-    function niceMax(v) {
+    function niceMax2(v) {
       if (!(v > 0)) return 1;
       var mag = Math.pow(10, Math.floor(Math.log10(v)));
       var step = [1, 2, 2.5, 5, 10].filter(function(s) {
@@ -1148,7 +1148,7 @@
           if (v != null) all.push(v);
         });
       });
-      var max = niceMax(Math.max.apply(null, all.concat([0])));
+      var max = niceMax2(Math.max.apply(null, all.concat([0])));
       axisTicks(max).forEach(function(t) {
         var y = P.padT + plotH - t / max * plotH;
         svg.appendChild(svgEl("line", { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: "ch-grid" }));
@@ -1185,9 +1185,9 @@
           g.appendChild(path);
           g.setAttribute("data-series", String(si));
           if (n === 1) {
-            var val = svgEl("text", { x: x + barW / 2, y: y - 12, class: "ch-value", "text-anchor": "middle" });
-            val.textContent = fmt(v);
-            g.appendChild(val);
+            var val2 = svgEl("text", { x: x + barW / 2, y: y - 12, class: "ch-value", "text-anchor": "middle" });
+            val2.textContent = fmt(v);
+            g.appendChild(val2);
           }
           beatFor(si, ci).appendChild(g);
         });
@@ -1203,12 +1203,12 @@
       var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
       var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
       var totals = data.categories.map(function(_, ci) {
-        return data.series.reduce(function(sum, s) {
+        return data.series.reduce(function(sum2, s) {
           var v = s.values[ci];
-          return sum + (v == null ? 0 : Math.max(0, v));
+          return sum2 + (v == null ? 0 : Math.max(0, v));
         }, 0);
       });
-      var max = niceMax(Math.max.apply(null, totals.concat([0])));
+      var max = niceMax2(Math.max.apply(null, totals.concat([0])));
       axisTicks(max).forEach(function(t) {
         var y = P.padT + plotH - t / max * plotH;
         svg.appendChild(svgEl("line", { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: "ch-grid" }));
@@ -1236,9 +1236,9 @@
           g.setAttribute("data-series", String(si));
           g.appendChild(svgEl("rect", { x, y, width: barW, height: Math.max(0, hgt), fill: chartColor(si) }));
           if (hgt > 26) {
-            var val = svgEl("text", { x: x + barW / 2, y: y + hgt / 2 + 6, class: "ch-value ch-on-fill", "text-anchor": "middle" });
-            val.textContent = fmt(v);
-            g.appendChild(val);
+            var val2 = svgEl("text", { x: x + barW / 2, y: y + hgt / 2 + 6, class: "ch-value ch-on-fill", "text-anchor": "middle" });
+            val2.textContent = fmt(v);
+            g.appendChild(val2);
           }
           groups[si].appendChild(g);
           run += v;
@@ -1264,7 +1264,7 @@
           if (v != null) all.push(v);
         });
       });
-      var max = niceMax(Math.max.apply(null, all.concat([0])));
+      var max = niceMax2(Math.max.apply(null, all.concat([0])));
       axisTicks(max).forEach(function(t) {
         var x = padL + t / max * plotW;
         svg.appendChild(svgEl("line", { x1: x, y1: P.padT, x2: x, y2: P.padT + plotH, class: "ch-grid" }));
@@ -1294,9 +1294,9 @@
           g.setAttribute("data-series", String(si));
           g.appendChild(svgEl("rect", { x: padL, y, width: wdt, height: barH, rx: Math.min(4, barH / 2), fill: chartColor(si) }));
           if (n === 1) {
-            var val = svgEl("text", { x: padL + wdt + 10, y: y + barH / 2 + 6, class: "ch-value" });
-            val.textContent = fmt(v);
-            g.appendChild(val);
+            var val2 = svgEl("text", { x: padL + wdt + 10, y: y + barH / 2 + 6, class: "ch-value" });
+            val2.textContent = fmt(v);
+            g.appendChild(val2);
           }
           groups[n > 1 ? si : ci].appendChild(g);
         });
@@ -1387,7 +1387,7 @@
       var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
       if (!bins.length) return svg;
       var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
-      var max = niceMax(Math.max.apply(null, bins.map(function(b) {
+      var max = niceMax2(Math.max.apply(null, bins.map(function(b) {
         return b.count;
       })));
       axisTicks(max).forEach(function(t) {
@@ -1562,7 +1562,7 @@
           if (v != null) all.push(v);
         });
       });
-      var max = niceMax(Math.max.apply(null, all.concat([0])));
+      var max = niceMax2(Math.max.apply(null, all.concat([0])));
       var ang = function(i2) {
         return -Math.PI / 2 + i2 / axes * Math.PI * 2;
       };
@@ -1965,7 +1965,7 @@
           if (v != null) all.push(v);
         });
       });
-      var max = niceMax(Math.max.apply(null, all.concat([0])));
+      var max = niceMax2(Math.max.apply(null, all.concat([0])));
       axisTicks(max).forEach(function(t) {
         var y = P.padT + plotH - t / max * plotH;
         svg.appendChild(svgEl("line", { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: "ch-grid" }));
@@ -2149,14 +2149,14 @@
           name.textContent = r.name;
           g.appendChild(name);
           var pct = Math.round(r.value / total * 100);
-          var val = svgEl("text", {
+          var val2 = svgEl("text", {
             x: r.x + 14,
             y: r.y + 52,
             class: "ch-tree-value",
             "text-anchor": "start"
           });
-          val.textContent = fmt(r.value) + " · " + pct + "%";
-          g.appendChild(val);
+          val2.textContent = fmt(r.value) + " · " + pct + "%";
+          g.appendChild(val2);
         }
         svg.appendChild(g);
       });
@@ -2175,7 +2175,7 @@
           if (v != null) all.push(Math.abs(v));
         });
       });
-      var max = niceMax(Math.max.apply(null, all.concat([0])));
+      var max = niceMax2(Math.max.apply(null, all.concat([0])));
       var rowH = Math.min(72, (H - P.padT - P.padB) / Math.max(1, data.categories.length));
       var trackH = Math.min(22, rowH * 0.38);
       var barH = Math.min(12, trackH * 0.55);
@@ -2245,7 +2245,7 @@
           if (v != null) all.push(v);
         });
       });
-      var max = niceMax(Math.max.apply(null, all.concat([0])));
+      var max = niceMax2(Math.max.apply(null, all.concat([0])));
       axisTicks(max).forEach(function(t) {
         var y = P.padT + plotH - t / max * plotH;
         svg.appendChild(svgEl("line", { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: "ch-grid" }));
@@ -2874,6 +2874,399 @@
     SF.Explore = { ownsSteps: active2, render: render2, inspector, command, step, nextAction };
   }
 
+  // lab/src/engine/experimentKinds.ts
+  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units"];
+  var COLOURS = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
+  var RAINBOW = ["#e0201b", "#1f3fd6", "#27b83a", "#8a2be2", "#f28c1b", "#e8d51b"];
+  var TYPE_COLOURS = ["#0072b2", "#009e73", "#d55e00", "#cc79a7"];
+  var POS = "#0072b2";
+  var NEG = "#d55e00";
+  var MONO = "#0072b2";
+  var DERIVED = "#cc79a7";
+  function ramp(j, m) {
+    const l = m <= 1 ? 45 : 78 - j / (m - 1) * 50;
+    return `hsl(205,62%,${Math.round(l)}%)`;
+  }
+  function shade(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [n >> 16 & 255, n >> 8 & 255, n & 255].map((v) => Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f)));
+    return "#" + c.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("");
+  }
+  function parseTable(text2) {
+    const rows2 = String(text2 ?? "").split(/\r?\n/).filter((l) => l.trim()).map((l) => (l.includes("	") ? l.split("	") : l.split("|")).map((c) => c.trim()));
+    if (rows2.length < 2) return { head: "", categories: [], series: [] };
+    const num = (c) => {
+      const r = String(c ?? "").replace(/[,\s%£$€]/g, "");
+      if (!r) return NaN;
+      const n = Number(r);
+      return Number.isFinite(n) ? n : NaN;
+    };
+    return {
+      head: rows2[0][0] ?? "",
+      categories: rows2.slice(1).map((r) => r[0] ?? ""),
+      series: rows2[0].slice(1).map((name, i) => ({ name, values: rows2.slice(1).map((r) => num(r[i + 1])) })).filter((s) => s.name.trim())
+    };
+  }
+  function along(verts) {
+    const pts = [];
+    for (let i = 0; i < 64; i++) {
+      const q = i / 64 * verts.length, j = Math.floor(q), t = q - j, u = verts[j], v = verts[(j + 1) % verts.length];
+      pts.push([u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t]);
+    }
+    return pts;
+  }
+  var rectPts = (x, y, w, h) => along([[x, y], [x + w, y], [x + w, y + h], [x, y + h]]);
+  function circlePts(cx, cy, r) {
+    const pts = [];
+    for (let i = 0; i < 64; i++) {
+      const g = -Math.PI / 2 + i / 64 * Math.PI * 2;
+      pts.push([cx + r * Math.cos(g), cy + r * Math.sin(g)]);
+    }
+    return pts;
+  }
+  function sectorPts(cx, cy, r, start, end) {
+    const pts = [];
+    for (let i = 0; i < 64; i++) {
+      const g = start + (end - start) * Math.max(0, Math.min(1, (i - 8) / 47)), rr = i < 8 ? r * i / 8 : i > 55 ? r * (64 - i) / 9 : r;
+      pts.push([cx + rr * Math.cos(g), cy + rr * Math.sin(g)]);
+    }
+    return pts;
+  }
+  function ringPts(cx, cy, r0, r1, start, end) {
+    const pts = [];
+    for (let i = 0; i < 32; i++) {
+      const g = start + (end - start) * i / 31;
+      pts.push([cx + r1 * Math.cos(g), cy + r1 * Math.sin(g)]);
+    }
+    for (let i = 0; i < 32; i++) {
+      const g = end - (end - start) * i / 31;
+      pts.push([cx + r0 * Math.cos(g), cy + r0 * Math.sin(g)]);
+    }
+    return pts;
+  }
+  function niceMax(v) {
+    if (!(v > 0)) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+    return 10 * p;
+  }
+  var sum = (a) => a.reduce((s, v) => s + (Number.isFinite(v) ? v : 0), 0);
+  var val = (v) => Number.isFinite(v) ? v : 0;
+  function kindPicture(data, st, ink) {
+    if (!KINDS.includes(st.kind)) return null;
+    const t = parseTable(data), els = [];
+    const text2 = (x, y, v2, size = 20, anchor = "start", key, more = {}) => els.push({ tag: "text", x, y, text: String(v2), size, anchor, key, num: typeof v2 === "number", fill: ink, ...more });
+    const poly = (key, pts, fill2, more = {}) => els.push({ tag: "poly", key, pts, fill: fill2, fo: 1, ...more });
+    const line = (key, x, y, x2, y2, stroke, sw = 1, so = 1) => els.push({ tag: "line", key, x, y, x2, y2, stroke, sw, so });
+    const cats = t.categories.slice(0, 12), ser = t.series.slice(0, 6);
+    if (!cats.length || !ser.length) {
+      text2(500, 180, "Add a table with category labels and numeric values.", 24, "middle");
+      return els;
+    }
+    const n = cats.length, m = ser.length, v = (i, j) => val(ser[j].values[i]);
+    const totals = cats.map((_, i) => sum(ser.map((s) => s.values[i])));
+    const axis = (max, left, right, top, bottom, junk = false) => {
+      for (let k = 0; k <= 4; k++) {
+        const py = bottom - k / 4 * (bottom - top);
+        if (junk && k < 4) poly(`junk:${k}`, rectPts(left, py - (bottom - top) / 4, right - left, (bottom - top) / 4), k % 2 ? "#c8b6ef" : "#e4dbf7", { fo: 0.8 });
+        line(`grid:${k}`, left, py, right, py, ink, 1, junk ? 0.45 : 0.15);
+        text2(left - 12, py + 6, Math.round(max * k / 4 * 10) / 10, 17, "end", `tick:${k}`);
+      }
+    };
+    if (st.kind === "grid") {
+      const rows2 = cats.slice(0, 8), nr = rows2.length;
+      const cols = [t.head, ...ser.map((s) => s.name), ...st.derive ? ["Total"] : []];
+      const colW = Math.min(170, 820 / cols.length), x0 = 500 - colW * cols.length / 2, top = 58, rh = Math.min(42, 270 / nr);
+      const cx = (c) => x0 + colW * (c + 0.5), ry = (r) => top + rh * (r + 1);
+      if (st.band === "items") rows2.forEach((_, r) => poly(`band:row:${r}`, rectPts(x0 - 8, ry(r) - rh * 0.72, colW * cols.length + 16, rh * 0.9), TYPE_COLOURS[0], { fo: r % 2 ? 0.1 : 0.2 }));
+      if (st.band === "attributes") {
+        poly("band:col:0", rectPts(x0 + 4, top - 30, colW - 8, rh * nr + 44), TYPE_COLOURS[0], { fo: 0.14 });
+        poly("band:series", rectPts(x0 + colW + 4, top - 30, colW * m - 8, rh * nr + 44), TYPE_COLOURS[2], { fo: 0.14 });
+      }
+      if (st.derive) poly("band:total", rectPts(x0 + colW * (m + 1) + 4, top - 30, colW - 8, rh * nr + 44), DERIVED, { fo: 0.18 });
+      text2(cx(0), top, t.head, 20, "middle", "head:0", { wt: 700 });
+      ser.forEach((s, j) => text2(cx(j + 1), top, s.name, 20, "middle", `head:s:${j}`, { wt: 700 }));
+      if (st.derive) text2(cx(m + 1), top, "Total", 20, "middle", "head:total", { wt: 700, fill: DERIVED });
+      line("rule", x0, top + 12, x0 + colW * cols.length, top + 12, ink, 1.5, 0.5);
+      rows2.forEach((name, r) => {
+        text2(cx(0), ry(r), name, 20, "middle", `cat:${r}`);
+        ser.forEach((_, j) => text2(cx(j + 1), ry(r), v(r, j), 20, "middle", `cell:${r}:${j}`));
+        if (st.derive) text2(cx(m + 1), ry(r), totals[r], 20, "middle", `total:${r}`, { wt: 700, fill: DERIVED });
+      });
+      const cap = st.derive ? `Total = ${ser.map((s) => s.name).join(" + ")}: computed, not observed` : st.band === "items" ? `${nr} items: one row per ${t.head.toLowerCase() || "item"}` : st.band === "attributes" ? `${m} columns, one attribute: each holds a quantity for one value of another attribute` : "";
+      if (cap) text2(500, 358, cap, 17, "middle", `caption:${st.derive ? "derive" : st.band}`);
+      return els;
+    }
+    if (st.kind === "long") {
+      const rows2 = [];
+      cats.slice(0, 8).forEach((_, i) => ser.forEach((__, j) => rows2.push({ i, j })));
+      const per = rows2.length > 10 ? Math.ceil(rows2.length / 2) : rows2.length, blocks = Math.ceil(rows2.length / per);
+      const blockW = blocks > 1 ? 440 : 520, gapB = 40, bx0 = 500 - (blocks * blockW + (blocks - 1) * gapB) / 2;
+      const top = st.typed ? 66 : 48, rh = Math.min(34, (348 - top) / (per + 0.3));
+      const colX = [0.2, 0.52, 0.84].map((f) => f * blockW), colW = 0.3 * blockW;
+      const names = [t.head, st.variable || "Series", st.measure || "Value"];
+      const types = st.types ?? ["Nominal", "Ordinal", "Quantitative"];
+      for (let b = 0; b < blocks; b++) {
+        const bx = bx0 + b * (blockW + gapB), count = Math.min(per, rows2.length - b * per);
+        if (st.typed) colX.forEach((x, k) => {
+          poly(`type:${k}:b${b}`, rectPts(bx + x - colW / 2, top - 28, colW, rh * count + 42), TYPE_COLOURS[k], { fo: 0.15 });
+          text2(bx + x, top - 36, types[k] ?? "", 15, "middle", `typename:${k}:b${b}`, { fill: TYPE_COLOURS[k], wt: 700 });
+        });
+        text2(bx + colX[0], top, names[0], 18, "middle", b ? `head:0:b${b}` : "head:0", { wt: 700 });
+        text2(bx + colX[1], top, names[1], 18, "middle", `head:var:b${b}`, { wt: 700 });
+        text2(bx + colX[2], top, names[2], 18, "middle", `head:val:b${b}`, { wt: 700 });
+        line(`rule:b${b}`, bx, top + 10, bx + blockW, top + 10, ink, 1.5, 0.5);
+      }
+      rows2.forEach(({ i, j }, k) => {
+        const b = Math.floor(k / per), r = k % per, bx = bx0 + b * (blockW + gapB), y = top + rh * (r + 1);
+        text2(bx + colX[0], y, cats[i], 17, "middle", j === 0 ? `cat:${i}` : `cat:${i}:${j}`);
+        text2(bx + colX[1], y, ser[j].name, 17, "middle", i === 0 ? `head:s:${j}` : `mon:${i}:${j}`);
+        text2(bx + colX[2], y, v(i, j), 17, "middle", `cell:${i}:${j}`);
+      });
+      return els;
+    }
+    if (st.kind === "groups") {
+      const mode = st.mode || "grouped", colourBy = st.colourBy || "series";
+      const left = 110, right = 930, top = 40, bottom = 300;
+      const f = Array.isArray(st.focus) ? st.focus : null;
+      const lit = (i, j) => !f || (f[0] < 0 || f[0] === i) && (f[1] < 0 || f[1] === j);
+      const colour = (i, j) => colourBy === "category" ? RAINBOW[i % RAINBOW.length] : colourBy === "mono" ? MONO : ramp(j, m);
+      if (mode === "series-totals") {
+        const sums = ser.map((s) => sum(s.values)), max2 = niceMax(Math.max(...sums)), y2 = (x) => bottom - x / max2 * (bottom - top);
+        axis(max2, left, right, top, bottom);
+        const slot2 = (right - left) / m, w = slot2 * 0.5;
+        sums.forEach((s, j) => {
+          const x = left + slot2 * (j + 0.5);
+          poly(`agg:${j}`, rectPts(x - w / 2, y2(s), w, bottom - y2(s)), ramp(j, m));
+          text2(x, y2(s) - 10, s, 20, "middle", `aggv:${j}`, { wt: 700 });
+          text2(x, 328, ser[j].name, 18, "middle", `xcat:${j}`);
+        });
+        text2(500, 360, `Each bar adds up one column over all ${n} ${t.head.toLowerCase() || "categories"}`, 16, "middle", "cap:series-totals");
+        return els;
+      }
+      const order2 = cats.map((_, i) => i);
+      if (st.sort) order2.sort((a, b) => totals[b] - totals[a]);
+      const stackedLike = mode === "stacked" || mode === "totals";
+      const max = niceMax(stackedLike ? Math.max(...totals) : Math.max(...cats.flatMap((_, i) => ser.map((__, j) => v(i, j)))));
+      const y = (x) => bottom - x / max * (bottom - top);
+      axis(max, left, right, top, bottom, !!st.junk);
+      const slot = (right - left) / n;
+      order2.forEach((i, p) => {
+        const xc = left + slot * (p + 0.5);
+        if (stackedLike) {
+          const w = slot * 0.56;
+          let acc = 0;
+          ser.forEach((_, j) => {
+            const x = v(i, j);
+            poly(`cell:${i}:${j}`, rectPts(xc - w / 2, y(acc + x), w, y(acc) - y(acc + x)), colour(i, j), { fo: lit(i, j) ? 1 : 0.18, stroke: "#ffffff", sw: 1.5 });
+            if (mode === "stacked" && st.labels) text2(xc, y(acc + x / 2) + 5, x, 14, "middle", `val:${i}:${j}`, { fill: "#ffffff" });
+            acc += x;
+          });
+          if (mode === "totals" || st.labels) text2(xc, y(acc) - 9, acc, 18, "middle", `tot:${i}`, { wt: 700 });
+        } else {
+          const space = slot * 0.8, w = space / m;
+          ser.forEach((_, j) => {
+            const x = v(i, j), bx = xc - space / 2 + j * w;
+            poly(`cell:${i}:${j}`, rectPts(bx + 1, y(x), Math.max(2, w - 2), bottom - y(x)), colour(i, j), { fo: lit(i, j) ? 1 : 0.18 });
+            if (st.labels && (!f || lit(i, j))) text2(bx + w / 2, y(x) - 8, x, f ? 22 : 13, "middle", `val:${i}:${j}`, { wt: f ? 700 : 500 });
+          });
+        }
+        text2(xc, 328, cats[i], 17, "middle", `category:${i}`);
+      });
+      if (colourBy === "series") ser.forEach((s, j) => {
+        const lx = 500 - m * 150 / 2 + j * 150;
+        poly(`legend:${j}`, rectPts(lx, 346, 16, 16), ramp(j, m));
+        text2(lx + 24, 360, s.name, 16, "start", `lname:${j}`);
+      });
+      else if (mode === "totals") text2(500, 360, `${ser.map((s) => s.name).join(" + ")} = a derived total${st.sort ? ", sorted" : ""}`, 16, "middle", "cap:totals");
+      return els;
+    }
+    const lineX = (k, count) => 110 + (k + 0.5) * (820 - 110) / count;
+    if (st.kind === "lines") {
+      const top = 40, bottom = 300, tr = !!st.transpose;
+      const xs = tr ? ser.map((s) => s.name) : cats;
+      const sets = tr ? cats.map((c, i) => ({ name: c, idx: i, vals: ser.map((s) => s.values[i]) })) : ser.map((s, j) => ({ name: s.name, idx: j, vals: s.values.slice(0, 12) }));
+      const max = niceMax(Math.max(...sets.flatMap((s) => s.vals.map(val))));
+      const y = (x) => bottom - x / max * (bottom - top);
+      axis(max, 110, 820, top, bottom);
+      const shown = sets.filter((s) => !st.only || st.only.includes(s.idx));
+      const focus = typeof st.focus === "number" ? st.focus : -1;
+      if (st.gap && !tr && sets.length >= 2) xs.forEach((_, k) => {
+        const a = val(sets[0].vals[k]), b = val(sets[1].vals[k]), x = lineX(k, xs.length);
+        poly(`gap:${k}`, rectPts(x - 7, y(Math.max(a, b)), 14, Math.abs(y(a) - y(b))), a >= b ? POS : NEG, { fo: 0.85 });
+      });
+      const topAt = xs.map((_, k) => Math.max(...shown.map((s) => val(s.vals[k]))));
+      const ends = shown.map((s) => ({ idx: s.idx, y: y(val(s.vals[s.vals.length - 1])) + 6 })).sort((a, b) => a.y - b.y);
+      for (let k = 1; k < ends.length; k++) if (ends[k].y - ends[k - 1].y < 20) ends[k].y = ends[k - 1].y + 20;
+      const endY = new Map(ends.map((e) => [e.idx, e.y]));
+      shown.forEach((s) => {
+        const c = COLOURS[s.idx % COLOURS.length], dim = focus >= 0 && focus !== s.idx, op = dim ? 0.22 : 1;
+        const at = s.vals.map((x, k) => ({ x: lineX(k, xs.length), y: y(val(x)), v: val(x), key: tr ? `cell:${s.idx}:${k}` : `cell:${k}:${s.idx}` }));
+        at.forEach((q, k) => {
+          if (k) line(`seg:${s.idx}:${k}`, at[k - 1].x, at[k - 1].y, q.x, q.y, c, dim ? 2.5 : 4, op);
+        });
+        at.forEach((q) => {
+          poly(q.key, circlePts(q.x, q.y, dim ? 5 : 7), c, { fo: op });
+        });
+        if (st.labels && !dim) at.forEach((q, k) => text2(q.x, q.v >= topAt[k] ? q.y - 14 : q.y + 28, q.v, 15, "middle", `val:${q.key}`, { wt: 700, fill: c }));
+        const last = at[at.length - 1];
+        if (!dim) text2(last.x + 16, endY.get(s.idx) ?? last.y + 6, s.name, 17, "start", `lname:${s.idx}`, { fill: c, wt: 700 });
+      });
+      xs.forEach((name, k) => text2(lineX(k, xs.length), 328, name, 17, "middle", `xcat:${k}`));
+      if (st.gap && !tr && sets.length >= 2) text2(500, 360, `Blue: ${sets[0].name} higher · orange: ${sets[1].name} higher`, 16, "middle", "cap:gap");
+      return els;
+    }
+    if (st.kind === "balance") {
+      const a = ser[0], b = ser[1] ?? { name: "", values: a.values.map(() => 0) };
+      const xs = cats;
+      let run = 0;
+      const d = xs.map((_, k) => {
+        const x = val(a.values[k]) - val(b.values[k]);
+        run += x;
+        return st.cumulative ? run : x;
+      });
+      const linesMax = niceMax(Math.max(...[a, b].flatMap((s) => s.values.slice(0, 12).map(val))));
+      const maxAbs = Math.max(1, ...d.map(Math.abs)), pxu = Math.min(260 / linesMax, 125 / maxAbs), y0 = 180;
+      const w = Math.min(46, 710 / xs.length * 0.5);
+      line("zero", 110, y0, 820, y0, ink, 2, 0.6);
+      text2(98, y0 + 6, 0, 17, "end", "tick:zero");
+      d.forEach((x, k) => {
+        const cx = lineX(k, xs.length), h = Math.abs(x) * pxu;
+        poly(`gap:${k}`, rectPts(cx - w / 2, x >= 0 ? y0 - h : y0, w, Math.max(1, h)), x >= 0 ? POS : NEG);
+        text2(cx, x >= 0 ? y0 - h - 9 : y0 + h + 22, x, 17, "middle", `bal:${k}`, { wt: 700 });
+        text2(cx, 342, xs[k], 17, "middle", `xcat:${k}`);
+      });
+      text2(500, 368, st.cumulative ? `Running total of ${a.name} − ${b.name}` : `${a.name} − ${b.name}: a derived attribute`, 16, "middle", st.cumulative ? "cap:cumulative" : "cap:balance");
+      return els;
+    }
+    if (st.kind === "oblique") {
+      const dxD = 26, dyD = -16, left = 120, base = 300;
+      const slot = (760 - m * dxD) / n, bw = slot * 0.5, dx = dxD * 0.6, dy = dyD * 0.6;
+      const max = Math.max(1, ...cats.flatMap((_, i) => ser.map((__, j) => v(i, j)))), hScale = 205 / max;
+      const floorR = left + n * slot + m * dxD, backY = base + m * dyD;
+      poly("junk:wall", along([[left + m * dxD, backY - 225], [floorR, backY - 225], [floorR, backY], [left + m * dxD, backY]]), "#e4dbf7", { fo: 0.9 });
+      for (let k = 0; k < 4; k++) poly(`junk:${k}`, rectPts(left + m * dxD, backY - 225 + k * 56, floorR - left - m * dxD, 28), "#c8b6ef", { fo: 0.8 });
+      poly("junk:floor", along([[left, base], [left + n * slot, base], [floorR, backY], [left + m * dxD, backY]]), "#d7cdee", { fo: 0.9 });
+      for (let j = m - 1; j >= 0; j--) {
+        cats.forEach((_, i) => {
+          const x = left + (i + 0.5) * slot - bw / 2 + j * dxD, yb = base + j * dyD, h = v(i, j) * hScale, yt = yb - h, c = RAINBOW[i % RAINBOW.length];
+          poly(`side:${i}:${j}`, along([[x + bw, yt], [x + bw + dx, yt + dy], [x + bw + dx, yb + dy], [x + bw, yb]]), shade(c, -0.35));
+          poly(`top:${i}:${j}`, along([[x, yt], [x + bw, yt], [x + bw + dx, yt + dy], [x + dx, yt + dy]]), shade(c, 0.35));
+          poly(`cell:${i}:${j}`, rectPts(x, yt, bw, h), c);
+        });
+        text2(left + n * slot + j * dxD + 10, base + j * dyD + 4, ser[j].name, 14, "start", `depth:${j}`);
+      }
+      cats.forEach((c, i) => text2(left + (i + 0.5) * slot, 326, c, 16, "middle", `category:${i}`));
+      return els;
+    }
+    if (st.kind === "donut" || st.kind === "exploded" || st.kind === "rose") {
+      const s = ser[Math.max(0, Math.min(m - 1, Number(st.series) || 0))];
+      const rows2 = cats.map((name, i) => ({ name, i, value: s.values[i] })).filter((r) => Number.isFinite(r.value));
+      const total = sum(rows2.map((r) => r.value)), max = Math.max(...rows2.map((r) => r.value));
+      if (!(total > 0) || rows2.some((r) => r.value < 0)) {
+        text2(500, 180, "A pie needs positive parts of a whole.", 24, "middle");
+        return els;
+      }
+      const cx = 350, cy = 175, R = 145;
+      let angle = -Math.PI / 2;
+      rows2.forEach((r, k) => {
+        const c = COLOURS[k % COLOURS.length];
+        if (st.kind === "rose") {
+          const a0 = -Math.PI / 2 + k * Math.PI * 2 / rows2.length, a1 = a0 + Math.PI * 2 / rows2.length;
+          poly(`mark:${r.i}`, sectorPts(cx, cy, R * Math.sqrt(r.value / max), a0, a1), c, { stroke: "#ffffff", sw: 2 });
+        } else {
+          const end = angle + r.value / total * Math.PI * 2, mid = (angle + end) / 2;
+          if (st.kind === "donut") poly(`mark:${r.i}`, ringPts(cx, cy, R * 0.56, R, angle, end), c, { stroke: "#ffffff", sw: 2 });
+          else poly(`mark:${r.i}`, sectorPts(cx + 18 * Math.cos(mid), cy + 18 * Math.sin(mid), R * 0.92, angle, end), c, { stroke: "#ffffff", sw: 2 });
+          angle = end;
+        }
+        text2(570, 65 + k * 32, r.name, 21, "start", `category:${r.i}`);
+        text2(760, 65 + k * 32, r.value, 21, "middle", `value:${r.i}`);
+      });
+      const channel = st.kind === "donut" ? "Read by arc length" : st.kind === "exploded" ? "Read by angle, slices apart" : "Equal angles: area carries the value";
+      text2(cx, 358, channel, 19, "middle", `cap:${st.kind}`);
+      return els;
+    }
+    if (st.kind === "units") {
+      const rows2 = cats.slice(0, 8), nr = rows2.length;
+      const counts = rows2.map((_, i) => ser.map((__, j) => Math.max(0, Math.round(v(i, j)))));
+      const tot = counts.map((c) => c.reduce((a, b) => a + b, 0));
+      const order2 = rows2.map((_, i) => i);
+      if (st.stack && st.sort) order2.sort((a, b) => tot[b] - tot[a]);
+      const left = 150, right = 960, top = 58, rh = Math.min(44, 262 / nr), r = 5.5;
+      const rowY = (p) => top + rh * (p + 0.5) + 8;
+      const colW = (right - left) / m;
+      if (!st.stack) ser.forEach((s, j) => {
+        text2(left + colW * (j + 0.5), 36, s.name, 16, "middle", `sec:${j}`, { wt: 700 });
+        if (j) line(`sep:${j}`, left + colW * j, 46, left + colW * j, top + rh * nr + 12, ink, 1, 0.15);
+      });
+      const maxTot = Math.max(1, ...tot), d = Math.min(16, (right - left - 60) / maxTot);
+      order2.forEach((i, p) => {
+        const y = rowY(p);
+        text2(left - 16, y + 6, rows2[i], 17, "end", `category:${i}`);
+        let idx = 0;
+        counts[i].forEach((c, j) => {
+          const dd = Math.min(16, colW * 0.9 / Math.max(1, c));
+          for (let k = 0; k < c; k++) {
+            const x = st.stack ? left + 10 + idx * d : left + colW * (j + 0.5) - (c - 1) * dd / 2 + k * dd;
+            poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), ramp(j, m));
+            idx++;
+          }
+        });
+        if (st.stack) text2(left + 10 + tot[i] * d + 8, y + 6, tot[i], 18, "start", `count:${i}`, { wt: 700 });
+      });
+      if (st.stack) ser.forEach((s, j) => {
+        const lx = 500 - m * 140 / 2 + j * 140;
+        poly(`legend:${j}`, circlePts(lx + 7, 352, 7), ramp(j, m));
+        text2(lx + 20, 358, s.name, 15, "start", `lname:${j}`);
+      });
+      return els;
+    }
+    return els;
+  }
+  var FRUIT = "Fruit	April	May	June\nApple	82	70	20\nPear	73	50	33\nPeach	67	45	28\nOrange	85	65	17\nKiwi	54	42	24\nMelon	33	58	20";
+  var KIND_PRESETS = {
+    reshape: { label: "Reshape: wide to long", prompt: "A chart needs Month on an axis. Where is Month in this table?", data: FRUIT, states: [
+      { label: "As supplied", kind: "grid", explanation: "Six fruit, three months. Each row is one fruit, and April, May and June sit in the headings." },
+      { label: "Items", kind: "grid", band: "items", explanation: "Each row is an item: one fruit. Six items." },
+      { label: "One attribute", kind: "grid", band: "attributes", explanation: "April, May and June are not three attributes. They hold one attribute, quantity sold, split by the values of another: month." },
+      { label: "Wide to long", kind: "long", variable: "Month", measure: "Quantity", explanation: "Watch each number travel. It keeps its value and now carries its month in its row: 6 fruit × 3 months = 18 rows. Month is a column you can put on an axis. In pandas this is melt; in Altair, transform_fold." },
+      { label: "Name the types", kind: "long", typed: true, variable: "Month", measure: "Quantity", explanation: "Fruit is nominal: names, no order. Month is ordinal: April, May, June has an order. Quantity is quantitative: zero means none sold, so 80 is twice 40." },
+      { label: "Derive a total", kind: "grid", derive: true, explanation: "Back to the supplied shape, with the Total column the original table had. Nobody counted it: it is computed, April + May + June. A derived attribute." }
+    ] },
+    tasks: { label: "Tasks: one table, five questions", prompt: "Same fruit data. Which chart answers each question fastest?", data: FRUIT, states: [
+      { label: "Month totals", kind: "groups", mode: "series-totals", explanation: "Discover. Summarise over all fruit by adding up each month. April sold most: 394, against 330 in May and 142 in June. These totals are derived; the table never listed them." },
+      { label: "Oranges in May", kind: "groups", focus: [3, 1], labels: true, explanation: "Locate one value: 65. Every bar is drawn but only one matters, so the rest step back. For one number, the table would do just as well." },
+      { label: "Apple v Orange", kind: "lines", transpose: true, only: [0, 3], labels: true, explanation: "Compare. Apple 82 → 70 → 20; Orange 85 → 65 → 17. Both fall; Orange starts higher and ends lower. A line suits an ordered attribute like month." },
+      { label: "The odd one out", kind: "lines", transpose: true, focus: 5, explanation: "Find the anomaly. Five fruit fall from April to May. Melon rises, 33 → 58: the only one." },
+      { label: "Fruit totals", kind: "groups", mode: "totals", sort: true, colourBy: "mono", explanation: "The months stack into one bar per fruit and sort. Apple leads with 172, just ahead of Orange with 167. Sorting turns find-the-maximum into read-the-first." }
+    ] },
+    derive: { label: "Derived attributes: a balance", prompt: "Exports and imports are both measured. Where is the trade balance?", data: "Year	Exports	Imports\n2019	30	22\n2020	28	40\n2021	45	42\n2022	70	50\n2023	52	63\n2024	80	58", states: [
+      { label: "Two attributes", kind: "lines", explanation: "Exports and imports over six years, in the same units." },
+      { label: "Show the gap", kind: "lines", gap: true, explanation: "The balance is the gap between the lines: blue where exports are higher, orange where imports are. Judging distances between two lines is hard." },
+      { label: "Drop to zero", kind: "balance", explanation: "Each gap falls to a zero baseline and keeps its length. Trade balance = exports − imports: a new attribute, derived by arithmetic. It can be negative, so zero sits in the middle." },
+      { label: "Running total", kind: "balance", cumulative: true, explanation: "Cumulative data is derived too: add each year’s balance to the years before. Same data, a different question: where do we stand overall?" }
+    ] },
+    rescue3d: { label: "Critique: rescue a 3D chart", prompt: "Same fruit, same numbers. What stops you reading this chart, and what would you fix first?", data: FRUIT, states: [
+      { label: "3D default", kind: "oblique", explanation: "Perspective hides the back rows and makes heights hard to judge. Colour repeats the fruit names already on the axis. The shaded walls add ink but no data." },
+      { label: "Flatten, stack", kind: "groups", mode: "stacked", colourBy: "series", explanation: "Depth gone: nothing is hidden. Colour now shows month, light to dark because months are ordered. But only April sits on the baseline, so comparing May across fruit is hard." },
+      { label: "Side by side", kind: "groups", mode: "grouped", colourBy: "series", explanation: "Every month now starts at zero, so comparing May with May is a length comparison. Melon is the only fruit that sold more in May than in April." },
+      { label: "One question", kind: "groups", mode: "totals", sort: true, colourBy: "mono", explanation: "If the question is which fruit sells most, stack the months into a derived total and sort. Apple, 172." }
+    ] },
+    pies: { label: "Pie variants: angle, area, length", prompt: "Four genres’ share of a playlist. In which version can you tell Hip-hop from Rock most confidently?", data: "Genre	Share\nPop	40\nHip-hop	25\nRock	20\nJazz	15", states: [
+      { label: "Pie", kind: "pie", explanation: "Angle and area carry the share. Hip-hop (25) and Rock (20) look close." },
+      { label: "Doughnut", kind: "donut", explanation: "The centre is cut out, so the angle at the middle is gone. You read arc length instead: harder, not easier." },
+      { label: "Exploded", kind: "exploded", explanation: "Pulling the slices apart adds emphasis and separation, but no accuracy." },
+      { label: "Polar area", kind: "rose", explanation: "Equal angles; the radius changes so that each wedge’s area is its share, as in Nightingale’s rose diagram. Areas are hard to compare." },
+      { label: "Bars", kind: "bar", categorical: true, explanation: "Aligned length from a common baseline: the most accurate of the five. Hip-hop 25 beats Rock 20 at a glance." }
+    ] },
+    units: { label: "Units: from words to frequency", prompt: "The raw data is words in the order they are sung. Where does “frequency” come from?", data: "Word	Verse 1	Chorus 1	Verse 2	Chorus 2	Bridge\nlove	2	4	1	4	2\nbaby	0	3	1	3	0\nnight	3	1	2	1	1\ndance	1	2	0	2	4\nheart	1	0	2	0	1", states: [
+      { label: "In time order", kind: "units", explanation: "One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context." },
+      { label: "Count them", kind: "units", stack: true, explanation: "The dots slide into one row per word. Frequency was never in the lyrics: it is derived by counting. The colour still shows which section each came from." },
+      { label: "Sort", kind: "units", stack: true, sort: true, explanation: "Sorted, the extremum reads first: love, 13 times. Chorus colours dominate, because choruses repeat." }
+    ] }
+  };
+
   // src/render/experiments.js
   function installExperiments(SF) {
     var presets = {
@@ -2935,6 +3328,10 @@
         { label: "Return to overview", kind: "line", explanation: "Restore the whole series to judge the detail in context." }
       ] }
     };
+    Object.keys(KIND_PRESETS).forEach(function(k) {
+      presets[k] = /** @type {any} */
+      KIND_PRESETS[k];
+    });
     function config(s) {
       var raw = s.experiment || {}, key = Object.prototype.hasOwnProperty.call(presets, raw.preset) ? raw.preset : "polling", preset2 = presets[key];
       var states = Array.isArray(raw.states) ? raw.states.filter(function(x) {
@@ -2981,6 +3378,52 @@
       }).join(" "), fill: a.fill, stroke: a.stroke || "none", "stroke-width": a.stroke ? 2 : 0 }, parent);
     }
     var colours = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
+    function paintKinds(chart, els) {
+      els.forEach(function(e) {
+        var a = (
+          /** @type {Record<string,any>} */
+          {}
+        );
+        if (e.key) a["data-motion"] = e.key;
+        if (e.tag === "poly") {
+          a.points = (e.pts || []).map(function(p) {
+            return p[0].toFixed(1) + "," + p[1].toFixed(1);
+          }).join(" ");
+          a.fill = e.fill || "none";
+          a["fill-opacity"] = e.fo == null ? 1 : e.fo;
+          if (e.stroke) {
+            a.stroke = e.stroke;
+            a["stroke-width"] = e.sw || 1;
+          }
+          svg("polygon", a, chart);
+        } else if (e.tag === "line") {
+          a.x1 = e.x;
+          a.y1 = e.y;
+          a.x2 = e.x2;
+          a.y2 = e.y2;
+          a.stroke = e.stroke || "currentColor";
+          a["stroke-width"] = e.sw || 1;
+          a["stroke-opacity"] = e.so == null ? 1 : e.so;
+          svg("line", a, chart);
+        } else if (e.tag === "rect") {
+          a.x = e.x;
+          a.y = e.y;
+          a.width = e.w;
+          a.height = e.h;
+          a.fill = e.fill || "currentColor";
+          svg("rect", a, chart);
+        } else {
+          a.x = e.x;
+          a.y = e.y;
+          a.fill = e.fill || "currentColor";
+          a["font-size"] = e.size || 22;
+          a["text-anchor"] = e.anchor || "start";
+          if (e.wt) a["font-weight"] = e.wt;
+          if (e.num) a["data-number"] = "true";
+          svg("text", a, chart, e.text || "");
+        }
+      });
+    }
     function draw(host, s, c, state2) {
       var data = SF.chartData(s), series = data.series;
       var current = series[Math.max(0, Math.min(series.length - 1, Number(state2.series) || 0))];
@@ -2994,6 +3437,11 @@
         return r.name + " " + r.value;
       }).join(", "));
       var ink = "currentColor";
+      var drawn = kindPicture(s.body || presets[c.preset].data, state2, ink);
+      if (drawn) {
+        paintKinds(chart, drawn);
+        return;
+      }
       function text2(x, y2, value2, size, anchor, key) {
         var attrs = { x, y: y2, fill: ink, "font-size": size || 22, "text-anchor": anchor || "start" };
         if (key) attrs["data-motion"] = key;
@@ -3031,17 +3479,17 @@
         return bottom - (v - baseline) / (max - baseline) * (bottom - top);
       }
       if (state2.kind === "pie") {
-        var sum = rows2.reduce(function(a, r) {
+        var sum2 = rows2.reduce(function(a, r) {
           return a + Math.max(0, r.value);
         }, 0), angle = -Math.PI / 2;
-        if (!sum || rows2.some(function(r) {
+        if (!sum2 || rows2.some(function(r) {
           return r.value < 0;
         })) {
           text2(500, 180, "A pie needs positive parts of a whole.", 24, "middle");
           return;
         }
         rows2.forEach(function(r, i) {
-          var end = angle + r.value / sum * Math.PI * 2, cx = 350, cy = 175, rad = 145;
+          var end = angle + r.value / sum2 * Math.PI * 2, cx = 350, cy = 175, rad = 145;
           mark(chart, "mark:" + r.index, "sector", { cx, cy, r: rad, start: angle, end, fill: colour(i), stroke: "white" });
           text2(570, 65 + i * 32, r.name, 21, "start", "category:" + r.index);
           text2(760, 65 + i * 32, r.value, 21, "middle", "value:" + r.index);
@@ -3932,13 +4380,13 @@
       });
     }
     function scaleStats(counts) {
-      var total = 0, sum = 0;
+      var total = 0, sum2 = 0;
       counts.forEach(function(n, i) {
         total += n;
-        sum += n * (i + 1);
+        sum2 += n * (i + 1);
       });
       if (!total) return { total: 0, mean: 0, split: false };
-      var mean = sum / total;
+      var mean = sum2 / total;
       var edges = (counts[0] || 0) + (counts[counts.length - 1] || 0);
       var middle = total - edges;
       return { total, mean, split: counts.length > 2 && edges > middle };
@@ -16914,7 +17362,7 @@
     return Object.fromEntries(PHASES.map((p) => [p.key, activitiesInPhase(p.key).length]));
   }
   function totalMinutes(keys) {
-    return keys.reduce((sum, key) => sum + ((activity(key) || {}).minutes || 0), 0);
+    return keys.reduce((sum2, key) => sum2 + ((activity(key) || {}).minutes || 0), 0);
   }
 
   // src/activities/stages.js
@@ -17094,7 +17542,7 @@
   // src/deck/content.js
   var TABLE_MAX_COLS = 6;
   var TABLE_MAX_ROWS = 12;
-  function parseTable(text2) {
+  function parseTable2(text2) {
     var lines = String(text2 == null ? "" : text2).split(/\r?\n/).filter(function(l) {
       return l.trim();
     }).slice(0, TABLE_MAX_ROWS);
@@ -17113,7 +17561,7 @@
     return rows2;
   }
   function chartData(slide) {
-    var rows2 = parseTable(slide && slide.body);
+    var rows2 = parseTable2(slide && slide.body);
     if (rows2.length < 2) return { categories: [], series: [] };
     var head = rows2[0], body = rows2.slice(1);
     var names = head.slice(1).filter(function(h) {
@@ -18003,7 +18451,7 @@
   }
   function slideSteps(slide) {
     if (slide.type === "table") {
-      var rows2 = parseTable(slide.body), start = slide.tableHeader !== false && rows2.length > 1 ? 1 : 0;
+      var rows2 = parseTable2(slide.body), start = slide.tableHeader !== false && rows2.length > 1 ? 1 : 0;
       return rows2.slice(start).map(function(r) {
         return r.join(" · ");
       });
@@ -18067,7 +18515,7 @@
       var n = slide.progressive === true && Number.isFinite(revealed) ? Math.max(0, revealed) : steps.length;
       var visible = steps.slice(0, n);
       if (slide.type === "table") {
-        var rows2 = parseTable(slide.body);
+        var rows2 = parseTable2(slide.body);
         if (slide.tableHeader !== false && rows2.length > 1) visible.unshift(rows2[0].join(" · "));
       }
       return visible.join("\n");
@@ -24404,7 +24852,7 @@
         }
         if (s.type === "image") return;
       }
-      if (s.type === "table" && !parseTable(s.body).length) {
+      if (s.type === "table" && !parseTable2(s.body).length) {
         add("stop", i, label, "A table slide with no rows.");
         return;
       }
@@ -24601,7 +25049,7 @@
     slideExcerpt,
     correctAnswerLabel,
     questionTimeLimit,
-    parseTable,
+    parseTable: parseTable2,
     readiness,
     safeMedia,
     cssUrl,
