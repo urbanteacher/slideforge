@@ -322,43 +322,55 @@ export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
   return slideOf(named(name, i, answer), o.layers, st, note(q));
 }
 
+/** The standard size of a Buttons check's answers, on the question and on its answer, and of the
+ *  answer's reason: two lines of an answer fit a button comfortably at it, and one word reads across a
+ *  room. Every check uses it, so the answers are one size across the lesson; what does not fit it is
+ *  said to the author (Slide.warn) rather than quietly drawn smaller. */
+const ANSWER_SIZE = 52;
 /** The Buttons look with its reason under the question, as two slides that each do one job. The
- *  question: its buttons right under it (rule 2), no room held for a reason it does not show. The
- *  answer: the question where it stood, then the right answer alone, green, at the buttons' size, and
- *  the reason under it in the muted ink. The right button carries its morph, so on the reveal it
- *  travels from its place in the set to the answer's. */
+ *  question: as large as two lines allow and at least ANSWER_SIZE / LEAD, so it leads its answers; its
+ *  buttons right under it (rule 2) at ANSWER_SIZE, no room held for a reason it does not show. The
+ *  answer: the question where it stood, then the right answer alone, green, and the reason under it in
+ *  the muted ink, both at ANSWER_SIZE. The right button carries its morph, so on the reveal it travels
+ *  from its place in the set to the answer's. */
 function buttonsAndAnswer(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer: boolean): Slide {
   const opts = (q.options ?? []).slice(0, 6);
   const cells: Cell[] = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k] }));
   const heading = (a: boolean) => tag('Multiple choice', 'choose one', i, n, a);
-  // The question slide, sized as rule 4 asks; the answer takes its question's size from it.
-  const ask = matched((sizes) => {
-    const o = opening(st, q, heading(false), q.question ?? '', false, { sizes: sizes ?? [120, 104, 92, 80], why: '' });
-    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size * LEAD, 88), 0, optionFloor(o.qn.size)) };
-  }, LEAD);
+  const sizes = [120, 104, 92, 80, Math.ceil(ANSWER_SIZE / LEAD)];
+  const warn: string[] = [];
+  const ask = opening(st, q, heading(false), q.question ?? '', false, { sizes, why: '' });
+  if (ask.qn.size < ANSWER_SIZE / LEAD - 0.5) warn.push(`The question is too long to stay larger than its answers: two lines of it fit only at ${Math.round(ask.qn.size)}px. Shorten it.`);
   if (!answer) {
-    ask.o.layers.push(...ask.set.layers);
-    return slideOf(named(name, i, false), ask.o.layers, st, note(q));
+    const set = buttons(st, cells, ask.top, ANSWER_SIZE, 0, ANSWER_SIZE);
+    if (set.over) warn.push('An answer runs past two lines at the standard size. Shorten it, so every answer fits its button.');
+    ask.layers.push(...set.layers);
+    return warned(slideOf(named(name, i, false), ask.layers, st, note(q)), warn);
   }
-  const o = opening(st, q, heading(true), q.question ?? '', true, { sizes: [ask.o.qn.size], why: '' });
+  const o = opening(st, q, heading(true), q.question ?? '', true, { sizes: [ask.qn.size], why: '' });
   const right = cells[q.correct ?? -1];
   if (!right) return slideOf(named(name, i, true), o.layers, st, note(q));
-  const set = buttons(st, [{ ...right, right: true }], o.top, ask.set.size, 0, ask.set.size);
+  const set = buttons(st, [{ ...right, right: true }], o.top, ANSWER_SIZE, 0, ANSWER_SIZE);
   o.layers.push(...set.layers);
   const why = q.explanation ?? '';
   if (why) {
-    // At the answer's size, so the two read as one statement; it shrinks only where it would not fit.
-    const p: Params = { font: st.body, size: set.size, color: st.muted, lineHeight: 1.25, fit: 'shrink' };
-    const h = Math.max(set.size * 1.3, Math.min(FOOT - set.bottom - 40, textHeight(why, W - LEFT * 2, p) + 6));
+    const p: Params = { font: st.body, size: ANSWER_SIZE, color: st.muted, lineHeight: 1.25, fit: 'shrink' };
+    const room = FOOT - set.bottom - 40;
+    if (textHeight(why, W - LEFT * 2, p) + 6 > room) warn.push('The reason is too long for the answer slide at the standard size, so it is drawn smaller. Shorten it.');
     // 'Reason', not 'Why': it belongs to the answer under it and moves with it when the game is centred.
-    o.layers.push(txt('Reason', why, box(LEFT, set.bottom + 40, W - LEFT * 2, h), p, { type: 'fade', duration: 0.6, delay: 0.4 }));
+    o.layers.push(txt('Reason', why, box(LEFT, set.bottom + 40, W - LEFT * 2, room), p, { type: 'fade', duration: 0.6, delay: 0.4 }));
   }
-  return slideOf(named(name, i, true), o.layers, st, note(q));
+  return warned(slideOf(named(name, i, true), o.layers, st, note(q)), warn);
+}
+/** A slide with what does not fit said on it (Slide.warn), or as it was when everything fits. */
+function warned(slide: Slide, warn: string[]): Slide {
+  if (warn.length) slide.warn = warn.join(' ');
+  return slide;
 }
 
 /** Buttons two by two under the question, rounded, apart, each as tall as the tallest's words; one
  *  size for all. The right one green (rule 7), a quiet one faded. */
-function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number, reserve = 0, min = 44): { layers: Layer[]; size: number; bottom: number } {
+function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number, reserve = 0, min = 44): { layers: Layer[]; size: number; bottom: number; over: boolean } {
   const face = FACE(st), gap = 28;
   const cols = cells.length > 2 ? 2 : Math.max(1, cells.length), rows = Math.ceil(cells.length / cols);
   const w = (W - LEFT * 2 - gap * (cols - 1)) / cols;
@@ -379,7 +391,8 @@ function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number, reser
     if (x.mark) layers.push(keyed(centred(`Button ${k + 1} — mark`, x.mark, box(b.x + inL, b.y, markW, b.h), { ...face, size, color: x.right ? ON_RIGHT : x.quiet ? st.muted : st.accent, lineHeight: 1 }, inner, 0, 0), ':mark'));
     if (x.text) layers.push(keyed(centred(`Button ${k + 1} — words`, x.text, box(b.x + inL + markW, b.y, w - inL - markW, b.h), { ...face, size, color: x.right ? ON_RIGHT : x.quiet ? st.muted : st.ink, align: 'left' }, inner, 0, inR), ':words'));
   });
-  return { layers, size, bottom: top + rows * h + (rows - 1) * gap };
+  // Over: an answer needs more than two lines at this size, so its button is taller than the set's.
+  return { layers, size, bottom: top + rows * h + (rows - 1) * gap, over: tallest > size * lh * 2 + 4 };
 }
 
 /** Predict the outcome: lettered futures; the phones commit and say how sure before the answer. */

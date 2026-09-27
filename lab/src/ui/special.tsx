@@ -366,6 +366,7 @@ export function GamePanel() {
   const levels = g.format === 'boss-battle' ? ['easy', 'medium', 'hard', 'boss'] : ['easy', 'medium', 'hard'];
   return (
     <Section title={`Game · ${g.label}`}>
+      {slide.warn && <div className="desc game-warn" role="status">⚠ {slide.warn}</div>}
       <WriteGame gameId={g.id} format={g.format} label={g.label} />
       {HAS_LOOKS.has(g.format) && (
         <Row label="Look" info="Buttons: the options as buttons (two by two, or True and False as two doors), the right one lit green where it stands, as SlideForge's quiz does. Question, then answer: the options as rows, the answer and why on the slide after. The questions, their times and points stay as they are.">

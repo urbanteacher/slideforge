@@ -156,6 +156,9 @@ export interface Slide {
   headerFooter?: HeaderFooter;
   /** A game's slide: which game, what part of it, and the settings the room's session plays it by. */
   game?: SlideGame;
+  /** What does not fit the slide's standard, said to the author: shown on its filmstrip thumbnail and
+   *  in the Game panel (designs/games.ts, a Buttons check's answers at the standard size). */
+  warn?: string;
 }
 
 /**

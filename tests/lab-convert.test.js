@@ -379,9 +379,11 @@ test('a lesson’s Check comes in as two slides: four buttons under the question
     assert.ok(why, 'and the reason is on the answer');
     assert.ok(why.box.y >= lit[0].box.y + lit[0].box.h, 'under the answer, not across it');
     const words = ask.layers.find((l) => l.name === 'Button 1 — words');
-    // Rule 4: the question leads, the buttons' words at most three-quarters of its size.
+    // The answers at the standard size (52px), and the question leading them by rule 4, or, where it
+    // is too long to, the slide saying so to its author.
     const qSize = ask.layers.find((l) => l.name === 'Question').params.size;
-    assert.ok(words.params.size <= qSize * 0.75 + 0.5, `the buttons’ words (${words.params.size}) at most three-quarters of the question (${qSize})`);
+    assert.equal(words.params.size, 52, 'the answers at the standard size');
+    assert.ok(words.params.size <= qSize * 0.75 + 0.5 || /question is too long/.test(ask.warn || ''), `the question (${qSize}) leads its answers, or the slide says it cannot`);
   });
 });
 

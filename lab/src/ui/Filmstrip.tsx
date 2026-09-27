@@ -98,7 +98,7 @@ export function Filmstrip() {
           onPointerDown={(e) => { if (e.button === 0 && !(e.target as HTMLElement).closest('.thumb-acts')) selectSlide(s.id); }}
         >
           {i > 0 && s.transition.type !== 'none' && <div className="thumb-trans" title={`Transition: ${s.transition.type}`}><ChevronRight size={12} /></div>}
-          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}</div>
+          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}{s.warn && <span className="thumb-warn" title={s.warn}>⚠</span>}</div>
           <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           <div className="thumb-acts" onClick={(e) => e.stopPropagation()}>
             <button title={s.hidden ? 'Show in the presentation' : 'Hide from the presentation'} aria-pressed={!!s.hidden} onClick={() => toggleHidden(s.id)}>{s.hidden ? <Eye size={12} /> : <EyeOff size={12} />}</button>
@@ -146,7 +146,7 @@ function SlideSorter({ close, thumb }: { close: () => void; thumb: (id: string) 
             onDrop={(e) => { e.preventDefault(); if (drag && drag.id !== s.id) moveSlide(drag.id, i); setDrag(null); }}
             onClick={() => { selectSlide(s.id); close(); }}
             onContextMenu={(e) => { selectSlide(s.id); openMenu(e, s.id); }}>
-            <div className="thumb-img" style={{ aspectRatio: ratio }}>{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden"><EyeOff size={12} />Hidden</span>}</div>
+            <div className="thumb-img" style={{ aspectRatio: ratio }}>{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden"><EyeOff size={12} />Hidden</span>}{s.warn && <span className="thumb-warn" title={s.warn}>⚠</span>}</div>
             <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           </div>
         ))}

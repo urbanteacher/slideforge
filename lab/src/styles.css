@@ -576,6 +576,10 @@ aside.left:not(.browse-pane) { overflow-y: auto; }
 }
 .thumb-feedback { position: absolute; right: 6px; bottom: 6px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; background: rgba(0, 0, 0, .7); color: #fff; }
 .thumb-feedback svg { width: 12px; height: 12px; }
+/* A slide with something that does not fit its standard (Slide.warn): marked on its thumbnail, and
+   said in full in the Game panel. */
+.thumb-warn { position: absolute; left: 6px; top: 6px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; background: #e0a100; color: #1a1400; font: 700 12px Inter, sans-serif; }
+.desc.game-warn { color: #f0c24a; background: rgba(224, 161, 0, .12); border: 1px solid rgba(224, 161, 0, .35); border-radius: 6px; padding: 7px 9px; }
 
 /* Colours & grounds (left panel): a palette of three grounds, picked or made, then every part of it editable. */
 .guide-panel { display: flex; flex-direction: column; gap: 6px; min-width: 0; overflow-x: hidden; }
