@@ -1348,7 +1348,7 @@
             blurb: 'Downloads "' + doc.title + '" as a single file.' }
         ];
         if (active.key === 'deck') {
-          items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results.' });
+          items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results. A student copy, or a teacher copy with each check as its answer.' });
           items.push({
             id: 'md',
             title: 'Practice notes (.md)',

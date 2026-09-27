@@ -1,4 +1,6 @@
-/* Student handout: a static copy of the authored deck, never the live DOM. */
+/* The PDF handout: a static copy of the authored deck, never the live DOM. The one route for every
+   PDF the app makes (Export → PDF handout, js/shell.js; tools/export-teaching-pdf.mjs), in two copies:
+   the student's, with no answers anywhere, and the teacher's, each check printed as its answer. */
 (function () {
   'use strict';
   var SF = window.SF;
@@ -171,13 +173,13 @@
   async function open(deck, opts) {
     var answers = !!(opts && opts.answers);
     var preview = window.open('', '_blank');
-    if (!preview) { SF.toast('Allow pop-ups to open the student PDF preview.'); return; }
+    if (!preview) { SF.toast('Allow pop-ups to open the PDF handout preview.'); return; }
     var doc = preview.document;
     doc.open(); doc.write('<!doctype html><html><head></head><body style="font:16px system-ui;padding:24px">Preparing the handout\u2026</body></html>'); doc.close();
     try { deck = await Promise.resolve(deck); }
     catch (e) { doc.body.textContent = 'The handout could not be prepared.'; return; }
     doc.body.textContent = '';
-    doc.title = deck.title + ' — teaching handout';
+    doc.title = deck.title + ' — handout';
     var base = doc.createElement('base'); base.href = document.baseURI; doc.head.appendChild(base);
     var loads = [];
     document.querySelectorAll('link[rel="stylesheet"]').forEach(function (source) {

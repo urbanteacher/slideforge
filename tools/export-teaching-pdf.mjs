@@ -1,4 +1,7 @@
-/* Export through the real handout flow in an isolated browser profile.
+/* Export a lesson's teacher copy through the app's own route, in an isolated browser profile: the
+   lesson opened in the lab, then Export → PDF handout (js/shell.js) as the app runs it, the lab's
+   print deck (SF.LabEngine.printDeck) through SF.Print.open, with the teacher copy's answers. One
+   route, so this PDF and the one a teacher saves from the app are the same pages.
    Usage: node tools/export-teaching-pdf.mjs [lesson-key] [output.pdf] */
 import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
@@ -16,7 +19,10 @@ try{
  await page.waitForFunction(()=>window.SF?.Print&&window.SF?.Experiments);
  const startupErrors=errors.splice(0);
  const popupEvent=context.waitForEvent('page');
- await page.evaluate(key=>{if(!SF.LESSONS.some(l=>l.key===key))throw Error('Unknown lesson: '+key);window.exportDeck=SF.buildLesson(key);SF.Print.open(exportDeck,{answers:true});},lesson);
+ await page.evaluate(key=>{if(!SF.LESSONS.some(l=>l.key===key))throw Error('Unknown lesson: '+key);if(!SF.LabEngine.openKey(key))throw Error('The lab could not open '+key);},lesson);
+ // The lab has the lesson once its deck is this lesson's and its slides are there.
+ await page.waitForFunction(key=>{const l=SF.LESSONS.find(x=>x.key===key),d=SF.LabEngine.stageDeck&&SF.LabEngine.stageDeck();return !!(d&&d.slides&&d.slides.length&&d.title===l.title);},lesson,{timeout:60000});
+ await page.evaluate(()=>SF.Print.open(SF.LabEngine.printDeck(),{answers:true}));
  const preview=await popupEvent;
  await preview.waitForFunction(()=>document.documentElement.dataset.pdfReady,{},{timeout:30000});
  const audit=await preview.evaluate(()=>({
