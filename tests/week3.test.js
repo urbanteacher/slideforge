@@ -64,7 +64,7 @@ test('Week 3 builds whole: its checks inline, its experiments known to SlideForg
   assert.equal(deck.theme, 'northeastern');
   assert.equal(deck.slides.filter((s) => s.type === 'game' && s.gameId).length, 7);
   const ex = deck.slides.filter((s) => s.type === 'experiment');
-  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'channels', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji']);
+  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'perception', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji']);
   deck.slides.forEach((s) => { if (s.image) assert.ok(fs.existsSync(path.join(ROOT, s.image)), s.image); });
   assert.equal(SF.LESSONS.find((l) => l.key === 'ipdv-da').libraryGroup, 'nul');
 });
@@ -78,7 +78,7 @@ test('a pictogram keeps one icon per row, not just the first four characters', (
 
 test('the perception experiment reveals the ratios the room estimated, and its pictures are on disk', async () => {
   const { KIND_PRESETS, kindPicture } = await kinds();
-  const p = KIND_PRESETS.channels;
+  const p = KIND_PRESETS.perception;
   const revealed = p.states.filter((st) => st.mode !== 'ranking').map((st) => kindPicture(p.data, st, '#000').find((e) => e.key === 'ch:answer').text);
   assert.deepEqual(revealed, ['45%', '65%', '35%', '60%', '50%']);
   assert.ok(!kindPicture(p.data, { ...p.states[0], labels: false }, '#000').some((e) => e.key === 'ch:answer'), 'the phones never see the answer');

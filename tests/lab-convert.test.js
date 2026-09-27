@@ -557,7 +557,7 @@ test('Week 3 comes into the lab with its thirteen experiments on the shared kind
   const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
   assert.equal(deck.slides.length, src.slides.filter((s) => s.type !== 'game').length, 'only the games stay SlideForge’s');
   const presets = experiments(deck).map((s) => s.layers.find((l) => l.kind === 'experiment').params.preset);
-  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'channels', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
+  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'perception', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
 });
 
 test('a comparison keeps both of its column headings, which SlideForge separates with a tab', { skip }, async () => {
@@ -607,11 +607,11 @@ test('Week 3’s charts use the focus layout, except where the first state gives
   assert.equal(layer.params.layout, 'focus');
   assert.equal(layer.params.prompt, source.experiment.prompt);
   assert.deepEqual(JSON.parse(layer.params.states), source.experiment.states);
-  // Focus is the standard (slide 28's structure: the prompt over the data, then the steps). The two
-  // whose first state shows the answer keep the rail's ? until they have a neutral first state.
+  // Focus is the standard (slide 28's structure: the prompt over the data, then the steps). The nested
+  // model keeps the rail's ?: its first state lights the Domain box, which is the answer.
   const rail = experiments(deck).filter((s) => !s.layers.some((l) => l.params.layout === 'focus'))
     .map((s) => src.slides.find((x) => x.id === s.sourceSlideId).experiment.preset).sort();
-  assert.deepEqual(rail, ['channels', 'nested']);
+  assert.deepEqual(rail, ['nested']);
   const keys = deck.slides.find((s) => s.sourceSlideId === src.slides.find((s) => s.title === 'Keys and values').id);
   assert.ok(keys.layers.some((l) => l.kind === 'text' && l.params.text === 'Apple + April → 82'));
 });
