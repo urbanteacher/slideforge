@@ -2561,6 +2561,18 @@
       root.appendChild(swap);
     }
 
+    /* A lab question played on SlideForge's wall (src/deck/labshow.js, design.labStill): the lab
+       draws over it (js/lab-stage.js), and its picture stands in until it does, or if it cannot.
+       It stands in as the whole slide. Left to the quiz layout it became the question's picture,
+       and the room saw the question twice, SlideForge's over a small copy of the lab's. */
+    if (slide.design && slide.design.labStill && slide.image) {
+      root.classList.add('lab-poster');
+      var poster = el('div', 'lab-poster-img');
+      poster.style.backgroundImage = SF.cssUrl(slide.image);
+      poster.setAttribute('aria-hidden', 'true');
+      root.appendChild(poster);
+    }
+
     return root;
   }
 

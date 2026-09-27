@@ -44,6 +44,11 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 120;
+  /* One line. Centred with left: 50%, the pill was only offered half the width and wrapped the
+     lesson's title onto five lines; it takes what it needs, up to the width of the view. */
+  width: max-content;
+  max-width: calc(100vw - 40px);
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -70,7 +75,12 @@
 .player-demo-pill .pdp-title {
   font-weight: 600;
   color: #ffd9cf;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+.player-demo-pill .pdp-tag,
+.player-demo-pill .pdp-exit { flex: none; }
 .player-demo-pill .pdp-exit {
   padding: 2px 8px;
   font-size: 11px;

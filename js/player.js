@@ -1591,13 +1591,11 @@
   };
 
   /**
-   * The strip or the full rail, from what the slide on the wall is doing.
+   * The rail's width: the full rail, beside every slide.
    *
-   * Full beside a question and its results, and while nobody is in yet (the
-   * join panel needs the room). A strip beside everything else: the
-   * standings are not what the room is reading while the teacher explains,
-   * and the slide gets the width back. Feedback never slims — its prompt is
-   * the slide's own.
+   * One width on every slide: the rail used to narrow to a strip beside a
+   * slide that was not asking anything, and that strip is retired. What is
+   * left puts right a rail an older show left narrowed.
    *
    * Returns true when the size changed, so a caller holding the last
    * standings can repaint them at the new width.
@@ -1607,11 +1605,10 @@
   function railSize(rows) {
     var rail = Player._rail;
     if (!rail || !viewport) return false;
-    var slide = Player._currentSlide || (Player.deck && Player.deck.slides[Player.idx]);
-    var last = /** @type {any} */ (rail)._last;
-    var n = rows ? rows.length : (last && last.rows ? last.rows.length : 0);
-    var asking = !!slide && (slide.type === 'quiz' || slide.type === 'results');
-    var slim = Player._railMode === 'scores' && n > 0 && !asking;
+    /* One width for the rail on every slide. Beside a slide that was not asking anything it used
+       to narrow to a 232px strip, so the rail changed size from slide to slide and read as
+       inconsistent; the strip is retired (27 Sep 2026) and the rail keeps its 384px. */
+    var slim = false;
     var was = rail.dataset.size === 'slim';
     rail.dataset.size = slim ? 'slim' : '';
     viewport.classList.toggle('rail-slim', slim);

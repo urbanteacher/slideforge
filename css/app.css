@@ -2792,6 +2792,9 @@ html[data-ws="game"] #btnSorter { display: none; }
   --row-gap: 11px;
   --row-r: 12px;
   --row-max: 116px;
+  /* The rows' type at nine-tenths of each density's size: the rows are lines, not cards, and a
+     class of twelve fits by name. */
+  --rail-k: .9;
 }
 
 .scorerail[data-density="xl"] { --nm-f: 42px; --sc-f: 40px; --rk-f: 26px; --mem-f: 19px; --row-py: 24px; --row-px: 22px; --row-gap: 18px; --row-r: 16px; --row-max: 210px; }
@@ -2820,27 +2823,28 @@ html[data-ws="game"] #btnSorter { display: none; }
 
 /* rows are content-sized and centred, so a two-team board reads big without
    stretching into two absurd slabs */
+/* The standings as a list read from the top: flat rows, each only as tall as its name, a hairline
+   between them and the team's colour as a thin edge. They were cards, each padded, filled and
+   rounded, and six of them filled the rail. */
 .scorerail .rows {
   flex: 1; min-height: 0;
-  display: flex; flex-direction: column; justify-content: safe center;
-  gap: var(--row-gap);
+  display: flex; flex-direction: column; justify-content: flex-start;
+  gap: 0;
   overflow: hidden;
 }
 
 .scorerail .srow {
-  flex: 1 1 auto;
-  max-height: var(--row-max);
-  display: flex; align-items: center; gap: 11px;
-  padding: var(--row-py) var(--row-px);
-  border-radius: var(--row-r);
-  background: var(--s-card);
-  border-left: 9px solid var(--s-rule);
+  flex: none;
+  display: flex; align-items: center; gap: 10px;
+  padding: calc(var(--row-py) * .45) 2px calc(var(--row-py) * .45) 10px;
+  border-left: 4px solid var(--s-rule);
+  border-bottom: 1px solid var(--s-rule);
   transition: background .3s;
 }
 
 .scorerail .srow .rk {
   flex: none; min-width: 1.1em;
-  font-size: var(--rk-f); font-weight: 700; color: var(--s-dim);
+  font-size: calc(var(--rk-f) * var(--rail-k, 1)); font-weight: 700; color: var(--s-dim);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2856,24 +2860,23 @@ html[data-ws="game"] #btnSorter { display: none; }
   word-break: normal; overflow-wrap: break-word;
 }
 .scorerail .srow .mem {
-  font-size: var(--mem-f); color: var(--s-dim); line-height: 1.2;
+  font-size: calc(var(--mem-f) * var(--rail-k, 1)); color: var(--s-dim); line-height: 1.2;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .scorerail .srow .sc {
   flex: none;
-  font-size: var(--sc-f); font-weight: 750;
+  font-size: calc(var(--sc-f) * var(--rail-k, 1)); font-weight: 750;
   font-variant-numeric: tabular-nums;
   letter-spacing: -.02em;
 }
 
-.scorerail .srow.lead { background: var(--s-card); outline: 1px solid var(--s-accent); outline-offset: -1px; }
-/* On a dark ground the leader is lifted rather than outlined: every dark
-   theme's --s-card is translucent white at 6-8%, and a 1px accent outline on
-   top of that reads as noise next to the glow of the accent itself. The rail
-   takes its ground from the slide beside it, so this matches whichever side
+.scorerail .srow.lead .rk { color: var(--s-accent); }
+/* The leader is marked by its rank in the accent, not a box around the row: the rows carry no
+   fill or outline. On a dark ground the rank is white, since the accent can sit too close to the
+   ground there. The rail takes its ground from the slide beside it, so this matches whichever side
    of a per-layout flip is on screen. */
-[data-ground="dark"] .scorerail .srow.lead,
-.scorerail[data-ground="dark"] .srow.lead { background: rgba(255,255,255,.17); outline: none; }
+[data-ground="dark"] .scorerail .srow.lead .rk,
+.scorerail[data-ground="dark"] .srow.lead .rk { color: #fff; }
 .scorerail .srow.gain { animation: sf-score-pop .85s ease; }
 @keyframes sf-score-pop {
   0%   { transform: scale(1); }
@@ -5580,35 +5583,12 @@ html[data-ws="deck"] #railCount { display: none; }
 .scorerail .cl-lbl { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--s-dim); white-space: nowrap; }
 @keyframes sf-climb-in { from { transform: translateY(8px); opacity: 0; } }
 
-/* ---- the strip: beside a slide that is not asking anything ----
-   The standings are not what the room is looking at while the teacher
-   explains, and a 384px board beside an objectives slide took a third of
-   the wall to say it. The strip keeps the podium, the count and the way
-   in, and gives the slide 150px back. The width is animated so the slide
-   eases across rather than jumping when a question arrives. */
+/* ---- one width for the rail ----
+   The rail is 384px beside every slide. A 232px strip beside slides that were not asking anything
+   made the rail change size from slide to slide; it is retired (js/player.js railSize). --rail-w
+   stays animated so a rail that opens or closes eases the slide across rather than jumping. */
 @property --rail-w { syntax: '<length>'; inherits: true; initial-value: 384px; }
 .deck-viewport { transition: --rail-w .45s cubic-bezier(.3,0,.2,1); }
-.deck-viewport.railed.rail-slim { --rail-w: 232px; }
-.scorerail[data-size="slim"] { padding: 26px 14px 18px; }
-.scorerail[data-density="slim"] { --nm-f: 21px; --sc-f: 17px; --rk-f: 15px; --row-py: 10px; --row-px: 11px; --row-gap: 8px; --row-r: 10px; --row-max: 80px; }
-.scorerail[data-size="slim"] .rail-title { font-size: 15px; }
-.scorerail[data-size="slim"] .rail-sub { font-size: 15px; margin-bottom: 14px; }
-.scorerail[data-size="slim"] .rail-legend,
-.scorerail[data-size="slim"] .foot .notes { display: none; }
-.scorerail[data-size="slim"] .rows { justify-content: flex-start; }
-.scorerail[data-size="slim"] .srow {
-  display: grid; grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 9px; row-gap: 1px; align-items: center;
-  border-left-width: 6px;
-}
-.scorerail[data-size="slim"] .srow .rk { grid-row: span 2; }
-.scorerail[data-size="slim"] .srow .nm { -webkit-line-clamp: 1; overflow-wrap: normal; word-break: break-all; }
-.scorerail[data-size="slim"] .srow .sc { font-weight: 650; color: var(--s-dim); }
-.scorerail[data-size="slim"] .more { font-size: 16px; padding-top: 6px; }
-.scorerail[data-size="slim"] .rail-join.on { flex-direction: column; gap: 8px; text-align: center; }
-.scorerail[data-size="slim"] .rj-qr { width: 132px; }
-.scorerail[data-size="slim"] .rj-lbl { font-size: 11px; }
-.scorerail[data-size="slim"] .rj-pin { font-size: 26px; }
 
 
 /* Activity briefs have named stages, not vocabulary definitions. Preserve
@@ -7486,3 +7466,15 @@ dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
 .layout-feedback .fk-held-n { font-size: 160px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
 .layout-feedback .fk-held-line { font-size: 36px; font-weight: 650; }
 .layout-feedback .fk-held-note { font-size: 26px; color: var(--s-dim); margin-top: 18px; }
+
+/* A lab question on SlideForge's wall (js/render.js, design.labStill): its picture is the whole
+   slide until the lab draws over it, and SlideForge's own quiz layout stays out of sight, as it is
+   under the lab's drawing. */
+.slide.lab-poster > .pad { visibility: hidden; }
+.slide.lab-poster > .lab-poster-img {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: var(--s-bg, #fff) center / contain no-repeat;
+}
+/* Beside the rail it stops at the rail, as a picture slide does, so none of it is under the rail. */
+.deck-viewport.railed .slide.lab-poster > .lab-poster-img,
+#previewBox.railed .slide.lab-poster > .lab-poster-img { right: var(--rail-w); }

@@ -5037,10 +5037,12 @@
       }
       node.appendChild(side);
     }
-    var RAIL_MAX_ROWS = 10;
+    var RAIL_MAX_ROWS = 12;
     var CROWD_AT = 8;
     var CROWD_TOP = 5;
     var SLIM_TOP = 3;
+    var RAIL_CROWD_AT = 12;
+    var RAIL_CROWD_TOP = 8;
     function overflowing(box2) {
       box2.classList.add("sf-measuring");
       var over = box2.scrollHeight > box2.clientHeight + 1;
@@ -5077,10 +5079,10 @@
       return parts[0] + " " + parts[parts.length - 1].charAt(0).toUpperCase() + ".";
     }
     function railDensity(n) {
-      if (n <= 2) return "xl";
-      if (n <= 4) return "lg";
-      if (n <= 6) return "md";
-      if (n <= 8) return "sm";
+      if (n <= 4) return "xl";
+      if (n <= 8) return "lg";
+      if (n <= 12) return "md";
+      if (n <= 14) return "sm";
       return "xs";
     }
     function paintScoreRail(rail, rows2, opts) {
@@ -5120,9 +5122,9 @@
       }
       rail._last = { rows: rows2, opts };
       var slim = rail.dataset.size === "slim";
-      var crowd = rows2.length > CROWD_AT;
+      var crowd = rows2.length > RAIL_CROWD_AT;
       rail.classList.toggle("crowd", crowd && !slim);
-      var limit = slim ? SLIM_TOP : crowd ? CROWD_TOP : RAIL_MAX_ROWS;
+      var limit = slim ? SLIM_TOP : crowd ? RAIL_CROWD_TOP : RAIL_MAX_ROWS;
       var shown = rows2.slice(0, limit);
       var hidden = rows2.length - shown.length;
       var climb = crowd && !slim ? biggestClimb(rail, rows2, shown.length) : null;
@@ -5150,7 +5152,7 @@
         var shownName = wallName(r.name, opts.people);
         nm.textContent = shownName;
         nm.title = r.name;
-        nm.style.fontSize = "calc(var(--nm-f) * " + nameScale(shownName) + ")";
+        nm.style.fontSize = "calc(var(--nm-f) * var(--rail-k, 1) * " + nameScale(shownName) + ")";
         var who = node.querySelector(".who");
         var mem = who.querySelector(".mem");
         if (r.members != null && roomForMembers) {

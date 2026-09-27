@@ -101,7 +101,7 @@
 
   function viewportOf() { return document.querySelector('#player .deck-viewport'); }
 
-  /* Room for the rail: its width in slide pixels (--rail-w, 384 or 232), and
+  /* Room for the rail: its width in slide pixels (--rail-w, 384), and
      the 54px gap SlideForge's own slides keep beside it. */
   function syncRail() {
     if (!player) return;

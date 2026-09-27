@@ -901,7 +901,7 @@ export function createLiveRenderer(SF, helpers) {
   /* How many entries the rail can show before it has to summarise. Beyond
      this the type would be too small to read from the back of a room, so the
      tail is collapsed into a "+N more" line instead. */
-  var RAIL_MAX_ROWS = 10;
+  var RAIL_MAX_ROWS = 12;
 
   /* Past this many entries the board stops being a list of everyone and
      becomes a top five and the pack. A class of thirty ranked on the wall is
@@ -913,6 +913,11 @@ export function createLiveRenderer(SF, helpers) {
   /* Beside a slide that is not asking anything, the rail is a strip: the
      podium, the count, the way in. The slide gets the width back. */
   var SLIM_TOP = 3;
+  /* The room rail's own crowd line. Its rows are flat lines (css/app.css .scorerail .srow), so it
+     lists a class of up to twelve by name, and past that its top eight and the pack. The race
+     track keeps CROWD_AT and CROWD_TOP: its lanes are drawn larger. */
+  var RAIL_CROWD_AT = 12;
+  var RAIL_CROWD_TOP = 8;
 
   /** @param {HTMLElement} box */
   function overflowing(box) {
@@ -989,11 +994,14 @@ export function createLiveRenderer(SF, helpers) {
 
   /* Row size is driven by the number of entries: a two-team board reads huge,
      a twelve-player board stays legible. */
+  /* The rows are flat lines (css/app.css .scorerail .srow), so each density holds about twice what
+     it did as cards: a class of twelve by name at md. overflowing() still steps a board down if a
+     long name or a members line needs it. */
   function railDensity(n) {
-    if (n <= 2) return 'xl';
-    if (n <= 4) return 'lg';
-    if (n <= 6) return 'md';
-    if (n <= 8) return 'sm';
+    if (n <= 4) return 'xl';
+    if (n <= 8) return 'lg';
+    if (n <= 12) return 'md';
+    if (n <= 14) return 'sm';
     return 'xs';
   }
 
@@ -1058,9 +1066,9 @@ export function createLiveRenderer(SF, helpers) {
     /** @type {any} */ (rail)._last = { rows: rows, opts: opts };
 
     var slim = rail.dataset.size === 'slim';
-    var crowd = rows.length > CROWD_AT;
+    var crowd = rows.length > RAIL_CROWD_AT;
     rail.classList.toggle('crowd', crowd && !slim);
-    var limit = slim ? SLIM_TOP : crowd ? CROWD_TOP : RAIL_MAX_ROWS;
+    var limit = slim ? SLIM_TOP : crowd ? RAIL_CROWD_TOP : RAIL_MAX_ROWS;
     var shown = rows.slice(0, limit);
     var hidden = rows.length - shown.length;
     var climb = crowd && !slim ? biggestClimb(rail, rows, shown.length) : null;
@@ -1097,7 +1105,7 @@ export function createLiveRenderer(SF, helpers) {
       var shownName = wallName(r.name, opts.people);
       nm.textContent = shownName;
       nm.title = r.name;
-      nm.style.fontSize = 'calc(var(--nm-f) * ' + nameScale(shownName) + ')';
+      nm.style.fontSize = 'calc(var(--nm-f) * var(--rail-k, 1) * ' + nameScale(shownName) + ')';
 
       /* Members sit on their own line rather than trailing the name, which is
          what made long team names collide with the score. */
