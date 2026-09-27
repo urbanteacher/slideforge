@@ -597,7 +597,7 @@ test('an Estimate question’s picture comes into the lab, on the question and a
   assert.ok(q.box.h >= 300, 'large enough to judge a ratio from');
 });
 
-test('Week 3 focuses only the reshape demonstration and preserves its authored states', { skip }, async () => {
+test('Week 3’s charts use the focus layout, except where the first state gives the answer away', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
   const src = lesson('ipdv-da');
   const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
@@ -607,7 +607,11 @@ test('Week 3 focuses only the reshape demonstration and preserves its authored s
   assert.equal(layer.params.layout, 'focus');
   assert.equal(layer.params.prompt, source.experiment.prompt);
   assert.deepEqual(JSON.parse(layer.params.states), source.experiment.states);
-  assert.equal(experiments(deck).filter((s) => s.layers.some((l) => l.params.layout === 'focus')).length, 1);
+  // Focus is the standard (slide 28's structure: the prompt over the data, then the steps). The two
+  // whose first state shows the answer keep the rail's ? until they have a neutral first state.
+  const rail = experiments(deck).filter((s) => !s.layers.some((l) => l.params.layout === 'focus'))
+    .map((s) => src.slides.find((x) => x.id === s.sourceSlideId).experiment.preset).sort();
+  assert.deepEqual(rail, ['channels', 'nested']);
   const keys = deck.slides.find((s) => s.sourceSlideId === src.slides.find((s) => s.title === 'Keys and values').id);
   assert.ok(keys.layers.some((l) => l.kind === 'text' && l.params.text === 'Apple + April → 82'));
 });
