@@ -153,8 +153,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .center { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
 .stage-wrap { flex: 1; overflow: auto; position: relative; min-height: 0; }
 .stage-wrap.drop { box-shadow: inset 0 0 0 2px var(--accent); }
-.stage-inner { position: relative; margin: auto; }
-.stage-label { position: absolute; top: -26px; left: 0; font-size: 12px; color: var(--muted); display: flex; gap: 10px; }
+.stage-inner { position: relative; margin: auto; container: stage / inline-size; }
+.stage-label { position: absolute; top: -26px; left: 0; font-size: 12px; color: var(--muted); display: flex; gap: 10px; max-width: 100%; white-space: nowrap; overflow: hidden; }
+/* With an Engage tag at the top right, the slide's name gives way to it rather than running under it. */
+.stage-inner:has(> .feedback-tag) > .stage-label { max-width: calc(100% - 232px); }
 .stage-label span { color: var(--dim); }
 .stage-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; box-shadow: 0 0 0 1px #1c1c20, 0 30px 80px rgba(0,0,0,.6); }
 .overlay { position: absolute; inset: 0; }
@@ -558,8 +560,18 @@ aside.left:not(.browse-pane) { overflow-y: auto; }
 .engage-kind { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; border-radius: 9px; background: var(--field); border: 1px solid transparent; color: var(--muted); font-size: 11.5px; }
 .engage-kind:hover { color: var(--text); background: var(--field-2); }
 .engage-kind.on { border-color: var(--accent); color: var(--text); }
-.feedback-tag { position: absolute; right: 0; top: -30px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); background: var(--field); border: 1px solid var(--accent); border-radius: 999px; padding: 3px 10px; z-index: 3; }
-.feedback-tag small { color: var(--dim); font-size: 11px; }
+.feedback-tag { position: absolute; right: 0; top: -30px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); background: var(--field); border: 1px solid var(--accent); border-radius: 999px; padding: 3px 10px; z-index: 3; white-space: nowrap; max-width: 100%; overflow: hidden; }
+.feedback-tag svg { flex: none; }
+.feedback-tag small { color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+/* The tag fits the stage it sits on: on a small stage the hint goes, then the tag tightens. */
+@container stage (max-width: 520px) {
+  .feedback-tag small { display: none; }
+  .stage-inner:has(> .feedback-tag) > .stage-label { max-width: calc(100% - 120px); }
+}
+@container stage (max-width: 300px) {
+  .feedback-tag { font-size: 11px; padding: 2px 8px; gap: 4px; top: -26px; }
+  .stage-label span { display: none; }
+}
 .thumb-feedback { position: absolute; right: 6px; bottom: 6px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; background: rgba(0, 0, 0, .7); color: #fff; }
 .thumb-feedback svg { width: 12px; height: 12px; }
 
