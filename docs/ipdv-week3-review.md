@@ -90,3 +90,14 @@ The teacher went through the 76-slide lab build and set four standards. Each is 
 - **The experiment slide is the template** for charts and interactions: title with its rule, a one-line prompt, the chart centred, the controls bottom left and the source bottom right. No slide needed changing for it.
 
 Also: the seven references fit their slide, one line each (`6fad22f`), and the movie-to-music comparison fits (`a1184e1`).
+
+## Second review: the four lesson changes (27 Sep, evening)
+
+A second review asked for one dominant visual per demonstration, a consistent predict → observe → explain → apply sequence, attribute types shown by example, and fewer, stronger centrepieces.
+
+- **One dominant visual.** Every chart except the nested model uses slide 28's focus layout (`dadfbf8`, `609487e`). Each step's caption is cut to one takeaway, and the full wording is in the speaker notes (`c6f350d`).
+- **Predict, observe, explain, apply.** The prompt over the data is the prediction, the steps observe, and the caption explains. *Which channel reads best?* now opens on an Estimate step without the percentage, so predicting does not give the answer away. Apply is still the check after a chart for only *Find the attributes* and *Rescue the 3D chart*. The other charts' apply tasks are not yet written.
+- **Attribute types by example.** *Three kinds of attribute* shows genre, shirt size and apples sold as cards, one per click, before the table, which becomes the recap (`609487e`). The lab now reveals a staged cards slide card by card (`c7c94cd`).
+- **Centrepieces and pacing.** The speaker notes mark three centrepieces (the reshape, perception and the colour scales) and four optional demos (the three idioms, units as icons, the pictogram chart and feature models).
+
+Found on the way: Codex's perception preset shared the name `channels` with Week 2's *Marks and channels*, and it had replaced Week 2's chart in both engines. It is now `perception` (`c6f350d`).
