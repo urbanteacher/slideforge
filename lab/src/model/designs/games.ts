@@ -310,16 +310,49 @@ export function choiceWall(st: LayoutStyle, name: string, q: GameQuestion, i: nu
  *  answer the right one is green where it stood and the rest go quiet, the reason under the question,
  *  so the reveal reads as the button lighting up. */
 export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, reason: ReasonAt = 'question'): Slide {
+  if (reason === 'question') return buttonsAndAnswer(st, name, q, i, n, answer);
   const opts = (q.options ?? []).slice(0, 6);
   const cells: Cell[] = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct, quiet: answer && k !== q.correct }));
   const under = underWhy(st, q);
   const { o, set } = matched((sizes) => {
     const o = opening(st, q, tag('Multiple choice', 'choose one', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80], why: '' });
-    if (reason === 'question') reasonOver(st, q, o, answer);
     return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size * LEAD, 88), reason === 'buttons' ? under.h : 0, optionFloor(o.qn.size)) };
   }, LEAD);
   o.layers.push(...set.layers, ...(answer && reason === 'buttons' ? whyLayer(q, under, set.bottom) : []));
   return slideOf(named(name, i, answer), o.layers, st, note(q));
+}
+
+/** The Buttons look with its reason under the question, as two slides that each do one job. The
+ *  question: its buttons right under it (rule 2), no room held for a reason it does not show. The
+ *  answer: the question where it stood, then the right answer alone, green, at the buttons' size, and
+ *  the reason under it in the muted ink. The right button carries its morph, so on the reveal it
+ *  travels from its place in the set to the answer's. */
+function buttonsAndAnswer(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer: boolean): Slide {
+  const opts = (q.options ?? []).slice(0, 6);
+  const cells: Cell[] = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k] }));
+  const heading = (a: boolean) => tag('Multiple choice', 'choose one', i, n, a);
+  // The question slide, sized as rule 4 asks; the answer takes its question's size from it.
+  const ask = matched((sizes) => {
+    const o = opening(st, q, heading(false), q.question ?? '', false, { sizes: sizes ?? [120, 104, 92, 80], why: '' });
+    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size * LEAD, 88), 0, optionFloor(o.qn.size)) };
+  }, LEAD);
+  if (!answer) {
+    ask.o.layers.push(...ask.set.layers);
+    return slideOf(named(name, i, false), ask.o.layers, st, note(q));
+  }
+  const o = opening(st, q, heading(true), q.question ?? '', true, { sizes: [ask.o.qn.size], why: '' });
+  const right = cells[q.correct ?? -1];
+  if (!right) return slideOf(named(name, i, true), o.layers, st, note(q));
+  const set = buttons(st, [{ ...right, right: true }], o.top, ask.set.size, 0, ask.set.size);
+  o.layers.push(...set.layers);
+  const why = q.explanation ?? '';
+  if (why) {
+    const p: Params = { font: st.body, size: 44, color: st.muted, lineHeight: 1.25 };
+    const h = Math.min(FOOT - set.bottom - 40, textHeight(why, W - LEFT * 2, p) + 6);
+    // 'Reason', not 'Why': it belongs to the answer under it and moves with it when the game is centred.
+    o.layers.push(txt('Reason', why, box(LEFT, set.bottom + 40, W - LEFT * 2, h), p, { type: 'fade', duration: 0.6, delay: 0.4 }));
+  }
+  return slideOf(named(name, i, true), o.layers, st, note(q));
 }
 
 /** Buttons two by two under the question, rounded, apart, each as tall as the tallest's words; one

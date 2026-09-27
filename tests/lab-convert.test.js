@@ -355,7 +355,7 @@ async function bundle(entry) {
 
 const RIGHT_GREEN = '#1f9d5a';
 
-test('a lesson’s Check comes in as SlideForge showed it: four buttons, the right one lit green, the question leading them', { skip }, async () => {
+test('a lesson’s Check comes in as two slides: four buttons under the question, then the right one alone, green, with its reason', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
   const src = lessonWithGames('ipdv-vc-hybrid');
   const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
@@ -365,15 +365,19 @@ test('a lesson’s Check comes in as SlideForge showed it: four buttons, the rig
     const q = SF_GAME(src, c);
     const buttons = (s) => q.options.map((_, k) => s.layers.find((l) => l.name === `Button ${k + 1}`));
     buttons(ask).forEach((b) => assert.ok(b && b.params.fill !== RIGHT_GREEN, 'no answer shown while asking'));
-    buttons(answer).forEach((b, k) => assert.equal(b.params.fill === RIGHT_GREEN, k === q.correct, 'the right one green, where it stood'));
-    // Where it stood: the same box on the question and the answer, so the reveal lights it in place.
-    assert.deepEqual(buttons(answer)[q.correct].params.morph, buttons(ask)[q.correct].params.morph);
-    buttons(answer).forEach((b, k) => assert.deepEqual(b.box, buttons(ask)[k].box, 'every button stands where it stood'));
-    // The reason under the question, as the other games have it (the default), clear of the buttons.
-    const why = answer.layers.find((l) => l.name === 'Why');
+    // The question slide holds no room for a reason: its buttons start right under the question.
+    const askQ = ask.layers.find((l) => l.name === 'Question');
+    assert.ok(!ask.layers.some((l) => l.name === 'Why' || l.name === 'Reason'), 'no room held on the question for a reason');
+    // The answer: the right one alone, green, carrying its morph so the reveal moves it there.
+    const lit = answer.layers.filter((l) => /^Button \d+$/.test(l.name));
+    assert.equal(lit.length, 1, 'only the right answer on the answer slide');
+    assert.equal(lit[0].params.fill, RIGHT_GREEN);
+    assert.equal(lit[0].params.morph, buttons(ask)[q.correct].params.morph);
+    assert.equal(answer.layers.find((l) => l.name === 'Question').box.y, askQ.box.y, 'the question where it stood');
+    // Its reason under it.
+    const why = answer.layers.find((l) => l.name === 'Reason');
     assert.ok(why, 'and the reason is on the answer');
-    const highest = Math.min(...buttons(answer).map((b) => b.box.y));
-    assert.ok(why.box.y + why.box.h <= highest, 'above the buttons, not across them');
+    assert.ok(why.box.y >= lit[0].box.y + lit[0].box.h, 'under the answer, not across it');
     const words = ask.layers.find((l) => l.name === 'Button 1 — words');
     // Rule 4: the question leads, the buttons' words at most three-quarters of its size.
     const qSize = ask.layers.find((l) => l.name === 'Question').params.size;
@@ -490,12 +494,15 @@ test('the reason goes where the Game panel says: under the question, under the b
     if (reason !== 'question') relookGame(deck, id, 'buttons', reason);
     const [ask, answer] = deck.slides.filter((s) => s.sourceSlideId === check.id);
     const btn = (s, k) => s.layers.find((l) => l.name === `Button ${k + 1}`);
-    [0, 1, 2, 3].forEach((k) => assert.deepEqual(btn(answer, k).box, btn(ask, k).box, reason + ': the buttons stand where they stood'));
-    return { answer, top: Math.min(...[0, 1, 2, 3].map((k) => btn(answer, k).box.y)), foot: Math.max(...[0, 1, 2, 3].map((k) => btn(answer, k).box.y + btn(answer, k).box.h)) };
+    const shown = answer.layers.filter((l) => /^Button \d+$/.test(l.name));
+    // Under the question (the default) the answer is its own slide: the right answer alone.
+    if (reason !== 'question') [0, 1, 2, 3].forEach((k) => assert.deepEqual(btn(answer, k).box, btn(ask, k).box, reason + ': the buttons stand where they stood'));
+    return { answer, shown, foot: Math.max(...shown.map((l) => l.box.y + l.box.h)) };
   };
   const q = place('question');
-  const why = q.answer.layers.find((l) => l.name === 'Why');
-  assert.ok(why && why.box.y + why.box.h <= q.top, 'under the question');
+  assert.equal(q.shown.length, 1, 'question: the right answer alone');
+  const why = q.answer.layers.find((l) => l.name === 'Reason');
+  assert.ok(why && why.box.y >= q.foot, 'question: the reason under the answer');
   const b = place('buttons');
   const reason = b.answer.layers.find((l) => l.name === 'Reason');
   assert.ok(reason && reason.box.y >= b.foot, 'under the buttons');
@@ -519,9 +526,10 @@ test('a Buttons game an older lab built is set right as its lesson opens', { ski
   assert.notEqual(fixed, deck, 'a copy, the deck handed in left alone');
   const answer = fixed.slides.filter((s) => s.sourceSlideId === check.id)[1];
   assert.equal(answer.game.reason, 'question');
-  const why = answer.layers.find((l) => l.name === 'Why');
-  const top = Math.min(...answer.layers.filter((l) => /^Button \d$/.test(l.name)).map((l) => l.box.y));
-  assert.ok(why && why.box.y + why.box.h <= top, 'the reason under the question, clear of the buttons');
+  const why = answer.layers.find((l) => l.name === 'Reason');
+  const shown = answer.layers.filter((l) => /^Button \d$/.test(l.name));
+  assert.equal(shown.length, 1, 'the answer slide as the question setting builds it: the right answer alone');
+  assert.ok(why && why.box.y >= shown[0].box.y + shown[0].box.h, 'and the reason under it');
   assert.equal(repairGames(fixed), fixed, 'and nothing more to do once it is');
 });
 
