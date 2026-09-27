@@ -2082,7 +2082,7 @@
         { ref: 'check-reshape', title: 'Check · Reshape first', style: 'choice',
           settings: { defaultTime: 0, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
           questions: [{
-            question: 'Country | 2019 | 2020 | 2021 holds GDP. To plot GDP against Year for each country, what must change first?',
+            question: 'Country | 2019 | 2020 | 2021 holds GDP. To plot GDP by year, what changes first?',
             options: ['Sort countries by GDP', 'Reshape to Country | Year | GDP', 'Add a Total column', 'Use each year as a separate line'],
             correct: 1,
             explanation: 'Year becomes a column. Country + Year identify each GDP value. Plot Year on x, GDP on y, and one line per country.'
@@ -2099,7 +2099,7 @@
           settings: { defaultTime: 0, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
           questions: [{
             question: 'The 3D fruit chart gives each fruit its own bright colour. What is the strongest criticism?',
-            options: ['Bright colours look unprofessional', 'Colour repeats the fruit names already on the axis, so it encodes nothing new', 'Colour can only ever show quantities', 'Six colours are too many for any chart'],
+            options: ['Bright colours look unprofessional', 'Colour repeats the axis labels, encoding nothing', 'Colour can only ever show quantities', 'Six colours are too many for any chart'],
             correct: 1,
             explanation: 'The fruit are already named along the axis. Colour is a channel, so spend it on something the chart does not already show, such as the month, with an ordered ramp.'
           }] }
