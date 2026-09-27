@@ -9,7 +9,7 @@
  *
  * Installed by src/model.js; nothing here runs at install.
  */
-import { KIND_PRESETS, kindPicture } from '../../lab/src/engine/experimentKinds.ts';
+import { KIND_PRESETS, kindPicture, resolveExperimentPreset } from '../../lab/src/engine/experimentKinds.ts';
 
 export function installExperiments(SF) {
   var presets = {
@@ -64,7 +64,8 @@ export function installExperiments(SF) {
   /* Week 3's demonstrations and their kinds are written once, in the lab's engine, for both. */
   Object.keys(KIND_PRESETS).forEach(function(k){presets[k]=/** @type {any} */(KIND_PRESETS[k]);});
   function config(s) {
-    var raw=s.experiment||{}, key=Object.prototype.hasOwnProperty.call(presets,raw.preset)?raw.preset:'polling', preset=presets[key];
+    var raw=s.experiment||{}, resolved=resolveExperimentPreset(raw.preset||'',s.body||'',raw.prompt||'');
+    var key=Object.prototype.hasOwnProperty.call(presets,resolved)?resolved:'polling', preset=presets[key];
     var states=Array.isArray(raw.states)?raw.states.filter(function(x){return x&&typeof x==='object'&&!Array.isArray(x);}):[];
     return {prompt:String(raw.prompt||preset.prompt),states:(states.length?states:preset.states).slice(0,8),preset:key,duration:Math.max(200,Math.min(4000,Number(raw.duration)||1600))};
   }
@@ -214,7 +215,15 @@ export function installExperiments(SF) {
       if(!replaying&&step!==lastStep){fromStep=lastStep;lastStep=step;}
       predict.setAttribute('aria-pressed',String(step<0));buttons.forEach(function(b,i){b.setAttribute('aria-pressed',String(i===step));});
       replay.disabled=step<0||fromStep<0;
-      if(step<0){if(SF.ChartMotion)SF.ChartMotion.cancel(plot);plot.replaceChildren();var wait=node('p','Make a prediction. Explain your reasoning, then reveal the first state.',plot);wait.className='ve-predict';explanation.textContent='';}
+      if(step<0){
+        if(SF.ChartMotion)SF.ChartMotion.cancel(plot);
+        plot.replaceChildren();
+        // Focus demonstrations show their starting evidence during prediction in the lab too.
+        // The two whose first state reveals the answer stay on the rail layout.
+        if(s.design&&s.design.experimentLayout==='focus')plot.appendChild(picture(0));
+        else{var wait=node('p','Make a prediction. Explain your reasoning, then reveal the first state.',plot);wait.className='ve-predict';}
+        explanation.textContent='';
+      }
       else{
         var st=c.states[step],target=picture(step);
         if(SF.ChartMotion){

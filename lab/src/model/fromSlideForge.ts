@@ -1,6 +1,6 @@
 import { createLayer, uid } from './defaults';
 import { CHART_DARK, CHART_LIGHT } from '../engine/chartKinds';
-import { EXPERIMENTS } from '../engine/experiment';
+import { EXPERIMENTS, experimentPreset } from '../engine/experiment';
 import {
   LAYOUTS, beforeAfterSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide,
   gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide,
@@ -315,7 +315,8 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
     }
     case 'experiment': {
       // The lab's experiment layer runs SlideForge's presets and states: predict, then Next through them.
-      const e = s.experiment ?? {}, preset = EXPERIMENTS[e.preset ?? ''] ? e.preset! : 'polling';
+      const e = s.experiment ?? {}, resolved = experimentPreset({ preset: e.preset ?? '', data: s.body ?? '', prompt: e.prompt ?? '' });
+      const preset = EXPERIMENTS[resolved] ? resolved : 'polling';
       return { slide: experimentSlide(st, t, e.prompt || EXPERIMENTS[preset].prompt, { preset, data: s.body || EXPERIMENTS[preset].data, states: e.states?.length ? JSON.stringify(e.states) : '', duration: e.duration, layout: s.design?.experimentLayout === 'focus' ? 'focus' : undefined }, s.chartSource ?? ''), ground: g };
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
@@ -398,8 +399,23 @@ export function convertsSlide(s: SFSlide): boolean {
 
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
  *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. 8: AI Awareness Day 2027 wears its frame (strand, lockup, campaign line, page number) and its labels over the words. 9: AI Awareness Day 2027's compositions are built as its design draws them. 10: its takeaways are the lab's numbered block, its ballot the lab's choice block. A copy made at an older version is brought up to date when it
- *  next opens (embed.ts), taking only what that version could not build. */
-export const CARRIED = 10;
+ *  next opens (embed.ts), taking only what that version could not build. 11: Week 3's perception
+ *  demonstration gets its own preset key, leaving `channels` to the older marks demonstration. */
+export const CARRIED = 11;
+
+/** Upgrade saved layer names and the Week 3 preset without changing authored data or states. */
+export function carryDeckExperimentPresets(deck: Deck): number {
+  let changed = 0;
+  for (const slide of deck.slides) for (const layer of slide.layers) {
+    if (layer.kind !== 'experiment') continue;
+    if (layer.name === 'Experiment') layer.name = 'Predict and compare';
+    if (layer.params.preset !== 'channels') continue;
+    if (experimentPreset(layer.params) !== 'perception') continue;
+    layer.params.preset = 'perception';
+    changed++;
+  }
+  return changed;
+}
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is

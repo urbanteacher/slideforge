@@ -2244,7 +2244,7 @@
         { type: 'game', gameRef: 'check-perception',
           notes: '5 min, five estimates on phones. Do not comment between questions. Watch the spread of answers widen from position to lightness. If phones are not available, ask for hands: under 30%, 30–50%, 50–70%, over 70%.' },
         { type: 'experiment', title: 'Which channel reads best?', bullets: [], progressive: false,
-          experiment: { preset: 'channels', prompt: 'Each pair asks the same question: B is what percentage of A? How sure are you of each answer?', duration: 1600 },
+          experiment: { preset: 'perception', prompt: 'Each pair asks the same question: B is what percentage of A? How sure are you of each answer?', duration: 1600 },
           body: 'Channel\tA\tB\nPosition\t80\t36\nLength\t80\t52\nAngle\t100\t35\nArea\t100\t60\nLightness\t100\t50',
           design: {},
           chartSource: 'Constructed mark pairs for estimation. Ranking after Cleveland & McGill (1984) and Heer & Bostock (2010).',

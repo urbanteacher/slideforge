@@ -24,7 +24,7 @@ function svg(els) {
   return out.join('\n');
 }
 
-const p = KIND_PRESETS.channels;
+const p = KIND_PRESETS.perception;
 p.states.filter((st) => st.mode !== 'ranking').forEach((st) => {
   const els = kindPicture(p.data, { ...st, labels: false }, INK).filter((e) => e.key !== 'ch:q' && e.key !== 'ch:title');
   const file = join(ROOT, 'assets/lesson/ipdv', `perception-${st.label.toLowerCase()}.svg`);

@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowLeftRight, ArrowUp, Plus, RefreshCw, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { EXPERIMENTS, experimentStates, type ExpState } from '../engine/experiment';
+import { EXPERIMENTS, experimentPreset, experimentStates, type ExpState } from '../engine/experiment';
 import { LOOKS, SCENES, sceneItems } from '../engine/scene';
 import { rebuildSlide, RECIPE_NAMES } from '../model/recipes';
 import { slideOf, useStore } from '../model/store';
@@ -136,7 +136,7 @@ function SimulationPanel({ layer }: { layer: Layer }) {
   );
 }
 
-// ─── Chart experiment ───────────────────────────────────────────────────────
+// ─── Predict and compare ─────────────────────────────────────────────────────
 const KINDS = ['bar', 'pie', 'line', 'dot', 'bubbles', 'hue', 'shape', 'tiles', 'table', 'network', 'field', 'geometry', 'classification'].map((k) => ({ value: k, label: k[0].toUpperCase() + k.slice(1) }));
 function ExperimentPanel({ layer }: { layer: Layer }) {
   const p = layer.params, set = useLayerParams(layer);
@@ -146,7 +146,7 @@ function ExperimentPanel({ layer }: { layer: Layer }) {
     <>
       <div className="picture-head">One dataset in several encodings. The room predicts first; each Next — or a press of a step on the slide — moves the marks into the next state.</div>
       <Section title="Demonstration">
-        <Select value={String(p.preset ?? 'polling')} options={Object.entries(EXPERIMENTS).map(([k, v]) => ({ value: k, label: v.label }))}
+        <Select value={experimentPreset(p) || 'polling'} options={Object.entries(EXPERIMENTS).map(([k, v]) => ({ value: k, label: v.label }))}
           onChange={(v) => useStore.getState().updateLayer(layer.id, (l) => { l.params.preset = v; l.params.data = EXPERIMENTS[v].data; l.params.states = ''; })} />
         <div className="desc">Choosing one brings its own data and states; edit either below.</div>
       </Section>

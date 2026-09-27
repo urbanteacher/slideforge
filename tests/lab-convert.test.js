@@ -557,7 +557,26 @@ test('Week 3 comes into the lab with its thirteen experiments on the shared kind
   const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
   assert.equal(deck.slides.length, src.slides.filter((s) => s.type !== 'game').length, 'only the games stay SlideForge’s');
   const presets = experiments(deck).map((s) => s.layers.find((l) => l.kind === 'experiment').params.preset);
-  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'channels', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
+  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'perception', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
+});
+
+test('an existing Week 3 studio copy upgrades its perception key without touching Week 2 channels', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckExperimentPresets } = await converter();
+  const week3 = deckFromSlideForge(asData(lesson('ipdv-da')), 'nul', { games: '' });
+  const perception = experiments(week3).find((s) => s.layers.some((l) => l.params.preset === 'perception'))
+    .layers.find((l) => l.kind === 'experiment');
+  perception.params.preset = 'channels'; // The key saved before this fix.
+  perception.name = 'Experiment';
+  const before = { data: perception.params.data, prompt: perception.params.prompt, states: perception.params.states };
+  assert.equal(carryDeckExperimentPresets(week3), 1);
+  assert.equal(perception.params.preset, 'perception');
+  assert.equal(perception.name, 'Predict and compare');
+  assert.deepEqual({ data: perception.params.data, prompt: perception.params.prompt, states: perception.params.states }, before);
+  assert.equal(carryDeckExperimentPresets(week3), 0, 'the migration is idempotent');
+
+  const week2 = deckFromSlideForge(asData(lesson('ipdv-vc-hybrid')), 'nul', { games: '' });
+  assert.equal(carryDeckExperimentPresets(week2), 0);
+  assert.ok(experiments(week2).some((s) => s.layers.some((l) => l.params.preset === 'channels')));
 });
 
 test('a comparison keeps both of its column headings, which SlideForge separates with a tab', { skip }, async () => {
@@ -611,7 +630,7 @@ test('Week 3’s charts use the focus layout, except where the first state gives
   // whose first state shows the answer keep the rail's ? until they have a neutral first state.
   const rail = experiments(deck).filter((s) => !s.layers.some((l) => l.params.layout === 'focus'))
     .map((s) => src.slides.find((x) => x.id === s.sourceSlideId).experiment.preset).sort();
-  assert.deepEqual(rail, ['channels', 'nested']);
+  assert.deepEqual(rail, ['nested', 'perception']);
   const keys = deck.slides.find((s) => s.sourceSlideId === src.slides.find((s) => s.title === 'Keys and values').id);
   assert.ok(keys.layers.some((l) => l.kind === 'text' && l.params.text === 'Apple + April → 82'));
 });
