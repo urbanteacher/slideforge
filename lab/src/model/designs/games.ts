@@ -347,8 +347,9 @@ function buttonsAndAnswer(st: LayoutStyle, name: string, q: GameQuestion, i: num
   o.layers.push(...set.layers);
   const why = q.explanation ?? '';
   if (why) {
-    const p: Params = { font: st.body, size: 44, color: st.muted, lineHeight: 1.25 };
-    const h = Math.min(FOOT - set.bottom - 40, textHeight(why, W - LEFT * 2, p) + 6);
+    // At the answer's size, so the two read as one statement; it shrinks only where it would not fit.
+    const p: Params = { font: st.body, size: set.size, color: st.muted, lineHeight: 1.25, fit: 'shrink' };
+    const h = Math.max(set.size * 1.3, Math.min(FOOT - set.bottom - 40, textHeight(why, W - LEFT * 2, p) + 6));
     // 'Reason', not 'Why': it belongs to the answer under it and moves with it when the game is centred.
     o.layers.push(txt('Reason', why, box(LEFT, set.bottom + 40, W - LEFT * 2, h), p, { type: 'fade', duration: 0.6, delay: 0.4 }));
   }

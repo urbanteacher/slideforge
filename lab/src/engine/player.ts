@@ -200,7 +200,9 @@ export class DeckPlayer {
    *  in a narrower box at their size and its pictures stop short of the rail; a backdrop that fills the
    *  slide stays full, under the rail. Made once for each slide and room, so its words are drawn once. */
   private flowed(slide: Slide): Slide {
-    if (!this.flowing()) return slide;
+    // A game's wall is laid out to the pixel (its set fitted to its box, marks beside words), so it
+    // is drawn whole and smaller beside the rail, by the renderer's inset (loop), rather than rewrapped.
+    if (!this.flowing() || slide.game) return slide;
     const k = 1 - this.insetTarget;
     const hit = this.flowCache.get(slide);
     if (hit && hit.k === k) return hit.slide;
@@ -395,8 +397,9 @@ export class DeckPlayer {
     if (Math.abs(this.insetNow - this.insetTarget) > 0.0005) this.insetNow += (this.insetTarget - this.insetNow) * (1 - Math.exp(-dt / 0.12));
     else this.insetNow = this.insetTarget;
     // While the rail slides in, the slide is drawn smaller to keep clear of it; once it is open the
-    // slide is laid out beside it (flowed), full height, so the renderer draws it at its own size.
-    r.inset = this.flowing() ? 0 : this.insetNow;
+    // slide is laid out beside it (flowed), full height, so the renderer draws it at its own size. A
+    // game's wall stays drawn smaller: it is not reflowed.
+    r.inset = this.flowing() && !this.slide.game ? 0 : this.insetNow;
     // Critically-damped-ish smoothing keeps pointer-driven motion silky rather than jittery.
     this.mouse = [this.mouse[0] + (this.mouseTarget[0] - this.mouse[0]) * 0.12, this.mouse[1] + (this.mouseTarget[1] - this.mouse[1]) * 0.12];
     for (const l of this.slide.layers) {
