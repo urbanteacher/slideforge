@@ -21,6 +21,10 @@ export interface KState {
   band?: string; derive?: boolean; typed?: boolean; variable?: string; measure?: string; types?: string[];
   mode?: string; colourBy?: string; focus?: number[] | number; sort?: boolean; junk?: boolean; labels?: boolean;
   transpose?: boolean; only?: number[]; gap?: boolean; cumulative?: boolean; stack?: boolean; hideValues?: boolean;
+  /** units: a picture (an emoji) per category in place of dots, and the spacing between units. */
+  icons?: string[]; size?: number;
+  /** nested: show each level's threat to validity. */
+  threats?: boolean;
   /** Read by the older kinds (the pies preset ends on a categorical bar). */
   categorical?: boolean;
 }
@@ -35,12 +39,12 @@ export interface KEl {
 
 interface KPreset { label: string; prompt: string; data: string; states: KState[] }
 
-export const KINDS = ['grid', 'long', 'groups', 'lines', 'balance', 'oblique', 'donut', 'exploded', 'rose', 'units'];
+export const KINDS = ['grid', 'long', 'groups', 'lines', 'balance', 'oblique', 'donut', 'exploded', 'rose', 'units', 'nested'];
 
 /** Each new kind's small symbol for its step button. */
 export const KIND_GLYPHS: Record<string, string> = {
   grid: '▦', long: '≡', groups: '▮', lines: '╱', balance: '±', oblique: '▣',
-  donut: '◎', exploded: '◔', rose: '✿', units: '∷',
+  donut: '◎', exploded: '◔', rose: '✿', units: '∷', nested: '⧉',
 };
 
 const COLOURS = ['#0072b2', '#d55e00', '#009e73', '#cc79a7', '#8a6500', '#5b4ba8'];
@@ -371,27 +375,30 @@ export function kindPicture(data: string, st: KState, ink: string): KEl[] | null
     const tot = counts.map((c) => c.reduce((a, b) => a + b, 0));
     const order = rows.map((_, i) => i);
     if (st.stack && st.sort) order.sort((a, b) => tot[b] - tot[a]);
-    const left = 150, right = 960, top = 58, rh = Math.min(44, 262 / nr), r = 5.5;
+    const step = st.size ?? 16, big = step > 24, left = 150, right = 960, top = 58, rh = Math.min(big ? 90 : 44, 262 / nr), r = big ? 15 : 5.5;
     const rowY = (p: number) => top + rh * (p + 0.5) + 8;
     const colW = (right - left) / m;
     if (!st.stack) ser.forEach((s, j) => {
       text(left + colW * (j + 0.5), 36, s.name, 16, 'middle', `sec:${j}`, { wt: 700 });
       if (j) line(`sep:${j}`, left + colW * j, 46, left + colW * j, top + rh * nr + 12, ink, 1, 0.15);
     });
-    const maxTot = Math.max(1, ...tot), d = Math.min(16, (right - left - 60) / maxTot);
+    const maxTot = Math.max(1, ...tot), d = Math.min(step, (right - left - 60) / maxTot);
     order.forEach((i, p) => {
       const y = rowY(p);
       text(left - 16, y + 6, rows[i], 17, 'end', `category:${i}`);
       let idx = 0;
       counts[i].forEach((c, j) => {
-        const dd = Math.min(16, (colW * 0.9) / Math.max(1, c));
+        const dd = Math.min(step, (colW * 0.9) / Math.max(1, c));
         for (let k = 0; k < c; k++) {
-          const x = st.stack ? left + 10 + idx * d : left + colW * (j + 0.5) - ((c - 1) * dd) / 2 + k * dd;
-          poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), ramp(j, m));
+          const x = st.stack ? left + 10 + d / 2 + idx * d : left + colW * (j + 0.5) - ((c - 1) * dd) / 2 + k * dd;
+          const icon = st.icons?.[i];
+          // An icon keeps a faint disc of its column's colour behind it, so a stacked row still shows where each came from.
+          if (icon) { poly(`unitbg:${i}:${j}:${k}`, circlePts(x, y, r * 1.5), ramp(j, m), { fo: 0.28 }); text(x, y + r * 0.9, icon, r * 2.6, 'middle', `unit:${i}:${j}:${k}`); }
+          else poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), ramp(j, m));
           idx++;
         }
       });
-      if (st.stack) text(left + 10 + tot[i] * d + 8, y + 6, tot[i], 18, 'start', `count:${i}`, { wt: 700 });
+      if (st.stack) text(left + 10 + tot[i] * d + 8, y + 6, tot[i], big ? 24 : 18, 'start', `count:${i}`, { wt: 700 });
     });
     if (st.stack) ser.forEach((s, j) => {
       const lx = 500 - (m * 140) / 2 + j * 140;
@@ -400,8 +407,44 @@ export function kindPicture(data: string, st: KState, ink: string): KEl[] | null
     });
     return els;
   }
+  if (st.kind === 'nested') {
+    // Munzner's nested model drawn as boxes inside boxes. The level in focus stays lit and the rest
+    // dim; its question and, with `threats`, its threat to validity sit beside the boxes. Cells are
+    // words, read straight from the rows: level, what it asks (| breaks a line), its threat.
+    const rows = String(data ?? '').split(/\r?\n/).filter((l) => l.trim()).slice(1, 5).map((l) => l.split('\t').map((c) => c.trim()));
+    const fills = ['#f8c9a4', '#f2e6b0', '#b8dfcd', '#e3bde0'], inks = ['#b5421a', '#8a6a00', '#1d7a5c', '#8a3d86'];
+    const f = typeof st.focus === 'number' ? st.focus : -1;
+    const lit = (k: number) => f < 0 || f === k;
+    const box = [[16, 12, 450, 346], [44, 58, 408, 288], [72, 176, 352, 162], [100, 244, 170, 80]];
+    rows.forEach((r, k) => {
+      const [x, y, w, h] = box[k] ?? box[3];
+      poly(`lvl:${k}`, rectPts(x, y, w, h), fills[k], { fo: lit(k) ? 1 : 0.3, stroke: f === k ? inks[k] : '#ffffff', sw: f === k ? 3 : 1.5 });
+      text(x + 14, y + 28, r[0] ?? '', k === 3 ? 16 : 19, 'start', `lvlname:${k}`, { fill: inks[k], wt: 700 });
+    });
+    // What? Why? How? as the model's pills: the first two belong to abstraction, How? to idiom.
+    ([['What?', 1, 124], ['Why?', 1, 160], ['How?', 2, 236]] as [string, number, number][]).forEach(([word, k, y]) => {
+      poly(`pill:${word}`, rectPts(318, y - 22, 110, 30), inks[k], { fo: lit(k) ? 1 : 0.3 });
+      text(373, y - 1, word, 18, 'middle', `pilltext:${word}`, { fill: '#ffffff', wt: 700 });
+    });
+    const show = f >= 0 ? [f] : rows.map((_, k) => k);
+    let yy = f >= 0 ? 60 : 34;
+    show.forEach((k) => {
+      const r = rows[k] ?? [];
+      if (f >= 0) {
+        text(500, yy, r[0] ?? '', 26, 'start', `desc:${k}:title`, { fill: inks[k], wt: 700 }); yy += 40;
+        String(r[1] ?? '').split('|').forEach((ln, n) => { text(500, yy, ln.trim(), 20, 'start', `desc:${k}:${n}`); yy += 30; });
+        if (st.threats && r[2]) { yy += 14; text(500, yy, 'Threat', 16, 'start', `desc:${k}:threat-h`, { fill: inks[k], wt: 700 }); yy += 30; String(r[2]).split('|').forEach((ln, n) => { text(500, yy, ln.trim(), 22, 'start', `desc:${k}:t${n}`, { wt: 700 }); yy += 30; }); }
+      } else {
+        text(500, yy, r[0] ?? '', 19, 'start', `sum:${k}:h`, { fill: inks[k], wt: 700 }); yy += 26;
+        text(500, yy, String(st.threats ? r[2] : r[1] ?? '').split('|').join(' '), 17, 'start', `sum:${k}`); yy += 58;
+      }
+    });
+    return els;
+  }
   return els;
 }
+
+const NESTED = 'Level\tAsks\tThreat\nDomain situation\tWho are the target users?|What do they need to do?\tYou misunderstood|their needs\nData/task abstraction\tWhat is shown? (data)|Why are they looking? (task)\tYou’re showing them|the wrong thing\nIdiom\tHow is it shown? (encoding)|How is it manipulated? (interaction)\tThe way you show it|doesn’t work\nAlgorithm\tHow is it computed|efficiently?\tYour code is|too slow';
 
 const FRUIT = 'Fruit\tApril\tMay\tJune\nApple\t82\t70\t20\nPear\t73\t50\t33\nPeach\t67\t45\t28\nOrange\t85\t65\t17\nKiwi\t54\t42\t24\nMelon\t33\t58\t20';
 
@@ -436,6 +479,16 @@ export const KIND_PRESETS: Record<string, KPreset> = {
     { label: 'Exploded', kind: 'exploded', explanation: 'Pulling the slices apart adds emphasis and separation, but no accuracy.' },
     { label: 'Polar area', kind: 'rose', explanation: 'Equal angles; the radius changes so that each wedge’s area is its share, as in Nightingale’s rose diagram. Areas are hard to compare.' },
     { label: 'Bars', kind: 'bar', categorical: true, explanation: 'Aligned length from a common baseline: the most accurate of the five. Hip-hop 25 beats Rock 20 at a glance.' }] },
+  nested: { label: 'Nested model: four levels', prompt: 'You are asked to build a dashboard. Where do you start: with the users, the data, the chart or the code?', data: NESTED, states: [
+    { label: 'Domain', kind: 'nested', focus: 0, explanation: 'The outer box: the people and their problem. Everything else sits inside it, so nothing inside can rescue a misunderstood domain.' },
+    { label: 'Abstraction', kind: 'nested', focus: 1, explanation: 'Translate the domain into vis vocabulary: what is shown (data abstraction) and why the user is looking (task abstraction). What? and Why? live here.' },
+    { label: 'Idiom', kind: 'nested', focus: 2, explanation: 'How? The visual encoding (how to draw it) and the interaction (how to manipulate it).' },
+    { label: 'Algorithm', kind: 'nested', focus: 3, explanation: 'The innermost box: compute it efficiently. A fast algorithm cannot save the wrong idiom.' },
+    { label: 'Four threats', kind: 'nested', threats: true, explanation: 'Each level has its own way to fail. A failure at an outer level cascades inward, so work outside in when you start from a problem.' }] },
+  emoji: { label: 'Units as icons: animals', prompt: 'One mark per animal. What changes when the mark becomes a picture, and what must not?', data: 'Animal\tGreat Britain\tUnited States\ncattle\t3\t2\npigs\t2\t1\nsheep\t1\t3', states: [
+    { label: 'One dot each', kind: 'units', size: 58, explanation: 'A unit chart: one dot per animal, in a column for each country. Count the dots, and the counts are the data.' },
+    { label: 'Dots become icons', kind: 'units', size: 58, icons: ['🐄', '🐖', '🐑'], explanation: 'Each dot becomes its animal. The icon repeats the row label, so it adds recognition, not data: the count is still the number of marks, never their size.' },
+    { label: 'Count them', kind: 'units', size: 58, stack: true, icons: ['🐄', '🐖', '🐑'], explanation: 'Stack each animal’s icons into one row: cattle 5, sheep 4, pigs 3. The faint discs keep each country’s colour.' }] },
   units: { label: 'Units: from words to frequency', prompt: 'The raw data is words in the order they are sung. Where does “frequency” come from?', data: 'Word\tVerse 1\tChorus 1\tVerse 2\tChorus 2\tBridge\nlove\t2\t4\t1\t4\t2\nbaby\t0\t3\t1\t3\t0\nnight\t3\t1\t2\t1\t1\ndance\t1\t2\t0\t2\t4\nheart\t1\t0\t2\t0\t1', states: [
     { label: 'In time order', kind: 'units', explanation: 'One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context.' },
     { label: 'Count them', kind: 'units', stack: true, explanation: 'The dots slide into one row per word. Frequency was never in the lyrics: it is derived by counting. The colour still shows which section each came from.' },

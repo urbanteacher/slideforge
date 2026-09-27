@@ -2875,7 +2875,7 @@
   }
 
   // lab/src/engine/experimentKinds.ts
-  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units"];
+  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested"];
   var COLOURS = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
   var RAINBOW = ["#e0201b", "#1f3fd6", "#27b83a", "#8a2be2", "#f28c1b", "#e8d51b"];
   var TYPE_COLOURS = ["#0072b2", "#009e73", "#d55e00", "#cc79a7"];
@@ -3193,27 +3193,31 @@
       const tot = counts.map((c) => c.reduce((a, b) => a + b, 0));
       const order2 = rows2.map((_, i) => i);
       if (st.stack && st.sort) order2.sort((a, b) => tot[b] - tot[a]);
-      const left = 150, right = 960, top = 58, rh = Math.min(44, 262 / nr), r = 5.5;
+      const step = st.size ?? 16, big = step > 24, left = 150, right = 960, top = 58, rh = Math.min(big ? 90 : 44, 262 / nr), r = big ? 15 : 5.5;
       const rowY = (p) => top + rh * (p + 0.5) + 8;
       const colW = (right - left) / m;
       if (!st.stack) ser.forEach((s, j) => {
         text2(left + colW * (j + 0.5), 36, s.name, 16, "middle", `sec:${j}`, { wt: 700 });
         if (j) line(`sep:${j}`, left + colW * j, 46, left + colW * j, top + rh * nr + 12, ink, 1, 0.15);
       });
-      const maxTot = Math.max(1, ...tot), d = Math.min(16, (right - left - 60) / maxTot);
+      const maxTot = Math.max(1, ...tot), d = Math.min(step, (right - left - 60) / maxTot);
       order2.forEach((i, p) => {
         const y = rowY(p);
         text2(left - 16, y + 6, rows2[i], 17, "end", `category:${i}`);
         let idx = 0;
         counts[i].forEach((c, j) => {
-          const dd = Math.min(16, colW * 0.9 / Math.max(1, c));
+          const dd = Math.min(step, colW * 0.9 / Math.max(1, c));
           for (let k = 0; k < c; k++) {
-            const x = st.stack ? left + 10 + idx * d : left + colW * (j + 0.5) - (c - 1) * dd / 2 + k * dd;
-            poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), ramp(j, m));
+            const x = st.stack ? left + 10 + d / 2 + idx * d : left + colW * (j + 0.5) - (c - 1) * dd / 2 + k * dd;
+            const icon = st.icons?.[i];
+            if (icon) {
+              poly(`unitbg:${i}:${j}:${k}`, circlePts(x, y, r * 1.5), ramp(j, m), { fo: 0.28 });
+              text2(x, y + r * 0.9, icon, r * 2.6, "middle", `unit:${i}:${j}:${k}`);
+            } else poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), ramp(j, m));
             idx++;
           }
         });
-        if (st.stack) text2(left + 10 + tot[i] * d + 8, y + 6, tot[i], 18, "start", `count:${i}`, { wt: 700 });
+        if (st.stack) text2(left + 10 + tot[i] * d + 8, y + 6, tot[i], big ? 24 : 18, "start", `count:${i}`, { wt: 700 });
       });
       if (st.stack) ser.forEach((s, j) => {
         const lx = 500 - m * 140 / 2 + j * 140;
@@ -3222,8 +3226,53 @@
       });
       return els;
     }
+    if (st.kind === "nested") {
+      const rows2 = String(data ?? "").split(/\r?\n/).filter((l) => l.trim()).slice(1, 5).map((l) => l.split("	").map((c) => c.trim()));
+      const fills = ["#f8c9a4", "#f2e6b0", "#b8dfcd", "#e3bde0"], inks = ["#b5421a", "#8a6a00", "#1d7a5c", "#8a3d86"];
+      const f = typeof st.focus === "number" ? st.focus : -1;
+      const lit = (k) => f < 0 || f === k;
+      const box2 = [[16, 12, 450, 346], [44, 58, 408, 288], [72, 176, 352, 162], [100, 244, 170, 80]];
+      rows2.forEach((r, k) => {
+        const [x, y, w, h] = box2[k] ?? box2[3];
+        poly(`lvl:${k}`, rectPts(x, y, w, h), fills[k], { fo: lit(k) ? 1 : 0.3, stroke: f === k ? inks[k] : "#ffffff", sw: f === k ? 3 : 1.5 });
+        text2(x + 14, y + 28, r[0] ?? "", k === 3 ? 16 : 19, "start", `lvlname:${k}`, { fill: inks[k], wt: 700 });
+      });
+      [["What?", 1, 124], ["Why?", 1, 160], ["How?", 2, 236]].forEach(([word, k, y]) => {
+        poly(`pill:${word}`, rectPts(318, y - 22, 110, 30), inks[k], { fo: lit(k) ? 1 : 0.3 });
+        text2(373, y - 1, word, 18, "middle", `pilltext:${word}`, { fill: "#ffffff", wt: 700 });
+      });
+      const show = f >= 0 ? [f] : rows2.map((_, k) => k);
+      let yy = f >= 0 ? 60 : 34;
+      show.forEach((k) => {
+        const r = rows2[k] ?? [];
+        if (f >= 0) {
+          text2(500, yy, r[0] ?? "", 26, "start", `desc:${k}:title`, { fill: inks[k], wt: 700 });
+          yy += 40;
+          String(r[1] ?? "").split("|").forEach((ln, n2) => {
+            text2(500, yy, ln.trim(), 20, "start", `desc:${k}:${n2}`);
+            yy += 30;
+          });
+          if (st.threats && r[2]) {
+            yy += 14;
+            text2(500, yy, "Threat", 16, "start", `desc:${k}:threat-h`, { fill: inks[k], wt: 700 });
+            yy += 30;
+            String(r[2]).split("|").forEach((ln, n2) => {
+              text2(500, yy, ln.trim(), 22, "start", `desc:${k}:t${n2}`, { wt: 700 });
+              yy += 30;
+            });
+          }
+        } else {
+          text2(500, yy, r[0] ?? "", 19, "start", `sum:${k}:h`, { fill: inks[k], wt: 700 });
+          yy += 26;
+          text2(500, yy, String(st.threats ? r[2] : r[1] ?? "").split("|").join(" "), 17, "start", `sum:${k}`);
+          yy += 58;
+        }
+      });
+      return els;
+    }
     return els;
   }
+  var NESTED = "Level	Asks	Threat\nDomain situation	Who are the target users?|What do they need to do?	You misunderstood|their needs\nData/task abstraction	What is shown? (data)|Why are they looking? (task)	You’re showing them|the wrong thing\nIdiom	How is it shown? (encoding)|How is it manipulated? (interaction)	The way you show it|doesn’t work\nAlgorithm	How is it computed|efficiently?	Your code is|too slow";
   var FRUIT = "Fruit	April	May	June\nApple	82	70	20\nPear	73	50	33\nPeach	67	45	28\nOrange	85	65	17\nKiwi	54	42	24\nMelon	33	58	20";
   var KIND_PRESETS = {
     reshape: { label: "Reshape: wide to long", prompt: "A chart needs Month on an axis. Where is Month in this table?", data: FRUIT, states: [
@@ -3259,6 +3308,18 @@
       { label: "Exploded", kind: "exploded", explanation: "Pulling the slices apart adds emphasis and separation, but no accuracy." },
       { label: "Polar area", kind: "rose", explanation: "Equal angles; the radius changes so that each wedge’s area is its share, as in Nightingale’s rose diagram. Areas are hard to compare." },
       { label: "Bars", kind: "bar", categorical: true, explanation: "Aligned length from a common baseline: the most accurate of the five. Hip-hop 25 beats Rock 20 at a glance." }
+    ] },
+    nested: { label: "Nested model: four levels", prompt: "You are asked to build a dashboard. Where do you start: with the users, the data, the chart or the code?", data: NESTED, states: [
+      { label: "Domain", kind: "nested", focus: 0, explanation: "The outer box: the people and their problem. Everything else sits inside it, so nothing inside can rescue a misunderstood domain." },
+      { label: "Abstraction", kind: "nested", focus: 1, explanation: "Translate the domain into vis vocabulary: what is shown (data abstraction) and why the user is looking (task abstraction). What? and Why? live here." },
+      { label: "Idiom", kind: "nested", focus: 2, explanation: "How? The visual encoding (how to draw it) and the interaction (how to manipulate it)." },
+      { label: "Algorithm", kind: "nested", focus: 3, explanation: "The innermost box: compute it efficiently. A fast algorithm cannot save the wrong idiom." },
+      { label: "Four threats", kind: "nested", threats: true, explanation: "Each level has its own way to fail. A failure at an outer level cascades inward, so work outside in when you start from a problem." }
+    ] },
+    emoji: { label: "Units as icons: animals", prompt: "One mark per animal. What changes when the mark becomes a picture, and what must not?", data: "Animal	Great Britain	United States\ncattle	3	2\npigs	2	1\nsheep	1	3", states: [
+      { label: "One dot each", kind: "units", size: 58, explanation: "A unit chart: one dot per animal, in a column for each country. Count the dots, and the counts are the data." },
+      { label: "Dots become icons", kind: "units", size: 58, icons: ["🐄", "🐖", "🐑"], explanation: "Each dot becomes its animal. The icon repeats the row label, so it adds recognition, not data: the count is still the number of marks, never their size." },
+      { label: "Count them", kind: "units", size: 58, stack: true, icons: ["🐄", "🐖", "🐑"], explanation: "Stack each animal’s icons into one row: cattle 5, sheep 4, pigs 3. The faint discs keep each country’s colour." }
     ] },
     units: { label: "Units: from words to frequency", prompt: "The raw data is words in the order they are sung. Where does “frequency” come from?", data: "Word	Verse 1	Chorus 1	Verse 2	Chorus 2	Bridge\nlove	2	4	1	4	2\nbaby	0	3	1	3	0\nnight	3	1	2	1	1\ndance	1	2	0	2	4\nheart	1	0	2	0	1", states: [
       { label: "In time order", kind: "units", explanation: "One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context." },
