@@ -1,6 +1,6 @@
 import * as MotionLab from './render/motion-lab.js';
 import {declareBodyRegion,measureBodyRegion} from './render/body-region.js';
-import {measureSlideFit,probeLayoutFit,svgScale,FIT_TOLERANCE,LEGIBLE_FLOOR} from './render/fit-check.js';
+import {measureSlideFit,probeLayoutFit,boxSpill,svgScale,FIT_TOLERANCE,LEGIBLE_FLOOR} from './render/fit-check.js';
 import {bindCanvasRegions} from './render/canvas-regions.js';
 import { CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions } from './render/regions.js';
 import { createActivityFields } from './activities/fields.js';
@@ -1771,7 +1771,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   DEFAULT_THEME, resolveTheme,
   createActivityFields, createCompositionRenderer, createChartRenderer, createWordRenderer, createLiveRenderer, createQuizRenderer, installArtRenderer, installLatticeRenderer, createPresenterWindow, createDeckSettings, createContentFields, installArrange, createPanes, createRail, installHeaderFooterUI, installArtwork, installCustom, installExplore, installExperiments, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
   hasLayoutTemplate, layoutRegionsFor, insertionRegionFor, LAYOUT_SLOT_TEMPLATES,
-  measureSlideFit, probeLayoutFit, svgScale, FIT_TOLERANCE, LEGIBLE_FLOOR,
+  measureSlideFit, probeLayoutFit, boxSpill, svgScale, FIT_TOLERANCE, LEGIBLE_FLOOR,
   CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,
   DESIGN_CONTROLS, designApplies,
   COMPOSITIONS: COMPOSITIONS,

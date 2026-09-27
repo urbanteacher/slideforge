@@ -105,10 +105,52 @@ try {
   assert.equal(overflowing.fits, false, 'fourteen long bullets should not fit');
   assert.ok(overflowing.issues.length, 'no issues reported for an overflowing slide');
   for (const issue of overflowing.issues) {
-    assert.match(issue.direction, /^(top|bottom|left|right|clipped-bottom|clipped-right)$/, `odd direction ${issue.direction}`);
+    assert.match(issue.direction, /^(top|bottom|left|right|clipped-bottom|clipped-right|spill-top|spill-bottom)$/, `odd direction ${issue.direction}`);
     assert.ok(issue.px > 0, 'an issue with no measured amount');
     assert.ok(issue.element, 'an issue with no element name');
   }
+
+  /* A compare grid too tall for the room left under its heading. Centred, it
+     used to overflow both ways with every word still on the slide, so the
+     frame test passed a grid covering its own title. Now the renderer steps it
+     down until it fits, and past the last rung the fit check says it spills. */
+  const compare = await page.evaluate(async () => {
+    const d = window.SF.buildLesson('layout-bank');
+    const five = [
+      'Goal\tIdentify good movies in genres I like\tIdentify common or unique words in favourite genres',
+      'Domain\tGeneral population, movie enthusiasts\tMusic listeners, linguists, fans',
+      'Task\tWhat is a good movie for me?\tWhat word patterns stand out?',
+      'Data\tRatings, box office, reviews\tLyrics, word frequencies, position, genre',
+      'Idiom\tStacked bar chart of ratings\tStreamgraph, unit chart, area chart',
+    ];
+    const measure = async (bullets) => {
+      const slide = { id: 'cmp', type: 'compare', title: 'From the movie example to your music project',
+        subtitle: 'Movie project\tMusic project', bullets,
+        body: 'This abstraction clarifies what you want to achieve before you choose a chart.' };
+      const root = await window.__mount(d, slide, 0);
+      const grid = root.querySelector('.compare');
+      const title = root.querySelector('h2').getBoundingClientRect();
+      const v = window.SF.measureSlideFit(root);
+      return {
+        rung: Number(grid.dataset.fit || 0),
+        clearOfTitle: grid.firstElementChild.getBoundingClientRect().top >= title.bottom - 1,
+        spill: v.issues.filter((i) => i.direction.startsWith('spill')).map((i) => i.direction),
+        /* The grid's own type, not the slide's smallest: the page number is
+           smaller than the floor on every slide and is not this layout's. */
+        smallest: Math.min(...[...grid.querySelectorAll('.compare-cell, .compare-aspect')]
+          .filter((n) => n.textContent.trim())
+          .map((n) => parseFloat(getComputedStyle(n).fontSize))),
+        floor: window.SF.LEGIBLE_FLOOR,
+      };
+    };
+    return { five: await measure(five), twelve: await measure(five.concat(five, five.slice(0, 2))) };
+  });
+  assert.ok(compare.five.rung >= 1, 'five two-line compare rows should step down a rung');
+  assert.equal(compare.five.clearOfTitle, true, 'the compare grid covered its heading');
+  assert.deepEqual(compare.five.spill, [], `five compare rows still spill: ${compare.five.spill}`);
+  assert.equal(compare.twelve.clearOfTitle, true, 'an over-full compare grid covered its heading');
+  assert.deepEqual(compare.twelve.spill, ['spill-bottom'], 'an over-full compare grid should be reported as spilling downward only');
+  assert.ok(compare.twelve.smallest >= compare.twelve.floor, `compare type went under the floor: ${compare.twelve.smallest}px`);
 
   /* probeLayoutFit: the estimate must match what the conversion produces, since
      both run prepareLayout on a clone. */
@@ -149,7 +191,8 @@ try {
     `Fit check passed: 97 slides measured, ${unfit.length} overflow their frame` +
       `${unfit.length ? ' (' + unfit.map((s) => '#' + s.n + ' ' + s.type).join(', ') + ')' : ''} · ` +
       `chart labels paint ${scaled.measured}px from a declared ${scaled.declared}px · ` +
-      `${probes.length} layout probes agreed with their own rendering`
+      `${probes.length} layout probes agreed with their own rendering · ` +
+      `five compare rows fit on rung ${compare.five.rung}, twelve spill and are reported`
   );
 } finally {
   await browser.close();
