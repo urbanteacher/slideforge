@@ -28,7 +28,7 @@ treatments. This file maps each item onto the lesson as it stands.
 
 | # | Item | Status |
 |---|---|---|
-| B1 | Align the reading | 27 Sep: "Reading this week" now names Chapters 2, 3 and 5 and what each covers (the sources slide already did) |
+| B1 | Align the reading | 27 Sep: Chapter 5 is marked as assigned; Chapters 2 and 3 are labelled optional context for the lecture |
 | B2 | Definitions: items, attributes, N/O/Q with everyday examples | 27 Sep: "Attribute types, with everyday examples" |
 | B3 | Keys versus values | 27 Sep: "Keys and values" (leads into the reshape) |
 | B4 | Semantics determines type | 27 Sep: "Check · Semantics decides the type" (postcode, shirt number, star rating, month) |
@@ -90,3 +90,7 @@ The teacher went through the 76-slide lab build and set four standards. Each is 
 - **The experiment slide is the template** for charts and interactions: title with its rule, a one-line prompt, the chart centred, the controls bottom left and the source bottom right. No slide needed changing for it.
 
 Also: the seven references fit their slide, one line each (`6fad22f`), and the movie-to-music comparison fits (`a1184e1`).
+
+## Change log
+
+- **27 Sep 2026:** Clarified slide 3 so Chapter 5 is the assigned reading and Chapters 2 and 3 are optional context, matching slide 2 and the supplied lecture materials.
