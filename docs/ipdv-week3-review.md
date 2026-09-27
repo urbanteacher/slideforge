@@ -79,3 +79,14 @@ treatments. This file maps each item onto the lesson as it stands.
 - `tools/build-perception-images.mjs` draws the five mark pairs from the `channels` kind, without the answer, into `assets/lesson/ipdv/perception-*.svg`.
 - `tools/build-ipdv-week3.js` now embeds the games' pictures in the portable bundle too.
 - Tests: `tests/week3.test.js` (ratios, deuteranopia collapse, network communities) and `tests/lab-convert.test.js` (preset list, the Estimate picture).
+
+## Layout review in the lab (27 Sep, afternoon)
+
+The teacher went through the 76-slide lab build and set four standards. Each is now applied.
+
+- **A dense figure is full screen, with its words on the flip.** What?, Why? and How?, the empires timeline, the FT Visual Vocabulary and the feature models were splits. Each is now a 16:9 framed picture with the bullets as the facts on its back (`33652c2`). The reading cover, the threats diagram, the pie sketch and the lab artwork stay as splits, because they read at half the slide.
+- **The question leads its answers.** On the multiple-choice walls the options are at most three-quarters of the question's size (`38d95c0`, `96fa3ba`). True or false keeps the statement at its doors' size. The Which-level check's question is shortened so its options are not squeezed (`33652c2`).
+- **A picture moves over for the rail.** In the lesson player a full-bleed picture was treated as a backdrop and stayed under the brainstorm and word-cloud rail (`bc6c171`).
+- **The experiment slide is the template** for charts and interactions: title with its rule, a one-line prompt, the chart centred, the controls bottom left and the source bottom right. No slide needed changing for it.
+
+Also: the seven references fit their slide, one line each (`6fad22f`), and the movie-to-music comparison fits (`a1184e1`).
