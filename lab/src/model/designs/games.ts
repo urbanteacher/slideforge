@@ -327,27 +327,30 @@ export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
  *  room. Every check uses it, so the answers are one size across the lesson; what does not fit it is
  *  said to the author (Slide.warn) rather than quietly drawn smaller. */
 const ANSWER_SIZE = 52;
+/** The standard size of a Buttons check's question, on the question and on its answer: it leads its
+ *  answers by rule 4 (ANSWER_SIZE / LEAD), and is the same on every check and on both its slides. */
+const QUESTION_SIZE = Math.ceil(ANSWER_SIZE / LEAD);
 /** The Buttons look with its reason under the question, as two slides that each do one job. The
- *  question: as large as two lines allow and at least ANSWER_SIZE / LEAD, so it leads its answers; its
- *  buttons right under it (rule 2) at ANSWER_SIZE, no room held for a reason it does not show. The
- *  answer: the question where it stood, then the right answer alone, green, and the reason under it in
- *  the muted ink, both at ANSWER_SIZE. The right button carries its morph, so on the reveal it travels
+ *  question at QUESTION_SIZE, so it leads its answers; its buttons right under it (rule 2) at
+ *  ANSWER_SIZE, no room held for a reason it does not show. The answer: the question at the same size in
+ *  the same place, then the right answer alone, green, and the reason under it in the muted ink, both
+ *  at ANSWER_SIZE. The right button carries its morph, so on the reveal it travels
  *  from its place in the set to the answer's. */
 function buttonsAndAnswer(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer: boolean): Slide {
   const opts = (q.options ?? []).slice(0, 6);
   const cells: Cell[] = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k] }));
   const heading = (a: boolean) => tag('Multiple choice', 'choose one', i, n, a);
-  const sizes = [120, 104, 92, 80, Math.ceil(ANSWER_SIZE / LEAD)];
   const warn: string[] = [];
-  const ask = opening(st, q, heading(false), q.question ?? '', false, { sizes, why: '' });
-  if (ask.qn.size < ANSWER_SIZE / LEAD - 0.5) warn.push(`The question is too long to stay larger than its answers: two lines of it fit only at ${Math.round(ask.qn.size)}px. Shorten it.`);
+  const ask = opening(st, q, heading(false), q.question ?? '', false, { sizes: [QUESTION_SIZE], why: '' });
+  if (ask.qn.size < QUESTION_SIZE - 0.5) warn.push(`The question is too long to stay larger than its answers: two lines of it fit only at ${Math.round(ask.qn.size)}px. Shorten it.`);
   if (!answer) {
     const set = buttons(st, cells, ask.top, ANSWER_SIZE, 0, ANSWER_SIZE);
     if (set.over) warn.push('An answer runs past two lines at the standard size. Shorten it, so every answer fits its button.');
     ask.layers.push(...set.layers);
     return warned(slideOf(named(name, i, false), ask.layers, st, note(q)), warn);
   }
-  const o = opening(st, q, heading(true), q.question ?? '', true, { sizes: [ask.qn.size], why: '' });
+  // The question at the same size and in the same place as on its question slide.
+  const o = opening(st, q, heading(true), q.question ?? '', true, { sizes: [QUESTION_SIZE], why: '' });
   const right = cells[q.correct ?? -1];
   if (!right) return slideOf(named(name, i, true), o.layers, st, note(q));
   const set = buttons(st, [{ ...right, right: true }], o.top, ANSWER_SIZE, 0, ANSWER_SIZE);
@@ -620,8 +623,9 @@ export function finishGame(slides: Slide[], format: string, label: string): Slid
     if (q) { q.type = 'quiz'; q.style ??= format; q.input ??= format === 'type' ? 'text' : 'choice'; q.gameTitle ??= label; }
     if (s.game.role === 'question' && !s.game.clock) s.game.clock = 'Time limit';
     // Every step of a game morphs: what the two slides share travels — the lit tile, the item into
-    // its place, the card into its reveal — and the rest crossfades.
-    s.transition = { type: 'morph', duration: 0.8 };
+    // its place, the card into its reveal — and the rest crossfades. A Buttons check's answer (placed)
+    // is a new slide, not the question changing: it fades in, and nothing travels.
+    s.transition = s.placed ? { type: 'fade', duration: 0.4 } : { type: 'morph', duration: 0.8 };
   });
   return centreGame(slides);
 }
