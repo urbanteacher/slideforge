@@ -4,10 +4,10 @@ Production module, not a lab note — it moved here out of `modular-canvas/` whe
 `js/editor.js` started calling it.
 
 `src/render/fit-check.js`, exposed as `SF.measureSlideFit`, `SF.probeLayoutFit`,
-`SF.svgScale`, `SF.FIT_TOLERANCE`, `SF.LEGIBLE_FLOOR`.
+`SF.boxSpill`, `SF.svgScale`, `SF.FIT_TOLERANCE`, `SF.LEGIBLE_FLOOR`.
 
-Built into `js/model.js` and covered by `npm test`
-(`tests/fit-check.test.js` → `tools/smoke/fit-check.mjs`), which exercises it on
+Built into `js/model.js` and covered by the `fit-check` smoke
+(`node tools/smoke/run.mjs fit-check` → `tools/smoke/fit-check.mjs`), which exercises it on
 **production rendering with no lab page involved**. That independence is the
 point: these are the two functions `js/editor.js` calls, so they have to hold up
 without the lattice, the recipes, or anything else the lab adds.
@@ -40,6 +40,33 @@ that is genuinely hidden from one sitting in a box whose scroll size is simply
 larger than its client size.
 
 With that instrument, **1 of 97 slides overflows: #43 `chart`.**
+
+## Rows out of their own box
+
+The word test has a blind spot. Overflow inside the frame, over something else
+that is also on the slide, is invisible to it. That is how a compare grid got
+through: it takes whatever height the heading and takeaway leave (`flex: 1;
+min-height: 0`), and five two-line rows centred in too little room rode up over
+the heading and down past the takeaway, with every glyph inside the frame.
+
+So a layout marks such a box `data-fit-box` (compare, stat tiles, claim rows and
+funnel do), and `boxSpill(box)` measures how far its rows reach past the box's
+top and bottom. `measureSlideFit` reports that as `spill-top` or `spill-bottom`,
+in screen pixels like the rest, naming the first word of the row that reaches
+furthest. Offsets rather than rects, because a build step waiting to come in is
+translated down half an em and a rect would call that a spill. Hidden children
+and positioned decoration are skipped.
+
+`spill-top` should now be rare. Those boxes centre with `safe center`, which
+sends rows that do not fit downward from the top rather than out of both ends.
+
+The compare renderer also uses `boxSpill` to fit itself. `fitRows` in
+`js/render.js` tries three rungs of tighter padding and smaller type
+(`.compare[data-fit="1|2|3"]` in `css/app.css`), measured once the box is laid
+out and again when fonts settle. The last rung stops at `LEGIBLE_FLOOR`. Past it
+the rows spill and this check reports them: the module still shrinks nothing
+itself, and the renderer does not shrink past the point where the room can read
+it. The other three boxes are safe-centred and reported, not yet fitted.
 
 ## Trials: two hooks, and the order matters
 
@@ -86,3 +113,10 @@ slot-level test through `inspect`, so that stricture does not leak into the
 production answer. When this lands in `js/editor.js`, the layout picker already
 renders a trial of every candidate shape — it just throws the render away instead
 of measuring it. Measuring a render that already happens is the whole change.
+
+## Change log
+
+- **27 Sep 2026.** `boxSpill` and the `spill-top` / `spill-bottom` directions,
+  after a compare grid covered its heading on Week 3 (CA-56). The test pointer
+  above named `tests/fit-check.test.js`, which does not exist; the smoke is run
+  through `tools/smoke/run.mjs`.

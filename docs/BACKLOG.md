@@ -186,6 +186,7 @@ Three read-only reviews, running in parallel, covered:
 | CA-26 | Undo or redo closes Layout and Artwork (slides are compared by object, not by id) | arrange | P2 | S | **Done** 23 Sep |
 | CA-27 | A resize drag can be left running (no blur or cancel handling, unlike move) | arrange | P2 | S | **Done** 23 Sep |
 | CA-28 | Fit badges and the text-size fitter measure before web fonts load | fit-check | P2 | S | **Done** 23 Sep · picker badges; the size fitter not yet |
+| CA-56 | **New:** a compare grid taller than its room centred out of both ends, over its heading and past its takeaway, and the fit check passed it | render × fit-check | P1 | S | **Done** 27 Sep · compare steps down; stats, claim rows and funnel only stop at the top |
 | **Editor text on the projector** (widens UX-03) ||||||
 | CA-30 | `infoEmpty` shows "Add … in the inspector" on 8 layouts; there are also image, video and URL prompts, the "needs http(s)" warning, and empty free-block labels | render | P0 | S | **Done** 23 Sep |
 | **Keyboard** ||||||
@@ -779,6 +780,17 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026; the lesson side next |
 
 ## Change log
+
+### 27 September 2026 — A compare grid can no longer cover its heading
+
+- **CA-56:** Week 3's movie-to-music comparison had five labelled rows of two-line cells, which is more than the room left under the heading. `.compare` centred them, so the grid overflowed both ways: the column heads rode up over the title and the last row ran past the takeaway's rule. Every word was still on the slide, so `measureSlideFit` passed it. The slide was fixed by shortening its words (`a1184e1`); this fixes the engine. Five changes:
+  - `.compare` is now `justify-content: safe center`, so rows that do not fit start at the top and run downward. The same holds for the other boxes in the infographic block that centre into a flex share: the stat tiles, claim rows, funnel and spectrum. The timeline and stepper use auto margins, which were safe already.
+  - `fitRows` in `js/render.js` measures a compare grid once it is laid out, and tries three rungs (`data-fit` 1–3) of tighter padding and smaller type. The last rung stops at 20px, the legibility floor.
+  - Compare, stats, claim rows and funnel mark their box `data-fit-box`.
+  - A new `boxSpill` in `src/render/fit-check.js` measures how far a box's rows reach past its edges.
+  - `measureSlideFit` reports that as `spill-top` or `spill-bottom`. Only compare steps down; the other three are only reported.
+
+  Measured: Week 3's original wording fits on rung 1 in the Northeastern and Editorial themes and on rung 2 in Brutal. Eight rows fit on rung 3. Twelve rows spill 131px, are reported, and still sit below the heading. Checked by `npm test` (541 pass), the `fit-check` smoke (new compare assertions, and the 97-slide bank still has only its one known overflow) and `npm run visual:check`. The visual check's only new failure was `layout-compare6`, the six-row fixture held open on 18 Sep to be split by hand. It now fits, so its three baselines are re-recorded. `layout-beforeafter` and `randomchallenge` fail at `a1184e1` too, and some game-style captures differ between runs. Details in [the fit check](fit-check.md).
 
 ### 27 September 2026 — Week 3 and the new chart-experiment kinds
 
