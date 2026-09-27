@@ -30,7 +30,12 @@ study. Category, ordinal and redesign slides now use native editable examples.
 
 Presets cover polling, baseline distortion, clutter, aspect ratio and selected
 ranges, marks and channels, colour schemes, accessibility, dataset structures,
-attribute classification and overview/detail. The Week 2 lesson uses these
+attribute classification and overview/detail. Week 3 added six more: reshape
+(a table melted wide to long, its types named, a total derived), tasks (one
+table answering five questions), derive (the gap between two lines dropping
+into a balance, then a running total), rescue3d (a 3D default flattened,
+stacked, grouped and totalled), pies (pie, doughnut, exploded, polar area,
+bars) and units (words counted into frequency). The Week 2 lesson uses these
 alongside full-size reference images with the existing Flip to facts interaction.
 
 ## Teaching and data
@@ -48,6 +53,12 @@ alongside full-size reference images with the existing Flip to facts interaction
   begins at the prediction prompt. Animations respect reduced-motion settings.
 
 No React or external chart dependency is required. Rendering lives in
-`js/experiments.js` with data-keyed motion in `js/chart-motion.js`; Explore handles navigation and presenter messages. The
+`src/render/experiments.js` with data-keyed motion in `js/chart-motion.js`;
+the lab draws the same states in `lab/src/engine/experiment.ts`. The Week 3
+kinds (grid, long, groups, lines, balance, oblique, donut, exploded, rose,
+units) are written once, in `lab/src/engine/experimentKinds.ts`, which both
+engines import; add a new kind there, not twice. A key names a datum wherever
+it is drawn (`cell:i:j` is a table cell, a bar, a segment or a point), which
+is what lets it travel between kinds; Explore handles navigation and presenter messages. The
 catalogue entry is in `src/deck/content.js`. Run `npm run build` when changing
 that catalogue to regenerate the browser model bundle.

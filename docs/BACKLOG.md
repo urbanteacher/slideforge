@@ -768,6 +768,7 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-16 | Text effects and a text block: outline, outline only, gradient fill, shadows, glow, highlighter, word spacing; Scramble and Count up entrances, a typewriter cursor, random order; Safari draws the blur and white logos | Done · 26 Sep 2026 · `2885d4f` |
 | LAB-17 | Default slides move plainly: no blurred word motion or Blur in across the layouts, designs and the lab's originals; bullet lists build a point per click with the earlier points dimmed | Done · 26 Sep 2026 · `d8b981e` |
+| LAB-18 | Week 3 · Data Abstraction as a lesson, and ten chart-experiment kinds written once for both engines: a table melted wide to long, grouped and stacked bars into sorted totals, lines with a gap that drops into a derived balance, a 3D default to rescue, the pie's variants, unit charts counted into frequency | Done · 27 Sep 2026 · `39d9e95` `5a7167d` |
 
 ## The lab as the engine
 
@@ -778,6 +779,10 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026; the lesson side next |
 
 ## Change log
+
+### 27 September 2026 — Week 3 and the new chart-experiment kinds
+
+- **LAB-18:** Week 3 (lesson `ipdv-da`, 44 slides, 90 minutes) is built from `01_Lecture_IPDV_3.pptx` in the Northeastern theme (`5a7167d`). It has six live chart transformations, five inline checks and a group abstraction of the lyrics project. The deck's errors are fixed on the way in, and each fix is recorded in the slide's notes. The transformations needed kinds the engines lacked, so `lab/src/engine/experimentKinds.ts` now draws ten new ones, and SlideForge's SVG engine imports the same file (`39d9e95`): `grid`, `long`, `groups`, `lines`, `balance`, `oblique`, `donut`, `exploded`, `rose` and `units`. They back six presets (reshape, tasks, derive, rescue3d, pies, units), which are in the lab's Chart experiment menu. Also fixed: the converter kept only the first heading of a comparison, because SlideForge separates the two with a tab. Checked by `npm test` (565), a render of every state, and presenting the reshape experiment in the lab.
 
 ### 26 September 2026 — Plain motion on default slides
 
