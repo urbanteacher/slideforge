@@ -246,7 +246,17 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
     case 'timeline': return { slide: timelineSlide(st, t, sub, triples(b)), ground: g };
     case 'cards': {
       const items = pairs(b);
-      return { slide: cardsSlide(st, t, items), ground: g, note: items.length > 4 ? `SlideForge shows ${items.length} cards here; the lab's cards take four a slide, so the rest are in these notes: ${items.slice(4).map((x) => x.join(' — ')).join('; ')}.` : undefined };
+      const slide = cardsSlide(st, t, items);
+      // Built a card per press in SlideForge: the same here. Each card arrives on a click, and its rule,
+      // heading and words follow it at once; the slide's own heading is there from the start.
+      if (s.progressive) {
+        let inCard = false;
+        for (const l of slide.layers) {
+          if (l.name === 'Card') { inCard = true; l.anim = { ...l.anim, trigger: 'onClick', delay: 0 }; }
+          else if (inCard && /^(Rule|Heading|Text)$/.test(l.name)) l.anim = { ...l.anim, trigger: 'afterPrev', delay: 0, duration: 0.4 };
+        }
+      }
+      return { slide, ground: g, note: items.length > 4 ? `SlideForge shows ${items.length} cards here; the lab's cards take four a slide, so the rest are in these notes: ${items.slice(4).map((x) => x.join(' — ')).join('; ')}.` : undefined };
     }
     case 'keywords': return { slide: keywordsSlide(st, t, pairs(b)), ground: g };
     case 'italics': {
