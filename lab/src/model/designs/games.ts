@@ -352,16 +352,25 @@ function buttonsAndAnswer(st: LayoutStyle, name: string, q: GameQuestion, i: num
   if (!right) return slideOf(named(name, i, true), o.layers, st, note(q));
   const set = buttons(st, [{ ...right, right: true }], o.top, ANSWER_SIZE, 0, ANSWER_SIZE);
   centreAnswer(st, set.layers, right.text);
-  o.layers.push(...set.layers);
   const why = q.explanation ?? '';
+  const p: Params = { font: st.body, size: ANSWER_SIZE, color: st.muted, lineHeight: 1.25, fit: 'shrink', align: 'center' };
+  const GAP = 40;
+  const room = FOOT - set.bottom - GAP;
+  const whyH = why ? textHeight(why, W - LEFT * 2, p) + 6 : 0;
+  if (whyH > room) warn.push('The reason is too long for the answer slide at the standard size, so it is drawn smaller. Shorten it.');
+  // The answer and its reason as one block, set in the middle of the room under the question, so the
+  // space above the answer is the space below the reason. Where the reason fills the room, from the top.
+  const block = (set.bottom - o.top) + (why ? GAP + Math.min(whyH, room) : 0);
+  const dy = Math.max(0, (FOOT - o.qn.bottom - block) / 2 - (o.top - o.qn.bottom));
+  for (const l of set.layers) if (l.box) l.box = { ...l.box, y: l.box.y + dy };
+  o.layers.push(...set.layers);
   if (why) {
-    const p: Params = { font: st.body, size: ANSWER_SIZE, color: st.muted, lineHeight: 1.25, fit: 'shrink', align: 'center' };
-    const room = FOOT - set.bottom - 40;
-    if (textHeight(why, W - LEFT * 2, p) + 6 > room) warn.push('The reason is too long for the answer slide at the standard size, so it is drawn smaller. Shorten it.');
-    // 'Reason', not 'Why': it belongs to the answer under it and moves with it when the game is centred.
-    o.layers.push(txt('Reason', why, box(LEFT, set.bottom + 40, W - LEFT * 2, room), p, { type: 'fade', duration: 0.6, delay: 0.4 }));
+    // 'Reason', not 'Why': it belongs to the answer above it and moves with it when the game is centred.
+    o.layers.push(txt('Reason', why, box(LEFT, set.bottom + dy + GAP, W - LEFT * 2, Math.min(whyH, room)), p, { type: 'fade', duration: 0.6, delay: 0.4 }));
   }
-  return warned(slideOf(named(name, i, true), o.layers, st, note(q)), warn);
+  const made = warned(slideOf(named(name, i, true), o.layers, st, note(q)), warn);
+  made.placed = true;
+  return made;
 }
 /** The answer at the middle of the slide: its button only as wide as its letter and words, centred.
  *  An answer too long for one line keeps the full width, its words centred in it. The insets are
@@ -587,11 +596,11 @@ function slack(s: Slide): number {
 }
 /** Centre each slide's content — its tiles, rows and strips — in the space under its question. A question and its answer move
  *  together, by the smaller of their two, so the question holds still between them. Covers keep their
- *  own layout. */
+ *  own layout, and so does a slide its design has placed (Slide.placed). */
 export function centreGame(slides: Slide[]) {
   const groups = new Map<string, Slide[]>();
   slides.forEach((s, k) => {
-    if (s.game?.role === 'cover') return;
+    if (s.game?.role === 'cover' || s.placed) return;
     const key = s.game?.key != null ? `key:${s.game.key}` : `slide:${k}`;
     groups.set(key, [...(groups.get(key) ?? []), s]);
   });
