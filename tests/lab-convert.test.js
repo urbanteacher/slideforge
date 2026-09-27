@@ -539,13 +539,13 @@ test('a slide hidden in SlideForge is hidden in the lab, and a copy made before 
   assert.ok(from(shown.id).every((s) => !s.hidden), 'and nothing shown is hidden');
 });
 
-test('Week 3 comes into the lab with its nine experiments on the shared kinds, leaving only its games', { skip }, async () => {
+test('Week 3 comes into the lab with its ten experiments on the shared kinds, leaving only its games', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
   const src = lesson('ipdv-da');
   const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
   assert.equal(deck.slides.length, src.slides.filter((s) => s.type !== 'game').length, 'only the games stay SlideForge’s');
   const presets = experiments(deck).map((s) => s.layers.find((l) => l.kind === 'experiment').params.preset);
-  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
+  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'rescue3d', 'pies', 'units', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
 });
 
 test('a comparison keeps both of its column headings, which SlideForge separates with a tab', { skip }, async () => {
