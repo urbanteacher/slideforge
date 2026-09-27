@@ -64,7 +64,14 @@ test('Week 3 builds whole: its checks inline, its experiments known to SlideForg
   assert.equal(deck.theme, 'northeastern');
   assert.equal(deck.slides.filter((s) => s.type === 'game' && s.gameId).length, 5);
   const ex = deck.slides.filter((s) => s.type === 'experiment');
-  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['nested', 'reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units', 'emoji']);
+  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['nested', 'reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units', 'idioms', 'emoji']);
   deck.slides.forEach((s) => { if (s.image) assert.ok(fs.existsSync(path.join(ROOT, s.image)), s.image); });
   assert.equal(SF.LESSONS.find((l) => l.key === 'ipdv-da').libraryGroup, 'nul');
+});
+
+test('a pictogram keeps one icon per row, not just the first four characters', () => {
+  const SF = sf();
+  const deck = SF.buildLesson('ipdv-da');
+  const s = deck.slides.find((x) => x.chartKind === 'pictogram');
+  assert.equal(SF.normalizeDeck(deck).slides.find((x) => x.id === s.id).chartIcon, '🐄 🐑 🐖');
 });

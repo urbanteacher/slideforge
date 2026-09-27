@@ -539,13 +539,13 @@ test('a slide hidden in SlideForge is hidden in the lab, and a copy made before 
   assert.ok(from(shown.id).every((s) => !s.hidden), 'and nothing shown is hidden');
 });
 
-test('Week 3 comes into the lab with its eight experiments on the shared kinds, leaving only its games', { skip }, async () => {
+test('Week 3 comes into the lab with its nine experiments on the shared kinds, leaving only its games', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
   const src = lesson('ipdv-da');
   const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
   assert.equal(deck.slides.length, src.slides.filter((s) => s.type !== 'game').length, 'only the games stay SlideForge’s');
   const presets = experiments(deck).map((s) => s.layers.find((l) => l.kind === 'experiment').params.preset);
-  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units', 'emoji'], 'each keeps its own preset, none falls back to polling');
+  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
 });
 
 test('a comparison keeps both of its column headings, which SlideForge separates with a tab', { skip }, async () => {
@@ -557,4 +557,14 @@ test('a comparison keeps both of its column headings, which SlideForge separates
   const words = made.layers.map((l) => String(l.params.text ?? '').trim());
   assert.ok(words.includes('Movie project') && words.includes('Music project'), 'each heading is its own');
   assert.ok(!words.includes('Two'), 'no placeholder heading');
+});
+
+test('Week 3’s pictogram comes into the lab as the lab’s own pictogram, an icon for each row', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lesson('ipdv-da');
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const want = src.slides.find((s) => s.chartKind === 'pictogram');
+  const layer = deck.slides.find((s) => s.sourceSlideId === want.id).layers.find((l) => l.params.chart === 'pictogram');
+  assert.ok(layer, 'a pictogram chart layer');
+  assert.equal(layer.params.icon, '🐄 🐑 🐖');
 });
