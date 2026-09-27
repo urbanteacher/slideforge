@@ -1486,7 +1486,9 @@
     function pictogramChart(data, slide) {
       var W = CHART.w, H = CHART.h, P = CHART;
       var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg ch-picto", role: "img" });
-      var icon = String(slide.chartIcon || "").trim() || "●";
+      var icons = String(slide.chartIcon || "").trim().split(/[\s,]+/).filter(Boolean);
+      if (!icons.length) icons = ["●"];
+      var icon = icons[0];
       var vals = (data.series[0] ? data.series[0].values : []).map(function(v) {
         return v == null ? 0 : Math.max(0, v);
       });
@@ -1506,6 +1508,7 @@
         var g = svgEl("g", { class: "ch-beat", "data-step": ci, "data-series": "0" });
         var whole = Math.floor(vals[ci] / unit);
         var part = vals[ci] % unit / unit;
+        icon = icons[ci % icons.length];
         for (var i = 0; i < whole && i < 40; i++) {
           var t = svgEl("text", {
             x: labelRoom + i * (size * 0.92),
@@ -1546,7 +1549,7 @@
         svg.appendChild(g);
       });
       var key = svgEl("text", { x: labelRoom, y: H - 10, class: "ch-tick" });
-      key.textContent = icon + " = " + fmt(unit) + (data.series[0] && data.series[0].name ? " " + data.series[0].name.toLowerCase() : "");
+      key.textContent = (icons.length > 1 ? "Each icon" : icons[0]) + " = " + fmt(unit) + (data.series[0] && data.series[0].name ? " " + data.series[0].name.toLowerCase() : "");
       svg.appendChild(key);
       return svg;
     }
@@ -2875,7 +2878,7 @@
   }
 
   // lab/src/engine/experimentKinds.ts
-  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested"];
+  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested", "stream", "area"];
   var COLOURS = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
   var RAINBOW = ["#e0201b", "#1f3fd6", "#27b83a", "#8a2be2", "#f28c1b", "#e8d51b"];
   var TYPE_COLOURS = ["#0072b2", "#009e73", "#d55e00", "#cc79a7"];
@@ -3210,10 +3213,11 @@
           for (let k = 0; k < c; k++) {
             const x = st.stack ? left + 10 + d / 2 + idx * d : left + colW * (j + 0.5) - (c - 1) * dd / 2 + k * dd;
             const icon = st.icons?.[i];
+            const col = st.colourBy === "category" ? COLOURS[i % COLOURS.length] : ramp(j, m);
             if (icon) {
-              poly(`unitbg:${i}:${j}:${k}`, circlePts(x, y, r * 1.5), ramp(j, m), { fo: 0.28 });
+              poly(`unitbg:${i}:${j}:${k}`, circlePts(x, y, r * 1.5), col, { fo: 0.28 });
               text2(x, y + r * 0.9, icon, r * 2.6, "middle", `unit:${i}:${j}:${k}`);
-            } else poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), ramp(j, m));
+            } else poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), col);
             idx++;
           }
         });
@@ -3270,9 +3274,52 @@
       });
       return els;
     }
+    if (st.kind === "stream" || st.kind === "area") {
+      const rows2 = cats.slice(0, 8), left = 150, right = 940;
+      const xAt = (t2) => left + (m <= 1 ? 0.5 : t2 / (m - 1)) * (right - left);
+      const at = (i, t2) => {
+        const a = Math.floor(t2), b = Math.min(m - 1, a + 1), u = t2 - a, e = (1 - Math.cos(u * Math.PI)) / 2;
+        return v(i, a) + (v(i, b) - v(i, a)) * e;
+      };
+      const span = (n2) => Array.from({ length: n2 }, (_, k) => m <= 1 ? 0 : k / (n2 - 1) * (m - 1));
+      const ts = span(st.kind === "stream" ? 32 : 62);
+      if (st.kind === "stream") {
+        const tot = (t2) => rows2.reduce((a, _, i) => a + at(i, t2), 0);
+        const maxT = Math.max(1, ...ts.map(tot)), k = 280 / maxT, mid = 178;
+        rows2.forEach((name, i) => {
+          const lo = ts.map((t2) => mid - tot(t2) / 2 * k + rows2.slice(0, i).reduce((a, _, h) => a + at(h, t2), 0) * k);
+          const hi = ts.map((t2, n2) => lo[n2] + at(i, t2) * k);
+          const verts = [...ts.map((t2, n2) => [xAt(t2), hi[n2]]), ...ts.map((t2, n2) => [xAt(t2), lo[n2]]).reverse()];
+          poly(`band:${i}`, along(verts), COLOURS[i % COLOURS.length], { fo: 0.9, stroke: "#ffffff", sw: 1 });
+          const edge = Math.round(ts.length / 10);
+          let best = edge;
+          ts.forEach((_, n2) => {
+            if (n2 >= edge && n2 <= ts.length - 1 - edge && hi[n2] - lo[n2] > hi[best] - lo[best]) best = n2;
+          });
+          if (hi[best] - lo[best] > 16) text2(xAt(ts[best]), (hi[best] + lo[best]) / 2 + 6, name, 17, "middle", `bandname:${i}`, { fill: "#ffffff", wt: 700 });
+        });
+      } else {
+        const maxV = Math.max(1, ...rows2.flatMap((_, i) => ser.map((__, j) => v(i, j)))), k = 250 / maxV, base = 312;
+        rows2.map((_, i) => i).sort((a, b) => sum(ser.map((q) => q.values[b])) - sum(ser.map((q) => q.values[a]))).forEach((i) => {
+          const hi = ts.map((t2) => base - at(i, t2) * k);
+          const verts = [...ts.map((t2, n2) => [xAt(t2), hi[n2]]), [right, base], [left, base]];
+          poly(`band:${i}`, along(verts), COLOURS[i % COLOURS.length], { fo: 0.3, stroke: COLOURS[i % COLOURS.length], sw: 2.5 });
+          const edge = Math.round(hi.length / 10);
+          let best = edge;
+          hi.forEach((y, n2) => {
+            if (n2 >= edge && n2 <= hi.length - 1 - edge && y < hi[best]) best = n2;
+          });
+          text2(xAt(ts[best]), hi[best] - 8, rows2[i], 17, "middle", `bandname:${i}`, { fill: COLOURS[i % COLOURS.length], wt: 700 });
+        });
+        line("base", left, base, right, base, ink, 1.5, 0.5);
+      }
+      ser.forEach((q, j) => text2(xAt(j), 350, q.name, 16, "middle", `xcat:${j}`));
+      return els;
+    }
     return els;
   }
   var NESTED = "Level	Asks	Threat\nDomain situation	Who are the target users?|What do they need to do?	You misunderstood|their needs\nData/task abstraction	What is shown? (data)|Why are they looking? (task)	You’re showing them|the wrong thing\nIdiom	How is it shown? (encoding)|How is it manipulated? (interaction)	The way you show it|doesn’t work\nAlgorithm	How is it computed|efficiently?	Your code is|too slow";
+  var SONG = "Word	Verse 1	Chorus 1	Verse 2	Chorus 2	Bridge\nlove	2	4	1	4	2\nbaby	0	3	1	3	0\nnight	3	1	2	1	1\ndance	1	2	0	2	4\nheart	1	0	2	0	1";
   var FRUIT = "Fruit	April	May	June\nApple	82	70	20\nPear	73	50	33\nPeach	67	45	28\nOrange	85	65	17\nKiwi	54	42	24\nMelon	33	58	20";
   var KIND_PRESETS = {
     reshape: { label: "Reshape: wide to long", prompt: "A chart needs Month on an axis. Where is Month in this table?", data: FRUIT, states: [
@@ -3321,7 +3368,12 @@
       { label: "Dots become icons", kind: "units", size: 58, icons: ["🐄", "🐖", "🐑"], explanation: "Each dot becomes its animal. The icon repeats the row label, so it adds recognition, not data: the count is still the number of marks, never their size." },
       { label: "Count them", kind: "units", size: 58, stack: true, icons: ["🐄", "🐖", "🐑"], explanation: "Stack each animal’s icons into one row: cattle 5, sheep 4, pigs 3. The faint discs keep each country’s colour." }
     ] },
-    units: { label: "Units: from words to frequency", prompt: "The raw data is words in the order they are sung. Where does “frequency” come from?", data: "Word	Verse 1	Chorus 1	Verse 2	Chorus 2	Bridge\nlove	2	4	1	4	2\nbaby	0	3	1	3	0\nnight	3	1	2	1	1\ndance	1	2	0	2	4\nheart	1	0	2	0	1", states: [
+    idioms: { label: "Idioms: one song, three charts", prompt: "Same song, same counts. Which chart gives the overview, which lets you explore, which shows the song’s shape?", data: SONG, states: [
+      { label: "Streamgraph", kind: "stream", explanation: "Overview. X: position in the song. Thickness: how often each word is sung there. Colour: the word. The stream swells at the choruses." },
+      { label: "Unit chart", kind: "units", colourBy: "category", explanation: "Exploration. One mark per sung word, by section. Every mark can be hovered to show the word in its line." },
+      { label: "Area chart", kind: "area", explanation: "The song’s dynamics. Each word from zero, see-through, so peaks can be compared; animate it for the “liquid” version. Colour: the word." }
+    ] },
+    units: { label: "Units: from words to frequency", prompt: "The raw data is words in the order they are sung. Where does “frequency” come from?", data: SONG, states: [
       { label: "In time order", kind: "units", explanation: "One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context." },
       { label: "Count them", kind: "units", stack: true, explanation: "The dots slide into one row per word. Frequency was never in the lyrics: it is derived by counting. The colour still shows which section each came from." },
       { label: "Sort", kind: "units", stack: true, sort: true, explanation: "Sorted, the extremum reads first: love, 13 times. Chorus colours dominate, because choruses repeat." }
@@ -8441,7 +8493,7 @@
         if (SHAPES[s.chartKind]) insp.appendChild(el("p", "hint", SHAPES[s.chartKind]));
         if (s.chartKind === "pictogram") {
           insp.appendChild(UI.field("Icon", UI.text(s.chartIcon || "", function(v) {
-            s.chartIcon = String(v).trim().slice(0, 4);
+            s.chartIcon = String(v).trim().slice(0, 40);
             touched();
             repaint();
           }), "One emoji or character, repeated once per unit. A person, a book, a bus — something the room can count at a glance."));
@@ -24280,7 +24332,7 @@
     ].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     s.chartSource = String(s.chartSource || "").trim().slice(0, 200);
     if (!s.chartSource) delete s.chartSource;
-    s.chartIcon = String(s.chartIcon || "").trim().slice(0, 4);
+    s.chartIcon = String(s.chartIcon || "").trim().slice(0, 40);
     s.chartUnit = Math.max(1, Math.min(1e4, Number(s.chartUnit) || 1));
     var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
     s.layers = rawLayers.slice(0, GALLERY_MAX).map(function(layer) {

@@ -39,12 +39,12 @@ export interface KEl {
 
 interface KPreset { label: string; prompt: string; data: string; states: KState[] }
 
-export const KINDS = ['grid', 'long', 'groups', 'lines', 'balance', 'oblique', 'donut', 'exploded', 'rose', 'units', 'nested'];
+export const KINDS = ['grid', 'long', 'groups', 'lines', 'balance', 'oblique', 'donut', 'exploded', 'rose', 'units', 'nested', 'stream', 'area'];
 
 /** Each new kind's small symbol for its step button. */
 export const KIND_GLYPHS: Record<string, string> = {
   grid: '▦', long: '≡', groups: '▮', lines: '╱', balance: '±', oblique: '▣',
-  donut: '◎', exploded: '◔', rose: '✿', units: '∷', nested: '⧉',
+  donut: '◎', exploded: '◔', rose: '✿', units: '∷', nested: '⧉', stream: '≋', area: '◭',
 };
 
 const COLOURS = ['#0072b2', '#d55e00', '#009e73', '#cc79a7', '#8a6500', '#5b4ba8'];
@@ -393,8 +393,9 @@ export function kindPicture(data: string, st: KState, ink: string): KEl[] | null
           const x = st.stack ? left + 10 + d / 2 + idx * d : left + colW * (j + 0.5) - ((c - 1) * dd) / 2 + k * dd;
           const icon = st.icons?.[i];
           // An icon keeps a faint disc of its column's colour behind it, so a stacked row still shows where each came from.
-          if (icon) { poly(`unitbg:${i}:${j}:${k}`, circlePts(x, y, r * 1.5), ramp(j, m), { fo: 0.28 }); text(x, y + r * 0.9, icon, r * 2.6, 'middle', `unit:${i}:${j}:${k}`); }
-          else poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), ramp(j, m));
+          const col = st.colourBy === 'category' ? COLOURS[i % COLOURS.length] : ramp(j, m);
+          if (icon) { poly(`unitbg:${i}:${j}:${k}`, circlePts(x, y, r * 1.5), col, { fo: 0.28 }); text(x, y + r * 0.9, icon, r * 2.6, 'middle', `unit:${i}:${j}:${k}`); }
+          else poly(`unit:${i}:${j}:${k}`, circlePts(x, y, r), col);
           idx++;
         }
       });
@@ -441,10 +442,49 @@ export function kindPicture(data: string, st: KState, ink: string): KEl[] | null
     });
     return els;
   }
+  if (st.kind === 'stream' || st.kind === 'area') {
+    // A band per category across the series (words across a song's sections), smoothed between the
+    // sections. stream stacks the bands round a centre line (a streamgraph); area draws each band
+    // from zero, overlapping and see-through. Both key a band by its category, so one becomes the other.
+    const rows = cats.slice(0, 8), left = 150, right = 940;
+    const xAt = (t: number) => left + (m <= 1 ? 0.5 : t / (m - 1)) * (right - left);
+    const at = (i: number, t: number) => { const a = Math.floor(t), b = Math.min(m - 1, a + 1), u = t - a, e = (1 - Math.cos(u * Math.PI)) / 2; return v(i, a) + (v(i, b) - v(i, a)) * e; };
+    // Exactly 64 outline points (32 along each edge of a stream band, 62 plus two corners for an area),
+    // so resampling to the shared 64 never cuts a corner.
+    const span = (n: number) => Array.from({ length: n }, (_, k) => (m <= 1 ? 0 : (k / (n - 1)) * (m - 1)));
+    const ts = span(st.kind === 'stream' ? 32 : 62);
+    if (st.kind === 'stream') {
+      const tot = (t: number) => rows.reduce((a, _, i) => a + at(i, t), 0);
+      const maxT = Math.max(1, ...ts.map(tot)), k = 280 / maxT, mid = 178;
+      rows.forEach((name, i) => {
+        const lo = ts.map((t) => mid - (tot(t) / 2) * k + rows.slice(0, i).reduce((a, _, h) => a + at(h, t), 0) * k);
+        const hi = ts.map((t, n) => lo[n] + at(i, t) * k);
+        const verts = [...ts.map((t, n) => [xAt(t), hi[n]]), ...ts.map((t, n) => [xAt(t), lo[n]]).reverse()];
+        poly(`band:${i}`, along(verts), COLOURS[i % COLOURS.length], { fo: 0.9, stroke: '#ffffff', sw: 1 });
+        // The label sits where the band is thickest, away from the ends so it is never cut off.
+        const edge = Math.round(ts.length / 10); let best = edge; ts.forEach((_, n) => { if (n >= edge && n <= ts.length - 1 - edge && hi[n] - lo[n] > hi[best] - lo[best]) best = n; });
+        if (hi[best] - lo[best] > 16) text(xAt(ts[best]), (hi[best] + lo[best]) / 2 + 6, name, 17, 'middle', `bandname:${i}`, { fill: '#ffffff', wt: 700 });
+      });
+    } else {
+      const maxV = Math.max(1, ...rows.flatMap((_, i) => ser.map((__, j) => v(i, j)))), k = 250 / maxV, base = 312;
+      rows.map((_, i) => i).sort((a, b) => sum(ser.map((q) => q.values[b])) - sum(ser.map((q) => q.values[a]))).forEach((i) => {
+        const hi = ts.map((t) => base - at(i, t) * k);
+        const verts = [...ts.map((t, n) => [xAt(t), hi[n]]), [right, base], [left, base]];
+        poly(`band:${i}`, along(verts), COLOURS[i % COLOURS.length], { fo: 0.3, stroke: COLOURS[i % COLOURS.length], sw: 2.5 });
+        const edge = Math.round(hi.length / 10); let best = edge; hi.forEach((y, n) => { if (n >= edge && n <= hi.length - 1 - edge && y < hi[best]) best = n; });
+        text(xAt(ts[best]), hi[best] - 8, rows[i], 17, 'middle', `bandname:${i}`, { fill: COLOURS[i % COLOURS.length], wt: 700 });
+      });
+      line('base', left, base, right, base, ink, 1.5, 0.5);
+    }
+    ser.forEach((q, j) => text(xAt(j), 350, q.name, 16, 'middle', `xcat:${j}`));
+    return els;
+  }
   return els;
 }
 
 const NESTED = 'Level\tAsks\tThreat\nDomain situation\tWho are the target users?|What do they need to do?\tYou misunderstood|their needs\nData/task abstraction\tWhat is shown? (data)|Why are they looking? (task)\tYou’re showing them|the wrong thing\nIdiom\tHow is it shown? (encoding)|How is it manipulated? (interaction)\tThe way you show it|doesn’t work\nAlgorithm\tHow is it computed|efficiently?\tYour code is|too slow';
+
+const SONG = 'Word\tVerse 1\tChorus 1\tVerse 2\tChorus 2\tBridge\nlove\t2\t4\t1\t4\t2\nbaby\t0\t3\t1\t3\t0\nnight\t3\t1\t2\t1\t1\ndance\t1\t2\t0\t2\t4\nheart\t1\t0\t2\t0\t1';
 
 const FRUIT = 'Fruit\tApril\tMay\tJune\nApple\t82\t70\t20\nPear\t73\t50\t33\nPeach\t67\t45\t28\nOrange\t85\t65\t17\nKiwi\t54\t42\t24\nMelon\t33\t58\t20';
 
@@ -489,7 +529,11 @@ export const KIND_PRESETS: Record<string, KPreset> = {
     { label: 'One dot each', kind: 'units', size: 58, explanation: 'A unit chart: one dot per animal, in a column for each country. Count the dots, and the counts are the data.' },
     { label: 'Dots become icons', kind: 'units', size: 58, icons: ['🐄', '🐖', '🐑'], explanation: 'Each dot becomes its animal. The icon repeats the row label, so it adds recognition, not data: the count is still the number of marks, never their size.' },
     { label: 'Count them', kind: 'units', size: 58, stack: true, icons: ['🐄', '🐖', '🐑'], explanation: 'Stack each animal’s icons into one row: cattle 5, sheep 4, pigs 3. The faint discs keep each country’s colour.' }] },
-  units: { label: 'Units: from words to frequency', prompt: 'The raw data is words in the order they are sung. Where does “frequency” come from?', data: 'Word\tVerse 1\tChorus 1\tVerse 2\tChorus 2\tBridge\nlove\t2\t4\t1\t4\t2\nbaby\t0\t3\t1\t3\t0\nnight\t3\t1\t2\t1\t1\ndance\t1\t2\t0\t2\t4\nheart\t1\t0\t2\t0\t1', states: [
+  idioms: { label: 'Idioms: one song, three charts', prompt: 'Same song, same counts. Which chart gives the overview, which lets you explore, which shows the song’s shape?', data: SONG, states: [
+    { label: 'Streamgraph', kind: 'stream', explanation: 'Overview. X: position in the song. Thickness: how often each word is sung there. Colour: the word. The stream swells at the choruses.' },
+    { label: 'Unit chart', kind: 'units', colourBy: 'category', explanation: 'Exploration. One mark per sung word, by section. Every mark can be hovered to show the word in its line.' },
+    { label: 'Area chart', kind: 'area', explanation: 'The song’s dynamics. Each word from zero, see-through, so peaks can be compared; animate it for the “liquid” version. Colour: the word.' }] },
+  units: { label: 'Units: from words to frequency', prompt: 'The raw data is words in the order they are sung. Where does “frequency” come from?', data: SONG, states: [
     { label: 'In time order', kind: 'units', explanation: 'One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context.' },
     { label: 'Count them', kind: 'units', stack: true, explanation: 'The dots slide into one row per word. Frequency was never in the lyrics: it is derived by counting. The colour still shows which section each came from.' },
     { label: 'Sort', kind: 'units', stack: true, sort: true, explanation: 'Sorted, the extremum reads first: love, 13 times. Chorus colours dominate, because choruses repeat.' }] },

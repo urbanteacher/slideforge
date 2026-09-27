@@ -535,7 +535,10 @@ export function createChartRenderer(SF, helpers) {
   function pictogramChart(data, slide) {
     var W = CHART.w, H = CHART.h, P = CHART;
     var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg ch-picto', role: 'img' });
-    var icon = String(slide.chartIcon || '').trim() || '●';
+    /* One icon for every row, or one per row: "🐄 🐖 🐑" gives each row its own. */
+    var icons = String(slide.chartIcon || '').trim().split(/[\s,]+/).filter(Boolean);
+    if (!icons.length) icons = ['●'];
+    var icon = icons[0];
     var vals = (data.series[0] ? data.series[0].values : []).map(function (v) { return v == null ? 0 : Math.max(0, v); });
     if (!vals.length) return svg;
     var max = Math.max.apply(null, vals);
@@ -557,6 +560,7 @@ export function createChartRenderer(SF, helpers) {
       var g = svgEl('g', { class: 'ch-beat', 'data-step': ci, 'data-series': '0' });
       var whole = Math.floor(vals[ci] / unit);
       var part = (vals[ci] % unit) / unit;
+      icon = icons[ci % icons.length];
       for (var i = 0; i < whole && i < 40; i++) {
         var t = svgEl('text', { x: labelRoom + i * (size * 0.92), y: y + size * 0.34,
           class: 'ch-icon', 'font-size': size });
@@ -584,7 +588,7 @@ export function createChartRenderer(SF, helpers) {
     });
 
     var key = svgEl('text', { x: labelRoom, y: H - 10, class: 'ch-tick' });
-    key.textContent = icon + ' = ' + fmt(unit) + (data.series[0] && data.series[0].name ? ' ' + data.series[0].name.toLowerCase() : '');
+    key.textContent = (icons.length > 1 ? 'Each icon' : icons[0]) + ' = ' + fmt(unit) + (data.series[0] && data.series[0].name ? ' ' + data.series[0].name.toLowerCase() : '');
     svg.appendChild(key);
     return svg;
   }

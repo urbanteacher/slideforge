@@ -354,7 +354,9 @@ function box(p: Pen, text: string) {
 }
 
 function pictogram(p: Pen, d: Data, params: Params) {
-  const icon = String(params.icon ?? '').trim() || '●';
+  // One icon for every row, or one per row: "🐄 🐖 🐑" gives each row its own.
+  const icons = String(params.icon ?? '').trim().split(/[\s,]+/).filter(Boolean);
+  if (!icons.length) icons.push('●');
   const vals = (d.series[0]?.values ?? []).map((v) => Math.max(0, v ?? 0));
   if (!vals.length) return;
   const max = Math.max(...vals);
@@ -368,7 +370,7 @@ function pictogram(p: Pen, d: Data, params: Params) {
     const y = P.padT + rowH * ci + rowH / 2;
     label(p, cat, labelRoom - 16, y + p.px * 0.37, 'end');
     p.beat(ci);
-    const whole = Math.floor(vals[ci] / unit), part = (vals[ci] % unit) / unit;
+    const whole = Math.floor(vals[ci] / unit), part = (vals[ci] % unit) / unit, icon = icons[ci % icons.length];
     ctx.font = `400 ${size}px "${p.font}", system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.fillStyle = p.ink;
     // The icons are counted out, one after another.
     const shown = Math.ceil(Math.min(whole, 40) * p.grow(ci) - 1e-9);
@@ -381,7 +383,7 @@ function pictogram(p: Pen, d: Data, params: Params) {
     label(p, fmt(vals[ci]), labelRoom + Math.min(whole + 1, 41) * stepX + 12, y + p.px * 0.37, 'start', { weight: 650, color: p.ink, size: 1.05 });
     p.settle();
   });
-  label(p, `${icon} = ${fmt(unit)}${d.series[0]?.name ? ' ' + d.series[0].name.toLowerCase() : ''}`, labelRoom, H - 10);
+  label(p, `${icons.length > 1 ? 'Each icon' : icons[0]} = ${fmt(unit)}${d.series[0]?.name ? ' ' + d.series[0].name.toLowerCase() : ''}`, labelRoom, H - 10);
 }
 
 function radar(p: Pen, d: Data) {

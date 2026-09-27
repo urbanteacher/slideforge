@@ -733,7 +733,8 @@ function normalizeSlide(raw) {
      seventy slides is bytes in localStorage bought for nothing. */
   s.chartSource = String(s.chartSource || '').trim().slice(0, 200);
   if (!s.chartSource) delete s.chartSource;
-  s.chartIcon = String(s.chartIcon || '').trim().slice(0, 4);
+  /* One icon, or one per row separated by spaces or commas ("🐄 🐖 🐑"). */
+  s.chartIcon = String(s.chartIcon || '').trim().slice(0, 40);
   s.chartUnit = Math.max(1, Math.min(10000, Number(s.chartUnit) || 1));
   /* Layers come off `raw` for the same reason options do: whatever was on disk
      may be strings, may be half-built, may be nothing. Capped because a stack

@@ -274,7 +274,7 @@ export function createContentFields(SF, helpers) {
 
     if (s.chartKind === 'pictogram') {
       insp.appendChild(UI.field('Icon', UI.text(s.chartIcon || '', function (v) {
-        s.chartIcon = String(v).trim().slice(0, 4); touched(); repaint();
+        s.chartIcon = String(v).trim().slice(0, 40); touched(); repaint();
       }), 'One emoji or character, repeated once per unit. A person, a book, a bus — something the room can count at a glance.'));
       insp.appendChild(UI.field('One icon is worth',
         UI.num(s.chartUnit > 1 ? s.chartUnit : null, function (v) {
