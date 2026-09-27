@@ -47,7 +47,7 @@ function items(id: string, close: () => void): ReactNode {
       <button onClick={run(() => slideClipboard.copy(id))}><Copy size={15} />Copy slide<small>⌘C</small></button>
       <button disabled={!slideClipboard.has()} onClick={run(() => { useStore.getState().selectSlide(id); slideClipboard.paste(); })}><ClipboardPaste size={15} />Paste slide after<small>⌘V</small></button>
       <button onClick={run(() => st.duplicateSlide(id))}><CopyPlus size={15} />Duplicate slide</button>
-      <button onClick={run(() => toggleHidden(id))}>{s.hidden ? <Eye size={15} /> : <EyeOff size={15} />}{s.hidden ? 'Show in the presentation' : 'Hide from the presentation'}</button>
+      <button onClick={run(() => toggleHidden(id))}>{s.hidden ? <Eye size={15} /> : <EyeOff size={15} />}{s.hidden ? 'Show in the presentation and the PDF' : 'Hide from the presentation and the PDF'}</button>
       <hr />
       <button className="danger" disabled={st.deck.slides.length <= 1} onClick={run(() => st.deleteSlide(id))}><Trash2 size={15} />Delete slide</button>
     </>

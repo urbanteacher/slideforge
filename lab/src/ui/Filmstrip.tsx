@@ -98,10 +98,10 @@ export function Filmstrip() {
           onPointerDown={(e) => { if (e.button === 0 && !(e.target as HTMLElement).closest('.thumb-acts')) selectSlide(s.id); }}
         >
           {i > 0 && s.transition.type !== 'none' && <div className="thumb-trans" title={`Transition: ${s.transition.type}`}><ChevronRight size={12} /></div>}
-          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}{s.warn && <span className="thumb-warn" title={s.warn}>⚠</span>}</div>
+          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation and the PDF"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}{s.warn && <span className="thumb-warn" title={s.warn}>⚠</span>}</div>
           <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           <div className="thumb-acts" onClick={(e) => e.stopPropagation()}>
-            <button title={s.hidden ? 'Show in the presentation' : 'Hide from the presentation'} aria-pressed={!!s.hidden} onClick={() => toggleHidden(s.id)}>{s.hidden ? <Eye size={12} /> : <EyeOff size={12} />}</button>
+            <button title={s.hidden ? 'Show in the presentation and the PDF' : 'Hide from the presentation and the PDF'} aria-pressed={!!s.hidden} onClick={() => toggleHidden(s.id)}>{s.hidden ? <Eye size={12} /> : <EyeOff size={12} />}</button>
             <button title="Duplicate slide" onClick={() => duplicateSlide(s.id)}><Copy size={12} /></button>
             <button title="Delete slide" onClick={() => deleteSlide(s.id)}><Trash2 size={12} /></button>
           </div>
