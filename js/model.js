@@ -2879,6 +2879,13 @@
 
   // lab/src/engine/experimentKinds.ts
   var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested", "stream", "area", "heatmap", "channels", "scales", "network"];
+  function resolveExperimentPreset(key, data = "", prompt = "") {
+    if (key !== "channels") return key;
+    const header = String(data).split(/\r?\n/, 1)[0].split(/\t|\|/).map((s) => s.trim().toLowerCase());
+    if (header[0] === "channel" && header[1] === "a" && header[2] === "b") return "perception";
+    if (/each pair asks the same question:\s*b is what percentage of a\?/i.test(String(prompt))) return "perception";
+    return key;
+  }
   var COLOURS = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
   var RAINBOW = ["#e0201b", "#1f3fd6", "#27b83a", "#8a2be2", "#f28c1b", "#e8d51b"];
   var TYPE_COLOURS = ["#0072b2", "#009e73", "#d55e00", "#cc79a7"];
@@ -3696,7 +3703,8 @@
       KIND_PRESETS[k];
     });
     function config(s) {
-      var raw = s.experiment || {}, key = Object.prototype.hasOwnProperty.call(presets, raw.preset) ? raw.preset : "polling", preset2 = presets[key];
+      var raw = s.experiment || {}, resolved = resolveExperimentPreset(raw.preset || "", s.body || "", raw.prompt || "");
+      var key = Object.prototype.hasOwnProperty.call(presets, resolved) ? resolved : "polling", preset2 = presets[key];
       var states = Array.isArray(raw.states) ? raw.states.filter(function(x) {
         return x && typeof x === "object" && !Array.isArray(x);
       }) : [];
@@ -4046,8 +4054,11 @@
         if (step < 0) {
           if (SF.ChartMotion) SF.ChartMotion.cancel(plot);
           plot.replaceChildren();
-          var wait = node("p", "Make a prediction. Explain your reasoning, then reveal the first state.", plot);
-          wait.className = "ve-predict";
+          if (s.design && s.design.experimentLayout === "focus") plot.appendChild(picture(0));
+          else {
+            var wait = node("p", "Make a prediction. Explain your reasoning, then reveal the first state.", plot);
+            wait.className = "ve-predict";
+          }
           explanation.textContent = "";
         } else {
           var st = c.states[step], target = picture(step);

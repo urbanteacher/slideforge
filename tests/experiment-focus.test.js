@@ -53,3 +53,13 @@ test('prediction shows the supplied data without leaking a later state or takeaw
   drawExperiment(ctx, 1764, 586, { preset: 'reshape', _step: -1, size: 36 });
   assert.ok(words.includes('?') && !words.includes('Apple'), 'other experiments keep their existing prediction screen');
 });
+
+test('saved channel presets resolve to the right demonstration in the lab', async () => {
+  const { experimentPreset, experimentStates } = await load();
+  const older = { preset: 'channels', data: 'Item\tValue\nA\t20\nB\t24' };
+  const savedWeek3 = { preset: 'channels', data: 'Channel\tA\tB\nPosition\t80\t36' };
+  assert.equal(experimentPreset(older), 'channels');
+  assert.equal(experimentStates(older)[0].kind, 'dot');
+  assert.equal(experimentPreset(savedWeek3), 'perception');
+  assert.equal(experimentStates(savedWeek3)[0].kind, 'channels');
+});

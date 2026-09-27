@@ -560,6 +560,25 @@ test('Week 3 comes into the lab with its thirteen experiments on the shared kind
   assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'perception', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
 });
 
+test('an existing Week 3 studio copy upgrades its perception key without touching Week 2 channels', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckExperimentPresets } = await converter();
+  const week3 = deckFromSlideForge(asData(lesson('ipdv-da')), 'nul', { games: '' });
+  const perception = experiments(week3).find((s) => s.layers.some((l) => l.params.preset === 'perception'))
+    .layers.find((l) => l.kind === 'experiment');
+  perception.params.preset = 'channels'; // The key saved before this fix.
+  perception.name = 'Experiment';
+  const before = { data: perception.params.data, prompt: perception.params.prompt, states: perception.params.states };
+  assert.equal(carryDeckExperimentPresets(week3), 1);
+  assert.equal(perception.params.preset, 'perception');
+  assert.equal(perception.name, 'Predict and compare');
+  assert.deepEqual({ data: perception.params.data, prompt: perception.params.prompt, states: perception.params.states }, before);
+  assert.equal(carryDeckExperimentPresets(week3), 0, 'the migration is idempotent');
+
+  const week2 = deckFromSlideForge(asData(lesson('ipdv-vc-hybrid')), 'nul', { games: '' });
+  assert.equal(carryDeckExperimentPresets(week2), 0);
+  assert.ok(experiments(week2).some((s) => s.layers.some((l) => l.params.preset === 'channels')));
+});
+
 test('a comparison keeps both of its column headings, which SlideForge separates with a tab', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
   const src = lesson('ipdv-da');

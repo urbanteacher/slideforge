@@ -9,7 +9,7 @@
  */
 import type { Params } from '../model/types';
 import { drawRow, row, type Button } from './controls';
-import { KIND_GLYPHS, KIND_PRESETS, kindPicture, type KState } from './experimentKinds';
+import { KIND_GLYPHS, KIND_PRESETS, kindPicture, resolveExperimentPreset, type KState } from './experimentKinds';
 
 type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -72,11 +72,15 @@ export const EXPERIMENTS: Record<string, Preset> = {
   ...KIND_PRESETS,
 };
 
+export function experimentPreset(p: Params): string {
+  return resolveExperimentPreset(String(p.preset ?? ''), String(p.data ?? ''), String(p.prompt ?? ''));
+}
+
 /** The states an experiment layer steps through: its own, else its preset's (up to eight). */
 export function experimentStates(p: Params): ExpState[] {
   let own: ExpState[] = [];
   try { own = JSON.parse(String(p.states ?? '[]')); } catch { own = []; }
-  const preset = EXPERIMENTS[String(p.preset)] ?? EXPERIMENTS.polling;
+  const preset = EXPERIMENTS[experimentPreset(p)] ?? EXPERIMENTS.polling;
   return (Array.isArray(own) && own.length ? own : preset.states).slice(0, 8);
 }
 
@@ -113,10 +117,11 @@ function outline(kind: 'circle' | 'sector' | 'rect' | 'polygon', a: { cx?: numbe
 }
 
 function picture(p: Params, st: ExpState, ink: string): El[] {
-  const drawn = kindPicture(String(p.data ?? EXPERIMENTS[String(p.preset)]?.data ?? ''), st, ink);
+  const fallback = EXPERIMENTS[experimentPreset(p)]?.data ?? EXPERIMENTS.polling.data;
+  const drawn = kindPicture(String(p.data ?? fallback), st, ink);
   if (drawn) return st.hideValues ? drawn.filter((e) => !/^(cell|val|value|tot|agg|bal|count)/.test(e.key ?? '') || e.tag !== 'text') : drawn;
   const els: El[] = [];
-  const d = table(String(p.data ?? EXPERIMENTS[String(p.preset)]?.data ?? ''));
+  const d = table(String(p.data ?? fallback));
   const series = d.series;
   const current = series[Math.max(0, Math.min(series.length - 1, Number(st.series) || 0))];
   const rows = d.categories.slice(0, 12).map((name, i) => ({ name, index: i, value: current?.values[i] ?? NaN })).filter((r) => Number.isFinite(r.value));

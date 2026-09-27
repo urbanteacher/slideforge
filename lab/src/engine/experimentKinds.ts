@@ -56,6 +56,20 @@ export const KIND_GLYPHS: Record<string, string> = {
   channels: '◐', scales: '▥', network: '⌬',
 };
 
+/**
+ * Week 3 originally used the existing `channels` preset key for its perception exercise.
+ * Saved copies still carry that key, while Week 2 and older authored slides use it for the
+ * original marks-and-channels demonstration. Distinguish the Week 3 copies by their data or
+ * prompt; new copies use `perception` and never need this compatibility path.
+ */
+export function resolveExperimentPreset(key: string, data = '', prompt = ''): string {
+  if (key !== 'channels') return key;
+  const header = String(data).split(/\r?\n/, 1)[0].split(/\t|\|/).map((s) => s.trim().toLowerCase());
+  if (header[0] === 'channel' && header[1] === 'a' && header[2] === 'b') return 'perception';
+  if (/each pair asks the same question:\s*b is what percentage of a\?/i.test(String(prompt))) return 'perception';
+  return key;
+}
+
 const COLOURS = ['#0072b2', '#d55e00', '#009e73', '#cc79a7', '#8a6500', '#5b4ba8'];
 /** The saturated hues a 3D default hands out, one per category: the thing being critiqued. */
 const RAINBOW = ['#e0201b', '#1f3fd6', '#27b83a', '#8a2be2', '#f28c1b', '#e8d51b'];

@@ -85,6 +85,18 @@ test('the perception experiment reveals the ratios the room estimated, and its p
   for (const ch of ['position', 'length', 'angle', 'area', 'lightness']) assert.ok(fs.existsSync(path.join(ROOT, `assets/lesson/ipdv/perception-${ch}.svg`)), ch);
 });
 
+test('the older channels demonstration and saved Week 3 perception copies keep their own states', () => {
+  const SF = sf();
+  SF.installExperiments(SF);
+  const older = { type: 'experiment', body: 'Item\tValue\nA\t20\nB\t24\nC\t38\nD\t42', experiment: { preset: 'channels' } };
+  const legacyWeek3 = { type: 'experiment', body: 'Channel\tA\tB\nPosition\t80\t36', experiment: { preset: 'channels' } };
+  const oldConfig = SF.Experiments.config(older), week3Config = SF.Experiments.config(legacyWeek3);
+  assert.equal(oldConfig.preset, 'channels');
+  assert.equal(oldConfig.states[0].kind, 'dot');
+  assert.equal(week3Config.preset, 'perception');
+  assert.equal(week3Config.states[0].kind, 'channels');
+});
+
 test('red–green collapses under simulated deuteranopia and blue–orange does not', async () => {
   const { KIND_PRESETS, kindPicture } = await kinds();
   const p = KIND_PRESETS.scales;

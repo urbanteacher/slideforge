@@ -844,12 +844,12 @@ export function youtubeSlide(st: LayoutStyle, title: string, subtitle: string, u
  */
 export function experimentSlide(st: LayoutStyle, title: string, prompt: string, e: { preset: string; data: string; states?: string; duration?: number; layout?: 'focus' }, source: string): Slide {
   const focused = e.layout === 'focus', top = CONTENT_TOP + (focused ? -50 : 30);
-  return slide(st, 'Experiment', [
+  return slide(st, 'Predict and compare', [
     titleRow(st, title),
     titleBar(st),
     ...(focused ? [] : [body(st, prompt, { ...cell(1, 5, 12, 1), y: CONTENT_TOP - 50, h: 60 }, 40, { color: st.muted, fit: 'shrink' }, 0.2)]),
     // The chart on the left, the steps and what each shows on the right, the source at the rail's foot.
-    createLayer('experiment', { name: 'Experiment', box: { ...cell(1, 5, 12, 1), y: top, h: CONTENT_FOOT - top }, params: {
+    createLayer('experiment', { name: 'Predict and compare', box: { ...cell(1, 5, 12, 1), y: top, h: CONTENT_FOOT - top }, params: {
       preset: e.preset, data: e.data, states: e.states ?? '', duration: String(e.duration ?? 1600), font: st.body, size: 36, textColor: st.ink, accent: st.accent,
       source: source || 'Illustrative teaching data', layout: e.layout ?? 'rail', prompt,
     }, anim: { type: 'fade', duration: 0.6, delay: 0.3 } }),
