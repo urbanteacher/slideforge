@@ -538,3 +538,23 @@ test('a slide hidden in SlideForge is hidden in the lab, and a copy made before 
   assert.equal(carryDeckHidden(deck, src.slides), hiddenIds.reduce((n, id) => n + from(id).length, 0));
   assert.ok(from(shown.id).every((s) => !s.hidden), 'and nothing shown is hidden');
 });
+
+test('Week 3 comes into the lab with its six experiments on the shared kinds, leaving only its games', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lesson('ipdv-da');
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  assert.equal(deck.slides.length, src.slides.filter((s) => s.type !== 'game').length, 'only the games stay SlideForge’s');
+  const presets = experiments(deck).map((s) => s.layers.find((l) => l.kind === 'experiment').params.preset);
+  assert.deepEqual(presets, ['reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units'], 'each keeps its own preset, none falls back to polling');
+});
+
+test('a comparison keeps both of its column headings, which SlideForge separates with a tab', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lesson('ipdv-da');
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const want = src.slides.find((s) => s.type === 'compare' && /movie/i.test(s.title));
+  const made = deck.slides.find((s) => s.sourceSlideId === want.id);
+  const words = made.layers.map((l) => String(l.params.text ?? '').trim());
+  assert.ok(words.includes('Movie project') && words.includes('Music project'), 'each heading is its own');
+  assert.ok(!words.includes('Two'), 'no placeholder heading');
+});
