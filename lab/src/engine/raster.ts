@@ -429,7 +429,8 @@ function rasterText(layer: Layer, textT: number): Raster {
         if (b <= 0) return;
         ctx.globalAlpha = Math.min(1, b * 1.4) * (dimBefore >= 0 && (step[line.para] ?? 0) < dimBefore ? (p._dimTo === 'spot' ? DIM_TO.spot : DIM_TO.dim) : 1);
         band();
-        whole(base + (1 - b) * size * 0.5);
+        // Each line rises half a line as it fades in; with reduced motion (`_still`) it only fades.
+        whole(base + (p._still ? 0 : (1 - b) * size * 0.5));
         ctx.globalAlpha = 1;
         return;
       }

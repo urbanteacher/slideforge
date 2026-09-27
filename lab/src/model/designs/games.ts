@@ -34,6 +34,8 @@ export interface GameQuestion {
   itemA?: string; itemB?: string; sortBins?: string[];
   points?: number; difficulty?: string; bossDamage?: number; accept?: string[];
   min?: number; max?: number; step?: number; target?: number; tolerance?: number; unit?: string;
+  /** A picture the question is asked about (SlideForge's question image), and what it shows. */
+  image?: string; imageAlt?: string;
 }
 /** One of SlideForge's showcase games, as tools/lab-games.mjs writes it. */
 export interface ShowcaseGame { format: string; style: string; label: string; styleLabel: string; aim: string; howToPlay: string[]; title: string; slides: GameQuestion[]; /** Multiple choice's look (types.ts GameLook); the walls when not said. */ look?: 'buttons' | 'walls'; /** Where the Buttons looks write the reason (ReasonAt); under the question when not said. */ reason?: ReasonAt }

@@ -286,12 +286,18 @@ function paint(ctx: Ctx, e: El, alpha: number, font: string, fs = 1) {
   ctx.restore();
 }
 
-/** Draw the plan's elements for the move from state `from` to state `to` at progress t (0–1). */
-function scene(ctx: Ctx, p: Params, states: ExpState[], from: number, to: number, t: number, ink: string, font: string, fs: number) {
+/** Draw the plan's elements for the move from state `from` to state `to` at progress t (0–1). With
+ *  `fade` (reduced motion) nothing travels: the old picture cross-fades into the new one. */
+function scene(ctx: Ctx, p: Params, states: ExpState[], from: number, to: number, t: number, ink: string, font: string, fs: number, fade = false) {
   const next = picture(p, states[to], ink);
   if (from < 0 || from === to || t >= 1) { next.forEach((e) => paint(ctx, e, 1, font, fs)); return; }
   const prev = picture(p, states[from], ink);
   const k = t * t * (3 - 2 * t);
+  if (fade) {
+    prev.forEach((e) => paint(ctx, e, 1 - k, font, fs));
+    next.forEach((e) => paint(ctx, e, k, font, fs));
+    return;
+  }
   const before = new Map(prev.filter((e) => e.key).map((e) => [e.key!, e]));
   const used = new Set<string>();
   // Keyed marks travel; what only the old picture had fades out, what only the new has fades in.
@@ -321,6 +327,23 @@ type Rect = { x: number; y: number; w: number; h: number };
 export function experimentControls(p: Params, w: number, h: number): { buttons: Button[]; px: number; plot: Rect; note: Rect; source: Rect } {
   const states = experimentStates(p), size = Number(p.size ?? 36), font = `"${String(p.font ?? 'Inter')}", system-ui, sans-serif`;
   const step = Math.max(-1, Math.min(states.length - 1, Math.round(Number(p._step ?? states.length - 1))));
+  // Opt-in for a demonstration with short authored takeaways: the picture spans the slide,
+  // with its caption above and sequential controls below. Draw and hit-test the same buttons.
+  if (p.layout === 'focus') {
+    const strip = row([
+      { label: '‹ Back', action: `state:${step - 1}`, off: step < 0 },
+      { label: step < 0 ? 'Reveal ›' : 'Next ›', action: `state:${step + 1}`, off: step === states.length - 1 },
+      { label: '↻ Replay', action: 'replay', off: step < 0 },
+      { label: step < 0 ? 'Predict first' : `${step + 1}/${states.length} · ${states[step].label}`, action: `state:${step}`, on: true },
+    ], 0, 0, w * 0.62, Math.max(24, size * 0.7), font);
+    const foot = Math.max(strip.height, size * 1.7), caption = size * 1.8, gap = size * 0.35;
+    return {
+      buttons: strip.buttons.map((b) => ({ ...b, y: b.y + h - foot })), px: strip.px,
+      plot: { x: 0, y: caption + gap, w, h: Math.max(1, h - caption - foot - gap * 2) },
+      note: { x: 0, y: 0, w, h: caption },
+      source: { x: w * 0.66, y: h - foot, w: w * 0.34, h: foot },
+    };
+  }
   const labels = [
     { label: '? Predict first', action: 'state:-1', on: step < 0 },
     ...states.map((st, i) => ({ label: `${GLYPH[st.kind] ?? '\u25ae'} ${st.label}`, action: `state:${i}`, on: i === step })),
@@ -353,7 +376,8 @@ function fitWords(ctx: Ctx, text: string, font: string, weight: number, px: numb
 /**
  * The experiment layer: the plot on its 1000 × 370 plan scaled into the box, and the state's
  * explanation beneath it. `_step` is the state shown (−1 asks for a prediction), `_from` the state it
- * is moving from and `_k` how far, all injected by the renderer from the slide's clicks.
+ * is moving from and `_k` how far, all injected by the renderer from the slide's clicks; `_fade` (reduced
+ * motion) makes the move a cross-fade.
  */
 export function drawExperiment(ctx: Ctx, w: number, h: number, p: Params) {
   const states = experimentStates(p);
@@ -363,16 +387,19 @@ export function drawExperiment(ctx: Ctx, w: number, h: number, p: Params) {
   const ctl = experimentControls(p, w, h), { plot, note, source } = ctl;
   drawRow(ctx, ctl.buttons, ctl.px, `"${font}", system-ui, sans-serif`, ink, accent);
   // The explanation: a card under the steps, marked on its edge in the accent.
-  const say = step < 0 ? 'Make a prediction. Explain your reasoning, then reveal the first state.' : String(states[step].explanation ?? '');
+  const focus = p.layout === 'focus';
+  const say = step < 0 ? (focus ? String(p.prompt || 'Make a prediction from the data. Explain your reasoning before revealing.') : 'Make a prediction. Explain your reasoning, then reveal the first state.') : String(states[step].explanation ?? '');
   if (say) {
-    const pad = size * 0.6;
+    const pad = focus ? 0 : size * 0.6;
     const f = fitWords(ctx, say, font, 400, size, note.w - pad * 2 - 6, note.h - pad * 2, 1.35);
     const cardH = Math.min(note.h, f.lines.length * f.size * 1.35 + pad * 2);
     ctx.save();
     ctx.globalAlpha = from >= 0 && from !== step ? Math.min(1, k * 2) : 1;
-    ctx.fillStyle = ink.startsWith('#') && parseInt(ink.slice(1, 3), 16) > 128 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
-    ctx.beginPath(); ctx.roundRect(note.x, note.y, note.w, cardH, 12); ctx.fill();
-    ctx.fillStyle = accent; ctx.fillRect(note.x, note.y, 6, cardH);
+    if (!focus) {
+      ctx.fillStyle = ink.startsWith('#') && parseInt(ink.slice(1, 3), 16) > 128 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+      ctx.beginPath(); ctx.roundRect(note.x, note.y, note.w, cardH, 12); ctx.fill();
+      ctx.fillStyle = accent; ctx.fillRect(note.x, note.y, 6, cardH);
+    }
     ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     f.lines.forEach((l, i) => ctx.fillText(l, note.x + pad + 6, note.y + pad + i * f.size * 1.35));
     ctx.restore();
@@ -385,7 +412,7 @@ export function drawExperiment(ctx: Ctx, w: number, h: number, p: Params) {
     f.lines.forEach((l, i) => ctx.fillText(l, source.x, source.y + source.h - (f.lines.length - 1 - i) * f.size * 1.2, source.w));
     ctx.restore();
   }
-  if (step < 0) {
+  if (step < 0 && !focus) {
     // Before the first state: a large question mark where the chart will be.
     ctx.save(); ctx.globalAlpha = 0.14; ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = `800 ${Math.min(plot.h * 0.7, 520)}px "${font}", system-ui, sans-serif`;
@@ -398,6 +425,7 @@ export function drawExperiment(ctx: Ctx, w: number, h: number, p: Params) {
   // further than the plan's spacing allows, or rows of a table would run into each other.
   const fs = Math.max(1, Math.min(1.3, size / (20 * sc)));
   ctx.save(); ctx.translate(ox, oy); ctx.scale(sc, sc);
-  scene(ctx, p, states, from, step, k, ink, font, fs);
+  // During prediction the supplied table remains visible, so the question can be answered.
+  scene(ctx, p, states, step < 0 ? -1 : from, Math.max(0, step), step < 0 ? 1 : k, ink, font, fs, !!p._fade);
   ctx.restore();
 }

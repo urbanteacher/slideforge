@@ -260,4 +260,7 @@ export interface Deck {
   libraryGroup?: string;
   /** When the shell last saved it, for the Open list. */
   modified?: number;
+  /** 'reduce': always shown with reduced motion, whatever the computer is set to (engine/motion.ts).
+   *  Absent follows the computer's own prefers-reduced-motion. */
+  motion?: 'reduce';
 }

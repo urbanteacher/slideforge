@@ -1,6 +1,7 @@
 import type { BlendMode, Layer, Slide, TransitionType } from '../model/types';
 import { EASE, IDLE_STATE, animTotal, layerState, schedule, stepLight, type LayerState } from './anim';
 import { CONTENT_GLSL, MAIN, PRELUDE, VERT } from './glsl';
+import { REDUCED_CHANGE } from './motion';
 import { contentFrame, getAssetVersion, groupSizes, rasterise, textSize } from './raster';
 import { kind } from './registry';
 
@@ -100,6 +101,9 @@ export interface FrameOpts {
   live?: Map<string, number>;
   /** Morph: layers drawn part-way between their place on the slide before and on this one. */
   morph?: Map<string, MorphPose>;
+  /** Reduced motion (engine/motion.ts): entrances fade, experiments cross-fade, transitions are a
+   *  crossfade, and effects, loops, parallax and hover movement hold still. Absent is full motion. */
+  reduce?: boolean;
 }
 
 export function hexToRgb(hex: string): [number, number, number] {
@@ -273,7 +277,9 @@ export class Renderer {
     gl.uniform1i(this.u(p, 'uBelow'), 0);
     gl.uniform2f(this.u(p, 'uRes'), this.deckW, this.deckH);
     gl.uniform2f(this.u(p, 'uPx'), this.pw, this.ph);
-    gl.uniform1f(this.u(p, 'uTime'), opts.time);
+    // Reduced motion stops what moves on its own (backdrop motion, grain, ripples): every effect is
+    // drawn at its first moment, which is the rest pose SlideForge's CSS keyframes start from.
+    gl.uniform1f(this.u(p, 'uTime'), opts.reduce ? 0 : opts.time);
     gl.uniform2f(this.u(p, 'uMouse'), opts.mouse[0], opts.mouse[1]);
   }
 
@@ -322,18 +328,19 @@ export class Renderer {
    * state, −1 before the first; the scene's step), the one before it (`_from`) and how far the move
    * between them has gone (`_k`). Still, it shows its last state, as SlideForge's thumbnails do.
    */
-  private withSteps(layer: Layer, starts: number[], t: number): Layer {
+  private withSteps(layer: Layer, starts: number[], t: number, reduce = false): Layer {
     const exp = layer.kind === 'experiment';
     let key: string, extra: Record<string, number>;
     if (!Number.isFinite(t)) { key = 'still'; extra = exp ? { _step: starts.length - 2 } : {}; }
     else {
       let i = -1;
       starts.forEach((s, j) => { if (t >= s) i = j; });
-      const dur = exp ? Math.max(0.2, Number(layer.params.duration ?? 1600) / 1000) : 0.65;
+      const dur = this.stepSecs(layer, reduce);
       const k = i > 0 ? Math.min(1, (t - starts[i]) / dur) : 1;
       const q = Math.round(k * 60) / 60;
       extra = exp ? { _step: i - 1, _from: i - 2, _k: q } : { _step: Math.max(0, i), _k: q };
-      key = `${i}|${q}`;
+      if (reduce && exp) extra._fade = 1;
+      key = `${i}|${q}|${reduce ? 'r' : ''}`;
     }
     let hit = this.stepped.get(layer.params);
     if (!hit || hit.key !== key) {
@@ -346,15 +353,24 @@ export class Renderer {
   }
   private stepped = new WeakMap<Layer['params'], { key: string; params: Layer['params'] }>();
 
+  /** How long a move between states takes: an experiment's own duration, a scene's .65 s. Reduced, an
+   *  experiment cross-fades in a third of a second and a scene jumps. */
+  private stepSecs(layer: Layer, reduce: boolean) {
+    if (layer.kind !== 'experiment') return reduce ? 0.001 : 0.65;
+    const own = Math.max(0.2, Number(layer.params.duration ?? 1600) / 1000);
+    return reduce ? Math.min(own, REDUCED_CHANGE) : own;
+  }
+
   /** An experiment or scene a button has sent to a state: the move from where it was, timed from the press. */
   private withLiveSteps(layer: Layer, state: number, opts: FrameOpts): Layer {
     const id = layer.id, from = opts.live!.get(`${id}:from`) ?? state, at = opts.live!.get(`${id}:at`) ?? 0;
-    const dur = layer.kind === 'experiment' ? Math.max(0.2, Number(layer.params.duration ?? 1600) / 1000) : 0.65;
+    const dur = this.stepSecs(layer, !!opts.reduce);
     const k = Math.round(Math.min(1, Math.max(0, (opts.time - at) / dur)) * 60) / 60;
-    const key = `live|${state}|${from}|${at}|${k}`;
+    const fade = opts.reduce && layer.kind === 'experiment';
+    const key = `live|${state}|${from}|${at}|${k}|${fade ? 'r' : ''}`;
     let hit = this.stepped.get(layer.params);
     if (!hit || hit.key !== key) {
-      hit = { key, params: { ...layer.params, _step: state, _from: from, _k: k } };
+      hit = { key, params: { ...layer.params, _step: state, _from: from, _k: k, ...(fade ? { _fade: 1 } : {}) } };
       this.stepped.set(layer.params, hit);
     }
     return { ...layer, params: hit.params };
@@ -420,15 +436,15 @@ export class Renderer {
   /** A text built a line per click draws each line at its own progress: 0 not yet, 1 arrived, and
    *  with "dim" every line before the newest one drawn back at a third. Memoised per state so a
    *  settled slide reuses its texture. */
-  private withLines(layer: Layer, starts: number[], t: number): Layer {
+  private withLines(layer: Layer, starts: number[], t: number, reduce = false): Layer {
     const d = Math.max(0.01, layer.anim.duration);
     const prog = starts.map((s) => (!Number.isFinite(t) ? 1 : t < s ? 0 : EASE.cubicOut(Math.min(1, (t - s) / d))));
     const shown = prog.reduce((n, p, i) => (p > 0 ? i : n), -1);
     const dim = (layer.anim.build === 'dim' || layer.anim.build === 'spot') && Number.isFinite(t);
-    const key = prog.map((p) => Math.round(p * 40)).join() + (dim ? `|${shown}|${layer.anim.build}` : '');
+    const key = prog.map((p) => Math.round(p * 40)).join() + (dim ? `|${shown}|${layer.anim.build}` : '') + (reduce ? '|r' : '');
     let hit = this.lined.get(layer.params);
     if (!hit || hit.key !== key) {
-      hit = { key, params: { ...layer.params, _lines: prog.map((p) => Math.round(p * 40) / 40).join(), _dimBefore: dim ? shown : -1, _dimTo: layer.anim.build === 'spot' ? 'spot' : 'dim' } };
+      hit = { key, params: { ...layer.params, _lines: prog.map((p) => Math.round(p * 40) / 40).join(), _dimBefore: dim ? shown : -1, _dimTo: layer.anim.build === 'spot' ? 'spot' : 'dim', ...(reduce ? { _still: 1 } : {}) } };
       this.lined.set(layer.params, hit);
     }
     return { ...layer, params: hit.params };
@@ -483,7 +499,8 @@ export class Renderer {
     gl.bindVertexArray(this.vao);
     gl.disable(gl.BLEND);
     const sched = schedule(slide, opts.clicks);
-    const light = stepLight(slide, sched, opts.t);
+    const reduce = !!opts.reduce;
+    const light = stepLight(slide, sched, opts.t, reduce);
     const [br, bg, bb] = hexToRgb(slide.background || '#000000');
 
     type Pass = { layer: Layer; run: (p: Prog) => boolean };
@@ -495,20 +512,20 @@ export class Renderer {
       const toned = this.withTone(this.withLive(this.withClock(this.withGroup(raw, groups), sched.start.get(raw.id), opts.t), opts.live), slide.background);
       const stepped = raw.kind === 'experiment' || raw.kind === 'scene';
       const liveState = stepped ? opts.live?.get(`${raw.id}:state`) : undefined;
-      const layer = liveState !== undefined ? this.withLiveSteps(this.withPage(toned, slide.id), liveState, opts) : starts ? (stepped ? this.withSteps(this.withPage(toned, slide.id), starts, opts.t) : this.withLines(this.withPage(toned, slide.id), starts, opts.t)) : this.withPage(toned, slide.id);
+      const layer = liveState !== undefined ? this.withLiveSteps(this.withPage(toned, slide.id), liveState, opts) : starts ? (stepped ? this.withSteps(this.withPage(toned, slide.id), starts, opts.t, reduce) : this.withLines(this.withPage(toned, slide.id), starts, opts.t, reduce)) : this.withPage(toned, slide.id);
       const k = kind(layer.kind);
-      const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time);
+      const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time, reduce);
       st.opacity *= light.dim.get(layer.id) ?? 1;
       const piled = light.pile.get(layer.id);
       if (piled) { st.dx += piled.dx; st.dy += piled.dy; st.scale *= piled.scale; st.rot += piled.rot; }
       const pose = opts.morph?.get(layer.id);
       if (pose) { st.dx += pose.dx; st.dy += pose.dy; st.opacity *= pose.opacity; }
       // The back of the slide turns in: it fades and swings up from a slight rotation about the
-      // vertical, SlideForge's .5s flip, read here as a scale on x.
+      // vertical, SlideForge's .5s flip, read here as a scale on x. Reduced, it only fades.
       if (layer.face === 'back') {
         const f = opts.flip ?? 0;
         st.opacity *= f;
-        st.scale *= 0.96 + 0.04 * f;
+        if (!reduce) st.scale *= 0.96 + 0.04 * f;
       }
       if (!st.visible || st.opacity <= 0.001 || layer.opacity <= 0.001) continue;
 
@@ -520,13 +537,15 @@ export class Renderer {
         const blinking = layer.anim.type === 'typewriter' && layer.anim.caret && st.textT < total + 3;
         const textT = layer.anim.leave || blinking || st.textT < total ? st.textT : Infinity;
         if (opts.interactive) {
-          if (layer.interact.parallax) {
+          // Reduced motion keeps the pointer from moving things: no parallax, and a hover that would
+          // lift, grow or tilt a layer lights it instead.
+          if (layer.interact.parallax && !reduce) {
             st.dx += (opts.mouse[0] - 0.5) * layer.interact.parallax * 90;
             st.dy += (opts.mouse[1] - 0.5) * layer.interact.parallax * 60;
           }
           const hv = opts.hover?.get(layer.id) ?? 0;
           if (hv > 0.001) {
-            const hov = layer.interact.hover;
+            const hov = reduce && layer.interact.hover !== 'none' ? 'glow' : layer.interact.hover;
             if (hov === 'lift') { st.dy -= 12 * hv; st.scale *= 1 + 0.02 * hv; }
             else if (hov === 'grow') st.scale *= 1 + 0.07 * hv;
             else if (hov === 'glow') st.glow = hv;
@@ -619,6 +638,8 @@ export class Renderer {
 
   /** Render two slides and blend them with a shader transition. p: 0..1 eased. */
   drawTransition(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, type: TransitionType, p: number, dir: 1 | -1) {
+    // Reduced motion: every transition, Morph included, is a crossfade.
+    if (toOpts.reduce) { this.blend(from, fromOpts, to, toOpts, 'fade', p, dir, null); return; }
     if (type === 'morph') { this.drawMorph(from, fromOpts, to, toOpts, p); return; }
     this.blend(from, fromOpts, to, toOpts, type, p, dir, null);
   }

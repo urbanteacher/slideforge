@@ -5,6 +5,7 @@ import { MODEL_PLOT } from './raster';
 import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps } from './scene';
 import { experimentControls, experimentStates } from './experiment';
 import { hitButton } from './controls';
+import { reducesMotion, type MotionSetting } from './motion';
 import { Renderer, type FrameOpts } from './renderer';
 
 export interface PlayerOptions {
@@ -14,6 +15,9 @@ export interface PlayerOptions {
   /** Inside SlideForge's player (js/lab-stage.js), which owns Next and Previous: a click the slide
    *  does not use is left to bubble up to it, and a layer's own next / previous is handed to it. */
   host?: { next: () => void; prev: () => void };
+  /** This show's motion: 'reduce' or 'full' whatever the deck and computer say; 'system' (or unset)
+   *  follows the deck's `motion`, then the computer's prefers-reduced-motion. */
+  motion?: MotionSetting;
 }
 
 interface Trans { from: Slide; fromStart: number; fromClicks: number[]; fromBuilt: boolean; start: number; dur: number; type: Slide['transition']['type']; dir: 1 | -1 }
@@ -368,8 +372,13 @@ export class DeckPlayer {
     return this.flipped ? k : 1 - k;
   }
 
+  /** Set this show's motion (see PlayerOptions.motion); it applies from the next frame. */
+  setMotion(motion: MotionSetting | undefined) { this.opts.motion = motion; }
+  /** Whether the show is drawn with reduced motion now. */
+  get reduced() { return reducesMotion(this.opts.motion, this.deck.motion); }
+
   private frameOpts(slide: Slide, start: number, clicks: number[], built: boolean, time: number): FrameOpts {
-    return { time, mouse: this.mouse, t: built ? Infinity : time - start, clicks, interactive: true, hover: this.hover, live: slide === this.slide ? this.live : undefined, flip: slide === this.slide ? this.flipAmount(time) : 0 };
+    return { time, mouse: this.mouse, t: built ? Infinity : time - start, clicks, interactive: true, hover: this.hover, live: slide === this.slide ? this.live : undefined, flip: slide === this.slide ? this.flipAmount(time) : 0, reduce: this.reduced };
   }
 
   private loop = () => {

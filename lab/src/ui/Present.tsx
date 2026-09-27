@@ -1,8 +1,11 @@
-import { ChevronLeft, ChevronRight, Maximize, StickyNote, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize, StickyNote, Waves, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { reducesMotion, type MotionSetting } from '../engine/motion';
 import { DeckPlayer } from '../engine/player';
 import { useStore } from '../model/store';
 import { videoEmbed } from '../model/video';
+
+const MOTION_LABEL: Record<MotionSetting, string> = { system: 'Auto', reduce: 'Reduced', full: 'Full' };
 
 export function Present() {
   // The show is the deck without its hidden slides; starting on a hidden one starts at the next shown.
@@ -20,6 +23,12 @@ export function Present() {
   const [notes, setNotes] = useState(false);
   const [idle, setIdle] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  // This show's motion, for the room in front of it: Auto (the deck's setting, then the computer's),
+  // Reduced or Full. M, or the HUD's button, goes round the three; it lasts until the show ends.
+  const [motion, setMotion] = useState<MotionSetting>('system');
+  const cycleMotion = () => setMotion((m) => (m === 'system' ? 'reduce' : m === 'reduce' ? 'full' : 'system'));
+  useEffect(() => { player.current?.setMotion(motion); }, [motion]);
+  const calm = reducesMotion(motion, deck.motion);
 
   useEffect(() => {
     const fit = () => {
@@ -53,6 +62,7 @@ export function Present() {
       else if (e.key === 'End') p.goto(deck.slides.length - 1, 1, true);
       else if (e.key === 'n' || e.key === 'N') setNotes((v) => !v);
       else if (e.key === 'f' || e.key === 'F') toggleFs();
+      else if (e.key === 'm' || e.key === 'M') cycleMotion();
     };
     const toggleFs = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); };
     (window as unknown as { __sfExit?: () => void }).__sfExit = exit;
@@ -88,6 +98,9 @@ export function Present() {
         {state.steps > 0 && <span className="steps" title="Build steps on this slide">{Array.from({ length: state.steps }, (_, i) => <i key={i} className={i < state.step ? 'on' : ''} />)}</span>}
         <button title="Next (→ / click)" onClick={() => player.current?.next()}><ChevronRight size={16} /></button>
         <button title="Speaker notes (N)" onClick={() => setNotes((v) => !v)}><StickyNote size={15} /></button>
+        <button className={`present-motion${calm ? ' calm' : ''}`} aria-label={`Motion: ${MOTION_LABEL[motion]}${motion === 'system' ? (calm ? ', reduced' : ', full') : ''}`}
+          title={`Motion (M): ${MOTION_LABEL[motion]} — ${motion === 'system' ? `follows ${deck.motion === 'reduce' ? 'the deck, set to reduce' : 'this computer'}, so ${calm ? 'reduced' : 'full'} now` : motion === 'reduce' ? 'entrances fade, charts cross-fade, backdrops hold still' : 'every animation, even on a computer set to reduce motion'}`}
+          onClick={cycleMotion}><Waves size={15} /><span>{MOTION_LABEL[motion]}</span></button>
         <button title="Fullscreen (F)" onClick={() => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); }}><Maximize size={15} /></button>
         <button title="Exit (Esc)" onClick={exit}><X size={16} /></button>
       </div>

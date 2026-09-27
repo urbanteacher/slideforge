@@ -539,13 +539,13 @@ test('a slide hidden in SlideForge is hidden in the lab, and a copy made before 
   assert.ok(from(shown.id).every((s) => !s.hidden), 'and nothing shown is hidden');
 });
 
-test('Week 3 comes into the lab with its ten experiments on the shared kinds, leaving only its games', { skip }, async () => {
+test('Week 3 comes into the lab with its thirteen experiments on the shared kinds, leaving only its games', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
   const src = lesson('ipdv-da');
   const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
   assert.equal(deck.slides.length, src.slides.filter((s) => s.type !== 'game').length, 'only the games stay SlideForge’s');
   const presets = experiments(deck).map((s) => s.layers.find((l) => l.kind === 'experiment').params.preset);
-  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'rescue3d', 'pies', 'units', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
+  assert.deepEqual(presets, ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'channels', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji'], 'each keeps its own preset, none falls back to polling');
 });
 
 test('a comparison keeps both of its column headings, which SlideForge separates with a tab', { skip }, async () => {
@@ -567,4 +567,35 @@ test('Week 3’s pictogram comes into the lab as the lab’s own pictogram, an i
   const layer = deck.slides.find((s) => s.sourceSlideId === want.id).layers.find((l) => l.params.chart === 'pictogram');
   assert.ok(layer, 'a pictogram chart layer');
   assert.equal(layer.params.icon, '🐄 🐑 🐖');
+});
+
+test('an Estimate question’s picture comes into the lab, on the question and above the answer’s pin', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const game = { format: 'slider', style: 'slider', label: 'Estimate · B is what % of A?', styleLabel: 'Slider', aim: '', howToPlay: [], title: '',
+    slides: [{ type: 'quiz', question: 'Area: B is what percentage of A?', image: 'assets/lesson/ipdv/perception-area.svg', imageAlt: 'Two circles, A and B.', min: 0, max: 100, step: 1, target: 60, tolerance: 8, unit: '%' }] };
+  const data = { key: 'x', title: 'x', theme: 'northeastern', slides: [{ id: 'g1', type: 'game', gameId: 'est', title: 'Estimate' }], images: new Proxy({}, { get: (_, k) => `/site/${String(k)}` }), games: { est: game } };
+  const deck = deckFromSlideForge(data, 'nul', { games: '' });
+  const pics = deck.slides.map((s) => s.layers.find((l) => l.name === 'Question picture'));
+  const [q, a] = pics.filter(Boolean);
+  assert.ok(q && a, 'the question and its answer both show the picture');
+  assert.equal(q.params.src, '/site/assets/lesson/ipdv/perception-area.svg', 'the address made to work from the lab');
+  assert.equal(q.params.alt, 'Two circles, A and B.');
+  const line = deck.slides.find((s) => s.layers.some((l) => l.name === 'Question picture')).layers.find((l) => l.name === 'Line');
+  assert.ok(q.box.y + q.box.h < line.box.y, 'the picture sits above the line');
+  assert.ok(q.box.h >= 300, 'large enough to judge a ratio from');
+});
+
+test('Week 3 focuses only the reshape demonstration and preserves its authored states', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lesson('ipdv-da');
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const source = src.slides.find((s) => s.experiment?.preset === 'reshape');
+  const made = deck.slides.find((s) => s.sourceSlideId === source.id);
+  const layer = made.layers.find((l) => l.kind === 'experiment');
+  assert.equal(layer.params.layout, 'focus');
+  assert.equal(layer.params.prompt, source.experiment.prompt);
+  assert.deepEqual(JSON.parse(layer.params.states), source.experiment.states);
+  assert.equal(experiments(deck).filter((s) => s.layers.some((l) => l.params.layout === 'focus')).length, 1);
+  const keys = deck.slides.find((s) => s.sourceSlideId === src.slides.find((s) => s.title === 'Keys and values').id);
+  assert.ok(keys.layers.some((l) => l.kind === 'text' && l.params.text === 'Apple + April → 82'));
 });

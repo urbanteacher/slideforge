@@ -842,15 +842,16 @@ export function youtubeSlide(st: LayoutStyle, title: string, subtitle: string, u
  * SlideForge's visual experiment slide: the title, the prediction prompt, the experiment — which asks
  * for a prediction, then moves through its states a Next at a time — and the data's source.
  */
-export function experimentSlide(st: LayoutStyle, title: string, prompt: string, e: { preset: string; data: string; states?: string; duration?: number }, source: string): Slide {
+export function experimentSlide(st: LayoutStyle, title: string, prompt: string, e: { preset: string; data: string; states?: string; duration?: number; layout?: 'focus' }, source: string): Slide {
+  const focused = e.layout === 'focus', top = CONTENT_TOP + (focused ? -50 : 30);
   return slide(st, 'Experiment', [
     titleRow(st, title),
     titleBar(st),
-    body(st, prompt, { ...cell(1, 5, 12, 1), y: CONTENT_TOP - 50, h: 60 }, 40, { color: st.muted, fit: 'shrink' }, 0.2),
+    ...(focused ? [] : [body(st, prompt, { ...cell(1, 5, 12, 1), y: CONTENT_TOP - 50, h: 60 }, 40, { color: st.muted, fit: 'shrink' }, 0.2)]),
     // The chart on the left, the steps and what each shows on the right, the source at the rail's foot.
-    createLayer('experiment', { name: 'Experiment', box: { ...cell(1, 5, 12, 1), y: CONTENT_TOP + 30, h: CONTENT_FOOT - CONTENT_TOP - 30 }, params: {
+    createLayer('experiment', { name: 'Experiment', box: { ...cell(1, 5, 12, 1), y: top, h: CONTENT_FOOT - top }, params: {
       preset: e.preset, data: e.data, states: e.states ?? '', duration: String(e.duration ?? 1600), font: st.body, size: 36, textColor: st.ink, accent: st.accent,
-      source: source || 'Illustrative teaching data',
+      source: source || 'Illustrative teaching data', layout: e.layout ?? 'rail', prompt,
     }, anim: { type: 'fade', duration: 0.6, delay: 0.3 } }),
   ]);
 }

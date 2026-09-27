@@ -65,14 +65,23 @@ const quietRow = (st: LayoutStyle, text: string, top: number) => grid(st, [{ tex
  *  events already placed stay on the line, so it grows across the game. */
 function lineWall(st: LayoutStyle, name: string, q: Q, i: number, n: number, answer = false, timeline = false): Slide {
   const game = timeline ? 'Time traveler' : 'Estimate';
-  const o = opening(st, q, tag(game, timeline ? 'place it in time' : 'place it on the line', i, n, answer), q.question ?? '', answer, { sizes: [112, 104, 96, 88], maxH: 240 });
+  // A pictured question is about the picture: the question takes one smaller line and the line drops
+  // towards the foot, so the picture gets the room.
+  const pictured = !!q.image && !timeline;
+  const o = opening(st, q, tag(game, timeline ? 'place it in time' : 'place it on the line', i, n, answer), q.question ?? '', answer, pictured ? { sizes: [80, 72, 64, 56], maxH: 110 } : { sizes: [112, 104, 96, 88], maxH: 240 });
   const min = q.min ?? 0, max = q.max ?? 100, span = max - min || 1;
   const x0 = LEFT, x1 = W - LEFT, at = (v: number) => x0 + ((Math.min(max, Math.max(min, v)) - min) / span) * (x1 - x0);
   const unit = q.unit && q.unit.length <= 2 ? q.unit : '';
   // The line sits at one height on both slides, clear of the reason and the pin above it, with room
   // under its values for the events already placed.
-  const y = Math.min(FOOT - 270, o.qn.bottom + 360);
+  const y = pictured ? FOOT - 150 : Math.min(FOOT - 270, o.qn.bottom + 360);
   const L = o.layers;
+  // The picture the room estimates from (a Week 3 mark pair, say), between the question and the line.
+  // On the answer it stays, above the pin and under the reason, so the reveal shows what was judged.
+  if (pictured) {
+    const top = answer ? o.top : o.qn.bottom + 24, h = Math.max(120, (answer ? y - 236 : y - 60) - top), w = Math.min(x1 - x0, h * 1.6);
+    L.push(keyed(createLayer('image', { name: 'Question picture', box: box((W - w) / 2, top, w, h), params: { src: String(q.image), fit: 'contain', alt: q.imageAlt ?? '' }, anim: fade(0.2) }), 'question-picture'));
+  }
   L.push(rect('Line', box(x0, y - 3, x1 - x0, 6), rgba(st.ink, 0.35), { type: 'wipeRight', duration: 0.7, delay: 0.2 }));
   for (let k = 0; k <= 4; k++) {
     const v = Math.round((min + (span * k) / 4) / (q.step ?? 1)) * (q.step ?? 1);

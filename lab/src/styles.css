@@ -309,6 +309,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .steps { display: flex; gap: 4px; padding: 0 6px; }
 .steps i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.2); transition: background .2s; }
 .steps i.on { background: var(--accent); }
+.present-hud .present-motion span { font-size: 12px; color: #aaa; }
+.present-hud .present-motion.calm { color: var(--accent); }
 .present-progress { position: fixed; left: 0; bottom: 0; height: 3px; background: var(--accent); transition: width .5s var(--ease); z-index: 2; }
 .notes { position: fixed; right: 18px; bottom: 76px; width: 380px; max-height: 40vh; overflow: auto; background: rgba(18,18,20,.92); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px 16px; color: #ddd; font-size: 15px; line-height: 1.5; white-space: pre-wrap; z-index: 2; animation: pop .2s var(--ease); }
 .notes h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -739,3 +741,9 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .empty-view .btn-soft { margin-top: 6px; }
 .canvas-bar .add-view { background: var(--accent); color: #fff; font-weight: 600; }
 .canvas-bar .add-view:hover { filter: brightness(1.08); }
+
+/* Reduced motion: the studio's own menus, toasts and HUD appear rather than pop or slide, and the
+   playing dot stops blinking. The slides themselves are calmed by the engine (engine/motion.ts). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

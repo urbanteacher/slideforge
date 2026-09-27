@@ -2,6 +2,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, GripVertical, Plus } from 'l
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { EASE, schedule } from '../engine/anim';
 import { hitLayer } from '../engine/player';
+import { reducesMotion } from '../engine/motion';
 import { autoHeight, fontString, measureTextHeight, textSize } from '../engine/raster';
 import { ChartEditor, FieldsEditor, editsOnCanvas } from './CanvasEditors';
 import { addAnother, canAddAnother, editIntent, groupOf, nextDirection, unitFrame } from './snap';
@@ -145,6 +146,8 @@ export function Stage() {
       const m = mouse.current;
       m.cur = [m.cur[0] + (m.target[0] - m.cur[0]) * 0.14, m.cur[1] + (m.target[1] - m.cur[1]) * 0.14];
       const time = clock();
+      // The canvas follows the deck's motion setting and the computer's, as a show would.
+      const reduce = reducesMotion(undefined, st.deck.motion);
       // The layer being edited is hidden under its editor — except a chart, whose bars stay in view.
       const editing = st.editingTextId ? slideOf(st).layers.find((l) => l.id === st.editingTextId) : undefined;
       const hidden = editing && editing.kind !== 'chart' ? new Set([editing.id]) : undefined;
@@ -158,9 +161,9 @@ export function Stage() {
           play.current = null;
           setPlaying(false);
         } else {
-          const opts = { time, mouse: m.cur, t, clicks: p.clicks, hidden };
+          const opts = { time, mouse: m.cur, t, clicks: p.clicks, hidden, reduce };
           if (p.from && t < p.trans.duration && p.trans.type !== 'none') {
-            r.drawTransition(p.from, { time, mouse: m.cur, t: Infinity, clicks: [] }, s, opts, p.trans.type, EASE.cubicInOut(Math.max(0, t) / p.trans.duration), 1);
+            r.drawTransition(p.from, { time, mouse: m.cur, t: Infinity, clicks: [], reduce }, s, opts, p.trans.type, EASE.cubicInOut(Math.max(0, t) / p.trans.duration), 1);
           } else {
             r.drawSlide(s, opts, null);
           }
@@ -170,7 +173,7 @@ export function Stage() {
       // The back of a flip slide shows when the Slide panel turns it over (Front | Back), or while one
       // of its layers is selected, so it can be edited on the canvas.
       const back = s.layers.some((l) => l.face === 'back' && (st.backOf === s.id || l.id === st.selectedId)) ? 1 : 0;
-      r.drawSlide(s, { time, mouse: m.cur, t: Infinity, clicks: [], hidden, flip: back }, null);
+      r.drawSlide(s, { time, mouse: m.cur, t: Infinity, clicks: [], hidden, flip: back, reduce }, null);
       // Only the slide in view and its neighbours keep their textures: holding every slide visited
       // grows with the deck until the GPU gives out.
       if (++frame % 240 === 0 || s.id !== lastSlide) {

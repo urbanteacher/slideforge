@@ -316,7 +316,7 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
     case 'experiment': {
       // The lab's experiment layer runs SlideForge's presets and states: predict, then Next through them.
       const e = s.experiment ?? {}, preset = EXPERIMENTS[e.preset ?? ''] ? e.preset! : 'polling';
-      return { slide: experimentSlide(st, t, e.prompt || EXPERIMENTS[preset].prompt, { preset, data: s.body || EXPERIMENTS[preset].data, states: e.states?.length ? JSON.stringify(e.states) : '', duration: e.duration }, s.chartSource ?? ''), ground: g };
+      return { slide: experimentSlide(st, t, e.prompt || EXPERIMENTS[preset].prompt, { preset, data: s.body || EXPERIMENTS[preset].data, states: e.states?.length ? JSON.stringify(e.states) : '', duration: e.duration, layout: s.design?.experimentLayout === 'focus' ? 'focus' : undefined }, s.chartSource ?? ''), ground: g };
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
@@ -429,7 +429,9 @@ function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtCo
  *  cover when its intro and How to play are off, as the Checks in a lecture are; so does the lab.
  *  Every slide is filed under the game's SlideForge slide, and the first carries its notes. */
 function buildGame(s: SFSlide, g: LessonGame, k: Kit, img: (p?: string) => string, art?: ArtContext): Slide[] {
-  const slides = gameSlides(g, k.on('working')).filter((x) => g.cover || x.game?.role !== 'cover');
+  // A question's picture is an address as SlideForge wrote it: made to work here, as a slide's is.
+  const pictured: LessonGame = { ...g, slides: g.slides.map((q) => (q.image ? { ...q, image: img(q.image) } : q)) };
+  const slides = gameSlides(pictured, k.on('working')).filter((x) => g.cover || x.game?.role !== 'cover');
   slides.forEach((x, i) => {
     if (s.id) x.sourceSlideId = s.id;
     if (s.hidden) x.hidden = true;

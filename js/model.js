@@ -2878,7 +2878,7 @@
   }
 
   // lab/src/engine/experimentKinds.ts
-  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested", "stream", "area", "heatmap"];
+  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested", "stream", "area", "heatmap", "channels", "scales", "network"];
   var COLOURS = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
   var RAINBOW = ["#e0201b", "#1f3fd6", "#27b83a", "#8a2be2", "#f28c1b", "#e8d51b"];
   var TYPE_COLOURS = ["#0072b2", "#009e73", "#d55e00", "#cc79a7"];
@@ -3346,10 +3346,201 @@
       });
       return els;
     }
+    if (st.kind === "channels") {
+      const rows2 = cats.map((c, i) => ({ c, a: v(i, 0), b: m > 1 ? v(i, 1) : 0 }));
+      const f = Math.max(0, Math.min(rows2.length - 1, typeof st.focus === "number" ? st.focus : 0));
+      if (st.mode === "ranking") {
+        text2(40, 40, "Judged most accurately", 17, "start", "rank:top", { wt: 700, fill: "#009e73" });
+        const order2 = rows2.map((r2, i) => i);
+        order2.forEach((i, k) => {
+          const y = 62 + k * 52, w = 420 - k * 70;
+          poly(`rank:${i}`, rectPts(250, y, Math.max(40, w), 36), ramp(k, order2.length), { fo: 1 });
+          text2(234, y + 25, rows2[i].c, 20, "end", `category:${i}`, { wt: 700 });
+          text2(260 + Math.max(40, w), y + 25, `#${k + 1}`, 17, "start", `rankn:${i}`);
+        });
+        text2(40, 62 + order2.length * 52 + 14, "Judged least accurately", 17, "start", "rank:bottom", { wt: 700, fill: "#d55e00" });
+        text2(860, 120, "Your room’s spread", 19, "middle", "rank:note1", { wt: 700 });
+        text2(860, 150, "on each question", 19, "middle", "rank:note2", { wt: 700 });
+        text2(860, 190, "is the evidence.", 19, "middle", "rank:note3", { wt: 700 });
+        text2(860, 250, "After Cleveland & McGill (1984)", 14, "middle", "rank:src1");
+        text2(860, 272, "and Heer & Bostock (2010)", 14, "middle", "rank:src2");
+        return els;
+      }
+      const r = rows2[f], name = r.c.toLowerCase(), ax = 190, bx = 390, base = 320, top = 40, span = base - top;
+      const scale = (x) => x / 100 * span;
+      text2(40, 40, `${f + 1} / ${rows2.length} · ${r.c}`, 18, "start", "ch:title", { wt: 700 });
+      if (name.startsWith("position")) {
+        line("ch:axis", 110, top, 110, base, ink, 2, 0.7);
+        [0, 25, 50, 75, 100].forEach((t2) => line(`ch:tick:${t2}`, 102, base - scale(t2), 110, base - scale(t2), ink, 2, 0.7));
+        poly("markA", circlePts(ax, base - scale(r.a), 16), COLOURS[0]);
+        poly("markB", circlePts(bx, base - scale(r.b), 16), COLOURS[0]);
+      } else if (name.startsWith("length")) {
+        poly("markA", rectPts(ax - 30, base - 30 - scale(r.a) * 0.9, 60, scale(r.a) * 0.9), COLOURS[0]);
+        poly("markB", rectPts(bx - 30, base - 90 - scale(r.b) * 0.9, 60, scale(r.b) * 0.9), COLOURS[0]);
+      } else if (name.startsWith("angle")) {
+        const wedge = (cx, x) => sectorPts(cx, 190, 120, -Math.PI / 2, -Math.PI / 2 + x / 100 * Math.PI);
+        poly("markA", wedge(ax, r.a), COLOURS[0]);
+        poly("markB", wedge(bx, r.b), COLOURS[0]);
+      } else if (name.startsWith("area")) {
+        const R = 90;
+        poly("markA", circlePts(ax, 190, R * Math.sqrt(r.a / 100)), COLOURS[0]);
+        poly("markB", circlePts(bx, 190, R * Math.sqrt(r.b / 100)), COLOURS[0]);
+      } else {
+        const tone = (x) => `hsl(205,70%,${Math.round(96 - x / 100 * 66)}%)`;
+        poly("markA", rectPts(ax - 70, 120, 140, 140), tone(r.a), { stroke: ink, sw: 1, so: 0.25 });
+        poly("markB", rectPts(bx - 70, 120, 140, 140), tone(r.b), { stroke: ink, sw: 1, so: 0.25 });
+      }
+      text2(ax, base + 40, "A", 22, "middle", "ch:A", { wt: 700 });
+      text2(bx, base + 40, "B", 22, "middle", "ch:B", { wt: 700 });
+      text2(740, 150, "B is what % of A?", 26, "middle", "ch:q", { wt: 700 });
+      if (st.labels) {
+        const pct = Math.round(r.b / (r.a || 1) * 100);
+        text2(740, 220, `${pct}%`, 64, "middle", "ch:answer", { fill: "#d55e00", wt: 700 });
+      }
+      return els;
+    }
+    if (st.kind === "scales") {
+      const all = t.series.slice(0, 12), nr = Math.min(cats.length, 6), nc = all.length;
+      const left = 150, top = 46, cw = Math.min(62, 780 / Math.max(1, nc)), ch = 38;
+      const vals = cats.slice(0, nr).flatMap((_, i) => all.map((s2) => val(s2.values[i])));
+      const lo = Math.min(...vals), hi = Math.max(...vals), lim = Math.max(Math.abs(lo), Math.abs(hi)) || 1;
+      const lerp = (a, b, u) => a.map((x, k) => x + (b[k] - x) * u);
+      const hex = (c) => "#" + c.map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("");
+      const rgb = (h) => {
+        const n2 = parseInt(h.slice(1), 16);
+        return [n2 >> 16 & 255, n2 >> 8 & 255, n2 & 255];
+      };
+      const PALE = rgb("#f5f5f5");
+      const colourOf = (x) => {
+        if (st.scheme === "rg" || st.scheme === "bo") {
+          const neg = rgb(st.scheme === "rg" ? "#c8102e" : "#b35806"), pos = rgb(st.scheme === "rg" ? "#1a8a3a" : "#2166ac");
+          const u2 = Math.max(-1, Math.min(1, x / lim));
+          return u2 < 0 ? lerp(PALE, neg, -u2) : lerp(PALE, pos, u2);
+        }
+        const u = hi > lo ? (x - lo) / (hi - lo) : 0;
+        return lerp(rgb("#eef4fb"), rgb("#08306b"), u);
+      };
+      const toLin = (c) => {
+        c /= 255;
+        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      };
+      const toSrgb = (c) => 255 * (c <= 31308e-7 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+      const DEUTAN = [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]];
+      const seen = (c) => {
+        if (st.cvd !== "deutan") return hex(c);
+        const l = c.map(toLin);
+        return hex(DEUTAN.map((row) => toSrgb(Math.max(0, Math.min(1, row[0] * l[0] + row[1] * l[1] + row[2] * l[2])))));
+      };
+      const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      cats.slice(0, nr).forEach((cat, i) => {
+        text2(left - 14, top + ch * i + ch / 2 + 6, cat, 17, "end", `category:${i}`);
+        all.forEach((s2, j) => {
+          const x = val(s2.values[i]), c = colourOf(x);
+          poly(`cell:${i}:${j}`, rectPts(left + cw * j + 1, top + ch * i + 1, cw - 2, ch - 2), seen(c));
+          text2(left + cw * j + cw / 2, top + ch * i + ch / 2 + 5, x > 0 ? `+${x}` : x, 13, "middle", `val:${i}:${j}`, { fill: luma(c) < 120 ? "#ffffff" : "#1a1a1a" });
+        });
+      });
+      all.forEach((s2, j) => text2(left + cw * j + cw / 2, top - 12, s2.name, 14, "middle", `xcat:${j}`, { wt: 700 }));
+      const ly = top + ch * nr + 30;
+      if (st.mode === "cyclic") {
+        const hsl = (h, sat = 0.55, l = 0.55) => {
+          const a = sat * Math.min(l, 1 - l), f2 = (n2) => {
+            const k = (n2 + h / 30) % 12;
+            return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)));
+          };
+          return [f2(0), f2(8), f2(4)];
+        };
+        text2(left - 14, ly + 20, "Sequential", 15, "end", "strip:seq", { wt: 700 });
+        text2(left - 14, ly + 62, "Cyclic", 15, "end", "strip:cyc", { wt: 700 });
+        all.forEach((_, j) => {
+          poly(`seq:${j}`, rectPts(left + cw * j + 1, ly, cw - 2, 30), hex(lerp(rgb("#eef4fb"), rgb("#08306b"), nc > 1 ? j / (nc - 1) : 0)));
+          poly(`cyc:${j}`, rectPts(left + cw * j + 1, ly + 42, cw - 2, 30), hex(hsl(j / nc * 360)));
+        });
+        return els;
+      }
+      const steps = 24, lw = Math.min(cw * nc, 560);
+      for (let k = 0; k < steps; k++) {
+        const x = st.scheme === "rg" || st.scheme === "bo" ? -lim + 2 * lim * k / (steps - 1) : lo + (hi - lo) * k / (steps - 1);
+        poly(`leg:${k}`, rectPts(left + lw / steps * k, ly, lw / steps + 0.5, 18), seen(colourOf(x)));
+      }
+      const lMin = st.scheme === "rg" || st.scheme === "bo" ? -lim : lo, lMax = st.scheme === "rg" || st.scheme === "bo" ? lim : hi;
+      text2(left, ly + 42, lMin, 14, "start", "leg:min");
+      text2(left + lw, ly + 42, lMax > 0 ? `+${lMax}` : lMax, 14, "end", "leg:max");
+      if (lMin < 0 && lMax > 0) text2(left + lw * (0 - lMin) / (lMax - lMin), ly + 42, "0", 14, "middle", "leg:zero", { wt: 700 });
+      return els;
+    }
+    if (st.kind === "network") {
+      const nr = Math.min(cats.length, 10), words = ser.map((s2) => s2.name), nw = words.length;
+      const co = words.map((_, a) => words.map((__, b) => a === b ? 0 : cats.slice(0, nr).reduce((acc, _c, i) => acc + Math.min(v(i, a), v(i, b)), 0)));
+      const maxCo = Math.max(1, ...co.flat());
+      const tone = (u) => `hsl(205,65%,${Math.round(95 - u * 66)}%)`;
+      if (st.mode === "matrix") {
+        const left2 = 300, top2 = 60, cw2 = Math.min(70, 520 / nw), chh2 = Math.min(42, 290 / nw);
+        words.forEach((w, a) => {
+          text2(left2 - 14, top2 + chh2 * a + chh2 / 2 + 6, w, 17, "end", `wordrow:${a}`);
+          text2(left2 + cw2 * a + cw2 / 2, top2 - 14, w, 16, "middle", `word:${a}`, { wt: 700 });
+          words.forEach((__, b) => {
+            const x = co[a][b], u = x / maxCo;
+            poly(`co:${Math.min(a, b)}:${Math.max(a, b)}:${a < b ? "u" : "l"}`, rectPts(left2 + cw2 * b + 1, top2 + chh2 * a + 1, cw2 - 2, chh2 - 2), a === b ? "#e8e8e8" : tone(u));
+            if (a !== b) text2(left2 + cw2 * b + cw2 / 2, top2 + chh2 * a + chh2 / 2 + 5, x, 13, "middle", `cov:${a}:${b}`, { fill: u > 0.55 ? "#ffffff" : "#1a1a1a" });
+          });
+        });
+        return els;
+      }
+      if (st.mode === "network") {
+        const totals2 = words.map((_, a) => cats.slice(0, nr).reduce((acc, _c, i) => acc + v(i, a), 0)), maxT = Math.max(1, ...totals2);
+        let s1 = 0, s2 = 1;
+        for (let a = 0; a < nw; a++) for (let b = a + 1; b < nw; b++) if (co[a][b] < co[s1][s2]) {
+          s1 = a;
+          s2 = b;
+        }
+        const group = words.map((_, a) => a === s1 ? 0 : a === s2 ? 1 : co[a][s1] >= co[a][s2] ? 0 : 1);
+        const P = words.map(() => [0, 0]);
+        [0, 1].forEach((g) => {
+          const members = words.map((_, a) => a).filter((a) => group[a] === g), cxg = g === 0 ? 250 : 590, k = members.length;
+          members.forEach((a, n2) => {
+            const ang = -Math.PI / 2 + n2 / Math.max(1, k) * Math.PI * 2;
+            P[a] = [cxg + (k > 1 ? 105 : 0) * Math.cos(ang), 185 + (k > 1 ? 95 : 0) * Math.sin(ang)];
+          });
+        });
+        for (let a = 0; a < nw; a++) for (let b = a + 1; b < nw; b++) {
+          const u = co[a][b] / maxCo;
+          if (u < 0.35) continue;
+          line(`edge:${a}:${b}`, P[a][0], P[a][1], P[b][0], P[b][1], "#7a8a99", 1 + u * 9, 0.35 + u * 0.5);
+        }
+        words.forEach((w, a) => {
+          const r = 16 + 20 * Math.sqrt(totals2[a] / maxT);
+          poly(`node:${a}`, circlePts(P[a][0], P[a][1], r), st.labels ? COLOURS[group[a]] : COLOURS[0], { stroke: "#ffffff", sw: 2 });
+          text2(P[a][0], P[a][1] + r + 22, w, 18, "middle", `word:${a}`, { wt: 700 });
+        });
+        text2(750, 140, "Nodes: words", 17, "start", "net:k1");
+        text2(750, 168, "Links: shared songs", 17, "start", "net:k2");
+        text2(750, 196, "Width: how often", 17, "start", "net:k3");
+        if (st.labels) {
+          text2(750, 246, "Two communities:", 17, "start", "net:k4", { wt: 700, fill: "#d55e00" });
+          text2(750, 272, "the Cluster task", 17, "start", "net:k5", { wt: 700, fill: "#d55e00" });
+        }
+        return els;
+      }
+      const left = 190, top = 44, cw = Math.min(100, 700 / nw), chh = Math.min(38, 300 / nr);
+      const mx = Math.max(1, ...cats.slice(0, nr).flatMap((_, i) => words.map((__, j) => v(i, j))));
+      cats.slice(0, nr).forEach((cat, i) => {
+        text2(left - 14, top + chh * i + chh / 2 + 6, cat, 16, "end", `category:${i}`);
+        words.forEach((__, j) => {
+          const x = v(i, j), u = x / mx;
+          poly(`cell:${i}:${j}`, rectPts(left + cw * j + 1, top + chh * i + 1, cw - 2, chh - 2), tone(u));
+          text2(left + cw * j + cw / 2, top + chh * i + chh / 2 + 5, x, 13, "middle", `val:${i}:${j}`, { fill: u > 0.55 ? "#ffffff" : "#1a1a1a" });
+        });
+      });
+      words.forEach((w, j) => text2(left + cw * j + cw / 2, top - 12, w, 16, "middle", `word:${j}`, { wt: 700 }));
+      return els;
+    }
     return els;
   }
   var NESTED = "Level	Asks	Threat\nDomain situation	Who are the target users?|What do they need to do?	You misunderstood|their needs\nData/task abstraction	What is shown? (data)|Why are they looking? (task)	You’re showing them|the wrong thing\nIdiom	How is it shown? (encoding)|How is it manipulated? (interaction)	The way you show it|doesn’t work\nAlgorithm	How is it computed|efficiently?	Your code is|too slow";
   var SONG = "Word	Verse 1	Chorus 1	Verse 2	Chorus 2	Bridge\nlove	2	4	1	4	2\nbaby	0	3	1	3	0\nnight	3	1	2	1	1\ndance	1	2	0	2	4\nheart	1	0	2	0	1";
+  var CHANNELS = "Channel	A	B\nPosition	80	36\nLength	80	52\nAngle	100	35\nArea	100	60\nLightness	100	50";
+  var SCALES = "Genre	Jan	Feb	Mar	Apr	May	Jun	Jul	Aug	Sep	Oct	Nov	Dec\nPop	3	4	2	-1	-4	-6	-7	-5	-2	1	4	6\nHip-hop	-2	-1	1	3	5	7	8	6	3	0	-2	-3\nRock	1	0	-1	-2	-2	-3	-2	-1	0	1	1	2\nJazz	-4	-3	-2	0	1	2	1	0	-1	-3	-4	-5\nClassical	6	5	3	1	-1	-3	-4	-3	-1	2	4	7";
   var FRUIT = "Fruit	April	May	June\nApple	82	70	20\nPear	73	50	33\nPeach	67	45	28\nOrange	85	65	17\nKiwi	54	42	24\nMelon	33	58	20";
   var KIND_PRESETS = {
     reshape: { label: "Reshape: wide to long", prompt: "A chart needs Month on an axis. Where is Month in this table?", data: FRUIT, states: [
@@ -3412,6 +3603,28 @@
       { label: "In time order", kind: "units", explanation: "One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context." },
       { label: "Count them", kind: "units", stack: true, explanation: "The dots slide into one row per word. Frequency was never in the lyrics: it is derived by counting. The colour still shows which section each came from." },
       { label: "Sort", kind: "units", stack: true, sort: true, explanation: "Sorted, the extremum reads first: love, 13 times. Chorus colours dominate, because choruses repeat." }
+    ] },
+    channels: { label: "Perception: one ratio, five channels", prompt: "Each pair asks the same question: B is what percentage of A? How sure are you of each answer?", data: CHANNELS, states: [
+      { label: "Position", kind: "channels", focus: 0, labels: true, explanation: "Two dots against one common scale. B is 45% of A. Answers usually cluster tightly here: position on a common scale is the most accurately read channel." },
+      { label: "Length", kind: "channels", focus: 1, labels: true, explanation: "Two bars that do not share a baseline, so only their lengths can be compared. B is 65% of A. Without the common baseline, estimates spread wider." },
+      { label: "Angle", kind: "channels", focus: 2, labels: true, explanation: "Two wedges from the same starting line. B is 35% of A. Angles are read less accurately than lengths: this is the pie chart’s channel." },
+      { label: "Area", kind: "channels", focus: 3, labels: true, explanation: "Two circles. B has 60% of A’s area. Area tends to be underestimated, because the eye compares widths as well as areas." },
+      { label: "Lightness", kind: "channels", focus: 4, labels: true, explanation: "Two shades. B is 50% of A. Lightness shows order well (darker is more) but is poor for reading how much more." },
+      { label: "The ranking", kind: "channels", mode: "ranking", explanation: "Position on a common scale, length, angle, area, lightness: the order Cleveland and McGill measured in 1984 and Heer and Bostock replicated in 2010. Munzner calls this effectiveness: give the most important attribute the most accurate channel." }
+    ] },
+    scales: { label: "Colour scales: follow the ordering", prompt: "Change in streams against last year, by genre and month. Which cells went up, which went down, and which barely moved?", data: SCALES, states: [
+      { label: "Sequential", kind: "scales", scheme: "seq", explanation: "Light to dark, lowest to highest. But this attribute is signed: the palest cells are the biggest falls, not “no change”, and zero has no colour of its own." },
+      { label: "Diverging", kind: "scales", scheme: "rg", explanation: "A diverging scale: zero is palest, falls go one way and rises the other. The attribute’s ordering direction (it diverges from zero) chooses the scale." },
+      { label: "Deuteranopia", kind: "scales", scheme: "rg", cvd: "deutan", explanation: "The same red–green scale with deuteranopia simulated (Machado et al., 2009). Around 1 in 12 men have a red–green colour vision deficiency. Rises and falls now look alike." },
+      { label: "Blue–orange", kind: "scales", scheme: "bo", explanation: "Still diverging, zero still palest, but blue against orange." },
+      { label: "Deuteranopia again", kind: "scales", scheme: "bo", cvd: "deutan", explanation: "Simulated deuteranopia again: rises and falls stay distinct, because blue and orange differ along the blue–yellow axis that deuteranopia keeps." },
+      { label: "Cyclic months", kind: "scales", scheme: "bo", mode: "cyclic", explanation: "Month is ordered too, but cyclic: December sits next to January. A sequential scale puts them at opposite ends; a cyclic scale, equally light all the way round the hue wheel, brings them back together." }
+    ] },
+    network: { label: "Table or network: words that co-occur", prompt: "The same lyric counts as the heatmap. Could they be a network rather than a table?", data: "Song	love	party	heart	dance	baby	night\nSong 1	1	8	0	9	2	7\nSong 2	8	1	9	0	7	2\nSong 3	0	9	1	8	1	8\nSong 4	9	2	7	1	8	1\nSong 5	2	7	1	9	0	9\nSong 6	7	0	8	2	9	1\nSong 7	1	8	2	7	1	9\nSong 8	8	1	8	1	6	3", states: [
+      { label: "A table", kind: "network", mode: "table", explanation: "As collected: a table. The eight songs are the items, the six words are the attributes, and each cell counts how often a word is sung." },
+      { label: "Derive pairs", kind: "network", mode: "matrix", explanation: "A derived table: for each pair of words, add up how often they are sung in the same song (the smaller count, song by song). The songs have gone; words are now the items on both sides." },
+      { label: "A network", kind: "network", mode: "network", explanation: "Words become nodes and co-occurrence becomes links. Same data, now abstracted as a network, so network idioms and tasks, such as following paths or finding hubs, become available." },
+      { label: "Communities", kind: "network", mode: "network", labels: true, explanation: "The links split the words into two communities: love, heart, baby and party, dance, night. It is the Cluster task again, found this time from the links rather than by reordering a heatmap." }
     ] }
   };
 

@@ -62,9 +62,9 @@ test('Week 3 builds whole: its checks inline, its experiments known to SlideForg
   const SF = sf();
   const deck = SF.buildLesson('ipdv-da');
   assert.equal(deck.theme, 'northeastern');
-  assert.equal(deck.slides.filter((s) => s.type === 'game' && s.gameId).length, 5);
+  assert.equal(deck.slides.filter((s) => s.type === 'game' && s.gameId).length, 7);
   const ex = deck.slides.filter((s) => s.type === 'experiment');
-  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'rescue3d', 'pies', 'units', 'idioms', 'emoji']);
+  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['nested', 'reshape', 'derive', 'tasks', 'cluster', 'channels', 'rescue3d', 'scales', 'pies', 'units', 'network', 'idioms', 'emoji']);
   deck.slides.forEach((s) => { if (s.image) assert.ok(fs.existsSync(path.join(ROOT, s.image)), s.image); });
   assert.equal(SF.LESSONS.find((l) => l.key === 'ipdv-da').libraryGroup, 'nul');
 });
@@ -74,4 +74,34 @@ test('a pictogram keeps one icon per row, not just the first four characters', (
   const deck = SF.buildLesson('ipdv-da');
   const s = deck.slides.find((x) => x.chartKind === 'pictogram');
   assert.equal(SF.normalizeDeck(deck).slides.find((x) => x.id === s.id).chartIcon, '🐄 🐑 🐖');
+});
+
+test('the perception experiment reveals the ratios the room estimated, and its pictures are on disk', async () => {
+  const { KIND_PRESETS, kindPicture } = await kinds();
+  const p = KIND_PRESETS.channels;
+  const revealed = p.states.filter((st) => st.mode !== 'ranking').map((st) => kindPicture(p.data, st, '#000').find((e) => e.key === 'ch:answer').text);
+  assert.deepEqual(revealed, ['45%', '65%', '35%', '60%', '50%']);
+  assert.ok(!kindPicture(p.data, { ...p.states[0], labels: false }, '#000').some((e) => e.key === 'ch:answer'), 'the phones never see the answer');
+  for (const ch of ['position', 'length', 'angle', 'area', 'lightness']) assert.ok(fs.existsSync(path.join(ROOT, `assets/lesson/ipdv/perception-${ch}.svg`)), ch);
+});
+
+test('red–green collapses under simulated deuteranopia and blue–orange does not', async () => {
+  const { KIND_PRESETS, kindPicture } = await kinds();
+  const p = KIND_PRESETS.scales;
+  const rgb = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const gap = (st) => { const els = kindPicture(p.data, st, '#000'); const a = rgb(els.find((e) => e.key === 'cell:0:6').fill), b = rgb(els.find((e) => e.key === 'cell:1:6').fill); return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); };
+  const by = (label) => p.states.find((st) => st.label === label);
+  assert.ok(gap(by('Diverging')) > 150, 'red and green are far apart to typical vision');
+  assert.ok(gap(by('Deuteranopia')) < 30, 'and nearly the same with deuteranopia');
+  assert.ok(gap(by('Deuteranopia again')) > 120, 'blue and orange stay apart');
+});
+
+test('the lyric network finds the ballads and the club songs from its links alone', async () => {
+  const { KIND_PRESETS, kindPicture } = await kinds();
+  const p = KIND_PRESETS.network;
+  const els = kindPicture(p.data, p.states.find((st) => st.labels), '#000');
+  const fill = (w) => { const j = ['love', 'party', 'heart', 'dance', 'baby', 'night'].indexOf(w); return els.find((e) => e.key === `node:${j}`).fill; };
+  assert.equal(fill('love'), fill('heart')); assert.equal(fill('love'), fill('baby'));
+  assert.equal(fill('party'), fill('dance')); assert.equal(fill('party'), fill('night'));
+  assert.notEqual(fill('love'), fill('party'));
 });

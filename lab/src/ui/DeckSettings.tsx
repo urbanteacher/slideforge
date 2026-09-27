@@ -1,4 +1,4 @@
-import { Hash, RectangleHorizontal } from 'lucide-react';
+import { Hash, RectangleHorizontal, Waves } from 'lucide-react';
 import { editHeaderFooter } from '../model/headerFooter';
 import { ASPECTS, aspectOf, setAspect, type Aspect } from '../model/aspect';
 import { useStore } from '../model/store';
@@ -26,6 +26,11 @@ export function DeckSettings() {
     const own = useStore.getState().deck.slides.filter((s) => s.headerFooter).length;
     showToast(on ? `Slide numbers on, bottom right of every slide${own ? ` — ${own} slide${own === 1 ? ' has' : 's have'} its own header and footer and ${own === 1 ? 'keeps it' : 'keep theirs'}` : ''}.` : 'Slide numbers off.');
   };
+  const calm = deck.motion === 'reduce';
+  const setCalm = (on: boolean) => {
+    mutate((d) => { if (on) d.motion = 'reduce'; else delete d.motion; });
+    showToast(on ? 'This deck is shown with reduced motion, on every computer.' : 'Motion follows each computer’s own setting again.');
+  };
   return (
     <div className="deck-settings">
       <label className="deck-shape" title={`Slide shape — ${ASPECTS.find((a) => a.value === aspect)?.hint}. Changing it keeps every box in its place and every line break; type follows the narrower side.`}>
@@ -34,6 +39,7 @@ export function DeckSettings() {
           {ASPECTS.map((a) => <option key={a.value} value={a.value} title={a.hint}>{a.label}</option>)}
         </select>
       </label>
+      <button className={`tb-btn${calm ? ' active' : ''}`} aria-pressed={calm} title="Reduced motion for this deck, whatever the computer is set to: entrances fade, chart experiments cross-fade, transitions crossfade, and backdrops and effects hold still. Off, a computer set to reduce motion still gets it." onClick={() => setCalm(!calm)}><Waves size={14} /><span className="tb-label">Reduce motion</span></button>
       <button className={`tb-btn${numbers ? ' active' : ''}`} aria-pressed={numbers} title="Show slide numbers (page / total, bottom right)" onClick={() => setNumbers(!numbers)}><Hash size={14} /><span className="tb-label">Numbers</span></button>
     </div>
   );

@@ -22,7 +22,7 @@ function embed(value) {
   }
   return value;
 }
-const bundle={kind:'slideforge-bundle',version:1,exported:new Date().toISOString(),decks:[embed(SF.normalizeDeck(deck))],games:games.map(SF.normalizeGame)};
+const bundle={kind:'slideforge-bundle',version:1,exported:new Date().toISOString(),decks:[embed(SF.normalizeDeck(deck))],games:games.map(g=>embed(SF.normalizeGame(g)))};
 const file=path.join(root,'lessons/03_Lecture_IPDV_Data_Abstraction.sfbundle.json');
 fs.writeFileSync(file,JSON.stringify(bundle,null,2)+'\n');
 console.log(`${deck.slides.length} slides, ${games.length} checks. Portable bundle: ${file}`);

@@ -190,9 +190,9 @@ const DIM_SECS = 0.5;
  * appears. Nothing is dimmed on a static slide (t = Infinity): the editor and a handout show it all.
  */
 export interface PileMove { dx: number; dy: number; scale: number; rot: number }
-export function stepLight(slide: Slide, sched: Schedule, t: number): { dim: Map<string, number>; spot: number; pile: Map<string, PileMove> } {
+export function stepLight(slide: Slide, sched: Schedule, t: number, reduce = false): { dim: Map<string, number>; spot: number; pile: Map<string, PileMove> } {
   const dim = new Map<string, number>();
-  const pile = pileOf(slide, sched, t, dim);
+  const pile = pileOf(slide, sched, t, dim, reduce);
   let spot = 0;
   if (!Number.isFinite(t)) {
     // A set shown one at a time stacks its items in one place; still, only its first is drawn.
@@ -236,9 +236,10 @@ export function stepLight(slide: Slide, sched: Schedule, t: number): { dim: Map<
  * SlideForge's gallery pile: each click lays the next item on top, and every item already down steps
  * one notch further up, back and over — translated, shrunk 5% and turned 1.3° a notch, about its own
  * middle — its caption layers fading as soon as something covers it, so only the top caption reads. Notches
- * ease in over half a second. Still, the pile shows complete: every item down, the last on top.
+ * ease in over half a second (with reduced motion they step at once). Still, the pile shows complete:
+ * every item down, the last on top.
  */
-function pileOf(slide: Slide, sched: Schedule, t: number, dim: Map<string, number>): Map<string, PileMove> {
+function pileOf(slide: Slide, sched: Schedule, t: number, dim: Map<string, number>, reduce: boolean): Map<string, PileMove> {
   const out = new Map<string, PileMove>();
   const items = new Map<string, Map<number, { at: number; layers: Layer[] }>>();
   for (const l of slide.layers) {
@@ -252,7 +253,7 @@ function pileOf(slide: Slide, sched: Schedule, t: number, dim: Map<string, numbe
     it.layers.push(l);
   }
   const still = !Number.isFinite(t);
-  const ease = (from: number) => (still ? 1 : Number.isFinite(from) && t >= from ? EASE.cubicOut(Math.min(1, (t - from) / 0.5)) : 0);
+  const ease = (from: number) => (still ? 1 : Number.isFinite(from) && t >= from ? (reduce ? 1 : EASE.cubicOut(Math.min(1, (t - from) / 0.5))) : 0);
   for (const set of items.values()) {
     const list = [...set.entries()].sort((a, b) => a[0] - b[0]);
     for (const [i, it] of list) {
@@ -327,8 +328,11 @@ function imageView(layer: Layer, local: number): [number, number, number] {
 /**
  * Evaluate a layer's animated state.
  * @param t slide clock (s). Pass Infinity for a fully built, static slide.
+ * @param reduce reduced motion (engine/motion.ts): every entrance is a fade of the whole layer, a
+ *   picture's slow zoom or travel holds its first frame (a zoom to a detail is already there), and
+ *   loops hold still.
  */
-export function layerState(layer: Layer, start: number | undefined, t: number, time: number): LayerState {
+export function layerState(layer: Layer, start: number | undefined, t: number, time: number, reduce = false): LayerState {
   const st = IDLE_STATE();
   const a = layer.anim;
   const h = layer.box?.h ?? 200;
@@ -340,7 +344,8 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
       st.opacity = 0;
       return st;
     }
-    const textUnits = (layer.kind === 'text' && isTextUnit(a.type) && !buildLines(layer)) || isChartDraw(layer);
+    // Reduced, letters, words and a chart's bars arrive together, as the layer's one fade.
+    const textUnits = !reduce && ((layer.kind === 'text' && isTextUnit(a.type) && !buildLines(layer)) || isChartDraw(layer));
     st.textT = textUnits ? local : Infinity;
     // A line-by-line build moves each line itself (see the renderer), and a chart that draws itself
     // draws its own bars; the box just appears.
@@ -349,7 +354,8 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
       const e = EASE[a.easing](raw);
       const inv = 1 - e;
       const fade = Math.min(1, EASE.cubicOut(raw) * 1.4);
-      switch (a.type) {
+      if (reduce) st.opacity = fade;
+      else switch (a.type) {
         case 'fade': st.opacity = fade; break;
         case 'rise': st.opacity = fade; st.dy = inv * Math.min(120, h * 0.5 + 40); break;
         case 'drop': st.opacity = fade; st.dy = -inv * Math.min(120, h * 0.5 + 40); break;
@@ -370,7 +376,8 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
   // A chart can zoom to a detail too (SlideForge's chart callouts); its other motions are a picture's.
   const moves = layer.kind === 'image' || (layer.kind === 'chart' && layer.params.motion === 'detail');
   if (moves && (layer.params.motion ?? 'none') !== 'none' && Number.isFinite(t)) {
-    st.view = imageView(layer, t - (start !== undefined && Number.isFinite(start) ? start : 0));
+    const local = t - (start !== undefined && Number.isFinite(start) ? start : 0);
+    st.view = imageView(layer, !reduce ? local : layer.params.motion === 'detail' ? (local >= 0 ? Infinity : local) : 0);
   } else if (moves && layer.params.motion === 'detail') {
     st.view = imageView(layer, Infinity);
   }
@@ -380,7 +387,7 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
     if (since > 0) st.opacity *= 1 - Math.min(1, since / 0.8);
   }
 
-  if (a.loop !== 'none') {
+  if (a.loop !== 'none' && !reduce) {
     const s = a.loopSpeed, amt = a.loopAmount;
     switch (a.loop) {
       case 'float': st.dy += Math.sin(time * s * 1.6 + hashId(layer.id)) * 10 * amt; break;
