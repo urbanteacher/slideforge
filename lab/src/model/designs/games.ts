@@ -351,16 +351,33 @@ function buttonsAndAnswer(st: LayoutStyle, name: string, q: GameQuestion, i: num
   const right = cells[q.correct ?? -1];
   if (!right) return slideOf(named(name, i, true), o.layers, st, note(q));
   const set = buttons(st, [{ ...right, right: true }], o.top, ANSWER_SIZE, 0, ANSWER_SIZE);
+  centreAnswer(st, set.layers, right.text);
   o.layers.push(...set.layers);
   const why = q.explanation ?? '';
   if (why) {
-    const p: Params = { font: st.body, size: ANSWER_SIZE, color: st.muted, lineHeight: 1.25, fit: 'shrink' };
+    const p: Params = { font: st.body, size: ANSWER_SIZE, color: st.muted, lineHeight: 1.25, fit: 'shrink', align: 'center' };
     const room = FOOT - set.bottom - 40;
     if (textHeight(why, W - LEFT * 2, p) + 6 > room) warn.push('The reason is too long for the answer slide at the standard size, so it is drawn smaller. Shorten it.');
     // 'Reason', not 'Why': it belongs to the answer under it and moves with it when the game is centred.
     o.layers.push(txt('Reason', why, box(LEFT, set.bottom + 40, W - LEFT * 2, room), p, { type: 'fade', duration: 0.6, delay: 0.4 }));
   }
   return warned(slideOf(named(name, i, true), o.layers, st, note(q)), warn);
+}
+/** The answer at the middle of the slide: its button only as wide as its letter and words, centred.
+ *  An answer too long for one line keeps the full width, its words centred in it. The insets are
+ *  buttons()'s own (36 in, a 72 column for the letter, 40 at the end). */
+function centreAnswer(st: LayoutStyle, layers: Layer[], text: string) {
+  const bar = layers.find((l) => /^Button \d+$/.test(l.name));
+  const mark = layers.find((l) => / — mark$/.test(l.name));
+  const words = layers.find((l) => / — words$/.test(l.name));
+  if (!bar?.box || !words?.box) return;
+  const inL = 36, markW = 72, inR = 40;
+  const need = inL + (mark ? markW : 0) + textWidth(text, { ...FACE(st), size: Number(words.params.size) }) + inR + 8;
+  if (need >= bar.box.w) { words.params.align = 'center'; return; }
+  const x = (W - need) / 2;
+  bar.box = { ...bar.box, x, w: need };
+  if (mark?.box) mark.box = { ...mark.box, x: x + inL };
+  words.box = { ...words.box, x: x + inL + (mark ? markW : 0), w: need - inL - (mark ? markW : 0) - inR };
 }
 /** A slide with what does not fit said on it (Slide.warn), or as it was when everything fits. */
 function warned(slide: Slide, warn: string[]): Slide {
