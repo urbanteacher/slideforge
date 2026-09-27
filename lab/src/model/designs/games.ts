@@ -283,12 +283,13 @@ const LEAD = 0.75;
 /** The smallest the options may go: 44px, or less under a long question that two lines only fit
  *  small, so the question keeps its lead; never below 34px, which still reads across a room. */
 const optionFloor = (question: number) => Math.max(34, Math.min(44, Math.floor(question * LEAD)));
-/** Rule 4 for the lettered walls: the question leads its options. The options are sized under the
- *  question; where they had to come down further than LEAD asks, the question is brought down to
- *  keep its lead over them and they are laid out again under it (its two lines can take it lower). */
-function matched<T extends { size: number }>(build: (sizes?: number[]) => { o: ReturnType<typeof opening>; set: T }) {
+/** Rule 4: the question and its set. The set is sized under the question; where it had to come down
+ *  further than `lead` asks, the question is brought down to keep that lead over it and the set is laid
+ *  out again under it (its two lines can take it lower). The lettered walls pass LEAD; true or false
+ *  keeps the statement at its doors' size (lead 1). */
+function matched<T extends { size: number }>(build: (sizes?: number[]) => { o: ReturnType<typeof opening>; set: T }, lead = 1) {
   let r = build();
-  for (let k = 0; k < 3 && r.o.qn.size * LEAD > r.set.size + 0.5; k++) r = build([r.set.size / LEAD]);
+  for (let k = 0; k < 3 && r.o.qn.size * lead > r.set.size + 0.5; k++) r = build([r.set.size / lead]);
   return r;
 }
 
@@ -300,7 +301,7 @@ export function choiceWall(st: LayoutStyle, name: string, q: GameQuestion, i: nu
   const { o, set } = matched((sizes) => {
     const o = opening(st, q, tag(game, cue, i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80] });
     return { o, set: grid(st, cells, o.top, { cols: 1, max: Math.min(o.qn.size * LEAD, 88), min: optionFloor(o.qn.size), name: 'Option', marks: true }) };
-  });
+  }, LEAD);
   o.layers.push(...set.layers);
   return slideOf(named(name, i, answer), o.layers, st, answer || !held ? note(q) : held);
 }
@@ -316,7 +317,7 @@ export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
     const o = opening(st, q, tag('Multiple choice', 'choose one', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80], why: '' });
     if (reason === 'question') reasonOver(st, q, o, answer);
     return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size * LEAD, 88), reason === 'buttons' ? under.h : 0, optionFloor(o.qn.size)) };
-  });
+  }, LEAD);
   o.layers.push(...set.layers, ...(answer && reason === 'buttons' ? whyLayer(q, under, set.bottom) : []));
   return slideOf(named(name, i, answer), o.layers, st, note(q));
 }

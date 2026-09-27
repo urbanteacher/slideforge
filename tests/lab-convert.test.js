@@ -355,7 +355,7 @@ async function bundle(entry) {
 
 const RIGHT_GREEN = '#1f9d5a';
 
-test('a lesson’s Check comes in as SlideForge showed it: four buttons, the right one lit green, the question at their size', { skip }, async () => {
+test('a lesson’s Check comes in as SlideForge showed it: four buttons, the right one lit green, the question leading them', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
   const src = lessonWithGames('ipdv-vc-hybrid');
   const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
@@ -375,7 +375,9 @@ test('a lesson’s Check comes in as SlideForge showed it: four buttons, the rig
     const highest = Math.min(...buttons(answer).map((b) => b.box.y));
     assert.ok(why.box.y + why.box.h <= highest, 'above the buttons, not across them');
     const words = ask.layers.find((l) => l.name === 'Button 1 — words');
-    assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the question at the buttons’ size');
+    // Rule 4: the question leads, the buttons' words at most three-quarters of its size.
+    const qSize = ask.layers.find((l) => l.name === 'Question').params.size;
+    assert.ok(words.params.size <= qSize * 0.75 + 0.5, `the buttons’ words (${words.params.size}) at most three-quarters of the question (${qSize})`);
   });
 });
 
