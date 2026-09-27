@@ -232,7 +232,19 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
         if (s.progressive) { const l = slide.layers.find((x) => x.name === 'Bullet points'); if (l) l.anim = { ...l.anim, type: 'fade', build: 'lines' }; }
         return { slide, ground: g };
       }
-    case 'journey': return { slide: journeySlide(st, t, sub, pairs(b)), ground: g };
+    case 'journey': {
+      const slide = journeySlide(st, t, sub, pairs(b));
+      // Walked through a stop per press in SlideForge: the same here. The track is there from the start,
+      // so the room sees the route; each stop arrives on a click, its number and words straight after it.
+      if (s.progressive) {
+        let inStop = false;
+        for (const l of slide.layers) {
+          if (l.name === 'Stop') { inStop = true; l.anim = { ...l.anim, trigger: 'onClick', delay: 0 }; }
+          else if (inStop) l.anim = { ...l.anim, trigger: 'afterPrev', delay: 0, duration: 0.4 };
+        }
+      }
+      return { slide, ground: g };
+    }
     case 'mindmap': return { slide: mindmapSlide(st, t, pairs(b)), ground: g };
     case 'keyfact': return { slide: keyfactSlide(st, t, s.body ?? '', sub, b), ground: g };
     case 'orgchart': return { slide: orgchartSlide(st, t, triples(b)), ground: g };
