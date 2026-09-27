@@ -16,8 +16,10 @@ import { BASE, EY, FOOT, HY, LEFT, LIFT, ON_RIGHT, PAD, RIGHT, TOPBAND, W, box, 
 //    lines: a long one comes down in size rather than taking a third.
 // 2. The answers start right under the question.
 // 3. Rows and tiles are only as tall as their words, with PADV above and below; nothing stretches.
-// 4. A set shares one size, as large as the question where it fits; on the lettered walls (multiple
-//    choice) the question comes down to the options' size, so the two read as one.
+// 4. A set shares one size, as large as the question where it fits. On the lettered walls (multiple
+//    choice) the question leads: the options are at most three-quarters of its size (LEAD), because
+//    bold answers on tiles at the question's size read louder than the question. Where the options
+//    need smaller type, the question comes down with them and keeps the lead.
 // 5. The answers are set in the body face and the marks (letters, numbers, handles) in the muted ink,
 //    so nothing under the question reads as part of the heading; words are centred in their cell.
 // 6. Every question is answered on the slide after it, in its own layout: the reason under the
@@ -276,12 +278,17 @@ function doors(st: LayoutStyle, opts: string[], top: number, max: number, right?
 }
 
 // ─── Lettered choices: multiple choice, predict the outcome ─────────────────
-/** Rule 4 for the lettered walls: the question and its options at one size. The options are sized
- *  under the question, the question is brought down to their size, and they are laid out again under
- *  it, until the two agree (the question's two lines can take it lower still). */
+/** Rule 4: how much larger the question is than its options on the lettered walls. */
+const LEAD = 0.75;
+/** The smallest the options may go: 44px, or less under a long question that two lines only fit
+ *  small, so the question keeps its lead; never below 34px, which still reads across a room. */
+const optionFloor = (question: number) => Math.max(34, Math.min(44, Math.floor(question * LEAD)));
+/** Rule 4 for the lettered walls: the question leads its options. The options are sized under the
+ *  question; where they had to come down further than LEAD asks, the question is brought down to
+ *  keep its lead over them and they are laid out again under it (its two lines can take it lower). */
 function matched<T extends { size: number }>(build: (sizes?: number[]) => { o: ReturnType<typeof opening>; set: T }) {
   let r = build();
-  for (let k = 0; k < 3 && r.o.qn.size > r.set.size; k++) r = build([r.set.size]);
+  for (let k = 0; k < 3 && r.o.qn.size * LEAD > r.set.size + 0.5; k++) r = build([r.set.size / LEAD]);
   return r;
 }
 
@@ -292,7 +299,7 @@ export function choiceWall(st: LayoutStyle, name: string, q: GameQuestion, i: nu
   const cells = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct }));
   const { o, set } = matched((sizes) => {
     const o = opening(st, q, tag(game, cue, i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80] });
-    return { o, set: grid(st, cells, o.top, { cols: 1, max: Math.min(o.qn.size, 88), name: 'Option', marks: true }) };
+    return { o, set: grid(st, cells, o.top, { cols: 1, max: Math.min(o.qn.size * LEAD, 88), min: optionFloor(o.qn.size), name: 'Option', marks: true }) };
   });
   o.layers.push(...set.layers);
   return slideOf(named(name, i, answer), o.layers, st, answer || !held ? note(q) : held);
@@ -308,7 +315,7 @@ export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
   const { o, set } = matched((sizes) => {
     const o = opening(st, q, tag('Multiple choice', 'choose one', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80], why: '' });
     if (reason === 'question') reasonOver(st, q, o, answer);
-    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size, 88), reason === 'buttons' ? under.h : 0) };
+    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size * LEAD, 88), reason === 'buttons' ? under.h : 0, optionFloor(o.qn.size)) };
   });
   o.layers.push(...set.layers, ...(answer && reason === 'buttons' ? whyLayer(q, under, set.bottom) : []));
   return slideOf(named(name, i, answer), o.layers, st, note(q));
@@ -316,14 +323,14 @@ export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
 
 /** Buttons two by two under the question, rounded, apart, each as tall as the tallest's words; one
  *  size for all. The right one green (rule 7), a quiet one faded. */
-function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number, reserve = 0): { layers: Layer[]; size: number; bottom: number } {
+function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number, reserve = 0, min = 44): { layers: Layer[]; size: number; bottom: number } {
   const face = FACE(st), gap = 28;
   const cols = cells.length > 2 ? 2 : Math.max(1, cells.length), rows = Math.ceil(cells.length / cols);
   const w = (W - LEFT * 2 - gap * (cols - 1)) / cols;
   const markW = 72, inL = 36, inR = 40, textW = w - inL - markW - inR;
   const lh = Number(face.lineHeight ?? 1.15);
   const room = (FOOT - reserve - top - gap * (rows - 1)) / Math.max(1, rows);
-  const size = fitSize(cells.map((x) => x.text).filter(Boolean), textW, Math.min(max * lh * 2 + 4, room - PADV * 2), face, max, 44);
+  const size = fitSize(cells.map((x) => x.text).filter(Boolean), textW, Math.min(max * lh * 2 + 4, room - PADV * 2), face, max, min);
   const tallest = Math.max(size * lh, ...cells.map((x) => (x.text ? textHeight(x.text, textW, { ...face, size }) : 0)));
   const h = Math.min(room, tallest + PADV * 2 + 12);
   const layers: Layer[] = [];
