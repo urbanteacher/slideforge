@@ -64,7 +64,7 @@ test('Week 3 builds whole: its checks inline, its experiments known to SlideForg
   assert.equal(deck.theme, 'northeastern');
   assert.equal(deck.slides.filter((s) => s.type === 'game' && s.gameId).length, 5);
   const ex = deck.slides.filter((s) => s.type === 'experiment');
-  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units']);
+  assert.deepEqual([...ex.map((s) => s.experiment.preset)], ['nested', 'reshape', 'derive', 'tasks', 'rescue3d', 'pies', 'units', 'emoji']);
   deck.slides.forEach((s) => { if (s.image) assert.ok(fs.existsSync(path.join(ROOT, s.image)), s.image); });
   assert.equal(SF.LESSONS.find((l) => l.key === 'ipdv-da').libraryGroup, 'nul');
 });
