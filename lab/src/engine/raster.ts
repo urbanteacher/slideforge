@@ -1183,7 +1183,8 @@ const MEASURES: Record<string, Measure> = {
   note: (c, p, w) => noteLayout(c, p, w),
   quote: (c, p, w) => quoteLayout(c, p, w),
   // Columns wider, together, than the table can be do not fit: the cells would be cut off.
-  table: (c, p, w) => { const L = tableLayout(c, p, w); return L.natural > w + 1 ? { height: Infinity } : L; },
+  // A table a little too wide shrinks to one line a row; one much too wide keeps its size and wraps.
+  table: (c, p, w) => { const L = tableLayout(c, p, w); return L.natural > w + 1 && L.natural < w * 1.3 ? { height: Infinity } : L; },
 };
 
 /** The size a layer is drawn at: its own, or less when it has to shrink into its box. */
@@ -1297,44 +1298,65 @@ function tableLayout(ctx: Ctx, p: Params, w: number) {
   const rows = parseTable(String(p.data ?? ''));
   const cols = Math.max(1, ...rows.map((r) => r.length));
   const pad = size * 0.6;
-  // Columns share the width by what they hold, and none is squeezed below a third of an even share.
-  const want = Array.from({ length: cols }, (_, c) => {
-    let m = size * 2;
-    rows.forEach((r, i) => { setFont(ctx, fam, size, (p.header !== false && i === 0) || (p.labels !== false && c === 0) ? 700 : 400); m = Math.max(m, ctx.measureText(r[c] ?? '').width); });
-    return m + pad * 2;
-  });
+  const bold = (i: number, c: number) => (p.header !== false && i === 0) || (p.labels !== false && c === 0);
+  // What each column would like (its longest cell on one line) and what it must have (its longest
+  // word): a table never cuts a word off, it wraps the cell instead.
+  const want: number[] = [], need: number[] = [];
+  for (let c = 0; c < cols; c++) {
+    let m = size * 2, n = size * 2;
+    rows.forEach((r, i) => {
+      setFont(ctx, fam, size, bold(i, c) ? 700 : 400);
+      const cell = r[c] ?? '';
+      m = Math.max(m, ctx.measureText(cell).width);
+      cell.split(/\s+/).forEach((wd) => { n = Math.max(n, ctx.measureText(wd).width); });
+    });
+    want.push(m + pad * 2); need.push(n + pad * 2);
+  }
   const total = want.reduce((a, b) => a + b, 0);
-  const floor = w / cols / 3;
-  const widths = want.map((x) => Math.max(floor, (x / total) * w));
-  const k = w / widths.reduce((a, b) => a + b, 0);
-  const cw = widths.map((x) => x * k);
+  let cw: number[];
+  if (total <= w) cw = want.map((x) => x * (w / total));
+  else {
+    // Each column gets its longest word, then the rest of the width in proportion to what it still wants.
+    const base = need.reduce((a, b) => a + b, 0), spare = Math.max(0, w - base), extra = want.map((x, c) => x - need[c]);
+    const ex = extra.reduce((a, b) => a + b, 0) || 1;
+    cw = need.map((x, c) => x + (spare * extra[c]) / ex);
+    const k = w / cw.reduce((a, b) => a + b, 0);
+    cw = cw.map((x) => x * k);
+  }
+  const lineH = size * 1.2, padY = size * 0.75;
+  const cells = rows.map((r, i) => Array.from({ length: cols }, (_, c) => {
+    setFont(ctx, fam, size, bold(i, c) ? 700 : 400);
+    return wrap(ctx, r[c] ?? '', Math.max(size, cw[c] - pad * 2));
+  }));
+  const rowHs = cells.map((row) => Math.max(size * 1.95, Math.max(...row.map((l) => l.length)) * lineH + padY));
   const rowH = size * 1.95;
-  return { size, fam, rows, cols, cw, pad, rowH, height: rows.length * rowH, natural: total };
+  return { size, fam, rows, cols, cw, pad, rowH, rowHs, cells, lineH, height: rowHs.reduce((a, b) => a + b, 0), natural: total };
 }
 function rasterTable(layer: Layer): Raster {
   const p = fitted(layer);
   const { canvas, ctx, w, rect } = boxCanvas(layer);
   const L = tableLayout(ctx, p, w);
   const ink = String(p.textColor ?? '#141414'), accent = String(p.accent ?? '#d94f2b');
+  let y = 0;
   L.rows.forEach((r, i) => {
-    const head = p.header !== false && i === 0;
-    const y = i * L.rowH;
+    const head = p.header !== false && i === 0, rh = L.rowHs[i];
     let x = 0;
     for (let c = 0; c < L.cols; c++) {
       const label = p.labels !== false && c === 0;
       setFont(ctx, L.fam, L.size, head || label ? 700 : 400);
       ctx.fillStyle = head ? accent : ink;
       ctx.textBaseline = 'middle';
-      const cell = fit(ctx, r[c] ?? '', L.cw[c] - L.pad * 2);
       ctx.textAlign = c === 0 ? 'left' : 'center';
-      ctx.fillText(cell, c === 0 ? x + (label ? 0 : L.pad) : x + L.cw[c] / 2, y + L.rowH / 2);
+      const lines = L.cells[i][c], y0 = y + rh / 2 - ((lines.length - 1) * L.lineH) / 2;
+      lines.forEach((ln, k) => ctx.fillText(ln, c === 0 ? x + (label ? 0 : L.pad) : x + L.cw[c] / 2, y0 + k * L.lineH));
       x += L.cw[c];
     }
     // A hairline under every row; the header's is the ink at full strength.
     ctx.globalAlpha = head ? 0.9 : 0.22;
     ctx.fillStyle = head ? accent : ink;
-    ctx.fillRect(0, y + L.rowH - (head ? 2 : 1), w, head ? 2 : 1);
+    ctx.fillRect(0, y + rh - (head ? 2 : 1), w, head ? 2 : 1);
     ctx.globalAlpha = 1;
+    y += rh;
   });
   ctx.textAlign = 'left';
   return { canvas, rect };

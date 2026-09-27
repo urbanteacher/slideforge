@@ -25,6 +25,8 @@ export interface KState {
   icons?: string[]; size?: number;
   /** nested: show each level's threat to validity. */
   threats?: boolean;
+  /** heatmap: the order rows and columns are drawn in, and labelled boxes round blocks [row0, row1, col0, col1, label]. */
+  rowOrder?: number[]; colOrder?: number[]; boxes?: (number | string)[][];
   /** Read by the older kinds (the pies preset ends on a categorical bar). */
   categorical?: boolean;
 }
@@ -39,12 +41,12 @@ export interface KEl {
 
 interface KPreset { label: string; prompt: string; data: string; states: KState[] }
 
-export const KINDS = ['grid', 'long', 'groups', 'lines', 'balance', 'oblique', 'donut', 'exploded', 'rose', 'units', 'nested', 'stream', 'area'];
+export const KINDS = ['grid', 'long', 'groups', 'lines', 'balance', 'oblique', 'donut', 'exploded', 'rose', 'units', 'nested', 'stream', 'area', 'heatmap'];
 
 /** Each new kind's small symbol for its step button. */
 export const KIND_GLYPHS: Record<string, string> = {
   grid: '▦', long: '≡', groups: '▮', lines: '╱', balance: '±', oblique: '▣',
-  donut: '◎', exploded: '◔', rose: '✿', units: '∷', nested: '⧉', stream: '≋', area: '◭',
+  donut: '◎', exploded: '◔', rose: '✿', units: '∷', nested: '⧉', stream: '≋', area: '◭', heatmap: '▩',
 };
 
 const COLOURS = ['#0072b2', '#d55e00', '#009e73', '#cc79a7', '#8a6500', '#5b4ba8'];
@@ -479,6 +481,33 @@ export function kindPicture(data: string, st: KState, ink: string): KEl[] | null
     ser.forEach((q, j) => text(xAt(j), 350, q.name, 16, 'middle', `xcat:${j}`));
     return els;
   }
+  if (st.kind === 'heatmap') {
+    // A grid of cells coloured by value. Each cell is keyed by its row and column, so when rows or
+    // columns are reordered the cells travel to their new places and blocks of similar values form.
+    const rows = cats.slice(0, 12), nr = rows.length;
+    const ro = st.rowOrder?.length === nr ? st.rowOrder : rows.map((_, i) => i);
+    const co = st.colOrder?.length === m ? st.colOrder : ser.map((_, j) => j);
+    const left = 190, top = 44, cw = Math.min(100, 700 / m), ch = Math.min(38, 300 / nr);
+    const all = rows.flatMap((_, i) => ser.map((__, j) => v(i, j))), lo = Math.min(...all), hi = Math.max(...all);
+    const shadeOf = (x: number) => { const t = hi > lo ? (x - lo) / (hi - lo) : 0; return { fill: `hsl(205,65%,${Math.round(95 - t * 68)}%)`, dark: t > 0.55 }; };
+    ro.forEach((i, r) => {
+      text(left - 14, top + ch * r + ch / 2 + 6, rows[i], 17, 'end', `category:${i}`);
+      co.forEach((j, c) => {
+        const x = v(i, j), sh = shadeOf(x);
+        poly(`cell:${i}:${j}`, rectPts(left + cw * c + 1, top + ch * r + 1, cw - 2, ch - 2), sh.fill);
+        if (st.labels !== false) text(left + cw * c + cw / 2, top + ch * r + ch / 2 + 5, x, 14, 'middle', `val:${i}:${j}`, { fill: sh.dark ? '#ffffff' : '#1a1a1a' });
+      });
+    });
+    co.forEach((j, c) => text(left + cw * c + cw / 2, top - 12, ser[j].name, 16, 'middle', `xcat:${j}`, { wt: 700 }));
+    (st.boxes ?? []).forEach((b, k) => {
+      const [r0, r1, c0, c1] = b.map(Number), label = String(b[4] ?? '');
+      const x = left + cw * c0, y = top + ch * r0, w = cw * (c1 - c0 + 1), h = ch * (r1 - r0 + 1);
+      line(`box:${k}:t`, x, y, x + w, y, '#d55e00', 3.5); line(`box:${k}:b`, x, y + h, x + w, y + h, '#d55e00', 3.5);
+      line(`box:${k}:l`, x, y, x, y + h, '#d55e00', 3.5); line(`box:${k}:r`, x + w, y, x + w, y + h, '#d55e00', 3.5);
+      if (label) text(left + cw * m + 16, y + h / 2 + 6, label, 18, 'start', `boxname:${k}`, { fill: '#d55e00', wt: 700 });
+    });
+    return els;
+  }
   return els;
 }
 
@@ -533,6 +562,10 @@ export const KIND_PRESETS: Record<string, KPreset> = {
     { label: 'Streamgraph', kind: 'stream', explanation: 'Overview. X: position in the song. Thickness: how often each word is sung there. Colour: the word. The stream swells at the choruses.' },
     { label: 'Unit chart', kind: 'units', colourBy: 'category', explanation: 'Exploration. One mark per sung word, by section. Every mark can be hovered to show the word in its line.' },
     { label: 'Area chart', kind: 'area', explanation: 'The song’s dynamics. Each word from zero, see-through, so peaks can be compared; animate it for the “liquid” version. Colour: the word.' }] },
+  cluster: { label: 'Cluster: reorder a heatmap', prompt: 'Eight songs, six words, how often each is sung. Are there groups of songs?', data: 'Song\tlove\tparty\theart\tdance\tbaby\tnight\nSong 1\t1\t8\t0\t9\t2\t7\nSong 2\t8\t1\t9\t0\t7\t2\nSong 3\t0\t9\t1\t8\t1\t8\nSong 4\t9\t2\t7\t1\t8\t1\nSong 5\t2\t7\t1\t9\t0\t9\nSong 6\t7\t0\t8\t2\t9\t1\nSong 7\t1\t8\t2\t7\t1\t9\nSong 8\t8\t1\t8\t1\t6\t3', states: [
+    { label: 'As collected', kind: 'heatmap', explanation: 'Darker means the word is sung more. In the order the songs were collected, it looks like noise.' },
+    { label: 'Reorder the rows', kind: 'heatmap', rowOrder: [1, 3, 5, 7, 0, 2, 4, 6], explanation: 'Only the order of the songs changes. Every cell keeps its value, and a pattern starts to show.' },
+    { label: 'Reorder the columns', kind: 'heatmap', rowOrder: [1, 3, 5, 7, 0, 2, 4, 6], colOrder: [0, 2, 4, 1, 3, 5], boxes: [[0, 3, 0, 2, 'Ballads'], [4, 7, 3, 5, 'Club songs']], explanation: 'Put similar words together too and two blocks appear: love, heart, baby songs and party, dance, night songs. That is the Cluster task, and ordering is the channel that reveals it.' }] },
   units: { label: 'Units: from words to frequency', prompt: 'The raw data is words in the order they are sung. Where does “frequency” come from?', data: SONG, states: [
     { label: 'In time order', kind: 'units', explanation: 'One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context.' },
     { label: 'Count them', kind: 'units', stack: true, explanation: 'The dots slide into one row per word. Frequency was never in the lyrics: it is derived by counting. The colour still shows which section each came from.' },

@@ -2878,7 +2878,7 @@
   }
 
   // lab/src/engine/experimentKinds.ts
-  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested", "stream", "area"];
+  var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested", "stream", "area", "heatmap"];
   var COLOURS = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
   var RAINBOW = ["#e0201b", "#1f3fd6", "#27b83a", "#8a2be2", "#f28c1b", "#e8d51b"];
   var TYPE_COLOURS = ["#0072b2", "#009e73", "#d55e00", "#cc79a7"];
@@ -3316,6 +3316,36 @@
       ser.forEach((q, j) => text2(xAt(j), 350, q.name, 16, "middle", `xcat:${j}`));
       return els;
     }
+    if (st.kind === "heatmap") {
+      const rows2 = cats.slice(0, 12), nr = rows2.length;
+      const ro = st.rowOrder?.length === nr ? st.rowOrder : rows2.map((_, i) => i);
+      const co = st.colOrder?.length === m ? st.colOrder : ser.map((_, j) => j);
+      const left = 190, top = 44, cw = Math.min(100, 700 / m), ch = Math.min(38, 300 / nr);
+      const all = rows2.flatMap((_, i) => ser.map((__, j) => v(i, j))), lo = Math.min(...all), hi = Math.max(...all);
+      const shadeOf = (x) => {
+        const t2 = hi > lo ? (x - lo) / (hi - lo) : 0;
+        return { fill: `hsl(205,65%,${Math.round(95 - t2 * 68)}%)`, dark: t2 > 0.55 };
+      };
+      ro.forEach((i, r) => {
+        text2(left - 14, top + ch * r + ch / 2 + 6, rows2[i], 17, "end", `category:${i}`);
+        co.forEach((j, c) => {
+          const x = v(i, j), sh = shadeOf(x);
+          poly(`cell:${i}:${j}`, rectPts(left + cw * c + 1, top + ch * r + 1, cw - 2, ch - 2), sh.fill);
+          if (st.labels !== false) text2(left + cw * c + cw / 2, top + ch * r + ch / 2 + 5, x, 14, "middle", `val:${i}:${j}`, { fill: sh.dark ? "#ffffff" : "#1a1a1a" });
+        });
+      });
+      co.forEach((j, c) => text2(left + cw * c + cw / 2, top - 12, ser[j].name, 16, "middle", `xcat:${j}`, { wt: 700 }));
+      (st.boxes ?? []).forEach((b, k) => {
+        const [r0, r1, c0, c1] = b.map(Number), label = String(b[4] ?? "");
+        const x = left + cw * c0, y = top + ch * r0, w = cw * (c1 - c0 + 1), h = ch * (r1 - r0 + 1);
+        line(`box:${k}:t`, x, y, x + w, y, "#d55e00", 3.5);
+        line(`box:${k}:b`, x, y + h, x + w, y + h, "#d55e00", 3.5);
+        line(`box:${k}:l`, x, y, x, y + h, "#d55e00", 3.5);
+        line(`box:${k}:r`, x + w, y, x + w, y + h, "#d55e00", 3.5);
+        if (label) text2(left + cw * m + 16, y + h / 2 + 6, label, 18, "start", `boxname:${k}`, { fill: "#d55e00", wt: 700 });
+      });
+      return els;
+    }
     return els;
   }
   var NESTED = "Level	Asks	Threat\nDomain situation	Who are the target users?|What do they need to do?	You misunderstood|their needs\nData/task abstraction	What is shown? (data)|Why are they looking? (task)	You’re showing them|the wrong thing\nIdiom	How is it shown? (encoding)|How is it manipulated? (interaction)	The way you show it|doesn’t work\nAlgorithm	How is it computed|efficiently?	Your code is|too slow";
@@ -3372,6 +3402,11 @@
       { label: "Streamgraph", kind: "stream", explanation: "Overview. X: position in the song. Thickness: how often each word is sung there. Colour: the word. The stream swells at the choruses." },
       { label: "Unit chart", kind: "units", colourBy: "category", explanation: "Exploration. One mark per sung word, by section. Every mark can be hovered to show the word in its line." },
       { label: "Area chart", kind: "area", explanation: "The song’s dynamics. Each word from zero, see-through, so peaks can be compared; animate it for the “liquid” version. Colour: the word." }
+    ] },
+    cluster: { label: "Cluster: reorder a heatmap", prompt: "Eight songs, six words, how often each is sung. Are there groups of songs?", data: "Song	love	party	heart	dance	baby	night\nSong 1	1	8	0	9	2	7\nSong 2	8	1	9	0	7	2\nSong 3	0	9	1	8	1	8\nSong 4	9	2	7	1	8	1\nSong 5	2	7	1	9	0	9\nSong 6	7	0	8	2	9	1\nSong 7	1	8	2	7	1	9\nSong 8	8	1	8	1	6	3", states: [
+      { label: "As collected", kind: "heatmap", explanation: "Darker means the word is sung more. In the order the songs were collected, it looks like noise." },
+      { label: "Reorder the rows", kind: "heatmap", rowOrder: [1, 3, 5, 7, 0, 2, 4, 6], explanation: "Only the order of the songs changes. Every cell keeps its value, and a pattern starts to show." },
+      { label: "Reorder the columns", kind: "heatmap", rowOrder: [1, 3, 5, 7, 0, 2, 4, 6], colOrder: [0, 2, 4, 1, 3, 5], boxes: [[0, 3, 0, 2, "Ballads"], [4, 7, 3, 5, "Club songs"]], explanation: "Put similar words together too and two blocks appear: love, heart, baby songs and party, dance, night songs. That is the Cluster task, and ordering is the channel that reveals it." }
     ] },
     units: { label: "Units: from words to frequency", prompt: "The raw data is words in the order they are sung. Where does “frequency” come from?", data: SONG, states: [
       { label: "In time order", kind: "units", explanation: "One dot each time a word is sung, placed in its section. This is a unit chart: every mark is one word you could hover over to see in context." },

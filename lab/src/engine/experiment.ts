@@ -313,34 +313,27 @@ const GLYPH: Record<string, string> = {
 type Rect = { x: number; y: number; w: number; h: number };
 
 /**
- * The layer's arrangement: the chart on the left at full height, and on the right a rail of steps —
- * Predict first, one button per state (lit while it shows), Replay change — stacked as a list, the
- * explanation of the state showing in a card beneath them, and the data's source at the foot.
+ * The layer's arrangement. The chart is the point, so it takes the full width: the steps — Predict
+ * first, one button per state (lit while it shows), Replay change — run as one compact strip across
+ * the top, and the state's explanation is a caption band along the bottom with the data's source
+ * beneath it. The plan is wide (1000 × 370), so a rail beside it only ever took width it needed.
  */
 export function experimentControls(p: Params, w: number, h: number): { buttons: Button[]; px: number; plot: Rect; note: Rect; source: Rect } {
   const states = experimentStates(p), size = Number(p.size ?? 36), font = `"${String(p.font ?? 'Inter')}", system-ui, sans-serif`;
   const step = Math.max(-1, Math.min(states.length - 1, Math.round(Number(p._step ?? states.length - 1))));
-  const railW = Math.min(620, w * 0.34), railX = w - railW;
   const labels = [
     { label: '? Predict first', action: 'state:-1', on: step < 0 },
     ...states.map((st, i) => ({ label: `${GLYPH[st.kind] ?? '\u25ae'} ${st.label}`, action: `state:${i}`, on: i === step })),
     { label: '\u21bb Replay change', action: 'replay', off: step < 0 },
   ];
-  // A list: each button on its own line, as wide as its words; past five steps, two columns, so the
-  // type can stay large. The type is set to fit about half the rail's height.
-  const cols = labels.length > 5 ? 2 : 1, rows = Math.ceil(labels.length / cols);
-  let px = Math.max(28, size * 0.85);
-  const sourceH = size * 1.2;
-  while (rows * px * 2.17 > h * 0.52 && px > 24) px -= 1;
-  const bh = px * 1.75, gap = px * 0.42, colW = (railW - gap * (cols - 1)) / cols;
-  const buttons = labels.map((l, i) => {
-    const c = cols === 1 ? 0 : i < rows ? 0 : 1, r = cols === 1 ? i : i % rows;
-    const b = row([l], railX + c * (colW + gap), r * (bh + gap), colW, px, font).buttons[0];
-    return { ...b, h: bh };
-  });
-  const listH = rows * (bh + gap) - gap;
-  const note = { x: railX, y: listH + size * 0.8, w: railW, h: h - listH - size * 0.8 - sourceH - size * 0.4 };
-  return { buttons, px, plot: { x: 0, y: 0, w: railX - size * 1.2, h }, note, source: { x: railX, y: h - sourceH, w: railW, h: sourceH } };
+  const strip = row(labels, 0, 0, w, Math.max(24, size * 0.7), font);
+  const sourceH = Math.max(24, size * 0.6) * 2.4;
+  const top = strip.height + size * 0.7, gap = size * 1.1;
+  // The plan is wide, so height is what limits the chart: the explanation takes a narrow column
+  // beside it rather than a band beneath it.
+  const noteW = Math.min(620, w * 0.28), plotW = w - noteW - gap;
+  const note = { x: plotW + gap, y: top, w: noteW, h: h - top - sourceH - size * 0.4 };
+  return { buttons: strip.buttons, px: strip.px, plot: { x: 0, y: top, w: plotW, h: h - top }, note, source: { x: note.x, y: h - sourceH, w: noteW, h: sourceH } };
 }
 
 /** Words wrapped to a width, shrunk (not below 24px) until they fit a height. */
@@ -386,10 +379,10 @@ export function drawExperiment(ctx: Ctx, w: number, h: number, p: Params) {
   }
   const src = String(p.source ?? '').trim();
   if (src) {
-    const f = fitWords(ctx, src, font, 400, Math.max(24, size * 0.72), source.w, source.h, 1.2);
+    const f = fitWords(ctx, src, font, 400, Math.max(24, size * 0.6), source.w, source.h, 1.2);
     ctx.save(); ctx.globalAlpha = 0.62; ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
     ctx.font = `400 ${f.size}px "${font}", system-ui, sans-serif`;
-    ctx.fillText(f.lines.join(' '), source.x, source.y + source.h, source.w);
+    f.lines.forEach((l, i) => ctx.fillText(l, source.x, source.y + source.h - (f.lines.length - 1 - i) * f.size * 1.2, source.w));
     ctx.restore();
   }
   if (step < 0) {
@@ -401,8 +394,9 @@ export function drawExperiment(ctx: Ctx, w: number, h: number, p: Params) {
     return;
   }
   const sc = Math.min(plot.w / 1000, plot.h / 370), ox = plot.x + (plot.w - 1000 * sc) / 2, oy = plot.y + (plot.h - 370 * sc) / 2;
-  // The plan's labels were set for a 1280-wide slide; here they are brought up to the text size.
-  const fs = Math.max(1, (size * 0.8) / (20 * sc));
+  // The plan's labels were set for a 1280-wide slide. They grow towards the layer's text size, but no
+  // further than the plan's spacing allows, or rows of a table would run into each other.
+  const fs = Math.max(1, Math.min(1.3, size / (20 * sc)));
   ctx.save(); ctx.translate(ox, oy); ctx.scale(sc, sc);
   scene(ctx, p, states, from, step, k, ink, font, fs);
   ctx.restore();
