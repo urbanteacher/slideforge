@@ -2075,12 +2075,10 @@
           }] }
       ],
       slides: [
-        { type: 'image', title: 'Data Abstraction',
-          subtitle: 'LDSCI6253 · Week 3 · Monday 28 September 2026',
+        { type: 'title', title: 'Data Abstraction',
+          subtitle: 'Week 3 · Lecture 3',
           date: '2026-09-28',
-          image: 'assets/lesson/ipdv/data-abstraction-hero.png', imageFit: 'cover',
-          design: { capStyle: 'scrim', capPos: 'bottom', imageMotion: 'zoom' },
-          notes: '0–5 min. Welcome back. Housekeeping first: fire alarm, toilets, where the lab is. Today’s one sentence: before you choose a chart, name what the data is and what the user needs to do with it. Plan: framework 20 min, the fruit table 25, tasks 15, critique 15, your project 10, close 5.\nThe cover is drawn from today’s data: table cells flowing into bars of the fruit totals.' },
+          notes: '0–5 min. Welcome back. Housekeeping first: fire alarm, toilets, where the lab is. Today’s one sentence: before you choose a chart, name what the data is and what the user needs to do with it. Plan: framework 20 min, the fruit table 25, tasks 15, critique 15, your project 10, close 5.\nThe cover is the Northeastern title slide, as Week 1’s is.' },
         { type: 'content', title: 'This week', subtitle: 'Reading and lab preparation',
           bullets: ['Worksheets: Canvas by 12:00 on the Friday after the lab.',
             'Reading: Munzner, Chapter 5, Marks and Channels.',
