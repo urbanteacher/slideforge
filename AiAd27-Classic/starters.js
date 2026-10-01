@@ -33,6 +33,7 @@
  */
 
 const { SUPPORT_SLIDES: SUPPORT_2026 } = require('../AiAd26/starters.js');
+const { DEBATES } = require('./debates.js');
 
 const kw = (term, detail) => `${term}\t${detail}`;
 const info = (label, value, note) => [label, value, note].join('\t');
@@ -54,28 +55,67 @@ const SUPPORT_SLIDES = [
   Object.assign({}, SUPPORT_2026[1], { run: { with: 'previous' } })
 ];
 
-/* The debate motion for this lesson, from the website's Debate pack (Secondary).
-   Held back: a five-minute starter has no room for it, and the lesson page's
-   "Set up the debate" section is where it is run from. */
-function debate(motion) {
-  return {
-    type: 'statement',
-    hidden: true,
-    body: motion,
-    subtitle: 'Debate it · National AI Conversation',
-    feedback: {
-      kind: 'poll',
-      prompt: 'Where do you stand?',
-      options: ['For', 'Against', 'Not sure yet'],
-      max: 1,
-      presentAs: 'rail'
+/* The debate, three slides in every deck, after the key takeaway and before
+   the support slides: the Secondary motion with a first vote; its points for
+   and against; and the same debate's motion for every age, so a primary or
+   post-16 class can run it too. From debates.js, which also writes the lesson
+   page's "Set up the debate" on the website, so the two match.
+
+   Optional, so the steps are marked optional: the website leaves them out of
+   the starter's five minutes, and they work as well in the next lesson. */
+function debateSlides(d) {
+  const s = d.secondary;
+  return [
+    {
+      type: 'statement',
+      body: s.motion,
+      subtitle: 'Debate it · National AI Conversation',
+      feedback: { kind: 'poll', prompt: 'Where do you stand?', options: ['For', 'Against', 'Not sure yet'], max: 1, presentAs: 'rail' },
+      run: {
+        step: 'Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.',
+        time: 60,
+        pupils: 'Vote',
+        tip: s.prompt,
+        optional: true
+      },
+      notes:
+        'THE DEBATE FOR THIS LESSON — the Secondary motion. Take the vote before anyone ' +
+        'argues, and keep the numbers: you will vote again at the end.\n\n' +
+        'A primary or post-16 class? Their motion is two slides on, and the lesson page on ' +
+        'the website has the prompt and three points each way for every age.'
     },
-    notes:
-      'HIDDEN BY DEFAULT — the debate for this lesson, for a longer session or a follow-up.\n\n' +
-      'Vote before anyone speaks, then again at the end, and ask who moved. The motion, ' +
-      'a prompt and three points each way for Primary, Secondary and Post-16 are on the ' +
-      'lesson page under "Set up the debate".'
-  };
+    {
+      type: 'compare',
+      title: 'Build both sides',
+      subtitle: 'For | Against',
+      bullets: s.for.map((f, i) => versus(f, s.against[i] || '')),
+      body: s.prompt,
+      run: {
+        step: 'Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.',
+        time: 300,
+        pupils: 'Prepare, speak, vote again',
+        tip: 'Ask who changed their mind, and what changed it.',
+        optional: true
+      },
+      notes:
+        'Three points each way to start from, not to read out. Ask each side for one piece ' +
+        'of evidence from the lesson, and use the challenge card under the table to test ' +
+        'whichever side is winning.'
+    },
+    {
+      type: 'cards',
+      title: 'The same debate, at every age',
+      bullets: [
+        card('Primary · Years 5 and 6', d.primary.motion),
+        card('Secondary · Years 7 to 11', s.motion),
+        card('Post-16', d.post16.motion)
+      ],
+      run: { with: 'previous' },
+      notes:
+        'For a different year group, use its motion. Primary: hands up or move to a corner, ' +
+        'then tell a talk partner why. Post-16: a formal debate with points of information.'
+    }
+  ];
 }
 
 const JOIN = {
@@ -280,7 +320,6 @@ const LESSONS = [
         buildMode: 'hide',
         notes: 'Extension. "Who benefits if I believe this?" works on advertising, politics and the group chat.'
       },
-      debate('Making a deepfake of someone without their permission should be against the law, even as a joke.'),
       JOIN
     ]
   },
@@ -441,7 +480,6 @@ const LESSONS = [
         feedback: { kind: 'scale', prompt: 'How much does it matter?', points: 5, lowLabel: 'Not at all', highLabel: 'Enormously', max: 1, presentAs: 'rail' },
         notes: 'HIDDEN BY DEFAULT. Push towards real-world consequences: health advice, legal questions, safety information.'
       },
-      debate('It does not matter whether AI understands, as long as its answers are useful.'),
       JOIN
     ]
   },
@@ -584,7 +622,6 @@ const LESSONS = [
         feedback: { kind: 'wordcloud', prompt: 'One word — what do you bring?', max: 2, presentAs: 'rail' },
         notes: 'HIDDEN BY DEFAULT. Push past obvious answers: lived experience, emotional truth, intention.'
       },
-      debate('Using AI makes people more creative, not less.'),
       JOIN
     ]
   },
@@ -744,7 +781,6 @@ const LESSONS = [
         feedback: { kind: 'poll', prompt: 'Who is responsible?', options: ['The tech companies', 'Governments', 'Us, the users', 'All of the above'], max: 1, presentAs: 'rail' },
         notes: 'HIDDEN BY DEFAULT. Rooms split three ways and then notice that everyone picked somebody else.'
       },
-      debate("Tech companies, not users, should be responsible for cutting AI's environmental impact."),
       JOIN
     ]
   },
@@ -884,7 +920,6 @@ const LESSONS = [
         ],
         notes: 'HIDDEN BY DEFAULT — the old second question. Most jobs will be TRANSFORMED, not destroyed: the left column is tasks, not careers.'
       },
-      debate('AI will create more good jobs than it takes away.'),
       JOIN
     ]
   },
@@ -1021,10 +1056,16 @@ const LESSONS = [
         })
       }),
       SUPPORT_SLIDES[1],
-      debate('AI chatbots should have to warn you every time an answer might be made up.'),
       JOIN
     ]
   }
 ];
+
+/* The debate goes in after the key takeaway, before the support slides. */
+LESSONS.forEach((lesson) => {
+  lesson.debate = DEBATES[lesson.slug || lesson.key];
+  const at = lesson.slides.findIndex((slide) => slide.type === 'section');
+  lesson.slides.splice(at, 0, ...debateSlides(lesson.debate));
+});
 
 module.exports = { LESSONS };

@@ -5,7 +5,7 @@
     "principle": "SAFE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Safe.pdf",
-    "pages": 11,
+    "pages": 15,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "This topic can be distressing for students who have experienced image-based abuse: have your safeguarding lead's name ready to say, and details to share privately.",
@@ -17,65 +17,104 @@
         "duration": "15 sec",
         "resource_ref": "Slide 1",
         "student_action": "",
-        "teacher_tip": "Frame it sensitively — some students may have personal experience of this."
+        "teacher_tip": "Frame it sensitively — some students may have personal experience of this.",
+        "optional": false
       },
       {
         "action": "Ask the question and give pairs 60 seconds. Take a vote on the four options by hands or phones.",
         "duration": "1 min",
         "resource_ref": "Slides 2–3",
         "student_action": "Pair discussion, then vote",
-        "teacher_tip": "\"Send it to a friend to check\" is the teachable answer: it feels responsible and it is the one that spreads the harm. Do not say so until after the vote."
+        "teacher_tip": "\"Send it to a friend to check\" is the teachable answer: it feels responsible and it is the one that spreads the harm. Do not say so until after the vote.",
+        "optional": false
       },
       {
         "action": "Read the headline aloud and let the room work out what \"1 in 17\" means for a class of thirty.",
         "duration": "45 sec",
         "resource_ref": "Slide 4",
         "student_action": "",
-        "teacher_tip": "Pause after \"1 in 17\" and say that support is always available. State 98% once and move on."
+        "teacher_tip": "Pause after \"1 in 17\" and say that support is always available. State 98% once and move on.",
+        "optional": false
       },
       {
         "action": "Take the room's answers first, then go through the four cards, matching them to what was said.",
         "duration": "1 min",
         "resource_ref": "Slide 5",
         "student_action": "Share answers",
-        "teacher_tip": "Say plainly that forwarding something to warn people is still forwarding it, and that creating AI-generated intimate images of anyone is illegal."
+        "teacher_tip": "Say plainly that forwarding something to warn people is still forwarding it, and that creating AI-generated intimate images of anyone is illegal.",
+        "optional": false
       },
       {
         "action": "Turn the lesson back on the deck: go through the source check row by row.",
         "duration": "45 sec",
         "resource_ref": "Slide 6",
         "student_action": "",
-        "teacher_tip": "Be fair to the number — it is a serious figure from a serious source. The point is that nobody asked."
+        "teacher_tip": "Be fair to the number — it is a serious figure from a serious source. The point is that nobody asked.",
+        "optional": false
       },
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
         "resource_ref": "Slide 7",
         "student_action": "Copy the definitions",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Go through the three habits.",
         "duration": "30 sec",
         "resource_ref": "Slide 8",
         "student_action": "",
-        "teacher_tip": "If you are short of time, end here."
+        "teacher_tip": "If you are short of time, end here.",
+        "optional": false
       },
       {
         "action": "Read the takeaway, then stop talking.",
         "duration": "15 sec",
         "resource_ref": "Slide 9",
         "student_action": "",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
+      },
+      {
+        "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
+        "duration": "1 min",
+        "resource_ref": "Slides 10–11",
+        "student_action": "Vote",
+        "teacher_tip": "Challenge card: What if the deepfake was of a famous politician and made a serious point?",
+        "optional": true
+      },
+      {
+        "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
+        "duration": "5 min",
+        "resource_ref": "Slides 12–13",
+        "student_action": "Prepare, speak, vote again",
+        "teacher_tip": "Ask who changed their mind, and what changed it.",
+        "optional": true
       },
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 10–11",
+        "resource_ref": "Slides 14–15",
         "student_action": "",
-        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
+        "optional": false
       }
-    ]
+    ],
+    "debate_pack": {
+      "primary_motion": "Should apps have to put a label on pictures and videos made by AI?",
+      "primary_prompt": "Sentence starter: I think they should / shouldn't because ___.",
+      "primary_for": "It would help us tell what is real and what is made up.\nPeople would be less likely to be tricked.\nIt is fair to know how something was made.",
+      "primary_against": "People who want to trick others could remove the label.\nSome AI pictures are just for fun and do no harm.\nWe should learn to check things ourselves anyway.",
+      "secondary_motion": "Making a deepfake of someone without their permission should be against the law, even as a joke.",
+      "secondary_prompt": "Challenge card: What if the deepfake was of a famous politician and made a serious point?",
+      "secondary_for": "A joke deepfake can still humiliate someone and spread far beyond the people it was meant for.\nOnce shared, it is almost impossible to delete, and the harm can last.\nA clear law would show that a person's face and voice belong to them.",
+      "secondary_against": "Satire of public figures is an important part of free speech.\nThe most harmful uses, such as intimate images and fraud, are already crimes.\nEducation and fast reporting tools may protect people better than a law that is hard to enforce.",
+      "post16_motion": "This house would make social media platforms legally responsible for deepfakes shared on their sites.",
+      "post16_prompt": "The tension: free expression vs protection. Research: what does the Online Safety Act require platforms to do about illegal content?",
+      "post16_for": "Platforms profit from content spreading, so they should carry responsibility for the harm it causes.\nOnly platforms can act at the speed and scale needed to stop a deepfake spreading.\nLegal duties give victims a route to justice that individual reporting does not.",
+      "post16_against": "Detection is imperfect, so platforms would over-remove legitimate content, including satire.\nResponsibility should rest with the person who makes and shares a deepfake.\nHeavy liability favours big companies that can afford moderation and squeezes out smaller platforms."
+    }
   },
   {
     "wp": "how-does-ai-actually-think",
@@ -83,7 +122,7 @@
     "principle": "SMART",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Smart.pdf",
-    "pages": 11,
+    "pages": 15,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Arrange students into pairs.",
@@ -95,65 +134,104 @@
         "duration": "15 sec",
         "resource_ref": "Slide 1",
         "student_action": "",
-        "teacher_tip": "Frame it as curious exploration: how does a tool they already use actually work?"
+        "teacher_tip": "Frame it as curious exploration: how does a tool they already use actually work?",
+        "optional": false
       },
       {
         "action": "Ask the question, give pairs 60 seconds, then take the vote.",
         "duration": "1 min",
         "resource_ref": "Slides 2–3",
         "student_action": "Pair discussion, then vote",
-        "teacher_tip": "Note who says AI \"thinks\" for gentle correction later. \"Somewhere in between\" is the most interesting answer to unpick."
+        "teacher_tip": "Note who says AI \"thinks\" for gentle correction later. \"Somewhere in between\" is the most interesting answer to unpick.",
+        "optional": false
       },
       {
         "action": "Walk through the four rows: what a language model does, against what understanding would need.",
         "duration": "45 sec",
         "resource_ref": "Slide 4",
         "student_action": "",
-        "teacher_tip": "This slide is the whole starter. If you only have two minutes, show the question and then this."
+        "teacher_tip": "This slide is the whole starter. If you only have two minutes, show the question and then this.",
+        "optional": false
       },
       {
         "action": "Read the three figures: nearly everyone uses it, and half already know it makes things up.",
         "duration": "45 sec",
         "resource_ref": "Slide 5",
         "student_action": "",
-        "teacher_tip": "A hallucination is not a rare glitch. It is what prediction does when the pattern runs out."
+        "teacher_tip": "A hallucination is not a rare glitch. It is what prediction does when the pattern runs out.",
+        "optional": false
       },
       {
         "action": "Go through the four answer cards, matching them to what pairs said.",
         "duration": "1 min",
         "resource_ref": "Slide 6",
         "student_action": "Share answers",
-        "teacher_tip": "Do not skip the last card: explaining the limits should not tip into \"AI is rubbish\"."
+        "teacher_tip": "Do not skip the last card: explaining the limits should not tip into \"AI is rubbish\".",
+        "optional": false
       },
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
         "resource_ref": "Slide 7",
         "student_action": "Copy the definitions",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Go through the three habits and invite pupils to name one they will change.",
         "duration": "30 sec",
         "resource_ref": "Slide 8",
         "student_action": "Name one habit",
-        "teacher_tip": "Emphasise \"Verify\". If you are short of time, end here."
+        "teacher_tip": "Emphasise \"Verify\". If you are short of time, end here.",
+        "optional": false
       },
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
         "resource_ref": "Slide 9",
         "student_action": "",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
+      },
+      {
+        "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
+        "duration": "1 min",
+        "resource_ref": "Slides 10–11",
+        "student_action": "Vote",
+        "teacher_tip": "Challenge card: What if someone followed an AI's health advice and it was wrong?",
+        "optional": true
+      },
+      {
+        "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
+        "duration": "5 min",
+        "resource_ref": "Slides 12–13",
+        "student_action": "Prepare, speak, vote again",
+        "teacher_tip": "Ask who changed their mind, and what changed it.",
+        "optional": true
       },
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 10–11",
+        "resource_ref": "Slides 14–15",
         "student_action": "",
-        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
+        "optional": false
       }
-    ]
+    ],
+    "debate_pack": {
+      "primary_motion": "Would you trust an AI helper more than a book?",
+      "primary_prompt": "Sentence starter: I would trust ___ more because ___.",
+      "primary_for": "AI answers quickly, and you can ask it anything.\nIt can explain things in a way that suits you.\nBooks can be old and out of date.",
+      "primary_against": "AI can make up answers that sound true.\nBooks are checked by people before they are printed.\nAI does not really understand what it is saying.",
+      "secondary_motion": "It does not matter whether AI understands, as long as its answers are useful.",
+      "secondary_prompt": "Challenge card: What if someone followed an AI's health advice and it was wrong?",
+      "secondary_for": "We use calculators and maps without them understanding anything.\nWhat matters is whether an answer is correct, and we can check that.\nAI already helps people learn, write and solve problems every day.",
+      "secondary_against": "Without understanding, AI cannot tell when its own answer is false.\nHallucinations in health, legal or safety advice can cause real harm.\nPeople trust AI more when they think it understands, so the difference changes how we use it.",
+      "post16_motion": "This house would ban AI chatbots from giving medical or legal advice.",
+      "post16_prompt": "The tension: access vs accuracy. Research: what do UK health and legal regulators say about AI tools giving advice to the public?",
+      "post16_for": "Pattern prediction is not professional judgement, and confident errors here can do serious harm.\nDoctors and lawyers are accountable and regulated; a chatbot is neither.\nVulnerable people are the most likely to rely on free advice without checking it.",
+      "post16_against": "Many people cannot afford or quickly reach a doctor or lawyer, and general information helps them.\nA ban would push people towards worse sources, such as anonymous forums.\nClear signposting and safety rules would reduce harm without removing a useful service."
+    }
   },
   {
     "wp": "ai-as-your-creative-partner",
@@ -161,7 +239,7 @@
     "principle": "CREATIVE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Creative.pdf",
-    "pages": 10,
+    "pages": 14,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Optional: have one example of a student creative task to refer to when discussing AI's role."
@@ -172,58 +250,96 @@
         "duration": "15 sec",
         "resource_ref": "Slide 1",
         "student_action": "",
-        "teacher_tip": "Frame it positively: this is about enhancing creativity, not threatening it."
+        "teacher_tip": "Frame it positively: this is about enhancing creativity, not threatening it.",
+        "optional": false
       },
       {
         "action": "Ask the question, give pairs 60 seconds, then take the vote.",
         "duration": "1 min",
         "resource_ref": "Slides 2–3",
         "student_action": "Pair discussion, then vote",
-        "teacher_tip": "Accept a range of answers and let two people who voted differently argue it out. Do not resolve it."
+        "teacher_tip": "Accept a range of answers and let two people who voted differently argue it out. Do not resolve it.",
+        "optional": false
       },
       {
         "action": "Read the three figures aloud.",
         "duration": "45 sec",
         "resource_ref": "Slide 4",
         "student_action": "",
-        "teacher_tip": "The \"None\" tile often surprises students — let it land, and take the pushback."
+        "teacher_tip": "The \"None\" tile often surprises students — let it land, and take the pushback.",
+        "optional": false
       },
       {
         "action": "Go through the four cards.",
         "duration": "1 min",
         "resource_ref": "Slide 5",
         "student_action": "Share answers",
-        "teacher_tip": "The answer depends on how much human creative input was involved. Spend your time on \"The test\"."
+        "teacher_tip": "The answer depends on how much human creative input was involved. Spend your time on \"The test\".",
+        "optional": false
       },
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
         "resource_ref": "Slide 6",
         "student_action": "Copy the definitions",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Go through the three ways, then ask pupils to name one project where they would use AI as a starting point, not a shortcut.",
         "duration": "30 sec",
         "resource_ref": "Slide 7",
         "student_action": "Name one project",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
         "resource_ref": "Slide 8",
         "student_action": "",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
+      },
+      {
+        "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
+        "duration": "1 min",
+        "resource_ref": "Slides 9–10",
+        "student_action": "Vote",
+        "teacher_tip": "Challenge card: What if AI made it so easy that nobody bothered to learn to draw, write or play an instrument?",
+        "optional": true
+      },
+      {
+        "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
+        "duration": "5 min",
+        "resource_ref": "Slides 11–12",
+        "student_action": "Prepare, speak, vote again",
+        "teacher_tip": "Ask who changed their mind, and what changed it.",
+        "optional": true
       },
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 9–10",
+        "resource_ref": "Slides 13–14",
         "student_action": "",
-        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
+        "optional": false
       }
-    ]
+    ],
+    "debate_pack": {
+      "primary_motion": "If AI helps you make a picture, is it still your picture?",
+      "primary_prompt": "Sentence starter: I think it is / isn't still mine because ___.",
+      "primary_for": "You had the idea and told the AI what to make.\nYou chose which picture to keep and what to change.\nArtists have always used tools, like paintbrushes and cameras.",
+      "primary_against": "The AI did the drawing, not you.\nThe AI learned from other people's pictures.\nIf you only typed a few words, you did not do much of the work.",
+      "secondary_motion": "Using AI makes people more creative, not less.",
+      "secondary_prompt": "Challenge card: What if AI made it so easy that nobody bothered to learn to draw, write or play an instrument?",
+      "secondary_for": "AI can get you past a blank page and spark ideas you would not have had.\nPeople without expensive training or equipment can now make music, films and art.\nThe best results come from human ideas plus AI help, with the human still in charge.",
+      "secondary_against": "AI recombines existing patterns, so its suggestions push everyone towards similar work.\nSkills such as drawing and writing come from practice that AI lets people skip.\nWhen AI does the hard part, it is harder to put your own voice and experience into the work.",
+      "post16_motion": "This house believes AI-generated work should not be eligible for creative prizes.",
+      "post16_prompt": "The tension: tool vs author. Research: how is the UK debating copyright and AI training?",
+      "post16_for": "Prizes reward human skill, effort and vision, and a prompt is not the same achievement.\nAI models are trained on artists' work, often without permission or payment.\nIf AI work can win, human artists lose the opportunities that build careers.",
+      "post16_against": "Every new tool, from photography to digital art, was once called cheating.\nWhere a person directs, selects and edits, the creative choices are still theirs.\nA ban is unworkable, because almost all digital work now involves some AI assistance."
+    }
   },
   {
     "wp": "the-hidden-costs-of-ai",
@@ -231,7 +347,7 @@
     "principle": "RESPONSIBLE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Responsible.pdf",
-    "pages": 11,
+    "pages": 15,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Optional: have one short article or graphic ready about AI energy use or data centres."
@@ -242,65 +358,104 @@
         "duration": "15 sec",
         "resource_ref": "Slide 1",
         "student_action": "",
-        "teacher_tip": "Keep the tone curious rather than alarming."
+        "teacher_tip": "Keep the tone curious rather than alarming.",
+        "optional": false
       },
       {
         "action": "Ask the question, give pairs 60 seconds, then ask pupils to place themselves from 1 (not at all) to 5 (enormously).",
         "duration": "1 min",
         "resource_ref": "Slides 2–3",
         "student_action": "Pair discussion, then vote",
-        "teacher_tip": "Listen for students who assume online activity is \"free\" for the planet. Redirect guilt to \"when is it worth it?\"."
+        "teacher_tip": "Listen for students who assume online activity is \"free\" for the planet. Redirect guilt to \"when is it worth it?\".",
+        "optional": false
       },
       {
         "action": "Go through the four layers: everything under one chatbot answer.",
         "duration": "45 sec",
         "resource_ref": "Slide 4",
         "student_action": "",
-        "teacher_tip": "The water layer is the one students remember, because nobody expects computing to be thirsty."
+        "teacher_tip": "The water layer is the one students remember, because nobody expects computing to be thirsty.",
+        "optional": false
       },
       {
         "action": "Go through the four cards.",
         "duration": "1 min",
         "resource_ref": "Slide 5",
         "student_action": "Share answers",
-        "teacher_tip": "Say card B clearly: nobody should leave thinking they have been told off for using a chatbot."
+        "teacher_tip": "Say card B clearly: nobody should leave thinking they have been told off for using a chatbot.",
+        "optional": false
       },
       {
         "action": "Ask the room which of the five uses is in the wrong place.",
         "duration": "45 sec",
         "resource_ref": "Slide 6",
         "student_action": "Argue one position",
-        "teacher_tip": "The positions are arguable, and that is the exercise. Do not defend the exact spots."
+        "teacher_tip": "The positions are arguable, and that is the exercise. Do not defend the exact spots.",
+        "optional": false
       },
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
         "resource_ref": "Slide 7",
         "student_action": "Copy the definitions",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Go through the three habits.",
         "duration": "30 sec",
         "resource_ref": "Slide 8",
         "student_action": "",
-        "teacher_tip": "Keep it balanced: the goal is thoughtful use, not fear of AI."
+        "teacher_tip": "Keep it balanced: the goal is thoughtful use, not fear of AI.",
+        "optional": false
       },
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
         "resource_ref": "Slide 9",
         "student_action": "",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
+      },
+      {
+        "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
+        "duration": "1 min",
+        "resource_ref": "Slides 10–11",
+        "student_action": "Vote",
+        "teacher_tip": "Challenge card: What if companies only change when their customers demand it?",
+        "optional": true
+      },
+      {
+        "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
+        "duration": "5 min",
+        "resource_ref": "Slides 12–13",
+        "student_action": "Prepare, speak, vote again",
+        "teacher_tip": "Ask who changed their mind, and what changed it.",
+        "optional": true
       },
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 10–11",
+        "resource_ref": "Slides 14–15",
         "student_action": "",
-        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
+        "optional": false
       }
-    ]
+    ],
+    "debate_pack": {
+      "primary_motion": "Should we use AI less to help look after the planet?",
+      "primary_prompt": "Sentence starter: I think we should / shouldn't use AI less because ___.",
+      "primary_for": "AI uses electricity and water every time we use it.\nSmall changes by lots of people can add up.\nWe can still do many things without AI, like thinking for ourselves.",
+      "primary_against": "AI can help the planet too, like spotting leaks or saving energy.\nThe big companies use the most, so they should change first.\nAI helps people learn and do useful things.",
+      "secondary_motion": "Tech companies, not users, should be responsible for cutting AI's environmental impact.",
+      "secondary_prompt": "Challenge card: What if companies only change when their customers demand it?",
+      "secondary_for": "Companies design the models and run the data centres, so they control most of the impact.\nUsers cannot see how much energy or water a request uses, so they cannot make informed choices.\nCompanies have the money and expertise to switch to renewable energy and better cooling.",
+      "secondary_against": "Companies respond to demand, so users' choices shape what they build.\nGovernments set the rules on energy and water, so responsibility is shared.\nEvery user can choose when AI is really needed.",
+      "post16_motion": "This house believes the benefits of AI are worth its environmental cost.",
+      "post16_prompt": "The tension: progress vs sustainability. Research: how is AI being used to cut emissions in energy, transport or farming?",
+      "post16_for": "AI is helping to design better batteries, manage power grids and model the climate.\nEfficiency improves quickly: newer models and chips do more with less energy.\nThe cost is real but small compared with sectors such as transport and heating.",
+      "post16_against": "Data centre demand for energy and water is growing fast and competing with local communities.\nMuch AI use is trivial, so the cost is not being spent on climate solutions.\nWithout transparent reporting, claims that the benefits outweigh the costs cannot be checked."
+    }
   },
   {
     "wp": "your-ai-ready-future",
@@ -308,7 +463,7 @@
     "principle": "FUTURE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Future.pdf",
-    "pages": 10,
+    "pages": 14,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Optional: have the WEF Future of Jobs Report 2025 figures to hand in case students ask."
@@ -319,58 +474,96 @@
         "duration": "15 sec",
         "resource_ref": "Slide 1",
         "student_action": "",
-        "teacher_tip": "Set a positive tone: this is about opportunity, not fear."
+        "teacher_tip": "Set a positive tone: this is about opportunity, not fear.",
+        "optional": false
       },
       {
         "action": "Ask the question and give pairs 60 seconds. Collect one skill from each pair.",
         "duration": "1 min",
         "resource_ref": "Slides 2–3",
         "student_action": "Pair discussion",
-        "teacher_tip": "Listen for students who focus only on job loss, and draw out the opportunities too."
+        "teacher_tip": "Listen for students who focus only on job loss, and draw out the opportunities too.",
+        "optional": false
       },
       {
         "action": "Read the three figures, leading with the net number.",
         "duration": "45 sec",
         "resource_ref": "Slide 4",
         "student_action": "",
-        "teacher_tip": "Pause after each figure. \"Transformed, not disappeared\": most jobs will change rather than vanish."
+        "teacher_tip": "Pause after each figure. \"Transformed, not disappeared\": most jobs will change rather than vanish.",
+        "optional": false
       },
       {
         "action": "Go through the four cards, matching them to the skills pairs suggested.",
         "duration": "1 min",
         "resource_ref": "Slide 5",
         "student_action": "Share answers",
-        "teacher_tip": "\"Somebody said kindness — that is this one\" makes the list theirs rather than yours."
+        "teacher_tip": "\"Somebody said kindness — that is this one\" makes the list theirs rather than yours.",
+        "optional": false
       },
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
         "resource_ref": "Slide 6",
         "student_action": "Copy the definitions",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Go through the three moves and invite pupils to name one habit they will try.",
         "duration": "30 sec",
         "resource_ref": "Slide 7",
         "student_action": "Name one habit",
-        "teacher_tip": "End on an empowering note."
+        "teacher_tip": "End on an empowering note.",
+        "optional": false
       },
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
         "resource_ref": "Slide 8",
         "student_action": "",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
+      },
+      {
+        "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
+        "duration": "1 min",
+        "resource_ref": "Slides 9–10",
+        "student_action": "Vote",
+        "teacher_tip": "Challenge card: What if the new jobs need skills that the people who lost their jobs do not have?",
+        "optional": true
+      },
+      {
+        "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
+        "duration": "5 min",
+        "resource_ref": "Slides 11–12",
+        "student_action": "Prepare, speak, vote again",
+        "teacher_tip": "Ask who changed their mind, and what changed it.",
+        "optional": true
       },
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 9–10",
+        "resource_ref": "Slides 13–14",
         "student_action": "",
-        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
+        "optional": false
       }
-    ]
+    ],
+    "debate_pack": {
+      "primary_motion": "Should AI and robots do the boring jobs so people don't have to?",
+      "primary_prompt": "Sentence starter: I think they should / shouldn't because ___.",
+      "primary_for": "People would have more time for fun, creative and caring jobs.\nRobots do not get tired or bored.\nSome boring jobs are also dangerous, so it would keep people safe.",
+      "primary_against": "Some people like those jobs and need them to earn money.\nA job that seems boring to you might matter a lot to someone else.\nIf AI does everything, people might forget how to do important things.",
+      "secondary_motion": "AI will create more good jobs than it takes away.",
+      "secondary_prompt": "Challenge card: What if the new jobs need skills that the people who lost their jobs do not have?",
+      "secondary_for": "The World Economic Forum expects about 170 million new roles by 2030, against 92 million displaced.\nMost jobs will be transformed rather than disappear, with AI taking over routine tasks.\nNew careers are already appearing, from AI ethics to data science.",
+      "secondary_against": "New jobs may appear in different places from the jobs that are lost.\nNot every new role is a good one; some will be low-paid work checking AI output.\nThe speed of change could leave many people behind before they can retrain.",
+      "post16_motion": "This house believes schools should prioritise human skills over technical AI skills.",
+      "post16_prompt": "The tension: employability vs adaptability. Research: which skills do employers say they will need most by 2030?",
+      "post16_for": "Empathy, judgement and creativity are the skills AI cannot replicate, so they keep their value.\nTechnical tools change every year, but human skills last a whole career.\nEmployers consistently rank skills such as communication and problem-solving among the most important.",
+      "post16_against": "Without technical AI literacy, young people cannot shape or question the tools they use.\nMany of the best-paid new roles need data and AI skills, and school is where access is fairest.\nIt is a false choice: working well alongside AI is itself a human skill."
+    }
   },
   {
     "wp": "ai-is-already-here",
@@ -378,7 +571,7 @@
     "principle": "SMART",
     "kind": "assembly",
     "pdf": "AiAd27-Classic-Assembly.pdf",
-    "pages": 12,
+    "pages": 16,
     "preparation": [
       "Open the PDF (or the SlideForge deck) and check the BBC Ideas film plays with sound in the hall: youtube.com/watch?v=E4bvQZRC6Bo",
       "Have the video open in a browser tab, so you can switch to it on slide 5.",
@@ -390,64 +583,103 @@
         "duration": "1 min",
         "resource_ref": "Slide 1",
         "student_action": "",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Hook: ask for a show of hands — has anyone used AI today? Then ask whether AI \"understands\" what it writes.",
         "duration": "1 min",
         "resource_ref": "Slides 2–3",
         "student_action": "Show of hands",
-        "teacher_tip": "Most hands stay down at first. The next slide changes that."
+        "teacher_tip": "Most hands stay down at first. The next slide changes that.",
+        "optional": false
       },
       {
         "action": "Go through the four everyday uses, then ask again who has used AI today.",
         "duration": "1 min",
         "resource_ref": "Slide 4",
         "student_action": "Show of hands",
-        "teacher_tip": "Card C is the bridge to the film: a chatbot is autocomplete at enormous scale."
+        "teacher_tip": "Card C is the bridge to the film: a chatbot is autocomplete at enormous scale.",
+        "optional": false
       },
       {
         "action": "Play the BBC Ideas film \"How AI actually works\".",
         "duration": "5 min",
         "resource_ref": "Slide 5",
         "student_action": "Watch",
-        "teacher_tip": "Ask them to listen for one thing the AI does NOT do."
+        "teacher_tip": "Ask them to listen for one thing the AI does NOT do.",
+        "optional": false
       },
       {
         "action": "Discuss: AI as pattern prediction — advanced autocomplete — against genuine understanding. Take two or three answers from the hall.",
         "duration": "4 min",
         "resource_ref": "Slide 6",
         "student_action": "Turn to a neighbour, then answers from the hall",
-        "teacher_tip": "Row 3 is the surprise: a model has no way of noticing that it does not know."
+        "teacher_tip": "Row 3 is the surprise: a model has no way of noticing that it does not know.",
+        "optional": false
       },
       {
         "action": "Explain hallucinations: plausible wording can still be wrong, so verify important facts.",
         "duration": "2 min",
         "resource_ref": "Slide 7",
         "student_action": "",
-        "teacher_tip": "If you prepared a fact-check example, show it here."
+        "teacher_tip": "If you prepared a fact-check example, show it here.",
+        "optional": false
       },
       {
         "action": "Present the three Being AI-smart habits and invite responses from the hall.",
         "duration": "3 min",
         "resource_ref": "Slide 8",
         "student_action": "Respond",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
       },
       {
         "action": "Exit check: ask students for one safe use of AI and one use that must be fact-checked.",
         "duration": "2 min",
         "resource_ref": "Slides 9–10",
         "student_action": "Answer as they leave, or tell a tutor",
-        "teacher_tip": ""
+        "teacher_tip": "",
+        "optional": false
+      },
+      {
+        "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
+        "duration": "1 min",
+        "resource_ref": "Slides 11–12",
+        "student_action": "Vote",
+        "teacher_tip": "Challenge card: What if the warnings appeared so often that everyone started ignoring them?",
+        "optional": true
+      },
+      {
+        "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
+        "duration": "5 min",
+        "resource_ref": "Slides 13–14",
+        "student_action": "Prepare, speak, vote again",
+        "teacher_tip": "Ask who changed their mind, and what changed it.",
+        "optional": true
       },
       {
         "action": "Signpost reporting and support resources, and leave them up as the hall empties.",
         "duration": "1 min",
-        "resource_ref": "Slides 11–12",
+        "resource_ref": "Slides 15–16",
         "student_action": "",
-        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
+        "optional": false
       }
-    ]
+    ],
+    "debate_pack": {
+      "primary_motion": "Should you check everything AI tells you?",
+      "primary_prompt": "Sentence starter: I think you should / don't need to check because ___.",
+      "primary_for": "AI can make things up and still sound very sure.\nChecking with a book or a trusted adult helps you find the truth.\nIf you share something wrong, other people might believe it too.",
+      "primary_against": "Checking everything would take a very long time.\nFor fun things, like a silly story, it does not matter if it is wrong.\nAI gets lots of simple things right.",
+      "secondary_motion": "AI chatbots should have to warn you every time an answer might be made up.",
+      "secondary_prompt": "Challenge card: What if the warnings appeared so often that everyone started ignoring them?",
+      "secondary_for": "Hallucinations happen regularly, and fluent answers make them hard to spot.\nA warning reminds people to verify before they trust or share.\nCompanies already warn about other risks, such as age limits and gambling.",
+      "secondary_against": "The system often cannot tell when it is wrong, so the warnings would be guesses too.\nConstant warnings cause warning fatigue, and people stop reading them.\nLearning to verify is a skill we need anyway, warning or not.",
+      "post16_motion": "This house would require AI tools in schools to guide students rather than give answers.",
+      "post16_prompt": "The tension: efficiency vs learning. Research: what does the evidence say about AI tutoring and learning outcomes?",
+      "post16_for": "Learning comes from working things out; ready-made answers skip the thinking that builds understanding.\nGuiding tools reduce the risk of students copying a confident hallucination into their work.\nSchools have a duty to teach verification, and answer machines undermine it.",
+      "post16_against": "Students will use answer tools at home anyway, so schools should teach them to use them well.\nSometimes a clear worked answer is the fastest way to learn, as with a model essay.\nA rule for every tool is hard to enforce and may hold back students who use AI responsibly."
+    }
   }
 ]

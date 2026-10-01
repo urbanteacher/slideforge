@@ -29,6 +29,7 @@ require(path.join(__dirname, '..', 'js', 'model.js'));
 const SF = global.window.SF;
 const { LESSONS } = require('./starters.js');
 const { DECK_SETTINGS } = require('../AiAd27/deck-settings.js');
+const { debatePack } = require('./debates.js');
 
 const STAMP = Date.parse('2026-10-01T00:00:00Z');
 
@@ -74,7 +75,7 @@ function buildDeck(lesson) {
     if (stepAt.has(i) && steps[stepAt.get(i)].slides[0] === i) {
       const n = stepAt.get(i);
       const step = steps[n];
-      const head = [`STEP ${n + 1} OF ${steps.length} · ${clock(step.time).toUpperCase()}`, step.step];
+      const head = [`STEP ${n + 1} OF ${steps.length} · ${clock(step.time).toUpperCase()}${step.optional ? ' · OPTIONAL' : ''}`, step.step];
       if (step.pupils) head.push(`Pupils: ${step.pupils}`);
       if (step.tip) head.push(`Tip: ${step.tip}`);
       slide.notes = head.join('\n') + (src.notes ? '\n\n' + src.notes : '');
@@ -145,7 +146,9 @@ function main() {
     const deck = buildDeck(lesson);
     const problems = checkDeck(deck, lesson);
     const steps = stepsOf(lesson);
-    const total = steps.reduce((n, s) => n + s.time, 0);
+    /* Optional steps (the debate) are not part of the starter's time. */
+    const total = steps.reduce((n, s) => n + (s.optional ? 0 : s.time), 0);
+    const extra = steps.reduce((n, s) => n + (s.optional ? s.time : 0), 0);
     const name = 'AiAd27-Classic-' + nameOf(lesson);
 
     fs.writeFileSync(path.join(outDir, name + '.sfbundle.json'),
@@ -158,19 +161,22 @@ function main() {
       title: lesson.title,
       principle: lesson.principle,
       prep: lesson.prep,
+      debate_pack: debatePack(lesson.debate),
       steps: steps.map((s) => ({
         slides: s.slides,
         action: s.step,
         duration: clock(s.time),
         seconds: s.time,
         student_action: s.pupils || '',
-        teacher_tip: s.tip || ''
+        teacher_tip: s.tip || '',
+        optional: s.optional === true
       }))
     });
 
     const shown = deck.slides.filter((s) => s.hidden !== true).length;
     console.log(`${name}.sfbundle.json  —  ${lesson.title}`);
-    console.log(`    ${shown} slides in the show, ${deck.slides.length - shown} held back · ${steps.length} steps · ${clock(total)}`);
+    console.log(`    ${shown} slides in the show, ${deck.slides.length - shown} held back · ${steps.length} steps · ${clock(total)}` +
+      (extra ? ` + ${clock(extra)} optional debate` : ''));
     if (problems.length) { failed += problems.length; problems.forEach((p) => console.log(`    !! ${p}`)); }
   });
 

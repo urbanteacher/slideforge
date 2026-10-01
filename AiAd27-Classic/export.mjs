@@ -19,7 +19,8 @@
  *   pdf/AiAd27-Classic-<Name>.pdf     the slides to present or print
  *   preview/<name>/NN.png              each PDF page, for review
  *   bundles/wp-instructions.json       each lesson's steps for the website,
- *                                      with "Slide n" meaning page n of the PDF
+ *                                      with "Slide n" meaning page n of the PDF,
+ *                                      and its debate pack (debates.js)
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -103,7 +104,8 @@ for (const run of runs) {
       duration: s.duration,
       resource_ref: !pages.length ? '' : first === last ? `Slide ${first}` : `Slides ${first}–${last}`,
       student_action: s.student_action,
-      teacher_tip: s.teacher_tip
+      teacher_tip: s.teacher_tip,
+      optional: s.optional
     };
   });
 
@@ -123,7 +125,8 @@ for (const run of runs) {
     pdf: run.file + '.pdf',
     pages: audit.pages,
     preparation: run.prep,
-    instructions: steps
+    instructions: steps,
+    debate_pack: run.debate_pack
   });
 }
 
