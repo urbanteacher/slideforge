@@ -96,3 +96,20 @@
 @media print {
   .slide[class*='theme-aiad27-']:not(.logo-reverse) .slide-logo img { filter:none; }
 }
+
+/* app.css lowercases a keyword's definition. Every definition in these decks
+   is about AI, and "AI that creates new content" rendered as "ai that creates
+   new content", with Google Lens and TinEye lowercased beside it. The same
+   override css/aiad26.css carries for 2026; the definitions are written in
+   sentence case, so the quieter gloss comes from the words. */
+.slide[class*='theme-aiad27-'] .kw-def {
+  text-transform: none;
+}
+
+/* The campaign layouts keep their header clear of the corner lockup
+   (customize.css, .cp.has-corner-mark). The plain layouts these themes also
+   draw — stat tiles, vocabulary, links — did not, and a two-line headline ran
+   under the lockup ("…targeted by deepfake" on the Safe starter). */
+.slide[class*='theme-aiad27-'].has-corner-mark:not(.cp) > .pad > h2 {
+  padding-right: 170px;
+}

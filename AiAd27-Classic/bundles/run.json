@@ -1,0 +1,609 @@
+[
+  {
+    "file": "AiAd27-Classic-Safe",
+    "wp": "whos-really-behind-the-screen",
+    "kind": "starter",
+    "title": "Who's really behind the screen?",
+    "principle": "SAFE",
+    "prep": [
+      "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
+      "This topic can be distressing for students who have experienced image-based abuse: have your safeguarding lead's name ready to say, and details to share privately.",
+      "Optional: be ready to show a reverse image search (Google Lens or TinEye)."
+    ],
+    "steps": [
+      {
+        "slides": [
+          0
+        ],
+        "action": "Have the title up as the class comes in.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Frame it sensitively — some students may have personal experience of this."
+      },
+      {
+        "slides": [
+          1
+        ],
+        "action": "Ask the question and give pairs 60 seconds. Take a vote on the four options by hands or phones.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Pair discussion, then vote",
+        "teacher_tip": "\"Send it to a friend to check\" is the teachable answer: it feels responsible and it is the one that spreads the harm. Do not say so until after the vote."
+      },
+      {
+        "slides": [
+          2
+        ],
+        "action": "Read the headline aloud and let the room work out what \"1 in 17\" means for a class of thirty.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "",
+        "teacher_tip": "Pause after \"1 in 17\" and say that support is always available. State 98% once and move on."
+      },
+      {
+        "slides": [
+          3
+        ],
+        "action": "Take the room's answers first, then go through the four cards, matching them to what was said.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Share answers",
+        "teacher_tip": "Say plainly that forwarding something to warn people is still forwarding it, and that creating AI-generated intimate images of anyone is illegal."
+      },
+      {
+        "slides": [
+          4
+        ],
+        "action": "Turn the lesson back on the deck: go through the source check row by row.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "",
+        "teacher_tip": "Be fair to the number — it is a serious figure from a serious source. The point is that nobody asked."
+      },
+      {
+        "slides": [
+          5
+        ],
+        "action": "Leave the two definitions up for pupils to copy.",
+        "duration": "20 sec",
+        "seconds": 20,
+        "student_action": "Copy the definitions",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          6
+        ],
+        "action": "Go through the three habits.",
+        "duration": "30 sec",
+        "seconds": 30,
+        "student_action": "",
+        "teacher_tip": "If you are short of time, end here."
+      },
+      {
+        "slides": [
+          7
+        ],
+        "action": "Read the takeaway, then stop talking.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          8,
+          9
+        ],
+        "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+      }
+    ]
+  },
+  {
+    "file": "AiAd27-Classic-Smart",
+    "wp": "how-does-ai-actually-think",
+    "kind": "starter",
+    "title": "How does AI actually 'think'?",
+    "principle": "SMART",
+    "prep": [
+      "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
+      "Arrange students into pairs.",
+      "Optional: have ChatGPT or a similar tool ready to show one answer live."
+    ],
+    "steps": [
+      {
+        "slides": [
+          0
+        ],
+        "action": "Have the title up as the class comes in.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Frame it as curious exploration: how does a tool they already use actually work?"
+      },
+      {
+        "slides": [
+          1
+        ],
+        "action": "Ask the question, give pairs 60 seconds, then take the vote.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Pair discussion, then vote",
+        "teacher_tip": "Note who says AI \"thinks\" for gentle correction later. \"Somewhere in between\" is the most interesting answer to unpick."
+      },
+      {
+        "slides": [
+          2
+        ],
+        "action": "Walk through the four rows: what a language model does, against what understanding would need.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "",
+        "teacher_tip": "This slide is the whole starter. If you only have two minutes, show the question and then this."
+      },
+      {
+        "slides": [
+          3
+        ],
+        "action": "Read the three figures: nearly everyone uses it, and half already know it makes things up.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "",
+        "teacher_tip": "A hallucination is not a rare glitch. It is what prediction does when the pattern runs out."
+      },
+      {
+        "slides": [
+          4
+        ],
+        "action": "Go through the four answer cards, matching them to what pairs said.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Share answers",
+        "teacher_tip": "Do not skip the last card: explaining the limits should not tip into \"AI is rubbish\"."
+      },
+      {
+        "slides": [
+          5
+        ],
+        "action": "Leave the two definitions up for pupils to copy.",
+        "duration": "20 sec",
+        "seconds": 20,
+        "student_action": "Copy the definitions",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          6
+        ],
+        "action": "Go through the three habits and invite pupils to name one they will change.",
+        "duration": "30 sec",
+        "seconds": 30,
+        "student_action": "Name one habit",
+        "teacher_tip": "Emphasise \"Verify\". If you are short of time, end here."
+      },
+      {
+        "slides": [
+          7
+        ],
+        "action": "Read the takeaway, then stop.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          8,
+          9
+        ],
+        "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+      }
+    ]
+  },
+  {
+    "file": "AiAd27-Classic-Creative",
+    "wp": "ai-as-your-creative-partner",
+    "kind": "starter",
+    "title": "AI as your creative partner",
+    "principle": "CREATIVE",
+    "prep": [
+      "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
+      "Optional: have one example of a student creative task to refer to when discussing AI's role."
+    ],
+    "steps": [
+      {
+        "slides": [
+          0
+        ],
+        "action": "Have the title up and introduce AI as a creative partner, not a replacement.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Frame it positively: this is about enhancing creativity, not threatening it."
+      },
+      {
+        "slides": [
+          1
+        ],
+        "action": "Ask the question, give pairs 60 seconds, then take the vote.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Pair discussion, then vote",
+        "teacher_tip": "Accept a range of answers and let two people who voted differently argue it out. Do not resolve it."
+      },
+      {
+        "slides": [
+          2
+        ],
+        "action": "Read the three figures aloud.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "",
+        "teacher_tip": "The \"None\" tile often surprises students — let it land, and take the pushback."
+      },
+      {
+        "slides": [
+          3
+        ],
+        "action": "Go through the four cards.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Share answers",
+        "teacher_tip": "The answer depends on how much human creative input was involved. Spend your time on \"The test\"."
+      },
+      {
+        "slides": [
+          4
+        ],
+        "action": "Leave the two definitions up for pupils to copy.",
+        "duration": "20 sec",
+        "seconds": 20,
+        "student_action": "Copy the definitions",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          5
+        ],
+        "action": "Go through the three ways, then ask pupils to name one project where they would use AI as a starting point, not a shortcut.",
+        "duration": "30 sec",
+        "seconds": 30,
+        "student_action": "Name one project",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          6
+        ],
+        "action": "Read the takeaway, then stop.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          7,
+          8
+        ],
+        "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+      }
+    ]
+  },
+  {
+    "file": "AiAd27-Classic-Responsible",
+    "wp": "the-hidden-costs-of-ai",
+    "kind": "starter",
+    "title": "The hidden costs of AI",
+    "principle": "RESPONSIBLE",
+    "prep": [
+      "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
+      "Optional: have one short article or graphic ready about AI energy use or data centres."
+    ],
+    "steps": [
+      {
+        "slides": [
+          0
+        ],
+        "action": "Have the title up and introduce the idea that AI has hidden environmental costs.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Keep the tone curious rather than alarming."
+      },
+      {
+        "slides": [
+          1
+        ],
+        "action": "Ask the question, give pairs 60 seconds, then ask pupils to place themselves from 1 (not at all) to 5 (enormously).",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Pair discussion, then vote",
+        "teacher_tip": "Listen for students who assume online activity is \"free\" for the planet. Redirect guilt to \"when is it worth it?\"."
+      },
+      {
+        "slides": [
+          2
+        ],
+        "action": "Go through the four layers: everything under one chatbot answer.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "",
+        "teacher_tip": "The water layer is the one students remember, because nobody expects computing to be thirsty."
+      },
+      {
+        "slides": [
+          3
+        ],
+        "action": "Go through the four cards.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Share answers",
+        "teacher_tip": "Say card B clearly: nobody should leave thinking they have been told off for using a chatbot."
+      },
+      {
+        "slides": [
+          4
+        ],
+        "action": "Ask the room which of the five uses is in the wrong place.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "Argue one position",
+        "teacher_tip": "The positions are arguable, and that is the exercise. Do not defend the exact spots."
+      },
+      {
+        "slides": [
+          5
+        ],
+        "action": "Leave the two definitions up for pupils to copy.",
+        "duration": "20 sec",
+        "seconds": 20,
+        "student_action": "Copy the definitions",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          6
+        ],
+        "action": "Go through the three habits.",
+        "duration": "30 sec",
+        "seconds": 30,
+        "student_action": "",
+        "teacher_tip": "Keep it balanced: the goal is thoughtful use, not fear of AI."
+      },
+      {
+        "slides": [
+          7
+        ],
+        "action": "Read the takeaway, then stop.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          8,
+          9
+        ],
+        "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+      }
+    ]
+  },
+  {
+    "file": "AiAd27-Classic-Future",
+    "wp": "your-ai-ready-future",
+    "kind": "starter",
+    "title": "Your AI-ready future",
+    "principle": "FUTURE",
+    "prep": [
+      "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
+      "Optional: have the WEF Future of Jobs Report 2025 figures to hand in case students ask."
+    ],
+    "steps": [
+      {
+        "slides": [
+          0
+        ],
+        "action": "Have the title up and introduce the idea that AI is changing careers and work.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Set a positive tone: this is about opportunity, not fear."
+      },
+      {
+        "slides": [
+          1
+        ],
+        "action": "Ask the question and give pairs 60 seconds. Collect one skill from each pair.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Pair discussion",
+        "teacher_tip": "Listen for students who focus only on job loss, and draw out the opportunities too."
+      },
+      {
+        "slides": [
+          2
+        ],
+        "action": "Read the three figures, leading with the net number.",
+        "duration": "45 sec",
+        "seconds": 45,
+        "student_action": "",
+        "teacher_tip": "Pause after each figure. \"Transformed, not disappeared\": most jobs will change rather than vanish."
+      },
+      {
+        "slides": [
+          3
+        ],
+        "action": "Go through the four cards, matching them to the skills pairs suggested.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Share answers",
+        "teacher_tip": "\"Somebody said kindness — that is this one\" makes the list theirs rather than yours."
+      },
+      {
+        "slides": [
+          4
+        ],
+        "action": "Leave the two definitions up for pupils to copy.",
+        "duration": "20 sec",
+        "seconds": 20,
+        "student_action": "Copy the definitions",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          5
+        ],
+        "action": "Go through the three moves and invite pupils to name one habit they will try.",
+        "duration": "30 sec",
+        "seconds": 30,
+        "student_action": "Name one habit",
+        "teacher_tip": "End on an empowering note."
+      },
+      {
+        "slides": [
+          6
+        ],
+        "action": "Read the takeaway, then stop.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          7,
+          8
+        ],
+        "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
+        "duration": "15 sec",
+        "seconds": 15,
+        "student_action": "",
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+      }
+    ]
+  },
+  {
+    "file": "AiAd27-Classic-Assembly",
+    "wp": "ai-is-already-here",
+    "kind": "assembly",
+    "title": "AI is already here!",
+    "principle": "SMART",
+    "prep": [
+      "Open the PDF (or the SlideForge deck) and check the BBC Ideas film plays with sound in the hall: youtube.com/watch?v=E4bvQZRC6Bo",
+      "Have the video open in a browser tab, so you can switch to it on slide 5.",
+      "Optional: prepare one live AI prompt and one fact-check example to show."
+    ],
+    "steps": [
+      {
+        "slides": [
+          0
+        ],
+        "action": "Have the title up as students come in.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          1
+        ],
+        "action": "Hook: ask for a show of hands — has anyone used AI today? Then ask whether AI \"understands\" what it writes.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Show of hands",
+        "teacher_tip": "Most hands stay down at first. The next slide changes that."
+      },
+      {
+        "slides": [
+          2
+        ],
+        "action": "Go through the four everyday uses, then ask again who has used AI today.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "Show of hands",
+        "teacher_tip": "Card C is the bridge to the film: a chatbot is autocomplete at enormous scale."
+      },
+      {
+        "slides": [
+          3
+        ],
+        "action": "Play the BBC Ideas film \"How AI actually works\".",
+        "duration": "5 min",
+        "seconds": 300,
+        "student_action": "Watch",
+        "teacher_tip": "Ask them to listen for one thing the AI does NOT do."
+      },
+      {
+        "slides": [
+          4
+        ],
+        "action": "Discuss: AI as pattern prediction — advanced autocomplete — against genuine understanding. Take two or three answers from the hall.",
+        "duration": "4 min",
+        "seconds": 240,
+        "student_action": "Turn to a neighbour, then answers from the hall",
+        "teacher_tip": "Row 3 is the surprise: a model has no way of noticing that it does not know."
+      },
+      {
+        "slides": [
+          5
+        ],
+        "action": "Explain hallucinations: plausible wording can still be wrong, so verify important facts.",
+        "duration": "2 min",
+        "seconds": 120,
+        "student_action": "",
+        "teacher_tip": "If you prepared a fact-check example, show it here."
+      },
+      {
+        "slides": [
+          6
+        ],
+        "action": "Present the three Being AI-smart habits and invite responses from the hall.",
+        "duration": "3 min",
+        "seconds": 180,
+        "student_action": "Respond",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          7
+        ],
+        "action": "Exit check: ask students for one safe use of AI and one use that must be fact-checked.",
+        "duration": "2 min",
+        "seconds": 120,
+        "student_action": "Answer as they leave, or tell a tutor",
+        "teacher_tip": ""
+      },
+      {
+        "slides": [
+          8,
+          9
+        ],
+        "action": "Signpost reporting and support resources, and leave them up as the hall empties.",
+        "duration": "1 min",
+        "seconds": 60,
+        "student_action": "",
+        "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide."
+      }
+    ]
+  }
+]
