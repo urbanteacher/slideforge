@@ -13,7 +13,9 @@
  *     the held-back slides, and a class reading "4 / 14" on the board is
  *     doing arithmetic instead of answering the question;
  *   - every page is checked for text running off it, since nobody in the room
- *     can scroll a PDF to find it.
+ *     can scroll a PDF to find it;
+ *   - it is drawn with screen styles, so the strand grounds survive: the
+ *     handout's print styles put the aiad27 themes on white paper.
  *
  * Writes:
  *   pdf/AiAd27-Classic-<Name>.pdf     the slides to present or print
@@ -63,6 +65,19 @@ for (const run of runs) {
   const preview = await popup;
   preview.on('pageerror', (e) => errors.push(`${run.file}: ${e.message}`));
   await preview.waitForFunction(() => document.documentElement.dataset.pdfReady, null, { timeout: 30000 });
+
+  /* Projected, not handed out: keep the strand grounds. The handout prints
+     the aiad27 themes on white paper (css/aiad27.css, @media print), which is
+     right for paper and wrong for a deck on the board — the covers, questions
+     and takeaways lost their colour. So the PDF is drawn with screen styles,
+     with the preview window's own furniture removed. */
+  await preview.emulateMedia({ media: 'screen' });
+  await preview.addStyleTag({
+    content: '.pdf-toolbar{display:none!important}' +
+      'html,body{background:#fff!important}' +
+      '.pdf-page{margin:0!important}'
+  });
+  await preview.waitForTimeout(300);
 
   const audit = await preview.evaluate(() => {
     document.querySelectorAll('.pdf-page-reference').forEach((n) => n.remove());
