@@ -16,14 +16,14 @@ node AiAd27-Classic/export.mjs      # PDFs, previews and wp-instructions.json
 `export.mjs` needs the server (`npm start`); from a worktree, run that worktree's
 server on another port and pass `SLIDEFORGE_URL=http://localhost:<port>`.
 
-| Deck | Website lesson | Shown | Time |
-|---|---|---|---|
-| Safe | whos-really-behind-the-screen | 10 | 5 min |
-| Smart | how-does-ai-actually-think | 10 | 5 min |
-| Creative | ai-as-your-creative-partner | 9 | 4 min 20 sec |
-| Responsible | the-hidden-costs-of-ai | 10 | 5 min |
-| Future | your-ai-ready-future | 9 | 4 min 20 sec |
-| Assembly | ai-is-already-here | 10 | 20 min |
+| Deck | Website lesson | Shown | Time | Debate (optional) |
+|---|---|---|---|---|
+| Safe | whos-really-behind-the-screen | 13 | 5 min | 6 min |
+| Smart | how-does-ai-actually-think | 13 | 5 min | 6 min |
+| Creative | ai-as-your-creative-partner | 12 | 4 min 20 sec | 6 min |
+| Responsible | the-hidden-costs-of-ai | 13 | 5 min | 6 min |
+| Future | your-ai-ready-future | 12 | 4 min 20 sec | 6 min |
+| Assembly | ai-is-already-here | 13 | 20 min | 6 min |
 
 Import any deck from `bundles/` with **File → Import → From a file**.
 
@@ -73,8 +73,13 @@ PDF. Edit the steps here, not in WordPress — the next export replaces them.
   oddly, and the notes say to check the source instead.
 - **Assembly, new.** The 2026 deck had seven slides for twenty minutes and none
   for three of its steps. This one has a slide per step, in the steps' order.
-- **Debate.** Each deck holds back a "Debate it" slide with the lesson's
-  Secondary motion from the website's debate pack.
+- **Debate.** Three slides in every deck, after the key takeaway: the
+  Secondary motion with a first vote, its points for and against with the
+  challenge card, and the motion for every age. They come from `debates.js`,
+  which also writes each lesson's debate pack into `wp-instructions.json`, so
+  the slides and the lesson page's "Set up the debate" match. Their steps are
+  marked `optional`: the website shows them but leaves them off the lesson
+  clock, so a starter stays five minutes.
 - **Hidden extensions** keep the 2026 sub-questions for longer lessons.
 
 Slide numbers are off, as in 2026: the count includes held-back slides.
