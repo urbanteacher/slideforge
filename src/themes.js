@@ -15,6 +15,14 @@ export const THEMES = {
   northeastern: { name: 'Northeastern London', swatch: '#c8102e', ground: { default: 'light', title: 'dark', section: 'dark', quote: 'dark' }, art: {"className": "nu-art", "html": "<div class=\"nu-skyline\"></div><div class=\"nu-n\"></div>", "layouts": ["title", "section"], "eyebrow": {"className": "nu-eyebrow", "title": ["title", "org"], "section": ["org"]}}, defaults: {} },
   ukbt: { name: 'UK Black Tech', swatch: '#264258', ground: 'dark', art: {"className": "ukbt-art", "html": "<div class=\"ukbt-chev ukbt-chev-back\"></div><div class=\"ukbt-chev ukbt-chev-front\"></div><div class=\"ukbt-object\"></div>", "layouts": ["title", "section"]}, defaults: {} },
   'ukbt-institute': { name: 'UKBT Institute', swatch: '#2d3134', ground: 'dark', art: {"className": "ukbt-art", "html": "<div class=\"ukbt-chev ukbt-chev-back\"></div><div class=\"ukbt-chev ukbt-chev-front\"></div><div class=\"ukbt-object\"></div>", "layouts": ["title", "section"]}, defaults: {} },
+  /* Youth Charter, for a room of teenagers: a street poster in the charity's
+     navy and red with a highlighter pop — cut-out tape headlines, stickers,
+     a phone message for the scenario, a scoreboard for the facts, a ticket
+     for the closing promise. Matchday is the same design with pitch stripes
+     on the dark grounds. Both run the campaign compositions. See
+     css/youth-charter.css. */
+  'youth-charter': { name: 'Youth Charter · Street', swatch: '#e21c21', ground: { default: 'light', title: 'dark', section: 'dark', quote: 'dark', journey: 'dark', stats: 'dark', statement: 'dark', keyfact: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: {"className": "yc-art", "html": "<div class=\"yc-scribble\"></div><div class=\"yc-tape yc-tape-a\"></div><div class=\"yc-tape yc-tape-b\"></div><div class=\"yc-typing\"><i></i><i></i><i></i></div><div class=\"yc-bubble\"></div>", "layouts": ["title", "quote", "statement"]} },
+  'youth-charter-matchday': { name: 'Youth Charter · Matchday', swatch: '#224476', ground: { default: 'light', title: 'dark', section: 'dark', quote: 'dark', journey: 'dark', stats: 'dark', statement: 'dark', keyfact: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: {"className": "yc-art", "html": "<div class=\"yc-scribble\"></div><div class=\"yc-tape yc-tape-a\"></div><div class=\"yc-tape yc-tape-b\"></div><div class=\"yc-typing\"><i></i><i></i><i></i></div><div class=\"yc-bubble\"></div>", "layouts": ["title", "quote", "statement"]} },
   /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
      of its principles a colour, and a starter deck belongs to exactly one of
      them, so the principle is the theme rather than a setting inside it.
