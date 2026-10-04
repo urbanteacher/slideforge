@@ -102,7 +102,7 @@ Where several slides build one picture (one part lit, the rest dimmed, or a zoom
 | 72 | Binning changes the story | Case C's 27 countries binned three ways (equal interval, quantile, natural breaks), with class ranges |
 | 73 | Three families · Diverging | The diverging row lit: the chapter opener |
 | 74 | Diverging: agree or disagree? | Datawrapper Likert pair: arbitrary hues against a true diverging scale |
-| 75 | Warming stripes | Debate: good data vis with no axes? **Placeholder until the official image is added** |
+| 75 | Warming stripes | The UK 1884–2025 stripes (Ed Hawkins, CC BY 4.0): good data vis with no axes, numbers or legend? |
 | 76 | Three families · Categorical | The categorical row lit: the chapter opener |
 | 77 | Categorical: agree or disagree? | Datawrapper bar pair: shades of one blue against distinct hues |
 | 78–79 | Two respected rules. Which is right? | Rule A (equal lightness) against Rule B (varied lightness), then both in greyscale and the trade-off |
@@ -171,5 +171,4 @@ Each claim is followed by our own example, so students see the effect on a chart
 
 ## Still to do
 
-- Warming Stripes (75) needs the official image from showyourstripes.info.
-- Every plan slide is now built.
+Nothing: every slide is built, and the Warming Stripes image is the official UK file from showyourstripes.info.
