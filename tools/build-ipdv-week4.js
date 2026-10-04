@@ -52,6 +52,8 @@ function dataUri(file) {
 
 function jpegSize(file) {
   const buf = fs.readFileSync(path.join(root, file));
+  /* A PNG keeps its size in the IHDR chunk; the stripes image is a PNG. */
+  if (buf.readUInt32BE(0) === 0x89504e47) return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
   for (let i = 2; i < buf.length;) {
     const marker = buf[i + 1];
     const len = buf.readUInt16BE(i + 2);
@@ -2202,10 +2204,10 @@ const LESSON = {
     { type: 'image', title: 'Warming stripes', subtitle: 'Ed Hawkins, #ShowYourStripes (2018)',
       image: asset('stripes.svg'), imageFit: 'cover', design: { capStyle: 'none' },
       feedback: { kind: 'poll', prompt: 'Is this good data visualisation?', options: ['Yes', 'No', 'It depends'], hold: true },
-      notes: '3 min. A diverging scale with no axes, no numbers and no legend, shared millions of times.\n' +
+      notes: '3 min. The UK, 1884–2025: one stripe per year. The 1961–2010 average is the boundary between blue and red, and the scale spans ±3 standard deviations of 1901–2000 temperatures (showyourstripes.info). A diverging scale with no axes, no numbers and no legend, shared millions of times.\n' +
         'ASK: "Is this good data visualisation? What does it gain by removing everything? What does it lose?" Then: "Would it work with a rainbow scale?"\n' +
         'It pits communication against precision. Blue to red works because the midpoint (the average) is meaningful and lightness is symmetrical.\n' +
-        'IMAGE: download the UK stripes from showyourstripes.info (CC BY 4.0) to assets/lesson/ipdv/week4/warming-stripes-uk.png and rebuild.' },
+        'Image: Ed Hawkins, University of Reading, showyourstripes.info, CC BY 4.0. UK data: Met Office (HadUK).' },
 
     /* Categorical, in depth */
     { type: 'image', title: 'Three families of colour map',
