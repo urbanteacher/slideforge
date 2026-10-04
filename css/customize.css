@@ -144,8 +144,13 @@
 .slide[data-composition='rail'] .pad { display:grid; grid-template-columns:340px 1fr; gap:60px; align-items:start; align-content:center; }
 .slide[data-composition='rail'] h2 { font-size:var(--composition-rail-heading,54px); line-height:1.06; letter-spacing:-.025em; margin:0; padding-top:20px; text-align:left; }
 .slide[data-composition='rail'] ul { gap:0; margin:0; padding:0; width:auto; }
-.slide[data-composition='rail'] li { list-style:none; font-size:var(--composition-list,30px); line-height:1.25; padding:22px 0; border-top:1px solid var(--s-rule); }
-.slide[data-composition='rail'][data-composition-density='dense'] li { font-size:var(--composition-compact,26px); padding:15px 0; }
+.slide[data-composition='rail'] li { list-style:none; font-size:var(--composition-list,30px); line-height:1.25; padding-top:22px; padding-bottom:22px; border-top:1px solid var(--s-rule); }
+.slide[data-composition='rail'][data-composition-density='dense'] li { font-size:var(--composition-compact,26px); padding-top:15px; padding-bottom:15px; }
+/* The row's padding is set per side so the theme's padding-left survives: the
+   shorthand zeroed it, and the absolutely placed marker landed on the first
+   letter. The marker moves down by the same padding to sit on the first line. */
+.slide[data-composition='rail'] li::before { top:calc(22px + .5em); }
+.slide[data-composition='rail'][data-composition-density='dense'] li::before { top:calc(15px + .5em); }
 .slide[data-composition='columns'] .pad { justify-content:center; }
 .slide[data-composition='columns'] h2 { font-size:var(--composition-columns-heading,56px); margin:0 0 48px; text-align:left; max-width:1050px; }
 .slide[data-composition='columns'] ul { display:grid; grid-template-columns:repeat(var(--composition-columns),minmax(0,1fr)); gap:30px; margin:0; padding:0; align-items:start; }
