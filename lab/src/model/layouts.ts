@@ -751,14 +751,17 @@ export function exploreSlide(st: LayoutStyle, title: string, src: string, spots:
  * With `facts`, SlideForge's Flip to facts: a ⇄ in the picture's corner turns the slide over to the
  * facts, the picture faint behind them; pressed again, it turns back. Turning over is not a build step.
  */
-export function framedPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, frame = '4:3', cap: 'bar' | 'plain' = 'bar', facts = ''): Slide {
+export function framedPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, frame = '4:3', cap: 'bar' | 'plain' | 'none' = 'bar', facts = ''): Slide {
   const [fw, fh] = frame.split(':').map(Number), ratio = fw > 0 && fh > 0 ? fw / fh : 4 / 3;
   const padT = 84, padB = 72, padX = 138, gap = 39;
-  const capH = (cap === 'bar' ? 54 : 0) + 62 + (credit ? 50 : 0);
+  // No caption (SlideForge's capStyle 'none'): the picture is the whole slide, as the deck drew it.
+  const bare = cap === 'none';
+  const capH = bare ? 0 : (cap === 'bar' ? 54 : 0) + 62 + (credit ? 50 : 0);
   let h = 1080 - padT - padB - gap - capH, w = h * ratio;
   if (w > 1920 - padX * 2) { w = 1920 - padX * 2; h = w / ratio; }
   const top = padT + (1080 - padT - padB - (h + gap + capH)) / 2;
-  const pic: Box = { x: (1920 - w) / 2, y: top, w, h, rot: 0 };
+  const pic: Box = bare ? { x: 0, y: 0, w: 1920, h: 1080, rot: 0 } : { x: (1920 - w) / 2, y: top, w, h, rot: 0 };
+  if (bare) { w = 1920; h = 1080; }
   const band: Box = { x: pic.x, y: top + h + gap, w, h: capH, rot: 0 };
   const onBand = cap === 'bar';
   const layers: Layer[] = [
@@ -766,8 +769,8 @@ export function framedPictureSlide(st: LayoutStyle, caption: string, credit: str
   ];
   if (onBand) layers.push(createLayer('shape', { name: 'Caption band', box: band, params: { shape: 'rect', radius: 0, fill: st.accent, strokeWidth: 0 }, anim: after(0.3) }));
   const inner = onBand ? inset(band, 45, 27) : band;
-  layers.push(text('Caption', caption, { ...inner, h: 62 }, { font: st.body, weight: '650', size: 51, color: onBand ? '#ffffff' : st.ink, align: 'center', lineHeight: 1.15 }, after(0.4)));
-  if (credit) layers.push(text('Caption credit', credit, { ...inner, y: inner.y + 70, h: 44 }, { font: st.body, weight: '400', size: 36, color: onBand ? 'rgba(255,255,255,0.85)' : st.muted, align: 'center' }, after(0.5)));
+  if (!bare) layers.push(text('Caption', caption, { ...inner, h: 62 }, { font: st.body, weight: '650', size: 51, color: onBand ? '#ffffff' : st.ink, align: 'center', lineHeight: 1.15 }, after(0.4)));
+  if (credit && !bare) layers.push(text('Caption credit', credit, { ...inner, y: inner.y + 70, h: 44 }, { font: st.body, weight: '400', size: 36, color: onBand ? 'rgba(255,255,255,0.85)' : st.muted, align: 'center' }, after(0.5)));
   if (facts.trim()) {
     const lines = facts.split('\n').map((l) => l.trim()).filter(Boolean);
     const back = (l: Layer) => { l.face = 'back'; l.anim = { ...l.anim, type: 'none' }; return l; };
@@ -777,12 +780,13 @@ export function framedPictureSlide(st: LayoutStyle, caption: string, credit: str
     layers.push(
       scrim,
       // Clear of the ⇄, which keeps its corner on both faces.
-      back(heading(st, caption || 'Behind the image', { x: 150, y: pic.y + 140, w: 1620, h: 100, rot: 0 }, 66, { fit: 'shrink' })),
-      back(text('Facts', lines.join('\n\n'), { x: 150, y: pic.y + 280, w: 1350, h: 1080 - (pic.y + 280) - 130, rot: 0 }, { font: st.body, weight: '400', size: 42, color: st.ink, lineHeight: 1.45, fit: 'shrink' })),
+      back(heading(st, caption || 'Behind the image', { x: 150, y: (bare ? 84 : pic.y) + 140, w: 1620, h: 100, rot: 0 }, 66, { fit: 'shrink' })),
+      back(text('Facts', lines.join('\n\n'), { x: 150, y: (bare ? 84 : pic.y) + 280, w: 1350, h: 1080 - ((bare ? 84 : pic.y) + 280) - 130, rot: 0 }, { font: st.body, weight: '400', size: 42, color: st.ink, lineHeight: 1.45, fit: 'shrink' })),
     );
     // The toggle, just outside the picture's top right corner: clear of the picture on the front and
     // of the heading and facts on the back. Quiet on the front, lit in the accent on the back.
-    const at: Box = { x: pic.x + w + 24, y: pic.y, w: 72, h: 72, rot: 0 };
+    // On a bare, full-slide picture there is no outside: the toggle takes the top right corner.
+    const at: Box = bare ? { x: 1920 - 72 - 30, y: 30, w: 72, h: 72, rot: 0 } : { x: pic.x + w + 24, y: pic.y, w: 72, h: 72, rot: 0 };
     const toggle = (lit: boolean) => {
       const disc = createLayer('shape', { name: lit ? 'Back to image' : 'Flip to facts', box: at, params: { shape: 'rect', radius: 14, fill: lit ? st.accent : st.ground, fillOpacity: lit ? 1 : 0.82, stroke: lit ? st.accent : st.ink, strokeOpacity: lit ? 1 : 0.22, strokeWidth: 2, label: '\u21c4', labelColor: lit ? '#ffffff' : st.ink, labelSize: 36, labelFont: st.body, labelWeight: '600' }, anim: after(0.6) });
       disc.interact = { ...disc.interact, click: 'flip' };

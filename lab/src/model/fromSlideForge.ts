@@ -301,8 +301,15 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       // A frame (16:9, 4:3, 1:1…) or facts on the back make it SlideForge's framed picture; else full bleed.
       const frame = String((s.design as { imageFrame?: string } | undefined)?.imageFrame ?? '');
       const facts = String(s.body ?? '').trim();
+      const capStyle = (s.design as { capStyle?: string } | undefined)?.capStyle;
+      // capStyle 'none': SlideForge draws the picture alone, full slide, no caption and no scrim. A
+      // deck that designs its own full-slide pictures (Week 4's) asks for exactly that, so the lab
+      // keeps it bare too, with the facts still a flip away when there are any.
+      if (capStyle === 'none' && !frame) {
+        return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), '16:9', 'none', facts), s.imageFit), ground: g };
+      }
       if (frame || facts) {
-        const cap = (s.design as { capStyle?: string } | undefined)?.capStyle === 'bar' ? 'bar' : 'plain';
+        const cap = capStyle === 'bar' ? 'bar' : 'plain';
         return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), frame || '4:3', cap, facts), s.imageFit), ground: g };
       }
       return { slide: fitted(photo(st, img(s.image), t, sub), s.imageFit), ground: g };

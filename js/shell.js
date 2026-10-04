@@ -1201,16 +1201,33 @@
     SF.GameStore.list().forEach(function (g) { existing[g.id] = 1; });
     var replacing = decks.concat(games).filter(function (x) { return existing[x.id]; }).length;
 
+    /* One presentation in the file is a lesson being brought in, not a backup
+       being restored: it opens, as importing a single deck does. Without this
+       the studio kept whatever it had open (often a blank "Untitled") and the
+       lesson waited in the Library. */
+    var lesson = decks.length === 1 && workspaces.deck ? decks[0] : null;
+
     SF.ask({
-      title: 'Restore ' + decks.length + ' presentation(s) and ' + games.length + ' game(s)?',
+      title: lesson
+        ? 'Import “' + (lesson.title || 'Untitled') + '”?'
+        : 'Restore ' + decks.length + ' presentation(s) and ' + games.length + ' game(s)?',
       detail: replacing
         ? replacing + ' already here will be replaced by the backup version.'
-        : 'Nothing here will be overwritten.',
-      confirm: 'Restore', danger: replacing > 0
+        : lesson ? 'It opens in the studio and is saved to your Library.' : 'Nothing here will be overwritten.',
+      confirm: lesson ? 'Import' : 'Restore', danger: replacing > 0
     }, function () {
 
     games.forEach(function (g) { SF.GameStore.save(g); });
     decks.forEach(function (d) { SF.Store.save(d); });
+
+    if (lesson) {
+      activate('deck', { toast: false });
+      workspaces.deck.setDoc(lesson);
+      workspaces.deck._dirty = false;
+      syncChrome();
+      SF.toast('Imported “' + (lesson.title || 'Untitled') + '” · ' + lesson.slides.length + ' slides');
+      return;
+    }
 
     Object.keys(workspaces).forEach(function (k) {
       var ws = workspaces[k];
