@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="76" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="22" letter-spacing="5" fill="#c8102e">EXPERIMENT · ROUND 1</text>
+  <text x="80" y="146" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="58" fill="#14181f">Can you find it in two seconds?</text>
+  <circle cx="112" cy="292" r="32" fill="#0c3354"/>
+  <text x="112" y="303" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#fff">1</text>
+  <text x="170" y="290" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="40" fill="#14181f">Look</text>
+  <text x="170" y="328" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#5a6572">A field of dots fills the screen for two seconds.</text>
+  <circle cx="112" cy="432" r="32" fill="#0c3354"/>
+  <text x="112" y="443" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#fff">2</text>
+  <text x="170" y="430" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="40" fill="#14181f">Find</text>
+  <text x="170" y="468" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#5a6572">One dot is red. Find it before it disappears.</text>
+  <circle cx="112" cy="572" r="32" fill="#0c3354"/>
+  <text x="112" y="583" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#fff">3</text>
+  <text x="170" y="570" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="40" fill="#14181f">Answer</text>
+  <text x="170" y="608" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#5a6572">Hands up: which quarter was it in, A, B, C or D?</text>
+  <rect x="1140" y="250" width="164" height="164" fill="#fff" stroke="#0c3354" stroke-opacity=".3" stroke-width="2"/>
+  <text x="1222" y="350" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="60" fill="#0c3354">A</text><rect x="1310" y="250" width="164" height="164" fill="#fff" stroke="#0c3354" stroke-opacity=".3" stroke-width="2"/>
+  <text x="1392" y="350" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="60" fill="#0c3354">B</text><rect x="1140" y="420" width="164" height="164" fill="#fff" stroke="#0c3354" stroke-opacity=".3" stroke-width="2"/>
+  <text x="1222" y="520" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="60" fill="#0c3354">C</text><rect x="1310" y="420" width="164" height="164" fill="#fff" stroke="#0c3354" stroke-opacity=".3" stroke-width="2"/>
+  <text x="1392" y="520" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="60" fill="#0c3354">D</text>
+  <text x="1307" y="630" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#5a6572">the four quarters</text>
+  <rect x="80" y="700" width="1440" height="120" fill="#fff" stroke="#c8102e" stroke-width="3"/>
+  <text x="112" y="752" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="27" fill="#14181f"><tspan font-weight="700" fill="#c8102e">Why:</tspan> we are testing whether colour lets your eye find something</text>
+  <text x="112" y="792" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="27" fill="#14181f">without searching for it. Two seconds is not long enough to search.</text>
+</svg>

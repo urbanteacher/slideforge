@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="92" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="54" fill="#14181f">Three dimensions of colour</text><text x="80" y="138" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572" opacity="1">Hue answers “what kind?”. Lightness answers “how much?” · Munzner, Ch. 10</text>
+  <g opacity="0.16"><text x="80" y="280" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="48" fill="#14181f">Hue</text>
+    <rect x="380" y="200" width="106" height="130" fill="#d7191c"/><rect x="498" y="200" width="106" height="130" fill="#f08a24"/><rect x="616" y="200" width="106" height="130" fill="#e3cf3a"/><rect x="734" y="200" width="106" height="130" fill="#1a9641"/><rect x="852" y="200" width="106" height="130" fill="#2b83ba"/><rect x="970" y="200" width="106" height="130" fill="#7b3294"/>
+    <text x="1120" y="236" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="28" fill="#14181f">Which colour family</text>
+    <text x="1120" y="274" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="2" fill="#c8102e">IDENTITY CHANNEL</text>
+    <text x="1120" y="310" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572">Best for categories</text></g>
+  <g opacity="1"><text x="80" y="485" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="48" fill="#14181f">Lightness</text>
+    <rect x="380" y="405" width="106" height="130" fill="#eff3ff"/><rect x="498" y="405" width="106" height="130" fill="#c6dbef"/><rect x="616" y="405" width="106" height="130" fill="#9ecae1"/><rect x="734" y="405" width="106" height="130" fill="#4292c6"/><rect x="852" y="405" width="106" height="130" fill="#2171b5"/><rect x="970" y="405" width="106" height="130" fill="#08306b"/>
+    <text x="1120" y="441" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="28" fill="#14181f">How light or dark</text>
+    <text x="1120" y="479" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="2" fill="#c8102e">MAGNITUDE CHANNEL</text>
+    <text x="1120" y="515" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572">Best for ordered and quantitative</text></g>
+  <g opacity="0.16"><text x="80" y="690" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="48" fill="#14181f">Saturation</text>
+    <rect x="380" y="610" width="106" height="130" fill="#8a8f94"/><rect x="498" y="610" width="106" height="130" fill="#7c8fa3"/><rect x="616" y="610" width="106" height="130" fill="#6c90b5"/><rect x="734" y="610" width="106" height="130" fill="#5a91c8"/><rect x="852" y="610" width="106" height="130" fill="#4592da"/><rect x="970" y="610" width="106" height="130" fill="#2a93ee"/>
+    <text x="1120" y="646" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="28" fill="#14181f">How vivid or grey</text>
+    <text x="1120" y="684" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="2" fill="#c8102e">MAGNITUDE, BUT WEAK</text>
+    <text x="1120" y="720" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572">Ordered, only a few steps</text></g>
+</svg>

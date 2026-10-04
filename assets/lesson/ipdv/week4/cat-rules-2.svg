@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="92" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="54" fill="#14181f">Two respected rules. Which is right?</text><text x="80" y="138" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572" opacity="1">Categorical colours: keep lightness equal, or vary it?</text>
+  
+  <rect x="80" y="180" width="680" height="560" fill="#fff" stroke="rgba(12,51,84,.18)"/>
+  <text x="108" y="236" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="38" fill="#14181f">Rule A</text>
+  <text x="108" y="274" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#5a6572">Vary hue; keep lightness and saturation constant</text>
+  <rect x="108" y="300" width="96" height="120" fill="#ef888e"/><rect x="212" y="300" width="96" height="120" fill="#c99f5a"/><rect x="316" y="300" width="96" height="120" fill="#79b474"/><rect x="420" y="300" width="96" height="120" fill="#00b9be"/><rect x="524" y="300" width="96" height="120" fill="#4fadf0"/><rect x="628" y="300" width="96" height="120" fill="#c992d7"/>
+  <text x="108" y="456" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#5a6572">lightness L* 68 · 68 · 68 · 68 · 68 · 68</text>
+  <text x="108" y="512" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="18" letter-spacing="3" fill="#0c3354">IN GREYSCALE</text>
+  <rect x="108" y="528" width="96" height="120" fill="#a6a6a6"/><rect x="212" y="528" width="96" height="120" fill="#a6a6a6"/><rect x="316" y="528" width="96" height="120" fill="#a6a6a6"/><rect x="420" y="528" width="96" height="120" fill="#a7a7a7"/><rect x="524" y="528" width="96" height="120" fill="#a5a5a5"/><rect x="628" y="528" width="96" height="120" fill="#a6a6a6"/>
+  <text x="108" y="700" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f"><tspan font-weight="700" fill="#c8102e">✗</tspan>  One grey: the categories vanish</text>
+  
+  <rect x="840" y="180" width="680" height="560" fill="#fff" stroke="rgba(12,51,84,.18)"/>
+  <text x="868" y="236" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="38" fill="#14181f">Rule B</text>
+  <text x="868" y="274" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#5a6572">Vary hue, lightness and saturation</text>
+  <rect x="868" y="300" width="96" height="120" fill="#00579a"/><rect x="972" y="300" width="96" height="120" fill="#dd5853"/><rect x="1076" y="300" width="96" height="120" fill="#87c060"/><rect x="1180" y="300" width="96" height="120" fill="#ffd668"/><rect x="1284" y="300" width="96" height="120" fill="#985191"/><rect x="1388" y="300" width="96" height="120" fill="#00a8ad"/>
+  <text x="868" y="456" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#5a6572">lightness L* 36 · 55 · 72 · 87 · 45 · 63</text>
+  <text x="868" y="512" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="18" letter-spacing="3" fill="#0c3354">IN GREYSCALE</text>
+  <rect x="868" y="528" width="96" height="120" fill="#555555"/><rect x="972" y="528" width="96" height="120" fill="#848484"/><rect x="1076" y="528" width="96" height="120" fill="#b1b1b1"/><rect x="1180" y="528" width="96" height="120" fill="#dadada"/><rect x="1284" y="528" width="96" height="120" fill="#6b6b6b"/><rect x="1388" y="528" width="96" height="120" fill="#979797"/>
+  <text x="868" y="700" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f"><tspan font-weight="700" fill="#0c3354">✓</tspan>  Still six greys you can tell apart</text>
+  <text x="80" y="800" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="34" fill="#c8102e">It’s a trade-off. A protects equal importance; B protects telling them apart.</text>
+  <text x="80" y="844" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">In practice: vary lightness modestly, and label the categories directly.</text>
+</svg>

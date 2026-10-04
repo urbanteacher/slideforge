@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="92" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="54" fill="#14181f">Share</text><text x="80" y="138" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572" opacity="1">Two or three pairs put their palette on screen</text>
+  <rect x="80" y="220" width="1440" height="300" fill="#fff" stroke="#0c3354" stroke-width="2"/>
+  <text x="130" y="320" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="46" fill="#14181f">“We used <tspan fill="#c8102e">[scheme]</tspan> because the data is</text>
+  <text x="130" y="390" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="46" fill="#14181f"><tspan fill="#c8102e">[type]</tspan>, and it <tspan fill="#c8102e">[passed / failed]</tspan> the test because</text>
+  <text x="130" y="460" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="46" fill="#c8102e">[reason]<tspan fill="#14181f">.”</tspan></text>
+  <text x="80" y="610" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#14181f">Listen for: a family that matches the data, lightness doing the ordering, no red–green pair,</text>
+  <text x="80" y="648" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#14181f">and a palette that still works in the simulation.</text>
+</svg>

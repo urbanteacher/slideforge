@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="92" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="54" fill="#14181f">Use the colour the concept already has</text><text x="80" y="138" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572" opacity="1">Fruit sales, illustrative numbers · readers are faster when colours match concepts (Lin et al., 2013)</text>
+  <text x="80" y="220" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="34" fill="#14181f">Matched</text>
+  <text x="80" y="300" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Banana</text>
+  <rect x="200" y="270" width="462" height="50" fill="#f2d43d"/><text x="80" y="382" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Apple</text>
+  <rect x="200" y="352" width="385" height="50" fill="#d8342c"/><text x="80" y="464" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Orange</text>
+  <rect x="200" y="434" width="297" height="50" fill="#f08a24"/><text x="80" y="546" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Grape</text>
+  <rect x="200" y="516" width="198" height="50" fill="#6b3fa0"/><text x="80" y="628" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Lime</text>
+  <rect x="200" y="598" width="132" height="50" fill="#7cc242"/>
+  <text x="80" y="720" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f"><tspan font-weight="700" fill="#0c3354">✓</tspan>  Read without the labels: banana is yellow</text>
+  <text x="860" y="220" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="34" fill="#14181f">Shuffled</text>
+  <text x="860" y="300" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Banana</text>
+  <rect x="980" y="270" width="462" height="50" fill="#6b3fa0"/><text x="860" y="382" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Apple</text>
+  <rect x="980" y="352" width="385" height="50" fill="#7cc242"/><text x="860" y="464" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Orange</text>
+  <rect x="980" y="434" width="297" height="50" fill="#d8342c"/><text x="860" y="546" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Grape</text>
+  <rect x="980" y="516" width="198" height="50" fill="#f2d43d"/><text x="860" y="628" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">Lime</text>
+  <rect x="980" y="598" width="132" height="50" fill="#f08a24"/>
+  <text x="860" y="720" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f"><tspan font-weight="700" fill="#c8102e">✗</tspan>  Every bar fights its fruit</text>
+  <text x="80" y="820" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f">What is the natural colour for the Liberal Democrats? For temperature? For profit?</text>
+</svg>

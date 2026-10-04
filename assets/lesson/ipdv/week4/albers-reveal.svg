@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  
+  <rect x="160" y="140" width="560" height="560" fill="#262626"/>
+  <rect x="880" y="140" width="560" height="560" fill="#e6e6e6"/>
+  <rect x="540" y="370" width="520" height="100" fill="#8a8a8a"/>
+  <rect x="340" y="320" width="200" height="200" fill="#8a8a8a"/>
+  <rect x="1060" y="320" width="200" height="200" fill="#8a8a8a"/>
+  <text x="440" y="760" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="34" fill="#14181f">Left</text>
+  <text x="1160" y="760" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="34" fill="#14181f">Right</text>
+  <text x="800" y="830" text-anchor="middle" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="40" fill="#c8102e">One grey, #8a8a8a. The neighbours changed it.</text>
+</svg>

@@ -1,3 +1,0 @@
-# Drawn by tools/build-ipdv-week4.js on every build (and embedding copies of the
-# photos), so only the source pictures are kept in git.
-*.svg

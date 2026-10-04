@@ -2509,5 +2509,89 @@ for (const g of games) for (const q of g.questions) if (q.image && !fs.existsSyn
 const bundle = { kind: 'slideforge-bundle', version: 1, exported: new Date().toISOString(), decks: [embed(deck)], games: games.map(embed) };
 const file = path.join(root, 'lessons/04_Lecture_IPDV_Colour.sfbundle.json');
 fs.writeFileSync(file, JSON.stringify(bundle, null, 2) + '\n');
+/* The student copy: the same deck with the room-only and in-between slides
+   hidden, so a handout or export has one slide per idea. A build keeps only
+   its final state, a question keeps only its reveal, and repeats, briefings
+   and optional slides drop out. Hidden rather than removed, so any of them
+   can be shown again in SlideForge. The lecture bundle is untouched. */
+const STUDENT_RULES = [
+  // builds: keep only the last state
+  ['From raw data to insight', 'last'], ['Four jobs colour does in a chart', 'last'], ['From light to colour', 'last'],
+  ['Three dimensions of colour', 'last'], ['Why HSL lies', 'last'], ['Two respected rules. Which is right?', 'last'],
+  ['Start with grey', 'last'], ['Don’t rely on colour alone', 'last'],
+  // the families: keep the first (overview); openers and summary repeat it
+  ['Three families of colour map', 'first'], ['Three families of colour map · summary', 'none'],
+  // questions whose reveal follows
+  ['Classify these: sequential, diverging or categorical?', 'none'], ['Which inner square is lighter?', 'none'],
+  ['Which cell holds the higher value: P or Q?', 'none'], ['Colour constancy', 'none'], ['Predict: which one will be hardest to read?', 'none'],
+  ['Name the danger', 'none'], ['Fix the opening maps', 'none'],
+  // run in the room
+  ['Can you find it in two seconds?', 'none'], ['Find the red dot', 'none'], ['Again. One thing changes', 'none'],
+  ['Put these in order, least to most', 'none'], ['Now these, least to most', 'none'],
+  ['Palette lab: your dataset', 'none'], ['Palette lab: share', 'none'], ['Questions?', 'none'],
+  // repeats and optional extras
+  ['Six palette types, six data jobs · summary', 'none'], ['Treemaps: is colour even needed?', 'none'],
+  ['Park them. We fix all three at the end.', 'none'], ['Common mistakes: the rainbow', 'none']
+];
+function studentCopy(deck) {
+  const copy = JSON.parse(JSON.stringify(deck));
+  copy.id = 'ipdv-col-2026-student';
+  copy.title = deck.title + ' (student copy)';
+  const seen = {}, total = {};
+  copy.slides.forEach(sl => { total[sl.title] = (total[sl.title] || 0) + 1; });
+  copy.slides.forEach(sl => {
+    const n = (seen[sl.title] = (seen[sl.title] || 0) + 1);
+    const rule = (STUDENT_RULES.find(([t]) => t === sl.title) || [])[1];
+    let hide = rule === 'none' || (rule === 'last' && n < total[sl.title]) || (rule === 'first' && n > 1);
+    if (/^Six palette types · /.test(sl.title || '')) hide = true;            // the six zooms
+    if (sl.type === 'image' && sl.title === 'Who can’t read your chart?') hide = true; // the chart, shown again
+    if (hide) sl.hidden = true;
+  });
+  return copy;
+}
+const student = studentCopy(deck);
+const studentFile = path.join(root, 'lessons/04_Lecture_IPDV_Colour_STUDENT.sfbundle.json');
+fs.writeFileSync(studentFile, JSON.stringify({ kind: 'slideforge-bundle', version: 1, exported: new Date().toISOString(), decks: [embed(student)], games: [] }, null, 2) + '\n');
+const shown = student.slides.filter(sl => !sl.hidden).length;
+console.log(`student copy: ${shown} of ${student.slides.length} slides shown (${Math.round(100 * (1 - shown / student.slides.length))}% fewer) · ${path.relative(root, studentFile)}`);
+
+/* Built in: js/lessons-ipdv-week4.js puts both lessons in SlideForge's own
+   lesson list and library seeds, so every browser on the deployed site has
+   them in the Northeastern folder with nothing to import. Slides point at
+   the served pictures (assets/lesson/ipdv/week4/), not data URIs. The keys
+   differ from the bundles' sourceKey, so a browser holding an imported copy
+   still gets the built-in ones. */
+function builtInLessons() {
+  const hidden = new Set(student.slides.map((sl, i) => (sl.hidden ? i : -1)).filter(i => i >= 0));
+  const base = {
+    theme: LESSON.theme, org: LESSON.org, logo: LESSON.logo, logoOn: LESSON.logoOn, logoSize: LESSON.logoSize,
+    libraryGroup: 'nul', kind: 'lecture', minutes: 90, icon: '◐', games: []
+  };
+  const lecture = { ...base, key: 'ipdv-col-w4', title: LESSON.title,
+    blurb: 'A journey from noticing colour to choosing it: perception, deception, the vocabulary of hue and lightness, the jobs colour does, colour maps, meaning, accessibility and tools, ending by fixing three broken charts. Real TfL and Eurostat data throughout.',
+    slides: authored };
+  const studentLesson = { ...base, key: 'ipdv-col-w4-student', title: LESSON.title + ' (student copy)',
+    blurb: 'The Week 4 lecture with the in-room steps hidden: one slide per idea, about 40% fewer, for handouts and revision.',
+    slides: authored.map((sl, i) => (hidden.has(i) ? { ...sl, hidden: true } : sl)) };
+  return [lecture, studentLesson];
+}
+const builtInFile = path.join(root, 'js/lessons-ipdv-week4.js');
+fs.writeFileSync(builtInFile, `/* Generated by tools/build-ipdv-week4.js: do not edit by hand, rebuild instead.
+   LDSCI6253 Week 4 · The Power of Colour, built into SlideForge's lesson list and
+   seeded into the Northeastern folder of every browser's Library. Loaded after
+   js/lessons.js, whose LESSONS and LIBRARY_SEED_KEYS it extends. */
+(function (root) {
+  'use strict';
+  var SF = root.SF;
+  if (!SF || !SF.LESSONS || !SF.LIBRARY_SEED_KEYS) return;
+  var lessons = ${JSON.stringify(builtInLessons())};
+  lessons.forEach(function (lesson) {
+    if (!SF.LESSONS.some(function (l) { return l.key === lesson.key; })) SF.LESSONS.push(lesson);
+    SF.LIBRARY_SEED_KEYS[lesson.key] = 'nul';
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+`);
+console.log(`built in: ${path.relative(root, builtInFile)} (${Math.round(fs.statSync(builtInFile).size / 1024)} KB)`);
+
 const kb = Math.round(fs.statSync(file).size / 1024);
 console.log(`${deck.slides.length} slides · ${games.length} games · ${kb} KB · ${path.relative(root, file)}`);

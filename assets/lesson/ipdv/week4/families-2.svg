@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="92" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="54" fill="#14181f">Three families of colour map</text><text x="80" y="138" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572" opacity="1">Measure, measure from a middle, label: the data’s structure picks the family · Brewer (1994)</text>
+  <g opacity="0.16"><text x="80" y="240" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="46" fill="#14181f">Sequential</text>
+    <text x="80" y="276" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="18" letter-spacing="3" fill="#c8102e">ORDERED OR QUANTITATIVE</text>
+    <rect x="560" y="200" width="60.5" height="90" fill="#eff3ff"/><rect x="620" y="200" width="60.5" height="90" fill="#c6dbef"/><rect x="680" y="200" width="60.5" height="90" fill="#9ecae1"/><rect x="740" y="200" width="60.5" height="90" fill="#6baed6"/><rect x="800" y="200" width="60.5" height="90" fill="#4292c6"/><rect x="860" y="200" width="60.5" height="90" fill="#2171b5"/><rect x="920" y="200" width="60.5" height="90" fill="#084594"/>
+    
+    <text x="1030" y="230" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="26" fill="#14181f">Low → high</text>
+    <text x="1030" y="266" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#5a6572">Lightness does the work; hue may shift a little</text>
+    <text x="1030" y="298" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#14181f">Rainfall · income · population density</text></g>
+  <g opacity="1"><text x="80" y="470" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="46" fill="#14181f">Diverging</text>
+    <text x="80" y="506" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="18" letter-spacing="3" fill="#c8102e">ORDERED + MIDPOINT</text>
+    <rect x="560" y="430" width="60.5" height="90" fill="#b2182b"/><rect x="620" y="430" width="60.5" height="90" fill="#ef8a62"/><rect x="680" y="430" width="60.5" height="90" fill="#fddbc7"/><rect x="740" y="430" width="60.5" height="90" fill="#f7f7f7"/><rect x="800" y="430" width="60.5" height="90" fill="#d1e5f0"/><rect x="860" y="430" width="60.5" height="90" fill="#67a9cf"/><rect x="920" y="430" width="60.5" height="90" fill="#2166ac"/>
+    <line x1="770" y1="420" x2="770" y2="530" stroke="#14181f" stroke-width="3"/><text x="770" y="558" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#14181f">midpoint</text>
+    <text x="1030" y="460" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="26" fill="#14181f">Two directions from a middle</text>
+    <text x="1030" y="496" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#5a6572">Zero, average or 50%: a middle that means something</text>
+    <text x="1030" y="528" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#14181f">Profit and loss · temperature anomaly · vote swing</text></g>
+  <g opacity="0.16"><text x="80" y="700" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="46" fill="#14181f">Categorical</text>
+    <text x="80" y="736" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="18" letter-spacing="3" fill="#c8102e">NOMINAL: NO ORDER</text>
+    <rect x="560" y="660" width="70.5" height="90" fill="#4e79a7"/><rect x="630" y="660" width="70.5" height="90" fill="#f28e2b"/><rect x="700" y="660" width="70.5" height="90" fill="#59a14f"/><rect x="770" y="660" width="70.5" height="90" fill="#b07aa1"/><rect x="840" y="660" width="70.5" height="90" fill="#edc948"/><rect x="910" y="660" width="70.5" height="90" fill="#9c755f"/>
+    
+    <text x="1030" y="690" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="26" fill="#14181f">Different, not more</text>
+    <text x="1030" y="726" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#5a6572">Distinct hues, equal status, at most 6–12</text>
+    <text x="1030" y="758" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#14181f">Product line · country · party</text></g>
+</svg>

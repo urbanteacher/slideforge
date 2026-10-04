@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="92" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="54" fill="#14181f">Why HSL lies</text><text x="80" y="138" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572" opacity="1">Every swatch below is hsl(hue, 100%, 50%): “lightness 50%” in every colour picker</text>
+  <rect x="135" y="200" width="200" height="200" fill="#ff0000"/>
+  <text x="135" y="436" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="24" fill="#14181f">Red</text>
+  <text x="135" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#5a6572">hsl(0, 100%, 50%)</text>
+  <rect x="361" y="200" width="200" height="200" fill="#ffff00"/>
+  <text x="361" y="436" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="24" fill="#14181f">Yellow</text>
+  <text x="361" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#5a6572">hsl(60, 100%, 50%)</text>
+  <rect x="587" y="200" width="200" height="200" fill="#00ff00"/>
+  <text x="587" y="436" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="24" fill="#14181f">Green</text>
+  <text x="587" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#5a6572">hsl(120, 100%, 50%)</text>
+  <rect x="813" y="200" width="200" height="200" fill="#00ffff"/>
+  <text x="813" y="436" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="24" fill="#14181f">Cyan</text>
+  <text x="813" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#5a6572">hsl(180, 100%, 50%)</text>
+  <rect x="1039" y="200" width="200" height="200" fill="#0000ff"/>
+  <text x="1039" y="436" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="24" fill="#14181f">Blue</text>
+  <text x="1039" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#5a6572">hsl(240, 100%, 50%)</text>
+  <rect x="1265" y="200" width="200" height="200" fill="#ff00ff"/>
+  <text x="1265" y="436" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="24" fill="#14181f">Magenta</text>
+  <text x="1265" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#5a6572">hsl(300, 100%, 50%)</text>
+  
+  <text x="135" y="600" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="40" fill="#14181f">Same lightness? Click to print them in greyscale.</text>
+</svg>

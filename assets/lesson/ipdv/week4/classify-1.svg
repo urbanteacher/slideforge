@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="92" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="54" fill="#14181f">Sequential, diverging or categorical?</text><text x="80" y="138" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#5a6572" opacity="1">Decide for each before the next click</text>
+  <rect x="80" y="190" width="274" height="560" fill="#fff" stroke="rgba(12,51,84,.18)" stroke-width="1.5"/>
+  <text x="102" y="236" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="3" fill="#c8102e">1</text>
+  <foreignObject x="102" y="250" width="230" height="200"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;font-size:32px;line-height:1.15;color:#14181f">Quarterly company profit</div>
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif;font-size:21px;line-height:1.3;color:#5a6572;margin-top:10px">including losses</div></foreignObject>
+  <text x="217" y="560" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#0c3354" opacity=".35">S · D · C ?</text>
+  <rect x="372" y="190" width="274" height="560" fill="#fff" stroke="rgba(12,51,84,.18)" stroke-width="1.5"/>
+  <text x="394" y="236" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="3" fill="#c8102e">2</text>
+  <foreignObject x="394" y="250" width="230" height="200"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;font-size:32px;line-height:1.15;color:#14181f">Customer satisfaction</div>
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif;font-size:21px;line-height:1.3;color:#5a6572;margin-top:10px">rated 1–10</div></foreignObject>
+  <text x="509" y="560" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#0c3354" opacity=".35">S · D · C ?</text>
+  <rect x="664" y="190" width="274" height="560" fill="#fff" stroke="rgba(12,51,84,.18)" stroke-width="1.5"/>
+  <text x="686" y="236" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="3" fill="#c8102e">3</text>
+  <foreignObject x="686" y="250" width="230" height="200"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;font-size:32px;line-height:1.15;color:#14181f">Brexit result by area</div>
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif;font-size:21px;line-height:1.3;color:#5a6572;margin-top:10px">share voting Leave</div></foreignObject>
+  <text x="801" y="560" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#0c3354" opacity=".35">S · D · C ?</text>
+  <rect x="956" y="190" width="274" height="560" fill="#fff" stroke="rgba(12,51,84,.18)" stroke-width="1.5"/>
+  <text x="978" y="236" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="3" fill="#c8102e">4</text>
+  <foreignObject x="978" y="250" width="230" height="200"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;font-size:32px;line-height:1.15;color:#14181f">Global temperature</div>
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif;font-size:21px;line-height:1.3;color:#5a6572;margin-top:10px">anomaly against 1961–90</div></foreignObject>
+  <text x="1093" y="560" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#0c3354" opacity=".35">S · D · C ?</text>
+  <rect x="1248" y="190" width="274" height="560" fill="#fff" stroke="rgba(12,51,84,.18)" stroke-width="1.5"/>
+  <text x="1270" y="236" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="20" letter-spacing="3" fill="#c8102e">5</text>
+  <foreignObject x="1270" y="250" width="230" height="200"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;font-size:32px;line-height:1.15;color:#14181f">Smartphone brands</div>
+  <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif;font-size:21px;line-height:1.3;color:#5a6572;margin-top:10px">the best seller in each country</div></foreignObject>
+  <text x="1385" y="560" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="30" fill="#0c3354" opacity=".35">S · D · C ?</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1420 420" width="1420" height="420">
+  <rect x="10" y="10" width="250" height="300" fill="#4292c6"/>
+  <text x="135" y="400" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="72" fill="#14181f">A</text><rect x="292" y="10" width="250" height="300" fill="#c6dbef"/>
+  <text x="417" y="400" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="72" fill="#14181f">B</text><rect x="574" y="10" width="250" height="300" fill="#08306b"/>
+  <text x="699" y="400" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="72" fill="#14181f">C</text><rect x="856" y="10" width="250" height="300" fill="#9ecae1"/>
+  <text x="981" y="400" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="72" fill="#14181f">D</text><rect x="1138" y="10" width="250" height="300" fill="#2171b5"/>
+  <text x="1263" y="400" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="72" fill="#14181f">E</text>
+</svg>
