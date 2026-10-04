@@ -1,0 +1,175 @@
+# Week 4 · The Power of Colour: slide list
+
+Every slide in `lessons/04_Lecture_IPDV_Colour.sfbundle.json`, in order, with one line on what it contains. The deck
+is built by `tools/build-ipdv-week4.js`. It has 126 slides, all in the Northeastern theme. Phone games and polls are
+switched off (`INTERACTIVE = false`), so questions are answered by hands up.
+
+Where several slides build one picture (one part lit, the rest dimmed, or a zoom), they are grouped in a single row.
+*(opt)* marks an optional slide.
+
+## Opening
+
+| # | Slide | What it contains |
+|---|---|---|
+| 1 | The Power of Colour | Title on the NUL navy ground, with the skyline and the N |
+| 2 | Before we start | Reading (Munzner Ch. 10), the worksheet deadline, asking early for help, and planning the week |
+| 3–9 | From raw data to insight | TfL 2024 cycle hires followed from raw lines to table, types, question, heatmap and insight. One stage is lit per click, then all six |
+| 10 | By the end of today you can | Five learning outcomes: explain, distinguish, choose, critique, build |
+
+## Hook
+
+| # | Slide | What it contains |
+|---|---|---|
+| 11 | Case A · What is colour doing here? | The US-ancestry map, full screen. Political-map colours encode no data. The points are on the flip side |
+| 12 | Case B · What is colour doing here? | The profitable-markets map, full screen. A blue ramp on a blue sea, and an ambiguous no-data colour |
+| 13 | Case C · What is colour doing here? | "When Europeans fly the nest", full screen. Rainbow hues on ordered age bins |
+| 14 | Park them. We fix all three at the end. | The three cases pinned to a navy board: "You could tell something was wrong before you could say why" |
+
+## Part 1 · Notice: what does colour do for your eye?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 15 | What does colour do for your eye? | Section divider |
+| 16 | Name the danger | The tiger in greyscale: "count to three" |
+| 17 | Colour finds it for you. Unless you are a deer | The tiger in colour. A deer, with only two cone types, sees this orange as green (Fennell et al., 2019) |
+| 18 | Predict: which one will be hardest to read? | The fruit stall three ways (lightness only, colour only, both), lettered A–C |
+| 19 | Lightness shows where. Hue shows what. | WHERE + WHAT = BOTH over the three fruit pictures: the rule that recurs all lecture |
+| 20 | Can you find it in two seconds? | Briefing for round 1: look, find, answer (hands up, A–D), and why we're testing it |
+| 21 | Find the red dot | Round 1: one red dot among grey dots, flashed for two seconds |
+| 22 | Again. One thing changes | Briefing for round 2 |
+| 23 | Find the red dot | Round 2: the red dot among many colours, including a near-red decoy |
+| 24 | Colour only highlights when it is scarce | Both rounds side by side. Pop-out explained, with "give colour to one thing and keep the rest grey" (Treisman & Gelade; Duncan & Humphreys; Munzner 5.5.4) |
+
+## Part 2 · See: where does colour come from?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 25 | The brain vs colour | Your 2025 brain diagram with the claim now cited: an odd colour is found in under about 200–250 ms (Healey & Enns, 2012) |
+| 26 | Where does colour come from? | Section divider |
+| 27–29 | From light to colour | Three builds: the spectrum with rods and cones, then the S/M/L cone curves, then 580 nm read as three numbers and seen as yellow |
+| 30 | Three cones, three channels | The cones wired into light–dark, red–green and blue–yellow channels: why there is no reddish-green (Hering) |
+| 31 | Colour vision deficiency | The parrots four ways (typical, deuteranomaly, protanopia, tritanopia), with the facts on the flip side |
+| 32 | The same chart, four ways of seeing it | One line chart simulated four ways (Machado 2009): "Which line is North?", with 8% / 0.5% on the flip side |
+
+## Part 3 · Doubt: can you trust what you see?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 33 | Can you trust what you see? | Section divider |
+| 34 | Albers quote | "…it deceives continually": Josef Albers, *Interaction of Color* |
+| 35 | Which inner square is lighter? | Two identical grey squares on black and on light grey |
+| 36 | One grey. The neighbours changed it | Reveal: a bar of the same grey joins the two squares |
+| 37 | Which cell holds the higher value: P or Q? | A blue heatmap with P in a dark neighbourhood and Q in a light one |
+| 38 | P and Q are both 50 | Reveal: a bar joins P and Q. Readers judge colour against its neighbours |
+| 39 | Colour constancy | The cubes illusion in yellow and blue light, full screen, with the question on the flip side |
+| 40 | The same colour: your brain discounted the light | Cubes reveal, with what constancy means for shaded and 3D charts |
+
+## Part 4 · Vocabulary: what is a colour made of?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 41 | What is a colour made of? | Section divider |
+| 42–45 | Three dimensions of colour | Hue, lightness and saturation, one row lit per click, each with its channel type and what it's best for |
+| 46 | Hue: the colour family | Your 2025 diagram, full screen: different hue = new family; less saturation and darker value stay in the family |
+| 47 | The painter's wheel vs your eye | The art-class RYB wheel against how light full-strength hues really look: built for mixing paint, not for reading data |
+| 48–49 | Why HSL lies | Six hues at "50% lightness", then their real greyscale: yellow 97, blue 32 |
+| 50 | Put these in order, least to most | Five lettered hues for the room to order aloud: no agreement |
+| 51 | Now these, least to most | Five lettered lightness steps: near-total agreement. Hue has no order |
+
+## Part 5 · Use: what jobs can colour do in a chart?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 52 | What jobs can colour do in a chart? | Section divider |
+| 53–57 | Four jobs colour does in a chart | Label, Measure, Highlight, Mean, each with a mini chart. One lit per click, then all four |
+| 58–59 | Start with grey | TfL 2019–2024 with every line coloured ("what's the story?"), then grey with 2020's lockdown dip highlighted |
+| 60 | How newsrooms do it | The Times examples and the GLA City Intelligence guidelines: grey for context, colour for the point |
+| 61 | City Intelligence data design guidelines | The GLA guidelines full screen, with the review activity (colour scheme, text and layout) on the flip side |
+| 62 | One dataset, two jobs | Case C's data: region labelled with hues against shades, age measured with lightness against rainbow bands |
+
+## Part 6 · Map: which colour map for which data?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 63 | Which colour map for which data? | Section divider |
+| 64 | Three families of colour map | Overview with all three lit: sequential, diverging, categorical, each with its data type, rule and examples |
+| 65 | Classify these | Five datasets as cards asking S, D or C. The room predicts; the answers come at the end of the part |
+| 66 | Three families · Sequential | The sequential row lit: the chapter opener |
+| 67 | Sequential: agree or disagree? | Datawrapper US map pair: categorical colours against a sequential ramp |
+| 68 | Same rain, two colour maps | Heller Weather rainfall: rainbow against one hue. "Where is the heaviest rain?" |
+| 69–70 | The rainbow debate | The TfL heatmap in jet, viridis and turbo with lightness curves, then all three in greyscale |
+| 71 | Common mistakes: the rainbow | The 2025 deck's colour-blind rainbow wheels, with three reasons the rainbow fails on the flip side |
+| 72 | Binning changes the story | Case C's 27 countries binned three ways (equal interval, quantile, natural breaks), with class ranges |
+| 73 | Three families · Diverging | The diverging row lit: the chapter opener |
+| 74 | Diverging: agree or disagree? | Datawrapper Likert pair: arbitrary hues against a true diverging scale |
+| 75 | Warming stripes | Debate: good data vis with no axes? **Placeholder until the official image is added** |
+| 76 | Three families · Categorical | The categorical row lit: the chapter opener |
+| 77 | Categorical: agree or disagree? | Datawrapper bar pair: shades of one blue against distinct hues |
+| 78–79 | Two respected rules. Which is right? | Rule A (equal lightness) against Rule B (varied lightness), then both in greyscale and the trade-off |
+| 80 | Size changes everything | Five muted colours as squares, dots and lines, then saturated colours as the fix for small marks |
+| 81 | How many colours can people tell apart? | TfL 2011–2024 as 14 hues, against grey with 2022 and 2024 highlighted. About 6–12 hues at most |
+| 82–83 | Treemaps: is colour even needed? *(opt)* | Two Datawrapper treemap pairs: redundant encoding, virtue or waste? |
+| 84 | Three families of colour map · summary | All three lit again: the data's structure picks the family |
+| 85 | Classify these: the answers | Back to the predictions from slide 62: each family, and why two are debatable |
+
+## Part 7 · Mean: what does colour say?
+
+Each claim is followed by our own example, so students see the effect on a chart.
+
+| # | Slide | What it contains |
+|---|---|---|
+| 86 | What does colour say? | Section divider |
+| 87 | Psychological impact | Your warm/cool wheel beside the brand-psychology guide: warm for energy, cool for calm, as associations, not laws |
+| 88 | Warm or cool: does colour change the message? | Our example: TfL 2024 monthly hires as the same bars in red and in blue. Which looks like a problem? |
+| 89 | Colours by culture | The Colours by Culture chart, full screen; red means danger in the West and luck in China, on the flip side |
+| 90 | Same map, two audiences | Our example: one illustrative seat map. Red means Labour in London and the Republicans in Washington |
+| 91 | Culture changes the reading | Our example: one price series in Western (green up) and Chinese (red up) conventions. Illustrative |
+| 92 | Colour psychology: handle with care | The colour-psychology infographic tagged POPULAR CLAIMS, with Jonauskaite et al. (2020) on the flip side |
+| 93 | Colour adds a judgement | Our example: real TfL change on 2023 in traffic-light red/green against neutral blue/orange |
+| 94 | Use the colour the concept already has | Fruit bars with matched colours against shuffled ones (Lin et al., 2013). Illustrative numbers |
+| 95 | Darker means more… usually | The same TfL heatmap on white and on black: dark-is-more can flip (Schloss et al., 2019) |
+| 96 | House palettes: two philosophies | NYT, FT and Economist palette wheels: flexible against brand-led |
+| 97 | Brand colour in action | Netflix vs HBO: brand colours used to highlight, and light vs dark orange used to measure |
+
+## Part 8 · Check: who can't read your chart?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 98 | Who can't read your chart? | Section divider |
+| 99 | Who can't read your chart? | The four-way colour-blindness chart from Part 2 again: "what would you change?" |
+| 100–101 | Don't rely on colour alone | Weekday vs Sunday hires in red and green, with a deuteranopia inset, then fixed with lightness, dashes and labels. WCAG 1.4.1, 1.4.11 and 1.4.3 |
+| 102 | Redundant encoding toolkit | One chart four ways: direct labels, line style, lightness differences, annotation |
+| 103 | The two tests | Greyscale (equal-lightness palette fails, varied passes) and colour blindness (red–green fails, blue–orange passes), plus how to run each |
+
+## Part 9 · Build: how do you build it?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 104 | How do you build it? | Section divider |
+| 105 | Tools, matched to the job | ColorBrewer, Colorgorical, chroma.js, Adobe Color and the colour-name analyser, with screenshots; a pair activity in the notes |
+| 106 | Six palette types | Figma's six harmonies, full screen, with a one-line definition of each on the flip side |
+| 107 | Six palette types, six data jobs | Bird's-eye view: all six on real data, each with its wheel, job and verdict |
+| 108–113 | Six palette types · one each *(opt)* | Zooms: monochromatic, analogous, complementary, split-complementary, triadic, square |
+| 114 | Six palette types · summary | Bird's-eye again: harmonies pick hues within the family the data chose |
+| 115 | Palette lab: pick it, harmonise it, test it | Pairs, 8 minutes: decide the family, pick on ColorBrewer, harmonise on Adobe Color (student account), test on the chroma.js helper. From the 2025 deck's own activities |
+| 116 | Palette lab: your dataset | The five classify datasets numbered for pairs, the three URLs, and an 8-minute on-screen timer |
+| 117 | Palette lab: share | Sentence frame: "We used [scheme] because the data is [type], and it [passed / failed] the test because [reason]" |
+| 118 | Colour in Altair | The five code patterns (viridis, redblue with domainMid, tableau10, alt.condition, quantile), each tagged with its job |
+
+## Part 10 · Fix: can you fix it?
+
+| # | Slide | What it contains |
+|---|---|---|
+| 119 | Can you fix it? | Section divider |
+| 120 | Fix the opening maps | The three cases with the group task: data type and task, family and why, one accessibility fix |
+| 121 | Fix the opening maps: our answers | The expected fix for each case: for Case C, sorting beats any colour |
+| 122 | Colour checklist | Eight questions, each tagged with the part of the lecture that taught it. It is also the Lab 4 rubric |
+| 123 | The power of colour *(opt, or homework)* | YouTube video "Unlocking the Secrets of Color in Data Visualization" (about 11 min) |
+| 124 | Klee quote | "Colour is the place where our brain and the universe meet": meet the data, not the palette |
+| 125 | Questions? | Q&A |
+| 126 | Next: Lab 4 · Colour in Altair | Recolour the three cases, test them, build a house palette; the checklist is the rubric |
+
+## Still to do
+
+- Warming Stripes (75) needs the official image from showyourstripes.info.
+- Every plan slide is now built.
