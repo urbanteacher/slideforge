@@ -1,0 +1,63 @@
+{
+  "title": "Which Chart? Think Before You Draw",
+  "engine": "edge",
+  "voice": "en-GB-RyanNeural",
+  "rate": "+8%",
+  "macVoice": "Daniel",
+  "macRate": 165,
+  "gap": 0.55,
+  "scenes": [
+    { "id": "open", "lead": 0.8, "tail": 1.6, "lines": [
+      ["o1", "You've got the data. You've got a deadline. And you've got a menu full of charts."],
+      ["o2", "So which one do you pick?"],
+      ["o3", "Most of us pick the one that looks right. Let's rewind."]
+    ]},
+    { "id": "nest", "lead": 0.6, "tail": 1.0, "lines": [
+      ["n1", "Tamara Munzner describes design as four nested layers. The domain: who the readers are, and what they care about. The data and task abstraction. The visual encoding. And the algorithm that draws it."],
+      ["n2", "Each layer depends on the one around it. Jump straight to the chart, and you can build something polished that answers the wrong question."],
+      ["n3", "So we'll walk three signposts, in order. What. Why. And how."]
+    ]},
+    { "id": "what", "lead": 0.6, "tail": 1.2, "lines": [
+      ["w1", "First: what is the data? Every row is an item. Here, one day of bike hires. Every column is an attribute."],
+      ["w2", "And every attribute has a type. Day type is categorical: weekday, Saturday, Sunday. There's no order to them."],
+      ["w3", "Try sorting them from smallest to largest, and the labels just shrug."],
+      ["w4", "Month is ordered. And it's time: one moment leads to the next."],
+      ["w5", "Number of hires is quantitative. You can measure it, add it, and say one month had more than another."],
+      ["w6", "N, O, or Q. And is it time?"]
+    ]},
+    { "id": "why", "lead": 0.6, "tail": 1.2, "lines": [
+      ["y1", "Second: why is the reader looking? Imagine two readers with the same table."],
+      ["y2", "One asks: which month was busiest? The other: do busier months mean longer rides?"],
+      ["y3", "Munzner splits every task into an action and a target. Compare the months, and your target is the extremes. Check whether two measures move together, and your target is a relationship."],
+      ["y4", "Same data. Different job. Different chart. Most jobs you'll meet sit on one of four cards: compare and rank, part of a whole, trend over time, and relationship."]
+    ]},
+    { "id": "how", "lead": 0.6, "tail": 1.2, "lines": [
+      ["h1", "Third, and only now: how should it look? A chart is made of marks, like dots, lines and bars, whose appearance changes to carry the data. Those changes are channels."],
+      ["h2", "People read some channels far more accurately than others. Position along a shared axis is the best we have. Then position on separate axes. Then length. Angle and area sit much lower, and colour lower still."],
+      ["h3", "Munzner's two rules are simple. Be expressive: show what's in the data, and nothing that isn't. Be effective: give your most important attribute the most accurate channel."]
+    ]},
+    { "id": "pie", "lead": 0.6, "tail": 1.2, "lines": [
+      ["p1", "Let's test it. Here are TfL's 2024 cycle hires, month by month, drawn twice. The question: which month was busiest?"],
+      ["p2", "On the pie, you're comparing angles, and twelve slices look almost the same. On the bar, every length shares a baseline, so you can rank them: July, just ahead of August and June."],
+      ["p3", "One category, one number each. Both charts can show it, so the type doesn't decide. The task does. To compare twelve months, you want length on a common baseline. That's a bar."],
+      ["p4", "Now a different question: what share of the year's hires came on weekdays, Saturdays and Sundays?"],
+      ["p5", "Three parts that really do add up to a whole. Here, a pie does its one job well. Three quarters of all hires were on weekdays."],
+      ["p6", "Few parts. A real hundred per cent. Otherwise, bar is your default."]
+    ]},
+    { "id": "line", "lead": 0.6, "tail": 1.4, "lines": [
+      ["l1", "Two numbers on two axes. Line, or scatter? Ask whether your points form a sequence."],
+      ["l2", "Months follow one another, so a line says, honestly: this continues into that. Hires climb through spring, peak in July, and fall away by December."],
+      ["l3", "Now each dot is one month's pair of measures: how many hires, and the average hire time in minutes. The question is whether busier months mean longer rides."],
+      ["l4", "They do. The dots rise together, from about fifteen minutes in winter to nineteen in summer."],
+      ["l5", "Join the dots in month order, and the line runs up, then doubles back over itself. It tells a story about time that this chart was never asking. That's the expressiveness rule at work."]
+    ]},
+    { "id": "routine", "lead": 0.6, "tail": 1.4, "lines": [
+      ["r1", "So, before you open the chart menu, walk the path."],
+      ["r2", "One: what are my items, and what are my attributes? Two: what type is each one? N, O, or Q, and is it time? Three: what must the reader do? Choose the chart whose strongest channel, position first, serves that task."],
+      ["r3", "What is it. Why are they looking. And only then, how should it look. Do that, and the chart picks itself."]
+    ]},
+    { "id": "end", "lead": 0.6, "tail": 12.0, "lines": [
+      ["e1", "Your turn. Four new data sets. Which chart, and why?"]
+    ]}
+  ]
+}

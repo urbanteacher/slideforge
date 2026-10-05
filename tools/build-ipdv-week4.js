@@ -1803,6 +1803,18 @@ const LESSON = {
       ...(i ? { transition: 'none' } : {}),
       notes: i ? step : PIPELINE_NOTES })),
 
+    /* The bridge from Week 3: students knew the data types but not how they
+       lead to a chart. Drawn, narrated and stitched by tools/video-which-chart/. */
+    { type: 'video', title: 'Which chart? Think before you draw',
+      subtitle: '5-minute explainer · Munzner’s What, Why, How on TfL 2024 data',
+      video: asset('which-chart.mp4'), videoPoster: asset('which-chart-poster.jpg'), design: { capStyle: 'none' },
+      notes: '5 min. WHY: slide 3 ends at "pick the chart", and students struggle to get from data types to a chart choice (pie or bar, line or scatter). ' +
+        'WHAT: a 5-minute explainer in three signposts. WHAT: items, attributes and N, O, Q, and is it time? WHY: action plus target. HOW: the channel ranking, then expressive and effective. ' +
+        'It then tests both questions on the Lab 1 TfL 2024 file. HOW: play it straight through; it ends on four new scenarios.\n' +
+        'HANDS UP on the end card, then ask for the reason. 1 Week split (4 parts, sums to 100%): a pie can work, a 100% stacked bar compares better. ' +
+        '2 Rent in eight boroughs: a sorted bar. 3 Temperature across October: a line, because days are a sequence. 4 Hours against mark: a scatter, because each dot is a pair of measures with no order.\n' +
+        'Every bar and dot is plotted from the real file. Average hire time is the file’s mean per month.' },
+
     { type: 'content', title: 'By the end of today you can',
       bullets: [
         'Explain\thow your eyes turn light into colour, and why colour is always relative',

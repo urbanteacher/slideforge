@@ -1,0 +1,615 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Which Chart? scenes</title>
+<style>
+  html,body{margin:0;background:#fdfcf8;overflow:hidden}
+  svg{display:block;width:1920px;height:1080px}
+</style></head>
+<body>
+<svg id="stage" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"></svg>
+<script>
+/* "Which Chart? Think Before You Draw": every frame is a pure function of the
+   time t, so render.mjs can ask for frame n in any order, in any number of
+   pages. window.TL (the narration timeline) is injected before the first
+   renderAt(t). Black ink, one purple accent; the only red is the cold-open
+   stamp. Every chart is plotted from TfL's 2024 Santander Cycles figures. */
+
+const INK = '#1d1d1f', GREY = '#8a8a8f', FAINT = '#e6e3dc', PUR = '#6a3fd1',
+      PUR_SOFT = 'rgba(106,63,209,.16)', RED = '#cf3a2e', PAPER = '#fdfcf8';
+const HAND = "'Chalkboard SE','Chalkboard','Comic Sans MS',cursive";
+
+/* 2024, from lessons/tfl-daily-cycle-hires.xlsx */
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const HIRES = [558837,568039,647372,685246,822970,869330,883624,871747,791965,830977,711622,526509];
+const MINS  = [15,15,16,16,18,19,19,18,17,16,15,15];       /* Average Hire Time (mins), a mean */
+const DAYTYPE = [['Weekday',6639188],['Saturday',1117917],['Sunday',1011133]];
+const DAILY = [["Mon 01 Jan",8212],["Tue 02 Jan",9769],["Wed 03 Jan",15255],["Thu 04 Jan",12987],["Fri 05 Jan",15430],["Sat 06 Jan",13370],["Sun 07 Jan",11508],["Mon 08 Jan",17428],["Tue 09 Jan",20665],["Wed 10 Jan",20887],["Thu 11 Jan",21096],["Fri 12 Jan",18811],["Sat 13 Jan",14698],["Sun 14 Jan",12909],["Mon 15 Jan",20275],["Tue 16 Jan",22379],["Wed 17 Jan",22084],["Thu 18 Jan",21403],["Fri 19 Jan",18804],["Sat 20 Jan",14573],["Sun 21 Jan",11607],["Mon 22 Jan",21077],["Tue 23 Jan",20436],["Wed 24 Jan",24682],["Thu 25 Jan",24677],["Fri 26 Jan",21669],["Sat 27 Jan",16959],["Sun 28 Jan",15540],["Mon 29 Jan",22839],["Tue 30 Jan",22303],["Wed 31 Jan",24505],["Thu 01 Feb",24839],["Fri 02 Feb",21427],["Sat 03 Feb",17434],["Sun 04 Feb",14998],["Mon 05 Feb",22260],["Tue 06 Feb",23315],["Wed 07 Feb",23542],["Thu 08 Feb",12260],["Fri 09 Feb",17511]];
+const JUNE = [["Fri 07 Jun",'Weekday',28592],["Sat 08 Jun",'Saturday',26163],["Sun 09 Jun",'Sunday',25644],["Mon 10 Jun",'Weekday',23647],["Tue 11 Jun",'Weekday',29836],["Wed 12 Jun",'Weekday',30467],["Thu 13 Jun",'Weekday',27347]];
+
+let T = 0, BOIL = 0;
+
+/* ---------- time ---------- */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = x => { x = clamp(x); return x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };
+const back = x => { x = clamp(x); const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const prog = (a, d = .8) => ease((T - a) / d);
+const lin = (a, d = .8) => clamp((T - a) / d);
+const fadeIO = (a, b, d = .35) => Math.min(lin(a, d), 1 - lin(b - d, d));
+const A = id => TL.lines[id].start, E = id => TL.lines[id].end;
+const at = (id, f) => A(id) + f * (E(id) - A(id));
+const SC = id => TL.scenes.find(s => s.id === id);
+
+/* ---------- ink ---------- */
+function hash(...a) { let h = 2166136261; for (const v of a) { h ^= Math.round(v * 7) | 0; h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { let s = seed || 1; return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return ((s >>> 0) % 100000) / 100000; }; }
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* A polyline through pts, cut into ~36px pieces and nudged a little, with
+   the nudge re-rolled six times a second: the "boil" of a hand-drawn film. */
+function wpath(pts, closed, amp = 1.5) {
+  const r = rng(hash(pts[0][0], pts[0][1], pts.length, BOIL));
+  const all = closed ? pts.concat([pts[0]]) : pts;
+  let d = '', first = true;
+  for (let i = 0; i < all.length - 1; i++) {
+    const [x1, y1] = all[i], [x2, y2] = all[i + 1];
+    const n = Math.max(1, Math.round(Math.hypot(x2 - x1, y2 - y1) / 36));
+    for (let k = (i === 0 ? 0 : 1); k <= n; k++) {
+      const f = k / n, edge = (k === 0 || k === n);
+      const j = edge ? amp * .5 : amp;
+      const x = x1 + (x2 - x1) * f + (r() - .5) * 2 * j, y = y1 + (y2 - y1) * f + (r() - .5) * 2 * j;
+      d += (first ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+      first = false;
+    }
+  }
+  return d + (closed ? 'Z' : '');
+}
+function stroke(d, p, o = {}) {
+  if (p <= 0) return '';
+  const w = o.w || 4, c = o.c || INK, op = o.op == null ? 1 : o.op;
+  const dash = o.dash ? ` stroke-dasharray="${o.dash}"` : (p < 1 ? ` pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="${(1 - p).toFixed(4)}"` : '');
+  const fill = o.fill && p > .6 ? `<path d="${d}" fill="${o.fill}" opacity="${(clamp((p - .6) / .4) * (o.fillOp == null ? 1 : o.fillOp) * op).toFixed(3)}" stroke="none"/>` : '';
+  return fill + `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"${dash}/>`;
+}
+const L = (x1, y1, x2, y2, p = 1, o) => stroke(wpath([[x1, y1], [x2, y2]], false, o && o.amp), p, o);
+const P = (pts, p = 1, o = {}) => stroke(wpath(pts, !!o.closed, o.amp), p, o);
+const R = (x, y, w, h, p = 1, o = {}) => stroke(wpath([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], true, o.amp), p, o);
+function circlePts(cx, cy, r, a0 = -Math.PI / 2, a1 = a0 + Math.PI * 2, n) {
+  n = n || Math.max(12, Math.round(Math.abs(a1 - a0) * r / 22));
+  const pts = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+  return pts;
+}
+const C = (cx, cy, r, p = 1, o = {}) => stroke(wpath(circlePts(cx, cy, r), false, o.amp == null ? 1.2 : o.amp), p, o);
+function wedge(cx, cy, r, a0, a1, p = 1, o = {}) {
+  return stroke(wpath([[cx, cy]].concat(circlePts(cx, cy, r, a0, a1)), true, 1.2), p, o);
+}
+function arrow(x1, y1, x2, y2, p = 1, o = {}) {
+  const a = Math.atan2(y2 - y1, x2 - x1), s = o.head || 22;
+  const hx = x1 + (x2 - x1) * p, hy = y1 + (y2 - y1) * p;
+  let out = L(x1, y1, x2, y2, p, o);
+  if (p > .85) out += P([[x2 - s * Math.cos(a - .45), y2 - s * Math.sin(a - .45)], [x2, y2], [x2 - s * Math.cos(a + .45), y2 - s * Math.sin(a + .45)]], (p - .85) / .15, o);
+  return out;
+}
+/* Hand lettering. o.p types it out a character at a time. */
+function tx(x, y, s, o = {}) {
+  const op = o.op == null ? 1 : o.op; if (op <= 0) return '';
+  let str = String(s);
+  if (o.p != null) { if (o.p <= 0) return ''; str = str.slice(0, Math.ceil(str.length * clamp(o.p))); }
+  const rot = o.rot ? ` transform="rotate(${o.rot} ${x} ${y})"` : '';
+  return `<text x="${x}" y="${y}" font-family="${o.font || HAND}" font-size="${o.size || 40}" font-weight="${o.weight || 400}" fill="${o.c || INK}" text-anchor="${o.anchor || 'start'}" opacity="${op}"${o.ls ? ` letter-spacing="${o.ls}"` : ''}${rot}>${esc(str)}</text>`;
+}
+const typed = (t0, s, cps = 30) => clamp((T - t0) * cps / Math.max(1, String(s).length));
+const g = (inner, o = {}) => {
+  const op = o.op == null ? 1 : o.op; if (op <= 0 || !inner) return '';
+  return `<g opacity="${op.toFixed(3)}"${o.tf ? ` transform="${o.tf}"` : ''}>${inner}</g>`;
+};
+const fmt = n => n.toLocaleString('en-GB');
+
+/* ---------- recurring pieces ---------- */
+function title(s, t0, o = {}) { return tx(o.x || 120, o.y || 120, s, { size: o.size || 58, weight: 700, p: typed(t0, s, 34) }); }
+function cite(s, t0) { return tx(120, 1050, s, { size: 24, c: GREY, op: lin(t0, .6) }); }
+function dataTag(t0) { return tx(1800, 1050, 'Data: TfL Santander Cycles hires, 2024', { size: 24, c: GREY, anchor: 'end', op: lin(t0, .6) }); }
+function student(x, y, p = 1, s = 1) {
+  return g(C(x, y - 170 * s, 36 * s, prog(0, 1) * 0 + p) +
+    L(x, y - 132 * s, x, y - 40 * s, clamp(p * 1.5 - .2)) +
+    L(x, y - 40 * s, x - 34 * s, y + 50 * s, clamp(p * 1.5 - .4)) + L(x, y - 40 * s, x + 34 * s, y + 50 * s, clamp(p * 1.5 - .4)) +
+    L(x, y - 105 * s, x + 70 * s, y - 70 * s, clamp(p * 1.5 - .3)) + L(x, y - 105 * s, x - 50 * s, y - 60 * s, clamp(p * 1.5 - .3)));
+}
+function signpost(x, y, label, p, active, s = 1) {
+  if (p <= 0) return '';
+  const bw = 190 * s, bh = 78 * s, by = y - 210 * s;
+  return L(x, y, x, by + bh, p) +
+    R(x - bw / 2, by, bw, bh, clamp(p * 1.4 - .3), { fill: active ? PUR : PAPER, c: active ? PUR : INK, w: 4 }) +
+    tx(x, by + bh * .68, label, { size: 42 * s, weight: 700, anchor: 'middle', c: active ? '#fff' : INK, op: clamp(p * 2 - 1), ls: 2 });
+}
+function dottedPath(pts, p, o = {}) {
+  /* dots laid along a polyline; p reveals them in order */
+  if (p <= 0) return '';
+  const segs = []; let total = 0;
+  for (let i = 0; i < pts.length - 1; i++) { const l = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); segs.push(l); total += l; }
+  let out = '', step = o.step || 26, n = Math.floor(total / step), shown = Math.floor(n * clamp(p));
+  for (let k = 0; k <= shown; k++) {
+    let d = k * step, i = 0; while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; }
+    const f = clamp(d / segs[i]), x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f;
+    out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${o.r || 5}" fill="${o.c || PUR}" opacity="${o.op == null ? 1 : o.op}"/>`;
+  }
+  return out;
+}
+function curve(x1, y1, cx, cy, x2, y2, n = 30) {
+  const pts = []; for (let i = 0; i <= n; i++) { const t = i / n; pts.push([(1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * x2, (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * y2]); }
+  return pts;
+}
+/* The three signposts in the top-right corner of WHAT, WHY and HOW. */
+function strip(active, t0) {
+  const p = prog(t0, .9);
+  let out = dottedPath(curve(1180, 150, 1500, 120, 1840, 150), p, { r: 4, step: 22 });
+  ['WHAT', 'WHY', 'HOW'].forEach((l, i) => { out += signpost(1300 + i * 220, 160, l, prog(t0 + .2 + i * .12, .6), i === active, .55); });
+  const x = 1300 + active * 220;
+  out += `<circle cx="${x}" cy="${168}" r="11" fill="${PUR}" opacity="${p}"/>`;
+  return out;
+}
+function tick(x, y, s, p, c = PUR) { return P([[x - s * .5, y], [x - s * .12, y + s * .4], [x + s * .6, y - s * .55]], p, { c, w: 9 }); }
+function cross(x, y, s, p, c = INK, w = 8) { return L(x - s, y - s, x + s, y + s, clamp(p * 2), { c, w }) + L(x + s, y - s, x - s, y + s, clamp(p * 2 - 1), { c, w }); }
+function chip(x, y, label, value, p) {
+  if (p <= 0) return '';
+  const w = 270, h = 64;
+  return g(R(x, y, w, h, 1, { fill: PAPER, w: 3 }) + tx(x + 18, y + 26, label, { size: 20, c: GREY, weight: 700, ls: 2 }) +
+    tx(x + 18, y + 54, value, { size: 30, c: PUR, weight: 700 }), { op: p, tf: `translate(0 ${((1 - p) * -40).toFixed(1)})` });
+}
+/* Mini chart icons for task cards and the menu. */
+function iconBar(x, y, s, p, hi) { let o = L(x, y + s, x + s, y + s, p, { w: 3 }); [.5, .9, .65, .3].forEach((h, i) => { o += R(x + i * s * .25 + 4, y + s * (1 - h), s * .17, s * h, clamp(p * 1.3 - .1 * i), { w: 3, fill: hi && i === 1 ? PUR : null }); }); return o; }
+function iconPie(x, y, s, p) { const cx = x + s / 2, cy = y + s / 2, r = s / 2; return C(cx, cy, r, p, { w: 3 }) + L(cx, cy, cx, cy - r, p, { w: 3 }) + L(cx, cy, cx + r * .87, cy + r * .5, p, { w: 3 }) + L(cx, cy, cx - r * .95, cy + r * .3, p, { w: 3 }); }
+function iconLine(x, y, s, p) { return L(x, y + s, x + s, y + s, p, { w: 3 }) + P([[x, y + s * .8], [x + s * .3, y + s * .5], [x + s * .55, y + s * .62], [x + s, y + s * .15]], p, { w: 4, c: PUR }); }
+function iconDots(x, y, s, p) { let o = L(x, y + s, x + s, y + s, p, { w: 3 }) + L(x, y, x, y + s, p, { w: 3 }); [[.15, .8], [.3, .62], [.45, .7], [.55, .45], [.7, .4], [.85, .2], [.6, .3]].forEach(([a, b], i) => { o += `<circle cx="${x + a * s}" cy="${y + b * s}" r="${s * .045}" fill="${PUR}" opacity="${clamp(p * 2 - i * .1)}"/>`; }); return o; }
+
+/* ---------- scenes ---------- */
+function sOpen() {
+  const real = T, rs = E('o3') - .15;
+  let rew = 0;
+  if (T > rs) { rew = clamp((T - rs) / 1.25); T = rs * (1 - ease(rew)); }
+  let o = '';
+  o += student(250, 800, prog(.2, 1.2), 1.15);
+  o += R(500, 150, 1150, 700, prog(.4, 1), { w: 5 });
+  o += tx(530, 200, 'tfl-daily-cycle-hires.xlsx', { size: 30, c: GREY, op: lin(1.1, .5) });
+  o += L(500, 220, 1650, 220, prog(.9, .7), { w: 3 });
+  /* thousands of rows scrolling */
+  if (T > 1.3) {
+    const off = Math.max(0, T - 1.8) * 160;
+    let rows = tx(560, 270, 'Day', { size: 30, weight: 700 }) + tx(1000, 270, 'Number of Bicycle Hires', { size: 30, weight: 700 });
+    let body = '';
+    for (let i = 0; i < 60; i++) {
+      const y = 330 + i * 48 - off % (48 * 40);
+      const r = DAILY[i % 40];
+      if (y < 300 || y > 830) continue;
+      body += tx(560, y, r[0], { size: 28 }) + tx(1000, y, fmt(r[1]), { size: 28 }) + `<line x1="540" x2="1620" y1="${y + 14}" y2="${y + 14}" stroke="${FAINT}" stroke-width="2"/>`;
+    }
+    o += g(rows + body, { op: lin(1.3, .5) });
+  }
+  /* the chart menu */
+  const mt = at('o1', .6);
+  if (T > mt) {
+    const sl = back((T - mt) / .5), x = 1170 + (1 - sl) * 500;
+    let m = `<rect x="${x}" y="190" width="430" height="640" fill="${PAPER}"/>` + R(x, 190, 430, 640, 1, { w: 4 }) +
+      tx(x + 26, 240, 'Insert chart', { size: 32, weight: 700 }) + L(x, 262, x + 430, 262, 1, { w: 3 });
+    /* a pie, a 3D donut, a rainbow line */
+    m += iconPie(x + 140, 290, 150, 1);
+    m += `<ellipse cx="${x + 215}" cy="${545}" rx="95" ry="38" fill="none" stroke="${INK}" stroke-width="3"/><ellipse cx="${x + 215}" cy="${545}" rx="38" ry="15" fill="none" stroke="${INK}" stroke-width="3"/>` +
+      L(x + 120, 545, x + 120, 580, 1, { w: 3 }) + L(x + 310, 545, x + 310, 580, 1, { w: 3 }) +
+      `<path d="M${x + 120} 580 A95 38 0 0 0 ${x + 310} 580" fill="none" stroke="${INK}" stroke-width="3"/>` + tx(x + 215, 520, '3D!', { size: 22, anchor: 'middle', c: GREY });
+    const rb = ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa'];
+    const lp = [[x + 120, 770], [x + 160, 700], [x + 200, 740], [x + 240, 660], [x + 280, 720], [x + 310, 650], [x + 330, 690]];
+    for (let i = 0; i < 6; i++) m += P([lp[i], lp[i + 1]], 1, { c: rb[i], w: 7 });
+    /* cursor hovers each in turn */
+    const stops = [[at('o1', .72), 365], [E('o1') - .2, 560], [A('o2') + .35, 715]];
+    let cy = 365; stops.forEach(([t, y], i) => { if (T > t) cy = i === 0 ? y : stops[i - 1][1] + (y - stops[i - 1][1]) * ease((T - t) / .35); });
+    const hov = stops.filter(([t]) => T > t).length - 1;
+    if (hov >= 0) m += R(x + 95, [285, 485, 630][hov], 240, 160, 1, { c: PUR, w: 5 });
+    const cx = x + 330;
+    m += `<path d="M${cx} ${cy} l0 46 l12 -12 l10 22 l9 -4 l-10 -21 l17 -1 z" fill="${PAPER}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    o += m;
+  }
+  /* the stamp */
+  const st = A('o2') + .75;
+  if (T > st) {
+    const k = clamp((T - st) / .22), sc = 1.8 - .8 * k;
+    o += `<g transform="translate(960 520) rotate(-8) scale(${sc.toFixed(3)})" opacity="${k}">` +
+      `<rect x="-330" y="-95" width="660" height="190" rx="18" fill="rgba(253,252,248,.82)" stroke="${RED}" stroke-width="12"/>` +
+      `<text x="0" y="38" text-anchor="middle" font-family="${HAND}" font-size="112" font-weight="700" fill="${RED}">Which one?</text></g>`;
+  }
+  T = real;
+  if (rew > 0 && rew < 1.2) {
+    let r = `<text x="1790" y="130" text-anchor="end" font-family="${HAND}" font-size="64" font-weight="700" fill="${PUR}">◀◀ rewind</text>`;
+    const rr = rng(hash(Math.floor(T * 25)));
+    for (let i = 0; i < 6; i++) { const y = rr() * 1080; r += `<rect x="0" y="${y.toFixed(0)}" width="1920" height="${(2 + rr() * 6).toFixed(0)}" fill="${INK}" opacity="${(.05 + rr() * .08).toFixed(2)}"/>`; }
+    o += g(r, { op: 1 - clamp((rew - .85) / .15) });
+  }
+  return o;
+}
+
+function sNest() {
+  const s = SC('nest'); let o = '';
+  o += title('Where did you start?', s.start + .2);
+  const boxes = [
+    [110, 175, 1010, 800, 'Domain situation', 'who reads it · what they care about', .2],
+    [175, 285, 880, 640, 'Data & task abstraction', 'WHAT is it?  WHY are they looking?', .52],
+    [240, 395, 750, 480, 'Visual encoding & interaction', 'HOW: the chart itself', .68],
+    [305, 505, 620, 260, 'Algorithm', 'the code that draws it', .84]];
+  const glow = at('n2', .5);
+  boxes.forEach(([x, y, w, h, a, b, f], i) => {
+    const t0 = at('n1', f), isAbs = i === 1 && T > glow;
+    const pulse = isAbs ? .55 + .45 * Math.sin((T - glow) * 5) : 1;
+    o += R(x, y, w, h, prog(t0, .9), { w: isAbs ? 8 : 4, c: isAbs ? PUR : INK, fill: isAbs ? PUR_SOFT : null, fillOp: isAbs ? pulse : 1 });
+    o += tx(x + 28, y + 50, a, { size: 34, weight: 700, op: lin(t0 + .4, .4), c: isAbs ? PUR : INK });
+    o += tx(x + 28, y + 88, b, { size: 26, c: GREY, op: lin(t0 + .6, .4) });
+  });
+  if (T > glow) o += tx(800, 335, 'skipped!', { size: 36, weight: 700, c: PUR, rot: -6, op: lin(glow + .3, .3) });
+  /* the student dropped in at the chart */
+  const dt = at('n2', .32);
+  if (T > dt) {
+    const k = clamp((T - dt) / .55), y = -40 + (848 - -40) * (1 - Math.pow(1 - k, 3));
+    o += `<circle cx="680" cy="${y.toFixed(1)}" r="20" fill="${PUR}"/>`;
+    o += arrow(1220, 840, 715, 848, prog(dt + .6, .5), { c: PUR, w: 4 }) + tx(1240, 852, 'you jumped in here', { size: 34, c: PUR, weight: 700, op: lin(dt + .9, .4) });
+  }
+  o += cite('Munzner (2009) A nested model for visualization design and validation · IEEE TVCG 15(6)', s.start + 1.5);
+  /* three signposts on the path */
+  o += dottedPath(curve(1170, 690, 1450, 640, 1840, 430), prog(A('n3') + .2, 1.6));
+  ['WHAT', 'WHY', 'HOW'].forEach((l, i) => { o += signpost(1320 + i * 200, 660 - i * 75, l, prog(at('n3', [.42, .62, .82][i]), .5), false, .85); });
+  return o;
+}
+
+function sWhat() {
+  const s = SC('what'); let o = '';
+  o += title('1 · WHAT is the data?', s.start + .2) + strip(0, s.start + .3);
+  const x0 = 130, y0 = 230, cw = [290, 270, 190, 250], rh = 66, hh = 72;
+  const xs = [x0]; cw.forEach(w => xs.push(xs[xs.length - 1] + w));
+  const tw = xs[4] - x0, th = hh + rh * 8;
+  /* highlights first, under the ink */
+  const rowT = at('w1', .22), colT = at('w1', .72);
+  if (T > rowT) o += `<rect x="${x0}" y="${y0 + hh + rh}" width="${tw}" height="${rh}" fill="${PUR_SOFT}" opacity="${lin(rowT, .4) * (1 - lin(colT, .4))}"/>`;
+  const colHi = [[colT, 3, E('w1') + .2], [at('w2', .25), 1, E('w3')], [A('w4'), 2, E('w4')], [A('w5'), 3, E('w5')]];
+  colHi.forEach(([t0, c, t1]) => { if (T > t0 && T < t1 + .4) o += `<rect x="${xs[c]}" y="${y0}" width="${cw[c]}" height="${th}" fill="${PUR_SOFT}" opacity="${fadeIO(t0, t1 + .4)}"/>`; });
+  const gp = prog(s.start + .4, 1.2);
+  o += R(x0, y0, tw, th, gp, { w: 4 });
+  o += L(x0, y0 + hh, x0 + tw, y0 + hh, gp, { w: 4 });
+  for (let c = 1; c < 4; c++) o += L(xs[c], y0, xs[c], y0 + hh + rh * 7, gp, { w: 2, c: GREY });
+  for (let r = 1; r < 8; r++) o += L(x0, y0 + hh + rh * r, x0 + tw, y0 + hh + rh * r, gp, { w: 1.5, c: FAINT, amp: .8 });
+  const tp = lin(s.start + 1.2, .6);
+  ['Date', 'Day type', 'Month', 'Hires'].forEach((h, c) => { o += tx(xs[c] + 20, y0 + 48, h, { size: 32, weight: 700, op: tp }); });
+  JUNE.forEach((r, i) => {
+    const y = y0 + hh + rh * i + 44, op = lin(s.start + 1.4 + i * .08, .4);
+    o += tx(xs[0] + 20, y, r[0], { size: 29, op }) + tx(xs[1] + 20, y, r[1], { size: 29, op }) + tx(xs[2] + 20, y, 'June', { size: 29, op }) + tx(xs[3] + 20, y, fmt(r[2]), { size: 29, op });
+  });
+  o += tx(x0 + tw / 2, y0 + hh + rh * 7 + 44, '… 366 rows, one per day of 2024', { size: 27, c: GREY, anchor: 'middle', op: lin(s.start + 2, .5) });
+  /* type tags under the columns */
+  const tags = [[1, 'N', 'categorical', at('w2', .3)], [2, 'O', 'ordered, time', at('w4', .15)], [3, 'Q', 'quantitative', at('w5', .2)]];
+  tags.forEach(([c, k, l, t0]) => {
+    const cx = xs[c] + cw[c] / 2;
+    o += arrow(cx, y0 + th + 48, cx, y0 + th + 10, prog(t0, .4), { c: PUR, w: 4, head: 14 });
+    o += tx(cx, y0 + th + 88, k, { size: 40, weight: 700, c: PUR, anchor: 'middle', op: lin(t0 + .2, .3) });
+    o += tx(cx, y0 + th + 120, l, { size: 26, weight: 700, c: PUR, anchor: 'middle', op: lin(t0 + .2, .3) });
+  });
+  /* right-hand panel, one thought at a time */
+  const px = 1230;
+  const ph1 = fadeIO(rowT, A('w3') + .1);
+  o += g(tx(px, 330, 'row', { size: 34, weight: 700, c: PUR }) + tx(px + 100, 330, '→ an item: one day', { size: 34 }) +
+    arrow(px - 20, 318, x0 + tw + 14, y0 + hh + rh * 1.5, 1, { c: PUR, w: 3, head: 14 }), { op: Math.min(ph1, lin(rowT + .2, .4)) });
+  o += g(tx(px, 410, 'column', { size: 34, weight: 700, c: PUR }) + tx(px + 140, 410, '→ an attribute', { size: 34 }), { op: Math.min(ph1, lin(colT, .4)) });
+  o += g(tx(px, 520, 'Day type has names,', { size: 34 }) + tx(px, 566, 'not amounts.', { size: 34 }), { op: Math.min(ph1, lin(at('w2', .5), .4)) });
+  /* the sorting gag */
+  const gt = A('w3'), ph2 = fadeIO(gt, A('w4') + .1);
+  if (ph2 > 0) {
+    let gg = tx(px, 330, 'sort small → large?', { size: 34, weight: 700 });
+    ['Weekday', 'Saturday', 'Sunday'].forEach((l, i) => {
+      const k = clamp((T - gt - .3 - i * .2) / .4), sh = T > at('w3', .55) ? Math.sin((T - gt) * 14 + i * 2) * 9 : 0;
+      const cx = px + 95 + i * 210;
+      gg += g(R(cx - 90, 400, 180, 80, 1, { w: 4, fill: PAPER }) + tx(cx, 452, l, { size: 30, anchor: 'middle' }), { op: k, tf: `rotate(${sh.toFixed(2)} ${cx} 440)` });
+      if (i < 2) gg += tx(cx + 105, 452, '<', { size: 40, anchor: 'middle', c: GREY, op: k });
+    });
+    gg += tx(px + 300, 600, '¯\\_(ツ)_/¯', { size: 64, anchor: 'middle', op: lin(at('w3', .55), .3) });
+    gg += tx(px + 300, 680, 'no natural order', { size: 34, anchor: 'middle', c: PUR, weight: 700, op: lin(at('w3', .7), .3) });
+    o += g(gg, { op: ph2 });
+  }
+  /* time */
+  const ph3 = fadeIO(A('w4'), A('w5') + .1);
+  if (ph3 > 0) {
+    let gg = tx(px, 330, 'Month comes in order,', { size: 34 }) + tx(px, 376, 'and each leads to the next', { size: 34 });
+    gg += dottedPath([[px, 470], [px + 560, 470]], prog(A('w4') + .4, 1.2), { c: INK, r: 3 });
+    ['Jan', 'Feb', 'Mar', 'Apr', '…'].forEach((m, i) => { gg += `<circle cx="${px + 20 + i * 130}" cy="470" r="9" fill="${PUR}" opacity="${lin(A('w4') + .4 + i * .2, .3)}"/>` + tx(px + 20 + i * 130, 515, m, { size: 28, anchor: 'middle', op: lin(A('w4') + .4 + i * .2, .3) }); });
+    gg += tx(px, 610, 'neighbours belong together', { size: 32, c: PUR, weight: 700, op: lin(at('w4', .65), .3) });
+    o += g(gg, { op: ph3 });
+  }
+  /* measure */
+  const ph4 = lin(A('w5'), .35) * (1 - lin(s.end - .35, .35));
+  if (ph4 > 0) {
+    let gg = tx(px, 330, 'Hires can be measured:', { size: 34 });
+    gg += tx(px, 400, '30,467  (Wed 12 Jun)', { size: 32 }) + tx(px, 446, '− 26,163  (Sat 08 Jun)', { size: 32 });
+    gg += L(px, 466, px + 420, 466, prog(at('w5', .5), .4), { w: 3 });
+    gg += tx(px, 512, '= 4,304 more hires', { size: 34, weight: 700, c: PUR, op: lin(at('w5', .6), .3) });
+    o += g(gg, { op: ph4 });
+  }
+  /* the lower third */
+  const lt = A('w6');
+  if (T > lt) o += g(R(1230, 790, 590, 82, 1, { fill: PUR, c: PUR }) + tx(1525, 845, 'N · O · Q, and is it time?', { size: 44, weight: 700, c: '#fff', anchor: 'middle' }), { op: lin(lt, .3), tf: `translate(0 ${((1 - back((T - lt) / .45)) * 60).toFixed(1)})` });
+  o += dataTag(s.start + 1.5);
+  return o;
+}
+
+function bubble(x, y, w, h, tailX, tailY, lines, p) {
+  if (p <= 0) return '';
+  const pts = tailX < x
+    ? [[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y + h * .72], [tailX, tailY], [x, y + h * .42]]
+    : [[x, y], [x + w, y], [x + w, y + h * .42], [tailX, tailY], [x + w, y + h * .72], [x + w, y + h], [x, y + h]];
+  return P(pts, p, { closed: true, fill: PAPER, w: 4 }) + lines.map((l, i) => tx(x + w / 2, y + 66 + i * 52, l, { size: 42, anchor: 'middle', weight: 700, op: clamp(p * 2 - 1) })).join('');
+}
+function reader(x, y, p, flip) {
+  return C(x, y, 52, p) + `<circle cx="${x - 16 + (flip ? 6 : -6)}" cy="${y - 8}" r="5" fill="${INK}" opacity="${p}"/><circle cx="${x + 16 + (flip ? 6 : -6)}" cy="${y - 8}" r="5" fill="${INK}" opacity="${p}"/>` +
+    P(circlePts(x, y + 8, 22, .3, Math.PI - .3), p, { w: 3 }) + P(circlePts(x, y + 200, 120, Math.PI * 1.15, Math.PI * 1.85), p);
+}
+function sWhy() {
+  const s = SC('why'); let o = '';
+  o += title('2 · WHY is the reader looking?', s.start + .2) + strip(1, s.start + .3);
+  const rp = prog(at('y1', .5), .8);
+  o += reader(150, 470, rp, false) + reader(1770, 470, rp, true);
+  /* the one table both of them have */
+  const tt = at('y1', .55);
+  let tb = R(890, 205, 140, 96, 1, { w: 3 }); for (let i = 1; i < 4; i++) tb += L(890, 205 + i * 24, 1030, 205 + i * 24, 1, { w: 1.5, c: GREY }); tb += L(950, 205, 950, 301, 1, { w: 1.5, c: GREY });
+  o += g(tb + tx(960, 335, 'the same table', { size: 26, anchor: 'middle', c: GREY }), { op: lin(tt, .4) });
+  o += bubble(300, 360, 560, 170, 215, 470, ['Which month', 'was busiest?'], prog(A('y2') + .2, .6));
+  o += bubble(1060, 360, 560, 170, 1705, 470, ['Do busier months', 'mean longer rides?'], prog(at('y2', .45), .6));
+  o += chip(300, 570, 'ACTION', 'compare', lin(at('y3', .4), .4)) + chip(590, 570, 'TARGET', 'extremes', lin(at('y3', .52), .4));
+  o += chip(1060, 570, 'ACTION', 'discover', lin(at('y3', .72), .4)) + chip(1350, 570, 'TARGET', 'correlation', lin(at('y3', .84), .4));
+  const cards = [['compare · rank', iconBar], ['part of a whole', iconPie], ['trend over time', iconLine], ['relationship', iconDots]];
+  cards.forEach(([l, ic], i) => {
+    const t0 = at('y4', [.44, .6, .74, .86][i]), x = 140 + i * 420, k = prog(t0, .5);
+    if (k <= 0) return;
+    o += g(R(x, 730, 380, 230, 1, { fill: PAPER, w: 4 }) + ic(x + 30, 760, 110, 1) + tx(x + 30, 925, l, { size: 36, weight: 700 }), { op: k, tf: `translate(0 ${((1 - k) * 30).toFixed(1)})` });
+  });
+  /* each question lands on its card */
+  const lk = at('y4', .95);
+  if (T > lk - .1) {
+    o += P(curve(440, 640, 330, 690, 330, 726), prog(lk, .5), { c: PUR, w: 4, dash: '3 12' });
+    o += P(curve(1480, 640, 1560, 690, 1560, 726), prog(lk + .2, .5), { c: PUR, w: 4, dash: '3 12' });
+    o += R(140, 730, 380, 230, prog(lk, .5), { c: PUR, w: 7 }) + R(1400, 730, 380, 230, prog(lk + .2, .5), { c: PUR, w: 7 });
+  }
+  o += cite('Munzner (2014) Visualization Analysis and Design, ch. 3: actions and targets', s.start + 1.5);
+  return o;
+}
+
+function sHow() {
+  const s = SC('how'); let o = '';
+  o += title('3 · HOW should it look?', s.start + .2) + strip(2, s.start + .3);
+  /* left: marks and channels, until the two rules replace them */
+  const lop = 1 - lin(A('h3') - .2, .4);
+  if (lop > 0) {
+    let m = tx(130, 260, 'MARKS', { size: 30, weight: 700, ls: 3, c: GREY, op: lin(at('h1', .2), .3) });
+    const mt = [at('h1', .3), at('h1', .37), at('h1', .44)];
+    m += `<circle cx="200" cy="350" r="22" fill="${INK}" opacity="${lin(mt[0], .3)}"/>` + tx(200, 430, 'point', { size: 30, anchor: 'middle', op: lin(mt[0], .3) });
+    m += P([[320, 380], [380, 330], [440, 360], [500, 310]], prog(mt[1], .4), { w: 6 }) + tx(410, 430, 'line', { size: 30, anchor: 'middle', op: lin(mt[1], .3) });
+    m += R(590, 300, 90, 90, prog(mt[2], .4), { fill: PUR_SOFT, w: 4 }) + tx(635, 430, 'area', { size: 30, anchor: 'middle', op: lin(mt[2], .3) });
+    const ct = at('h1', .74);
+    m += tx(130, 530, 'CHANNELS', { size: 30, weight: 700, ls: 3, c: GREY, op: lin(ct, .3) });
+    const w = Math.sin((T - ct) * 2.2) * .5 + .5, cp = lin(ct + .2, .4);
+    let ch = '';
+    ch += L(140, 680, 300, 680, 1, { w: 3 }) + `<circle cx="${160 + w * 120}" cy="650" r="14" fill="${PUR}"/>` + tx(220, 740, 'position', { size: 26, anchor: 'middle' });
+    ch += R(350, 680 - (40 + w * 70), 50, 40 + w * 70, 1, { w: 4 }) + tx(375, 740, 'length', { size: 26, anchor: 'middle' });
+    ch += wedge(500, 670, 60, -Math.PI / 2, -Math.PI / 2 + .5 + w * 1.4, 1, { w: 4 }) + tx(500, 740, 'angle', { size: 26, anchor: 'middle' });
+    ch += C(630, 640, 14 + w * 28, 1, { w: 4 }) + tx(630, 740, 'area', { size: 26, anchor: 'middle' });
+    ch += `<rect x="720" y="610" width="70" height="70" fill="${PUR}" opacity="${(.15 + w * .85).toFixed(2)}"/>` + R(720, 610, 70, 70, 1, { w: 3 }) + tx(755, 740, 'colour', { size: 26, anchor: 'middle' });
+    m += g(ch, { op: cp });
+    m += tx(130, 840, 'Marks carry the data; channels', { size: 32, op: lin(at('h1', .85), .4) }) + tx(130, 884, 'change how the marks look.', { size: 32, op: lin(at('h1', .85), .4) });
+    o += g(m, { op: lop });
+  }
+  /* the two rules, stamped */
+  const st = [at('h3', .25), at('h3', .6)];
+  [['BE EXPRESSIVE', 'show all of the data,', 'and only the data'], ['BE EFFECTIVE', 'most important attribute', '→ most accurate channel']].forEach(([a, b, c], i) => {
+    if (T < st[i]) return;
+    const k = clamp((T - st[i]) / .2), sc = 1.5 - .5 * k, y = 300 + i * 300;
+    o += `<g transform="translate(480 ${y}) rotate(${i ? 2 : -3}) scale(${sc.toFixed(3)})" opacity="${k}">` + R(-340, -100, 680, 220, 1, { c: PUR, w: 7 }) +
+      tx(0, -30, a, { size: 52, weight: 700, c: PUR, anchor: 'middle', ls: 3 }) + tx(0, 30, b, { size: 34, anchor: 'middle' }) + tx(0, 76, c, { size: 34, anchor: 'middle' }) + '</g>';
+  });
+  /* right: the ranking ladder */
+  const lt = A('h2'), rx1 = 1080, rx2 = 1780;
+  o += L(rx1, 250, rx1, 900, prog(lt, .8), { w: 5 }) + L(rx2, 250, rx2, 900, prog(lt + .1, .8), { w: 5 });
+  o += arrow(1020, 880, 1020, 270, prog(lt + .4, .8), { w: 4, c: GREY }) + tx(1000, 580, 'more accurate', { size: 26, c: GREY, anchor: 'middle', rot: -90, op: lin(lt + .9, .4) });
+  const rungs = [
+    ['Position on a common scale', .27], ['Position on unaligned scales', .48], ['Length', .58],
+    ['Angle · tilt', .69], ['Area', .76], ['Colour lightness · saturation', .88]];
+  rungs.forEach(([l, f], i) => {
+    const t0 = at('h2', f), y = 330 + i * 110, k = prog(t0, .45);
+    if (k <= 0) return;
+    if (i === 0) o += `<rect x="${rx1}" y="${y - 70}" width="${rx2 - rx1}" height="72" fill="${PUR_SOFT}" opacity="${k}"/>`;
+    o += L(rx1, y, rx2, y, k, { w: 4 });
+    const ix = 1110, iy = y - 58;
+    let ic = '';
+    if (i === 0) ic = L(ix, iy + 46, ix + 70, iy + 46, 1, { w: 2 }) + `<circle cx="${ix + 20}" cy="${iy + 30}" r="7" fill="${INK}"/><circle cx="${ix + 52}" cy="${iy + 14}" r="7" fill="${INK}"/>`;
+    if (i === 1) ic = L(ix, iy + 46, ix + 28, iy + 46, 1, { w: 2 }) + L(ix + 40, iy + 30, ix + 70, iy + 30, 1, { w: 2 }) + `<circle cx="${ix + 14}" cy="${iy + 26}" r="7" fill="${INK}"/><circle cx="${ix + 56}" cy="${iy + 10}" r="7" fill="${INK}"/>`;
+    if (i === 2) ic = L(ix, iy + 18, ix + 44, iy + 18, 1, { w: 8 }) + L(ix + 14, iy + 40, ix + 70, iy + 40, 1, { w: 8 });
+    if (i === 3) ic = L(ix + 4, iy + 46, ix + 66, iy + 46, 1, { w: 3 }) + L(ix + 4, iy + 46, ix + 60, iy + 8, 1, { w: 3 });
+    if (i === 4) ic = C(ix + 18, iy + 30, 13, 1, { w: 3 }) + C(ix + 52, iy + 26, 19, 1, { w: 3 });
+    if (i === 5) ic = [.25, .5, .8].map((a, j) => `<rect x="${ix + j * 24}" y="${iy + 12}" width="22" height="34" fill="${PUR}" opacity="${a}"/>`).join('');
+    o += g(ic, { op: k }) + tx(1200, y - 20, l, { size: 36, weight: i === 0 ? 700 : 400, c: i === 0 ? PUR : INK, op: k });
+  });
+  o += cite('Cleveland & McGill (1984) · Munzner (2014), ch. 5: channel effectiveness', A('h2'));
+  return o;
+}
+
+function sPie() {
+  const s = SC('pie'); let o = '';
+  o += title('Pie or bar?', s.start + .2);
+  const wipe = A('p4') - .3, part1 = 1 - lin(wipe, .4);
+  const total = HIRES.reduce((a, b) => a + b, 0);
+  if (part1 > 0) {
+    let q = '';
+    const qs = 'Which month was busiest?';
+    q += tx(960, 200, qs, { size: 46, weight: 700, anchor: 'middle', c: PUR, p: typed(at('p1', .7), qs, 26) });
+    /* left: twelve slices */
+    const cx = 480, cy = 610, r = 290;
+    let a = -Math.PI / 2;
+    HIRES.forEach((v, i) => {
+      const a1 = a + v / total * Math.PI * 2, t0 = at('p1', .3) + i * .1;
+      q += wedge(cx, cy, r, a, a1, prog(t0, .4), { w: 3, fill: i === 6 && T > at('p2', .55) ? PUR_SOFT : null });
+      const m = (a + a1) / 2;
+      q += tx(cx + (r + 38) * Math.cos(m), cy + (r + 38) * Math.sin(m) + 10, MONTHS[i], { size: 26, anchor: 'middle', op: lin(t0 + .3, .3) });
+      a = a1;
+    });
+    /* the eye darting across Jun, Jul, Aug */
+    const et = A('p2') + .2, ee = at('p2', .45);
+    if (T > et && T < ee + .3) {
+      const order = [6, 5, 7, 6, 5, 7, 6], k = (T - et) / (ee - et) * (order.length - 1);
+      const i0 = order[Math.min(order.length - 1, Math.floor(k))];
+      let aa = -Math.PI / 2; for (let i = 0; i < i0; i++) aa += HIRES[i] / total * Math.PI * 2;
+      const m = aa + HIRES[i0] / total * Math.PI;
+      const ex = cx + r * .62 * Math.cos(m), ey = cy + r * .62 * Math.sin(m);
+      q += g(`<ellipse cx="${ex}" cy="${ey}" rx="34" ry="20" fill="${PAPER}" stroke="${PUR}" stroke-width="4"/><circle cx="${ex}" cy="${ey}" r="9" fill="${PUR}"/>` +
+        tx(ex + 44, ey - 26, '?', { size: 46, weight: 700, c: PUR }), { op: fadeIO(et, ee + .3) });
+    }
+    /* right: twelve bars on one baseline */
+    const bx = 1010, base = 870, hmax = 560, bw = 44, step = 66;
+    const ap = prog(at('p1', .35), .8);
+    q += L(bx - 20, base, bx + step * 12, base, ap, { w: 4 }) + L(bx - 20, base, bx - 20, base - hmax - 20, ap, { w: 3 });
+    [0, 300000, 600000, 900000].forEach(v => { const y = base - v / 900000 * hmax; q += tx(bx - 32, y + 9, v ? (v / 1000) + 'k' : '0', { size: 22, anchor: 'end', c: GREY, op: ap }); if (v) q += `<line x1="${bx - 20}" x2="${bx + step * 12}" y1="${y}" y2="${y}" stroke="${FAINT}" stroke-width="2" opacity="${ap}"/>`; });
+    const hl = at('p2', .55);
+    HIRES.forEach((v, i) => {
+      const h = v / 900000 * hmax, x = bx + i * step, t0 = at('p1', .45) + i * .08;
+      q += R(x, base - h, bw, h, prog(t0, .5), { w: 3, fill: i === 6 && T > hl ? PUR : null, c: i === 6 && T > hl ? PUR : INK });
+      q += tx(x + bw / 2, base + 36, MONTHS[i][0], { size: 26, anchor: 'middle', op: lin(t0, .3) });
+    });
+    [[6, '1'], [7, '2'], [5, '3']].forEach(([i, n], j) => {
+      const t0 = hl + .3 + j * .45;
+      q += tx(bx + i * step + bw / 2, base - HIRES[i] / 900000 * hmax - 16, n, { size: 30, weight: 700, c: PUR, anchor: 'middle', op: lin(t0, .3) });
+    });
+    q += tx(1810, 262, 'Jul 883,624 · Aug 871,747 · Jun 869,330', { size: 28, anchor: 'end', c: PUR, op: lin(hl + 1.4, .4) });
+    /* the verdict */
+    const vt = at('p3', .55);
+    q += cross(480, 610, 120, prog(vt, .5), INK, 6) + tick(1862, 520, 80, prog(vt + .3, .4));
+    q += tx(960, 985, 'compare twelve values → length on a common baseline → bar', { size: 36, weight: 700, anchor: 'middle', op: lin(at('p3', .75), .4) });
+    o += g(q, { op: part1 });
+  }
+  if (T > wipe) {
+    let q = '';
+    const qs = 'What share of 2024 hires came on weekdays, Saturdays, Sundays?';
+    q += tx(960, 200, qs, { size: 42, weight: 700, anchor: 'middle', c: PUR, p: typed(A('p4') + .2, qs, 30) });
+    const sum = DAYTYPE.reduce((a, b) => a + b[1], 0), cx = 600, cy = 620, r = 300;
+    let a = -Math.PI / 2;
+    DAYTYPE.forEach(([n, v], i) => {
+      const a1 = a + v / sum * Math.PI * 2, t0 = A('p5') + .1 + i * .4, m = (a + a1) / 2;
+      q += wedge(cx, cy, r, a, a1, prog(t0, .6), { w: 4, fill: i === 0 ? PUR_SOFT : null, c: INK });
+      const pct = (100 * v / sum).toFixed(1) + '%';
+      if (i === 0) q += tx(cx - 70, cy + 70, n, { size: 40, weight: 700, anchor: 'middle', op: lin(t0 + .5, .3) }) + tx(cx - 70, cy + 120, pct, { size: 40, c: PUR, weight: 700, anchor: 'middle', op: lin(t0 + .5, .3) });
+      else { const lx = cx + (r + 30) * Math.cos(m), ly = cy + (r + 30) * Math.sin(m); q += tx(lx, ly, n + ' ' + pct, { size: 32, anchor: Math.cos(m) < 0 ? 'end' : 'start', op: lin(t0 + .5, .3) }); }
+      a = a1;
+    });
+    q += tx(600, 990, 'about three quarters on weekdays', { size: 36, anchor: 'middle', c: PUR, weight: 700, op: lin(at('p5', .75), .4) });
+    const ct = A('p6');
+    const items = ['a part-to-whole question', '2 to 5 parts', 'they sum to 100%'];
+    q += tx(1180, 420, 'A pie earns its place when:', { size: 36, weight: 700, op: lin(at('p5', .9), .4) });
+    items.forEach((l, i) => {
+      const t0 = ct + .1 + i * .55, y = 510 + i * 90;
+      q += R(1180, y - 38, 48, 48, prog(at('p5', .9) + .2, .4), { w: 4 }) + tick(1204, y - 14, 40, prog(t0, .3)) + tx(1255, y, l, { size: 36, op: lin(at('p5', .9) + .2, .4) });
+    });
+    q += tx(1180, 830, 'Otherwise, bar is your default.', { size: 38, weight: 700, c: PUR, op: lin(at('p6', .62), .4) });
+    o += g(q, { op: lin(wipe + .3, .4) });
+  }
+  o += dataTag(s.start + 1);
+  o += cite('Cleveland & McGill (1984): position and length are read more accurately than angle', s.start + 1);
+  return o;
+}
+
+function sLine() {
+  const s = SC('line'); let o = '';
+  o += title('Line or scatter?', s.start + .2);
+  const qs = 'Do your points form a sequence?';
+  o += tx(960, 200, qs, { size: 46, weight: 700, anchor: 'middle', c: PUR, p: typed(at('l1', .55), qs, 26) });
+  const ap = prog(at('l1', .2), .9);
+  /* left: hires by month */
+  const lx = 190, lb = 850, lw = 690, lh = 520, ly = v => lb - (v - 400000) / 550000 * lh, lxm = i => lx + 30 + i * (lw - 60) / 11;
+  o += L(lx, lb, lx + lw, lb, ap, { w: 4 }) + L(lx, lb, lx, lb - lh - 10, ap, { w: 4 });
+  [500000, 700000, 900000].forEach(v => { o += tx(lx - 14, ly(v) + 8, (v / 1000) + 'k', { size: 22, anchor: 'end', c: GREY, op: ap }); });
+  MONTHS.forEach((m, i) => { o += tx(lxm(i), lb + 34, m[0], { size: 24, anchor: 'middle', op: ap }); });
+  o += tx(lx + lw / 2, lb + 80, 'month', { size: 28, anchor: 'middle', c: GREY, op: ap }) + tx(lx, lb - lh - 30, 'hires per month', { size: 28, c: GREY, op: ap });
+  const lt = at('l2', .2), pts = HIRES.map((v, i) => [lxm(i), ly(v)]);
+  o += P(pts, prog(lt, 2.6), { w: 5 });
+  pts.forEach(([x, y], i) => { o += `<circle cx="${x}" cy="${y}" r="8" fill="${INK}" opacity="${lin(lt + i * .2, .2)}"/>`; });
+  o += tx(pts[6][0], pts[6][1] - 26, 'peak: July', { size: 30, weight: 700, c: PUR, anchor: 'middle', op: lin(at('l2', .62), .3) });
+  o += tx(pts[11][0] - 10, pts[11][1] + 52, 'December low', { size: 30, weight: 700, c: PUR, anchor: 'end', op: lin(at('l2', .86), .3) });
+  o += tick(800, 330, 70, prog(at('l2', .95), .4));
+  /* right: hires against average hire time */
+  const sx = 1100, sb = 850, sw = 700, sh = 520, X = v => sx + (v - 480000) / 440000 * sw, Y = m => sb - (m - 14) / 6 * sh;
+  const sp = prog(at('l1', .3), .9);
+  o += L(sx, sb, sx + sw, sb, sp, { w: 4 }) + L(sx, sb, sx, sb - sh - 10, sp, { w: 4 });
+  [500000, 600000, 700000, 800000, 900000].forEach(v => { o += tx(X(v), sb + 34, (v / 1000) + 'k', { size: 22, anchor: 'middle', c: GREY, op: sp }); });
+  [14, 16, 18, 20].forEach(m => { o += tx(sx - 14, Y(m) + 8, m, { size: 22, anchor: 'end', c: GREY, op: sp }); });
+  o += tx(sx + sw / 2, sb + 80, 'hires per month', { size: 28, anchor: 'middle', c: GREY, op: sp }) + tx(sx, sb - sh - 30, 'average hire time (mins)', { size: 28, c: GREY, op: sp });
+  const dt = at('l3', .35), spts = HIRES.map((v, i) => [X(v), Y(MINS[i])]);
+  spts.forEach(([x, y], i) => { const k = back((T - dt - i * .07) / .3); if (T > dt + i * .07) o += `<circle cx="${x}" cy="${y}" r="${(11 * k).toFixed(1)}" fill="${PUR}"/>`; });
+  [[0, 'Jan', 'end', -16, 36], [6, 'Jul', 'start', 16, -14], [11, 'Dec', 'end', -16, -8]].forEach(([i, l, an, dx, dy]) => { o += tx(spts[i][0] + dx, spts[i][1] + dy, l, { size: 26, anchor: an, c: GREY, op: lin(dt + 1, .3) }); });
+  /* they rise together */
+  const rt = A('l4') + .2, hideRise = 1 - lin(A('l5') + .2, .5);
+  if (hideRise > 0) o += g(arrow(X(560000), Y(14.6), X(880000), Y(19.6), prog(rt, .7), { c: PUR, w: 5 }) +
+    tx(X(600000), Y(17.8), 'busier months,', { size: 30, weight: 700, c: PUR, op: lin(at('l4', .45), .3) }) + tx(X(600000), Y(17.8) + 40, 'longer rides', { size: 30, weight: 700, c: PUR, op: lin(at('l4', .45), .3) }), { op: hideRise });
+  /* join the dots, and it doubles back */
+  const jt = A('l5') + .3, rub = s.end - 1.2;
+  const jop = 1 - lin(rub, .9);
+  o += g(P(spts, prog(jt, (E('l5') - A('l5')) * .35), { w: 5, c: INK }), { op: jop });
+  o += g(cross(X(700000), Y(17), 150, prog(at('l5', .55), .5), PUR, 10), { op: jop });
+  o += tx(960, 985, 'a line claims an order the question never asked for', { size: 36, weight: 700, anchor: 'middle', op: lin(at('l5', .62), .4) });
+  o += dataTag(s.start + 1);
+  return o;
+}
+
+function sRoutine() {
+  const s = SC('routine'); let o = '';
+  const pathPts = curve(160, 230, 960, 150, 1760, 230, 40);
+  o += dottedPath(pathPts, prog(s.start + .2, 1.6), { step: 28 });
+  const posts = [520, 960, 1400], hiT = [at('r3', .02), at('r3', .17), at('r3', .38)];
+  let walker = -1; hiT.forEach((t, i) => { if (T > t) walker = i; });
+  ['WHAT', 'WHY', 'HOW'].forEach((l, i) => { o += signpost(posts[i], 214, l, prog(s.start + .5 + i * .25, .5), walker === i, .7); });
+  /* the walker: along the path to whichever signpost is speaking */
+  const wx = walker < 0 ? 160 + 360 * prog(A('r1'), E('r1') - A('r1')) : posts[walker - 1 < 0 ? 0 : walker - 1] + (posts[walker] - posts[Math.max(0, walker - 1)]) * ease((T - hiT[walker]) / .5);
+  const fx = T > at('r3', .8) ? wx + (1820 - wx) * ease((T - at('r3', .8)) / 1.2) : wx;
+  o += `<circle cx="${fx.toFixed(1)}" cy="${(205 - 30 * Math.sin((fx - 160) / 1600 * Math.PI)).toFixed(1)}" r="18" fill="${PUR}"/>`;
+  /* the card */
+  const ct = A('r2') - .3, cp = prog(ct, .7);
+  o += R(230, 340, 1460, 560, cp, { w: 5, fill: PAPER });
+  o += tx(290, 420, 'Before you open the chart menu', { size: 44, weight: 700, op: lin(ct + .4, .4) });
+  const rows = [
+    [at('r2', .01), '1', 'What are my items? What are my attributes?', ''],
+    [at('r2', .22), '2', 'What type is each one? N, O or Q, and is it time?', ''],
+    [at('r2', .48), '3', 'What must the reader do? Pick the chart whose strongest', 'channel, position first, serves that task.']];
+  rows.forEach(([t0, n, a, b], i) => {
+    const y = 520 + i * 120;
+    o += g(`<circle cx="320" cy="${y - 14}" r="30" fill="${PUR}"/>` + tx(320, y, n, { size: 36, weight: 700, c: '#fff', anchor: 'middle' }), { op: lin(t0, .3) });
+    o += tx(380, y, a, { size: 38, p: typed(t0, a, 40) }) + (b ? tx(380, y + 50, b, { size: 38, p: typed(t0 + a.length / 40, b, 40) }) : '');
+  });
+  o += tx(1800, 1000, 'next slide →', { size: 34, c: PUR, weight: 700, anchor: 'end', op: lin(at('r3', .85), .4) });
+  return o;
+}
+
+function sEnd() {
+  const s = SC('end'); let o = '';
+  o += tx(960, 160, 'Which chart, and why?', { size: 76, weight: 700, anchor: 'middle', p: typed(s.start + .3, 'Which chart, and why?', 22) });
+  const cards = [['How students split a typical week:', 'sleep, study, work, everything else'], ['Average monthly rent in', 'eight London boroughs'], ['Daily high temperature in London', 'across October'], ['Hours studied against exam mark', 'for 60 students']];
+  cards.forEach(([a, b], i) => {
+    const x = 150 + (i % 2) * 830, y = 250 + Math.floor(i / 2) * 330, t0 = A('e1') + 1 + i * .5, k = prog(t0, .5);
+    if (k <= 0) return;
+    o += g(R(x, y, 790, 290, 1, { w: 4, fill: PAPER }) + `<circle cx="${x + 60}" cy="${y + 64}" r="32" fill="${PUR}"/>` + tx(x + 60, y + 78, i + 1, { size: 40, weight: 700, c: '#fff', anchor: 'middle' }) +
+      tx(x + 115, y + 80, a, { size: 36, weight: 700 }) + tx(x + 115, y + 130, b, { size: 36 }) +
+      tx(x + 115, y + 230, 'N, O or Q?  ·  the task?  ·  the channel?', { size: 28, c: GREY }), { op: k, tf: `translate(0 ${((1 - k) * 30).toFixed(1)})` });
+  });
+  o += tx(960, 985, 'Hands up, then tell your neighbour why.', { size: 40, weight: 700, c: PUR, anchor: 'middle', op: lin(A('e1') + 3.5, .5) });
+  return o;
+}
+
+const SCENES = { open: sOpen, nest: sNest, what: sWhat, why: sWhy, how: sHow, pie: sPie, line: sLine, routine: sRoutine, end: sEnd };
+
+window.renderAt = function (t) {
+  T = t; BOIL = Math.floor(t * 6);
+  let out = `<rect width="1920" height="1080" fill="${PAPER}"/>`;
+  for (const s of TL.scenes) {
+    if (t < s.start || t > s.end) continue;
+    const op = s.id === 'open' ? 1 - clamp((t - s.end + .35) / .35) : Math.min(clamp((t - s.start) / .35), 1 - clamp((t - s.end + .35) / .35));
+    out += g(SCENES[s.id](), { op });
+    T = t;
+  }
+  document.getElementById('stage').innerHTML = out;
+};
+</script>
+</body></html>
