@@ -1898,7 +1898,7 @@ const LESSON = {
        lead to a chart. Drawn, narrated and stitched by tools/video-which-chart/. */
     { type: 'video', title: 'Which chart? Think before you draw',
       subtitle: '5-minute explainer · Munzner’s What, Why, How on TfL 2024 data',
-      video: asset('which-chart.mp4'), videoPoster: asset('which-chart-poster.jpg'), design: { capStyle: 'none' },
+      video: asset('which-chart.mp4'), videoPoster: asset('which-chart-poster.jpg'), videoAutoplay: true, design: { capStyle: 'none' },
       notes: '5 min. WHY: slide 3 ends at "pick the chart", and students struggle to get from data types to a chart choice (pie or bar, line or scatter). ' +
         'WHAT: a 5-minute explainer in three signposts. WHAT: items, attributes and N, O, Q, and is it time? WHY: action plus target. HOW: the channel ranking, then expressive and effective. ' +
         'It then tests both questions on the Lab 1 TfL 2024 file. HOW: play it straight through; it ends on four new scenarios.\n' +

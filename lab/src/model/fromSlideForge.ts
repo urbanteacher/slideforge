@@ -1,4 +1,5 @@
 import { createLayer, uid } from './defaults';
+import { videoEmbed } from './video';
 import { CHART_DARK, CHART_LIGHT } from '../engine/chartKinds';
 import { EXPERIMENTS, experimentPreset } from '../engine/experiment';
 import {
@@ -350,11 +351,17 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
-      // The clip plays muted on a loop over its poster, which shows until the first frame decodes.
+      // The clip plays over its poster, which shows until the first frame decodes. It keeps the
+      // slide's sound: SlideForge's video slide is a clip to watch, not a backdrop. It plays as the
+      // slide arrives when the slide says autoplay, and otherwise waits for a press (engine/raster.ts showMedia).
       const slide = photo(st, img(s.videoPoster), t, '');
       const pic = slide.layers.find((l) => l.kind === 'image')!;
-      const clip = img((s as { video?: string }).video);
-      if (clip) slide.layers.splice(slide.layers.indexOf(pic) + 1, 0, createLayer('video', { name: 'Video', box: { ...pic.box! }, params: { src: clip, fit: 'cover' }, anim: { type: 'fade', duration: 0.6 } }));
+      if (s.design?.capStyle === 'none') bareVideo(slide);
+      const v = s as { video?: string; videoAutoplay?: boolean; videoStart?: number };
+      const clip = img(v.video);
+      if (clip) slide.layers.splice(slide.layers.indexOf(pic) + 1, 0, createLayer('video', { name: 'Video', box: { ...pic.box! },
+        params: { ...videoSound(s), src: clip, fit: 'cover', ...(Number(v.videoStart) > 0 ? { start: Number(v.videoStart) } : {}) },
+        anim: { type: 'fade', duration: 0.6 } }));
       return { slide, ground: g };
     }
     default: return null; // games and activities are SlideForge's, not the lab's
@@ -426,11 +433,39 @@ export function convertsSlide(s: SFSlide): boolean {
   try { return !!convert(s, probe.on, (p) => p ?? '', ''); } catch { return false; }
 }
 
+/** SlideForge's video slide is a clip to watch: its sound on, once through, and playing as the slide
+ *  arrives unless the slide says not to (engine/raster.ts showMedia). */
+function videoSound(s: SFSlide) {
+  return { muted: false, autoplay: (s as { videoAutoplay?: boolean }).videoAutoplay !== false, loop: false };
+}
+/** "No caption": the clip fills the slide with nothing over it, as a bare picture does. */
+function bareVideo(slide: Slide) {
+  slide.layers = slide.layers.filter((l) => !['Caption band', 'Caption', 'Caption credit'].includes(l.name));
+  const pic = slide.layers.find((l) => l.kind === 'image' && l.name === 'Picture');
+  if (pic) pic.params.capStyle = 'none';
+}
+/** A lab copy made before video slides kept their sound (version 12): each clip that came from a
+ *  SlideForge video slide and was never set either way gets it, and a "no caption" slide loses its band. */
+export function carryDeckVideo(deck: Deck, source: SFSlide[]): number {
+  const byId = new Map(source.filter((s) => s.id).map((s) => [s.id, s] as const));
+  let n = 0;
+  for (const sl of deck.slides) {
+    const s = sl.sourceSlideId ? byId.get(sl.sourceSlideId) : undefined;
+    if (!s || s.type !== 'video') continue;
+    let changed = false;
+    for (const l of sl.layers) if (l.kind === 'video' && l.params.muted === undefined && !videoEmbed(l.params)) { Object.assign(l.params, videoSound(s)); changed = true; }
+    if (changed && s.design?.capStyle === 'none') bareVideo(sl);
+    if (changed) n++;
+  }
+  return n;
+}
+
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
  *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. 8: AI Awareness Day 2027 wears its frame (strand, lockup, campaign line, page number) and its labels over the words. 9: AI Awareness Day 2027's compositions are built as its design draws them. 10: its takeaways are the lab's numbered block, its ballot the lab's choice block. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. 11: Week 3's perception
- *  demonstration gets its own preset key, leaving `channels` to the older marks demonstration. */
-export const CARRIED = 11;
+ *  demonstration gets its own preset key, leaving `channels` to the older marks demonstration. 12: a
+ *  video slide's clip keeps its sound and plays as the slide arrives; with no caption, nothing covers it. */
+export const CARRIED = 12;
 
 /** Upgrade saved layer names and the Week 3 preset without changing authored data or states. */
 export function carryDeckExperimentPresets(deck: Deck): number {

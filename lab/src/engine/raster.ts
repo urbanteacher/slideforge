@@ -767,7 +767,10 @@ function rasterModel(layer: Layer): Raster {
 // ─── Video ──────────────────────────────────────────────────────────────────
 // Videos play muted on a loop (the only way a browser will autoplay them). The renderer
 // re-uploads a video layer whenever `contentFrame` moves on, so the texture follows playback.
+// A clip with its sound on ("Start muted" off) is the show's to run instead (showMedia): it plays
+// from its start when its slide comes up and stops when the show moves on, so it is left alone here.
 const videos = new Map<string, HTMLVideoElement>();
+const voiced = new Set<string>();
 export function getVideo(src: string): HTMLVideoElement | null {
   if (!src || typeof document === 'undefined') return null;
   let v = videos.get(src);
@@ -780,11 +783,47 @@ export function getVideo(src: string): HTMLVideoElement | null {
     v.preload = 'auto';
     v.onloadeddata = bump;
     v.src = src;
-    v.play().catch(() => undefined);
+    if (!voiced.has(src)) v.play().catch(() => undefined);
     videos.set(src, v);
   }
-  if (v.paused && v.readyState >= 2) v.play().catch(() => undefined);
+  if (v.paused && v.readyState >= 2 && !voiced.has(src)) v.play().catch(() => undefined);
   return v.readyState >= 2 && v.videoWidth > 0 ? v : null;
+}
+
+/** A video layer that plays its own sound in a show: a file (not YouTube or Vimeo) with "Start muted" off. */
+export function voicedVideo(layer: Layer): boolean {
+  return layer.kind === 'video' && layer.visible && layer.params.muted === false && !!layer.params.src && !videoEmbed(layer.params);
+}
+
+/**
+ * A show's sound, for the slide it has just come to (engine/player.ts). The slide's clips with sound
+ * play, unmuted, from where they were (from their start the first time, or once one has finished)
+ * when "Play when the slide appears" is on, and wait at their start for a press when it is off. The
+ * transition does not stop them: they start as the slide arrives and carry on. Every other clip with
+ * sound is paused, so nothing talks over the next slide. `null` silences them all (the show paused or ended).
+ */
+export function showMedia(layers: Layer[] | null) {
+  const here = new Map((layers ?? []).filter(voicedVideo).map((l) => [String(l.params.src), l]));
+  for (const src of voiced) if (!here.has(src)) { const v = videos.get(src); if (v) { v.pause(); v.muted = true; } }
+  for (const [src, l] of here) {
+    voiced.add(src);
+    getVideo(src);
+    const v = videos.get(src)!;
+    v.loop = !!l.params.loop;
+    const start = Math.max(0, Number(l.params.start ?? 0));
+    if (v.ended || (v.currentTime < start && v.paused)) v.currentTime = start;
+    v.muted = false;
+    if (l.params.autoplay === false) continue;
+    // A browser can refuse sound before the page has been pressed: the clip then plays silent.
+    v.play().catch(() => { v.muted = true; v.play().catch(() => undefined); });
+  }
+}
+
+/** Play or pause a clip with sound, from a press on it in the show. */
+export function toggleMedia(layer: Layer) {
+  const v = videos.get(String(layer.params.src ?? ''));
+  if (!v) return;
+  if (v.paused) { v.muted = false; v.play().catch(() => undefined); } else v.pause();
 }
 
 /** Changes whenever a content layer needs redrawing without its params changing (a playing video). */

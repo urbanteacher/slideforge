@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { CARRIED, carryDeck27, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
+import { CARRIED, carryDeck27, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { enterView, useStore, type LabView } from './model/store';
@@ -146,6 +146,7 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   }
   if (from < 3) repairAddresses(copy);
   if (from < 7) carryDeckHidden(copy, source.slides);
+  if (from < 12) carryDeckVideo(copy, source.slides);
   copy.carried = CARRIED;
   return copy;
 }

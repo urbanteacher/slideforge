@@ -634,3 +634,27 @@ test('Week 3’s charts use the focus layout, except where the first state gives
   const keys = deck.slides.find((s) => s.sourceSlideId === src.slides.find((s) => s.title === 'Keys and values').id);
   assert.ok(keys.layers.some((l) => l.kind === 'text' && l.params.text === 'Apple + April → 82'));
 });
+
+test('a video slide comes into the lab with its sound, playing as it arrives, bare when it has no caption', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckVideo } = await converter();
+  const video = { id: 'v1', type: 'video', title: 'Which chart?', video: 'assets/clip.mp4', videoPoster: 'assets/clip.jpg', design: { capStyle: 'none' } };
+  const deck = deckFromSlideForge(asData({ id: 'd', title: 'D', theme: 'studio', slides: [video] }), 'nul', { games: '' });
+  const made = deck.slides.find((s) => s.sourceSlideId === 'v1');
+  const clip = made.layers.find((l) => l.kind === 'video');
+  assert.equal(clip.params.muted, false, 'the clip keeps its sound');
+  assert.equal(clip.params.autoplay, true, 'it plays as the slide arrives');
+  assert.equal(clip.params.loop, false, 'once through');
+  assert.ok(!made.layers.some((l) => /^Caption/.test(l.name)), 'nothing covers it');
+  // A slide that says not to autoplay waits for a press.
+  const waits = deckFromSlideForge(asData({ id: 'd', title: 'D', theme: 'studio', slides: [{ ...video, videoAutoplay: false }] }), 'nul', { games: '' });
+  assert.equal(waits.slides[0].layers.find((l) => l.kind === 'video').params.autoplay, false);
+  // A copy converted before (a clip with no sound setting, under its caption band) is brought up to date once.
+  const old = JSON.parse(JSON.stringify(deck));
+  const oldClip = old.slides[0].layers.find((l) => l.kind === 'video');
+  delete oldClip.params.muted; delete oldClip.params.autoplay; delete oldClip.params.loop;
+  old.slides[0].layers.push({ ...oldClip, id: 'band', kind: 'shape', name: 'Caption band', params: {} });
+  assert.equal(carryDeckVideo(old, [video]), 1);
+  assert.equal(oldClip.params.muted, false);
+  assert.ok(!old.slides[0].layers.some((l) => l.name === 'Caption band'));
+  assert.equal(carryDeckVideo(old, [video]), 0, 'a clip already set is left alone');
+});

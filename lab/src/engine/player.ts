@@ -1,7 +1,7 @@
 import type { Deck, Layer, Slide } from '../model/types';
 import { EASE, schedule } from './anim';
 import { ALL_KINDS } from './registry';
-import { MODEL_PLOT } from './raster';
+import { MODEL_PLOT, showMedia, toggleMedia, voicedVideo } from './raster';
 import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps } from './scene';
 import { experimentControls, experimentStates } from './experiment';
 import { hitButton } from './controls';
@@ -92,6 +92,7 @@ export class DeckPlayer {
     canvas.addEventListener('pointerup', this.onUp);
     this.loop();
     this.emit();
+    showMedia(this.slide.layers);
   }
 
   private now() { return (performance.now() - this.t0) / 1000; }
@@ -156,6 +157,8 @@ export class DeckPlayer {
     this.built = built;
     this.slideStart = this.now();
     this.emit();
+    // The new slide's clips with sound start now, as it arrives, and play on through the transition.
+    showMedia(to.layers);
   }
 
   private finishTransition() { this.trans = null; }
@@ -219,8 +222,8 @@ export class DeckPlayer {
     return out;
   }
   /** Stop drawing while SlideForge's player shows one of its own slides, and start again. */
-  pause() { this.paused = true; }
-  resume() { this.paused = false; }
+  pause() { this.paused = true; showMedia(null); }
+  resume() { if (this.paused) showMedia(this.slide.layers); this.paused = false; }
 
   // ─── On-slide controls ─────────────────────────────────────────────────────
   /** The state an experiment (−1: predict) or a scene (its step) is showing: a button's, or its clicks'. */
@@ -334,6 +337,9 @@ export class DeckPlayer {
     if (c) { if (this.opts.host) e.stopPropagation(); if (c.action !== 'slider') this.press(c.layer, c.action); return; }
     // A press on a before / after moves its handle there; it never advances the show.
     if (this.wipeAt(u, v)) { if (this.opts.host) e.stopPropagation(); return; }
+    // A press on a clip with sound plays or pauses it; it never advances the show.
+    const clip = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, voicedVideo);
+    if (clip) { if (this.opts.host) e.stopPropagation(); toggleMedia(clip); return; }
     // A press on a scene's card chooses it, or, chosen already, returns to the overview.
     const card = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'scene' && sceneIsSelectable(String(l.params.mode)));
     if (card) {
@@ -424,6 +430,7 @@ export class DeckPlayer {
 
   destroy() {
     cancelAnimationFrame(this.raf);
+    showMedia(null);
     this.ro.disconnect();
     this.canvas.removeEventListener('pointermove', this.onMove);
     this.canvas.removeEventListener('pointerleave', this.onLeave);

@@ -256,7 +256,7 @@ function VideoPanel({ layer }: { layer: Layer }) {
       <div className="picture-head"><ImageIcon size={14} />Video settings — the address, how the clip sits on the slide, how it plays, and its caption.</div>
       <Section title="Address">
         <VideoPick value={String(layer.params.src ?? '')} onChange={(x) => useStore.getState().updateLayer(layer.id, (l) => { l.params.src = x; })} />
-        <div className="desc on-canvas">{service ? `${service} link understood — the slide shows its still, and Preview plays the real player.` : file ? 'A file carried in the deck. It plays muted on a loop, on the slide itself.' : layer.params.src ? 'A link to a video file. It plays muted on a loop, on the slide itself.' : 'Paste a YouTube, Vimeo or .mp4 address, or upload a clip.'}</div>
+        <div className="desc on-canvas">{service ? `${service} link understood — the slide shows its still, and Preview plays the real player.` : (file || layer.params.src) && layer.params.muted === false ? `${file ? 'A file carried in the deck' : 'A link to a video file'}. In the show it plays with its sound${layer.params.autoplay ? ' as the slide arrives' : ' when pressed'}, and stops when the show moves on.` : file ? 'A file carried in the deck. It plays muted on a loop, on the slide itself.' : layer.params.src ? 'A link to a video file. It plays muted on a loop, on the slide itself.' : 'Paste a YouTube, Vimeo or .mp4 address, or upload a clip.'}</div>
       </Section>
       <Section title="On the slide">
         <div className="video-layouts">
