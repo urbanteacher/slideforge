@@ -279,6 +279,64 @@ function pipeline(focus = null) {
 `;
 }
 
+/* Slide 11, after the video. The everyday shortcut, made honest: four reader
+   purposes, each with its question, a small chart on the Lab 1 TfL 2024 data,
+   the data shape that points to it, and its close relatives. One card is lit
+   per click, then all four, like slide 3. */
+const MINS_2024 = [15, 15, 16, 16, 18, 19, 19, 18, 17, 16, 15, 15];   // Average Hire Time (mins), the file's monthly mean
+function purposeCards(focus = null) {
+  const W = 335, H = 620, gap = 28, top = 178, left = (1600 - (W * 4 + gap * 3)) / 2;
+  const hires = TFL_MONTHLY[2024];
+  const t = (x, y, str, o = {}) => `<text x="${x}" y="${y}" font-family="${o.serif ? NU.serif : NU.sans}" font-size="${o.size || 20}" font-weight="${o.weight || 400}" fill="${o.fill || NU.ink}" text-anchor="${o.anchor || 'start'}"${o.ls ? ` letter-spacing="${o.ls}"` : ''}>${esc(str)}</text>`;
+  const axis = (x, y) => `<path d="M${x + 30} ${y + 170} V${y + 400} H${x + W - 28}" fill="none" stroke="${NU.dim}" stroke-width="1.5"/>`;
+  const charts = [
+    (x, y) => axis(x, y) + hires.map((v, i) => { const h = v / 900 * 215, bw = 17, bx = x + 40 + i * 22.6;
+      return `<rect x="${bx}" y="${y + 400 - h}" width="${bw}" height="${h}" fill="${i === 6 ? NU.red : NU.navy}"/>`; }).join('') +
+      t(x + 40 + 6 * 22.6 + 8, y + 400 - 884 / 900 * 215 - 10, 'Jul', { size: 16, fill: NU.red, anchor: 'middle', weight: 700 }),
+    (x, y) => { const cx = x + W / 2 + 28, cy = y + 290, r = 100, parts = [['Weekday', 75.7, NU.navy], ['Saturday', 12.7, '#5f7f9c'], ['Sunday', 11.5, '#a9bccd']];
+      let a = -Math.PI / 2, out = '';
+      parts.forEach(([n, pct, fill], i) => { const a1 = a + pct / 100 * Math.PI * 2, big = a1 - a > Math.PI ? 1 : 0;
+        out += `<path d="M${cx} ${cy} L${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)} A${r} ${r} 0 ${big} 1 ${(cx + r * Math.cos(a1)).toFixed(1)} ${(cy + r * Math.sin(a1)).toFixed(1)} Z" fill="${fill}" stroke="#fff" stroke-width="2"/>`;
+        const m = (a + a1) / 2;
+        if (i === 0) out += t(cx + 34, cy + 40, '76%', { size: 26, weight: 700, fill: '#fff', anchor: 'middle' });
+        else out += t(cx + (r + 14) * Math.cos(m), cy + (r + 14) * Math.sin(m) + 6, `${n.slice(0, 3)} ${Math.round(pct)}%`, { size: 16, anchor: 'end', fill: NU.dim });
+        a = a1; });
+      return out; },
+    (x, y) => { const px = i => x + 44 + i * 23.5, py = v => y + 400 - (v - 450) / 470 * 215;
+      return axis(x, y) + `<polyline points="${hires.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${NU.navy}" stroke-width="4" stroke-linejoin="round"/>` +
+        hires.map((v, i) => `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="${i === 6 ? 7 : 4.5}" fill="${i === 6 ? NU.red : NU.navy}"/>`).join('') +
+        t(px(0), y + 424, 'Jan', { size: 15, fill: NU.dim, anchor: 'middle' }) + t(px(11), y + 424, 'Dec', { size: 15, fill: NU.dim, anchor: 'middle' }); },
+    (x, y) => { const px = v => x + 40 + (v - 500) / 400 * 255, py = m => y + 400 - (m - 14) / 6 * 215;
+      return axis(x, y) + hires.map((v, i) => `<circle cx="${px(v).toFixed(1)}" cy="${py(MINS_2024[i]).toFixed(1)}" r="7" fill="${NU.navy}" opacity=".85"/>`).join('') +
+        t(x + W - 28, y + 424, 'hires →', { size: 15, fill: NU.dim, anchor: 'end' }) + t(x + 38, y + 188, '↑ ride length', { size: 15, fill: NU.dim }); }
+  ];
+  const cards = [
+    ['COMPARISON', ['Which month', 'was busiest?'], 'Bar chart', ['categories, one number each', '→ length on a shared baseline'], 'also: column · dot plot · sorted bar'],
+    ['PART OF A WHOLE', ['What share were', 'weekday hires?'], 'Pie or 100% bar', ['2–5 parts that sum to 100%', '→ more parts? use a bar'], 'also: stacked bar · treemap · waffle'],
+    ['TREND OVER TIME', ['How did hires change', 'through 2024?'], 'Line chart', ['time in order, a number per step', '→ the line joins the sequence'], 'also: area · column for few periods'],
+    ['RELATIONSHIP', ['Do busier months', 'mean longer rides?'], 'Scatter plot', ['two numbers for every item', '→ position on two axes'], 'also: bubble · connected scatter']];
+  const groups = cards.map(([label, q, chart, shape, also], i) => {
+    const x = left + i * (W + gap), y = top, lit = focus === i || focus === null, red = focus === i;
+    return `<rect x="${x}" y="${y}" width="${W}" height="${H}" fill="#fff" stroke="${red ? NU.red : 'rgba(12,51,84,.18)'}" stroke-width="${red ? 4 : 1.5}"/>
+  <circle cx="${x + 30}" cy="${y + 34}" r="17" fill="${red ? NU.red : NU.navy}"/>
+  ${t(x + 30, y + 41, String(i + 1), { size: 18, weight: 700, fill: '#fff', anchor: 'middle' })}
+  ${t(x + 58, y + 42, label, { size: 19, weight: 700, ls: 3, fill: red ? NU.red : NU.navy })}
+  ${q.map((l, k) => t(x + 28, y + 98 + k * 34, l, { serif: true, size: 28 })).join('')}
+  ${charts[i](x, y)}
+  ${t(x + 28, y + 468, chart, { size: 27, weight: 700, fill: lit && focus !== null ? NU.red : NU.ink })}
+  ${shape.map((l, k) => t(x + 28, y + 506 + k * 28, l, { size: 19, fill: k ? NU.navy : NU.ink })).join('')}
+  ${t(x + 28, y + H - 24, also, { size: 17, fill: NU.dim })}`;
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="${NU.paper}"/>
+  <text x="${left}" y="92" font-family="${NU.serif}" font-size="54" fill="${NU.ink}">Pick the chart by its purpose</text>
+  <text x="${left}" y="138" font-family="${NU.sans}" font-size="24" fill="${NU.dim}">The usual shortcut: name what the reader must do. The same TfL 2024 data, four questions, four charts</text>
+  ${groups.map((g, i) => `<g opacity="${focus === null || focus === i ? 1 : 0.16}">${g}</g>`).join('\n  ')}
+  <text x="800" y="862" text-anchor="middle" font-family="${NU.sans}" font-size="24" fill="${NU.ink}">The purpose names the family (WHY). The data types confirm it (WHAT): only then pick the chart (HOW).</text>
+</svg>
+`;
+}
+
 /* Slides 5–7. A case fills the screen: the chart as large as the slide's
    height allows, on navy so nothing competes with it, and a small red tag in
    the bottom-left corner instead of a caption bar. */
@@ -1670,7 +1728,9 @@ function drawPictures() {
     'fruit-abc.svg': fruitStrip(),
     'fruit-where-what.svg': fruitTakeaway(),
     'tiger-panel-grey.svg': photoPanel('tiger-grey.jpg', '01 · NO COLOUR'),
-    'tiger-panel-colour.svg': photoPanel('tiger-colour.jpg', '02 · COLOUR')
+    'tiger-panel-colour.svg': photoPanel('tiger-colour.jpg', '02 · COLOUR'),
+    'purpose.svg': purposeCards(),
+    ...Object.fromEntries([0, 1, 2, 3].map(i => [`purpose-${i + 1}.svg`, purposeCards(i)]))
   };
   Object.assign(out, drawBatch2(), drawBatch3(), drawBatch4(), drawBatch5());
   for (const [name, svg] of Object.entries(out)) {
@@ -1681,6 +1741,16 @@ function drawPictures() {
   }
 }
 
+const PURPOSE_NOTES = [
+  '4 min across five clicks. WHY: this is the shortcut students meet everywhere (chart choosers, the FT Visual Vocabulary): name the purpose, get a chart family. ' +
+    'WHAT: four purposes, each on the same TfL 2024 data, so only the question changes. HOW: one card per click, then all four; ask the room to name the chart before you reveal the next card.\n' +
+    '1 COMPARISON. "Which month was busiest?" Twelve categories, one number each: a bar chart, because length on a shared baseline is the second-best channel. July, just ahead of August and June.',
+  '2 PART OF A WHOLE. "What share were weekday hires?" Three parts that sum to 100%: a pie can do it (76% weekday). The test from the video: 2–5 parts and a real 100%. With more parts, or to compare shares across years, use a 100% stacked bar.',
+  '3 TREND OVER TIME. "How did hires change through 2024?" Months are ordered and each leads to the next, so a line: the line itself says "this continues into that". Peak in July, low in December.',
+  '4 RELATIONSHIP. "Do busier months mean longer rides?" Two numbers for each month: a scatter. Position on two axes shows whether they move together (they do: about 15 minutes in winter, 19 in summer). Joining these dots would invent an order.',
+  'All four. SAY: "The purpose names the family; the data types confirm it." ASK: "A table of exam marks and hours studied for 60 students: which card?" (relationship, scatter). ' +
+    'Warn that the shortcut breaks when the purpose is vague, so ask what the reader must do first. Average hire time is the file’s monthly mean.'
+];
 const PIPELINE_STEPS = [
   '1 · Raw data: 366 lines, a date and a count. Nothing is a chart yet.',
   '2 · Table: items in rows (days), attributes in columns.',
@@ -1814,6 +1884,14 @@ const LESSON = {
         'HANDS UP on the end card, then ask for the reason. 1 Week split (4 parts, sums to 100%): a pie can work, a 100% stacked bar compares better. ' +
         '2 Rent in eight boroughs: a sorted bar. 3 Temperature across October: a line, because days are a sequence. 4 Hours against mark: a scatter, because each dot is a pair of measures with no order.\n' +
         'Every bar and dot is plotted from the real file. Average hire time is the file’s mean per month.' },
+
+    /* After the video, the shortcut everyone uses, tied back to What, Why, How. */
+    ...PURPOSE_NOTES.map((note, i) => ({ type: 'image', title: 'Pick the chart by its purpose',
+      subtitle: 'Comparison, part of a whole, trend over time, relationship',
+      image: asset(i < 4 ? `purpose-${i + 1}.svg` : 'purpose.svg'), imageFit: 'contain',
+      design: { capStyle: 'none' },
+      ...(i ? { transition: 'none' } : {}),
+      notes: note })),
 
     { type: 'content', title: 'By the end of today you can',
       bullets: [
@@ -2528,7 +2606,7 @@ fs.writeFileSync(file, JSON.stringify(bundle, null, 2) + '\n');
    can be shown again in SlideForge. The lecture bundle is untouched. */
 const STUDENT_RULES = [
   // builds: keep only the last state
-  ['From raw data to insight', 'last'], ['Four jobs colour does in a chart', 'last'], ['From light to colour', 'last'],
+  ['From raw data to insight', 'last'], ['Pick the chart by its purpose', 'last'], ['Four jobs colour does in a chart', 'last'], ['From light to colour', 'last'],
   ['Three dimensions of colour', 'last'], ['Why HSL lies', 'last'], ['Two respected rules. Which is right?', 'last'],
   ['Start with grey', 'last'], ['Don’t rely on colour alone', 'last'],
   // the families: keep the first (overview); openers and summary repeat it
