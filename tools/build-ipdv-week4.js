@@ -1060,6 +1060,27 @@ function orderPanel(file, title, sub) {
 /* Plan slide 25 without phones: five datasets as cards, then the answers
    and the reason each is debatable. The answer depends on the task, not only
    on the data (Munzner's abstraction level). */
+/* Wrapped text as plain SVG lines. Not foreignObject: Chrome treats an image
+   with HTML inside as unsafe, and the Lesson studio cannot then draw it (the
+   show stops at "Preparing the show"). Widths are estimated per face. */
+function wrapLines(str, width, size, serif) {
+  const per = size * (serif ? 0.47 : 0.5), max = Math.max(4, Math.floor(width / per));
+  const lines = [];
+  for (const word of String(str).split(/\s+/)) {
+    const last = lines[lines.length - 1];
+    if (last && (last + ' ' + word).length <= max) lines[lines.length - 1] = last + ' ' + word;
+    else lines.push(word);
+  }
+  return lines;
+}
+function wrapText(str, x, y, width, o = {}) {
+  const size = o.size || 20, lh = size * (o.lh || 1.25), lines = wrapLines(str, width, size, o.serif);
+  const ax = o.anchor === 'middle' ? x + width / 2 : x;
+  const svg = `<text x="${ax}" y="${y + size}" font-family="${o.serif ? NU.serif : NU.sans}" font-size="${size}" fill="${o.fill || NU.ink}"${o.anchor ? ` text-anchor="${o.anchor}"` : ''}>` +
+    lines.map((l, i) => `<tspan x="${ax}" dy="${i ? lh : 0}">${esc(l)}</tspan>`).join('') + '</text>';
+  return { svg, h: lines.length * lh };
+}
+
 const CLASSIFY = [
   ['Quarterly company profit', 'including losses', 'Diverging', 'Midpoint 0. Sequential only if profit is always positive'],
   ['Customer satisfaction', 'rated 1–10', 'Sequential', 'Or diverging, if 5 is a true neutral. Ask what 5 means'],
@@ -1075,11 +1096,10 @@ function classifyCards(reveal) {
   ${CLASSIFY.map(([name, detail, fam, why], i) => { const x = left + i * (W + gap);
     return `<rect x="${x}" y="190" width="${W}" height="560" fill="#fff" stroke="rgba(12,51,84,.18)" stroke-width="1.5"/>
   <text x="${x + 22}" y="236" font-family="${NU.sans}" font-weight="700" font-size="20" letter-spacing="3" fill="${NU.red}">${i + 1}</text>
-  <foreignObject x="${x + 22}" y="250" width="${W - 44}" height="200"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:${NU.serif.replace(/"/g, "'")};font-size:32px;line-height:1.15;color:${NU.ink}">${esc(name)}</div>
-  <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:${NU.sans.replace(/"/g, "'")};font-size:21px;line-height:1.3;color:${NU.dim};margin-top:10px">${esc(detail)}</div></foreignObject>
+  ${(() => { const a = wrapText(name, x + 22, 250, W - 44, { size: 32, lh: 1.15, serif: true }); return a.svg + wrapText(detail, x + 22, 250 + a.h + 10, W - 44, { size: 21, lh: 1.3, fill: NU.dim }).svg; })()}
   ${reveal ? `<rect x="${x + 22}" y="470" width="${W - 44}" height="60" fill="${famColour[fam]}"/>
   <text x="${x + W / 2}" y="510" text-anchor="middle" font-family="${NU.sans}" font-weight="700" font-size="24" fill="#fff">${fam}</text>
-  <foreignObject x="${x + 22}" y="548" width="${W - 44}" height="190"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:${NU.sans.replace(/"/g, "'")};font-size:20px;line-height:1.35;color:${NU.ink}">${esc(why)}</div></foreignObject>`
+  ${wrapText(why, x + 22, 548, W - 44, { size: 20, lh: 1.35 }).svg}`
     : `<text x="${x + W / 2}" y="560" text-anchor="middle" font-family="${NU.sans}" font-weight="700" font-size="30" fill="${NU.navy}" opacity=".35">S · D · C ?</text>`}`; }).join('\n  ')}
 </svg>
 `;
@@ -1586,8 +1606,7 @@ function labDatasets() {
   ${sets.map(([n, d], i) => { const x = 80 + i * 292;
     return `<rect x="${x}" y="200" width="274" height="380" fill="#fff" stroke="rgba(12,51,84,.18)" stroke-width="1.5"/>
   <circle cx="${x + 137}" cy="280" r="50" fill="${NU.red}"/><text x="${x + 137}" y="298" text-anchor="middle" font-family="${NU.sans}" font-weight="700" font-size="48" fill="#fff">${i + 1}</text>
-  <foreignObject x="${x + 20}" y="350" width="234" height="220"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:${NU.serif.replace(/"/g, "'")};font-size:30px;line-height:1.15;color:${NU.ink};text-align:center">${esc(n)}</div>
-  <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:${NU.sans.replace(/"/g, "'")};font-size:20px;line-height:1.3;color:${NU.dim};text-align:center;margin-top:10px">${esc(d)}</div></foreignObject>`; }).join('')}
+  ${(() => { const a = wrapText(n, x + 20, 350, 234, { size: 30, lh: 1.15, serif: true, anchor: 'middle' }); return a.svg + wrapText(d, x + 20, 350 + a.h + 10, 234, { size: 20, lh: 1.3, fill: NU.dim, anchor: 'middle' }).svg; })()}`; }).join('')}
   <text x="80" y="680" font-family="${NU.sans}" font-size="26" fill="${NU.ink}"><tspan font-weight="700" fill="${NU.navy}">Go:</tspan> colorbrewer2.org  ·  color.adobe.com  ·  gka.github.io/palettes</text>
   <text x="80" y="730" font-family="${NU.sans}" font-size="24" fill="${NU.dim}">Finished early? Try Colorgorical for a categorical palette, and compare.</text>
 </svg>
@@ -1737,6 +1756,8 @@ function drawPictures() {
     /* A bare & makes the whole SVG invalid, and the slide renders blank. */
     const bad = svg.replace(/data:[^"]+/g, '').match(/&(?![a-zA-Z]+;|#\d+;)/);
     if (bad) throw new Error(`${name}: unescaped & in the drawing`);
+    /* HTML inside an SVG makes Chrome refuse it in the Lesson studio's canvas. */
+    if (/<foreignObject/i.test(svg)) throw new Error(`${name}: foreignObject stops the Lesson studio presenting it; use wrapText`);
     fs.writeFileSync(path.join(root, DIR, name), svg);
   }
 }
