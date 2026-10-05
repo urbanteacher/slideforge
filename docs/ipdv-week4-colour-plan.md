@@ -638,6 +638,7 @@ The colour prescription is the rubric.
 
 ## Change log
 
+- **5 Oct 2026:** Slides 11–15 are new: "Pick the chart by its purpose", the everyday shortcut (comparison, part of a whole, trend over time, relationship) on the same TfL 2024 data, tied back to What, Why, How. A dim-one-card build; the student copy keeps the all-lit state. 132 slides in all.
 - **5 Oct 2026:** Slide 10 is new: "Which chart? Think before you draw", a 5-minute explainer bridging slide 3 to chart choice (students knew the data types but not how they pick a chart). Made from the video treatment in code: `tools/video-which-chart/` (script.json narration, voice.mjs with the macOS voice, scenes.html drawn per frame from the TfL 2024 figures, render.mjs in Playwright, encode.swift with AVFoundation). The MP4 is `assets/lesson/ipdv/week4/which-chart.mp4` (5 min 31 s, 1080p, 45 MB; narrated by Microsoft’s en-GB Ryan voice via edge-tts). Average hire time is the file’s mean per month. Later slides move down one (127 in all).
 - **4 Oct 2026:** Built. `tools/build-ipdv-week4.js` writes `lessons/04_Lecture_IPDV_Colour.sfbundle.json` (126 slides, ten parts: Notice, See, Doubt, Vocabulary, Use, Map, Mean, Check, Build, Fix), following Week4_Colour_Lecture_Plan.md. Every slide, one line each, is in `docs/ipdv-week4-slide-list.md`. Phone games and polls are switched off for now (`INTERACTIVE = false`); the plan above describes the original interactive design.
 - **4 Oct 2026:** §6.1 rewritten slide by slide: what we reuse and what we make (pictures A1–A23, code N1–N8),
