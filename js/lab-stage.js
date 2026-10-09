@@ -132,7 +132,45 @@
     return true;
   }
 
+  /* A YouTube or Vimeo clip on a lab slide plays in the service's own player,
+     framed where its layer sits, as the lab's Present frames it
+     (lab/src/ui/Present.tsx). The lab draws such a layer as a still; without
+     this the show had only the still, and a press on it played nothing. The
+     address is SlideForge's own (SF.videoEmbed), from the layer's start and
+     end; the clip waits for a press in the player unless it is muted and set
+     to play. */
+  /** @type {HTMLIFrameElement[]} */ var embeds = [];
+  function clearEmbeds() {
+    embeds.forEach(function (f) { if (f.parentNode) f.parentNode.removeChild(f); });
+    embeds = [];
+  }
+  /** @param {HTMLElement} node @param {number} i */
+  function placeEmbeds(node, i) {
+    clearEmbeds();
+    if (!player || !SF.videoEmbed || !node) return;
+    var deck = player.deck, slide = deck && deck.slides[i];
+    if (!slide) return;
+    (slide.layers || []).forEach(function (l) {
+      if (l.kind !== 'video' || l.visible === false || !l.box || !l.params) return;
+      var p = l.params;
+      var src = SF.videoEmbed({ video: p.src, videoStart: p.start, videoEnd: p.end, videoMuted: p.muted !== false, videoAutoplay: p.muted !== false && !!p.autoplay, videoLoop: !!p.loop });
+      if (!src) return;
+      var f = document.createElement('iframe');
+      f.className = 'lab-embed';
+      f.src = src;
+      f.title = l.name || 'Embedded video';
+      f.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen');
+      f.setAttribute('allowfullscreen', '');
+      f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      var b = l.box, W = deck.width || 1920, H = deck.height || 1080;
+      f.style.cssText = 'position:absolute;border:0;z-index:5;background:#000;left:' + (b.x / W * 100) + '%;top:' + (b.y / H * 100) + '%;width:' + (b.w / W * 100) + '%;height:' + (b.h / H * 100) + '%';
+      node.appendChild(f);
+      embeds.push(f);
+    });
+  }
+
   function stop() {
+    clearEmbeds();
     if (railWatch) { railWatch.disconnect(); railWatch = null; }
     if (player) { try { player.destroy(); } catch (e) {} }
     if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
@@ -148,6 +186,7 @@
     /* A show for another lesson: the stage starts again for it. */
     if (player && SF.Player.deck && SF.Player.deck.id !== deckId) stop();
     if (!isLabSlide(slide) || !available() || !SF.Player.deck) {
+      clearEmbeds();
       onLab = false;
       if (player) player.pause();
       if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
@@ -155,8 +194,10 @@
     }
     if (!player && !start()) return;
     var i = drawnIndex(slide);
-    if (i == null) { onLab = false; player.pause(); return; }
+    if (i == null) { clearEmbeds(); onLab = false; player.pause(); return; }
     node.appendChild(canvas);
+    /* A redraw of the same slide keeps a clip that is already playing. */
+    if (fresh || !embeds.length || embeds[0].parentNode !== node) placeEmbeds(node, i);
     node.classList.add('has-lab-live');
     player.resume();
     syncRail();

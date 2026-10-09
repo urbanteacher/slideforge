@@ -434,9 +434,11 @@ export function convertsSlide(s: SFSlide): boolean {
 }
 
 /** SlideForge's video slide is a clip to watch: its sound on, once through, and playing as the slide
- *  arrives unless the slide says not to (engine/raster.ts showMedia). */
+ *  arrives unless the slide says not to (engine/raster.ts showMedia). A slide set to loop or to start
+ *  muted keeps that: a silent demonstration (a GIF made into a clip) plays round and round. */
 function videoSound(s: SFSlide) {
-  return { muted: false, autoplay: (s as { videoAutoplay?: boolean }).videoAutoplay !== false, loop: false };
+  const v = s as { videoAutoplay?: boolean; videoLoop?: boolean; videoMuted?: boolean };
+  return { muted: v.videoMuted === true, autoplay: v.videoAutoplay !== false, loop: v.videoLoop === true };
 }
 /** "No caption": the clip fills the slide with nothing over it, as a bare picture does. */
 function bareVideo(slide: Slide) {
