@@ -197,6 +197,14 @@ export interface DesignControl {
 export interface Slide {
   /* Which motion specimen this slide is. A slide shape, not a design tweak. */
   motionScene?: string;
+  /** A live figure (src/render/figures/): which one, its data, and the steps Next walks. */
+  figure?: string;
+  figureData?: Record<string, unknown>;
+  figureSteps?: Array<Record<string, unknown>>;
+  figureGround?: 'stage' | 'paper';
+  figureEyebrow?: string;
+  figureCredit?: string;
+  figureAlt?: string;
   experiment?: {preset?:string; prompt?:string; duration?:number; print?:{changes?:string; constants?:string; takeaway?:string; caveat?:string}; states?:Array<Record<string, unknown>>};
   headerFooter?: HeaderFooterConfig;
   design?: SlideDesign;

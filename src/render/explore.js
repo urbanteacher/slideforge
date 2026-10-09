@@ -17,9 +17,9 @@
  */
 export function installExplore(SF) {
   var kinds = ['beforeafter', 'explore', 'simulation', 'experiment'];
-  function active(slide) { return (SF.MotionLab && SF.MotionLab.active(slide)) || kinds.includes(slide.type) || (slide.type === 'chart' && slide.exploration && slide.exploration.prediction); }
+  function active(slide) { return (SF.Figures && SF.Figures.active(slide)) || (SF.MotionLab && SF.MotionLab.active(slide)) || kinds.includes(slide.type) || (slide.type === 'chart' && slide.exploration && slide.exploration.prediction); }
   function config(slide) { return SF.normalizeExploration(slide.exploration); }
-  function initial(slide) { return { position: 50, spot: -1, input: config(slide).initial, revealed: false, experimentStep: -1 }; }
+  function initial(slide) { return { position: 50, spot: -1, input: config(slide).initial, revealed: false, experimentStep: -1, figureStep: 0 }; }
   function state(player, slide) { return Object.assign(initial(slide), (player.exploreStates || {})[slide.id] || {}); }
   function command(player, action, value) {
     var slide = player.deck && player.deck.slides[player.idx];
@@ -30,6 +30,7 @@ export function installExplore(SF) {
       if (!motionNext) return;
       Object.assign(next,motionNext);
     }
+    else if (action === 'figure' && slide.type === 'figure' && SF.Figures && Number.isInteger(n)) next.figureStep = Math.max(0, Math.min(SF.Figures.count(slide) - 1, n));
     else if (action === 'experiment' && slide.type === 'experiment' && SF.Experiments && Number.isInteger(n)) next.experimentStep = Math.max(-1,Math.min(SF.Experiments.config(slide).states.length-1,n));
     else if (action === 'experimentReplay' && slide.type === 'experiment') next.experimentReplay = (next.experimentReplay || 0) + 1;
     else if (action === 'reveal' && slide.type === 'chart') next.revealed = value === true;
@@ -74,6 +75,7 @@ export function installExplore(SF) {
       if(['draw','annotate'].includes(mode))return mv.sceneStep<SF.MotionLab.items(s).length?'comparison':null;
       return null;
     }
+    if (s.type === 'figure') return v.figureStep < SF.Figures.count(s) - 1 ? 'comparison' : null;
     if (s.type === 'experiment') return v.experimentStep < SF.Experiments.config(s).states.length-1 ? 'comparison' : null;
     if (s.type === 'chart' && !v.revealed) return 'prediction';
     if (s.type === 'explore' && v.spot < config(s).spots.length - 1) return 'hotspot';
@@ -91,6 +93,11 @@ export function installExplore(SF) {
       } else if(['draw','annotate'].includes(mode)) {
         if(direction>0 && mv.sceneStep<SF.MotionLab.items(s).length || direction<0 && mv.sceneStep>0){command(player,'motionStep',mv.sceneStep+direction);return true;}
       }
+      return false;
+    }
+    if (s.type === 'figure') {
+      var to = v.figureStep + direction;
+      if (to >= 0 && to < SF.Figures.count(s)) { command(player, 'figure', to); return true; }
       return false;
     }
     if (s.type === 'experiment') {
@@ -121,6 +128,7 @@ export function installExplore(SF) {
   }
   function render(root, pad, slide, opts) {
     if (!active(slide)) return;
+    if (slide.type === 'figure' && SF.Figures) { SF.Figures.render(root, pad, slide, opts); return; }
     if(SF.MotionLab && SF.MotionLab.active(slide)){SF.MotionLab.render(root,pad,slide,opts,SF.safeMedia);return;}
     if (slide.type === 'experiment' && SF.Experiments) { SF.Experiments.render(root,pad,slide,opts); return; }
     var c = config(slide), view = Object.assign(initial(slide), opts.exploreState || {});

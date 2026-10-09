@@ -221,6 +221,9 @@ const TYPES = {
   /* A game slide is a single card the engine draws: nothing sits beside it,
      and there is nowhere for a free item to go. */
   game: { slots: { gamecard: region(1, 1, 12, 16) } },
+  /* A live figure (src/render/figures/) draws the whole slide itself, full
+     bleed, the way a game's card does: nowhere for a free item to go. */
+  figure: { slots: { 'fig-svg': region(1, 1, 12, 16) } },
   beforeafter: { slots: { ...FULL, 'before-after': region(1, 3, 12, 11),
     'explore-compare': region(2, 4, 11, 10), 'explore-range': region(2, 14, 11, 1),
     'explore-actions': region(2, 15, 11, 1) } },

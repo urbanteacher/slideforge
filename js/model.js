@@ -72,7 +72,7 @@
     if (!rows2.length) rows2.push({ label: "Add a point", detail: "Use the slide’s bullet fields. Separate label and explanation with a tab." });
     const enabled = !!opts.exploreCommand;
     let view = state(slide, enabled ? opts.exploreState : { sceneStep: rows2.length, sceneValue: 100 });
-    const el = (tag, cls = "", text2 = "") => {
+    const el2 = (tag, cls = "", text2 = "") => {
       const n = document.createElement(tag);
       n.className = cls;
       n.textContent = text2;
@@ -82,7 +82,7 @@
       if (enabled) opts.exploreCommand(action, value);
     };
     const button = (parent, label, fn) => {
-      const b = el("button", "ml-button", label);
+      const b = el2("button", "ml-button", label);
       b.type = "button";
       b.disabled = !enabled;
       b.onclick = fn;
@@ -90,7 +90,7 @@
       return b;
     };
     const range = (parent, label, key, action) => {
-      const wrap = el("label", "ml-range", label), input = document.createElement("input");
+      const wrap = el2("label", "ml-range", label), input = document.createElement("input");
       input.type = "range";
       input.min = "0";
       input.max = "100";
@@ -109,16 +109,16 @@
     const look = (slide.design || {}).motionLook || "";
     root.dataset.motionLook = Object.hasOwn(MOTION_LOOKS, look) ? look : "editorial";
     root.dataset.motionMode = mode;
-    pad.append(el("div", "ml-kicker", MOTION_SCENES[mode]), el("h2", "ml-title", slide.title || MOTION_SCENES[mode]));
-    const stage = el("div", "ml-stage");
-    pad.append(stage);
-    const status = el("p", "ml-status");
+    pad.append(el2("div", "ml-kicker", MOTION_SCENES[mode]), el2("h2", "ml-title", slide.title || MOTION_SCENES[mode]));
+    const stage2 = el2("div", "ml-stage");
+    pad.append(stage2);
+    const status = el2("p", "ml-status");
     status.setAttribute("aria-live", enabled ? "polite" : "off");
     pad.append(status);
-    const controls = el("div", "ml-controls");
+    const controls = el2("div", "ml-controls");
     pad.append(controls);
     controls.addEventListener("keydown", (e) => e.stopPropagation());
-    stage.addEventListener("keydown", (e) => {
+    stage2.addEventListener("keydown", (e) => {
       if (e.target instanceof HTMLButtonElement || e.target instanceof HTMLInputElement) e.stopPropagation();
     });
     const parts = [];
@@ -134,7 +134,7 @@
         img.hidden = true;
         status.textContent = "Image unavailable — choose an image in Look.";
       };
-      stage.append(img);
+      stage2.append(img);
       return img;
     }
     function svgNode(tag, attrs) {
@@ -144,41 +144,41 @@
     }
     if (["mask", "annotate", "lens"].includes(mode)) {
       if (imageURL) photo = addPhoto();
-      else stage.append(el("p", "ml-empty", "Choose an image in Look to try this effect."));
+      else stage2.append(el2("p", "ml-empty", "Choose an image in Look to try this effect."));
       if (mode === "annotate") rows2.forEach((row, i) => {
-        const n = el("div", "ml-annotation");
+        const n = el2("div", "ml-annotation");
         n.style.left = `${10 + i % 2 * 48}%`;
         n.style.top = `${12 + Math.floor(i / 2) * 44}%`;
-        n.append(el("span", "ml-ring", String(i + 1)), el("strong", "", row.label));
-        stage.append(n);
+        n.append(el2("span", "ml-ring", String(i + 1)), el2("strong", "", row.label));
+        stage2.append(n);
         parts.push(n);
       });
       if (mode === "lens") {
         let move2 = function(e) {
-          const r = stage.getBoundingClientRect();
+          const r = stage2.getBoundingClientRect();
           send("motionX", (e.clientX - r.left) / r.width * 100);
           send("motionY", (e.clientY - r.top) / r.height * 100);
         };
         var move = move2;
-        lens = el("div", "ml-lens");
+        lens = el2("div", "ml-lens");
         if (imageURL) lens.style.backgroundImage = `url(${JSON.stringify(imageURL)})`;
-        stage.append(lens);
-        stage.tabIndex = enabled ? 0 : -1;
-        stage.setAttribute("aria-label", "Focus lens. Use the horizontal and vertical sliders below, or drag on the image.");
-        stage.onpointerdown = (e) => {
+        stage2.append(lens);
+        stage2.tabIndex = enabled ? 0 : -1;
+        stage2.setAttribute("aria-label", "Focus lens. Use the horizontal and vertical sliders below, or drag on the image.");
+        stage2.onpointerdown = (e) => {
           if (!enabled) return;
-          stage.setPointerCapture(e.pointerId);
+          stage2.setPointerCapture(e.pointerId);
           move2(e);
         };
-        stage.onpointermove = (e) => {
-          if (stage.hasPointerCapture(e.pointerId)) move2(e);
+        stage2.onpointermove = (e) => {
+          if (stage2.hasPointerCapture(e.pointerId)) move2(e);
         };
         xSlider = range(controls, "Lens horizontal", "sceneX", "motionX");
         ySlider = range(controls, "Lens vertical", "sceneY", "motionY");
       }
     } else if (mode === "scrub" || mode === "draw") {
       svg = svgNode("svg", { viewBox: "0 0 1000 360", role: "img", "aria-label": mode === "scrub" ? "The same values change from circles to aligned bars." : "Connections appear in sequence." });
-      stage.append(svg);
+      stage2.append(svg);
       rows2.forEach((row, i) => {
         if (mode === "draw") {
           if (i) {
@@ -206,19 +206,19 @@
         }
       });
     } else if (mode === "cause") {
-      const meter = el("div", "ml-meter");
-      detail = el("div", "ml-equation");
-      stage.append(meter, detail);
+      const meter = el2("div", "ml-meter");
+      detail = el2("div", "ml-equation");
+      stage2.append(meter, detail);
       parts.push(meter);
     } else {
-      stage.classList.add("ml-card-stage");
+      stage2.classList.add("ml-card-stage");
       rows2.forEach((row, i) => {
-        const card = el("button", "ml-card");
+        const card = el2("button", "ml-card");
         card.type = "button";
         card.disabled = !enabled;
-        card.append(el("span", "ml-number", String(i + 1).padStart(2, "0")), el("strong", "", row.label), el("span", "ml-detail", row.detail));
+        card.append(el2("span", "ml-number", String(i + 1).padStart(2, "0")), el2("strong", "", row.label), el2("span", "ml-detail", row.detail));
         card.onclick = () => send("motionChoice", view.sceneChoice === i ? -1 : i);
-        stage.append(card);
+        stage2.append(card);
         parts.push(card);
       });
     }
@@ -246,7 +246,7 @@
       if (mode === "lens" && lens) {
         lens.style.left = `${view.sceneX}%`;
         lens.style.top = `${view.sceneY}%`;
-        const width = stage.clientWidth || 1168, height = stage.clientHeight || 420;
+        const width = stage2.clientWidth || 1168, height = stage2.clientHeight || 420;
         const naturalW = photo?.naturalWidth || width, naturalH = photo?.naturalHeight || height;
         const cover = Math.max(width / naturalW, height / naturalH), fullW = naturalW * cover, fullH = naturalH * cover;
         lens.style.backgroundSize = `${fullW * 2}px ${fullH * 2}px`;
@@ -272,7 +272,7 @@
         parts[0].style.transform = `scaleX(${t})`;
       }
       if (["cards", "branch", "panels", "explode"].includes(mode)) {
-        stage.classList.toggle("ml-selected", view.sceneChoice >= 0);
+        stage2.classList.toggle("ml-selected", view.sceneChoice >= 0);
         parts.forEach((p, i) => {
           const selected2 = view.sceneChoice === i;
           p.classList.toggle("ml-selected-card", selected2);
@@ -341,21 +341,21 @@
   // src/render/fit-check.js
   var FIT_TOLERANCE = 1;
   var LEGIBLE_FLOOR = 20;
-  function svgScale(el) {
-    const svg = el.ownerSVGElement;
+  function svgScale(el2) {
+    const svg = el2.ownerSVGElement;
     if (!svg) return 1;
     const view = svg.viewBox?.baseVal;
     const box2 = svg.getBoundingClientRect();
     if (!view || !view.width || !view.height || !box2.width) return 1;
     return Math.min(box2.width / view.width, box2.height / view.height);
   }
-  function describe(el) {
-    const cls = el.className?.baseVal ?? el.className;
+  function describe(el2) {
+    const cls = el2.className?.baseVal ?? el2.className;
     const first = String(cls || "").trim().split(/\s+/)[0];
-    return first ? `${el.tagName.toLowerCase()}.${first}` : el.tagName.toLowerCase();
+    return first ? `${el2.tagName.toLowerCase()}.${first}` : el2.tagName.toLowerCase();
   }
-  function clipper(el, root) {
-    for (let node = el; node && node !== root.parentElement; node = node.parentElement) {
+  function clipper(el2, root) {
+    for (let node = el2; node && node !== root.parentElement; node = node.parentElement) {
       const style = getComputedStyle(node);
       if (/hidden|clip|auto|scroll/.test(style.overflowX + " " + style.overflowY)) return node;
     }
@@ -390,18 +390,18 @@
       const node = walk.currentNode;
       const words = node.textContent || "";
       if (!words.trim()) continue;
-      const el = node.parentElement;
-      if (!el) continue;
-      const painted = el.getBoundingClientRect();
+      const el2 = node.parentElement;
+      if (!el2) continue;
+      const painted = el2.getBoundingClientRect();
       if (!painted.height) continue;
       if (words.trim().length >= 3) {
-        const size = parseFloat(getComputedStyle(el).fontSize) * svgScale(el);
+        const size = parseFloat(getComputedStyle(el2).fontSize) * svgScale(el2);
         if (Number.isFinite(size) && (smallest === null || size < smallest)) {
           smallest = size;
-          smallestIn = describe(el);
+          smallestIn = describe(el2);
         }
       }
-      const clip = clipper(el, root);
+      const clip = clipper(el2, root);
       const clipBox = clip && clip !== root ? clip.getBoundingClientRect() : null;
       for (const word of words.matchAll(/\S+/g)) {
         const range = document.createRange();
@@ -410,11 +410,11 @@
         for (const box2 of range.getClientRects()) {
           if (!box2.width || !box2.height) continue;
           for (const [direction, px] of escapes(box2, frame, tolerance)) {
-            add(describe(el), direction, px, word[0]);
+            add(describe(el2), direction, px, word[0]);
           }
           if (clipBox) {
             for (const [direction, px] of escapes(box2, clipBox, tolerance)) {
-              add(describe(el), `clipped-${direction}`, px, word[0]);
+              add(describe(el2), `clipped-${direction}`, px, word[0]);
             }
           }
         }
@@ -777,18 +777,18 @@
     return JSON.parse(JSON.stringify(v));
   }
   function quizSlide(still, ask, answer, makeSlide2) {
-    var g = still.game, set = g.settings || {};
+    var g = still.game, set2 = g.settings || {};
     var s = Object.assign(makeSlide2("quiz"), copy(g.quiz));
     s.id = still.id;
     s.type = "quiz";
     s.notes = still.notes || "";
     if (still.hidden) s.hidden = true;
-    s.timeLimit = set.seconds > 0 ? set.seconds : 0;
-    if (set.points != null) s.points = set.points;
-    if (set.difficulty) s.difficulty = set.difficulty;
-    if (set.damage != null) s.bossDamage = set.damage;
-    if (set.tolerance != null) s.tolerance = set.tolerance;
-    if (set.accept && set.accept.length) s.accept = set.accept.slice();
+    s.timeLimit = set2.seconds > 0 ? set2.seconds : 0;
+    if (set2.points != null) s.points = set2.points;
+    if (set2.difficulty) s.difficulty = set2.difficulty;
+    if (set2.damage != null) s.bossDamage = set2.damage;
+    if (set2.tolerance != null) s.tolerance = set2.tolerance;
+    if (set2.accept && set2.accept.length) s.accept = set2.accept.slice();
     s.gameId = g.id;
     s.gameTitle = g.label;
     s.image = still.image;
@@ -802,14 +802,14 @@
     return s;
   }
   function boardSlides(still, makeSlide2) {
-    var g = still.game, set = g.settings || {};
+    var g = still.game, set2 = g.settings || {};
     return g.board.map(function(b, k) {
       var s = Object.assign(makeSlide2(b.type || "content"), copy(b));
       s.id = k ? still.id + "~" + k : still.id;
       s.gameId = g.id;
       s.gameTitle = g.label;
-      if (s.type === "quiz" && set.seconds > 0 && g.format !== "beat-the-clock") s.timeLimit = set.seconds;
-      if (s.type === "quiz" && g.format === "beat-the-clock" && set.seconds > 0) s.roundSeconds = set.seconds;
+      if (s.type === "quiz" && set2.seconds > 0 && g.format !== "beat-the-clock") s.timeLimit = set2.seconds;
+      if (s.type === "quiz" && g.format === "beat-the-clock" && set2.seconds > 0) s.roundSeconds = set2.seconds;
       if (still.hidden) s.hidden = true;
       return s;
     });
@@ -856,23 +856,23 @@
 
   // src/render/compositions.js
   function createCompositionRenderer(SF, helpers) {
-    const { el, rich, asStep, layoutQuote, layoutStatement, appendSlideDate } = helpers;
+    const { el: el2, rich, asStep, layoutQuote, layoutStatement, appendSlideDate } = helpers;
     const LETTERS = ["A", "B", "C", "D", "E", "F"];
     function layoutComposition(deck, slide, pad, root) {
       var choice3 = SF.slideComposition(deck, slide);
       if (!choice3 || !SF.COMPOSITIONS[choice3].structured) return false;
       root.classList.add("composition-structured", "cp", "cp-" + slide.type);
-      var header = el("div", "cp-header");
+      var header = el2("div", "cp-header");
       var beatAsEyebrow = ["title", "quote", "statement", "keyfact"].includes(slide.type);
       var beatAsClosing = slide.type === "journey";
       var beatInHeader = slide.subtitle && !beatAsEyebrow && !beatAsClosing && !["compare", "spectrum"].includes(slide.type);
       if (beatInHeader) header.appendChild(rich("div", "cp-beat", slide, "subtitle", slide.subtitle));
       pad.appendChild(header);
-      var body = el("div", "cp-body");
+      var body = el2("div", "cp-body");
       pad.appendChild(body);
-      var footer = el("div", "cp-footer");
+      var footer = el2("div", "cp-footer");
       var closing = deck.closingNote || deck.org;
-      if (closing) footer.appendChild(el("span", "cp-footer-note", closing));
+      if (closing) footer.appendChild(el2("span", "cp-footer-note", closing));
       pad.appendChild(footer);
       function field(tag, cls, key) {
         return rich(tag, cls, slide, key, slide[key] || "");
@@ -891,15 +891,15 @@
       }
       function artwork() {
         if (!SF.safeMedia(slide.image)) return null;
-        var art2 = el("div", "cp-art");
-        var img = el("img", "cp-prop");
+        var art2 = el2("div", "cp-art");
+        var img = el2("img", "cp-prop");
         img.alt = "";
         img.src = SF.safeMedia(slide.image);
         art2.appendChild(img);
         return art2;
       }
       if (slide.type === "title") {
-        var title = el("div", "cp-title-copy");
+        var title = el2("div", "cp-title-copy");
         if (slide.subtitle) title.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
         title.appendChild(field("h1", "", "title"));
         if (slide.body) title.appendChild(field("p", "cp-tagline", "body"));
@@ -909,17 +909,17 @@
         if (art) body.appendChild(art);
         else root.classList.add("cp-title-unillustrated");
       } else if (slide.type === "quote") {
-        body.appendChild(el("span", "cp-quote-mark", "“"));
+        body.appendChild(el2("span", "cp-quote-mark", "“"));
         if (slide.subtitle) body.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
         layoutQuote(Object.assign({}, slide, { subtitle: "" }), body);
         body.querySelector(".q").classList.add("cp-scenario");
       } else if (slide.type === "cards") {
         heading();
-        var choices = el("div", "cp-choices");
+        var choices = el2("div", "cp-choices");
         (slide.bullets || []).forEach(function(line, i) {
-          var p = SF.parseKeywordLine(line), card = asStep(el("div", "cp-choice"), slide);
-          card.appendChild(el("span", "cp-letter", LETTERS[i] || String(i + 1)));
-          var copy2 = el("div", "cp-choice-copy");
+          var p = SF.parseKeywordLine(line), card = asStep(el2("div", "cp-choice"), slide);
+          card.appendChild(el2("span", "cp-letter", LETTERS[i] || String(i + 1)));
+          var copy2 = el2("div", "cp-choice-copy");
           copy2.appendChild(bullet("h3", "", i, p.term));
           copy2.appendChild(bullet("p", "", i, p.def));
           card.appendChild(copy2);
@@ -929,18 +929,18 @@
         if (slide.body) body.appendChild(field("p", "cp-prompt", "body"));
       } else if (slide.type === "statement") {
         if (slide.subtitle) body.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
-        var discussion = el("div", "cp-discussion");
-        discussion.appendChild(el("span", "cp-pair-mark", "↔"));
+        var discussion = el2("div", "cp-discussion");
+        discussion.appendChild(el2("span", "cp-pair-mark", "↔"));
         layoutStatement(Object.assign({}, slide, { subtitle: "" }), discussion);
         discussion.querySelector(".statement").classList.add("cp-question");
         body.appendChild(discussion);
       } else if (slide.type === "journey") {
         heading();
-        var rules = el("div", "cp-rules");
+        var rules = el2("div", "cp-rules");
         (slide.bullets || []).forEach(function(line, i) {
-          var p = SF.parseKeywordLine(line), row = asStep(el("div", "cp-rule"), slide);
-          row.appendChild(el("span", "cp-rule-number", "0" + (i + 1)));
-          var copy2 = el("div");
+          var p = SF.parseKeywordLine(line), row = asStep(el2("div", "cp-rule"), slide);
+          row.appendChild(el2("span", "cp-rule-number", "0" + (i + 1)));
+          var copy2 = el2("div");
           copy2.appendChild(bullet("h3", "", i, p.term));
           copy2.appendChild(bullet("p", "", i, p.def));
           row.appendChild(copy2);
@@ -950,10 +950,10 @@
         if (slide.subtitle) body.appendChild(rich("p", "cp-closing-line", slide, "subtitle", slide.subtitle));
         note();
       } else if (slide.type === "keyfact") {
-        var actionMark = el("div", "cp-action-number", "↗");
+        var actionMark = el2("div", "cp-action-number", "↗");
         actionMark.setAttribute("aria-hidden", "true");
         body.appendChild(actionMark);
-        var action = el("div", "cp-action");
+        var action = el2("div", "cp-action");
         if (slide.subtitle) action.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
         action.appendChild(field("h2", "", "title"));
         action.appendChild(field("p", "", "body"));
@@ -963,17 +963,17 @@
         body.appendChild(action);
       } else if (slide.type === "compare") {
         heading();
-        var heads = parts(slide.subtitle), table = el("div", "cp-comparison");
+        var heads = parts(slide.subtitle), table = el2("div", "cp-comparison");
         var labelled = (slide.bullets || []).some(function(line) {
           return !!parts(line).note;
         });
-        var th = el("div", "cp-compare-head" + (labelled ? " labelled" : ""));
-        if (labelled) th.appendChild(el("span"));
+        var th = el2("div", "cp-compare-head" + (labelled ? " labelled" : ""));
+        if (labelled) th.appendChild(el2("span"));
         th.appendChild(rich("h3", "", slide, "subtitle", heads.label));
         th.appendChild(rich("h3", "", slide, "subtitle", heads.value));
         table.appendChild(th);
         (slide.bullets || []).forEach(function(line, i) {
-          var p = parts(line), row = asStep(el("div", "cp-compare-row" + (labelled ? " labelled" : "")), slide);
+          var p = parts(line), row = asStep(el2("div", "cp-compare-row" + (labelled ? " labelled" : "")), slide);
           if (labelled) row.appendChild(bullet("p", "", i, p.note));
           row.appendChild(bullet("p", "", i, p.label));
           row.appendChild(bullet("p", "", i, p.value));
@@ -983,10 +983,10 @@
         note();
       } else if (slide.type === "iceberg") {
         heading();
-        var reveal = el("div", "cp-risk-map");
-        var risks = el("div", "cp-risks");
+        var reveal = el2("div", "cp-risk-map");
+        var risks = el2("div", "cp-risks");
         (slide.bullets || []).forEach(function(line, i) {
-          var p = parts(line), row = asStep(el("div", "cp-risk"), slide);
+          var p = parts(line), row = asStep(el2("div", "cp-risk"), slide);
           row.appendChild(bullet("span", "cp-risk-number", i, p.value || String(i + 1)));
           row.appendChild(bullet("h3", "", i, p.label));
           row.appendChild(bullet("p", "", i, p.note));
@@ -997,9 +997,9 @@
         note();
       } else if (slide.type === "sourcecheck") {
         heading();
-        var receipt = el("div", "cp-credits");
+        var receipt = el2("div", "cp-credits");
         (slide.bullets || []).forEach(function(line, i) {
-          var p = parts(line), row = asStep(el("div", "cp-credit"), slide);
+          var p = parts(line), row = asStep(el2("div", "cp-credit"), slide);
           row.appendChild(bullet("span", "", i, p.label));
           row.appendChild(bullet("strong", "", i, p.value));
           row.appendChild(bullet("p", "", i, p.note));
@@ -1009,14 +1009,14 @@
         note();
       } else if (slide.type === "spectrum") {
         heading();
-        var lanes = el("div", "cp-lanes");
+        var lanes = el2("div", "cp-lanes");
         [parts(slide.subtitle).label, parts(slide.subtitle).value].forEach(function(label, side) {
-          var lane = el("div", "cp-lane");
+          var lane = el2("div", "cp-lane");
           lane.appendChild(rich("h3", "", slide, "subtitle", label));
           (slide.bullets || []).forEach(function(line, i) {
             var p = parts(line);
             if ((Number(p.value) >= 50 ? 1 : 0) !== side) return;
-            var item = asStep(el("div", "cp-lane-item"), slide);
+            var item = asStep(el2("div", "cp-lane-item"), slide);
             item.dataset.step = String(i);
             item.appendChild(bullet("strong", "", i, p.label));
             item.appendChild(bullet("span", "cp-lane-position", i, p.value));
@@ -1049,8 +1049,8 @@
 
   // src/render/charts.js
   function createChartRenderer(SF, helpers) {
-    const { el } = helpers;
-    var CHART = { w: 1180, h: 430, padL: 92, padR: 40, padT: 22, padB: 62 };
+    const { el: el2 } = helpers;
+    var CHART2 = { w: 1180, h: 430, padL: 92, padR: 40, padT: 22, padB: 62 };
     function chartColor(i) {
       return "var(--chart-" + (i % 6 + 1) + ")";
     }
@@ -1097,16 +1097,16 @@
       return String(Math.round(v * 100) / 100).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
     function chartKey(data, slide) {
-      var wrap = el("div", "chart-key");
+      var wrap = el2("div", "chart-key");
       if (!SF.chartUsesSeriesLegend || !SF.chartUsesSeriesLegend(slide && slide.chartKind, data.series.length)) {
         return wrap;
       }
       data.series.forEach(function(s, i) {
-        var item = el("span", "ck-item");
-        var dot = el("i", "ck-dot");
+        var item = el2("span", "ck-item");
+        var dot = el2("i", "ck-dot");
         dot.style.background = chartColor(i);
         item.appendChild(dot);
-        item.appendChild(el("span", null, s.name));
+        item.appendChild(el2("span", null, s.name));
         wrap.appendChild(item);
       });
       return wrap;
@@ -1114,42 +1114,42 @@
     function chartTable(data, slide) {
       if (slide && slide.chartKind === "sankey" && SF.chartFlows) {
         var flows = SF.chartFlows(slide);
-        var ft = el("table", "chart-data-table");
-        var fh = el("tr");
+        var ft = el2("table", "chart-data-table");
+        var fh = el2("tr");
         ["From", "To", "Amount"].forEach(function(h) {
-          fh.appendChild(el("th", null, h));
+          fh.appendChild(el2("th", null, h));
         });
         ft.appendChild(fh);
         flows.links.forEach(function(l) {
-          var tr = el("tr");
-          tr.appendChild(el("td", null, l.from));
-          tr.appendChild(el("td", null, l.to));
-          tr.appendChild(el("td", null, fmt(l.value)));
+          var tr = el2("tr");
+          tr.appendChild(el2("td", null, l.from));
+          tr.appendChild(el2("td", null, l.to));
+          tr.appendChild(el2("td", null, fmt(l.value)));
           ft.appendChild(tr);
         });
         return ft;
       }
-      var t = el("table", "chart-data-table");
-      var head = el("tr");
-      head.appendChild(el("th", null, ""));
+      var t = el2("table", "chart-data-table");
+      var head = el2("tr");
+      head.appendChild(el2("th", null, ""));
       data.series.forEach(function(s) {
-        head.appendChild(el("th", null, s.name));
+        head.appendChild(el2("th", null, s.name));
       });
       t.appendChild(head);
       data.categories.forEach(function(c, r) {
-        var tr = el("tr");
-        tr.appendChild(el("th", null, c));
+        var tr = el2("tr");
+        tr.appendChild(el2("th", null, c));
         data.series.forEach(function(s) {
-          tr.appendChild(el("td", null, fmt(s.values[r])));
+          tr.appendChild(el2("td", null, fmt(s.values[r])));
         });
         t.appendChild(tr);
       });
       return t;
     }
     function barChart(data, slide, stepOf) {
-      var W = CHART.w, H = CHART.h, P = CHART;
-      var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
+      var plotW = W2 - P.padL - P.padR, plotH = H2 - P.padT - P.padB;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var all = [];
       data.series.forEach(function(s) {
         s.values.forEach(function(v) {
@@ -1199,7 +1199,7 @@
           }
           beatFor(si, ci).appendChild(g);
         });
-        var cl = svgEl("text", { x: P.padL + band * ci + band / 2, y: H - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
+        var cl = svgEl("text", { x: P.padL + band * ci + band / 2, y: H2 - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
         cl.textContent = cat;
         svg.appendChild(cl);
       });
@@ -1207,9 +1207,9 @@
       return svg;
     }
     function stackedBar(data, slide, stepOf) {
-      var W = CHART.w, H = CHART.h, P = CHART;
-      var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
+      var plotW = W2 - P.padL - P.padR, plotH = H2 - P.padT - P.padB;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var totals = data.categories.map(function(_, ci) {
         return data.series.reduce(function(sum2, s) {
           var v = s.values[ci];
@@ -1251,7 +1251,7 @@
           groups[si].appendChild(g);
           run += v;
         });
-        var cl = svgEl("text", { x: P.padL + band * ci + band / 2, y: H - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
+        var cl = svgEl("text", { x: P.padL + band * ci + band / 2, y: H2 - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
         cl.textContent = cat;
         svg.appendChild(cl);
       });
@@ -1259,13 +1259,13 @@
       return svg;
     }
     function horizontalBar(data, slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
       var longest = data.categories.reduce(function(n2, c) {
         return Math.max(n2, String(c).length);
       }, 0);
       var padL = Math.min(320, 40 + longest * 10);
-      var plotW = W - padL - P.padR, plotH = H - P.padT - P.padB;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var plotW = W2 - padL - P.padR, plotH = H2 - P.padT - P.padB;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var all = [];
       data.series.forEach(function(sr) {
         sr.values.forEach(function(v) {
@@ -1316,10 +1316,10 @@
       return svg;
     }
     function scatterChart(slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
       var d = SF.chartPoints(slide);
-      var padL = P.padL, plotW = W - padL - P.padR, plotH = H - P.padT - P.padB;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var padL = P.padL, plotW = W2 - padL - P.padR, plotH = H2 - P.padT - P.padB;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var xs = [], ys = [];
       d.series.forEach(function(sr) {
         sr.points.forEach(function(pt) {
@@ -1346,7 +1346,7 @@
       });
       axisTicks(xMax - x0).forEach(function(t) {
         var x = xAt(x0 + t);
-        var lab = svgEl("text", { x, y: H - P.padB + 30, class: "ch-tick", "text-anchor": "middle" });
+        var lab = svgEl("text", { x, y: H2 - P.padB + 30, class: "ch-tick", "text-anchor": "middle" });
         lab.textContent = fmt(x0 + t);
         svg.appendChild(lab);
       });
@@ -1380,7 +1380,7 @@
         svg.appendChild(g);
       });
       if (d.xLabel) {
-        var xl = svgEl("text", { x: padL + plotW / 2, y: H - 6, class: "ch-axis-label", "text-anchor": "middle" });
+        var xl = svgEl("text", { x: padL + plotW / 2, y: H2 - 6, class: "ch-axis-label", "text-anchor": "middle" });
         xl.textContent = d.xLabel;
         svg.appendChild(xl);
       }
@@ -1389,12 +1389,12 @@
       return svg;
     }
     function histogramChart(slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
       var vals = SF.chartValues(slide);
       var bins = SF.histogramBins(vals);
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       if (!bins.length) return svg;
-      var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
+      var plotW = W2 - P.padL - P.padR, plotH = H2 - P.padT - P.padB;
       var max = niceMax2(Math.max.apply(null, bins.map(function(b) {
         return b.count;
       })));
@@ -1418,7 +1418,7 @@
           class: "ch-bin"
         }));
         if (i === 0 || i === bins.length - 1 || i % 2 === 0) {
-          var lab = svgEl("text", { x: P.padL + i * bw, y: H - P.padB + 30, class: "ch-tick", "text-anchor": "middle" });
+          var lab = svgEl("text", { x: P.padL + i * bw, y: H2 - P.padB + 30, class: "ch-tick", "text-anchor": "middle" });
           lab.textContent = fmt(Math.round(b.from * 10) / 10);
           svg.appendChild(lab);
         }
@@ -1431,9 +1431,9 @@
       return svg;
     }
     function boxChart(slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
       var groups = SF.chartGroups(slide);
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       if (!groups.length) return svg;
       var summaries = groups.map(function(g) {
         return SF.fiveNumber(g.values);
@@ -1447,7 +1447,7 @@
       var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
       var rng = niceRange(lo, hi);
       var base = rng.lo, top = rng.hi;
-      var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
+      var plotW = W2 - P.padL - P.padR, plotH = H2 - P.padT - P.padB;
       var yAt = function(v) {
         return P.padT + plotH - (v - base) / (top - base || 1) * plotH;
       };
@@ -1484,7 +1484,7 @@
           g.appendChild(svgEl("circle", { cx, cy: yAt(v), r: 5, class: "ch-outlier", stroke: col }));
         });
         svg.appendChild(g);
-        var cl = svgEl("text", { x: cx, y: H - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
+        var cl = svgEl("text", { x: cx, y: H2 - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
         cl.textContent = grp.name + " · n=" + f.n;
         svg.appendChild(cl);
       });
@@ -1492,8 +1492,8 @@
       return svg;
     }
     function pictogramChart(data, slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg ch-picto", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg ch-picto", role: "img" });
       var icons = String(slide.chartIcon || "").trim().split(/[\s,]+/).filter(Boolean);
       if (!icons.length) icons = ["●"];
       var icon = icons[0];
@@ -1506,7 +1506,7 @@
       var labelRoom = Math.min(300, 40 + data.categories.reduce(function(n, c) {
         return Math.max(n, String(c).length);
       }, 0) * 10);
-      var rowH = Math.min(78, (H - P.padT - P.padB) / Math.max(1, data.categories.length));
+      var rowH = Math.min(78, (H2 - P.padT - P.padB) / Math.max(1, data.categories.length));
       var size = Math.min(rowH * 0.74, 46);
       data.categories.forEach(function(cat, ci) {
         var y = P.padT + rowH * ci + rowH / 2;
@@ -1556,17 +1556,17 @@
         g.appendChild(vlab);
         svg.appendChild(g);
       });
-      var key = svgEl("text", { x: labelRoom, y: H - 10, class: "ch-tick" });
+      var key = svgEl("text", { x: labelRoom, y: H2 - 10, class: "ch-tick" });
       key.textContent = (icons.length > 1 ? "Each icon" : icons[0]) + " = " + fmt(unit) + (data.series[0] && data.series[0].name ? " " + data.series[0].name.toLowerCase() : "");
       svg.appendChild(key);
       return svg;
     }
     function radarChart(data, slide) {
-      var W = CHART.w, H = CHART.h;
-      var cx = W / 2, cy = H / 2 + 6, R = Math.min(H / 2 - 34, 168);
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
-      var axes = data.categories.length;
-      if (axes < 3) return svg;
+      var W2 = CHART2.w, H2 = CHART2.h;
+      var cx = W2 / 2, cy = H2 / 2 + 6, R = Math.min(H2 / 2 - 34, 168);
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
+      var axes2 = data.categories.length;
+      if (axes2 < 3) return svg;
       var all = [];
       data.series.forEach(function(sr) {
         sr.values.forEach(function(v) {
@@ -1575,7 +1575,7 @@
       });
       var max = niceMax2(Math.max.apply(null, all.concat([0])));
       var ang = function(i2) {
-        return -Math.PI / 2 + i2 / axes * Math.PI * 2;
+        return -Math.PI / 2 + i2 / axes2 * Math.PI * 2;
       };
       var at = function(i2, v) {
         var r = Math.max(0, v) / max * R;
@@ -1583,12 +1583,12 @@
       };
       [0.25, 0.5, 0.75, 1].forEach(function(f) {
         var pts = [];
-        for (var i2 = 0; i2 < axes; i2++) {
+        for (var i2 = 0; i2 < axes2; i2++) {
           pts.push((cx + R * f * Math.cos(ang(i2))).toFixed(1) + "," + (cy + R * f * Math.sin(ang(i2))).toFixed(1));
         }
         svg.appendChild(svgEl("polygon", { points: pts.join(" "), class: "ch-grid ch-web", fill: "none" }));
       });
-      for (var i = 0; i < axes; i++) {
+      for (var i = 0; i < axes2; i++) {
         var e = at(i, max);
         svg.appendChild(svgEl("line", { x1: cx, y1: cy, x2: e[0].toFixed(1), y2: e[1].toFixed(1), class: "ch-grid" }));
         var lr = R + 26, lx = cx + lr * Math.cos(ang(i)), ly = cy + lr * Math.sin(ang(i));
@@ -1607,7 +1607,7 @@
       svg.appendChild(tick);
       data.series.forEach(function(sr, si) {
         var pts = [];
-        for (var i2 = 0; i2 < axes; i2++) {
+        for (var i2 = 0; i2 < axes2; i2++) {
           var v = sr.values[i2];
           var p = at(i2, v == null ? 0 : v);
           pts.push(p[0].toFixed(1) + "," + p[1].toFixed(1));
@@ -1621,7 +1621,7 @@
           "stroke-width": 3,
           "stroke-linejoin": "round"
         }));
-        for (var j = 0; j < axes; j++) {
+        for (var j = 0; j < axes2; j++) {
           var vv = sr.values[j], pp = at(j, vv == null ? 0 : vv);
           g.appendChild(svgEl("circle", {
             cx: pp[0].toFixed(1),
@@ -1636,12 +1636,12 @@
       return svg;
     }
     function sankeyChart(slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
       var f = SF.chartFlows(slide);
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       if (!f.links.length) return svg;
       var padT = 18, padB = 26, left = 6, right = 6;
-      var plotH = H - padT - padB;
+      var plotH = H2 - padT - padB;
       var nodeW = 16;
       var gap = 16;
       var byLayer = [];
@@ -1658,7 +1658,7 @@
       }, 0);
       var perUnit = (plotH - (tallest - 1) * gap) / (heaviest || 1);
       var colX = function(d2) {
-        return left + (f.layers === 1 ? 0 : d2 * ((W - left - right - nodeW) / (f.layers - 1)));
+        return left + (f.layers === 1 ? 0 : d2 * ((W2 - left - right - nodeW) / (f.layers - 1)));
       };
       byLayer.forEach(function(col, d2) {
         col.sort(function(a, b) {
@@ -1720,8 +1720,8 @@
       return svg;
     }
     function dumbbellChart(data, slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       if (data.series.length < 2) return svg;
       var a = data.series[0], b = data.series[1];
       var vals = [];
@@ -1736,7 +1736,7 @@
         return Math.max(n, String(c).length);
       }, 0);
       var padL = Math.min(330, 40 + longest * 9.5);
-      var plotW = W - padL - P.padR, plotH = H - P.padT - P.padB;
+      var plotW = W2 - padL - P.padR, plotH = H2 - P.padT - P.padB;
       var sx = function(v) {
         return padL + (v - rng.lo) / (rng.hi - rng.lo || 1) * plotW;
       };
@@ -1792,9 +1792,9 @@
       "severe"
     ];
     function matrixChart(slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
       var rows2 = SF.parseTable(slide.body);
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       if (rows2.length < 2) return svg;
       var head = rows2[0], body = rows2.slice(1);
       var cols = head.slice(1).filter(function(h) {
@@ -1823,7 +1823,7 @@
         return Math.max(n, String(r[0] || "").length);
       }, 0);
       var padL = Math.min(300, 30 + longest * 9.5);
-      var plotW = W - padL - P.padR, plotH = H - P.padT - 42;
+      var plotW = W2 - padL - P.padR, plotH = H2 - P.padT - 42;
       var cw = plotW / cols.length, rh = Math.min(34, plotH / Math.max(1, body.length + 1));
       cols.forEach(function(c, j) {
         var lab = svgEl("text", { x: padL + cw * j + cw / 2, y: P.padT + 16, class: "ch-cat", "text-anchor": "middle" });
@@ -1865,8 +1865,8 @@
       return svg;
     }
     function multiplesChart(data, slide) {
-      var W = CHART.w, H = CHART.h;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var panels = data.categories.map(function(name, i) {
         return { name, values: data.series.map(function(sr) {
           return sr.values[i];
@@ -1887,7 +1887,7 @@
       var cols = Math.min(panels.length, panels.length <= 4 ? panels.length : Math.ceil(Math.sqrt(panels.length * 1.9)));
       var rows2 = Math.ceil(panels.length / cols);
       var padTop = 26, padBottom = 34;
-      var cellW = (W - 36) / cols, cellH = (H - padTop - padBottom) / rows2;
+      var cellW = (W2 - 36) / cols, cellH = (H2 - padTop - padBottom) / rows2;
       var plotW = cellW - 30, plotH = Math.max(22, cellH - 48);
       panels.forEach(function(p, i) {
         var cx = 18 + i % cols * cellW, cy = padTop + Math.floor(i / cols) * cellH;
@@ -1956,20 +1956,20 @@
         });
         svg.appendChild(g);
       });
-      var note = svgEl("text", { x: 18, y: H - 10, class: "ch-tick" });
+      var note = svgEl("text", { x: 18, y: H2 - 10, class: "ch-tick" });
       note.textContent = "Every panel on the same " + fmt(rng.lo) + "–" + fmt(rng.hi) + " scale · rose, fell or held is shown by colour";
       svg.appendChild(note);
       return svg;
     }
     function lineChart(data, slide, area) {
-      var W = CHART.w, H = CHART.h, P = CHART;
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
       var longest = data.series.reduce(function(n, x) {
         return Math.max(n, x.name.length);
       }, 0);
       var labelRoom = Math.min(230, 18 + longest * 10.5);
       var padR = P.padR + labelRoom;
-      var plotW = W - P.padL - padR, plotH = H - P.padT - P.padB;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var plotW = W2 - P.padL - padR, plotH = H2 - P.padT - P.padB;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var all = [];
       data.series.forEach(function(s) {
         s.values.forEach(function(v) {
@@ -1992,7 +1992,7 @@
         return P.padT + plotH - v / max * plotH;
       };
       data.categories.forEach(function(cat, i) {
-        var cl = svgEl("text", { x: xAt(i), y: H - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
+        var cl = svgEl("text", { x: xAt(i), y: H2 - P.padB + 30, class: "ch-cat", "text-anchor": "middle" });
         cl.textContent = cat;
         svg.appendChild(cl);
       });
@@ -2043,9 +2043,9 @@
       return svg;
     }
     function pieChart(data, slide, donut) {
-      var W = CHART.w, H = CHART.h;
-      var cx = W / 2, cy = H / 2 + 4, R = Math.min(H / 2 - 14, 200);
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h;
+      var cx = W2 / 2, cy = H2 / 2 + 4, R = Math.min(H2 / 2 - 14, 200);
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var vals = (data.series[0] ? data.series[0].values : []).map(function(v) {
         return v == null ? 0 : Math.max(0, v);
       });
@@ -2118,8 +2118,8 @@
       return layoutTreemap(left, x, y, w, h * ratio).concat(layoutTreemap(right, x, y + h * ratio, w, h * (1 - ratio)));
     }
     function treemapChart(data, slide) {
-      var W = CHART.w, H = CHART.h;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var series = data.series[0];
       if (!series) return svg;
       var nodes = [];
@@ -2137,7 +2137,7 @@
       });
       if (!total) return svg;
       var gap = 3;
-      var rects = layoutTreemap(nodes, gap, gap, W - gap * 2, H - gap * 2);
+      var rects = layoutTreemap(nodes, gap, gap, W2 - gap * 2, H2 - gap * 2);
       rects.forEach(function(r) {
         var g = svgEl("g", { class: "ch-cell ch-beat", "data-step": r.i, "data-series": "0" });
         var pad = 1.5;
@@ -2174,9 +2174,9 @@
       return svg;
     }
     function bulletChart(data, slide) {
-      var W = CHART.w, H = CHART.h, P = { padL: 160, padR: 40, padT: 18, padB: 28 };
-      var plotW = W - P.padL - P.padR;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h, P = { padL: 160, padR: 40, padT: 18, padB: 28 };
+      var plotW = W2 - P.padL - P.padR;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var actual = data.series[0];
       var target = data.series[1] || null;
       if (!actual) return svg;
@@ -2187,7 +2187,7 @@
         });
       });
       var max = niceMax2(Math.max.apply(null, all.concat([0])));
-      var rowH = Math.min(72, (H - P.padT - P.padB) / Math.max(1, data.categories.length));
+      var rowH = Math.min(72, (H2 - P.padT - P.padB) / Math.max(1, data.categories.length));
       var trackH = Math.min(22, rowH * 0.38);
       var barH = Math.min(12, trackH * 0.55);
       data.categories.forEach(function(cat, ci) {
@@ -2246,9 +2246,9 @@
       return svg;
     }
     function comboChart(data, slide) {
-      var W = CHART.w, H = CHART.h, P = CHART;
-      var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h, P = CHART2;
+      var plotW = W2 - P.padL - P.padR, plotH = H2 - P.padT - P.padB;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       if (!data.series.length) return svg;
       var all = [];
       data.series.forEach(function(s) {
@@ -2281,7 +2281,7 @@
         colG.appendChild(g);
         var cl = svgEl("text", {
           x: P.padL + band * ci + band / 2,
-          y: H - P.padB + 30,
+          y: H2 - P.padB + 30,
           class: "ch-cat",
           "text-anchor": "middle"
         });
@@ -2334,8 +2334,8 @@
       return svg;
     }
     function waffleChart(data, slide) {
-      var W = CHART.w, H = CHART.h;
-      var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img" });
+      var W2 = CHART2.w, H2 = CHART2.h;
+      var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
       var series = data.series[0];
       if (!series) return svg;
       var parts = [];
@@ -2370,11 +2370,11 @@
       var labelW = Math.max(160, Math.min(380, 52 + parts.reduce(function(m, p) {
         return Math.max(m, p.label.length);
       }, 0) * 9 + 24));
-      var gridSize = Math.min(H - 40, W - labelW - 80);
+      var gridSize = Math.min(H2 - 40, W2 - labelW - 80);
       var cell = gridSize / 10;
       var gap = Math.max(2, cell * 0.08);
       var ox = labelW;
-      var oy = (H - gridSize) / 2;
+      var oy = (H2 - gridSize) / 2;
       for (var i = 0; i < 100; i++) {
         var col = i % 10;
         var row = Math.floor(i / 10);
@@ -2424,13 +2424,13 @@
   function installExplore(SF) {
     var kinds = ["beforeafter", "explore", "simulation", "experiment"];
     function active2(slide) {
-      return SF.MotionLab && SF.MotionLab.active(slide) || kinds.includes(slide.type) || slide.type === "chart" && slide.exploration && slide.exploration.prediction;
+      return SF.Figures && SF.Figures.active(slide) || SF.MotionLab && SF.MotionLab.active(slide) || kinds.includes(slide.type) || slide.type === "chart" && slide.exploration && slide.exploration.prediction;
     }
     function config(slide) {
       return SF.normalizeExploration(slide.exploration);
     }
     function initial(slide) {
-      return { position: 50, spot: -1, input: config(slide).initial, revealed: false, experimentStep: -1 };
+      return { position: 50, spot: -1, input: config(slide).initial, revealed: false, experimentStep: -1, figureStep: 0 };
     }
     function state2(player, slide) {
       return Object.assign(initial(slide), (player.exploreStates || {})[slide.id] || {});
@@ -2443,7 +2443,8 @@
         var motionNext = SF.MotionLab.update(slide, next, action, value);
         if (!motionNext) return;
         Object.assign(next, motionNext);
-      } else if (action === "experiment" && slide.type === "experiment" && SF.Experiments && Number.isInteger(n)) next.experimentStep = Math.max(-1, Math.min(SF.Experiments.config(slide).states.length - 1, n));
+      } else if (action === "figure" && slide.type === "figure" && SF.Figures && Number.isInteger(n)) next.figureStep = Math.max(0, Math.min(SF.Figures.count(slide) - 1, n));
+      else if (action === "experiment" && slide.type === "experiment" && SF.Experiments && Number.isInteger(n)) next.experimentStep = Math.max(-1, Math.min(SF.Experiments.config(slide).states.length - 1, n));
       else if (action === "experimentReplay" && slide.type === "experiment") next.experimentReplay = (next.experimentReplay || 0) + 1;
       else if (action === "reveal" && slide.type === "chart") next.revealed = value === true;
       else if (action === "position" && slide.type === "beforeafter" && Number.isFinite(n)) next.position = Math.max(0, Math.min(100, n));
@@ -2479,6 +2480,7 @@
         if (["draw", "annotate"].includes(mode)) return mv.sceneStep < SF.MotionLab.items(s).length ? "comparison" : null;
         return null;
       }
+      if (s.type === "figure") return v.figureStep < SF.Figures.count(s) - 1 ? "comparison" : null;
       if (s.type === "experiment") return v.experimentStep < SF.Experiments.config(s).states.length - 1 ? "comparison" : null;
       if (s.type === "chart" && !v.revealed) return "prediction";
       if (s.type === "explore" && v.spot < config(s).spots.length - 1) return "hotspot";
@@ -2501,6 +2503,14 @@
             command(player, "motionStep", mv.sceneStep + direction);
             return true;
           }
+        }
+        return false;
+      }
+      if (s.type === "figure") {
+        var to = v.figureStep + direction;
+        if (to >= 0 && to < SF.Figures.count(s)) {
+          command(player, "figure", to);
+          return true;
         }
         return false;
       }
@@ -2553,6 +2563,10 @@
     }
     function render2(root, pad, slide, opts) {
       if (!active2(slide)) return;
+      if (slide.type === "figure" && SF.Figures) {
+        SF.Figures.render(root, pad, slide, opts);
+        return;
+      }
       if (SF.MotionLab && SF.MotionLab.active(slide)) {
         SF.MotionLab.render(root, pad, slide, opts, SF.safeMedia);
         return;
@@ -2691,7 +2705,7 @@
             var spot2 = c.spots[view.spot];
             var width = scene2.clientWidth || 1160, height = scene2.clientHeight || 360;
             var iw = mainImage.naturalWidth || width, ih = mainImage.naturalHeight || height;
-            var scale = Math.min(width / iw, height / ih), imageWidth = iw * scale, imageHeight = ih * scale;
+            var scale2 = Math.min(width / iw, height / ih), imageWidth = iw * scale2, imageHeight = ih * scale2;
             function point(p) {
               return { x: ((width - imageWidth) / 2 + p.x / 100 * imageWidth) / width * 100, y: ((height - imageHeight) / 2 + p.y / 100 * imageHeight) / height * 100 };
             }
@@ -3048,7 +3062,7 @@
       const left = 110, right = 930, top = 40, bottom = 300;
       const f = Array.isArray(st.focus) ? st.focus : null;
       const lit = (i, j) => !f || (f[0] < 0 || f[0] === i) && (f[1] < 0 || f[1] === j);
-      const colour = (i, j) => colourBy === "category" ? RAINBOW[i % RAINBOW.length] : colourBy === "mono" ? MONO : ramp(j, m);
+      const colour2 = (i, j) => colourBy === "category" ? RAINBOW[i % RAINBOW.length] : colourBy === "mono" ? MONO : ramp(j, m);
       if (mode === "series-totals") {
         const sums = ser.map((s) => sum(s.values)), max2 = niceMax(Math.max(...sums)), y2 = (x) => bottom - x / max2 * (bottom - top);
         axis(max2, left, right, top, bottom);
@@ -3076,7 +3090,7 @@
           let acc = 0;
           ser.forEach((_, j) => {
             const x = v(i, j);
-            poly(`cell:${i}:${j}`, rectPts(xc - w / 2, y(acc + x), w, y(acc) - y(acc + x)), colour(i, j), { fo: lit(i, j) ? 1 : 0.18, stroke: "#ffffff", sw: 1.5 });
+            poly(`cell:${i}:${j}`, rectPts(xc - w / 2, y(acc + x), w, y(acc) - y(acc + x)), colour2(i, j), { fo: lit(i, j) ? 1 : 0.18, stroke: "#ffffff", sw: 1.5 });
             if (mode === "stacked" && st.labels) text2(xc, y(acc + x / 2) + 5, x, 14, "middle", `val:${i}:${j}`, { fill: "#ffffff" });
             acc += x;
           });
@@ -3085,7 +3099,7 @@
           const space = slot * 0.8, w = space / m;
           ser.forEach((_, j) => {
             const x = v(i, j), bx = xc - space / 2 + j * w;
-            poly(`cell:${i}:${j}`, rectPts(bx + 1, y(x), Math.max(2, w - 2), bottom - y(x)), colour(i, j), { fo: lit(i, j) ? 1 : 0.18 });
+            poly(`cell:${i}:${j}`, rectPts(bx + 1, y(x), Math.max(2, w - 2), bottom - y(x)), colour2(i, j), { fo: lit(i, j) ? 1 : 0.18 });
             if (st.labels && (!f || lit(i, j))) text2(bx + w / 2, y(x) - 8, x, f ? 22 : 13, "middle", `val:${i}:${j}`, { wt: f ? 700 : 500 });
           });
         }
@@ -3382,16 +3396,16 @@
         return els;
       }
       const r = rows2[f], name = r.c.toLowerCase(), ax = 190, bx = 390, base = 320, top = 40, span = base - top;
-      const scale = (x) => x / 100 * span;
+      const scale2 = (x) => x / 100 * span;
       text2(40, 40, `${f + 1} / ${rows2.length} · ${r.c}`, 18, "start", "ch:title", { wt: 700 });
       if (name.startsWith("position")) {
         line("ch:axis", 110, top, 110, base, ink, 2, 0.7);
-        [0, 25, 50, 75, 100].forEach((t2) => line(`ch:tick:${t2}`, 102, base - scale(t2), 110, base - scale(t2), ink, 2, 0.7));
-        poly("markA", circlePts(ax, base - scale(r.a), 16), COLOURS[0]);
-        poly("markB", circlePts(bx, base - scale(r.b), 16), COLOURS[0]);
+        [0, 25, 50, 75, 100].forEach((t2) => line(`ch:tick:${t2}`, 102, base - scale2(t2), 110, base - scale2(t2), ink, 2, 0.7));
+        poly("markA", circlePts(ax, base - scale2(r.a), 16), COLOURS[0]);
+        poly("markB", circlePts(bx, base - scale2(r.b), 16), COLOURS[0]);
       } else if (name.startsWith("length")) {
-        poly("markA", rectPts(ax - 30, base - 30 - scale(r.a) * 0.9, 60, scale(r.a) * 0.9), COLOURS[0]);
-        poly("markB", rectPts(bx - 30, base - 90 - scale(r.b) * 0.9, 60, scale(r.b) * 0.9), COLOURS[0]);
+        poly("markA", rectPts(ax - 30, base - 30 - scale2(r.a) * 0.9, 60, scale2(r.a) * 0.9), COLOURS[0]);
+        poly("markB", rectPts(bx - 30, base - 90 - scale2(r.b) * 0.9, 60, scale2(r.b) * 0.9), COLOURS[0]);
       } else if (name.startsWith("angle")) {
         const wedge = (cx, x) => sectorPts(cx, 190, 120, -Math.PI / 2, -Math.PI / 2 + x / 100 * Math.PI);
         poly("markA", wedge(ax, r.a), COLOURS[0]);
@@ -3419,7 +3433,7 @@
       const left = 150, top = 46, cw = Math.min(62, 780 / Math.max(1, nc)), ch = 38;
       const vals = cats.slice(0, nr).flatMap((_, i) => all.map((s2) => val(s2.values[i])));
       const lo = Math.min(...vals), hi = Math.max(...vals), lim = Math.max(Math.abs(lo), Math.abs(hi)) || 1;
-      const lerp = (a, b, u) => a.map((x, k) => x + (b[k] - x) * u);
+      const lerp2 = (a, b, u) => a.map((x, k) => x + (b[k] - x) * u);
       const hex = (c) => "#" + c.map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("");
       const rgb = (h) => {
         const n2 = parseInt(h.slice(1), 16);
@@ -3430,10 +3444,10 @@
         if (st.scheme === "rg" || st.scheme === "bo") {
           const neg = rgb(st.scheme === "rg" ? "#c8102e" : "#b35806"), pos = rgb(st.scheme === "rg" ? "#1a8a3a" : "#2166ac");
           const u2 = Math.max(-1, Math.min(1, x / lim));
-          return u2 < 0 ? lerp(PALE, neg, -u2) : lerp(PALE, pos, u2);
+          return u2 < 0 ? lerp2(PALE, neg, -u2) : lerp2(PALE, pos, u2);
         }
         const u = hi > lo ? (x - lo) / (hi - lo) : 0;
-        return lerp(rgb("#eef4fb"), rgb("#08306b"), u);
+        return lerp2(rgb("#eef4fb"), rgb("#08306b"), u);
       };
       const toLin = (c) => {
         c /= 255;
@@ -3468,7 +3482,7 @@
         text2(left - 14, ly + 20, "Sequential", 15, "end", "strip:seq", { wt: 700 });
         text2(left - 14, ly + 62, "Cyclic", 15, "end", "strip:cyc", { wt: 700 });
         all.forEach((_, j) => {
-          poly(`seq:${j}`, rectPts(left + cw * j + 1, ly, cw - 2, 30), hex(lerp(rgb("#eef4fb"), rgb("#08306b"), nc > 1 ? j / (nc - 1) : 0)));
+          poly(`seq:${j}`, rectPts(left + cw * j + 1, ly, cw - 2, 30), hex(lerp2(rgb("#eef4fb"), rgb("#08306b"), nc > 1 ? j / (nc - 1) : 0)));
           poly(`cyc:${j}`, rectPts(left + cw * j + 1, ly + 42, cw - 2, 30), hex(hsl(j / nc * 360)));
         });
         return els;
@@ -3827,7 +3841,7 @@
         if (typeof value2 === "number") attrs["data-number"] = "true";
         return svg("text", attrs, chart, String(value2));
       }
-      function colour(i) {
+      function colour2(i) {
         return state2.mono ? "#636363" : colours[i % colours.length];
       }
       if (state2.kind === "classification") {
@@ -3869,7 +3883,7 @@
         }
         rows2.forEach(function(r, i) {
           var end = angle + r.value / sum2 * Math.PI * 2, cx = 350, cy = 175, rad = 145;
-          mark(chart, "mark:" + r.index, "sector", { cx, cy, r: rad, start: angle, end, fill: colour(i), stroke: "white" });
+          mark(chart, "mark:" + r.index, "sector", { cx, cy, r: rad, start: angle, end, fill: colour2(i), stroke: "white" });
           text2(570, 65 + i * 32, r.name, 21, "start", "category:" + r.index);
           text2(760, 65 + i * 32, r.value, 21, "middle", "value:" + r.index);
           angle = end;
@@ -3899,14 +3913,14 @@
         });
         rows2.forEach(function(r, i) {
           var p = locations[i];
-          mark(chart, "mark:" + r.index, "circle", { cx: p.x, cy: p.y, r: 24, fill: colour(i) });
+          mark(chart, "mark:" + r.index, "circle", { cx: p.x, cy: p.y, r: 24, fill: colour2(i) });
           text2(p.x, p.y + 45, r.name, 20, "middle", "category:" + r.index);
         });
         return;
       }
       if (state2.kind === "geometry") {
         ["100,70 390,50 430,170 120,190", "390,50 790,80 870,220 430,170", "120,190 430,170 480,320 150,290", "430,170 870,220 800,330 480,320"].forEach(function(p, i) {
-          svg("polygon", { points: p, fill: colour(i), "fill-opacity": 0.22, stroke: ink, "stroke-width": 3 }, chart);
+          svg("polygon", { points: p, fill: colour2(i), "fill-opacity": 0.22, stroke: ink, "stroke-width": 3 }, chart);
         });
         text2(500, 360, "Illustrative boundaries; no measured quantity encoded", 19, "middle");
         return;
@@ -3925,7 +3939,7 @@
           return Math.abs(r.value);
         }));
         rows2.forEach(function(r, i) {
-          var x = 90 + (i + 0.5) * 820 / rows2.length, fill2 = colour(i);
+          var x = 90 + (i + 0.5) * 820 / rows2.length, fill2 = colour2(i);
           if (state2.palette === "sequential") fill2 = "hsl(205,65%," + (92 - (r.value - min) / (max - min) * 60) + "%)";
           if (state2.palette === "diverging") fill2 = "hsl(" + (r.value < 0 ? 210 : 28) + ",70%," + (95 - Math.abs(r.value) / abs * 55) + "%)";
           if (state2.kind === "bubbles") mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: Math.sqrt(Math.max(0, r.value) / max) * Math.min(85, 340 / rows2.length), fill: fill2 });
@@ -3958,7 +3972,7 @@
         var x = left + (i + 0.5) * (right - left) / shown.length;
         if (state2.kind === "line" || state2.kind === "dot") {
           points.push({ x, y: y(r.value), id: r.index });
-          mark(chart, "mark:" + r.index, "circle", { cx: x, cy: y(r.value), r: 7, fill: colour(state2.kind === "dot" ? r.index : 0) });
+          mark(chart, "mark:" + r.index, "circle", { cx: x, cy: y(r.value), r: 7, fill: colour2(state2.kind === "dot" ? r.index : 0) });
           text2(x, y(r.value) - 15, r.value, 19, "middle", "value:" + r.index);
         } else {
           var ss = state2.all ? series.slice(0, 4) : [current], space = (right - left) / shown.length * 0.7, w = space / ss.length;
@@ -3971,7 +3985,7 @@
             }
             var zero = y(Math.max(0, baseline));
             var suffix = state2.all && j !== (Number(state2.series) || 0) ? ":series" + j : "";
-            mark(chart, "mark:" + r.index + suffix, "rect", { x: x - space / 2 + j * w, y: Math.min(y(v), zero), width: Math.max(2, w - 4), height: Math.abs(zero - y(v)), fill: colour(state2.all ? j : state2.categorical || c.preset === "channels" ? r.index : 0) });
+            mark(chart, "mark:" + r.index + suffix, "rect", { x: x - space / 2 + j * w, y: Math.min(y(v), zero), width: Math.max(2, w - 4), height: Math.abs(zero - y(v)), fill: colour2(state2.all ? j : state2.categorical || c.preset === "channels" ? r.index : 0) });
             text2(x - space / 2 + j * w + w / 2, y(v) - 9, v, 17, "middle", "value:" + r.index + suffix);
           });
         }
@@ -3981,10 +3995,10 @@
       if (state2.kind === "line") points.forEach(function(p, i) {
         if (!i) return;
         var q = points[i - 1];
-        svg("line", { "data-motion": "connection:" + q.id + ":" + p.id, x1: q.x, y1: q.y, x2: p.x, y2: p.y, stroke: colour(0), "stroke-width": 3 }, chart);
+        svg("line", { "data-motion": "connection:" + q.id + ":" + p.id, x1: q.x, y1: q.y, x2: p.x, y2: p.y, stroke: colour2(0), "stroke-width": 3 }, chart);
       });
       if (state2.all) series.slice(0, 4).forEach(function(a, i) {
-        svg("rect", { x: 220 + i * 200, y: 349, width: 15, height: 15, fill: colour(i) }, chart);
+        svg("rect", { x: 220 + i * 200, y: 349, width: 15, height: 15, fill: colour2(i) }, chart);
         text2(245 + i * 200, 363, a.name, 18);
       });
       else text2(500, 364, start ? "Visible range: " + shown[0].name + "–" + shown[shown.length - 1].name + " (filtered from " + rows2.length + " observations)" : "Baseline: " + baseline, 18, "middle");
@@ -4040,8 +4054,8 @@
         var buffer = document.createElement("div"), st = c.states[n];
         draw(buffer, s, c, st);
         if (st.hideValues) {
-          buffer.querySelectorAll('[data-motion^="value:"]').forEach(function(el) {
-            el.remove();
+          buffer.querySelectorAll('[data-motion^="value:"]').forEach(function(el2) {
+            el2.remove();
           });
           var title = buffer.querySelector("title");
           if (title) title.textContent = st.label + " — estimate the quantities before revealing the labels.";
@@ -4206,8 +4220,8 @@
       var host = document.createElement("div"), c = config(s), st = c.states[index];
       draw(host, s, c, st);
       if (st.hideValues) {
-        host.querySelectorAll('[data-motion^="value:"]').forEach(function(el) {
-          el.remove();
+        host.querySelectorAll('[data-motion^="value:"]').forEach(function(el2) {
+          el2.remove();
         });
         host.querySelector("title").textContent = st.label + " — estimate before reading the reveal.";
       }
@@ -4216,9 +4230,1519 @@
     SF.Experiments = { config, render: render2, inspector, presets, staticState };
   }
 
+  // src/render/figures/kit.js
+  var NS = "http://www.w3.org/2000/svg";
+  var W = 1280;
+  var H = 720;
+  var SPLIT = { x: 640, y: 548 };
+  var NU = {
+    red: "#c8102e",
+    navy: "#0c3354",
+    deep: "#071f35",
+    stage: "#06192c",
+    paper: "#fbfaf8",
+    ink: "#14181f",
+    dim: "#5a6572",
+    mist: "#9fb3c8",
+    line: "rgba(255,255,255,.14)",
+    serif: "'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif",
+    sans: "'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif",
+    mono: "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace"
+  };
+  function el(tag, attrs, parent, text2) {
+    var n = document.createElementNS(NS, tag);
+    Object.keys(attrs || {}).forEach(function(k) {
+      if (attrs && attrs[k] != null) n.setAttribute(k, String(attrs[k]));
+    });
+    if (text2 != null) n.textContent = text2;
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function set(node, attrs) {
+    Object.keys(attrs).forEach(function(k) {
+      if (attrs[k] == null) node.removeAttribute(k);
+      else node.setAttribute(k, String(attrs[k]));
+    });
+    return node;
+  }
+  function scale(domain, range, log) {
+    var f = log ? Math.log : function(v) {
+      return v;
+    };
+    var d0 = f(domain[0]), d1 = f(domain[1]);
+    var s = function(v) {
+      return range[0] + (f(v) - d0) / (d1 - d0) * (range[1] - range[0]);
+    };
+    return s;
+  }
+  var ease = {
+    /** @param {number} t */
+    inOut: function(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    },
+    /** @param {number} t */
+    out: function(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+  };
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+  function reduced() {
+    try {
+      return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    } catch (e) {
+      return false;
+    }
+  }
+  function tween(ms, frame, curve) {
+    if (ms <= 0 || reduced() || typeof requestAnimationFrame !== "function") {
+      frame(1);
+      return function() {
+      };
+    }
+    var start = 0, id = 0, done = false, c = curve || ease.inOut;
+    function tick(now) {
+      if (done) return;
+      if (!start) start = now;
+      var k = Math.min(1, (now - start) / ms);
+      frame(c(k));
+      if (k < 1) id = requestAnimationFrame(tick);
+      else done = true;
+    }
+    id = requestAnimationFrame(tick);
+    return function() {
+      done = true;
+      cancelAnimationFrame(id);
+    };
+  }
+  function format(spec, v) {
+    if (v == null || !isFinite(v)) return "n/a";
+    var money = spec.charAt(0) === "$", s = money ? spec.slice(1) : spec;
+    var comma = s.indexOf(",") >= 0, m = s.match(/\.(\d+)([f%s])?/) || [], dp = m[1] ? Number(m[1]) : 0, kind = m[2] || (s.slice(-1) === "d" ? "d" : "f");
+    var out;
+    if (kind === "%") out = (v * 100).toFixed(dp) + "%";
+    else if (kind === "s") {
+      var units = [[1e12, "T"], [1e9, "G"], [1e6, "M"], [1e3, "k"]], u = units.find(function(x) {
+        return Math.abs(v) >= /** @type {number} */
+        x[0];
+      });
+      out = u ? (v / /** @type {number} */
+      u[0]).toPrecision(dp || 3).replace(/\.0+$/, "") + u[1] : String(Math.round(v));
+    } else {
+      out = kind === "d" ? String(Math.round(v)) : v.toFixed(dp);
+      if (comma) {
+        var parts = out.split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        out = parts.join(".");
+      }
+    }
+    return (money ? "$" : "") + out;
+  }
+  function tooltipCard(parent, rows2, x, y, o) {
+    var size = o && o.size || 19, pad = size * 0.55, lh = size * 1.45;
+    var g = el("g", { class: "fig-tooltip", "pointer-events": "none" }, parent);
+    var keyW = 0, valW = 0;
+    rows2.forEach(function(r) {
+      keyW = Math.max(keyW, textWidth(r[0], size, true));
+      valW = Math.max(valW, textWidth(r[1], size, false));
+    });
+    var w = pad * 2 + keyW + size * 0.5 + valW, h = pad * 2 + lh * rows2.length - (lh - size * 1.15);
+    var gap = o && o.avoid || 16, maxX = o && o.maxX || W - 12;
+    var left = x + gap, top = y + gap;
+    if (left + w > maxX) left = x - gap - w;
+    if (top + h > H - 12) top = y - gap - h;
+    left = Math.max(12, left);
+    top = Math.max(12, top);
+    set(g, { transform: "translate(" + left + " " + top + ")" });
+    el("rect", { x: 3, y: 3, width: w, height: h, rx: 4, fill: "rgba(0,0,0,.28)" }, g);
+    el("rect", { width: w, height: h, rx: 4, fill: "#ffffff", stroke: "#d9d9d9", "stroke-width": 1 }, g);
+    rows2.forEach(function(r, i) {
+      var baseline = pad + size * 0.92 + i * lh;
+      el("text", { x: pad + keyW, y: baseline, "text-anchor": "end", "font-family": NU.sans, "font-size": size, fill: "#808080" }, g, r[0]);
+      el("text", { x: pad + keyW + size * 0.5, y: baseline, "font-family": NU.sans, "font-size": size, "font-weight": 600, fill: "#14181f" }, g, r[1]);
+    });
+    return { node: g, x: left, y: top, w, h };
+  }
+  function textWidth(text2, size, light) {
+    var w = 0;
+    for (var i = 0; i < text2.length; i++) {
+      var c = text2.charAt(i);
+      w += /[ijl.,'|!:;]/.test(c) ? 0.28 : /[mwMW@%]/.test(c) ? 0.86 : /[A-Z0-9$]/.test(c) ? 0.64 : c === " " ? 0.3 : 0.53;
+    }
+    return w * size * (light ? 1 : 1.04);
+  }
+  function stage(svg, o) {
+    var ground = o.ground || "stage", dark = ground !== "paper", split = ground === "split";
+    var ink = dark ? NU.paper : NU.ink, soft = dark ? NU.mist : NU.dim;
+    el("rect", { width: W, height: H, fill: dark ? NU.stage : NU.paper }, svg);
+    if (dark) {
+      var defs = el("defs", {}, svg), glow = el("radialGradient", { id: "fig-glow", cx: "50%", cy: "42%", r: "70%" }, defs);
+      el("stop", { offset: "0", "stop-color": "#0f3156", "stop-opacity": 0.9 }, glow);
+      el("stop", { offset: "1", "stop-color": NU.stage, "stop-opacity": 0 }, glow);
+      el("rect", { width: W, height: H, fill: "url(#fig-glow)" }, svg);
+    }
+    if (split) el("rect", { width: SPLIT.x, height: SPLIT.y, fill: NU.paper }, svg);
+    if (o.eyebrow) el("text", { x: 64, y: 58, "font-family": NU.sans, "font-size": 15, "font-weight": 700, "letter-spacing": 2.6, fill: NU.red }, svg, o.eyebrow.toUpperCase());
+    var title = o.title ? el("text", { x: 64, y: 100, "font-family": NU.serif, "font-size": split ? 32 : 38, fill: split ? NU.ink : ink }, svg, o.title) : null;
+    var caption = el("text", { x: 64, y: H - 34, "font-family": NU.sans, "font-size": 22, fill: ink, class: "fig-caption" }, svg);
+    var pips = el("g", { transform: "translate(" + (W - 64) + " " + (H - 41) + ")" }, svg);
+    if (o.credit) el("text", { x: W - 64, y: 58, "text-anchor": "end", "font-family": NU.sans, "font-size": 13, fill: soft }, svg, o.credit);
+    return {
+      ink,
+      soft,
+      dark,
+      title,
+      /** @param {string} text */
+      caption: function(text2) {
+        caption.textContent = text2 || "";
+      },
+      /** @param {number} at @param {number} of */
+      pips: function(at, of) {
+        pips.textContent = "";
+        if (of < 2) return;
+        for (var i = 0; i < of; i++) el("circle", { cx: -(of - 1 - i) * 18, cy: 0, r: i === at ? 5 : 3.5, fill: i === at ? NU.red : soft, opacity: i === at ? 1 : 0.55 }, pips);
+      }
+    };
+  }
+
+  // src/render/figures/plots.js
+  var GREY = "#8796a8";
+  function tooltipRows(row, spec, columns) {
+    if (!spec) return [];
+    if (spec === "all") return (columns || Object.keys(row)).map(function(k) {
+      return [k, String(row[k])];
+    });
+    var list = typeof spec === "string" ? [{ field: spec }] : spec;
+    return list.map(function(t) {
+      var v = row[t.field];
+      var shown = v == null || typeof v === "number" && !isFinite(v) ? t.missing || "" : t.format ? format(t.format, v) : String(v);
+      return [t.title || t.field, shown];
+    });
+  }
+  function scatter(parent, d, rect, look) {
+    var sx = scale(d.x.domain, [rect.x0, rect.x1], d.x.log), sy = scale(d.y.domain, [rect.y1, rect.y0], d.y.log);
+    var sizeD = d.size && d.size.domain || [1, 1], sizeR = d.size && d.size.range || [3, 40];
+    var fs = look.font || 15;
+    function radius(v) {
+      var k = Math.sqrt(Math.max(0, v - sizeD[0]) / Math.max(1e-9, sizeD[1] - sizeD[0]));
+      return lerp(sizeR[0], sizeR[1], k);
+    }
+    var axes2 = el("g", { "font-family": NU.sans, "font-size": fs, fill: look.soft }, parent);
+    function drawAxes(xd, yd) {
+      axes2.textContent = "";
+      (d.x.ticks || []).filter(function(t) {
+        return t >= xd[0] && t <= xd[1];
+      }).forEach(function(t) {
+        var x = sx(t);
+        el("line", { x1: x, x2: x, y1: rect.y0, y2: rect.y1, stroke: NU.line }, axes2);
+        el("text", { x, y: rect.y1 + fs * 1.7, "text-anchor": "middle" }, axes2, format(d.x.format || ",d", t));
+      });
+      (d.y.ticks || []).filter(function(t) {
+        return t >= yd[0] && t <= yd[1];
+      }).forEach(function(t) {
+        var y = sy(t);
+        el("line", { x1: rect.x0, x2: rect.x1, y1: y, y2: y, stroke: NU.line }, axes2);
+        el("text", { x: rect.x0 - fs * 0.9, y: y + fs * 0.33, "text-anchor": "end" }, axes2, format(d.y.format || ",d", t));
+      });
+      el("text", { x: rect.x1, y: rect.y1 + fs * 3.4, "text-anchor": "end", "font-size": fs + 1, fill: look.ink }, axes2, d.x.title || "");
+      el("text", { x: rect.x0 - fs * 3.3, y: rect.y0 - fs * 1.1, "font-size": fs + 1, fill: look.ink }, axes2, d.y.title || "");
+    }
+    drawAxes(d.x.domain, d.y.domain);
+    var clip = "fig-clip-" + Math.round(Math.random() * 1e9);
+    var cp = el("clipPath", { id: clip }, parent);
+    el("rect", { x: rect.x0 - 40, y: rect.y0 - 40, width: rect.x1 - rect.x0 + 80, height: rect.y1 - rect.y0 + 80 }, cp);
+    var rows2 = d.rows.slice().sort(function(a, b) {
+      return b.size - a.size;
+    });
+    var g = el("g", { "clip-path": "url(#" + clip + ")" }, parent);
+    var byId = {};
+    rows2.forEach(function(r) {
+      var m = { row: r, x: sx(r.x), y: sy(r.y), r: radius(r.size), node: null };
+      m.node = el("circle", { cx: m.x, cy: m.y, r: m.r, fill: GREY, "fill-opacity": 0.78, stroke: NU.stage, "stroke-width": 1 }, g);
+      byId[r.id] = m;
+    });
+    var api = {
+      byId,
+      sx,
+      sy,
+      radius,
+      /** Zoom to new domains (the mantra's "zoom"), moving every bubble there.
+       * @param {number[]} xd @param {number[]} yd @param {boolean} animate */
+      rescale: function(xd, yd, animate) {
+        sx = scale(xd, [rect.x0, rect.x1], d.x.log);
+        sy = scale(yd, [rect.y1, rect.y0], d.y.log);
+        api.sx = sx;
+        api.sy = sy;
+        drawAxes(xd, yd);
+        var from = Object.keys(byId).map(function(k) {
+          return [byId[k].x, byId[k].y];
+        });
+        Object.keys(byId).forEach(function(k) {
+          byId[k].x = sx(byId[k].row.x);
+          byId[k].y = sy(byId[k].row.y);
+        });
+        var ks = Object.keys(byId);
+        tween(animate ? 1200 : 0, function(t) {
+          ks.forEach(function(k, i) {
+            var m = byId[k];
+            set(m.node, { cx: lerp(from[i][0], m.x, t), cy: lerp(from[i][1], m.y, t) });
+          });
+        });
+      },
+      /** Show only some rows (the mantra's "filter"); null shows all. @param {((row: any) => boolean)|null} keep */
+      filter: function(keep) {
+        Object.keys(byId).forEach(function(k) {
+          set(byId[k].node, { display: !keep || keep(byId[k].row) ? null : "none" });
+        });
+        api.kept = keep;
+      },
+      /** @type {((row: any) => boolean)|null} */
+      kept: null,
+      /** Colour by group (or grey), with one row lit in red and the rest faded when asked.
+       * @param {{colour?: boolean, lit?: string|string[]|null, fade?: number}} o */
+      paint: function(o) {
+        var lit = o.lit == null ? null : Array.isArray(o.lit) ? o.lit : [o.lit];
+        Object.keys(byId).forEach(function(k) {
+          var m = byId[k], grp = d.groups && d.groups[m.row.group], on = !lit || lit.indexOf(m.row.id) >= 0;
+          var fill2 = lit && on && !o.colour ? NU.red : o.colour && grp ? grp.color : GREY;
+          set(m.node, { fill: fill2, "fill-opacity": on ? 0.82 : o.fade == null ? 0.18 : o.fade });
+        });
+      },
+      /** The bubble under a point, as Vega picks the mark on top.
+       * @param {{x: number, y: number}} p */
+      nearest: function(p) {
+        var best = null, bestD = Infinity;
+        Object.keys(byId).forEach(function(k) {
+          var m = byId[k], dist = Math.hypot(m.x - p.x, m.y - p.y);
+          if (api.kept && !api.kept(m.row)) return;
+          if (dist <= m.r + 6 && dist - m.r < bestD) {
+            bestD = dist - m.r;
+            best = m;
+          }
+        });
+        return best;
+      }
+    };
+    return api;
+  }
+  function bars(parent, d, rect, look) {
+    var fs = look.font || 15, n = d.rows.length, band = (rect.y1 - rect.y0) / n, max = d.max || Math.max.apply(null, d.rows.map(function(r) {
+      return r.value;
+    }));
+    var sx = scale([0, max], [rect.x0, rect.x1]);
+    var g = el("g", { "font-family": NU.sans, "font-size": fs }, parent);
+    (d.ticks || []).forEach(function(t) {
+      el("line", { x1: sx(t), x2: sx(t), y1: rect.y0, y2: rect.y1, stroke: NU.line }, g);
+      el("text", { x: sx(t), y: rect.y1 + fs * 1.6, "text-anchor": "middle", fill: look.soft }, g, format(d.format || ".3s", t));
+    });
+    if (d.title) el("text", { x: rect.x1, y: rect.y1 + fs * 3.2, "text-anchor": "end", fill: look.ink, "font-size": fs + 1 }, g, d.title);
+    var marks = [];
+    d.rows.forEach(function(r, i) {
+      var y = rect.y0 + i * band + band * 0.18, h = band * 0.64;
+      el("text", { x: rect.x0 - 12, y: y + h / 2 + fs * 0.35, "text-anchor": "end", fill: look.ink }, g, r.label);
+      var whole = el("rect", { x: rect.x0, y, width: Math.max(0, sx(r.value) - rect.x0), height: h, fill: r.color || NU.mist, rx: 2 }, g);
+      var parts = el("g", { opacity: 0 }, g), x = rect.x0;
+      (r.parts || []).forEach(function(p) {
+        var w = sx(p.value) - rect.x0;
+        var node = el("rect", { x, y, width: Math.max(0.5, w), height: h, fill: r.color || NU.mist, stroke: NU.stage, "stroke-width": 0.8 }, parts);
+        marks.push({ row: p.row, bar: r, node, x: x + w / 2, y: y + h / 2, x0: x, x1: x + w, y0: y, y1: y + h });
+        x += w;
+      });
+      marks.push({ row: r.row || r, bar: r, whole: true, node: whole, x: (rect.x0 + sx(r.value)) / 2, y: y + h / 2, x0: rect.x0, x1: sx(r.value), y0: y, y1: y + h, parts });
+    });
+    return {
+      /** @param {boolean} on */
+      split: function(on) {
+        marks.forEach(function(m) {
+          if (m.whole) {
+            set(m.parts, { opacity: on ? 1 : 0 });
+            set(m.node, { opacity: on ? 0 : 1 });
+          }
+        });
+        this._split = on;
+      },
+      _split: false,
+      /** The whole bar for a row id. @param {string} id */
+      find: function(id) {
+        return marks.find(function(m) {
+          return m.whole && m.bar.id === id;
+        }) || null;
+      },
+      /** @param {{x: number, y: number}} p */
+      nearest: function(p) {
+        var split = this._split;
+        return marks.find(function(m) {
+          return !!m.whole === !split && p.x >= m.x0 && p.x <= m.x1 && p.y >= m.y0 && p.y <= m.y1;
+        }) || null;
+      }
+    };
+  }
+  function cardAt(layer, mark, rows2) {
+    layer.textContent = "";
+    if (!mark || !rows2.length) return null;
+    return tooltipCard(layer, rows2, mark.x, mark.y, { avoid: (mark.r || 8) + 10 });
+  }
+
+  // src/render/figures/bubbles.js
+  var PLOT = { x0: 130, x1: W - 90, y0: 160, y1: H - 140 };
+  function pointer(parent) {
+    return el("path", { d: "M0 0 L0 30 L8 23 L13 35 L18 33 L13 21 L23 21 Z", fill: NU.paper, stroke: NU.ink, "stroke-width": 1.5, opacity: 0, "pointer-events": "none" }, parent);
+  }
+  function legendRow(parent, groups, x, y, ink) {
+    var g = el("g", { "font-family": NU.sans, "font-size": 15, opacity: 0 }, parent);
+    Object.keys(groups || {}).forEach(function(k, i) {
+      var gx = x + i % 3 * 230, gy = y + Math.floor(i / 3) * 26;
+      el("circle", { cx: gx, cy: gy - 5, r: 7, fill: groups[k].color }, g);
+      el("text", { x: gx + 14, y: gy, fill: ink }, g, groups[k].label);
+    });
+    return g;
+  }
+  var bubbles = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage;
+      var plot = scatter(svg, d, PLOT, { ink: st.ink, soft: st.soft });
+      if (d.source) el("text", { x: 64, y: H - 76, "font-family": NU.sans, "font-size": 13, fill: st.soft }, svg, d.source);
+      var legend = legendRow(svg, d.groups, PLOT.x0 + 10, PLOT.y0 + 10, st.ink);
+      var clock = el("text", { x: W - 64, y: 100, "text-anchor": "end", "font-family": NU.mono, "font-size": 34, fill: NU.paper, opacity: 0 }, svg);
+      var ring = el("circle", { r: 0, fill: "none", stroke: NU.paper, "stroke-width": 3, "pointer-events": "none", opacity: 0 }, svg);
+      var cursor = pointer(svg);
+      var cardLayer = el("g", { "pointer-events": "none" }, svg);
+      var pinned = (
+        /** @type {any} */
+        null
+      ), hovered = (
+        /** @type {any} */
+        null
+      );
+      function paintCard() {
+        var m = hovered || pinned;
+        set(ring, { opacity: m ? 1 : 0, cx: m ? m.x : 0, cy: m ? m.y : 0, r: m ? m.r + 4 : 0 });
+        cardAt(cardLayer, m, m ? tooltipRows(m.row, d.tooltip) : []);
+      }
+      if (fig.interactive) {
+        svg.addEventListener("pointermove", function(e) {
+          var best = plot.nearest(fig.toSlide(e));
+          if (best !== hovered) {
+            hovered = best;
+            paintCard();
+          }
+        });
+        svg.addEventListener("pointerleave", function() {
+          hovered = null;
+          paintCard();
+        });
+      }
+      var started = Date.now(), timer = 0, stopped = 0, cancel = function() {
+      }, zoomed = d.x.domain.join() + "|" + d.y.domain.join();
+      function tick() {
+        if (!clock.isConnected && started < Date.now() - 1e3) {
+          window.clearInterval(timer);
+          timer = 0;
+          return;
+        }
+        var s = Math.floor(((stopped || Date.now()) - started) / 1e3);
+        clock.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+      }
+      return {
+        /** @param {any} step @param {boolean} animate */
+        update: function(step, animate) {
+          cancel();
+          st.caption(step.caption);
+          plot.paint({ colour: !!step.colour, lit: step.lit, fade: 0.4 });
+          var f = step.focus || {}, xd = f.x || d.x.domain, yd = f.y || d.y.domain, key = xd.join() + "|" + yd.join();
+          if (key !== zoomed) {
+            plot.rescale(xd, yd, animate);
+            zoomed = key;
+          }
+          plot.filter(step.only ? function(r) {
+            return r.group === step.only;
+          } : null);
+          set(legend, { opacity: step.legend ? 1 : 0 });
+          if (step.clock === "run" && fig.interactive) {
+            stopped = 0;
+            set(clock, { opacity: 1, fill: NU.paper });
+            tick();
+            if (!timer) timer = window.setInterval(tick, 250);
+          } else if (step.clock === "stop" && fig.interactive) {
+            if (!stopped) stopped = Date.now();
+            window.clearInterval(timer);
+            timer = 0;
+            tick();
+            set(clock, { opacity: 1, fill: NU.red });
+          } else {
+            window.clearInterval(timer);
+            timer = 0;
+            set(clock, { opacity: 0 });
+          }
+          var target = step.point && plot.byId[step.point];
+          pinned = null;
+          paintCard();
+          if (!target) {
+            set(cursor, { opacity: 0 });
+            return;
+          }
+          var from = { x: W - 140, y: H - 110 }, to = { x: target.x + 2, y: target.y + 2 };
+          cancel = tween(animate ? 1300 : 0, function(k) {
+            set(cursor, { opacity: fig.interactive ? 1 : 0, transform: "translate(" + lerp(from.x, to.x, k) + " " + lerp(from.y, to.y, k) + ")" });
+            if (k >= 1) {
+              pinned = target;
+              paintCard();
+            }
+          }, ease.inOut);
+        },
+        destroy: function() {
+          cancel();
+          window.clearInterval(timer);
+        }
+      };
+    }
+  };
+
+  // src/render/figures/codechart.js
+  var CODE = { x: 56, y: 150, size: 15, lh: 22.5 };
+  var CHART = { x0: SPLIT.x + 96, x1: W - 50, y0: 170, y1: SPLIT.y - 92 };
+  var BOXES = [
+    ["input", "INPUT", "what the reader does"],
+    ["parameter", "PARAMETER", "what the chart stores"],
+    ["predicate", "PREDICATE", "what it tests"],
+    ["response", "VISUAL RESPONSE", "what changes"]
+  ];
+  var TOKENS = /(#.*$)|('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|\b(\d+(?:\.\d+)?)\b|\b(import|from|as|True|False|None|def|return|lambda|if|else)\b|(\balt\.)/g;
+  function colour(text2, line) {
+    text2.textContent = "";
+    var last = 0, m;
+    TOKENS.lastIndex = 0;
+    function span(s, a) {
+      if (s) el("tspan", a || {}, text2, s);
+    }
+    while (m = TOKENS.exec(line)) {
+      span(line.slice(last, m.index));
+      if (m[1]) span(m[1], { fill: NU.dim, "font-style": "italic" });
+      else if (m[2]) span(m[2], { fill: NU.navy, "font-weight": 600 });
+      else if (m[3]) span(m[3], { fill: NU.navy });
+      else if (m[4]) span(m[4], { "font-weight": 700 });
+      else if (m[5]) span(m[5], { fill: NU.dim });
+      last = m.index + m[0].length;
+    }
+    span(line.slice(last));
+  }
+  var codechart = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage, code = d.code || [];
+      var page2 = el("g", { "font-family": NU.mono, "font-size": CODE.size }, svg);
+      var lines = code.map(function(src) {
+        var bug = el("rect", { x: CODE.x - 12, width: SPLIT.x - CODE.x - 4, height: CODE.lh, rx: 5, fill: "none", stroke: NU.red, "stroke-width": 2.5, opacity: 0 }, page2);
+        var bar = el("rect", { x: CODE.x - 22, width: 5, height: CODE.lh - 4, fill: NU.red, opacity: 0 }, page2);
+        var text2 = el("text", { x: CODE.x, fill: NU.ink, style: "white-space:pre" }, page2);
+        return { src, text: text2, bar, bug, typed: false };
+      });
+      function place(l, rank) {
+        var y = CODE.y + rank * CODE.lh;
+        set(l.text, { y });
+        set(l.bar, { y: y - CODE.size + 1 });
+        set(l.bug, { y: y - CODE.size - 2 });
+      }
+      if (d.guide) el("text", { x: W - 50, y: SPLIT.y - 12, "text-anchor": "end", "font-family": NU.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 1.4, fill: NU.red }, svg, d.guide.toUpperCase());
+      var look = { ink: NU.paper, soft: NU.mist, font: 14 };
+      var plotData = d.plot || d;
+      var chart = d.chart === "bars" ? bars(svg, plotData, Object.assign({}, CHART, { x0: SPLIT.x + 210 }), look) : scatter(svg, plotData, CHART, look);
+      var ring = el("circle", { r: 0, fill: "none", stroke: NU.paper, "stroke-width": 2.5, opacity: 0, "pointer-events": "none" }, svg);
+      var cardLayer = el("g", { "pointer-events": "none" }, svg);
+      var stripG = el("g", { "font-family": NU.sans }, svg), bw = (W - 128 - 3 * 34) / 4;
+      var boxes = BOXES.map(function(b, i) {
+        var x = 64 + i * (bw + 34), y = SPLIT.y + 22;
+        var r = el("rect", { x, y, width: bw, height: 86, rx: 10, fill: "rgba(255,255,255,.04)", stroke: NU.line, "stroke-width": 1.5 }, stripG);
+        var label = el("text", { x: x + 16, y: y + 26, "font-size": 13, "font-weight": 700, "letter-spacing": 1.6, fill: NU.mist }, stripG, b[1]);
+        el("text", { x: x + bw - 14, y: y + 26, "text-anchor": "end", "font-size": 12, fill: NU.mist, opacity: 0.8 }, stripG, b[2]);
+        var words = el("text", { x: x + 16, y: y + 60, "font-size": 19, fill: NU.paper }, stripG);
+        if (i < 3) el("path", { d: "M" + (x + bw + 8) + " " + (y + 43) + " h18 m-7 -7 l7 7 l-7 7", fill: "none", stroke: NU.mist, "stroke-width": 2 }, stripG);
+        return { key: b[0], rect: r, label, words };
+      });
+      var spec = (
+        /** @type {any} */
+        null
+      ), pinned = (
+        /** @type {any} */
+        null
+      ), hovered = (
+        /** @type {any} */
+        null
+      );
+      function paintCard() {
+        var m = hovered || pinned, rows2 = m && spec ? tooltipRows(m.row, spec, d.columns) : [];
+        set(ring, { opacity: m && rows2.length && m.r ? 1 : 0, cx: m ? m.x : 0, cy: m ? m.y : 0, r: m && m.r ? m.r + 4 : 0 });
+        cardAt(cardLayer, rows2.length ? m : null, rows2);
+      }
+      if (fig.interactive) {
+        svg.addEventListener("pointermove", function(e) {
+          var p = fig.toSlide(e), best = p.x > SPLIT.x && p.y < SPLIT.y ? chart.nearest(p) : null;
+          if (best !== hovered) {
+            hovered = best;
+            paintCard();
+          }
+        });
+        svg.addEventListener("pointerleave", function() {
+          hovered = null;
+          paintCard();
+        });
+      }
+      var cancel = function() {
+      }, shownLines = [];
+      return {
+        /** @param {any} step @param {boolean} animate */
+        update: function(step, animate) {
+          cancel();
+          st.caption(step.caption);
+          var show = Array.isArray(step.show) ? step.show : code.map(function(_, i) {
+            return i;
+          }).slice(0, step.show == null ? code.length : step.show);
+          var fresh = show.filter(function(i) {
+            return shownLines.indexOf(i) < 0;
+          });
+          var lit = step.lit || (shownLines.length ? fresh : []);
+          var bugs = step.bug || [];
+          lines.forEach(function(l, i) {
+            var rank = show.indexOf(i), on = rank >= 0;
+            if (on) place(l, rank);
+            set(l.text, { opacity: !on ? 0 : lit.length && lit.indexOf(i) < 0 ? 0.34 : 1 });
+            set(l.bar, { opacity: on && lit.indexOf(i) >= 0 ? 1 : 0 });
+            set(l.bug, { opacity: on && bugs.indexOf(i) >= 0 ? 1 : 0 });
+            if (on) colour(l.text, l.src);
+            else l.text.textContent = "";
+          });
+          var typing = animate && shownLines.length ? fresh : [];
+          shownLines = show;
+          var total = typing.reduce(function(n, i) {
+            return n + lines[i].src.length;
+          }, 0);
+          function settle() {
+            spec = step.tooltip === void 0 ? spec : step.tooltip;
+            if (d.chart === "bars") chart.split(!!step.split);
+            else chart.paint({ colour: !!step.colour, lit: step.mark || null, fade: 0.3 });
+            pinned = step.demo ? d.chart === "bars" ? (
+              /** @type {any} */
+              chart.find(step.demo)
+            ) : (
+              /** @type {any} */
+              chart.byId[step.demo]
+            ) : null;
+            paintCard();
+            boxes.forEach(function(b) {
+              var on = step.strip === b.key, words = (step.stripText || {})[b.key] ?? (d.strip || {})[b.key] ?? "";
+              set(b.rect, { stroke: on ? NU.red : NU.line, fill: on ? "rgba(200,16,46,.16)" : "rgba(255,255,255,.04)" });
+              set(b.label, { fill: on ? NU.paper : NU.mist });
+              b.words.textContent = words;
+            });
+          }
+          if (!typing.length) {
+            settle();
+            return;
+          }
+          typing.forEach(function(i) {
+            lines[i].text.textContent = "";
+          });
+          cancel = tween(Math.min(2600, total * 22), function(k) {
+            var chars = Math.round(k * total);
+            typing.forEach(function(i) {
+              var src = lines[i].src, n = Math.max(0, Math.min(src.length, chars));
+              if (n >= src.length) colour(lines[i].text, src);
+              else lines[i].text.textContent = src.slice(0, n);
+              chars -= src.length;
+            });
+            if (k >= 1) settle();
+          }, function(t) {
+            return t;
+          });
+        }
+      };
+    }
+  };
+
+  // src/render/figures/worldmap.js
+  var cache = {};
+  function load(url) {
+    if (!cache[url]) cache[url] = fetch(url).then(function(r) {
+      if (!r.ok) throw new Error("map " + r.status);
+      return r.json();
+    });
+    return cache[url];
+  }
+  var MAP = { x: 200, y: 100, s: 0.88 };
+  var NODATA = { stage: "#2a3d52", paper: "#dcd8cf" };
+  function pathOf(rings, dx, dy) {
+    var ox = MAP.x + (dx || 0), oy = MAP.y + (dy || 0), k = MAP.s, s = "";
+    for (var r = 0; r < rings.length; r++) {
+      var ring = rings[r];
+      for (var i = 0; i < ring.length; i++) s += (i ? "L" : "M") + (ring[i][0] * k + ox).toFixed(1) + " " + (ring[i][1] * k + oy).toFixed(1);
+      s += "Z";
+    }
+    return s;
+  }
+  function mix(a, b, k) {
+    return a.map(function(ring, r) {
+      return ring.map(function(p, i) {
+        var q = b[r][i];
+        return [lerp(p[0], q[0], k), lerp(p[1], q[1], k)];
+      });
+    });
+  }
+  var worldmap = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage, ground = st.dark ? "stage" : "paper";
+      var land = st.dark ? "#33506e" : "#c9c3b6", edge = st.dark ? NU.stage : NU.paper;
+      var layer = el("g", {}, svg), symbolLayer = el("g", {}, svg), flyLayer = el("g", {}, svg);
+      var legend = el("g", { "font-family": NU.sans }, svg);
+      var big = el("text", { x: W / 2, y: H / 2, "text-anchor": "middle", "font-family": NU.serif, "font-size": 64, fill: st.ink, opacity: 0, "pointer-events": "none" }, svg);
+      var cardLayer = el("g", { "pointer-events": "none" }, svg);
+      if (d.source) el("text", { x: W - 64, y: 92, "text-anchor": "end", "font-family": NU.sans, "font-size": 12, fill: st.soft }, svg, d.source);
+      var loading = el("text", { x: W / 2, y: H / 2, "text-anchor": "middle", "font-family": NU.sans, "font-size": 18, fill: st.soft }, svg, "Drawing the world…");
+      var world = null;
+      var shapes = [];
+      var proj = "equalEarth", pending = (
+        /** @type {any} */
+        null
+      ), cancel = function() {
+      }, cancelFly = function() {
+      };
+      var greenland = (
+        /** @type {any} */
+        null
+      ), gOffset = [0, 0], hovered = (
+        /** @type {any} */
+        null
+      ), step = (
+        /** @type {any} */
+        {}
+      );
+      function fillOf(c) {
+        var f = step.fill;
+        if (!f) return land;
+        var v = c[f.field];
+        if (v == null) return NODATA[ground];
+        if (f.categories) return f.categories[v] && f.categories[v].color || NODATA[ground];
+        var i = 0;
+        while (i < f.breaks.length && v >= f.breaks[i]) i++;
+        return f.colors[Math.min(i, f.colors.length - 1)];
+      }
+      function paintFills() {
+        var lit = step.lit == null ? [] : [].concat(step.lit);
+        shapes.forEach(function(s) {
+          var isLit = lit.indexOf(s.c.name) >= 0 || lit.indexOf(s.c.code) >= 0, isG = step.greenland && s.c.code === 304;
+          set(s.node, { fill: isG ? NU.red : fillOf(s.c), stroke: isLit ? NU.red : edge, "stroke-width": isLit ? 2.5 : 0.6 });
+          if (isLit) s.node.parentNode.appendChild(s.node);
+        });
+      }
+      var HOME = [-41, 74];
+      function vec(p) {
+        var l = p[0] * Math.PI / 180, f = p[1] * Math.PI / 180;
+        return [Math.cos(f) * Math.cos(l), Math.cos(f) * Math.sin(l), Math.sin(f)];
+      }
+      function greenlandPath() {
+        var m = world.mercator, rings = greenland.c.lonlat;
+        var a = vec(HOME), b = vec([HOME[0] + gOffset[0], Math.max(-70, Math.min(80, HOME[1] + gOffset[1]))]);
+        var axis = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+        var sin = Math.hypot(axis[0], axis[1], axis[2]), cos = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        var k = sin > 1e-9 ? [axis[0] / sin, axis[1] / sin, axis[2] / sin] : [0, 0, 1];
+        var out = rings.map(function(ring) {
+          return ring.map(function(p) {
+            var v = vec(p), kv = k[0] * v[0] + k[1] * v[1] + k[2] * v[2];
+            var c = [k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0]];
+            var r = [0, 1, 2].map(function(i) {
+              return v[i] * cos + c[i] * sin + k[i] * kv * (1 - cos);
+            });
+            var lon = Math.atan2(r[1], r[0]), lat = Math.max(-1.45, Math.min(1.47, Math.asin(Math.max(-1, Math.min(1, r[2])))));
+            return [m.tx + m.k * lon, m.ty - m.k * Math.log(Math.tan(Math.PI / 4 + lat / 2))];
+          });
+        });
+        return pathOf(out);
+      }
+      function morph(to, animate) {
+        var from = proj;
+        if (from === to) {
+          shapes.forEach(function(s) {
+            set(s.node, { d: pathOf(s.c.shapes[to]) });
+          });
+          return;
+        }
+        cancel();
+        cancel = tween(animate ? 1800 : 0, function(k) {
+          shapes.forEach(function(s) {
+            set(s.node, { d: pathOf(mix(s.c.shapes[from], s.c.shapes[to], k)) });
+          });
+          if (k >= 1) proj = to;
+        });
+        proj = to;
+      }
+      function paintLegend() {
+        legend.textContent = "";
+        var f = step.fill;
+        if (!f || f.categories) return;
+        var x0 = 220, x1 = W - 220, y = H - 82, vals = shapes.map(function(s) {
+          return s.c[f.field];
+        }).filter(function(v) {
+          return v != null;
+        });
+        var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), sx = function(v) {
+          return x0 + (v - lo) / (hi - lo) * (x1 - x0);
+        };
+        var edges = [lo].concat(f.breaks, [hi]);
+        for (var i = 0; i < f.colors.length; i++) el("rect", { x: sx(edges[i]), y: y - 12, width: Math.max(1, sx(edges[i + 1]) - sx(edges[i])), height: 12, fill: f.colors[i], stroke: edge, "stroke-width": 0.6 }, legend);
+        vals.forEach(function(v) {
+          el("line", { x1: sx(v), x2: sx(v), y1: y + 3, y2: y + 11, stroke: st.ink, "stroke-opacity": 0.45 }, legend);
+        });
+        f.breaks.forEach(function(b) {
+          el("text", { x: sx(b), y: y - 18, "text-anchor": "middle", "font-size": 13, fill: st.ink }, legend, format(f.format || ".3s", b));
+        });
+        el("text", { x: x0, y: y + 28, "font-size": 13, fill: st.soft }, legend, (f.title || f.field) + (f.method ? " · " + f.method : "") + " · each tick is a country");
+      }
+      function paintSymbols() {
+        symbolLayer.textContent = "";
+        var sy = step.symbols;
+        if (!sy) return;
+        shapes.slice().sort(function(a, b) {
+          return (b.c[sy.field] || 0) - (a.c[sy.field] || 0);
+        }).forEach(function(s) {
+          var v = s.c[sy.field];
+          if (v == null) return;
+          var c = s.c.centroid[proj];
+          el("circle", { cx: c[0] * MAP.s + MAP.x, cy: c[1] * MAP.s + MAP.y, r: Math.sqrt(v / sy.max) * 40, fill: sy.color || NU.red, "fill-opacity": 0.55, stroke: st.dark ? NU.paper : NU.ink, "stroke-width": 0.8 }, symbolLayer);
+        });
+      }
+      function paintFly(animate) {
+        cancelFly();
+        var mode = step.fly;
+        if (!mode) {
+          flyLayer.textContent = "";
+          return;
+        }
+        if (!flyLayer.childNodes.length) {
+          Object.keys(d.scatter || {}).forEach(function(name) {
+            var s = shapes.find(function(x) {
+              return x.c.name === name;
+            });
+            var b = d.bubbles[name];
+            if (!s || !b) return;
+            var c = el("circle", { r: b.r, fill: b.color, "fill-opacity": 0.82, stroke: NU.stage, "stroke-width": 1 }, flyLayer);
+            c.__from = d.scatter[name];
+            c.__to = [s.c.centroid[proj][0] * MAP.s + MAP.x, s.c.centroid[proj][1] * MAP.s + MAP.y];
+            c.__name = name;
+            set(c, { cx: c.__from[0], cy: c.__from[1] });
+          });
+        }
+        var nodes = Array.prototype.slice.call(flyLayer.childNodes);
+        var home = mode === "home";
+        set(layer, { opacity: home ? 1 : 0.12 });
+        cancelFly = tween(animate ? 2600 : 0, function(k) {
+          nodes.forEach(function(c, i) {
+            var kk = Math.max(0, Math.min(1, k * 1.25 - i / nodes.length * 0.25)), t = home ? kk : 1 - kk;
+            set(c, { cx: lerp(c.__from[0], c.__to[0], t), cy: lerp(c.__from[1], c.__to[1], t) - Math.sin(t * Math.PI) * 40 });
+          });
+        });
+      }
+      function paintCard() {
+        cardLayer.textContent = "";
+        var s = hovered;
+        if (!s || !d.tooltip || !s.c.name) return;
+        var rows2 = d.tooltip.map(function(t) {
+          var v = s.c[t.field];
+          return [t.title || t.field, v == null ? "no data" : t.format ? format(t.format, v) : String(v)];
+        });
+        var c = s.c.centroid[proj];
+        tooltipCard(cardLayer, rows2, c[0] * MAP.s + MAP.x, c[1] * MAP.s + MAP.y, { avoid: 14 });
+      }
+      function draw() {
+        loading.remove();
+        world.countries.forEach(function(c) {
+          var node = el("path", { d: pathOf(c.shapes[proj]), fill: land, stroke: edge, "stroke-width": 0.6, "stroke-linejoin": "round" }, layer);
+          var s = { c, node };
+          shapes.push(s);
+          if (c.code === 304) greenland = s;
+        });
+        if (fig.interactive) {
+          var dragging = false, start = [0, 0], startOffset = [0, 0];
+          svg.addEventListener("pointermove", function(e) {
+            var p2 = fig.toSlide(e);
+            if (dragging) {
+              var m = world.mercator, lon = ((p2.x - MAP.x) / MAP.s - m.tx) / m.k * 180 / Math.PI;
+              var lat = (2 * Math.atan(Math.exp((m.ty - (p2.y - MAP.y) / MAP.s) / m.k)) - Math.PI / 2) * 180 / Math.PI;
+              gOffset = [startOffset[0] + lon - start[0], startOffset[1] + lat - start[1]];
+              set(greenland.node, { d: greenlandPath() });
+              return;
+            }
+            var target = (
+              /** @type {any} */
+              e.target
+            );
+            var s = shapes.find(function(x) {
+              return x.node === target;
+            }) || null;
+            if (s !== hovered) {
+              hovered = s;
+              paintCard();
+            }
+          });
+          svg.addEventListener("pointerdown", function(e) {
+            if (!step.greenland || proj !== "mercator" || e.target !== greenland.node) return;
+            var p2 = fig.toSlide(e), m = world.mercator;
+            start = [((p2.x - MAP.x) / MAP.s - m.tx) / m.k * 180 / Math.PI, (2 * Math.atan(Math.exp((m.ty - (p2.y - MAP.y) / MAP.s) / m.k)) - Math.PI / 2) * 180 / Math.PI];
+            startOffset = gOffset.slice();
+            dragging = true;
+            svg.setPointerCapture(e.pointerId);
+          });
+          svg.addEventListener("pointerup", function() {
+            dragging = false;
+          });
+          svg.addEventListener("pointerleave", function() {
+            if (!dragging) {
+              hovered = null;
+              paintCard();
+            }
+          });
+        }
+        if (pending) {
+          var p = pending;
+          pending = null;
+          apply(p.step, false);
+        }
+      }
+      function apply(next, animate) {
+        step = next;
+        st.caption(step.caption);
+        morph(step.projection || proj, animate);
+        if (Array.isArray(step.greenland)) {
+          var to = step.greenland, from = gOffset.slice();
+          var aim = [to[0] - HOME[0], to[1] - HOME[1]];
+          tween(animate ? 2e3 : 0, function(k) {
+            gOffset = [lerp(from[0], aim[0], k), lerp(from[1], aim[1], k)];
+            if (greenland) set(greenland.node, { d: greenlandPath() });
+          });
+        } else if (!step.greenland) gOffset = [0, 0];
+        paintFills();
+        paintLegend();
+        paintSymbols();
+        paintFly(animate);
+        if (greenland && step.greenland && proj === "mercator") set(greenland.node, { d: greenlandPath(), cursor: "grab" });
+        big.textContent = step.label || "";
+        set(big, { opacity: step.label ? 1 : 0 });
+      }
+      load(d.world).then(function(w) {
+        world = w;
+        draw();
+      }, function(err) {
+        loading.textContent = "The map could not load: " + err.message;
+      });
+      return {
+        /** @param {any} next @param {boolean} animate */
+        update: function(next, animate) {
+          if (!world) {
+            pending = { step: next };
+            st.caption(next.caption);
+            proj = next.projection || proj;
+            return;
+          }
+          apply(next, animate);
+        }
+      };
+    }
+  };
+
+  // src/render/figures/motion.js
+  function axes(parent, d, rect, st, fs, labels) {
+    var sx = scale(d.x.domain, [rect.x0, rect.x1], d.x.log), sy = scale(d.y.domain, [rect.y1, rect.y0], d.y.log);
+    var g = el("g", { "font-family": NU.sans, "font-size": fs, fill: st.soft }, parent);
+    (d.x.ticks || []).forEach(function(t) {
+      el("line", { x1: sx(t), x2: sx(t), y1: rect.y0, y2: rect.y1, stroke: NU.line }, g);
+      if (labels) el("text", { x: sx(t), y: rect.y1 + fs * 1.6, "text-anchor": "middle" }, g, format(d.x.format || "d", t));
+    });
+    (d.y.ticks || []).forEach(function(t) {
+      el("line", { x1: rect.x0, x2: rect.x1, y1: sy(t), y2: sy(t), stroke: NU.line }, g);
+      if (labels) el("text", { x: rect.x0 - fs * 0.8, y: sy(t) + fs * 0.33, "text-anchor": "end" }, g, format(d.y.format || "d", t));
+    });
+    if (labels) {
+      el("text", { x: rect.x1, y: rect.y1 + fs * 3.3, "text-anchor": "end", "font-size": fs + 1, fill: st.ink }, g, d.x.title || "");
+      el("text", { x: rect.x0 - fs * 2.6, y: rect.y0 - fs, "font-size": fs + 1, fill: st.ink }, g, d.y.title || "");
+    }
+    return { sx, sy };
+  }
+  function panel(parent, d, rect, st, o) {
+    var g = el("g", {}, parent);
+    var yearText = el("text", { x: (rect.x0 + rect.x1) / 2, y: (rect.y0 + rect.y1) / 2 + (rect.y1 - rect.y0) * 0.16, "text-anchor": "middle", "font-family": NU.sans, "font-weight": 700, "font-size": (rect.y1 - rect.y0) * 0.42, fill: st.ink, opacity: 0.07 }, g);
+    var s = axes(g, d, rect, st, o.fs, o.labels);
+    if (o.tag) el("text", { x: rect.x0, y: rect.y0 - o.fs * 2.4, "font-family": NU.mono, "font-size": o.fs + 3, fill: NU.paper }, g, o.tag);
+    var sizeD = d.size.domain, sizeR = d.size.range, k = (rect.x1 - rect.x0) / (W - 220);
+    function radius(v) {
+      return lerp(sizeR[0], sizeR[1], Math.sqrt(Math.max(0, v - sizeD[0]) / (sizeD[1] - sizeD[0]))) * Math.max(0.45, k);
+    }
+    var trail = el("path", { fill: "none", stroke: NU.red, "stroke-width": 3.5, "stroke-linecap": "round", "stroke-linejoin": "round", opacity: 0.9 }, g);
+    var marksG = el("g", {}, g);
+    var marks = d.series.map(function() {
+      return el("circle", { r: 0, "fill-opacity": 0.8, stroke: NU.stage, "stroke-width": 1 }, marksG);
+    });
+    var orders = (
+      /** @type {Record<string, number[]>} */
+      {}
+    );
+    d.years.forEach(function(y) {
+      orders[y] = d.series.map(function(_, i) {
+        return i;
+      }).sort(function(a, b) {
+        return d.series[b].frames[y][2] - d.series[a].frames[y][2];
+      });
+    });
+    function at(i, t) {
+      var ys = d.years, j = Math.max(0, Math.min(ys.length - 2, Math.floor((t - ys[0]) / (ys[1] - ys[0])))), k2 = Math.max(0, Math.min(1, (t - ys[j]) / (ys[1] - ys[j])));
+      var sa = o.keyed ? i : orders[ys[j]][i], sb = o.keyed ? i : orders[ys[j + 1]][i];
+      var fa = d.series[sa].frames[ys[j]], fb = d.series[sb].frames[ys[j + 1]];
+      return { x: s.sx(lerp(fa[0], fb[0], k2)), y: s.sy(lerp(fa[1], fb[1], k2)), r: radius(lerp(fa[2], fb[2], k2)), series: k2 < 0.5 ? sa : sb };
+    }
+    var trailId = -1, trailPts = (
+      /** @type {number[][]} */
+      []
+    );
+    return {
+      /** @param {number} t @param {boolean} reset */
+      show: function(t, reset) {
+        yearText.textContent = String(Math.round(t));
+        if (reset) trailPts = [];
+        d.series.forEach(function(_, i) {
+          var p = at(i, t), ser = d.series[p.series], grp = d.groups[ser.group];
+          var followed = i === trailId;
+          set(marks[i], { cx: p.x, cy: p.y, r: followed ? Math.max(9, p.r) : p.r, fill: followed ? NU.red : grp ? grp.color : "#8796a8", stroke: followed ? NU.paper : NU.stage, "stroke-width": followed ? 2.5 : 1 });
+          if (i === trailId) trailPts.push([p.x, p.y]);
+        });
+        set(trail, { d: trailPts.length > 1 ? "M" + trailPts.map(function(p) {
+          return p[0].toFixed(1) + " " + p[1].toFixed(1);
+        }).join("L") : "" });
+      },
+      /** @param {string|null} id */
+      follow: function(id) {
+        var i = d.series.findIndex(function(x) {
+          return x.id === id;
+        });
+        trailId = i < 0 ? -1 : o.keyed ? i : orders[d.years[0]].indexOf(i);
+        if (trailId >= 0) marksG.appendChild(marks[trailId]);
+      },
+      node: g
+    };
+  }
+  var motion = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage;
+      var root = el("g", {}, svg);
+      if (d.source) el("text", { x: 64, y: H - 76, "font-family": NU.sans, "font-size": 13, fill: st.soft }, svg, d.source);
+      var panels = (
+        /** @type {any[]} */
+        []
+      ), layout = "", cancel = function() {
+      }, now = d.years[0];
+      function build(step) {
+        var want = step.multiples ? "multiples" : step.panels === "pair" ? "pair" : step.keyed === false ? "one-unkeyed" : "one";
+        if (want === layout) return;
+        layout = want;
+        root.textContent = "";
+        panels = [];
+        if (want === "pair") {
+          panels.push(panel(root, d, { x0: 120, x1: 600, y0: 190, y1: H - 160 }, st, { keyed: false, fs: 13, labels: true, tag: "no key: marks follow row order" }));
+          panels.push(panel(root, d, { x0: 760, x1: W - 60, y0: 190, y1: H - 160 }, st, { keyed: true, fs: 13, labels: true, tag: "key='country:N'" }));
+        } else if (want === "multiples") {
+          var cols = 6, gw = (W - 140) / cols, gh = (H - 300) / 2;
+          d.years.forEach(function(y, i) {
+            var x0 = 90 + i % cols * gw, y0 = 170 + Math.floor(i / cols) * (gh + 20);
+            var p = panel(root, d, { x0: x0 + 10, x1: x0 + gw - 14, y0, y1: y0 + gh - 10 }, st, { keyed: true, fs: 10, labels: false });
+            p.show(y, true);
+            p.__year = y;
+            panels.push(p);
+          });
+        } else panels.push(panel(root, d, { x0: 150, x1: W - 90, y0: 160, y1: H - 140 }, st, { keyed: want === "one", fs: 15, labels: true }));
+      }
+      return {
+        /** @param {any} step @param {boolean} animate */
+        update: function(step, animate) {
+          cancel();
+          st.caption(step.caption);
+          build(step);
+          if (layout === "multiples") {
+            panels.forEach(function(p) {
+              p.follow(step.trail || null);
+              p.show(p.__year, true);
+            });
+            return;
+          }
+          panels.forEach(function(p) {
+            p.follow(step.trail || null);
+          });
+          var play = step.play;
+          if (!play) {
+            now = step.year || d.years[0];
+            panels.forEach(function(p) {
+              p.show(now, true);
+            });
+            return;
+          }
+          var from = play.from, to = play.to, jump = step.tween === false;
+          panels.forEach(function(p) {
+            p.show(from, true);
+          });
+          var span = to - from, gap = d.years[1] - d.years[0];
+          cancel = tween(animate && fig.interactive ? (play.seconds || 10) * 1e3 : 0, function(k) {
+            var t = from + span * k;
+            if (jump) t = Math.min(to, from + Math.floor((t - from) / gap + 1e-9) * gap);
+            now = t;
+            panels.forEach(function(p) {
+              p.show(t, false);
+            });
+          }, function(t) {
+            return t;
+          });
+        }
+      };
+    }
+  };
+
+  // src/render/figures/linked.js
+  var PLOT2 = { x0: 120, x1: 760, y0: 170, y1: H - 150 };
+  var BARS = { x0: 1010, x1: W - 60, y0: 372, y1: H - 150 };
+  var CHIP = { x: 828, y: 132, w: W - 60 - 828, h: 196 };
+  var linked = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage;
+      var plot = scatter(svg, d, PLOT2, { ink: st.ink, soft: st.soft, font: 14 });
+      var keys = Object.keys(d.groups);
+      var bars2 = el("g", { "font-family": NU.sans, "font-size": 14 }, svg);
+      el("text", { x: BARS.x0 - 150, y: BARS.y0 - 22, fill: st.ink, "font-size": 16 }, bars2, d.bars && d.bars.title || "Countries selected, by region");
+      var counts = keys.map(function(k) {
+        return d.rows.filter(function(r) {
+          return r.group === k;
+        }).length;
+      });
+      var max = Math.max.apply(null, counts), band = (BARS.y1 - BARS.y0) / keys.length, sx = scale([0, max], [BARS.x0, BARS.x1]);
+      var barNodes = keys.map(function(k, i) {
+        var y = BARS.y0 + i * band + band * 0.2, h = band * 0.6;
+        el("text", { x: BARS.x0 - 10, y: y + h / 2 + 5, "text-anchor": "end", fill: st.ink, "font-size": 13 }, bars2, d.groups[k].label);
+        el("rect", { x: BARS.x0, y, width: sx(counts[i]) - BARS.x0, height: h, fill: "none", stroke: NU.line, "stroke-width": 1.5 }, bars2);
+        var fillR = el("rect", { x: BARS.x0, y, width: 0, height: h, fill: d.groups[k].color }, bars2);
+        var n = el("text", { x: BARS.x0 + 6, y: y + h / 2 + 5, fill: NU.paper, "font-size": 13 }, bars2);
+        return { key: k, fill: fillR, n, total: counts[i], y, h };
+      });
+      var legend = el("g", { "font-family": NU.sans, "font-size": 14 }, svg);
+      var legendItems = keys.map(function(k, i) {
+        var x = PLOT2.x0 + 8 + i % 3 * 215, y = PLOT2.y0 - 52 + Math.floor(i / 3) * 22;
+        var g = el("g", { cursor: "pointer" }, legend);
+        el("rect", { x: x - 10, y: y - 15, width: 205, height: 21, fill: "transparent" }, g);
+        var dot = el("circle", { cx: x, cy: y - 5, r: 6, fill: d.groups[k].color }, g);
+        var t = el("text", { x: x + 12, y, fill: st.ink }, g, d.groups[k].label);
+        return { key: k, g, dot, t };
+      });
+      var chip = el("g", { "font-family": NU.mono, "font-size": 14 }, svg);
+      function paintChip(lines, guide) {
+        chip.textContent = "";
+        if (!lines || !lines.length) return;
+        el("rect", { x: CHIP.x, y: CHIP.y, width: CHIP.w, height: CHIP.h, rx: 10, fill: NU.paper }, chip);
+        el("rect", { x: CHIP.x, y: CHIP.y, width: 5, height: CHIP.h, fill: NU.red }, chip);
+        lines.forEach(function(line, i) {
+          el("text", { x: CHIP.x + 20, y: CHIP.y + 32 + i * 22, fill: NU.ink, style: "white-space:pre" }, chip, line);
+        });
+        if (guide) el("text", { x: CHIP.x + 20, y: CHIP.y + CHIP.h - 14, "font-family": NU.sans, "font-size": 12, "font-weight": 700, "letter-spacing": 1.3, fill: NU.red }, chip, guide.toUpperCase());
+      }
+      var brushRect = el("rect", { fill: "rgba(255,255,255,.08)", stroke: NU.paper, "stroke-width": 1.5, "stroke-dasharray": "6 4", opacity: 0, "pointer-events": "none" }, svg);
+      var cardLayer = el("g", { "pointer-events": "none" }, svg);
+      var mode = "none", emptyAll = false;
+      var sel = { ids: (
+        /** @type {string[]} */
+        []
+      ), group: (
+        /** @type {string|null} */
+        null
+      ), box: (
+        /** @type {number[]|null} */
+        null
+      ), hover: (
+        /** @type {string|null} */
+        null
+      ) };
+      function selected(r) {
+        if (mode === "hover") return sel.hover === r.id;
+        if (mode === "click") return sel.ids.indexOf(r.id) >= 0;
+        if (mode === "legend") return sel.group === r.group;
+        if (mode === "brush" && sel.box) {
+          var b = sel.box, m = plot.byId[r.id];
+          return m.x >= b[0] && m.x <= b[2] && m.y >= b[1] && m.y <= b[3];
+        }
+        return false;
+      }
+      function empty() {
+        if (mode === "hover") return !sel.hover;
+        if (mode === "click") return !sel.ids.length;
+        if (mode === "legend") return !sel.group;
+        if (mode === "brush") return !sel.box;
+        return true;
+      }
+      function paint() {
+        var none = empty(), all = none && (emptyAll || mode === "none");
+        Object.keys(plot.byId).forEach(function(k) {
+          var m = plot.byId[k], on = all || !none && selected(m.row), g = d.groups[m.row.group];
+          set(m.node, { fill: on ? g.color : "#8796a8", "fill-opacity": on ? 0.85 : 0.22 });
+        });
+        barNodes.forEach(function(b2) {
+          var n = d.rows.filter(function(r) {
+            return r.group === b2.key && (all || !none && selected(r));
+          }).length;
+          set(b2.fill, { width: Math.max(0, sx(n) - BARS.x0) });
+          b2.n.textContent = n ? String(n) : "";
+        });
+        legendItems.forEach(function(it) {
+          set(it.g, { opacity: mode === "legend" && sel.group && sel.group !== it.key ? 0.35 : 1 });
+        });
+        if (mode === "brush" && sel.box) {
+          var b = sel.box;
+          set(brushRect, { x: b[0], y: b[1], width: b[2] - b[0], height: b[3] - b[1], opacity: 1 });
+        } else set(brushRect, { opacity: 0 });
+      }
+      var hovered = (
+        /** @type {any} */
+        null
+      );
+      function paintCard() {
+        cardAt(cardLayer, hovered, hovered ? tooltipRows(hovered.row, d.tooltip) : []);
+      }
+      if (fig.interactive) {
+        let inPlot2 = function(p) {
+          return p.x >= PLOT2.x0 - 20 && p.x <= PLOT2.x1 + 20 && p.y >= PLOT2.y0 - 10 && p.y <= PLOT2.y1 + 10;
+        };
+        var inPlot = inPlot2;
+        var dragFrom = (
+          /** @type {{x: number, y: number}|null} */
+          null
+        );
+        svg.addEventListener("pointerdown", function(e) {
+          var p = fig.toSlide(e);
+          if (mode === "brush" && inPlot2(p)) {
+            dragFrom = { x: p.x, y: p.y };
+            sel.box = [p.x, p.y, p.x, p.y];
+            svg.setPointerCapture(e.pointerId);
+            paint();
+          }
+        });
+        svg.addEventListener("pointermove", function(e) {
+          var p = fig.toSlide(e);
+          if (dragFrom) {
+            sel.box = [Math.min(dragFrom.x, p.x), Math.min(dragFrom.y, p.y), Math.max(dragFrom.x, p.x), Math.max(dragFrom.y, p.y)];
+            paint();
+            return;
+          }
+          var m = (
+            /** @type {any} */
+            inPlot2(p) ? plot.nearest(p) : null
+          );
+          if (m !== hovered) {
+            hovered = m;
+            paintCard();
+          }
+          if (mode === "hover") {
+            var id = m ? m.row.id : null;
+            if (id !== sel.hover) {
+              sel.hover = id;
+              paint();
+            }
+          }
+        });
+        svg.addEventListener("pointerup", function() {
+          dragFrom = null;
+        });
+        svg.addEventListener("pointerleave", function() {
+          hovered = null;
+          paintCard();
+          if (mode === "hover") {
+            sel.hover = null;
+            paint();
+          }
+        });
+        svg.addEventListener("click", function(e) {
+          e.stopPropagation();
+          var p = fig.toSlide(
+            /** @type {any} */
+            e
+          );
+          if (mode === "click" && inPlot2(p)) {
+            var m = (
+              /** @type {any} */
+              plot.nearest(p)
+            );
+            if (m) {
+              var i = sel.ids.indexOf(m.row.id);
+              if (i >= 0) sel.ids.splice(i, 1);
+              else sel.ids.push(m.row.id);
+              paint();
+            }
+          }
+          if (mode === "legend") {
+            var hit = legendItems.find(function(it) {
+              return it.g.contains(
+                /** @type {any} */
+                e.target
+              );
+            });
+            if (hit) {
+              sel.group = sel.group === hit.key ? null : hit.key;
+              paint();
+            }
+          }
+        });
+        svg.addEventListener("dblclick", function(e) {
+          e.stopPropagation();
+          sel = { ids: [], group: null, box: null, hover: null };
+          paint();
+        });
+      }
+      return {
+        /** @param {any} step */
+        update: function(step) {
+          st.caption(step.caption);
+          paintChip(step.code, step.guide);
+          mode = step.mode || "none";
+          emptyAll = !!step.empty;
+          var pr = step.preset || {};
+          var box2 = null;
+          if (pr.box) {
+            var b = pr.box;
+            box2 = [plot.sx(b[0]), plot.sy(b[3]), plot.sx(b[2]), plot.sy(b[1])];
+          }
+          sel = { ids: (pr.ids || []).slice(), group: pr.group || null, box: box2, hover: pr.hover || null };
+          set(legend, { opacity: 1 });
+          paint();
+        }
+      };
+    }
+  };
+
+  // src/render/figures/rowtable.js
+  var PLOT3 = { x0: 110, x1: 600, y0: 170, y1: H - 160 };
+  var TABLE = { x: 680, y: 150, w: W - 740, rows: 15, lh: 27 };
+  var rowtable = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage;
+      var plot = scatter(svg, d, PLOT3, { ink: st.ink, soft: st.soft, font: 13 });
+      var rows2 = d.rows.slice().sort(function(a, b) {
+        return a.country < b.country ? -1 : 1;
+      });
+      var cols = d.columns, weights = cols.map(function(c, i) {
+        return i === 0 ? 1.7 : 1;
+      });
+      var unit = TABLE.w / weights.reduce(function(a, b) {
+        return a + b;
+      }, 0);
+      var colX = weights.map(function(_, i) {
+        return TABLE.x + weights.slice(0, i).reduce(function(a, b) {
+          return a + b;
+        }, 0) * unit;
+      });
+      var tbl = el("g", { "font-family": NU.mono, "font-size": 14 }, svg);
+      el("rect", { x: TABLE.x - 12, y: TABLE.y - 28, width: TABLE.w + 24, height: TABLE.lh * (TABLE.rows + 1) + 20, rx: 8, fill: "rgba(255,255,255,.04)", stroke: NU.line }, tbl);
+      cols.forEach(function(c, i) {
+        el("text", { x: colX[i], y: TABLE.y - 6, fill: NU.mist, "font-weight": 700 }, tbl, c.field);
+      });
+      var lit = el("rect", { x: TABLE.x - 8, width: TABLE.w + 16, height: TABLE.lh, rx: 4, fill: "rgba(200,16,46,.28)", stroke: NU.red, "stroke-width": 1.5, opacity: 0 }, tbl);
+      var cells = Array.from({ length: TABLE.rows }, function(_, r) {
+        return cols.map(function(c, i) {
+          return el("text", { x: colX[i], y: TABLE.y + 22 + r * TABLE.lh, fill: NU.paper }, tbl);
+        });
+      });
+      var count = el("text", { x: TABLE.x, y: TABLE.y + 22 + TABLE.rows * TABLE.lh + 14, "font-family": NU.sans, "font-size": 13, fill: NU.mist }, svg, rows2.length + " rows · one per country · the table behind the chart");
+      var link = el("path", { fill: "none", stroke: NU.red, "stroke-width": 2, "stroke-dasharray": "5 4", opacity: 0, "pointer-events": "none" }, svg);
+      var ring = el("circle", { fill: "none", stroke: NU.paper, "stroke-width": 2.5, opacity: 0, "pointer-events": "none" }, svg);
+      var cardLayer = el("g", { "pointer-events": "none" }, svg);
+      var showCard = true;
+      function focus(m) {
+        var at = m ? rows2.indexOf(m.row) : 0, top = Math.max(0, Math.min(rows2.length - TABLE.rows, at - Math.floor(TABLE.rows / 2)));
+        cells.forEach(function(line, r) {
+          var row = rows2[top + r];
+          line.forEach(function(t, i) {
+            var c = cols[i], v = row[c.field];
+            t.textContent = c.format ? format(c.format, v) : String(v).length > 15 ? String(v).slice(0, 14) + "…" : String(v);
+          });
+        });
+        cardLayer.textContent = "";
+        if (!m) {
+          set(lit, { opacity: 0 });
+          set(link, { opacity: 0 });
+          set(ring, { opacity: 0 });
+          return;
+        }
+        var ly = TABLE.y + 22 + (at - top) * TABLE.lh - 19;
+        set(lit, { y: ly, opacity: 1 });
+        set(ring, { cx: m.x, cy: m.y, r: m.r + 4, opacity: 1 });
+        if (showCard) {
+          var card = tooltipCard(cardLayer, tooltipRows(m.row, d.tooltip), m.x, m.y, { avoid: m.r + 10, maxX: TABLE.x - 70 });
+          var x1 = card.x + card.w, y1 = card.y + card.h / 2;
+          set(link, { d: "M" + (TABLE.x - 10) + " " + (ly + TABLE.lh / 2) + " C " + (TABLE.x - 60) + " " + (ly + TABLE.lh / 2) + ", " + (x1 + 50) + " " + y1 + ", " + x1 + " " + y1, opacity: 1 });
+        } else set(link, { opacity: 0 });
+      }
+      var hovered = (
+        /** @type {any} */
+        null
+      ), demo = (
+        /** @type {any} */
+        null
+      );
+      if (fig.interactive) {
+        svg.addEventListener("pointermove", function(e) {
+          var m = plot.nearest(fig.toSlide(e));
+          if (m && m !== hovered) {
+            hovered = m;
+            focus(m);
+          }
+        });
+        svg.addEventListener("pointerleave", function() {
+          hovered = null;
+          focus(demo);
+        });
+      }
+      return {
+        /** @param {any} step */
+        update: function(step) {
+          st.caption(step.caption);
+          showCard = step.card !== false;
+          demo = step.demo ? plot.byId[step.demo] : null;
+          plot.paint({ colour: true });
+          focus(hovered || demo);
+          void count;
+        }
+      };
+    }
+  };
+
+  // src/render/figures/index.js
+  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable };
+  var CSS = ".figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}.figure-slide .pad{visibility:hidden}.figure-slide .fig-svg text{font-kerning:normal}";
+  function installFigures(SF) {
+    var styled = false;
+    function style() {
+      if (styled || typeof document === "undefined") return;
+      styled = true;
+      var s = document.createElement("style");
+      s.setAttribute("data-sf", "figures");
+      s.textContent = CSS;
+      document.head.appendChild(s);
+    }
+    function active2(slide) {
+      return !!(slide && slide.type === "figure");
+    }
+    function steps(slide) {
+      var s = Array.isArray(slide.figureSteps) ? slide.figureSteps.filter(function(x) {
+        return x && typeof x === "object";
+      }) : [];
+      return s.length ? s : [{}];
+    }
+    function count(slide) {
+      return steps(slide).length;
+    }
+    function render2(root, pad, slide, opts) {
+      style();
+      root.classList.add("figure-slide");
+      var live = !!(opts.interactive || opts.exploreCommand);
+      var list = steps(slide), last = list.length - 1;
+      var at = opts.exploreState && Number.isInteger(opts.exploreState.figureStep) ? opts.exploreState.figureStep : live ? 0 : last;
+      var svg = (
+        /** @type {SVGSVGElement} */
+        document.createElementNS(NS, "svg")
+      );
+      svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+      svg.setAttribute("class", "fig-svg");
+      svg.setAttribute("role", "img");
+      svg.setAttribute("aria-label", String(slide.figureAlt || slide.title || "Live figure"));
+      root.appendChild(svg);
+      if (live) svg.addEventListener("click", function(e) {
+        e.stopPropagation();
+      });
+      var make = FIGURES[String(slide.figure || "")];
+      if (!make) {
+        var t = document.createElementNS(NS, "text");
+        t.setAttribute("x", "64");
+        t.setAttribute("y", "120");
+        t.textContent = "Unknown figure: " + String(slide.figure || "(none)");
+        svg.appendChild(t);
+        return;
+      }
+      var stage2 = stage(svg, { ground: slide.figureGround, eyebrow: slide.figureEyebrow, title: slide.title, credit: slide.figureCredit });
+      var fig = {
+        svg,
+        stage: stage2,
+        data: slide.figureData || {},
+        interactive: live,
+        /** Where a pointer event lands, in slide pixels, whatever scale the slide is drawn at. */
+        toSlide: function(e) {
+          var m = svg.getScreenCTM(), p = svg.createSVGPoint();
+          p.x = e.clientX;
+          p.y = e.clientY;
+          return m ? p.matrixTransform(m.inverse()) : { x: 0, y: 0 };
+        },
+        send: function(action, value) {
+          if (opts.exploreCommand) opts.exploreCommand(action, value);
+        }
+      };
+      function failed(err) {
+        var t2 = document.createElementNS(NS, "text");
+        t2.setAttribute("x", "64");
+        t2.setAttribute("y", "160");
+        t2.setAttribute("fill", "#c8102e");
+        t2.setAttribute("font-size", "22");
+        t2.textContent = "This figure could not be drawn: " + String(err && err.message || err);
+        svg.appendChild(t2);
+        if (typeof console !== "undefined") console.error(err);
+      }
+      var inst = null, shown = -1;
+      try {
+        inst = make.mount(fig);
+      } catch (err) {
+        failed(err);
+        return;
+      }
+      function show(i, animate) {
+        var k = Math.max(0, Math.min(last, i));
+        stage2.pips(k, list.length);
+        try {
+          if (inst) inst.update(Object.assign({ index: k }, list[k]), animate && k !== shown);
+        } catch (err) {
+          failed(err);
+        }
+        shown = k;
+      }
+      show(at, false);
+      if (live && typeof requestAnimationFrame === "function") {
+        var refresh = function() {
+          if (!svg.isConnected) return;
+          svg.querySelectorAll("text, tspan").forEach(function(t2) {
+            if (t2.childNodes.length === 1 && t2.firstChild && t2.firstChild.nodeType === 3) {
+              var v = t2.textContent;
+              t2.textContent = "";
+              t2.textContent = v;
+            }
+          });
+        };
+        requestAnimationFrame(function() {
+          requestAnimationFrame(refresh);
+        });
+        setTimeout(refresh, 480);
+        setTimeout(refresh, 1100);
+        if (typeof ResizeObserver === "function") new ResizeObserver(refresh).observe(root);
+      }
+      root._exploreRefresh = function(next) {
+        if (next && Number.isInteger(next.figureStep)) show(next.figureStep, true);
+      };
+    }
+    SF.Figures = { active: active2, count, steps, render: render2, kinds: Object.keys(FIGURES) };
+  }
+
   // src/render/words.js
   function createWordRenderer(helpers) {
-    const { el } = helpers;
+    const { el: el2 } = helpers;
     function statementBand(text2) {
       var n = String(text2 || "").trim().length;
       return n <= 24 ? "xs" : n <= 48 ? "sm" : n <= 90 ? "md" : n <= 170 ? "lg" : "xl";
@@ -4302,12 +5826,12 @@
             frag.appendChild(document.createTextNode(part));
             return;
           }
-          var host = letters ? el("span", "wword") : frag;
+          var host = letters ? el2("span", "wword") : frag;
           if (letters) host.setAttribute("aria-hidden", "true");
           (letters ? part.split("") : [part]).forEach(function(piece) {
             var at = order2(seen, total - 1);
             var delay = Math.round((1 - Math.pow(1 - at, 2.2)) * span);
-            var w = el("span", "w");
+            var w = el2("span", "w");
             w.style.setProperty("--i", String(seen));
             w.style.setProperty("--d", delay + "ms");
             w.textContent = piece;
@@ -4319,7 +5843,7 @@
         if (text2.parentNode) text2.parentNode.replaceChild(frag, text2);
       });
       if (letters && seen) {
-        node.insertBefore(el("span", "sr-only", said), node.firstChild);
+        node.insertBefore(el2("span", "sr-only", said), node.firstChild);
       }
       return seen;
     }
@@ -4366,16 +5890,16 @@
 
   // src/render/live.js
   function createLiveRenderer(SF, helpers) {
-    const { el, themedRoot } = helpers;
+    const { el: el2, themedRoot } = helpers;
     function questionCard(deck, item) {
       var node = themedRoot("slide", deck, "layout-question", "question");
-      var pad = el("div", "pad");
-      pad.appendChild(el("div", "qc-label", "From the room"));
-      pad.appendChild(el("div", "qc-text", item.text || ""));
-      var foot = el("div", "qc-foot");
-      if (item.name) foot.appendChild(el("span", "qc-who", item.name));
+      var pad = el2("div", "pad");
+      pad.appendChild(el2("div", "qc-label", "From the room"));
+      pad.appendChild(el2("div", "qc-text", item.text || ""));
+      var foot = el2("div", "qc-foot");
+      if (item.name) foot.appendChild(el2("span", "qc-who", item.name));
       if (item.votes > 1) {
-        foot.appendChild(el("span", "qc-votes", "▲ " + item.votes + " also asked this"));
+        foot.appendChild(el2("span", "qc-votes", "▲ " + item.votes + " also asked this"));
       }
       pad.appendChild(foot);
       node.appendChild(pad);
@@ -4384,22 +5908,22 @@
     function feedbackFocus(deck, digest, opts) {
       opts = opts || {};
       var node = themedRoot("slide", deck, "layout-feedback", "feedback");
-      var pad = el("div", "pad");
+      var pad = el2("div", "pad");
       if (opts.join && opts.join.pin) {
-        var jl = el("div", "joinline fk-join");
+        var jl = el2("div", "joinline fk-join");
         pad.appendChild(jl);
         paintJoinLine(jl, opts.join);
       }
-      var head = el("div", "fk-head");
-      head.appendChild(el("div", "fk-kind", opts.title || "Feedback"));
-      if (opts.subtitle) head.appendChild(el("div", "fk-prompt", opts.subtitle));
+      var head = el2("div", "fk-head");
+      head.appendChild(el2("div", "fk-kind", opts.title || "Feedback"));
+      if (opts.subtitle) head.appendChild(el2("div", "fk-prompt", opts.subtitle));
       pad.appendChild(head);
-      var body = el("div", "fk-body");
+      var body = el2("div", "fk-body");
       body.dataset.kind = digest && digest.kind || "";
       if (opts.held) {
         body.appendChild(heldNote(digest, "fk-held"));
       } else if (!digest || !digest.kind) {
-        body.appendChild(el("div", "fk-empty", "Waiting for the room"));
+        body.appendChild(el2("div", "fk-empty", "Waiting for the room"));
       } else if (digest.kind === "poll") {
         focusPoll(body, digest, opts);
       } else if (digest.kind === "scale") {
@@ -4410,10 +5934,10 @@
         focusBrainstorm(body, digest);
       }
       pad.appendChild(body);
-      var foot = el("div", "fk-foot");
-      foot.appendChild(el("span", null, opts.footnote || ""));
-      if (opts.sample) foot.appendChild(el("span", "fk-tag", "SAMPLE"));
-      else foot.appendChild(el("span", "fk-hint", "E or S to close"));
+      var foot = el2("div", "fk-foot");
+      foot.appendChild(el2("span", null, opts.footnote || ""));
+      if (opts.sample) foot.appendChild(el2("span", "fk-tag", "SAMPLE"));
+      else foot.appendChild(el2("span", "fk-hint", "E or S to close"));
       pad.appendChild(foot);
       node.appendChild(pad);
       return node;
@@ -4425,16 +5949,16 @@
       var total = digest.total || 0;
       var lead = counts.indexOf(Math.max.apply(null, counts.concat([0])));
       counts.forEach(function(n, i) {
-        var row = el("div", "fk-poll" + (total && i === lead && n > 0 ? " lead" : ""));
-        row.appendChild(el("div", "fk-plabel", labels[i] || "Option " + (i + 1)));
-        var bar = el("div", "fk-pbar");
-        var fill2 = el("i");
+        var row = el2("div", "fk-poll" + (total && i === lead && n > 0 ? " lead" : ""));
+        row.appendChild(el2("div", "fk-plabel", labels[i] || "Option " + (i + 1)));
+        var bar = el2("div", "fk-pbar");
+        var fill2 = el2("i");
         fill2.style.width = n / max * 100 + "%";
         bar.appendChild(fill2);
         row.appendChild(bar);
-        var num = el("div", "fk-pnum");
-        num.appendChild(el("span", "fk-pn", String(n)));
-        num.appendChild(el("span", "fk-ppct", total ? Math.round(n / total * 100) + "%" : "0%"));
+        var num = el2("div", "fk-pnum");
+        num.appendChild(el2("span", "fk-pn", String(n)));
+        num.appendChild(el2("span", "fk-ppct", total ? Math.round(n / total * 100) + "%" : "0%"));
         row.appendChild(num);
         body.appendChild(row);
       });
@@ -4463,16 +5987,16 @@
     function focusCloud(body, digest) {
       var words = digest.words || [];
       if (!words.length) {
-        body.appendChild(el("div", "fk-empty", "No words yet"));
+        body.appendChild(el2("div", "fk-empty", "No words yet"));
         return;
       }
-      var cloud = el("div", "fk-cloud");
+      var cloud = el2("div", "fk-cloud");
       var top = words[0].n;
       cloudWords(digest, 32).forEach(function(w) {
-        var scale = 0.34 + 0.66 * (w.n / top);
-        var chip = el("span", "fk-word " + cloudTone(w), w.text);
-        chip.style.fontSize = "calc(var(--fk-cloud) * " + scale.toFixed(2) + ")";
-        if (w.n > 1) chip.appendChild(el("sup", null, String(w.n)));
+        var scale2 = 0.34 + 0.66 * (w.n / top);
+        var chip = el2("span", "fk-word " + cloudTone(w), w.text);
+        chip.style.fontSize = "calc(var(--fk-cloud) * " + scale2.toFixed(2) + ")";
+        if (w.n > 1) chip.appendChild(el2("sup", null, String(w.n)));
         cloud.appendChild(chip);
       });
       body.appendChild(cloud);
@@ -4480,19 +6004,19 @@
     function focusBrainstorm(body, digest) {
       var items2 = digest.items || [];
       if (!items2.length) {
-        body.appendChild(el("div", "fk-empty", "Nothing yet"));
+        body.appendChild(el2("div", "fk-empty", "Nothing yet"));
         return;
       }
-      var grid = el("div", "fk-cards");
+      var grid = el2("div", "fk-cards");
       grid.dataset.cols = items2.length > 6 ? "3" : "2";
       items2.slice(0, 9).forEach(function(it) {
-        var card = el("div", "fk-card");
-        card.appendChild(el("div", "fk-ctext", it.text));
+        var card = el2("div", "fk-card");
+        card.appendChild(el2("div", "fk-ctext", it.text));
         grid.appendChild(card);
       });
       body.appendChild(grid);
       if (items2.length > 9) {
-        body.appendChild(el("div", "fk-more", "+ " + (items2.length - 9) + " more not shown"));
+        body.appendChild(el2("div", "fk-more", "+ " + (items2.length - 9) + " more not shown"));
       }
     }
     function feedbackViewOpts(f) {
@@ -4529,13 +6053,13 @@
           6: [1, 2, 3, 6, 4, 2],
           7: [1, 1, 2, 4, 6, 3, 1]
         };
-        var bars = shape[f.points] || shape[5];
-        var seen = bars.reduce(function(a, b) {
+        var bars2 = shape[f.points] || shape[5];
+        var seen = bars2.reduce(function(a, b) {
           return a + b;
         }, 0);
         return {
           kind: "scale",
-          counts: bars,
+          counts: bars2,
           total: seen,
           answered: seen,
           players: seen + 3,
@@ -4578,23 +6102,23 @@
     }
     function feedbackRail(deck) {
       var root = themedRoot("scorerail fbrail", deck);
-      root.appendChild(el("div", "rail-title", "Feedback"));
-      root.appendChild(el("div", "rail-sub", ""));
-      root.appendChild(el("div", "rail-news"));
-      root.appendChild(el("div", "rail-join"));
-      root.appendChild(el("div", "fb-body"));
-      var foot = el("div", "foot");
-      foot.appendChild(el("div", "joinline"));
-      foot.appendChild(el("div", "notes", ""));
+      root.appendChild(el2("div", "rail-title", "Feedback"));
+      root.appendChild(el2("div", "rail-sub", ""));
+      root.appendChild(el2("div", "rail-news"));
+      root.appendChild(el2("div", "rail-join"));
+      root.appendChild(el2("div", "fb-body"));
+      var foot = el2("div", "foot");
+      foot.appendChild(el2("div", "joinline"));
+      foot.appendChild(el2("div", "notes", ""));
       root.appendChild(foot);
       return root;
     }
     function heldNote(digest, cls) {
-      var box2 = el("div", cls);
+      var box2 = el2("div", cls);
       var answered = digest ? Number(digest.answered) || 0 : 0;
-      box2.appendChild(el("div", cls + "-n", String(answered)));
-      box2.appendChild(el("div", cls + "-line", answered === 1 ? "answer in" : "answers in"));
-      box2.appendChild(el("div", cls + "-note", "Hidden until your teacher shows them. Answer for yourself."));
+      box2.appendChild(el2("div", cls + "-n", String(answered)));
+      box2.appendChild(el2("div", cls + "-line", answered === 1 ? "answer in" : "answers in"));
+      box2.appendChild(el2("div", cls + "-note", "Hidden until your teacher shows them. Answer for yourself."));
       return box2;
     }
     function paintFeedbackRail(rail, digest, opts) {
@@ -4619,7 +6143,7 @@
       if (!busy) {
         if (opts.roster && opts.roster.length) paintFbRoster(body, opts.roster);
         else if (!joining) {
-          body.appendChild(el("div", "empty-rail", opts.emptyText || "Waiting for the room"));
+          body.appendChild(el2("div", "empty-rail", opts.emptyText || "Waiting for the room"));
         }
         return;
       }
@@ -4638,19 +6162,19 @@
         return;
       }
       if (!meter) {
-        meter = el("div", "fb-meter");
+        meter = el2("div", "fb-meter");
         var sub = rail.querySelector(".rail-sub");
         if (sub && sub.parentNode) sub.parentNode.insertBefore(meter, sub.nextSibling);
         else rail.appendChild(meter);
       }
       meter.textContent = "";
-      var line = el("div", "fbm-line");
-      line.appendChild(el("strong", "fbm-n", String(answered)));
-      line.appendChild(el("span", "fbm-of", " of " + players + " answered"));
-      if (answered === players) line.appendChild(el("span", "fbm-all", "Everyone"));
+      var line = el2("div", "fbm-line");
+      line.appendChild(el2("strong", "fbm-n", String(answered)));
+      line.appendChild(el2("span", "fbm-of", " of " + players + " answered"));
+      if (answered === players) line.appendChild(el2("span", "fbm-all", "Everyone"));
       meter.appendChild(line);
-      var bar = el("div", "fbm-bar");
-      var fill2 = el("i");
+      var bar = el2("div", "fbm-bar");
+      var fill2 = el2("i");
       fill2.style.width = Math.round(answered / players * 100) + "%";
       bar.appendChild(fill2);
       meter.appendChild(bar);
@@ -4685,7 +6209,7 @@
         var more = body.querySelector(".more");
         var total = Number(body.dataset.total) || 0;
         if (!more && over()) {
-          more = el("div", "more", "");
+          more = el2("div", "more", "");
           body.appendChild(more);
         }
         fitByDropping(body, ".fbcard", 1, function() {
@@ -4701,7 +6225,7 @@
       var body = rail.querySelector(".fb-body");
       var join = rail.querySelector(".rail-join");
       if (!join) {
-        join = el("div", "rail-join");
+        join = el2("div", "rail-join");
         if (body) rail.insertBefore(join, body);
         else rail.appendChild(join);
         return join;
@@ -4723,17 +6247,17 @@
     }
     function paintFbRoster(body, roster) {
       if (roster.length > 12) {
-        body.appendChild(el("div", "fb-room-n", String(roster.length)));
-        body.appendChild(el("div", "fb-room-lbl", "in the room, waiting for the first answer"));
+        body.appendChild(el2("div", "fb-room-n", String(roster.length)));
+        body.appendChild(el2("div", "fb-room-lbl", "in the room, waiting for the first answer"));
         return;
       }
-      body.appendChild(el(
+      body.appendChild(el2(
         "div",
         "fb-roster-lbl",
         roster.length === 1 ? "1 person in" : roster.length + " people in"
       ));
       roster.forEach(function(p) {
-        body.appendChild(el("div", "fb-who-in", p.name || "Player"));
+        body.appendChild(el2("div", "fb-who-in", p.name || "Player"));
       });
     }
     function paintPoll(body, digest, opts) {
@@ -4743,21 +6267,21 @@
       var total = digest.total || 0;
       if (!total) {
         var joining = !!(opts.join && opts.join.pin);
-        if (!joining) body.appendChild(el("div", "empty-rail", "No votes yet"));
+        if (!joining) body.appendChild(el2("div", "empty-rail", "No votes yet"));
         return;
       }
       counts.forEach(function(n, i) {
-        var row = el("div", "pollrow");
-        var head = el("div", "pollhead");
-        head.appendChild(el("span", "plabel", labels[i] || "Option " + (i + 1)));
-        head.appendChild(el("span", "pn", String(n)));
+        var row = el2("div", "pollrow");
+        var head = el2("div", "pollhead");
+        head.appendChild(el2("span", "plabel", labels[i] || "Option " + (i + 1)));
+        head.appendChild(el2("span", "pn", String(n)));
         row.appendChild(head);
-        var bar = el("div", "pbar");
-        var fill2 = el("i");
+        var bar = el2("div", "pbar");
+        var fill2 = el2("i");
         fill2.style.width = n / max * 100 + "%";
         bar.appendChild(fill2);
         row.appendChild(bar);
-        row.appendChild(el("div", "ppct", total ? Math.round(n / total * 100) + "%" : "0%"));
+        row.appendChild(el2("div", "ppct", total ? Math.round(n / total * 100) + "%" : "0%"));
         body.appendChild(row);
       });
     }
@@ -4776,30 +6300,30 @@
     function scaleChart(counts, opts, cls) {
       var stats = scaleStats(counts);
       var max = Math.max(1, Math.max.apply(null, counts.concat([1])));
-      var wrap = el("div", cls);
-      var cols = el("div", cls + "-cols");
+      var wrap = el2("div", cls);
+      var cols = el2("div", cls + "-cols");
       counts.forEach(function(n, i) {
-        var col = el("div", cls + "-col");
-        var bar = el("div", cls + "-bar");
-        var fill2 = el("i");
+        var col = el2("div", cls + "-col");
+        var bar = el2("div", cls + "-bar");
+        var fill2 = el2("i");
         fill2.style.height = n / max * 100 + "%";
         bar.appendChild(fill2);
-        col.appendChild(el("div", cls + "-n", n ? String(n) : ""));
+        col.appendChild(el2("div", cls + "-n", n ? String(n) : ""));
         col.appendChild(bar);
-        col.appendChild(el("div", cls + "-p", String(i + 1)));
+        col.appendChild(el2("div", cls + "-p", String(i + 1)));
         cols.appendChild(col);
       });
       wrap.appendChild(cols);
       var ends = opts.ends || {};
-      var foot = el("div", cls + "-ends");
-      foot.appendChild(el("span", null, ends.low || ""));
-      foot.appendChild(el("span", null, ends.high || ""));
+      var foot = el2("div", cls + "-ends");
+      foot.appendChild(el2("span", null, ends.low || ""));
+      foot.appendChild(el2("span", null, ends.high || ""));
       wrap.appendChild(foot);
-      var read = el("div", cls + "-read");
+      var read = el2("div", cls + "-read");
       if (stats.total) {
-        read.appendChild(el("strong", null, stats.mean.toFixed(1)));
-        read.appendChild(el("span", null, " average of " + stats.total));
-        if (stats.split) read.appendChild(el("span", cls + "-split", "ROOM IS SPLIT"));
+        read.appendChild(el2("strong", null, stats.mean.toFixed(1)));
+        read.appendChild(el2("span", null, " average of " + stats.total));
+        if (stats.split) read.appendChild(el2("span", cls + "-split", "ROOM IS SPLIT"));
       }
       wrap.appendChild(read);
       return wrap;
@@ -4807,7 +6331,7 @@
     function paintScale(body, digest, opts) {
       if (!digest.total) {
         var joining = !!(opts && opts.join && opts.join.pin);
-        if (!joining) body.appendChild(el("div", "empty-rail", "Nobody has placed themselves yet"));
+        if (!joining) body.appendChild(el2("div", "empty-rail", "Nobody has placed themselves yet"));
         return;
       }
       body.appendChild(scaleChart(digest.counts || [], opts, "sc"));
@@ -4819,17 +6343,17 @@
       var words = digest.words || [];
       if (!words.length) {
         var joining = !!(opts && opts.join && opts.join.pin);
-        if (!joining) body.appendChild(el("div", "empty-rail", "No words yet"));
+        if (!joining) body.appendChild(el2("div", "empty-rail", "No words yet"));
         return;
       }
-      var cloud = el("div", "cloud");
+      var cloud = el2("div", "cloud");
       var top = words[0].n;
       cloudWords(digest, 24).forEach(function(w) {
-        var scale = 0.5 + 0.5 * (w.n / top);
-        var chip = el("span", "word " + cloudTone(w), w.text);
+        var scale2 = 0.5 + 0.5 * (w.n / top);
+        var chip = el2("span", "word " + cloudTone(w), w.text);
         chip.dataset.n = String(w.n);
-        chip.style.fontSize = "calc(var(--cloud-f) * " + scale.toFixed(2) + ")";
-        if (w.n > 1) chip.appendChild(el("sup", null, String(w.n)));
+        chip.style.fontSize = "calc(var(--cloud-f) * " + scale2.toFixed(2) + ")";
+        if (w.n > 1) chip.appendChild(el2("sup", null, String(w.n)));
         cloud.appendChild(chip);
       });
       body.appendChild(cloud);
@@ -4837,18 +6361,18 @@
     function paintBrainstorm(body, digest) {
       var items2 = digest.items || [];
       if (!items2.length) {
-        body.appendChild(el("div", "empty-rail", "Nothing yet"));
+        body.appendChild(el2("div", "empty-rail", "Nothing yet"));
         return;
       }
       var total = Math.max(items2.length, Number(digest.total) || 0);
       body.dataset.total = String(total);
       items2.slice(0, 8).forEach(function(it) {
-        var card = el("div", "fbcard");
-        card.appendChild(el("div", "fbtext", it.text));
+        var card = el2("div", "fbcard");
+        card.appendChild(el2("div", "fbtext", it.text));
         body.appendChild(card);
       });
       if (total > 8) {
-        body.appendChild(el("div", "more", "+ " + (total - 8) + " more"));
+        body.appendChild(el2("div", "more", "+ " + (total - 8) + " more"));
       }
     }
     function tint(hex, alpha) {
@@ -4860,47 +6384,47 @@
       opts = opts || {};
       var len = Math.max(1, opts.length || 5);
       var node = themedRoot("slide", deck, "layout-race", "race");
-      var pad = el("div", "pad");
-      pad.appendChild(el("div", "race-title", opts.title || "The race"));
-      if (opts.note) pad.appendChild(el("div", "race-note", opts.note));
-      var board5 = el("div", "racetrack");
+      var pad = el2("div", "pad");
+      pad.appendChild(el2("div", "race-title", opts.title || "The race"));
+      if (opts.note) pad.appendChild(el2("div", "race-note", opts.note));
+      var board5 = el2("div", "racetrack");
       board5.style.setProperty("--steps", String(len));
       var crowd = lanes.length > CROWD_AT;
       var pack = crowd ? lanes.slice(CROWD_TOP) : [];
       if (crowd) lanes = lanes.slice(0, CROWD_TOP);
       lanes.forEach(function(lane) {
-        var row = el("div", "lane" + (lane.moved ? " moved" : "") + ((opts.winners || []).indexOf(lane.key) > -1 ? " won" : ""));
-        var colour = lane.color || "var(--s-accent)";
-        row.style.setProperty("--lane-color", colour);
+        var row = el2("div", "lane" + (lane.moved ? " moved" : "") + ((opts.winners || []).indexOf(lane.key) > -1 ? " won" : ""));
+        var colour2 = lane.color || "var(--s-accent)";
+        row.style.setProperty("--lane-color", colour2);
         row.style.setProperty("--lane-tint", tint(lane.color, 0.34));
-        var label = el("div", "lane-name");
-        var dot = el("span", "lane-dot");
-        dot.style.background = colour;
+        var label = el2("div", "lane-name");
+        var dot = el2("span", "lane-dot");
+        dot.style.background = colour2;
         label.appendChild(dot);
-        label.appendChild(el("span", "lane-text", lane.name));
+        label.appendChild(el2("span", "lane-text", lane.name));
         row.appendChild(label);
-        var rail = el("div", "lane-rail");
+        var rail = el2("div", "lane-rail");
         for (var i = 1; i <= len; i++) {
-          var cell = el("div", "step" + (i === len ? " finish" : ""));
+          var cell = el2("div", "step" + (i === len ? " finish" : ""));
           if (i <= lane.pos) cell.classList.add("done");
           rail.appendChild(cell);
         }
-        var runner = el("div", "runner", lane.pos >= len ? "🏆" : "🏇");
+        var runner = el2("div", "runner", lane.pos >= len ? "🏆" : "🏇");
         runner.style.left = (lane.pos <= 0 ? 0 : (lane.pos - 0.5) / len * 100) + "%";
         rail.appendChild(runner);
         row.appendChild(rail);
-        row.appendChild(el("div", "lane-pos", lane.pos + " / " + len));
+        row.appendChild(el2("div", "lane-pos", lane.pos + " / " + len));
         board5.appendChild(row);
       });
       if (pack.length) {
-        var packRow = el("div", "lane pack" + (pack.some(function(l) {
+        var packRow = el2("div", "lane pack" + (pack.some(function(l) {
           return l.moved;
         }) ? " moved" : ""));
-        var packLabel = el("div", "lane-name");
-        packLabel.appendChild(el("span", "lane-text", "The pack"));
-        packLabel.appendChild(el("span", "lane-sub", pack.length + " more"));
+        var packLabel = el2("div", "lane-name");
+        packLabel.appendChild(el2("span", "lane-text", "The pack"));
+        packLabel.appendChild(el2("span", "lane-sub", pack.length + " more"));
         packRow.appendChild(packLabel);
-        var packRail = el("div", "lane-rail");
+        var packRail = el2("div", "lane-rail");
         var here = [];
         for (var k = 0; k <= len; k++) here.push(0);
         pack.forEach(function(l) {
@@ -4908,20 +6432,20 @@
         });
         var most = Math.max.apply(null, here) || 1;
         for (var j = 1; j <= len; j++) {
-          var c = el("div", "step" + (j === len ? " finish" : "") + (here[j] ? " held" : ""));
+          var c = el2("div", "step" + (j === len ? " finish" : "") + (here[j] ? " held" : ""));
           c.style.setProperty("--share", String(here[j] / most));
-          if (here[j]) c.appendChild(el("span", "pack-n", String(here[j])));
+          if (here[j]) c.appendChild(el2("span", "pack-n", String(here[j])));
           packRail.appendChild(c);
         }
         packRow.appendChild(packRail);
         var moved = pack.filter(function(l) {
           return l.moved;
         }).length;
-        packRow.appendChild(el("div", "lane-pos", here[0] ? here[0] + " at the start" : moved ? "▲ " + moved : ""));
+        packRow.appendChild(el2("div", "lane-pos", here[0] ? here[0] + " at the start" : moved ? "▲ " + moved : ""));
         board5.appendChild(packRow);
       }
       pad.appendChild(board5);
-      if (crowd) pad.appendChild(el("div", "race-yours", "Your lane is on your phone"));
+      if (crowd) pad.appendChild(el2("div", "race-yours", "Your lane is on your phone"));
       node.appendChild(pad);
       return node;
     }
@@ -4931,38 +6455,38 @@
       var hp = Math.max(0, Math.min(max, Number(opts.hp) || 0));
       var pct = Math.round(hp / max * 100);
       var node = themedRoot("slide", deck, "layout-boss" + (opts.hit ? " boss-hit" : " boss-miss") + (hp <= 0 ? " boss-down" : ""), "boss");
-      var pad = el("div", "pad");
-      pad.appendChild(el("div", "boss-title", opts.title || "Boss battle"));
-      var face = el("div", "boss-face");
-      face.appendChild(el("span", "boss-glyph", hp <= 0 ? "☠" : "▲"));
-      face.appendChild(el("span", "boss-dmg", opts.hit && opts.damage ? "−" + opts.damage : opts.hit ? "" : "MISS"));
+      var pad = el2("div", "pad");
+      pad.appendChild(el2("div", "boss-title", opts.title || "Boss battle"));
+      var face = el2("div", "boss-face");
+      face.appendChild(el2("span", "boss-glyph", hp <= 0 ? "☠" : "▲"));
+      face.appendChild(el2("span", "boss-dmg", opts.hit && opts.damage ? "−" + opts.damage : opts.hit ? "" : "MISS"));
       pad.appendChild(face);
-      if (opts.attack) pad.appendChild(el("div", "boss-attack", opts.attack));
-      if (opts.note) pad.appendChild(el("div", "boss-note", opts.note));
-      var meter = el("div", "boss-meter");
+      if (opts.attack) pad.appendChild(el2("div", "boss-attack", opts.attack));
+      if (opts.note) pad.appendChild(el2("div", "boss-note", opts.note));
+      var meter = el2("div", "boss-meter");
       var prev = Math.max(hp, Math.min(max, Number(opts.prevHp) || hp));
       if (prev > hp) {
-        var chip = el("div", "boss-chip");
+        var chip = el2("div", "boss-chip");
         chip.style.left = pct + "%";
         chip.style.width = Math.round((prev - hp) / max * 100) + "%";
         meter.appendChild(chip);
       }
-      var fill2 = el("div", "boss-fill");
+      var fill2 = el2("div", "boss-fill");
       fill2.style.width = pct + "%";
       meter.appendChild(fill2);
       pad.appendChild(meter);
-      pad.appendChild(el("div", "boss-hp", hp + " / " + max + " HP"));
+      pad.appendChild(el2("div", "boss-hp", hp + " / " + max + " HP"));
       node.appendChild(pad);
       return node;
     }
     function wordRevealWall(deck, opts) {
       opts = opts || {};
       var node = themedRoot("slide", deck, "layout-wordreveal", "wordreveal");
-      var pad = el("div", "pad");
-      pad.appendChild(el("div", "wr-title", "Word reveal"));
-      if (opts.hint) pad.appendChild(el("div", "wr-hint", opts.hint));
-      pad.appendChild(el("div", "wr-mask", opts.mask || ""));
-      pad.appendChild(el(
+      var pad = el2("div", "pad");
+      pad.appendChild(el2("div", "wr-title", "Word reveal"));
+      if (opts.hint) pad.appendChild(el2("div", "wr-hint", opts.hint));
+      pad.appendChild(el2("div", "wr-mask", opts.mask || ""));
+      pad.appendChild(el2(
         "div",
         "wr-meta",
         (opts.shown || 0) + " / " + (opts.total || 0) + " letters"
@@ -4973,11 +6497,11 @@
     function studyCards(deck, opts) {
       opts = opts || {};
       var node = themedRoot("slide", deck, "layout-study", "study");
-      var pad = el("div", "pad");
-      pad.appendChild(el("div", "study-term", opts.term || ""));
-      if (opts.definition) pad.appendChild(el("div", "study-def", opts.definition));
+      var pad = el2("div", "pad");
+      pad.appendChild(el2("div", "study-term", opts.term || ""));
+      if (opts.definition) pad.appendChild(el2("div", "study-def", opts.definition));
       if (opts.seconds > 0) {
-        pad.appendChild(el(
+        pad.appendChild(el2(
           "div",
           "study-note",
           opts.hideAfter ? "Study · " + opts.seconds + "s then hide" : "Keywords stay visible"
@@ -4988,14 +6512,14 @@
     }
     function scoreRail(deck) {
       var root = themedRoot("scorerail", deck);
-      root.appendChild(el("div", "rail-title", "The room"));
-      root.appendChild(el("div", "rail-sub", ""));
-      root.appendChild(el("div", "rail-news"));
-      root.appendChild(el("div", "rows"));
-      root.appendChild(el("div", "rail-join"));
-      var foot = el("div", "foot");
-      foot.appendChild(el("div", "joinline"));
-      foot.appendChild(el("div", "notes", ""));
+      root.appendChild(el2("div", "rail-title", "The room"));
+      root.appendChild(el2("div", "rail-sub", ""));
+      root.appendChild(el2("div", "rail-news"));
+      root.appendChild(el2("div", "rows"));
+      root.appendChild(el2("div", "rail-join"));
+      var foot = el2("div", "foot");
+      foot.appendChild(el2("div", "joinline"));
+      foot.appendChild(el2("div", "notes", ""));
       root.appendChild(foot);
       return root;
     }
@@ -5034,23 +6558,23 @@
       node.dataset.for = key;
       node.textContent = "";
       if (link && SF.qrSvg) {
-        var code = el("div", "rj-qr");
+        var code = el2("div", "rj-qr");
         try {
           code.innerHTML = SF.qrSvg(link, { quiet: 4, title: "Join at " + link });
           node.appendChild(code);
         } catch (e) {
         }
       }
-      var side = el("div", "rj-side");
-      side.appendChild(el(
+      var side = el2("div", "rj-side");
+      side.appendChild(el2(
         "div",
         "rj-lbl" + (open ? "" : " shut"),
         open ? roomy ? "Point a camera here" : "Still joining?" : roomy ? "Scan to join the next round" : "Joining next round"
       ));
-      side.appendChild(el("div", "rj-pin", join.pin));
-      if (roomy) side.appendChild(el("div", "rj-url", join.url || ""));
+      side.appendChild(el2("div", "rj-pin", join.pin));
+      if (roomy) side.appendChild(el2("div", "rj-url", join.url || ""));
       if (waiting) {
-        side.appendChild(el(
+        side.appendChild(el2(
           "div",
           "rj-wait",
           waiting + (waiting === 1 ? " person is" : " people are") + " in the queue"
@@ -5112,7 +6636,7 @@
       if (sub) sub.textContent = opts.subtitle || "";
       var legend = rail.querySelector(".rail-legend");
       if (!legend) {
-        var newLegend = el("div", "rail-legend");
+        var newLegend = el2("div", "rail-legend");
         var rowsBox = rail.querySelector(".rows");
         if (rowsBox && rowsBox.parentNode) {
           rowsBox.parentNode.insertBefore(newLegend, rowsBox);
@@ -5121,7 +6645,7 @@
       }
       if (legend) {
         legend.replaceChildren();
-        legend.appendChild(el("span", "lg-score", String(opts.scoreLabel || "Game points").toUpperCase()));
+        legend.appendChild(el2("span", "lg-score", String(opts.scoreLabel || "Game points").toUpperCase()));
         legend.hidden = !rows2.length;
       }
       var footNotes = rail.querySelector(".foot .notes");
@@ -5137,7 +6661,7 @@
         box2.innerHTML = "";
         var joining = !!(opts.join && opts.join.pin);
         if (!joining) {
-          box2.appendChild(el("div", "empty-rail", opts.emptyText || "Nobody has joined yet."));
+          box2.appendChild(el2("div", "empty-rail", opts.emptyText || "Nobody has joined yet."));
         }
         return;
       }
@@ -5159,13 +6683,13 @@
       shown.forEach(function(r, i) {
         var node = existing[r.key];
         if (!node) {
-          node = el("div", "srow");
+          node = el2("div", "srow");
           node.dataset.key = r.key;
-          node.appendChild(el("div", "rk", ""));
-          var who = el("div", "who");
-          who.appendChild(el("div", "nm", ""));
+          node.appendChild(el2("div", "rk", ""));
+          var who = el2("div", "who");
+          who.appendChild(el2("div", "nm", ""));
           node.appendChild(who);
-          node.appendChild(el("div", "sc", ""));
+          node.appendChild(el2("div", "sc", ""));
         }
         delete existing[r.key];
         node.querySelector(".rk").textContent = String(i + 1);
@@ -5178,7 +6702,7 @@
         var mem = who.querySelector(".mem");
         if (r.members != null && roomForMembers) {
           if (!mem) {
-            mem = el("div", "mem", "");
+            mem = el2("div", "mem", "");
             who.appendChild(mem);
           }
           mem.textContent = r.members === 1 ? "1 player" : r.members + " players";
@@ -5206,7 +6730,7 @@
       var moreEl = box2.querySelector(".more");
       var more = null;
       if (hidden > 0) {
-        more = moreEl || el("div", "more", "");
+        more = moreEl || el2("div", "more", "");
         order2.push(more);
       } else if (moreEl) {
         moreEl.remove();
@@ -5214,19 +6738,19 @@
       var tellMore = function(n) {
         if (!more) return;
         more.textContent = "";
-        more.appendChild(el("span", "more-n", "+ " + n + " more"));
-        if (crowd && !slim) more.appendChild(el("span", "more-where", "Your place is on your phone"));
+        more.appendChild(el2("span", "more-n", "+ " + n + " more"));
+        if (crowd && !slim) more.appendChild(el2("span", "more-where", "Your place is on your phone"));
       };
       tellMore(hidden);
       var oldClimb = box2.querySelector(".climb");
       var climbEl = null;
       if (climb) {
         climbEl = /** @type {HTMLElement} */
-        oldClimb || el("div", "climb", "");
+        oldClimb || el2("div", "climb", "");
         climbEl.textContent = "";
-        climbEl.appendChild(el("span", "cl-up", "▲ " + climb.by));
-        climbEl.appendChild(el("span", "cl-nm", wallName(climb.name, opts.people)));
-        climbEl.appendChild(el("span", "cl-lbl", "biggest climb"));
+        climbEl.appendChild(el2("span", "cl-up", "▲ " + climb.by));
+        climbEl.appendChild(el2("span", "cl-nm", wallName(climb.name, opts.people)));
+        climbEl.appendChild(el2("span", "cl-lbl", "biggest climb"));
         order2.push(climbEl);
       } else if (oldClimb) {
         oldClimb.remove();
@@ -5236,7 +6760,7 @@
       }
       var list = box2;
       if (!more && list.clientHeight && overflowing(list)) {
-        more = el("div", "more", "");
+        more = el2("div", "more", "");
         list.appendChild(more);
         tellMore(0);
       }
@@ -5283,21 +6807,21 @@
       node.textContent = "";
       node.classList.toggle("shut", join.open === false);
       if (join.open === false) {
-        node.appendChild(el("span", "jl-lbl", "CLOSED"));
-        node.appendChild(el(
+        node.appendChild(el2("span", "jl-lbl", "CLOSED"));
+        node.appendChild(el2(
           "span",
           "jl-url",
           join.waiting ? join.waiting + " waiting for next round" : "joining reopens next round"
         ));
         return;
       }
-      node.appendChild(el("span", "jl-lbl", "JOIN"));
-      node.appendChild(el("span", "jl-url", join.url || ""));
-      node.appendChild(el("span", "jl-pin", join.pin));
+      node.appendChild(el2("span", "jl-lbl", "JOIN"));
+      node.appendChild(el2("span", "jl-url", join.url || ""));
+      node.appendChild(el2("span", "jl-pin", join.pin));
       if (node.classList.contains("fk-join")) {
         node.title = "Click or press J for full-screen QR code";
         node.style.cursor = "pointer";
-        var qrHint = el("span", "jl-qr-hint", "⛶ QR (J)");
+        var qrHint = el2("span", "jl-qr-hint", "⛶ QR (J)");
         node.appendChild(qrHint);
         node.onclick = function() {
           if (SF && SF.Player && SF.Player.control) {
@@ -5308,8 +6832,8 @@
     }
     function soloScore(deck) {
       var root = themedRoot("soloscore", deck);
-      root.appendChild(el("span", "lbl", "Score"));
-      root.appendChild(el("span", "val", "0 / 0"));
+      root.appendChild(el2("span", "lbl", "Score"));
+      root.appendChild(el2("span", "val", "0 / 0"));
       return root;
     }
     return { bossBar, feedbackFocus, feedbackRail, feedbackViewOpts, paintFeedbackRail, paintRailJoin, paintScoreRail, questionCard, raceTrack, railSurface, sampleFeedbackDigest: sampleFeedbackDigest2, scoreRail, soloScore, studyCards, tint, wordRevealWall };
@@ -5317,7 +6841,7 @@
 
   // src/render/quiz.js
   function createQuizRenderer(SF, helpers) {
-    const { LETTERS, asStep, el, rich, ring, stableShuffle, tint } = helpers;
+    const { LETTERS, asStep, el: el2, rich, ring, stableShuffle, tint } = helpers;
     function sampleJoinInfo() {
       var origin2 = "";
       try {
@@ -5337,21 +6861,21 @@
     }
     function layoutJoin(slide, pad, opts) {
       var join = opts && opts.join || sampleJoinInfo();
-      var stage = el("div", "join-stage");
-      if (slide.title) stage.appendChild(rich("h2", "join-title", slide, "title", slide.title));
-      if (slide.subtitle) stage.appendChild(rich("div", "join-sub", slide, "subtitle", slide.subtitle));
+      var stage2 = el2("div", "join-stage");
+      if (slide.title) stage2.appendChild(rich("h2", "join-title", slide, "title", slide.title));
+      if (slide.subtitle) stage2.appendChild(rich("div", "join-sub", slide, "subtitle", slide.subtitle));
       var lines = (slide.bullets || []).map(function(t) {
         return String(t).trim();
       }).filter(Boolean);
       if (lines.length) {
-        var list = el("ul", "join-bullets");
+        var list = el2("ul", "join-bullets");
         lines.forEach(function(line, i) {
           list.appendChild(rich("li", null, slide, "bullets." + i, line));
         });
-        stage.appendChild(list);
+        stage2.appendChild(list);
       }
-      var board5 = el("div", "join-board");
-      var code = el("div", "join-qr");
+      var board5 = el2("div", "join-board");
+      var code = el2("div", "join-qr");
       if (join.link && SF.qrSvg) {
         try {
           code.innerHTML = SF.qrSvg(join.link, {
@@ -5362,45 +6886,45 @@
         }
       }
       board5.appendChild(code);
-      var side = el("div", "join-side");
-      side.appendChild(el(
+      var side = el2("div", "join-side");
+      side.appendChild(el2(
         "div",
         "join-lead",
         join.sample ? "Sample — Host live for the real code" : "Join at"
       ));
-      side.appendChild(el("div", "join-url", join.url || "—"));
-      side.appendChild(el("div", "join-lead pin-lead", "Game PIN"));
-      side.appendChild(el("div", "join-pin", join.pin || "----"));
+      side.appendChild(el2("div", "join-url", join.url || "—"));
+      side.appendChild(el2("div", "join-lead pin-lead", "Game PIN"));
+      side.appendChild(el2("div", "join-pin", join.pin || "----"));
       board5.appendChild(side);
-      stage.appendChild(board5);
-      pad.appendChild(stage);
+      stage2.appendChild(board5);
+      pad.appendChild(stage2);
     }
     function layoutGame(slide, pad, opts) {
       var game = opts.game || null;
-      var card = el("div", "gamecard");
-      var top = el("div", "gc-top");
-      top.appendChild(el("span", "gc-badge", "GAME"));
-      top.appendChild(el("span", "gc-note", game ? "plays here, then the deck continues" : ""));
+      var card = el2("div", "gamecard");
+      var top = el2("div", "gc-top");
+      top.appendChild(el2("span", "gc-badge", "GAME"));
+      top.appendChild(el2("span", "gc-note", game ? "plays here, then the deck continues" : ""));
       card.appendChild(top);
-      card.appendChild(el("div", "gc-title", game ? game.title : slide.gameTitle || "No game selected"));
+      card.appendChild(el2("div", "gc-title", game ? game.title : slide.gameTitle || "No game selected"));
       if (game) {
-        var facts = el("div", "gc-facts");
+        var facts = el2("div", "gc-facts");
         var n = game.questions.length;
-        facts.appendChild(el("span", "gc-fact", SF.gameStyle(game.style).label));
-        facts.appendChild(el("span", "gc-fact", n + (n === 1 ? " question" : " questions")));
-        facts.appendChild(el(
+        facts.appendChild(el2("span", "gc-fact", SF.gameStyle(game.style).label));
+        facts.appendChild(el2("span", "gc-fact", n + (n === 1 ? " question" : " questions")));
+        facts.appendChild(el2(
           "span",
           "gc-fact",
           game.settings.mode === "teams" ? game.settings.teams.length + " teams" : "individual scoring"
         ));
         if (game.settings.defaultTime) {
-          facts.appendChild(el("span", "gc-fact", game.settings.defaultTime + "s per question"));
+          facts.appendChild(el2("span", "gc-fact", game.settings.defaultTime + "s per question"));
         }
         card.appendChild(facts);
         if (game.settings.mode === "teams") {
-          var teams = el("div", "gc-teams");
+          var teams = el2("div", "gc-teams");
           game.settings.teams.forEach(function(t, i) {
-            var chip = el("span", "gc-team", t.name);
+            var chip = el2("span", "gc-team", t.name);
             chip.style.background = SF.teamColor(i);
             if (i === 2) chip.style.color = "#1d1204";
             teams.appendChild(chip);
@@ -5408,7 +6932,7 @@
           card.appendChild(teams);
         }
       } else {
-        card.appendChild(el(
+        card.appendChild(el2(
           "div",
           "gc-facts",
           "Pick a game in Design & content, or this slide is skipped."
@@ -5417,70 +6941,70 @@
       pad.appendChild(card);
     }
     function layoutExplain(slide, pad, opts) {
-      var head = el("div", "ex-head");
-      if (slide.questionNumber) head.appendChild(el("span", "ex-qn", "Q" + slide.questionNumber));
-      head.appendChild(el("span", "ex-q", slide.question || ""));
+      var head = el2("div", "ex-head");
+      if (slide.questionNumber) head.appendChild(el2("span", "ex-qn", "Q" + slide.questionNumber));
+      head.appendChild(el2("span", "ex-q", slide.question || ""));
       pad.appendChild(head);
-      var answer = el("div", "ex-answer");
+      var answer = el2("div", "ex-answer");
       var typed = slide.input === "text" || slide.input === "number";
-      answer.appendChild(el(
+      answer.appendChild(el2(
         "span",
         "key",
         slide.input === "number" ? "↔" : typed ? "✎" : LETTERS[slide.correct] || "?"
       ));
-      answer.appendChild(el("span", "txt", typed ? slide.answer || "" : (slide.options || [])[slide.correct] || ""));
-      answer.appendChild(el("span", "tick", "✓"));
+      answer.appendChild(el2("span", "txt", typed ? slide.answer || "" : (slide.options || [])[slide.correct] || ""));
+      answer.appendChild(el2("span", "tick", "✓"));
       pad.appendChild(answer);
-      var body = el("div", "ex-body");
+      var body = el2("div", "ex-body");
       String(slide.body || "").split(/\n{2,}/).forEach(function(para) {
         if (!para.trim()) return;
-        body.appendChild(asStep(el("p", null, para.trim()), slide));
+        body.appendChild(asStep(el2("p", null, para.trim()), slide));
       });
       var len = String(slide.body || "").length;
       body.dataset.len = len > 420 ? "xl" : len > 240 ? "lg" : "md";
       pad.appendChild(body);
-      if (slide.subtitle) pad.appendChild(el("div", "ex-source", slide.subtitle));
+      if (slide.subtitle) pad.appendChild(el2("div", "ex-source", slide.subtitle));
     }
     function roundClockEl(slide) {
-      var round = el("div", "round-clock");
+      var round = el2("div", "round-clock");
       round.setAttribute("aria-hidden", "true");
-      round.appendChild(el("span", "rc-n", SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
-      var track = el("span", "rc-track");
-      track.appendChild(el("span", "rc-fill"));
+      round.appendChild(el2("span", "rc-n", SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
+      var track = el2("span", "rc-track");
+      track.appendChild(el2("span", "rc-fill"));
       round.appendChild(track);
-      round.appendChild(el("span", "rc-count", ""));
+      round.appendChild(el2("span", "rc-count", ""));
       return round;
     }
     function numberLine(slide) {
-      var wrap = el("div", "numberline");
-      var line = el("div", "nl-line");
-      line.appendChild(el("div", "nl-band"));
-      line.appendChild(el("div", "nl-marks"));
-      line.appendChild(el("div", "nl-target"));
+      var wrap = el2("div", "numberline");
+      var line = el2("div", "nl-line");
+      line.appendChild(el2("div", "nl-band"));
+      line.appendChild(el2("div", "nl-marks"));
+      line.appendChild(el2("div", "nl-target"));
       if (slide.timeline && slide.timeline.length) {
-        var past = el("div", "nl-past");
+        var past = el2("div", "nl-past");
         var span = Number(slide.max) - Number(slide.min) || 1;
         slide.timeline.forEach(function(e, k) {
-          var pin = el("div", "nl-past-pin" + (k % 2 ? " low" : ""));
+          var pin = el2("div", "nl-past-pin" + (k % 2 ? " low" : ""));
           pin.style.left = Math.max(0, Math.min(100, (e.year - slide.min) * 100 / span)) + "%";
-          pin.appendChild(el("span", "npp-year", String(e.year)));
-          pin.appendChild(el("span", "npp-label", e.label));
+          pin.appendChild(el2("span", "npp-year", String(e.year)));
+          pin.appendChild(el2("span", "npp-label", e.label));
           past.appendChild(pin);
         });
         line.appendChild(past);
       }
       wrap.appendChild(line);
-      var ends = el("div", "nl-ends");
-      ends.appendChild(el("span", null, SF.formatValue(slide.min, slide.unit)));
-      ends.appendChild(el("span", null, SF.formatValue(slide.max, slide.unit)));
+      var ends = el2("div", "nl-ends");
+      ends.appendChild(el2("span", null, SF.formatValue(slide.min, slide.unit)));
+      ends.appendChild(el2("span", null, SF.formatValue(slide.max, slide.unit)));
       wrap.appendChild(ends);
       return wrap;
     }
     function raceStrip(lanes, len, command) {
-      var strip = el("div", "race-strip");
+      var strip = el2("div", "race-strip");
       if (command) strip.classList.add("runnable");
       lanes.forEach(function(lane) {
-        var row = el(command ? "button" : "div", "rlane" + (lane.moved ? " moved" : "") + (lane.won ? " won" : ""));
+        var row = el2(command ? "button" : "div", "rlane" + (lane.moved ? " moved" : "") + (lane.won ? " won" : ""));
         if (command) {
           row.type = "button";
           row.setAttribute("aria-label", "Move " + lane.name + " forward a step");
@@ -5494,16 +7018,16 @@
         }
         row.style.setProperty("--lane-color", lane.color || "var(--s-accent)");
         row.style.setProperty("--lane-tint", tint(lane.color, 0.32));
-        row.appendChild(el("div", "rname", lane.name));
-        var rail = el("div", "rrail");
-        var fill2 = el("div", "rfill");
+        row.appendChild(el2("div", "rname", lane.name));
+        var rail = el2("div", "rrail");
+        var fill2 = el2("div", "rfill");
         fill2.style.width = Math.min(lane.pos, len) / len * 100 + "%";
         rail.appendChild(fill2);
-        var mark = el("div", "rmark", lane.pos >= len ? "🏆" : "🏇");
+        var mark = el2("div", "rmark", lane.pos >= len ? "🏆" : "🏇");
         mark.style.left = (lane.pos <= 0 ? 0 : (lane.pos - 0.5) / len * 100) + "%";
         rail.appendChild(mark);
         row.appendChild(rail);
-        row.appendChild(el("div", "rpos", lane.pos + "/" + len));
+        row.appendChild(el2("div", "rpos", lane.pos + "/" + len));
         strip.appendChild(row);
       });
       return strip;
@@ -5564,17 +7088,17 @@
       var opts_ = (slide.options || []).filter(function(o) {
         return String(o).trim();
       });
-      var wrap = el("div", "opts judge-strip");
-      wrap.appendChild(el("div", "judge-caption", slide.style === "spinexplain" ? "Clear · a question’s worth / With a hint · half / Try again · nothing" : "Host marks the claim"));
+      var wrap = el2("div", "opts judge-strip");
+      wrap.appendChild(el2("div", "judge-caption", slide.style === "spinexplain" ? "Clear · a question’s worth / With a hint · half / Try again · nothing" : "Host marks the claim"));
       opts_.forEach(function(text2, i) {
         var yes = i === slide.correct;
-        var b = el("button", "opt judge " + (yes ? "yes" : "skip"));
+        var b = el2("button", "opt judge " + (yes ? "yes" : "skip"));
         b.type = "button";
         b.dataset.choice = String(i);
         if (!opts.interactive) b.classList.add("locked");
-        var line = el("span", "opt-line");
-        line.appendChild(el("span", "judge-mark", yes ? "✓" : "○"));
-        line.appendChild(el("span", "txt", text2));
+        var line = el2("span", "opt-line");
+        line.appendChild(el2("span", "judge-mark", yes ? "✓" : "○"));
+        line.appendChild(el2("span", "txt", text2));
         b.appendChild(line);
         if (inlineWhy && yes) b.appendChild(whyBox());
         wrap.appendChild(b);
@@ -5605,24 +7129,24 @@
         byKey[key].links.push(l.link);
       });
       if (!byKey[slide.id]) rows2.push({ term: slide.term || slide.question || "", links: [], now: true });
-      var map = el("div", "chain-map");
+      var map = el2("div", "chain-map");
       var at = rows2.findIndex(function(r) {
         return r.now;
       });
       var hidden = Math.max(0, at - MAP_PAST_ROWS);
-      if (hidden) map.appendChild(el("div", "cm-earlier", "+" + hidden + (hidden === 1 ? " earlier term" : " earlier terms")));
+      if (hidden) map.appendChild(el2("div", "cm-earlier", "+" + hidden + (hidden === 1 ? " earlier term" : " earlier terms")));
       rows2.slice(hidden).forEach(function(r) {
-        var row = el("div", "cm-row " + (r.now ? "now" : "past"));
-        row.appendChild(el("div", "cm-term", r.term));
-        var branches = el("div", "cm-branches");
+        var row = el2("div", "cm-row " + (r.now ? "now" : "past"));
+        row.appendChild(el2("div", "cm-term", r.term));
+        var branches = el2("div", "cm-branches");
         var cap = r.now ? MAP_NOW_BRANCHES : MAP_PAST_BRANCHES;
         var from = Math.max(0, r.links.length - cap);
-        if (from) branches.appendChild(el("div", "cm-more", "+" + from + " more"));
+        if (from) branches.appendChild(el2("div", "cm-more", "+" + from + " more"));
         r.links.slice(from).forEach(function(text2, j, list) {
-          branches.appendChild(el("div", "cm-branch" + (r.now && j === list.length - 1 ? " fresh" : ""), text2));
+          branches.appendChild(el2("div", "cm-branch" + (r.now && j === list.length - 1 ? " fresh" : ""), text2));
         });
         if (r.now && open) {
-          branches.appendChild(el("div", "cm-branch ghost", String(pending || "").trim() || "next link"));
+          branches.appendChild(el2("div", "cm-branch ghost", String(pending || "").trim() || "next link"));
         }
         if (!branches.childNodes.length) row.classList.add("bare");
         row.appendChild(branches);
@@ -5639,76 +7163,76 @@
         pad.appendChild(raceStrip(opts.lanes, opts.trackLength || 5, opts.laneCommand));
       }
       if (present === "wordreveal") {
-        var wrHero = el("div", "stage-hero wr-stage");
-        wrHero.appendChild(el("div", "stage-atmosphere", ""));
-        if (slide.hint) wrHero.appendChild(el("div", "stage-kicker", slide.hint));
+        var wrHero = el2("div", "stage-hero wr-stage");
+        wrHero.appendChild(el2("div", "stage-atmosphere", ""));
+        if (slide.hint) wrHero.appendChild(el2("div", "stage-kicker", slide.hint));
         var letters = String(slide.word || slide.answer || "");
         var pre = slide.preReveal != null ? slide.preReveal : 0.4;
         var showN = Math.round(SF.wordRevealLetterCount(letters) * pre);
         var mask = SF.wordRevealMask ? SF.wordRevealMask(letters, showN) : letters.replace(/\S/g, "_");
-        var board5 = el("div", "wr-board");
+        var board5 = el2("div", "wr-board");
         String(mask).split("").forEach(function(ch2, i) {
           if (ch2 === " ") {
-            board5.appendChild(el("span", "wr-gap", ""));
+            board5.appendChild(el2("span", "wr-gap", ""));
             return;
           }
-          var tile = el("span", "wr-tile" + (ch2 === "_" ? " blank" : " lit"), ch2 === "_" ? "" : ch2);
+          var tile = el2("span", "wr-tile" + (ch2 === "_" ? " blank" : " lit"), ch2 === "_" ? "" : ch2);
           tile.style.animationDelay = i * 0.04 + "s";
           board5.appendChild(tile);
         });
         wrHero.appendChild(board5);
-        wrHero.appendChild(el("div", "stage-note", "Letters drip in · type your guess"));
+        wrHero.appendChild(el2("div", "stage-note", "Letters drip in · type your guess"));
         pad.appendChild(wrHero);
       } else if (present === "memorymatch") {
-        var match = el("div", "stage-hero match-stage");
-        match.appendChild(el("div", "stage-atmosphere", ""));
-        var board5 = el("div", "match-board");
+        var match = el2("div", "stage-hero match-stage");
+        match.appendChild(el2("div", "stage-atmosphere", ""));
+        var board5 = el2("div", "match-board");
         matchBoardTiles(slide, opts).forEach(function(tile, ti) {
-          var cell = el("button", "match-tile" + (tile.active ? " active" : "") + (tile.ghost ? " ghost" : " back"));
+          var cell = el2("button", "match-tile" + (tile.active ? " active" : "") + (tile.ghost ? " ghost" : " back"));
           cell.type = "button";
           cell.tabIndex = -1;
           cell.setAttribute("aria-hidden", "true");
-          cell.appendChild(el("span", "match-tile-back", tile.ghost ? "" : "◈"));
+          cell.appendChild(el2("span", "match-tile-back", tile.ghost ? "" : "◈"));
           if (tile.active && tile.term) {
-            cell.appendChild(el("span", "match-tile-front", String(tile.term).slice(0, 18)));
+            cell.appendChild(el2("span", "match-tile-front", String(tile.term).slice(0, 18)));
           }
           cell.style.animationDelay = ti * 0.05 + "s";
           board5.appendChild(cell);
         });
         match.appendChild(board5);
-        var duo = el("div", "match-duo");
-        var termCard = el("div", "match-card term open");
-        termCard.appendChild(el("div", "match-face-label", "Term"));
-        termCard.appendChild(el("div", "match-face-text", slide.term || slide.question || ""));
+        var duo = el2("div", "match-duo");
+        var termCard = el2("div", "match-card term open");
+        termCard.appendChild(el2("div", "match-face-label", "Term"));
+        termCard.appendChild(el2("div", "match-face-text", slide.term || slide.question || ""));
         var defOpen = !!(opts.revealed || slide.hideAfterStudy === false);
-        var defCard = el("div", "match-card def" + (defOpen ? " open" : " shut"));
-        defCard.appendChild(el("div", "match-face-label", "Definition"));
+        var defCard = el2("div", "match-card def" + (defOpen ? " open" : " shut"));
+        defCard.appendChild(el2("div", "match-face-label", "Definition"));
         if (defOpen && slide.definition) {
-          defCard.appendChild(el("div", "match-face-text", slide.definition));
+          defCard.appendChild(el2("div", "match-face-text", slide.definition));
         } else {
-          defCard.appendChild(el("div", "match-face-hidden", "?"));
-          defCard.appendChild(el("div", "match-face-hint", "Study · then recall"));
+          defCard.appendChild(el2("div", "match-face-hidden", "?"));
+          defCard.appendChild(el2("div", "match-face-hint", "Study · then recall"));
         }
         duo.appendChild(termCard);
-        duo.appendChild(el("div", "match-link", "⟷"));
+        duo.appendChild(el2("div", "match-link", "⟷"));
         duo.appendChild(defCard);
         match.appendChild(duo);
-        match.appendChild(el(
+        match.appendChild(el2(
           "div",
           "stage-note",
           "Memorise the pair. Host marks Claimed when a learner has it (+1)."
         ));
         pad.appendChild(match);
       } else if (present === "claim") {
-        var claim = el("div", "stage-hero claim-stage");
-        claim.appendChild(el("div", "stage-atmosphere", ""));
-        var flip = el("div", "flip-card" + (opts.revealed || slide.hideAfterStudy === false ? " open" : ""));
-        var faceA = el("div", "flip-face front");
-        faceA.appendChild(el("div", "match-face-label", "Term"));
-        faceA.appendChild(el("div", "claim-term", slide.term || slide.question || ""));
-        var faceB = el("div", "flip-face back");
-        faceB.appendChild(el("div", "match-face-label", "Definition"));
-        faceB.appendChild(el(
+        var claim = el2("div", "stage-hero claim-stage");
+        claim.appendChild(el2("div", "stage-atmosphere", ""));
+        var flip = el2("div", "flip-card" + (opts.revealed || slide.hideAfterStudy === false ? " open" : ""));
+        var faceA = el2("div", "flip-face front");
+        faceA.appendChild(el2("div", "match-face-label", "Term"));
+        faceA.appendChild(el2("div", "claim-term", slide.term || slide.question || ""));
+        var faceB = el2("div", "flip-face back");
+        faceB.appendChild(el2("div", "match-face-label", "Definition"));
+        faceB.appendChild(el2(
           "div",
           "claim-def",
           slide.definition || "Flip after study"
@@ -5717,7 +7241,7 @@
         flip.appendChild(faceB);
         claim.appendChild(flip);
         if (!opts.revealed && slide.hideAfterStudy !== false) {
-          claim.appendChild(el(
+          claim.appendChild(el2(
             "div",
             "stage-note",
             "Study while the clock runs · then the definition hides"
@@ -5725,114 +7249,114 @@
         }
         pad.appendChild(claim);
       } else if (present === "knowledge") {
-        var know = el("div", "stage-hero knowledge-stage");
-        know.appendChild(el("div", "stage-atmosphere", ""));
-        var chip = el("div", "knowledge-chip");
-        chip.appendChild(el("div", "claim-term", slide.term || slide.question || ""));
+        var know = el2("div", "stage-hero knowledge-stage");
+        know.appendChild(el2("div", "stage-atmosphere", ""));
+        var chip = el2("div", "knowledge-chip");
+        chip.appendChild(el2("div", "claim-term", slide.term || slide.question || ""));
         know.appendChild(chip);
         if (slide.definition) {
-          know.appendChild(el("div", "claim-def soft", slide.definition));
+          know.appendChild(el2("div", "claim-def soft", slide.definition));
         }
-        know.appendChild(el("div", "stage-note", "Keywords stay visible. Host marks Claimed for +1."));
+        know.appendChild(el2("div", "stage-note", "Keywords stay visible. Host marks Claimed for +1."));
         pad.appendChild(know);
       } else if (present === "spin") {
-        var spin = el("div", "spin-room");
-        var dial = el("div", "spin-dial");
+        var spin = el2("div", "spin-room");
+        var dial = el2("div", "spin-dial");
         dial.setAttribute("aria-hidden", "true");
-        var wheel = el("div", "spin-disc");
+        var wheel = el2("div", "spin-disc");
         wheel.style.setProperty("--land", 4 * 360 + (slide.drawNo || 1) * 137 % 360 + "deg");
         for (var segment = 0; segment < 8; segment++) {
-          var mark = el("span", "spin-segment", ["✦", "◎", "✳", "◇"][segment % 4]);
+          var mark = el2("span", "spin-segment", ["✦", "◎", "✳", "◇"][segment % 4]);
           mark.style.setProperty("--sector", segment);
           wheel.appendChild(mark);
         }
         dial.appendChild(wheel);
-        dial.appendChild(el("div", "spin-pointer", "▼"));
-        dial.appendChild(el("div", "spin-hub", "SPIN"));
-        var counter = el("div", "spin-counter", slide.spinTotal ? "DRAW " + slide.spinDraw + " / " + slide.spinTotal : "CONCEPT DRAW");
+        dial.appendChild(el2("div", "spin-pointer", "▼"));
+        dial.appendChild(el2("div", "spin-hub", "SPIN"));
+        var counter = el2("div", "spin-counter", slide.spinTotal ? "DRAW " + slide.spinDraw + " / " + slide.spinTotal : "CONCEPT DRAW");
         dial.appendChild(counter);
         spin.appendChild(dial);
-        var challenge = el("div", "spin-challenge");
-        challenge.appendChild(el("div", "spin-eyebrow", slide.category || "YOUR CONCEPT"));
-        challenge.appendChild(el("h2", "spin-concept", slide.term || slide.question || ""));
-        var steps = el("div", "spin-scaffold");
+        var challenge = el2("div", "spin-challenge");
+        challenge.appendChild(el2("div", "spin-eyebrow", slide.category || "YOUR CONCEPT"));
+        challenge.appendChild(el2("h2", "spin-concept", slide.term || slide.question || ""));
+        var steps = el2("div", "spin-scaffold");
         ["Explain the meaning", "Give a real example", "Connect it to what you know"].forEach(function(text2, i) {
-          var step = el("div", "spin-prompt");
-          step.appendChild(el("span", null, String(i + 1)));
-          step.appendChild(el("strong", null, text2));
+          var step = el2("div", "spin-prompt");
+          step.appendChild(el2("span", null, String(i + 1)));
+          step.appendChild(el2("strong", null, text2));
           steps.appendChild(step);
         });
         challenge.appendChild(steps);
         if (slide.hint) {
-          var hint = el("details", "spin-hint");
-          hint.appendChild(el("summary", null, "Need a hint?"));
-          hint.appendChild(el("p", null, slide.hint));
+          var hint = el2("details", "spin-hint");
+          hint.appendChild(el2("summary", null, "Need a hint?"));
+          hint.appendChild(el2("p", null, slide.hint));
           challenge.appendChild(hint);
         }
-        challenge.appendChild(el("div", "spin-deck-note", slide.spinTotal ? slide.spinTotal - slide.spinDraw + " concepts left · no repeat draws" : "Explain aloud · the teacher marks your response"));
+        challenge.appendChild(el2("div", "spin-deck-note", slide.spinTotal ? slide.spinTotal - slide.spinDraw + " concepts left · no repeat draws" : "Explain aloud · the teacher marks your response"));
         spin.appendChild(challenge);
         pad.appendChild(spin);
       } else if (present === "headsup") {
-        var oracy = el("div", "stage-hero oracy-stage heads-stage");
-        oracy.appendChild(el("div", "stage-atmosphere", ""));
-        if (slide.category) oracy.appendChild(el("div", "stage-kicker", slide.category));
-        oracy.appendChild(el("div", "oracy-term", slide.term || slide.question || ""));
-        if (slide.hint) oracy.appendChild(el("div", "stage-note", slide.hint));
+        var oracy = el2("div", "stage-hero oracy-stage heads-stage");
+        oracy.appendChild(el2("div", "stage-atmosphere", ""));
+        if (slide.category) oracy.appendChild(el2("div", "stage-kicker", slide.category));
+        oracy.appendChild(el2("div", "oracy-term", slide.term || slide.question || ""));
+        if (slide.hint) oracy.appendChild(el2("div", "stage-note", slide.hint));
         if (slide.roundSeconds) oracy.appendChild(roundClockEl(slide));
         if (slide.drawTotal) {
-          oracy.appendChild(el("div", "heads-pile", "Term " + slide.drawNo + " of " + slide.drawTotal));
+          oracy.appendChild(el2("div", "heads-pile", "Term " + slide.drawNo + " of " + slide.drawTotal));
         }
         pad.appendChild(oracy);
       } else if (present === "connection") {
-        var pair = el("div", "stage-hero connection-stage");
-        pair.appendChild(el("div", "stage-atmosphere", ""));
-        var row = el("div", "conn-pair");
-        var ca = el("div", "conn-tile a");
-        ca.appendChild(el("div", "conn-label", "A"));
-        ca.appendChild(el("div", "conn-text", slide.itemA || "A"));
-        var cb = el("div", "conn-tile b");
-        cb.appendChild(el("div", "conn-label", "B"));
-        cb.appendChild(el("div", "conn-text", slide.itemB || "B"));
+        var pair = el2("div", "stage-hero connection-stage");
+        pair.appendChild(el2("div", "stage-atmosphere", ""));
+        var row = el2("div", "conn-pair");
+        var ca = el2("div", "conn-tile a");
+        ca.appendChild(el2("div", "conn-label", "A"));
+        ca.appendChild(el2("div", "conn-text", slide.itemA || "A"));
+        var cb = el2("div", "conn-tile b");
+        cb.appendChild(el2("div", "conn-label", "B"));
+        cb.appendChild(el2("div", "conn-text", slide.itemB || "B"));
         row.appendChild(ca);
-        row.appendChild(el("div", "conn-bridge", "↔"));
+        row.appendChild(el2("div", "conn-bridge", "↔"));
         row.appendChild(cb);
         pair.appendChild(row);
-        pair.appendChild(el("div", "stage-note", "Explain the bridge aloud"));
+        pair.appendChild(el2("div", "stage-note", "Explain the bridge aloud"));
         pad.appendChild(pair);
       } else if (present === "compare" && !slide.compareSort) {
-        var cmp = el("div", "stage-hero compare-stage");
-        cmp.appendChild(el("div", "stage-atmosphere", ""));
+        var cmp = el2("div", "stage-hero compare-stage");
+        cmp.appendChild(el2("div", "stage-atmosphere", ""));
         if (slide.category) {
-          cmp.appendChild(el("div", "stage-kicker", slide.category));
+          cmp.appendChild(el2("div", "stage-kicker", slide.category));
         }
-        var crow = el("div", "compare-pair");
-        var cta = el("div", "compare-tile");
-        cta.appendChild(el("div", "compare-label", "Item A"));
-        cta.appendChild(el("div", "compare-text", slide.itemA || "A"));
-        var ctb = el("div", "compare-tile");
-        ctb.appendChild(el("div", "compare-label", "Item B"));
-        ctb.appendChild(el("div", "compare-text", slide.itemB || "B"));
+        var crow = el2("div", "compare-pair");
+        var cta = el2("div", "compare-tile");
+        cta.appendChild(el2("div", "compare-label", "Item A"));
+        cta.appendChild(el2("div", "compare-text", slide.itemA || "A"));
+        var ctb = el2("div", "compare-tile");
+        ctb.appendChild(el2("div", "compare-label", "Item B"));
+        ctb.appendChild(el2("div", "compare-text", slide.itemB || "B"));
         crow.appendChild(cta);
         crow.appendChild(ctb);
         cmp.appendChild(crow);
         if (!opts.revealed) {
-          cmp.appendChild(el(
+          cmp.appendChild(el2(
             "p",
             "compare-discuss",
             "Discuss: what are the similarities and differences?"
           ));
         }
-        var panels = el("div", "compare-panels" + (opts.revealed ? " on" : ""));
-        var alike = el("div", "compare-panel alike");
-        alike.appendChild(el("div", "compare-panel-label", "Similarities"));
-        alike.appendChild(el(
+        var panels = el2("div", "compare-panels" + (opts.revealed ? " on" : ""));
+        var alike = el2("div", "compare-panel alike");
+        alike.appendChild(el2("div", "compare-panel-label", "Similarities"));
+        alike.appendChild(el2(
           "div",
           "compare-panel-body",
           slide.similarities || "Needs similarities"
         ));
-        var differ = el("div", "compare-panel differ");
-        differ.appendChild(el("div", "compare-panel-label", "Differences"));
-        differ.appendChild(el(
+        var differ = el2("div", "compare-panel differ");
+        differ.appendChild(el2("div", "compare-panel-label", "Differences"));
+        differ.appendChild(el2(
           "div",
           "compare-panel-body",
           slide.differences || "Needs differences"
@@ -5842,15 +7366,15 @@
         cmp.appendChild(panels);
         pad.appendChild(cmp);
       } else if (present === "chain") {
-        var chain = el("div", "stage-hero chain-stage");
-        chain.appendChild(el("div", "stage-atmosphere", ""));
+        var chain = el2("div", "stage-hero chain-stage");
+        chain.appendChild(el2("div", "stage-atmosphere", ""));
         chain.appendChild(chainMap(slide, opts.chainLinks || [], opts.chainPending || "", !opts.revealed));
         if (slide.prompt) {
-          chain.appendChild(el("div", "stage-note chain-prompt", slide.prompt));
+          chain.appendChild(el2("div", "stage-note chain-prompt", slide.prompt));
         }
         if (!opts.revealed && opts.chainCommand) {
-          var wrap = el("div", "chain-capture");
-          var inp = el("input", "chain-link-input");
+          var wrap = el2("div", "chain-capture");
+          var inp = el2("input", "chain-link-input");
           inp.type = "text";
           inp.maxLength = 160;
           inp.placeholder = "Type the proposed link and justification";
@@ -5865,7 +7389,7 @@
             e.stopPropagation();
           });
           wrap.appendChild(inp);
-          wrap.appendChild(el(
+          wrap.appendChild(el2(
             "p",
             "chain-capture-hint",
             "Accept adds a branch and keeps the term open for another. Next closes it."
@@ -5877,74 +7401,74 @@
         var FACES = ["define", "compare", "why", "example", "what if", "benefits and limits"];
         var face = String(slide.category || "").trim();
         var faceNo = FACES.indexOf(face.toLowerCase());
-        var cube = el("div", "stage-hero cube-stage");
-        cube.appendChild(el("div", "stage-atmosphere", ""));
-        var die = el("div", "cube-face");
+        var cube = el2("div", "stage-hero cube-stage");
+        cube.appendChild(el2("div", "stage-atmosphere", ""));
+        var die = el2("div", "cube-face");
         die.dataset.face = String(faceNo >= 0 ? faceNo : (slide.drawNo || 1) % 6);
-        die.appendChild(el("div", "cube-pips", ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"][faceNo >= 0 ? faceNo : 0]));
-        die.appendChild(el("div", "cube-type", face || "Question"));
+        die.appendChild(el2("div", "cube-pips", ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"][faceNo >= 0 ? faceNo : 0]));
+        die.appendChild(el2("div", "cube-type", face || "Question"));
         cube.appendChild(die);
-        cube.appendChild(el("div", "cube-question", slide.challenge || slide.question || ""));
+        cube.appendChild(el2("div", "cube-question", slide.challenge || slide.question || ""));
         if (slide.drawTotal) {
           var facesLeft = slide.drawTotal - slide.drawNo;
-          cube.appendChild(el("div", "challenge-left", facesLeft ? facesLeft + (facesLeft === 1 ? " face left" : " faces left") : "Last face"));
+          cube.appendChild(el2("div", "challenge-left", facesLeft ? facesLeft + (facesLeft === 1 ? " face left" : " faces left") : "Last face"));
         }
         pad.appendChild(cube);
       } else if (present === "challenge") {
-        var ch = el("div", "stage-hero challenge-stage");
-        ch.appendChild(el("div", "stage-atmosphere", ""));
+        var ch = el2("div", "stage-hero challenge-stage");
+        ch.appendChild(el2("div", "stage-atmosphere", ""));
         var left = slide.drawTotal ? slide.drawTotal - slide.drawNo : 0;
-        var deckEl = el("div", "challenge-deck");
+        var deckEl = el2("div", "challenge-deck");
         deckEl.dataset.left = String(Math.min(3, left));
-        var poster = el("div", "challenge-poster");
-        if (slide.drawTotal) poster.appendChild(el("div", "challenge-card-no", "Card " + slide.drawNo));
-        poster.appendChild(el("div", "challenge-body", slide.challenge || slide.question || ""));
+        var poster = el2("div", "challenge-poster");
+        if (slide.drawTotal) poster.appendChild(el2("div", "challenge-card-no", "Card " + slide.drawNo));
+        poster.appendChild(el2("div", "challenge-body", slide.challenge || slide.question || ""));
         deckEl.appendChild(poster);
         ch.appendChild(deckEl);
         if (slide.drawTotal) {
-          ch.appendChild(el("div", "challenge-left", left ? left + (left === 1 ? " card left" : " cards left") + " in the deck" : "Last card"));
+          ch.appendChild(el2("div", "challenge-left", left ? left + (left === 1 ? " card left" : " cards left") + " in the deck" : "Last card"));
         }
         pad.appendChild(ch);
       } else if (present === "bowl") {
-        var bowl2 = el("div", "stage-hero bowl-stage");
-        bowl2.appendChild(el("div", "stage-atmosphere", ""));
-        var bcell = el("div", "bowl-cell");
-        bcell.appendChild(el("div", "bowl-cat", slide.category || "Category"));
-        bcell.appendChild(el("div", "bowl-val", String(slide.pointValue || slide.points || 200)));
+        var bowl2 = el2("div", "stage-hero bowl-stage");
+        bowl2.appendChild(el2("div", "stage-atmosphere", ""));
+        var bcell = el2("div", "bowl-cell");
+        bcell.appendChild(el2("div", "bowl-cat", slide.category || "Category"));
+        bcell.appendChild(el2("div", "bowl-val", String(slide.pointValue || slide.points || 200)));
         bowl2.appendChild(bcell);
         pad.appendChild(bowl2);
       } else if (present === "boss") {
         var fight = opts.boss || null;
-        var boss2 = el("div", "stage-hero boss-stage" + (fight ? " is-" + fight.stage : ""));
-        boss2.appendChild(el("div", "stage-atmosphere", ""));
-        var crest = el("div", "boss-crest");
-        crest.appendChild(el(
+        var boss2 = el2("div", "stage-hero boss-stage" + (fight ? " is-" + fight.stage : ""));
+        boss2.appendChild(el2("div", "stage-atmosphere", ""));
+        var crest = el2("div", "boss-crest");
+        crest.appendChild(el2(
           "div",
           "boss-glyph",
           fight && fight.stage === "defeated" ? "☠" : "▲"
         ));
         var dmg = slide.bossDamage || 2;
-        crest.appendChild(el(
+        crest.appendChild(el2(
           "div",
           "boss-hit-badge",
           (slide.difficulty || "medium") + " · " + dmg + " dmg"
         ));
         boss2.appendChild(crest);
         if (fight) {
-          var hp = el("div", "boss-hp");
-          var bar = el("div", "boss-hp-rail");
-          var fill2 = el("div", "boss-hp-fill");
+          var hp = el2("div", "boss-hp");
+          var bar = el2("div", "boss-hp-rail");
+          var fill2 = el2("div", "boss-hp-fill");
           fill2.style.width = Math.round(fight.hp / Math.max(1, fight.max) * 100) + "%";
           bar.appendChild(fill2);
           hp.appendChild(bar);
-          hp.appendChild(el("div", "boss-hp-n", fight.hp + " / " + fight.max + " HP"));
+          hp.appendChild(el2("div", "boss-hp-n", fight.hp + " / " + fight.max + " HP"));
           boss2.appendChild(hp);
           if (fight.gap) {
-            boss2.appendChild(el("div", "boss-turn boss-gap", fight.gap + " — the boss cannot be hit with a blank question."));
+            boss2.appendChild(el2("div", "boss-turn boss-gap", fight.gap + " — the boss cannot be hit with a blank question."));
           } else if (fight.marked) {
-            boss2.appendChild(el("div", "boss-turn", "Already marked — move on."));
+            boss2.appendChild(el2("div", "boss-turn", "Already marked — move on."));
           } else if (fight.turnName) {
-            boss2.appendChild(el(
+            boss2.appendChild(el2(
               "div",
               "boss-turn",
               fight.stage === "defeated" ? fight.verdict : fight.turnName + " — " + (fight.revealed ? fight.expired ? "out of time" : "did they earn the hit?" : "answer before the clock")
@@ -5954,7 +7478,7 @@
         pad.appendChild(boss2);
         if (opts.bossCommand && fight && !fight.marked && fight.phase !== "complete") {
           let bossBtn2 = function(text2, action, cls) {
-            var b = el("button", "boss-button " + (cls || ""), text2);
+            var b = el2("button", "boss-button " + (cls || ""), text2);
             b.type = "button";
             b.dataset.desk = "boss:" + action;
             b.onclick = function() {
@@ -5963,7 +7487,7 @@
             return b;
           };
           var bossBtn = bossBtn2;
-          var acts = el("div", "boss-actions");
+          var acts = el2("div", "boss-actions");
           if (!fight.revealed) acts.appendChild(bossBtn2("Reveal the answer", "reveal", "primary"));
           else {
             if (!fight.expired) acts.appendChild(bossBtn2("✓ Hit · −" + dmg, "hit", "primary"));
@@ -5972,13 +7496,13 @@
           pad.appendChild(acts);
         }
       } else if (present === "truefalse") {
-        var tf2 = el("div", "stage-atmosphere tf-atmosphere", "");
+        var tf2 = el2("div", "stage-atmosphere tf-atmosphere", "");
         pad.appendChild(tf2);
       } else if (present === "emoji") {
-        var em = el("div", "stage-hero emoji-stage");
-        em.appendChild(el("div", "stage-atmosphere", ""));
+        var em = el2("div", "stage-hero emoji-stage");
+        em.appendChild(el2("div", "stage-atmosphere", ""));
         var clueText = String(slide.clues || slide.question || "");
-        var hero = el("div", "emoji-hero");
+        var hero = el2("div", "emoji-hero");
         var layout = SF.emojiClueLayout ? SF.emojiClueLayout(clueText) : { tiled: false, pieces: [], text: clueText };
         var pieces = layout.pieces;
         var tiled = layout.tiled;
@@ -5989,28 +7513,28 @@
           hero.style.setProperty("--clue-count", pieces.length);
           pieces.forEach(function(piece, i) {
             var operator = /^[+＝=→➜➡↔&]$/.test(piece);
-            var tile = el("span", operator ? "emoji-operator" : "emoji-clue", piece);
+            var tile = el2("span", operator ? "emoji-operator" : "emoji-clue", piece);
             tile.setAttribute("aria-hidden", "true");
             tile.style.setProperty("--clue-index", i);
             hero.appendChild(tile);
           });
         } else hero.textContent = clueText;
-        var prompt = el("div", "emoji-mission");
-        prompt.appendChild(el("span", "emoji-thinking", "DECODE THE CLUES"));
-        prompt.appendChild(el("span", "emoji-solved", "THE CONNECTION REVEALED"));
+        var prompt = el2("div", "emoji-mission");
+        prompt.appendChild(el2("span", "emoji-thinking", "DECODE THE CLUES"));
+        prompt.appendChild(el2("span", "emoji-solved", "THE CONNECTION REVEALED"));
         em.appendChild(prompt);
         em.appendChild(hero);
-        var nudge = el("p", "emoji-nudge");
-        nudge.appendChild(el("span", "emoji-thinking", "Name the clues. Find the connection. Make your guess."));
-        nudge.appendChild(el("span", "emoji-solved", "Can you explain how each clue fits?"));
+        var nudge = el2("p", "emoji-nudge");
+        nudge.appendChild(el2("span", "emoji-thinking", "Name the clues. Find the connection. Make your guess."));
+        nudge.appendChild(el2("span", "emoji-solved", "Can you explain how each clue fits?"));
         em.appendChild(nudge);
         var help = SF.emojiHelp ? SF.emojiHelp(slide) : { pattern: "step", hint: "" };
         var pattern = help.pattern;
         if (pattern !== "none") {
-          var blanks = el("div", "emoji-help emoji-help-blanks" + (pattern === "step" ? " step" : ""));
+          var blanks = el2("div", "emoji-help emoji-help-blanks" + (pattern === "step" ? " step" : ""));
           blanks.dataset.step = "1";
-          blanks.appendChild(el("span", "emoji-help-label", "LETTERS"));
-          blanks.appendChild(el(
+          blanks.appendChild(el2("span", "emoji-help-label", "LETTERS"));
+          blanks.appendChild(el2(
             "strong",
             "emoji-blanks",
             SF.wordRevealMask(slide.answer || "", 0)
@@ -6018,42 +7542,42 @@
           em.appendChild(blanks);
         }
         if (help.hint) {
-          var hintStep = el("div", "emoji-help emoji-help-hint step");
+          var hintStep = el2("div", "emoji-help emoji-help-hint step");
           hintStep.dataset.step = "2";
-          hintStep.appendChild(el("span", "emoji-help-label", "HINT"));
-          hintStep.appendChild(el("strong", "emoji-hint-text", help.hint));
+          hintStep.appendChild(el2("span", "emoji-help-label", "HINT"));
+          hintStep.appendChild(el2("strong", "emoji-hint-text", help.hint));
           em.appendChild(hintStep);
         }
         pad.appendChild(em);
       } else if (present === "definition") {
         var defPhase = opts.definitionPhase || "reading";
-        var def = el("div", "stage-hero definition-stage phase-" + defPhase);
-        def.appendChild(el("div", "stage-atmosphere", ""));
-        var track = el("div", "def-track");
-        track.appendChild(el(
+        var def = el2("div", "stage-hero definition-stage phase-" + defPhase);
+        def.appendChild(el2("div", "stage-atmosphere", ""));
+        var track = el2("div", "def-track");
+        track.appendChild(el2(
           "span",
           "dt-stop" + (defPhase === "reading" ? " on" : " done"),
           "Read" + (slide.timeLimit ? " · " + SF.clockFace(slide.timeLimit) : "")
         ));
-        track.appendChild(el("span", "dt-arrow", ""));
-        track.appendChild(el("span", "dt-stop" + (defPhase === "reading" ? "" : " on"), "Recall"));
+        track.appendChild(el2("span", "dt-arrow", ""));
+        track.appendChild(el2("span", "dt-stop" + (defPhase === "reading" ? "" : " on"), "Recall"));
         def.appendChild(track);
         if (defPhase === "reading") {
-          def.appendChild(el("div", "definition-eyebrow", "READING · NO NOTES"));
-          def.appendChild(el(
+          def.appendChild(el2("div", "definition-eyebrow", "READING · NO NOTES"));
+          def.appendChild(el2(
             "p",
             "definition-passage",
             slide.passage || "Needs a passage"
           ));
           if (!String(slide.passage || "").trim()) {
-            def.appendChild(el(
+            def.appendChild(el2(
               "p",
               "definition-gap",
               "Add a passage in Quiz studio before you play"
             ));
           }
           if (opts.definitionCommand) {
-            var askBtn = el("button", "definition-ask", "Ask now — hide the passage");
+            var askBtn = el2("button", "definition-ask", "Ask now — hide the passage");
             askBtn.type = "button";
             askBtn.dataset.desk = "definition:ask";
             askBtn.onclick = function() {
@@ -6061,15 +7585,15 @@
             };
             def.appendChild(askBtn);
           } else {
-            def.appendChild(el(
+            def.appendChild(el2(
               "p",
               "definition-caption",
               "When time is up the passage clears and the recall question appears."
             ));
           }
         } else {
-          def.appendChild(el("div", "definition-eyebrow", "RECALL · FROM MEMORY"));
-          def.appendChild(el(
+          def.appendChild(el2("div", "definition-eyebrow", "RECALL · FROM MEMORY"));
+          def.appendChild(el2(
             "p",
             "definition-caption",
             "The passage is gone. Answer from what you just read."
@@ -6077,19 +7601,19 @@
         }
         pad.appendChild(def);
       } else if (present === "blanks") {
-        var bl = el("div", "stage-hero blanks-stage");
-        bl.appendChild(el("div", "stage-atmosphere", ""));
-        var line = el("div", "blanks-line");
+        var bl = el2("div", "stage-hero blanks-stage");
+        bl.appendChild(el2("div", "stage-atmosphere", ""));
+        var line = el2("div", "blanks-line");
         String(slide.question || "").split(/(_{2,}|……+|…+)/).forEach(function(part) {
-          if (/^(_+|……+|…+)$/.test(part)) line.appendChild(el("span", "blank-pill", "_____"));
+          if (/^(_+|……+|…+)$/.test(part)) line.appendChild(el2("span", "blank-pill", "_____"));
           else if (part) line.appendChild(document.createTextNode(part));
         });
         bl.appendChild(line);
         pad.appendChild(bl);
       }
-      var head = el("div", "qhead");
+      var head = el2("div", "qhead");
       if (opts.quizNumber) {
-        head.appendChild(el(
+        head.appendChild(el2(
           "div",
           "qnum",
           (opts.lanes ? "LEG " : "Q") + opts.quizNumber
@@ -6098,21 +7622,21 @@
       var title = typeof slide.headPrompt === "string" ? slide.headPrompt : slide.question || " ";
       var defReading = present === "definition" && (opts.definitionPhase || "reading") === "reading";
       if (present === "emoji") {
-        head.appendChild(el("div", "q q-ask", "Decode the symbols. What is it?"));
+        head.appendChild(el2("div", "q q-ask", "Decode the symbols. What is it?"));
       } else if (defReading) {
-        head.appendChild(el(
+        head.appendChild(el2(
           "div",
           "q q-ask",
           "Read carefully. The passage will clear for the recall question."
         ));
       } else if (title) {
-        head.appendChild(el("div", "q q-ask", title));
+        head.appendChild(el2("div", "q q-ask", title));
       }
       var pic = String(slide.image || "").trim();
       var picLayout = pic ? slide.imageLayout || "band" : null;
       var media = null;
       if (pic) {
-        media = el("div", "qmedia");
+        media = el2("div", "qmedia");
         var pimg = document.createElement("img");
         pimg.src = slide.image;
         pimg.alt = slide.imageAlt || "";
@@ -6146,9 +7670,9 @@
         if (media) pad.appendChild(media);
       }
       if (slide.timeLimit > 0) {
-        var clock = el("div", "clock");
+        var clock = el2("div", "clock");
         clock.appendChild(ring(84, 8, 1));
-        clock.appendChild(el("div", "n", String(slide.timeLimit)));
+        clock.appendChild(el2("div", "n", String(slide.timeLimit)));
         pad.parentNode.appendChild(clock);
         pad.parentNode.classList.add("has-clock");
       }
@@ -6159,12 +7683,12 @@
       var inlineWhy = why && slide.explainStyle !== "slide";
       if (inlineWhy) pad.parentNode.classList.add("has-why");
       function whyBox() {
-        var box2 = el("span", "why");
+        var box2 = el2("span", "why");
         why.split(/\n{2,}/).forEach(function(para) {
           if (!para.trim()) return;
-          box2.appendChild(el("span", "p", para.trim()));
+          box2.appendChild(el2("span", "p", para.trim()));
         });
-        if (slide.source) box2.appendChild(el("span", "src", slide.source));
+        if (slide.source) box2.appendChild(el2("span", "src", slide.source));
         box2.dataset.len = why.length > 320 ? "xl" : why.length > 170 ? "lg" : "md";
         return box2;
       }
@@ -6187,95 +7711,95 @@
       if (slide.input === "sort") {
         pad.parentNode.classList.add("is-sort");
         var bins = slide.sortBins || ["A only", "Both", "B only"];
-        var board5 = el("div", "sort-board");
+        var board5 = el2("div", "sort-board");
         bins.forEach(function(name, b) {
-          var col = el("div", "sort-col sort-col-" + b);
+          var col = el2("div", "sort-col sort-col-" + b);
           col.dataset.bin = String(b);
-          col.appendChild(el("div", "sort-col-head", name));
+          col.appendChild(el2("div", "sort-col-head", name));
           board5.appendChild(col);
         });
         pad.appendChild(board5);
-        var pile = el("div", "sort-pile");
+        var pile = el2("div", "sort-pile");
         (slide.options || []).forEach(function(text2, i) {
-          var card = el("div", "sort-card");
+          var card = el2("div", "sort-card");
           card.dataset.i = String(i);
-          card.appendChild(el("span", "sc-text", text2));
-          card.appendChild(el("span", "sc-heat", ""));
+          card.appendChild(el2("span", "sc-text", text2));
+          card.appendChild(el2("span", "sc-heat", ""));
           if (opts.revealed) {
             var home = board5.querySelector(".sort-col-" + ((slide.sortAnswers || [])[i] || 0));
             if (home) home.appendChild(card);
           } else pile.appendChild(card);
         });
         if (!opts.revealed) pad.appendChild(pile);
-        pad.appendChild(el("div", "sort-verdict", ""));
-        pad.appendChild(el("div", "answered-count", ""));
+        pad.appendChild(el2("div", "sort-verdict", ""));
+        pad.appendChild(el2("div", "answered-count", ""));
         return;
       }
       if (slide.input === "fill") {
         pad.parentNode.classList.add("is-fill");
         var parts = slide.fillParts || [slide.question || ""];
         var gapsAt = slide.gapAnswers || [];
-        var passageF = el("div", "fill-passage");
+        var passageF = el2("div", "fill-passage");
         passageF.dataset.len = String(slide.question || "").length <= 90 ? "short" : String(slide.question || "").length <= 200 ? "medium" : "long";
         parts.forEach(function(text2, i) {
-          if (text2) passageF.appendChild(el("span", "fill-text", text2));
+          if (text2) passageF.appendChild(el2("span", "fill-text", text2));
           if (i < parts.length - 1) {
-            var slot = el("span", "fill-gap");
+            var slot = el2("span", "fill-gap");
             slot.dataset.i = String(i);
-            slot.appendChild(el("span", "fg-n", String(i + 1)));
-            slot.appendChild(el("span", "fg-word", opts.revealed ? (slide.options || [])[gapsAt[i]] || "" : ""));
-            slot.appendChild(el("span", "fg-heat", ""));
+            slot.appendChild(el2("span", "fg-n", String(i + 1)));
+            slot.appendChild(el2("span", "fg-word", opts.revealed ? (slide.options || [])[gapsAt[i]] || "" : ""));
+            slot.appendChild(el2("span", "fg-heat", ""));
             passageF.appendChild(slot);
           }
         });
         pad.appendChild(passageF);
-        var bankF = el("div", "fill-bank");
+        var bankF = el2("div", "fill-bank");
         (slide.options || []).forEach(function(w) {
-          bankF.appendChild(el("span", "fb-word", w));
+          bankF.appendChild(el2("span", "fb-word", w));
         });
         pad.appendChild(bankF);
-        pad.appendChild(el("div", "fill-verdict", ""));
+        pad.appendChild(el2("div", "fill-verdict", ""));
         if (inlineWhy) {
-          var fw = el("div", "spot-why");
+          var fw = el2("div", "spot-why");
           fw.appendChild(whyBox());
           pad.appendChild(fw);
         }
-        pad.appendChild(el("div", "answered-count", ""));
+        pad.appendChild(el2("div", "answered-count", ""));
         return;
       }
       if (slide.input === "tap") {
         pad.parentNode.classList.add("is-spot");
         var from = typeof slide.errorFrom === "number" ? slide.errorFrom : Number(slide.correct) || 0;
         var to = typeof slide.errorTo === "number" ? slide.errorTo : from;
-        var passage = el("div", "spot-passage tally");
+        var passage = el2("div", "spot-passage tally");
         passage.dataset.errorFrom = String(from);
         passage.dataset.errorTo = String(to);
         var nWords = (slide.options || []).length;
         passage.dataset.len = nWords <= 16 ? "short" : nWords <= 36 ? "medium" : "long";
         (slide.options || []).forEach(function(word, i) {
-          var w = el("button", "opt spot-cell" + (i >= from && i <= to ? " in-error" : ""));
+          var w = el2("button", "opt spot-cell" + (i >= from && i <= to ? " in-error" : ""));
           w.type = "button";
           w.dataset.choice = String(i);
           if (!opts.interactive) w.classList.add("locked");
           if (opts.revealed && i === from) w.classList.add("correct");
-          w.appendChild(el("span", "spot-text", word));
-          var col = el("span", "col");
-          var bar2 = el("span", "bar");
+          w.appendChild(el2("span", "spot-text", word));
+          var col = el2("span", "col");
+          var bar2 = el2("span", "bar");
           bar2.style.height = "0px";
           col.appendChild(bar2);
-          col.appendChild(el("span", "cnt", ""));
+          col.appendChild(el2("span", "cnt", ""));
           w.appendChild(col);
           passage.appendChild(w);
-          if (i === to && slide.fix) passage.appendChild(el("span", "spot-fix", slide.fix));
+          if (i === to && slide.fix) passage.appendChild(el2("span", "spot-fix", slide.fix));
         });
         pad.appendChild(passage);
-        pad.appendChild(el("div", "spot-verdict", ""));
+        pad.appendChild(el2("div", "spot-verdict", ""));
         if (inlineWhy) {
-          var sw = el("div", "spot-why");
+          var sw = el2("div", "spot-why");
           sw.appendChild(whyBox());
           pad.appendChild(sw);
         }
-        pad.appendChild(el("div", "answered-count", ""));
+        pad.appendChild(el2("div", "answered-count", ""));
         return;
       }
       if (slide.input === "order") {
@@ -6287,21 +7811,21 @@
         else showing.sort(function(a, b) {
           return a.i - b.i;
         });
-        var ow = el("div", "opts stack ordered");
+        var ow = el2("div", "opts stack ordered");
         showing.forEach(function(item, pos) {
-          var row2 = el("button", "opt" + (opts.revealed ? " correct" : ""));
+          var row2 = el2("button", "opt" + (opts.revealed ? " correct" : ""));
           row2.type = "button";
           row2.dataset.choice = String(item.i);
           row2.classList.add("locked");
-          var line2 = el("span", "opt-line");
-          line2.appendChild(el("span", "key", opts.revealed ? String(pos + 1) : "↕"));
-          line2.appendChild(el("span", "txt", item.text));
+          var line2 = el2("span", "opt-line");
+          line2.appendChild(el2("span", "key", opts.revealed ? String(pos + 1) : "↕"));
+          line2.appendChild(el2("span", "txt", item.text));
           row2.appendChild(line2);
           ow.appendChild(row2);
         });
         pad.appendChild(ow);
-        var ol = el("div", "typedlist");
-        ol.appendChild(el("div", "typedcount", ""));
+        var ol = el2("div", "typedlist");
+        ol.appendChild(el2("div", "typedcount", ""));
         pad.appendChild(ol);
         if (inlineWhy) pad.appendChild(whyBox());
         return;
@@ -6310,8 +7834,8 @@
         var placing = slide.input === "number";
         var defPhaseNow = present === "definition" ? opts.definitionPhase || "reading" : null;
         if (defPhaseNow === "reading") {
-          var wait = el("div", "definition-wait");
-          wait.appendChild(el(
+          var wait = el2("div", "definition-wait");
+          wait.appendChild(el2(
             "strong",
             null,
             opts.live ? "Phones stay closed until the passage clears." : "Answers open when the passage clears."
@@ -6321,55 +7845,55 @@
         }
         pad.parentNode.classList.add("is-typed");
         var hold = !opts.revealed && (opts.live || slide.hideAnswerUntilReveal === true);
-        var tw = el("div", "opts stack typed");
-        var ab = el("button", "opt answer");
+        var tw = el2("div", "opts stack typed");
+        var ab = el2("button", "opt answer");
         ab.type = "button";
         ab.dataset.choice = "0";
         if (!opts.interactive) ab.classList.add("locked");
         if (hold) ab.classList.add("held");
-        var aline = el("span", "opt-line");
-        aline.appendChild(el("span", "key", placing ? "↔" : "✎"));
-        aline.appendChild(el("span", "txt", hold ? opts.live ? placing ? "Placing their answers…" : "Typing on your phones…" : "Hidden until you reveal it" : slide.answer || " "));
-        aline.appendChild(el("span", "tick", "✓"));
+        var aline = el2("span", "opt-line");
+        aline.appendChild(el2("span", "key", placing ? "↔" : "✎"));
+        aline.appendChild(el2("span", "txt", hold ? opts.live ? placing ? "Placing their answers…" : "Typing on your phones…" : "Hidden until you reveal it" : slide.answer || " "));
+        aline.appendChild(el2("span", "tick", "✓"));
         ab.appendChild(aline);
         if (inlineWhy) ab.appendChild(whyBox());
         tw.appendChild(ab);
         pad.appendChild(tw);
-        var tl = el("div", "typedlist");
-        tl.appendChild(el("div", "typedcount", ""));
+        var tl = el2("div", "typedlist");
+        tl.appendChild(el2("div", "typedcount", ""));
         if (placing) {
           tl.appendChild(numberLine(slide));
         } else {
-          tl.appendChild(el("div", "typedgroups"));
+          tl.appendChild(el2("div", "typedgroups"));
         }
         pad.appendChild(tl);
         return;
       }
-      var wrap = el("div", "opts" + (present === "truefalse" ? " tf-duo" : present === "oddone" ? " odd-grid" : opts_.length > 4 || opts_.some(longOption) ? " stack" : "") + (present === "speed" ? " speed-opts" : "") + (present === "spoterror" ? " spot-opts" : "") + (present === "predict" ? " predict-opts" : ""));
+      var wrap = el2("div", "opts" + (present === "truefalse" ? " tf-duo" : present === "oddone" ? " odd-grid" : opts_.length > 4 || opts_.some(longOption) ? " stack" : "") + (present === "speed" ? " speed-opts" : "") + (present === "spoterror" ? " spot-opts" : "") + (present === "predict" ? " predict-opts" : ""));
       opts_.forEach(function(text2, i) {
-        var b = el("button", "opt");
+        var b = el2("button", "opt");
         b.type = "button";
         b.dataset.choice = String(i);
         if (!opts.interactive || present === "oddone") b.classList.add("locked");
         if (present === "oddone" && opts.revealed && i === slide.correct) {
           b.classList.add("odd-marked");
         }
-        var line2 = el("span", "opt-line");
+        var line2 = el2("span", "opt-line");
         if (present === "oddone") {
-          line2.appendChild(el("span", "txt", text2));
+          line2.appendChild(el2("span", "txt", text2));
           if (opts.revealed) {
-            line2.appendChild(el("span", "tick", i === slide.correct ? "odd one" : ""));
+            line2.appendChild(el2("span", "tick", i === slide.correct ? "odd one" : ""));
           }
         } else {
-          line2.appendChild(el("span", "key", LETTERS[i] || String(i + 1)));
-          line2.appendChild(el("span", "txt", text2));
-          line2.appendChild(el("span", "tick", i === slide.correct ? "✓" : "✗"));
+          line2.appendChild(el2("span", "key", LETTERS[i] || String(i + 1)));
+          line2.appendChild(el2("span", "txt", text2));
+          line2.appendChild(el2("span", "tick", i === slide.correct ? "✓" : "✗"));
         }
         b.appendChild(line2);
         if (present === "oddone") {
-          var col = el("span", "col");
-          col.appendChild(el("span", "bar"));
-          col.appendChild(el("span", "cnt", ""));
+          var col = el2("span", "col");
+          col.appendChild(el2("span", "bar"));
+          col.appendChild(el2("span", "cnt", ""));
           b.appendChild(col);
         }
         if (inlineWhy && i === slide.correct) b.appendChild(whyBox());
@@ -6382,51 +7906,51 @@
       pad.appendChild(wrap);
       if (present === "oddone") {
         if (!opts.revealed) {
-          pad.appendChild(el(
+          pad.appendChild(el2(
             "p",
             "oddone-discuss",
             "Which one does not belong? Vote on your phone, and have your rule ready."
           ));
         }
-        pad.appendChild(el("p", "odd-verdict", ""));
+        pad.appendChild(el2("p", "odd-verdict", ""));
         if (slide.explanation && !inlineWhy) pad.appendChild(whyBox());
-        pad.appendChild(el("div", "answered-count", ""));
+        pad.appendChild(el2("div", "answered-count", ""));
         return;
       }
       if (slide.roundSeconds && slide.style === "speed") pad.appendChild(roundClockEl(slide));
       if (slide.predict && !opts.revealed) {
-        var pn = el("p", "predict-note");
-        pn.appendChild(el("span", "pn-commit", "Commit to a prediction on your phone — and say how sure you are."));
-        pn.appendChild(el("span", "pn-watch", "Predictions are locked. Watch what happens."));
+        var pn = el2("p", "predict-note");
+        pn.appendChild(el2("span", "pn-commit", "Commit to a prediction on your phone — and say how sure you are."));
+        pn.appendChild(el2("span", "pn-watch", "Predictions are locked. Watch what happens."));
         pad.appendChild(pn);
       }
       if (slide.showdown) {
-        var sd = el("div", "showdown");
+        var sd = el2("div", "showdown");
         sd.setAttribute("aria-live", "polite");
-        var sdBar = el("div", "sd-bar");
+        var sdBar = el2("div", "sd-bar");
         opts_.forEach(function(text2, i) {
-          var seg = el("div", "sd-seg sd-" + i);
+          var seg = el2("div", "sd-seg sd-" + i);
           seg.dataset.i = String(i);
-          seg.appendChild(el("span", "sd-label", text2));
-          seg.appendChild(el("span", "sd-pct", ""));
+          seg.appendChild(el2("span", "sd-label", text2));
+          seg.appendChild(el2("span", "sd-pct", ""));
           sdBar.appendChild(seg);
         });
-        sdBar.appendChild(el("span", "sd-was"));
+        sdBar.appendChild(el2("span", "sd-was"));
         sd.appendChild(sdBar);
-        sd.appendChild(el("p", "sd-note", "Votes are in when you are ready. Next shows the room its split."));
+        sd.appendChild(el2("p", "sd-note", "Votes are in when you are ready. Next shows the room its split."));
         pad.appendChild(sd);
       }
-      var tally = el("div", "tally");
+      var tally = el2("div", "tally");
       opts_.forEach(function(_, i) {
-        var col = el("div", "col" + (i === slide.correct ? " right" : ""));
-        var bar2 = el("div", "bar");
+        var col = el2("div", "col" + (i === slide.correct ? " right" : ""));
+        var bar2 = el2("div", "bar");
         bar2.style.height = "0px";
         col.appendChild(bar2);
-        col.appendChild(el("div", "cnt", "0"));
+        col.appendChild(el2("div", "cnt", "0"));
         tally.appendChild(col);
       });
       pad.appendChild(tally);
-      pad.appendChild(el("div", "answered-count", ""));
+      pad.appendChild(el2("div", "answered-count", ""));
     }
     function longOption(t) {
       return String(t).length > 42;
@@ -6435,33 +7959,33 @@
       if (slide.title) pad.appendChild(rich("h2", null, slide, "title", slide.title));
       var marks = opts.marks || [];
       if (!marks.length) {
-        pad.appendChild(el("div", "none", "Answer the quiz slides during the show and the score lands here."));
+        pad.appendChild(el2("div", "none", "Answer the quiz slides during the show and the score lands here."));
         return;
       }
       var right = marks.filter(function(m) {
         return m.correct;
       }).length;
       var pct = Math.round(right / marks.length * 100);
-      var hero = el("div", "score-hero");
-      var donut = el("div", "donut");
+      var hero = el2("div", "score-hero");
+      var donut = el2("div", "donut");
       donut.appendChild(ring(260, 22, right / marks.length));
-      var mid = el("div", "mid");
-      var box2 = el("div");
-      box2.appendChild(el("div", "pct", pct + "%"));
-      box2.appendChild(el("div", "of", right + " of " + marks.length + " correct"));
+      var mid = el2("div", "mid");
+      var box2 = el2("div");
+      box2.appendChild(el2("div", "pct", pct + "%"));
+      box2.appendChild(el2("div", "of", right + " of " + marks.length + " correct"));
       mid.appendChild(box2);
       donut.appendChild(mid);
       hero.appendChild(donut);
-      var bd = el("div", "breakdown");
+      var bd = el2("div", "breakdown");
       marks.slice(0, 7).forEach(function(m, i) {
-        var row = el("div", "row " + (m.correct ? "ok" : "no"));
-        row.appendChild(el("div", "qi", "Q" + (i + 1)));
-        row.appendChild(el("div", "qt", m.question || ""));
-        row.appendChild(el("div", "mk", m.correct ? "✓" : "✗"));
+        var row = el2("div", "row " + (m.correct ? "ok" : "no"));
+        row.appendChild(el2("div", "qi", "Q" + (i + 1)));
+        row.appendChild(el2("div", "qt", m.question || ""));
+        row.appendChild(el2("div", "mk", m.correct ? "✓" : "✗"));
         bd.appendChild(row);
       });
       if (marks.length > 7) {
-        bd.appendChild(el("div", "row", "+ " + (marks.length - 7) + " more"));
+        bd.appendChild(el2("div", "row", "+ " + (marks.length - 7) + " more"));
       }
       hero.appendChild(bd);
       pad.appendChild(hero);
@@ -6471,7 +7995,7 @@
 
   // src/render/art.js
   function installArtRenderer(SF, helpers) {
-    const { el } = helpers;
+    const { el: el2 } = helpers;
     function artKeyOf(node, i) {
       var raw = node.className;
       if (raw && typeof raw === "object" && "baseVal" in raw) raw = raw.baseVal;
@@ -6521,9 +8045,9 @@
       var layers = {};
       list.forEach(function(pic, i) {
         var side = SF.artOrder(pic, "front");
-        var layer = layers[side] || (layers[side] = el("div", "slide-art slide-art-" + side));
+        var layer = layers[side] || (layers[side] = el2("div", "slide-art slide-art-" + side));
         layer.setAttribute("data-art-order", side);
-        var img = el("img", "slide-art-img");
+        var img = el2("img", "slide-art-img");
         img.src = SF.safeMedia(pic.src);
         img.alt = String(pic.alt || "");
         img.setAttribute("data-art-pic", String(pic.id == null ? i : pic.id));
@@ -6542,7 +8066,7 @@
 
   // src/render/lattice.js
   function installLatticeRenderer(SF, helpers) {
-    const { el, IMAGE_FRAMES, travelFrom } = helpers;
+    const { el: el2, IMAGE_FRAMES, travelFrom } = helpers;
     var LATTICE = { left: 52, top: 88, w: 1176, h: 576, cols: 12, rows: 16, stepX: 101, stepY: 36 };
     SF.LATTICE = LATTICE;
     SF.anchorRegion = function(region2) {
@@ -6586,12 +8110,12 @@
       var grid = root && root.querySelector(".sf-lattice");
       if (!grid) return g;
       var base = root.getBoundingClientRect(), rect = grid.getBoundingClientRect();
-      var scale = base.width / 1280;
-      if (!scale || !rect.height) return g;
-      g.left = (rect.left - base.left) / scale;
-      g.top = (rect.top - base.top) / scale;
-      g.w = rect.width / scale;
-      g.h = rect.height / scale;
+      var scale2 = base.width / 1280;
+      if (!scale2 || !rect.height) return g;
+      g.left = (rect.left - base.left) / scale2;
+      g.top = (rect.top - base.top) / scale2;
+      g.w = rect.width / scale2;
+      g.h = rect.height / scale2;
       g.stepX = (g.w + 36) / g.cols;
       g.stepY = g.h / g.rows;
       return g;
@@ -6710,11 +8234,11 @@
         return n.nodeType === 1;
       });
       if (!kids.length) return false;
-      var grid = el("div", "sf-lattice");
+      var grid = el2("div", "sf-lattice");
       kids.forEach(function(node, i) {
         var key = blockKeyOf(node, i);
         var r = regions[key] && SF.anchorRegion(regions[key]);
-        var slot = el("div", "sf-slot");
+        var slot = el2("div", "sf-slot");
         slot.setAttribute("data-block-key", key);
         if (r) {
           slot.style.gridArea = r.row + " / " + r.col + " / span " + r.rows + " / span " + r.cols;
@@ -6780,7 +8304,7 @@
           text2.split("\n").map(function(l) {
             return l.trim();
           }).filter(Boolean).forEach(function(line) {
-            node.appendChild(el("li", null, line));
+            node.appendChild(el2("li", null, line));
           });
         }
       },
@@ -6798,8 +8322,8 @@
           var src = SF.safeMedia(text2);
           if (!src) return;
           var travel = travelFrom(block);
-          var motion = travel ? " img-motion-travel" : block.imageMotion === "zoom" ? " img-motion-zoom" : "";
-          var img = el("img", "free-image-img" + motion);
+          var motion2 = travel ? " img-motion-travel" : block.imageMotion === "zoom" ? " img-motion-zoom" : "";
+          var img = el2("img", "free-image-img" + motion2);
           img.src = src;
           img.alt = String(block.alt || "");
           img.draggable = false;
@@ -6850,8 +8374,8 @@
             var at = line.indexOf("	");
             var term = at < 0 ? line : line.slice(0, at);
             var def = at < 0 ? "" : line.slice(at + 1).trim();
-            node.appendChild(el("dt", "free-pair-term", term));
-            if (def) node.appendChild(el("dd", "free-pair-def", def));
+            node.appendChild(el2("dt", "free-pair-term", term));
+            if (def) node.appendChild(el2("dd", "free-pair-def", def));
           });
         }
       },
@@ -6869,8 +8393,8 @@
           var at = text2.indexOf("	");
           var words = at < 0 ? text2 : text2.slice(0, at);
           var who = at < 0 ? "" : text2.slice(at + 1).trim();
-          node.appendChild(el("blockquote", "free-quote-words", words.trim()));
-          if (who) node.appendChild(el("figcaption", "free-quote-attrib", who));
+          node.appendChild(el2("blockquote", "free-quote-words", words.trim()));
+          if (who) node.appendChild(el2("figcaption", "free-quote-attrib", who));
         }
       },
       chart: {
@@ -6969,10 +8493,10 @@
       var host = SF.latticeHost(root);
       if (!host) return 0;
       pictures.forEach(function(pic) {
-        var frame = el("div", "art-block");
+        var frame = el2("div", "art-block");
         frame.setAttribute("data-block-key", SF.artBlockKey(pic.id));
         frame.dataset.artPic = String(pic.id);
-        var img = el("img", "art-block-img");
+        var img = el2("img", "art-block-img");
         img.src = SF.safeMedia(pic.src);
         img.alt = String(pic.alt || "");
         img.draggable = false;
@@ -6988,7 +8512,7 @@
         var AS_TAG = { title: ["h2", ""], subtitle: ["div", composed ? "cp-eyebrow" : "sub"] };
         var asSlot = block.as && AS_TAG[block.as];
         var size = block.size || spec.size;
-        var node = asSlot ? el(asSlot[0], "free-block " + spec.cls + (asSlot[1] ? " " + asSlot[1] : "")) : el(spec.tag, "free-block " + spec.cls + (size ? " free-size-" + size : ""));
+        var node = asSlot ? el2(asSlot[0], "free-block " + spec.cls + (asSlot[1] ? " " + asSlot[1] : "")) : el2(spec.tag, "free-block " + spec.cls + (size ? " free-size-" + size : ""));
         node.dataset.contentKey = key;
         if (block.as) node.dataset.as = String(block.as);
         node.dataset.freeBlock = String(block.id);
@@ -7320,8 +8844,8 @@
         apply(box2.x, box2.y, box2.w, box2.h);
       });
     }
-    Player.openPresenter = function(panel) {
-      if (typeof panel === "string") requestedPresenterPanel = panel;
+    Player.openPresenter = function(panel2) {
+      if (typeof panel2 === "string") requestedPresenterPanel = panel2;
       presenterChannel();
       if (presenterWin && !presenterWin.closed) {
         presenterWin.focus();
@@ -7915,7 +9439,7 @@
 
   // src/editor/deck-settings.js
   function createDeckSettings(SF, helpers) {
-    const { $, el, current, touched, draw, pick, select } = helpers;
+    const { $, el: el2, current, touched, draw, pick, select } = helpers;
     function openDeckSettings() {
       var deck = helpers.deck(), UI = helpers.UI(), ws = helpers.ws();
       var body = $("settingsBody");
@@ -7961,13 +9485,13 @@
     }
     function drawNumbers(body) {
       var deck = helpers.deck(), UI = helpers.UI();
-      var box2 = el("div");
+      var box2 = el2("div");
       box2.appendChild(UI.check("Show slide numbers", deck.showSlideNumbers !== false, function(v) {
         deck.showSlideNumbers = v;
         touched();
         draw();
       }));
-      box2.appendChild(el("div", "hint", "A small counter in the corner of every slide but the title, on the projector and in the shared link."));
+      box2.appendChild(el2("div", "hint", "A small counter in the corner of every slide but the title, on the projector and in the shared link."));
       body.appendChild(UI.field("Slide numbers", box2));
     }
     function drawEnding(body, draw2) {
@@ -7976,14 +9500,14 @@
         return s.type === "game";
       });
       if (!games.length) return;
-      var box2 = el("div");
+      var box2 = el2("div");
       box2.appendChild(UI.check("Finish on the final scores", deck.finalScores === true, function(v) {
         deck.finalScores = v;
         touched();
         draw2();
         draw();
       }));
-      box2.appendChild(el("div", "hint", games.length === 1 ? "Adds one scoreboard after your last slide, covering the whole lesson." : "Adds one scoreboard after your last slide, adding up all " + games.length + " games rather than showing each in turn."));
+      box2.appendChild(el2("div", "hint", games.length === 1 ? "Adds one scoreboard after your last slide, covering the whole lesson." : "Adds one scoreboard after your last slide, adding up all " + games.length + " games rather than showing each in turn."));
       body.appendChild(UI.field(
         "How the lesson ends",
         box2,
@@ -7992,13 +9516,13 @@
     }
     function drawAiSettings(body, draw2) {
       var UI = helpers.UI();
-      var box2 = el("div", "ai-settings-box");
-      var badge = el("div", "ai-badge");
+      var box2 = el2("div", "ai-settings-box");
+      var badge = el2("div", "ai-badge");
       badge.style.marginBottom = "8px";
       badge.style.fontSize = "13px";
       badge.style.fontWeight = "600";
       box2.appendChild(badge);
-      var note = el("div", "hint", "");
+      var note = el2("div", "hint", "");
       note.style.marginTop = "6px";
       box2.appendChild(note);
       function paint(live) {
@@ -8008,13 +9532,13 @@
       }
       paint(!!(SF.AI && SF.AI.liveAIKnown && SF.AI.liveAIKnown()));
       if (SF.AI && SF.AI.checkLiveAI) SF.AI.checkLiveAI().then(paint);
-      var actions = el("div", "ai-smoke-actions");
+      var actions = el2("div", "ai-smoke-actions");
       actions.style.marginTop = "10px";
       actions.appendChild(UI.button("Open AI smoke test…", "primary", function() {
         openAiSmokeTest();
       }));
       box2.appendChild(actions);
-      box2.appendChild(el(
+      box2.appendChild(el2(
         "div",
         "hint",
         "Checks /api/ai/status and runs one small generate call. Use it before class to confirm the key and model are live."
@@ -8037,30 +9561,30 @@
         }
       }
       function line(logEl, kind, msg) {
-        var row = el("div", "ai-smoke-line ai-smoke-" + (kind || "info"));
+        var row = el2("div", "ai-smoke-line ai-smoke-" + (kind || "info"));
         var stamp = /* @__PURE__ */ new Date();
         var hh = String(stamp.getHours()).padStart(2, "0");
         var mm = String(stamp.getMinutes()).padStart(2, "0");
         var ss = String(stamp.getSeconds()).padStart(2, "0");
-        row.appendChild(el("span", "ai-smoke-time", hh + ":" + mm + ":" + ss));
-        row.appendChild(el("span", "ai-smoke-msg", msg));
+        row.appendChild(el2("span", "ai-smoke-time", hh + ":" + mm + ":" + ss));
+        row.appendChild(el2("span", "ai-smoke-msg", msg));
         logEl.insertBefore(row, logEl.firstChild);
         while (logEl.children.length > 40) logEl.removeChild(logEl.lastChild);
       }
       function paintStatus(card, s) {
         card.innerHTML = "";
         var live = !!(s && s.available);
-        var badge = el("div", "ai-badge");
+        var badge = el2("div", "ai-badge");
         badge.style.fontSize = "13px";
         badge.style.fontWeight = "600";
         badge.style.color = live ? "var(--s-accent, #38bdf8)" : "var(--s-dim, #94a3b8)";
         badge.textContent = live ? "● AI is live" : "○ AI offline (heuristics only)";
         card.appendChild(badge);
-        var dl = el("div", "ai-smoke-meta");
+        var dl = el2("div", "ai-smoke-meta");
         function meta(k, v) {
-          var row = el("div", "ai-smoke-meta-row");
-          row.appendChild(el("span", "ai-smoke-k", k));
-          row.appendChild(el("span", "ai-smoke-v", v == null || v === "" ? "—" : String(v)));
+          var row = el2("div", "ai-smoke-meta-row");
+          row.appendChild(el2("span", "ai-smoke-k", k));
+          row.appendChild(el2("span", "ai-smoke-v", v == null || v === "" ? "—" : String(v)));
           dl.appendChild(row);
         }
         meta("Origin", s && s.origin);
@@ -8092,16 +9616,16 @@
       }
       function drawPanel() {
         bodyEl.innerHTML = "";
-        var intro = el(
+        var intro = el2(
           "div",
           "hint",
           "Realtime check of this deployment’s AI. Status refreshes every few seconds while this panel is open. Run the generate test once before class."
         );
         intro.style.marginBottom = "12px";
         bodyEl.appendChild(intro);
-        var statusCard = el("div", "ai-smoke-card");
+        var statusCard = el2("div", "ai-smoke-card");
         bodyEl.appendChild(UI.field("Live status", statusCard));
-        var topicBox = el("div");
+        var topicBox = el2("div");
         var topicInput = UI.text("SlideForge", null, "Topic for the smoke reply");
         topicBox.appendChild(topicInput);
         bodyEl.appendChild(UI.field(
@@ -8109,12 +9633,12 @@
           topicBox,
           "Sent in a tiny fixed prompt. Does not touch your lesson."
         ));
-        var logEl = el("div", "ai-smoke-log");
+        var logEl = el2("div", "ai-smoke-log");
         bodyEl.appendChild(UI.field("Event log", logEl));
-        var resultEl = el("pre", "ai-smoke-result");
+        var resultEl = el2("pre", "ai-smoke-result");
         resultEl.textContent = "Generate result will appear here.";
         bodyEl.appendChild(UI.field("Last generate", resultEl));
-        var row = el("div", "ai-smoke-actions");
+        var row = el2("div", "ai-smoke-actions");
         var btnRefresh = UI.button("Refresh status", "ghost", function() {
           refreshStatus(statusCard, logEl, false);
         });
@@ -8184,19 +9708,19 @@
       var r = SF.readiness(deck, function(id) {
         return SF.GameStore.get(id);
       });
-      var box2 = el("div", "ready-box");
+      var box2 = el2("div", "ready-box");
       if (!r.items.length) {
-        box2.appendChild(el("div", "ready-ok", "✓ Nothing to fix. Every slide has something on it and no media is missing."));
+        box2.appendChild(el2("div", "ready-ok", "✓ Nothing to fix. Every slide has something on it and no media is missing."));
         insp.appendChild(UI.field("Ready to teach", box2));
         return;
       }
       r.items.forEach(function(f) {
-        var row = el("button", "ready-row ready-" + f.level);
+        var row = el2("button", "ready-row ready-" + f.level);
         row.type = "button";
-        row.appendChild(el("span", "ready-dot", f.level === "stop" ? "!" : "?"));
-        var t = el("span", "ready-text");
-        t.appendChild(el("strong", null, f.title));
-        t.appendChild(el("span", null, " " + f.detail));
+        row.appendChild(el2("span", "ready-dot", f.level === "stop" ? "!" : "?"));
+        var t = el2("span", "ready-text");
+        t.appendChild(el2("strong", null, f.title));
+        t.appendChild(el2("span", null, " " + f.detail));
         row.appendChild(t);
         if (f.slide != null) {
           row.title = "Go to slide " + (f.slide + 1);
@@ -8221,9 +9745,9 @@
     }
     function drawLogoFields(insp, redraw) {
       var deck = helpers.deck(), UI = helpers.UI();
-      var wrap = el("div", "logo-fields");
+      var wrap = el2("div", "logo-fields");
       if (deck.logo) {
-        var preview = el("div", "logo-preview");
+        var preview = el2("div", "logo-preview");
         var img = document.createElement("img");
         img.src = deck.logo;
         img.alt = "Lesson logo";
@@ -8238,7 +9762,7 @@
         preview.appendChild(clear);
         wrap.appendChild(preview);
       }
-      var pick2 = el("input");
+      var pick2 = el2("input");
       pick2.type = "file";
       pick2.accept = "image/png,image/jpeg,image/svg+xml,image/webp,image/gif";
       pick2.style.fontSize = "12px";
@@ -8304,7 +9828,7 @@
       if (!deck.logo) return;
       var managed = !!(deck.headerFooter && deck.headerFooter.enabled);
       if (managed) {
-        insp.appendChild(el(
+        insp.appendChild(el2(
           "p",
           "hint",
           "Header and footer slots are on, so they decide where this logo sits and how big it is. Put it in a slot from Header & footer in the slide panel."
@@ -8371,7 +9895,7 @@
         }
       }
       if (shown) {
-        var frame = el("div", "logo-shot");
+        var frame = el2("div", "logo-shot");
         var slide = SF.renderSlide(deck, deck.slides[sample], {
           index: sample,
           total: deck.slides.length
@@ -8396,7 +9920,7 @@
 
   // src/editor/content-fields.js
   function createContentFields(SF, helpers) {
-    const { CHART_LABELS, chartTypeOptions, draw, drawCallouts, drawImageFields, drawInfoPits, drawLayers, drawPairPits, drawPits, drawVideoFields, el, repaint, richField, touched } = helpers;
+    const { CHART_LABELS, chartTypeOptions, draw, drawCallouts, drawImageFields, drawInfoPits, drawLayers, drawPairPits, drawPits, drawVideoFields, el: el2, repaint, richField, touched } = helpers;
     function drawContentFields(insp, s) {
       var UI = helpers.UI();
       if (SF.MotionLab && SF.MotionLab.active(s)) {
@@ -8468,7 +9992,7 @@
             repaint();
           }
         )));
-        var stops = el("div");
+        var stops = el2("div");
         drawPairPits(stops, s, "journey");
         insp.appendChild(UI.field(
           "Milestones · heading and detail",
@@ -8491,7 +10015,7 @@
           touched();
           repaint();
         }, 2)));
-        var branches = el("div");
+        var branches = el2("div");
         drawPairPits(branches, s, "mindmap");
         insp.appendChild(UI.field(
           "Branches · heading and explanation",
@@ -8517,7 +10041,7 @@
             repaint();
           })
         ));
-        var people = el("div");
+        var people = el2("div");
         drawPits(people, s);
         insp.appendChild(UI.field(
           "People · one per line",
@@ -8525,16 +10049,16 @@
           "Name | Role | Reports to | photo. Reports-to is a name on this slide, not a row number — reorder freely. Leave Reports to blank for a flat team (no connectors)."
         ));
         var tree = SF.orgTree(s.bullets || []);
-        insp.appendChild(el(
+        insp.appendChild(el2(
           "p",
           "hint",
           tree.people.length ? tree.people.length + (tree.people.length === 1 ? " person" : " people") + (tree.levels > 1 ? " · " + tree.levels + " levels" : " · flat team") : "No people yet."
         ));
         (tree.warnings || []).forEach(function(w) {
-          insp.appendChild(el("p", "hint field-warn", w));
+          insp.appendChild(el2("p", "hint field-warn", w));
         });
         if (tree.levels > 4) {
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint field-warn",
             "This tree is " + tree.levels + " levels deep — it still draws, but cards shrink. Prefer fewer layers on a lecture slide."
@@ -8569,7 +10093,7 @@
           }, 2),
           "Keep it to a few words. This is set large, and long sentences stop being one thing the room can hold."
         ));
-        var notes = el("div");
+        var notes = el2("div");
         drawPits(notes, s);
         insp.appendChild(UI.field(
           "Supporting points",
@@ -8619,7 +10143,7 @@
             "Optional. Where the numbers come from, or the period they cover."
           ));
         }
-        var pits = el("div");
+        var pits = el2("div");
         drawInfoPits(pits, s);
         insp.appendChild(UI.field(hint[0], pits, hint[1]));
         insp.appendChild(UI.field(
@@ -8761,7 +10285,7 @@
           matrix: "First row names the conditions. Then one row per item, with a rating in each cell.",
           multiples: "One row per panel; the columns become the axis inside every panel. Read transposed."
         };
-        if (SHAPES[s.chartKind]) insp.appendChild(el("p", "hint", SHAPES[s.chartKind]));
+        if (SHAPES[s.chartKind]) insp.appendChild(el2("p", "hint", SHAPES[s.chartKind]));
         if (s.chartKind === "pictogram") {
           insp.appendChild(UI.field("Icon", UI.text(s.chartIcon || "", function(v) {
             s.chartIcon = String(v).trim().slice(0, 40);
@@ -8798,24 +10322,24 @@
         ));
         var cd = SF.chartData(s);
         var note = cd.series.length ? cd.series.length + (cd.series.length === 1 ? " series" : " series") + " × " + cd.categories.length + (cd.categories.length === 1 ? " category" : " categories") : "No data yet — needs a header row and at least one row of values.";
-        insp.appendChild(el("p", "hint", note));
+        insp.appendChild(el2("p", "hint", note));
         if (["pie", "donut", "pictogram", "treemap", "waffle"].indexOf(s.chartKind) >= 0 && cd.series.length > 1) {
           var oneName = s.chartKind === "donut" ? "donut" : s.chartKind === "treemap" ? "treemap" : s.chartKind === "waffle" ? "waffle" : s.chartKind === "pictogram" ? "pictogram" : "pie";
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint field-warn",
             "A " + oneName + " shows one series. Only “" + cd.series[0].name + "” is drawn; the rest are ignored. Bar compares them all."
           ));
         }
         if (s.chartKind === "combo" && cd.series.length < 2) {
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint field-warn",
             "Columns + markers needs at least two series — the first for the columns, another for the markers."
           ));
         }
         if (s.chartKind === "bullet" && cd.series.length < 1) {
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint field-warn",
             "A bullet needs an Actual series; add a Target series as the second column to mark the goal."
@@ -8826,31 +10350,31 @@
             return v != null && v < 0;
           });
         })) {
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint field-warn",
             "Stacked bars add values up, so negatives are left out of the stack. Use grouped bars to show them."
           ));
         }
         if (s.chartKind === "dumbbell" && cd.series.length !== 2) {
-          insp.appendChild(el("p", "hint field-warn", cd.series.length < 2 ? "A dumbbell needs two numbers per row — the two states you are comparing." : "A dumbbell draws the first two series. The bar joins a pair, so the rest are left out; use grouped bars to show them all."));
+          insp.appendChild(el2("p", "hint field-warn", cd.series.length < 2 ? "A dumbbell needs two numbers per row — the two states you are comparing." : "A dumbbell draws the first two series. The bar joins a pair, so the rest are left out; use grouped bars to show them all."));
         }
         if (s.chartKind === "matrix") {
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint",
             "Shade carries an order, not a distance. Low / Medium / High are ordinal — the gap between them is not a number, so say so in the source line."
           ));
         }
         if (s.chartKind === "multiples" && cd.categories.length > 12) {
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint field-warn",
             cd.categories.length + " panels is past the point where each one is readable on a wall. Around eight is the most a room can compare at once."
           ));
         }
         if (cd.series.length > 6) {
-          insp.appendChild(el(
+          insp.appendChild(el2(
             "p",
             "hint field-warn",
             "Six series is the ceiling — past that the colours stop being tellable apart. Group the tail into “Other”, or split the chart."
@@ -8887,7 +10411,7 @@
           }
         ));
         var rows2 = SF.parseTable(s.body);
-        insp.appendChild(el("p", "hint", rows2.length ? rows2.length + (rows2.length === 1 ? " row" : " rows") + " × " + rows2[0].length + (rows2[0].length === 1 ? " column" : " columns") + (s.tableHeader && rows2.length > 1 ? ", the first a header" : "") : "Nothing parsed yet."));
+        insp.appendChild(el2("p", "hint", rows2.length ? rows2.length + (rows2.length === 1 ? " row" : " rows") + " × " + rows2[0].length + (rows2[0].length === 1 ? " column" : " columns") + (s.tableHeader && rows2.length > 1 ? ", the first a header" : "") : "Nothing parsed yet."));
         return;
       }
       if (s.type === "code") {
@@ -8926,13 +10450,13 @@
           }, 12),
           "What the projector types. Keep it short enough to read from the back of the room."
         ));
-        var box2 = el("div");
+        var box2 = el2("div");
         box2.appendChild(UI.check("Type on enter", s.typewrite !== false, function(v) {
           s.typewrite = v;
           touched();
           repaint();
         }));
-        box2.appendChild(el(
+        box2.appendChild(el2(
           "div",
           "hint",
           "In Present, the code drips in character by character. Next skips to the finished source. The Lesson studio preview always shows the full text."
@@ -9006,7 +10530,7 @@
             repaint();
           }, 2)
         ));
-        var stackBox = el("div");
+        var stackBox = el2("div");
         drawLayers(stackBox, s);
         insp.appendChild(UI.field(
           "Pictures · one moment each",
@@ -9036,7 +10560,7 @@
             repaint();
           }, 2)
         ));
-        var pits = el("div");
+        var pits = el2("div");
         drawPits(pits, s);
         insp.appendChild(UI.field(
           "Points · drag to reorder",
@@ -9055,7 +10579,7 @@
             repaint();
           }, 2)
         ));
-        var kw = el("div");
+        var kw = el2("div");
         drawPairPits(kw, s, "keywords");
         insp.appendChild(UI.field(
           "Keywords — bold term, lowercase definition",
@@ -9073,7 +10597,7 @@
             repaint();
           }, 2)
         ));
-        var it = el("div");
+        var it = el2("div");
         drawPairPits(it, s, "italics");
         insp.appendChild(UI.field(
           "Italics — emphasised phrase, plain note",
@@ -9091,7 +10615,7 @@
             repaint();
           }, 2)
         ));
-        var ln = el("div");
+        var ln = el2("div");
         drawPairPits(ln, s, "links");
         insp.appendChild(UI.field(
           "Links — label + http(s) URL",
@@ -9119,7 +10643,7 @@
         ));
       }
       if (s.type === "join") {
-        var joinPits = el("div");
+        var joinPits = el2("div");
         drawPits(joinPits, s);
         insp.appendChild(UI.field(
           "Lines under the heading (optional)",
@@ -9129,7 +10653,7 @@
         return;
       }
       if (s.type === "content" || s.type === "cards") {
-        var bulletPits = el("div");
+        var bulletPits = el2("div");
         drawPits(bulletPits, s);
         insp.appendChild(UI.field(
           s.type === "cards" ? "Cards · drag to reorder" : "Bullets — click a pit to fill",
@@ -9186,47 +10710,47 @@
       var s = slide();
       var deck = SF.Editor && SF.Editor.deck && SF.Editor.deck();
       if (!s || !deck || !SF.renderSlide) return null;
-      var stage = document.createElement("div");
-      stage.style.cssText = "position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none";
-      document.body.appendChild(stage);
+      var stage2 = document.createElement("div");
+      stage2.style.cssText = "position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none";
+      document.body.appendChild(stage2);
       var rt, host;
       try {
         rt = SF.renderSlide(deck, s, { index: 0, total: 1, interactive: false });
-        stage.appendChild(rt);
+        stage2.appendChild(rt);
         host = SF.latticeHost(rt);
       } catch (e) {
         host = null;
       }
       if (!rt || !host || host.querySelector(".sf-lattice")) {
-        stage.remove();
+        stage2.remove();
         return null;
       }
       var rb = rt.getBoundingClientRect();
       if (!rb.width || !rb.height) {
-        stage.remove();
+        stage2.remove();
         return null;
       }
       var g = SF.LATTICE;
-      var scale = rb.width / 1280;
+      var scale2 = rb.width / 1280;
       var stepX = g.w / g.cols, stepY = g.h / g.rows;
       var out = {};
       Array.prototype.slice.call(host.children).forEach(function(n, i) {
         if (n.nodeType !== 1) return;
         var b = n.getBoundingClientRect();
         if (!b.height || !b.width) return;
-        var x = (b.left - rb.left) / scale - g.left;
-        var y = (b.top - rb.top) / scale - g.top;
+        var x = (b.left - rb.left) / scale2 - g.left;
+        var y = (b.top - rb.top) / scale2 - g.top;
         var col = clamp(Math.round(x / stepX) + 1, 1, g.cols);
         var row = clamp(Math.round(y / stepY) + 1, 1, g.rows);
-        var rows2 = SF.linesFor ? SF.linesFor(b.height / scale) : Math.max(1, Math.ceil(b.height / scale / stepY));
+        var rows2 = SF.linesFor ? SF.linesFor(b.height / scale2) : Math.max(1, Math.ceil(b.height / scale2 / stepY));
         out[blockKeyOfNode(n, i)] = {
           col,
           row,
-          cols: clamp(Math.max(1, Math.ceil(b.width / scale / stepX - 0.06)), 1, g.cols - col + 1),
+          cols: clamp(Math.max(1, Math.ceil(b.width / scale2 / stepX - 0.06)), 1, g.cols - col + 1),
           rows: clamp(rows2, 1, g.rows - row + 1)
         };
       });
-      stage.remove();
+      stage2.remove();
       return Object.keys(out).length ? out : null;
     }
     function blockKeyOfNode(n, i) {
@@ -9274,14 +10798,14 @@
       var deck = SF.Editor && SF.Editor.deck && SF.Editor.deck();
       if (!deck || !SF.renderSlide || !SF.latticeFit) return;
       var was = s.design && s.design.regions;
-      var stage = document.createElement("div");
-      stage.style.cssText = "position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none";
-      document.body.appendChild(stage);
+      var stage2 = document.createElement("div");
+      stage2.style.cssText = "position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none";
+      document.body.appendChild(stage2);
       try {
         if (!s.design) s.design = {};
         s.design.regions = map;
         var rt = SF.renderSlide(deck, s, { index: 0, total: 1, interactive: false });
-        stage.appendChild(rt);
+        stage2.appendChild(rt);
         SF.latticeFit(rt).forEach(function(f) {
           var r = map[f.key];
           if (!r || f.need == null || f.need <= r.rows) return;
@@ -9289,7 +10813,7 @@
         });
       } catch (e) {
       }
-      stage.remove();
+      stage2.remove();
       if (was === void 0 && s.design) delete s.design.regions;
       else if (s.design) s.design.regions = was;
     }
@@ -9411,12 +10935,12 @@
       e.stopImmediatePropagation();
       var corner = h.dataset.corner;
       var g = L();
-      var scale = scaleOf(root());
+      var scale2 = scaleOf(root());
       var fromX = e.clientX, fromY = e.clientY;
       var landed = start, moved = false;
       function move(ev) {
-        var dCol = Math.round((ev.clientX - fromX) / scale / g.stepX);
-        var dRow = Math.round((ev.clientY - fromY) / scale / g.stepY);
+        var dCol = Math.round((ev.clientX - fromX) / scale2 / g.stepX);
+        var dRow = Math.round((ev.clientY - fromY) / scale2 / g.stepY);
         if (!dCol && !dRow && !moved) return;
         moved = true;
         var west = corner === "nw" || corner === "sw";
@@ -9498,14 +11022,14 @@
       var start = map[key];
       if (!start) return;
       var g = L();
-      var scale = scaleOf(rt);
+      var scale2 = scaleOf(rt);
       var fromX = e.clientX;
       var fromY = e.clientY;
       var landed = start;
       var moved = false;
       function move(ev) {
-        var dCol = Math.round((ev.clientX - fromX) / scale / g.stepX);
-        var dRow = Math.round((ev.clientY - fromY) / scale / g.stepY);
+        var dCol = Math.round((ev.clientX - fromX) / scale2 / g.stepX);
+        var dRow = Math.round((ev.clientY - fromY) / scale2 / g.stepY);
         if (!dCol && !dRow && !moved) return;
         if (!moved && freeItem) {
           select(slot);
@@ -10000,8 +11524,8 @@
         { id: "btnArrangeShorter", cols: 0, rows: -1 }
       ];
       sizers.forEach(function(sizer) {
-        var el = document.getElementById(sizer.id);
-        if (el) el.addEventListener("click", function() {
+        var el2 = document.getElementById(sizer.id);
+        if (el2) el2.addEventListener("click", function() {
           resize(sizer.cols, sizer.rows);
         });
       });
@@ -10190,7 +11714,7 @@
   // src/editor/panes.js
   function createPanes(SF, helpers) {
     const {
-      el,
+      el: el2,
       touched,
       draw,
       drawInspector,
@@ -10203,7 +11727,7 @@
     };
     function drawMotion(insp, s) {
       var UI = helpers.UI();
-      insp.appendChild(el(
+      insp.appendChild(el2(
         "p",
         "hint",
         "What moves on this slide, and when: how it arrives, what waits for a press, and what moves once it is up. The words stay as they are."
@@ -10221,7 +11745,7 @@
         }
       )));
       if (s.transition === "morph") {
-        insp.appendChild(el(
+        insp.appendChild(el2(
           "p",
           "hint",
           "Morph carries one thing across the cut instead of dissolving the slide: the same picture, the same chart table, or the same heading text as the slide before this one. With nothing shared — or in a browser without view transitions, or when less motion has been asked for — it is a fade."
@@ -10276,7 +11800,7 @@
               repaint();
             }), "Which end the wave starts from. From the centre sends it outwards both ways at once; with an even number of words the middle two share the first beat."));
           }
-          var planBox = el("div", "word-plan");
+          var planBox = el2("div", "word-plan");
           var plan = d.wordPlan;
           var planFresh = plan && String(plan.text || "").trim() === String(s.body || "").trim();
           var planSummary = function() {
@@ -10288,7 +11812,7 @@
             });
             return n + " " + (plan.unit === "letter" ? "letter" : "word") + (n === 1 ? "" : "s") + " placed, landing " + arcs.join(" and ") + ".";
           };
-          var planStatus = el(
+          var planStatus = el2(
             "p",
             "hint",
             planFresh ? "✨ Choreographed" + (plan.note ? ": " + plan.note : "") + " — " + planSummary() : plan ? "The choreography was written for different words. Ask again, or clear it." : "Per-word coordinates: where each word comes from, how it turns, when, and how it lands — settling, bouncing, or condensing out of mist. Ask for letter by letter and it works in letters."
@@ -10432,7 +11956,7 @@
   // src/editor/rail.js
   function createRail(SF, helpers) {
     const {
-      el,
+      el: el2,
       $,
       touched,
       draw,
@@ -10669,15 +12193,15 @@
       }
       var bar = (
         /** @type {HTMLElement} */
-        found || el("div", "rail-placing")
+        found || el2("div", "rail-placing")
       );
       if (!found) host.insertBefore(bar, rail);
       bar.innerHTML = "";
       var s = deck.slides[placing];
       var lands = placeAt > placing ? placeAt : placeAt + 1;
-      bar.appendChild(el("strong", null, "Carrying slide " + (placing + 1) + " → lands at " + lands));
-      bar.appendChild(el("span", "rail-placing-what", s.title || SF.SLIDE_TYPES[s.type].label));
-      bar.appendChild(el(
+      bar.appendChild(el2("strong", null, "Carrying slide " + (placing + 1) + " → lands at " + lands));
+      bar.appendChild(el2("span", "rail-placing-what", s.title || SF.SLIDE_TYPES[s.type].label));
+      bar.appendChild(el2(
         "span",
         "rail-placing-hint",
         "↑ ↓ Home End to choose a place · Enter to drop it · Esc to cancel"
@@ -10740,7 +12264,7 @@
     }
     function railSlot(at) {
       var deck = helpers.deck();
-      var slot = el("div", "rail-slot");
+      var slot = el2("div", "rail-slot");
       slot.dataset.at = String(at);
       if (placing != null) {
         slot.tabIndex = 0;
@@ -10827,7 +12351,7 @@
       );
       list.appendChild(railSlot(0));
       deck.slides.forEach(function(s, i) {
-        var row = el("div", "thumb" + (i === sel ? " sel" : "") + (i === placing ? " carried" : "") + (s.hidden === true ? " hidden-slide" : ""));
+        var row = el2("div", "thumb" + (i === sel ? " sel" : "") + (i === placing ? " carried" : "") + (s.hidden === true ? " hidden-slide" : ""));
         row.draggable = true;
         row.tabIndex = 0;
         row.dataset.index = String(i);
@@ -10845,8 +12369,8 @@
         row.dataset.i = String(i);
         var owner = sectionOf(deck, i);
         if (owner >= 0 && owner !== i && foldIds[deck.slides[owner].id]) row.hidden = true;
-        var gutter = el("div", "thumb-gutter");
-        gutter.appendChild(el("div", "num", String(i + 1)));
+        var gutter = el2("div", "thumb-gutter");
+        gutter.appendChild(el2("div", "num", String(i + 1)));
         if (s.type === "section") {
           var inside = sectionLength(deck, i);
           var shut = !!foldIds[s.id];
@@ -10883,14 +12407,14 @@
         eye.setAttribute("aria-pressed", String(s.hidden === true));
         gutter.appendChild(eye);
         row.appendChild(gutter);
-        var body = el("div", "thumb-body");
-        var frame = el("div", "frame");
+        var body = el2("div", "thumb-body");
+        var frame = el2("div", "frame");
         if (s.type === "game") {
           var g = gameFor(s);
-          frame.appendChild(el("div", "badge quiz", g ? "GAME" : "MISSING"));
+          frame.appendChild(el2("div", "badge quiz", g ? "GAME" : "MISSING"));
         } else if (s.feedback && s.feedback.kind) {
           var live = SF.slideFeedback(s);
-          frame.appendChild(el(
+          frame.appendChild(el2(
             "div",
             "badge fb" + (live ? "" : " warn"),
             SF.FEEDBACK_KINDS[s.feedback.kind].icon + (live ? "" : " !")
@@ -10901,7 +12425,7 @@
           var ph = SF.Activities.PHASES.find(function(p) {
             return p.key === act.phase;
           });
-          var mark = el(
+          var mark = el2(
             "div",
             "badge act" + (act.target === "moment" ? " timed" : ""),
             (ph ? ph.label : "Activity").toUpperCase()
@@ -10916,7 +12440,7 @@
         var tx = s.transition || "fade";
         var txIcon = { none: "—", fade: "◌", push: "→", zoom: "⊕", wipe: "▭" }[tx] || "◌";
         var txLabel = tx === "none" ? "None" : tx.charAt(0).toUpperCase() + tx.slice(1);
-        var txMark = el("span", "thumb-tx", txIcon);
+        var txMark = el2("span", "thumb-tx", txIcon);
         txMark.title = "Transition: " + txLabel;
         txMark.setAttribute("aria-label", "Transition " + txLabel);
         row.appendChild(txMark);
@@ -10975,7 +12499,7 @@
       if (sorter) return;
       picked = [sel];
       anchor = sel;
-      sorter = el("div", "sorter");
+      sorter = el2("div", "sorter");
       document.body.appendChild(sorter);
       document.body.classList.add("sorter-on");
       drawSorter();
@@ -11070,27 +12594,27 @@
       });
       if (!picked.length) picked = [Math.min(sel, deck.slides.length - 1)];
       sorter.innerHTML = "";
-      var head = el("div", "sorter-head");
-      head.appendChild(el("strong", null, "Slide sorter"));
-      head.appendChild(el(
+      var head = el2("div", "sorter-head");
+      head.appendChild(el2("strong", null, "Slide sorter"));
+      head.appendChild(el2(
         "span",
         "sorter-count",
         deck.slides.length + " slides" + (picked.length > 1 ? " · " + picked.length + " selected" : "")
       ));
-      head.appendChild(el(
+      head.appendChild(el2(
         "span",
         "sorter-hint",
         "Drag to move · shift-click for a run · ⌘-click to add · ↵ to edit · esc to close"
       ));
       head.appendChild(UI.button("Done", "primary", closeSorter));
       sorter.appendChild(head);
-      var grid = el("div", "sorter-grid");
-      var bar = el("div", "sorter-caret");
+      var grid = el2("div", "sorter-grid");
+      var bar = el2("div", "sorter-caret");
       bar.hidden = true;
       grid.appendChild(bar);
       deck.slides.forEach(function(s, i) {
         var on = picked.indexOf(i) >= 0;
-        var tile = el("div", "sorter-tile" + (on ? " sel" : ""));
+        var tile = el2("div", "sorter-tile" + (on ? " sel" : ""));
         tile.dataset.i = String(i);
         tile.draggable = true;
         tile.tabIndex = 0;
@@ -11101,13 +12625,13 @@
           tile.classList.add("sorter-section");
           tile.setAttribute("data-section", "Section · " + (sectionLength(deck, i) + 1) + " slides");
         }
-        var frame = el("div", "frame");
+        var frame = el2("div", "frame");
         var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
         frame.appendChild(node);
         tile.appendChild(frame);
-        var foot = el("div", "sorter-foot");
-        foot.appendChild(el("span", "sorter-num", String(i + 1)));
-        foot.appendChild(el("span", "sorter-title", oneLine(s.title) || SF.SLIDE_TYPES[s.type].label));
+        var foot = el2("div", "sorter-foot");
+        foot.appendChild(el2("span", "sorter-num", String(i + 1)));
+        foot.appendChild(el2("span", "sorter-title", oneLine(s.title) || SF.SLIDE_TYPES[s.type].label));
         tile.appendChild(foot);
         tile.onclick = function(e) {
           pick(i, e);
@@ -11251,8 +12775,8 @@
       foot.innerHTML = "";
       var s = current();
       if (s) {
-        var txWrap = el("div", "rail-tx");
-        var lab = el("label", null, "Transition in");
+        var txWrap = el2("div", "rail-tx");
+        var lab = el2("label", null, "Transition in");
         var txSel = UI.select(
           SF.TRANSITIONS.map(function(t) {
             return { value: t, label: t[0].toUpperCase() + t.slice(1) };
@@ -11274,7 +12798,7 @@
         });
         foot.appendChild(txWrap);
       }
-      var actions = el("div", "rail-actions");
+      var actions = el2("div", "rail-actions");
       var addSlideBtn = UI.button("+ Slide", "primary", function() {
         if (SF.Studio && SF.Studio.openStarters) SF.Studio.openStarters();
         else addSlide("content");
@@ -11334,7 +12858,7 @@
   // src/editor/header-footer.js
   function installHeaderFooterUI(SF) {
     var open = false, scope = "deck", selected = "header-left";
-    var panel, fields = {}, warning;
+    var panel2, fields = {}, warning;
     function deck() {
       return SF.Editor && SF.Editor.deck();
     }
@@ -11402,14 +12926,14 @@
     }
     function mount(host) {
       if (!host) return;
-      if (!panel) install();
-      if (!panel) return;
-      host.appendChild(panel);
+      if (!panel2) install();
+      if (!panel2) return;
+      host.appendChild(panel2);
       open = true;
       refresh();
     }
     function refresh() {
-      if (!panel) return;
+      if (!panel2) return;
       var preview = document.getElementById("previewBox");
       if (preview) preview.classList.toggle("hf-editing", open);
       if (!open || !deck() || !slide()) return;
@@ -11430,17 +12954,17 @@
       if (document.activeElement !== fields.tagline) fields.tagline.value = deck().closingNote || "";
       if (fields.date && document.activeElement !== fields.date) fields.date.value = slide().date || "";
       fields.anchor.parentElement.hidden = item.placement !== "canvas";
-      panel.querySelectorAll("[data-hf-choice]").forEach(function(el) {
+      panel2.querySelectorAll("[data-hf-choice]").forEach(function(el2) {
         var b = (
           /** @type {HTMLElement} */
-          el
+          el2
         );
         b.setAttribute("aria-pressed", String(b.dataset.hfChoice === selected));
       });
-      if (preview) preview.querySelectorAll("[data-hf-slot]").forEach(function(el) {
+      if (preview) preview.querySelectorAll("[data-hf-slot]").forEach(function(el2) {
         var n = (
           /** @type {HTMLElement} */
-          el
+          el2
         );
         n.toggleAttribute("data-hf-selected", n.dataset.hfSlot === selected);
       });
@@ -11472,11 +12996,11 @@
       refresh();
     }
     function install() {
-      panel = node("section", "");
-      panel.className = "hf-panel";
-      panel.id = "headerFooterPanel";
-      panel.setAttribute("aria-label", "Header and footer slots");
-      var toolbar = node("div", "", panel);
+      panel2 = node("section", "");
+      panel2.className = "hf-panel";
+      panel2.id = "headerFooterPanel";
+      panel2.setAttribute("aria-label", "Header and footer slots");
+      var toolbar = node("div", "", panel2);
       toolbar.className = "hf-toolbar";
       selectField(toolbar, "Apply to", "scope", [["deck", "Presentation defaults"], ["slide", "This slide"]], function(v) {
         scope = v;
@@ -11510,7 +13034,7 @@
       done.onclick = function() {
         setOpen(false);
       };
-      var slots = node("div", "", panel);
+      var slots = node("div", "", panel2);
       slots.className = "hf-slots";
       ["header", "footer"].forEach(function(band) {
         ["left", "center", "right"].forEach(function(side) {
@@ -11523,7 +13047,7 @@
           };
         });
       });
-      var form = node("div", "", panel);
+      var form = node("div", "", panel2);
       form.className = "hf-fields";
       selectField(form, "Content", "kind", [["empty", "Empty"], ["text", "Text"], ["image", "Image"], ["logo", "Presentation logo"], ["number", "Page number"], ["pages", "Page / total"], ["date", "Slide date"], ["tagline", "Theme tagline"], ["title", "Presentation title"], ["section", "Section title"]], function(v) {
         updateItem("kind", v);
@@ -11591,7 +13115,7 @@
         };
         reader.readAsDataURL(file);
       };
-      var dateWrap = node("div", "", panel);
+      var dateWrap = node("div", "", panel2);
       dateWrap.className = "hf-fields hf-date";
       var dateLabel = node("label", "Slide date", dateWrap), dateInput = node("input", "", dateLabel);
       dateInput.type = "date";
@@ -11616,7 +13140,7 @@
         SF.Editor.refreshCanvas();
         refresh();
       };
-      warning = node("p", "", panel);
+      warning = node("p", "", panel2);
       warning.className = "hf-hint";
       warning.setAttribute("aria-live", "polite");
       var preview = document.getElementById("previewBox");
@@ -11765,14 +13289,14 @@
       select(target);
       var picked = target;
       var owner = slide();
-      var scale = scaleOf(root);
+      var scale2 = scaleOf(root);
       var start = originOf(picked, root);
       var fromX = e.clientX;
       var fromY = e.clientY;
       var moved = false;
       function move(ev) {
-        var dx = Math.round((ev.clientX - fromX) / scale);
-        var dy = Math.round((ev.clientY - fromY) / scale);
+        var dx = Math.round((ev.clientX - fromX) / scale2);
+        var dy = Math.round((ev.clientY - fromY) / scale2);
         if (!moved && Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
         moved = true;
         var x = start.x + dx;
@@ -11877,8 +13401,8 @@
         var w = Math.max(40, Math.round((pose.w || selected.node.getBoundingClientRect().width / scaleOf(box2())) + by));
         writePose(selected, { w });
       } else {
-        var scale = Math.max(0.2, Math.round(((pose.scale || 1) + by / 200) * 100) / 100);
-        writePose(selected, { scale });
+        var scale2 = Math.max(0.2, Math.round(((pose.scale || 1) + by / 200) * 100) / 100);
+        writePose(selected, { scale: scale2 });
       }
       commit(true);
       afterPaint();
@@ -12273,7 +13797,7 @@
         input.addEventListener("select", capture);
         input.addEventListener("keyup", capture);
         input.addEventListener("mouseup", capture);
-        function format(kind, v) {
+        function format2(kind, v) {
           var range = selection;
           if (["bold", "italic", "underline", "highlight"].includes(kind) && range[1] > range[0]) {
             var marks = entry(s, key).marks, all = true;
@@ -12308,7 +13832,7 @@
             capture();
           };
           b.onclick = function() {
-            format(item[2], true);
+            format2(item[2], true);
           };
           bar.appendChild(b);
         });
@@ -12318,7 +13842,7 @@
         c.title = "Text colour";
         c.setAttribute("aria-label", "Text colour");
         c.oninput = function() {
-          format("color", c.value);
+          format2("color", c.value);
         };
         bar.appendChild(c);
         var link = document.createElement("input");
@@ -12331,7 +13855,7 @@
         lb.type = "button";
         lb.textContent = "Link";
         lb.onclick = function() {
-          if (SF.safeHref(link.value) || SF.slideJumpTarget(link.value)) format("link", link.value);
+          if (SF.safeHref(link.value) || SF.slideJumpTarget(link.value)) format2("link", link.value);
           else SF.toast("Use an http(s) address, or slide:12 with the number on the left of the rail (author order — not the show count when slides are hidden)");
         };
         bar.appendChild(lb);
@@ -12340,7 +13864,7 @@
           if ((e.metaKey || e.ctrlKey) && ["b", "i", "u"].includes(k)) {
             e.preventDefault();
             capture();
-            format({ b: "bold", i: "italic", u: "underline" }[k], true);
+            format2({ b: "bold", i: "italic", u: "underline" }[k], true);
           }
         });
         input.parentNode.insertBefore(bar, input);
@@ -12391,8 +13915,8 @@
     }
     function canvasEditHost(box2) {
       if (!box2) return box2;
-      var stage = box2.closest("#previewBox") || box2.closest(".safe-stage");
-      if (stage && stage !== box2) return stage;
+      var stage2 = box2.closest("#previewBox") || box2.closest(".safe-stage");
+      if (stage2 && stage2 !== box2) return stage2;
       var slide = box2.closest(".slide");
       return slide && slide !== box2 ? slide : box2;
     }
@@ -12536,7 +14060,7 @@
       releaseTools = function() {
         document.removeEventListener("selectionchange", capture);
       };
-      function format(kind, v) {
+      function format2(kind, v) {
         var a = held[0], b = held[1];
         if (["bold", "italic", "underline", "highlight"].includes(kind) && b > a) {
           var marks = entry(s, key).marks, all = true;
@@ -12563,7 +14087,7 @@
       }
       if (hooks) hooks.format = function(kind) {
         capture();
-        format(kind, true);
+        format2(kind, true);
       };
       [
         ["B", "Bold", "bold"],
@@ -12581,19 +14105,19 @@
           e.preventDefault();
         };
         b.onclick = function() {
-          format(item[2], true);
+          format2(item[2], true);
         };
         bar.appendChild(b);
       });
-      var colour = document.createElement("input");
-      colour.type = "color";
-      colour.value = "#426332";
-      colour.title = "Text colour";
-      colour.setAttribute("aria-label", "Text colour");
-      colour.oninput = function() {
-        format("color", colour.value);
+      var colour2 = document.createElement("input");
+      colour2.type = "color";
+      colour2.value = "#426332";
+      colour2.title = "Text colour";
+      colour2.setAttribute("aria-label", "Text colour");
+      colour2.oninput = function() {
+        format2("color", colour2.value);
       };
-      bar.appendChild(colour);
+      bar.appendChild(colour2);
       var link = document.createElement("input");
       link.type = "text";
       link.placeholder = "https://… or slide:12";
@@ -12607,7 +14131,7 @@
         e.preventDefault();
       };
       lb.onclick = function() {
-        if (SF.safeHref(link.value) || SF.slideJumpTarget(link.value)) format("link", link.value);
+        if (SF.safeHref(link.value) || SF.slideJumpTarget(link.value)) format2("link", link.value);
         else SF.toast("Use an http(s) address, or slide:12 with the number on the left of the rail (author order — not the show count when slides are hidden)");
       };
       bar.appendChild(lb);
@@ -12701,10 +14225,10 @@
       };
       window.addEventListener("scroll", open.follow, true);
       window.addEventListener("resize", open.follow);
-      var stage = node.closest("#previewBox") || node.closest(".safe-stage");
-      if (stage && typeof ResizeObserver === "function") {
+      var stage2 = node.closest("#previewBox") || node.closest(".safe-stage");
+      if (stage2 && typeof ResizeObserver === "function") {
         open.watch = new ResizeObserver(open.follow);
-        open.watch.observe(stage);
+        open.watch.observe(stage2);
         open.watch.observe(node);
       }
       node.addEventListener("input", function() {
@@ -12923,15 +14447,15 @@
           n.style.color = d.textColor;
         });
       }
-      var scale = { small: 0.85, medium: 1, large: 1.15, x2: 2, x3: 3, x5: 5 }[d.size] || 1;
-      if (scale !== 1) requestAnimationFrame(function() {
+      var scale2 = { small: 0.85, medium: 1, large: 1.15, x2: 2, x3: 3, x5: 5 }[d.size] || 1;
+      if (scale2 !== 1) requestAnimationFrame(function() {
         var nodes = [];
         root.querySelectorAll("h1,h2,.sub,.q,.attrib,li,.kw-term,.kw-def,.it-phrase,.it-note,.ln-label,.ln-link,.ln-url,.cp [data-content-key]").forEach(function(n) {
           var px = parseFloat(getComputedStyle(n).fontSize);
           if (px) nodes.push([n, px]);
         });
         if (!nodes.length) return;
-        var want = scale;
+        var want = scale2;
         for (var pass = 0; pass < 40; pass++) {
           nodes.forEach(function(pair) {
             pair[0].style.fontSize = pair[1] * want + "px";
@@ -13290,7 +14814,7 @@
       tagControls(box2, s, "Look");
       parent.appendChild(box2);
     }
-    function motion(parent, s, change) {
+    function motion2(parent, s, change) {
       var UI = SF.Shell.UI;
       var box2 = document.createElement("div");
       box2.className = "custom-controls motion-controls";
@@ -13417,7 +14941,7 @@
         if (key) label.parentElement.dataset.designKey = key;
       });
     }
-    SF.Custom = { tagControls, motion, removeBullet, bind, editCanvasBlock, endInlineEdit, endCanvasEditor, inlineEditable, openCanvasEditor, enableCanvasEditDrag, placeCanvasEditForm, canvasEditHost, paint, layout, inspector, rebase, apply, entry };
+    SF.Custom = { tagControls, motion: motion2, removeBullet, bind, editCanvasBlock, endInlineEdit, endCanvasEditor, inlineEditable, openCanvasEditor, enableCanvasEditDrag, placeCanvasEditForm, canvasEditHost, paint, layout, inspector, rebase, apply, entry };
   }
 
   // src/boards/runtimes/bingo.js
@@ -13541,7 +15065,7 @@
       var b = slide.bingoBoard, s = opts.bingoState || create(b);
       var command2 = opts.bingoCommand;
       var size = Math.max(2, Math.min(4, Number(b.gridSize) || 3));
-      var el = SF.el;
+      var el2 = SF.el;
       pad.replaceChildren();
       var seenTerms = {}, unique = 0;
       b.pool.forEach(function(pair) {
@@ -13553,7 +15077,7 @@
       });
       var shortBy = Math.max(0, size * size - unique);
       function button(text2, action, cls, arg) {
-        var node = el("button", "bingo-button " + (cls || ""), text2);
+        var node = el2("button", "bingo-button " + (cls || ""), text2);
         node.type = "button";
         node.disabled = !command2;
         node.dataset.bingoAction = action;
@@ -13563,42 +15087,42 @@
         };
         return node;
       }
-      var head = el("header", "bingo-head");
-      var identity = el("div");
-      identity.appendChild(el("div", "bingo-eyebrow", "BINGO / " + size + "×" + size + " · " + b.pool.length + " TERMS"));
-      identity.appendChild(el("h2", "bingo-name", slide.title));
+      var head = el2("header", "bingo-head");
+      var identity = el2("div");
+      identity.appendChild(el2("div", "bingo-eyebrow", "BINGO / " + size + "×" + size + " · " + b.pool.length + " TERMS"));
+      identity.appendChild(el2("h2", "bingo-name", slide.title));
       head.appendChild(identity);
-      var count = el("div", "bingo-count");
-      count.appendChild(el("span", null, s.phase === "ready" ? "READY" : s.phase === "complete" ? "BINGO" : "CALLING"));
-      count.appendChild(el("strong", null, s.called.length + " / " + b.pool.length));
+      var count = el2("div", "bingo-count");
+      count.appendChild(el2("span", null, s.phase === "ready" ? "READY" : s.phase === "complete" ? "BINGO" : "CALLING"));
+      count.appendChild(el2("strong", null, s.called.length + " / " + b.pool.length));
       head.appendChild(count);
       pad.appendChild(head);
-      var call = el("div", "bingo-call" + (s.current > -1 ? " on" : ""));
+      var call = el2("div", "bingo-call" + (s.current > -1 ? " on" : ""));
       if (s.current > -1) {
-        call.appendChild(el("div", "bingo-eyebrow", s.revealed ? "THE TERM WAS" : "WHICH TERM IS THIS?"));
-        call.appendChild(el("p", "bingo-def", b.pool[s.current].definition));
-        if (s.revealed) call.appendChild(el("strong", "bingo-term", b.pool[s.current].term));
+        call.appendChild(el2("div", "bingo-eyebrow", s.revealed ? "THE TERM WAS" : "WHICH TERM IS THIS?"));
+        call.appendChild(el2("p", "bingo-def", b.pool[s.current].definition));
+        if (s.revealed) call.appendChild(el2("strong", "bingo-term", b.pool[s.current].term));
       } else {
-        call.appendChild(el("div", "bingo-eyebrow", s.phase === "complete" ? "FINISHED" : "NOTHING CALLED YET"));
-        call.appendChild(el("p", "bingo-def", s.phase === "complete" ? winner(b, s) : "Call a definition. If it is on their card, a team says what the term means to claim the square."));
+        call.appendChild(el2("div", "bingo-eyebrow", s.phase === "complete" ? "FINISHED" : "NOTHING CALLED YET"));
+        call.appendChild(el2("p", "bingo-def", s.phase === "complete" ? winner(b, s) : "Call a definition. If it is on their card, a team says what the term means to claim the square."));
       }
       pad.appendChild(call);
-      var cards = el("div", "bingo-cards");
+      var cards = el2("div", "bingo-cards");
       var across = b.participants.length <= 3 ? b.participants.length : b.participants.length === 4 ? 2 : 3;
       cards.classList.add("across-" + across);
       cards.classList.toggle("many", b.participants.length > 3);
       b.participants.forEach(function(name, team) {
-        var box2 = el("section", "bingo-card" + (s.winners.indexOf(team) > -1 ? " won" : ""));
-        var caption = el("div", "bingo-card-head");
-        caption.appendChild(el("strong", null, name));
+        var box2 = el2("section", "bingo-card" + (s.winners.indexOf(team) > -1 ? " won" : ""));
+        var caption = el2("div", "bingo-card-head");
+        caption.appendChild(el2("strong", null, name));
         if (command2 && s.phase === "calling") {
-          var verdicts = el("div", "bingo-verdicts");
+          var verdicts = el2("div", "bingo-verdicts");
           if (s.current > -1 && !s.revealed) {
-            verdicts.appendChild(el("span", "bingo-why", "Waiting on an answer"));
+            verdicts.appendChild(el2("span", "bingo-why", "Waiting on an answer"));
           } else {
             var why = blocked(s, b, team);
             if (why) {
-              verdicts.appendChild(el("span", "bingo-why", why));
+              verdicts.appendChild(el2("span", "bingo-why", why));
             } else {
               verdicts.appendChild(button("✓ Claim", "claim", "primary", team));
               verdicts.appendChild(button("✗ Missed", "miss", "", team));
@@ -13606,15 +15130,15 @@
           }
           caption.appendChild(verdicts);
         }
-        caption.appendChild(el("span", "bingo-tick", s.winners.indexOf(team) > -1 ? "LINE" : (s.cards[team] || []).filter(function(c) {
+        caption.appendChild(el2("span", "bingo-tick", s.winners.indexOf(team) > -1 ? "LINE" : (s.cards[team] || []).filter(function(c) {
           return c.state === "claimed";
         }).length + " / " + size * size));
         box2.appendChild(caption);
-        var grid = el("div", "bingo-grid");
+        var grid = el2("div", "bingo-grid");
         grid.style.gridTemplateColumns = "repeat(" + size + ", minmax(0, 1fr))";
         var live = s.current > -1 && !s.revealed ? -1 : square(s, b, team);
         (s.cards[team] || []).forEach(function(cell, i) {
-          var sq = el(
+          var sq = el2(
             "div",
             "bingo-square is-" + cell.state + (cell.term ? "" : " is-gap") + (i === live && cell.state === "open" ? " calling" : "") + /* "Mitochondrion" in a sixteenth of a shared card broke across two
                lines as "Mitochondri / on". Smaller reads better than split. */
@@ -13627,13 +15151,13 @@
         cards.appendChild(box2);
       });
       pad.appendChild(cards);
-      var foot = el("div", "bingo-foot");
-      var status = el("div", "bingo-status");
+      var foot = el2("div", "bingo-foot");
+      var status = el2("div", "bingo-status");
       status.setAttribute("aria-live", "polite");
-      status.appendChild(el("strong", null, s.paused ? "Paused." : s.phase === "ready" ? "Every team has a different card." : s.phase === "complete" ? winner(b, s) : s.current < 0 ? "Call the next definition." : s.revealed ? "Who claimed “" + b.pool[s.current].term + "”?" : "Read it out. Reveal the term once they have answered."));
-      status.appendChild(el("span", shortBy ? "bingo-short" : null, shortBy ? "A " + size + "×" + size + " card needs " + size * size + " different terms and there " + (unique === 1 ? "is" : "are") + " " + unique + " — add " + shortBy + " more, or choose a smaller card size in Game settings" : s.phase === "complete" ? s.called.length + " of " + b.pool.length + " terms called" : "A row, column or diagonal wins · no points · each term is called once"));
+      status.appendChild(el2("strong", null, s.paused ? "Paused." : s.phase === "ready" ? "Every team has a different card." : s.phase === "complete" ? winner(b, s) : s.current < 0 ? "Call the next definition." : s.revealed ? "Who claimed “" + b.pool[s.current].term + "”?" : "Read it out. Reveal the term once they have answered."));
+      status.appendChild(el2("span", shortBy ? "bingo-short" : null, shortBy ? "A " + size + "×" + size + " card needs " + size * size + " different terms and there " + (unique === 1 ? "is" : "are") + " " + unique + " — add " + shortBy + " more, or choose a smaller card size in Game settings" : s.phase === "complete" ? s.called.length + " of " + b.pool.length + " terms called" : "A row, column or diagonal wins · no points · each term is called once"));
       foot.appendChild(status);
-      var actions = el("div", "bingo-actions");
+      var actions = el2("div", "bingo-actions");
       if (s.phase === "ready") actions.appendChild(button("Deal and start →", "start", "primary"));
       if (s.phase === "calling") {
         if (s.current > -1 && !s.revealed) actions.appendChild(button("Reveal the term", "reveal", "primary"));
@@ -13656,9 +15180,9 @@
       foot.appendChild(actions);
       pad.appendChild(foot);
       if (s.phase === "complete") {
-        var tally = el("div", "bingo-tally");
+        var tally = el2("div", "bingo-tally");
         scores(b, s).forEach(function(row) {
-          tally.appendChild(el(
+          tally.appendChild(el2(
             "span",
             row.won ? "won" : null,
             row.name + " · " + row.score + (row.won ? " · LINE" : "")
@@ -13826,10 +15350,10 @@
       opts = opts || {};
       var b = slide.bowlBoard, s = opts.bowlState || create(b);
       var command2 = opts.bowlCommand;
-      var el = SF.el;
+      var el2 = SF.el;
       pad.replaceChildren();
       function button(text3, action, cls, arg) {
-        var node = el("button", "bowl-button " + (cls || ""), text3);
+        var node = el2("button", "bowl-button " + (cls || ""), text3);
         node.type = "button";
         node.disabled = !command2;
         node.dataset.bowlAction = action;
@@ -13839,47 +15363,47 @@
         };
         return node;
       }
-      var head = el("header", "bowl-head");
-      var identity = el("div");
-      identity.appendChild(el("div", "bowl-eyebrow", "QUIZ BOWL / FIRST TO " + b.target));
-      identity.appendChild(el("h2", "bowl-name", slide.title));
+      var head = el2("header", "bowl-head");
+      var identity = el2("div");
+      identity.appendChild(el2("div", "bowl-eyebrow", "QUIZ BOWL / FIRST TO " + b.target));
+      identity.appendChild(el2("h2", "bowl-name", slide.title));
       head.appendChild(identity);
-      var count = el("div", "bowl-count");
-      count.appendChild(el("span", null, s.phase === "ready" ? "READY" : s.phase === "complete" ? "FINISHED" : s.phase === "asking" ? "ON A CELL" : "CHOOSE"));
+      var count = el2("div", "bowl-count");
+      count.appendChild(el2("span", null, s.phase === "ready" ? "READY" : s.phase === "complete" ? "FINISHED" : s.phase === "asking" ? "ON A CELL" : "CHOOSE"));
       var left = b.cells.reduce(function(n, cell, i) {
         return n + Math.max(0, cell.questions.length - s.used[i]);
       }, 0);
-      count.appendChild(el("strong", null, left + " left"));
+      count.appendChild(el2("strong", null, left + " left"));
       head.appendChild(count);
       pad.appendChild(head);
       if (s.phase === "asking" && s.cell > -1) {
         var q = pending(b, s, s.cell);
         var cellNow = b.cells[s.cell];
-        var ask = el("div", "bowl-ask");
-        ask.appendChild(el("div", "bowl-eyebrow", cellNow.category.toUpperCase() + " · " + cellNow.value));
+        var ask = el2("div", "bowl-ask");
+        ask.appendChild(el2("div", "bowl-eyebrow", cellNow.category.toUpperCase() + " · " + cellNow.value));
         var text2 = q ? q.question : "";
-        var qEl = el("p", "bowl-question", text2);
+        var qEl = el2("p", "bowl-question", text2);
         qEl.dataset.len = text2.length > 150 ? "xl" : text2.length > 80 ? "lg" : "md";
         ask.appendChild(qEl);
         if (s.revealed) {
-          var reveal = el("div", "bowl-answer");
-          reveal.appendChild(el("span", "bowl-eyebrow", "THE ANSWER"));
-          reveal.appendChild(el("strong", null, q ? q.answer : ""));
+          var reveal = el2("div", "bowl-answer");
+          reveal.appendChild(el2("span", "bowl-eyebrow", "THE ANSWER"));
+          reveal.appendChild(el2("strong", null, q ? q.answer : ""));
           ask.appendChild(reveal);
         } else {
-          ask.appendChild(el("p", "bowl-hint", "Take an answer from the room, then reveal."));
+          ask.appendChild(el2("p", "bowl-hint", "Take an answer from the room, then reveal."));
         }
         pad.appendChild(ask);
       } else {
-        var grid = el("div", "bowl-grid");
+        var grid = el2("div", "bowl-grid");
         grid.style.gridTemplateColumns = "repeat(" + Math.max(1, b.categories.length) + ", minmax(0, 1fr))";
         b.categories.forEach(function(name) {
-          grid.appendChild(el("div", "bowl-category", name));
+          grid.appendChild(el2("div", "bowl-category", name));
         });
         b.cells.forEach(function(cell, i) {
           var waiting = Math.max(0, cell.questions.length - s.used[i]);
           if (!waiting) {
-            grid.appendChild(el("div", "bowl-cell is-spent", "·"));
+            grid.appendChild(el2("div", "bowl-cell is-spent", "·"));
             return;
           }
           var node = button(String(cell.value), "pick", "bowl-cell", i);
@@ -13887,18 +15411,18 @@
           node.classList.add("bowl-cell");
           node.disabled = !command2 || s.phase !== "picking" || s.paused;
           node.setAttribute("aria-label", cell.category + ", " + cell.value + " points");
-          if (waiting > 1) node.appendChild(el("span", "bowl-stack", "×" + waiting));
+          if (waiting > 1) node.appendChild(el2("span", "bowl-stack", "×" + waiting));
           grid.appendChild(node);
         });
         pad.appendChild(grid);
       }
-      var tally = el("div", "bowl-tally");
+      var tally = el2("div", "bowl-tally");
       tally.classList.toggle("many", b.participants.length > 3);
       scores(b, s).forEach(function(row, i) {
-        var box2 = el("section", "bowl-team" + (s.phase === "complete" && leaders(b, s).indexOf(i) > -1 ? " won" : ""));
-        var line = el("div", "bowl-team-head");
-        line.appendChild(el("strong", null, row.name));
-        line.appendChild(el("span", "bowl-score", String(row.score)));
+        var box2 = el2("section", "bowl-team" + (s.phase === "complete" && leaders(b, s).indexOf(i) > -1 ? " won" : ""));
+        var line = el2("div", "bowl-team-head");
+        line.appendChild(el2("strong", null, row.name));
+        line.appendChild(el2("span", "bowl-score", String(row.score)));
         box2.appendChild(line);
         if (command2 && s.phase === "asking" && s.revealed) {
           box2.appendChild(button("+ " + b.cells[s.cell].value, "award", "primary", i));
@@ -13906,13 +15430,13 @@
         tally.appendChild(box2);
       });
       pad.appendChild(tally);
-      var foot = el("div", "bowl-foot");
-      var status = el("div", "bowl-status");
+      var foot = el2("div", "bowl-foot");
+      var status = el2("div", "bowl-status");
       status.setAttribute("aria-live", "polite");
-      status.appendChild(el("strong", null, s.paused ? "Paused." : s.phase === "ready" ? "Pick a category and a value to begin." : s.phase === "complete" ? winner(b, s) : s.phase === "asking" ? s.revealed ? "Who answered it?" : "Read it out and take an answer." : "Choose an unused cell."));
-      status.appendChild(el("span", null, s.phase === "complete" ? s.asked + " cells opened · " + s.awarded + " awarded" : "Correct scores the cell value · a cell is spent either way · first to " + b.target));
+      status.appendChild(el2("strong", null, s.paused ? "Paused." : s.phase === "ready" ? "Pick a category and a value to begin." : s.phase === "complete" ? winner(b, s) : s.phase === "asking" ? s.revealed ? "Who answered it?" : "Read it out and take an answer." : "Choose an unused cell."));
+      status.appendChild(el2("span", null, s.phase === "complete" ? s.asked + " cells opened · " + s.awarded + " awarded" : "Correct scores the cell value · a cell is spent either way · first to " + b.target));
       foot.appendChild(status);
-      var actions = el("div", "bowl-actions");
+      var actions = el2("div", "bowl-actions");
       if (s.phase === "ready") actions.appendChild(button("Open the board →", "start", "primary"));
       if (s.phase === "asking") {
         if (!s.revealed) actions.appendChild(button("Reveal the answer", "reveal", "primary"));
@@ -14057,10 +15581,10 @@
       opts = opts || {};
       var b = slide.memoryBoard, s = opts.memoryState || create(b), preview = !opts.memoryState;
       var command2 = opts.memoryCommand;
-      var el = SF.el;
+      var el2 = SF.el;
       pad.replaceChildren();
       function button(text2, action, cls, card) {
-        var node = el("button", "mem-button " + (cls || ""), text2);
+        var node = el2("button", "mem-button " + (cls || ""), text2);
         node.type = "button";
         node.disabled = !command2;
         node.dataset.memoryAction = action;
@@ -14070,30 +15594,30 @@
         };
         return node;
       }
-      var head = el("header", "mem-header");
+      var head = el2("header", "mem-header");
       var titles = { memorymatch: "MEMORY MATCH", memoryflip: "MEMORY FLIP", knowledgeflip: "KNOWLEDGE FLIP" };
-      var identity = el("div");
-      identity.appendChild(el("div", "mem-eyebrow", titles[b.kind] + " / SET " + b.set + " OF " + b.sets));
-      identity.appendChild(el("h2", "mem-title", slide.title));
+      var identity = el2("div");
+      identity.appendChild(el2("div", "mem-eyebrow", titles[b.kind] + " / SET " + b.set + " OF " + b.sets));
+      identity.appendChild(el2("h2", "mem-title", slide.title));
       head.appendChild(identity);
-      var clock = el("div", "mem-clock");
-      clock.appendChild(el("span", null, s.phase === "ready" ? "READY" : s.phase === "study" ? "STUDY" : s.phase === "complete" ? "FINISHED" : "RECALL"));
-      clock.appendChild(el("strong", "mem-time", s.phase === "study" ? Math.ceil(s.remaining) + "s" : Math.floor(s.elapsed / 60) + ":" + String(Math.floor(s.elapsed % 60)).padStart(2, "0")));
+      var clock = el2("div", "mem-clock");
+      clock.appendChild(el2("span", null, s.phase === "ready" ? "READY" : s.phase === "study" ? "STUDY" : s.phase === "complete" ? "FINISHED" : "RECALL"));
+      clock.appendChild(el2("strong", "mem-time", s.phase === "study" ? Math.ceil(s.remaining) + "s" : Math.floor(s.elapsed / 60) + ":" + String(Math.floor(s.elapsed % 60)).padStart(2, "0")));
       head.appendChild(clock);
       pad.appendChild(head);
-      var progress = el("div", "mem-progress");
+      var progress = el2("div", "mem-progress");
       ["1 · Study", "2 · Recall", "3 · Collect"].forEach(function(label, i) {
         if (b.kind === "knowledgeflip" && i === 0) label = "1 · Choose";
         var current = s.phase === "ready" || s.phase === "study" ? 0 : s.phase === "complete" ? 2 : 1;
-        progress.appendChild(el("span", i <= current ? "on" : "", label));
+        progress.appendChild(el2("span", i <= current ? "on" : "", label));
       });
-      progress.appendChild(el("strong", null, s.owners.filter(function(o) {
+      progress.appendChild(el2("strong", null, s.owners.filter(function(o) {
         return o !== null;
       }).length + " / " + b.pairs.length + " collected"));
       pad.appendChild(progress);
       var allVisible = preview || s.phase === "study" || s.phase === "complete";
       if (b.kind === "knowledgeflip") allVisible = s.phase === "complete";
-      var grid = el("div", "mem-grid");
+      var grid = el2("div", "mem-grid");
       grid.classList.toggle("mem-grid-small", b.pairs.length <= 4);
       grid.classList.toggle("mem-grid-knowledge", b.kind === "knowledgeflip");
       b.pairs.forEach(function(pair, i) {
@@ -14103,47 +15627,47 @@
         card.classList.toggle("dense", pair.term.length > 35 || pair.definition.length > 150);
         card.disabled = !command2 || s.phase !== "recall" || s.paused || owned || s.selected !== -1;
         card.setAttribute("aria-label", face ? pair.term + (owned ? ", collected" : "") : "Choose card " + (i + 1));
-        card.appendChild(el("span", "mem-card-number", String(i + 1).padStart(2, "0")));
+        card.appendChild(el2("span", "mem-card-number", String(i + 1).padStart(2, "0")));
         if (face) {
-          card.appendChild(el("strong", "mem-term", pair.term));
-          if (allVisible) card.appendChild(el("span", "mem-definition", pair.definition));
-          else if (owned) card.appendChild(el("span", "mem-owner", "✓ " + b.participants[s.owners[i]]));
-          else card.appendChild(el(
+          card.appendChild(el2("strong", "mem-term", pair.term));
+          if (allVisible) card.appendChild(el2("span", "mem-definition", pair.definition));
+          else if (owned) card.appendChild(el2("span", "mem-owner", "✓ " + b.participants[s.owners[i]]));
+          else card.appendChild(el2(
             "span",
             "mem-card-prompt",
             selected ? "Explain it aloud" : "Choose & explain"
           ));
         } else {
-          card.appendChild(el("span", "mem-symbol", "✳"));
-          card.appendChild(el("span", "mem-card-prompt", "What do you remember?"));
+          card.appendChild(el2("span", "mem-symbol", "✳"));
+          card.appendChild(el2("span", "mem-card-prompt", "What do you remember?"));
         }
         grid.appendChild(card);
       });
       pad.appendChild(grid);
-      var bottom = el("div", "mem-bottom");
-      var status = el("div", "mem-status");
+      var bottom = el2("div", "mem-bottom");
+      var status = el2("div", "mem-status");
       status.setAttribute("aria-live", "polite");
       var caption = s.paused ? "Paused. Take a moment." : s.phase === "ready" ? b.kind === "knowledgeflip" ? "Keywords stay on the board. Choose one, explain it, then collect the card." : "Ready? Study the whole set, then recall from the hidden cards." : s.phase === "study" ? "Make a connection between each term and its meaning." : s.phase === "complete" ? winner(b, s) : s.selected < 0 ? b.participants[s.turn] + " — choose a keyword." : b.participants[s.turn] + " — explain “" + b.pairs[s.selected].term + "”.";
-      status.appendChild(el("strong", null, caption));
-      status.appendChild(el("span", null, s.phase === "complete" ? s.attempts + " attempts · " + b.pairs.length + " cards collected" : b.kind === "knowledgeflip" ? b.participants.length > 1 ? "No study timer · 1 point per claim · turns rotate · misses can be retried" : "No study timer · explain aloud · teacher checks · misses can be retried" : b.participants.length > 1 ? "1 point per claim · turns rotate after a claim or pass · misses can be retried" : "One class collection · explain aloud · teacher checks · misses can be retried"));
+      status.appendChild(el2("strong", null, caption));
+      status.appendChild(el2("span", null, s.phase === "complete" ? s.attempts + " attempts · " + b.pairs.length + " cards collected" : b.kind === "knowledgeflip" ? b.participants.length > 1 ? "No study timer · 1 point per claim · turns rotate · misses can be retried" : "No study timer · explain aloud · teacher checks · misses can be retried" : b.participants.length > 1 ? "1 point per claim · turns rotate after a claim or pass · misses can be retried" : "One class collection · explain aloud · teacher checks · misses can be retried"));
       bottom.appendChild(status);
-      var actions = el("div", "mem-actions");
+      var actions = el2("div", "mem-actions");
       if (s.phase === "ready") actions.appendChild(button(b.kind === "knowledgeflip" ? "Open the board →" : "Start studying →", "start", "primary"));
       if (s.phase === "study") actions.appendChild(button("Ready to recall →", "hide", "primary"));
       if (s.phase === "study" || s.phase === "recall") actions.appendChild(button(s.paused ? "Resume" : "Pause", "pause"));
       if (s.phase === "complete") actions.appendChild(button("Play this set again", "restart", "primary"));
       if (s.selected !== -1 && s.phase === "recall" && !s.paused) {
-        var check = el("div", "mem-check");
+        var check = el2("div", "mem-check");
         check.setAttribute("role", "group");
         check.setAttribute("aria-label", "Check this claim");
-        check.appendChild(el(
+        check.appendChild(el2(
           "div",
           "mem-eyebrow",
           b.kind === "knowledgeflip" ? "EXPLAIN FIRST · THEN CHECK" : "SAY IT FIRST · THEN CHECK"
         ));
-        check.appendChild(el("h3", null, b.pairs[s.selected].term));
-        check.appendChild(el("p", null, s.revealed ? b.pairs[s.selected].definition : "Explain the meaning before revealing the definition."));
-        var verdicts = el("div", "mem-actions");
+        check.appendChild(el2("h3", null, b.pairs[s.selected].term));
+        check.appendChild(el2("p", null, s.revealed ? b.pairs[s.selected].definition : "Explain the meaning before revealing the definition."));
+        var verdicts = el2("div", "mem-actions");
         if (!s.revealed) verdicts.appendChild(button("Reveal definition", "reveal", "primary"));
         else verdicts.appendChild(button("✓ Claim card · +1", "claim", "primary"));
         verdicts.appendChild(button(s.revealed ? "Try again next turn" : "Pass this turn", "pass"));
@@ -14153,9 +15677,9 @@
       bottom.appendChild(actions);
       pad.appendChild(bottom);
       if (s.phase === "complete") {
-        var tally = el("div", "mem-tally");
+        var tally = el2("div", "mem-tally");
         scores(b, s).forEach(function(row) {
-          tally.appendChild(el("span", null, row.name + " · " + row.score));
+          tally.appendChild(el2("span", null, row.name + " · " + row.score));
         });
         bottom.appendChild(tally);
       }
@@ -14273,7 +15797,7 @@
       var s = opts.lowstakesState || create(b);
       var preview = !opts.lowstakesState;
       var command2 = opts.lowstakesCommand;
-      var el = SF.el;
+      var el2 = SF.el;
       pad.replaceChildren();
       ["phase-ready", "phase-quiz", "phase-answers", "phase-complete", "is-paused", "is-preview"].forEach(function(c) {
         pad.classList.remove(c);
@@ -14282,7 +15806,7 @@
       if (s.paused) pad.classList.add("is-paused");
       if (preview) pad.classList.add("is-preview");
       function button(text2, action, cls) {
-        var node = el("button", "lsq-button " + (cls || ""), text2);
+        var node = el2("button", "lsq-button " + (cls || ""), text2);
         node.type = "button";
         node.disabled = !command2;
         node.dataset.lowstakesAction = action;
@@ -14291,27 +15815,27 @@
         };
         return node;
       }
-      var head = el("header", "lsq-header");
-      var identity = el("div");
-      identity.appendChild(el("div", "lsq-eyebrow", "LOW-STAKES QUIZ · NO NOTES — RETRIEVAL"));
-      identity.appendChild(el("h2", "lsq-title", slide.title));
+      var head = el2("header", "lsq-header");
+      var identity = el2("div");
+      identity.appendChild(el2("div", "lsq-eyebrow", "LOW-STAKES QUIZ · NO NOTES — RETRIEVAL"));
+      identity.appendChild(el2("h2", "lsq-title", slide.title));
       head.appendChild(identity);
-      var clock = el("div", "lsq-clock");
+      var clock = el2("div", "lsq-clock");
       var clockLabel = s.phase === "ready" ? "READY" : s.phase === "quiz" ? s.paused ? "PAUSED" : "QUIZ" : s.phase === "answers" ? "REVEAL" : "DONE";
-      clock.appendChild(el("span", null, clockLabel));
-      clock.appendChild(el(
+      clock.appendChild(el2("span", null, clockLabel));
+      clock.appendChild(el2(
         "strong",
         "lsq-time",
         s.phase === "quiz" ? formatClock(s.remaining) : s.phase === "ready" ? formatClock(b.timeLimit) : formatClock(s.elapsed)
       ));
       head.appendChild(clock);
       pad.appendChild(head);
-      var progress = el("div", "lsq-progress");
+      var progress = el2("div", "lsq-progress");
       ["1 · Ready", "2 · Write", "3 · Reveal"].forEach(function(label, i) {
         var current = s.phase === "ready" ? 0 : s.phase === "quiz" ? 1 : 2;
-        progress.appendChild(el("span", i <= current ? "on" : "", label));
+        progress.appendChild(el2("span", i <= current ? "on" : "", label));
       });
-      progress.appendChild(el(
+      progress.appendChild(el2(
         "strong",
         null,
         b.items.filter(function(item) {
@@ -14323,50 +15847,50 @@
       var readyCount = b.items.filter(function(item) {
         return !item.gap;
       }).length;
-      var list = el("ol", "lsq-list" + (showAnswers ? " revealed" : ""));
+      var list = el2("ol", "lsq-list" + (showAnswers ? " revealed" : ""));
       b.items.forEach(function(item, i) {
-        var row = el("li", "lsq-item" + (item.gap ? " is-gap" : ""));
-        row.appendChild(el("span", "lsq-num", String(i + 1).padStart(2, "0")));
-        var body = el("div", "lsq-body");
+        var row = el2("li", "lsq-item" + (item.gap ? " is-gap" : ""));
+        row.appendChild(el2("span", "lsq-num", String(i + 1).padStart(2, "0")));
+        var body = el2("div", "lsq-body");
         if (item.gap === "question") {
-          body.appendChild(el("p", "lsq-gap", "Needs a question"));
-          body.appendChild(el("p", "lsq-prompt", "Fill this row in Quiz studio before you play"));
+          body.appendChild(el2("p", "lsq-gap", "Needs a question"));
+          body.appendChild(el2("p", "lsq-prompt", "Fill this row in Quiz studio before you play"));
         } else if (item.gap === "answer") {
-          body.appendChild(el("p", "lsq-question", item.question));
-          body.appendChild(el("p", "lsq-gap", "Needs an answer for the reveal"));
+          body.appendChild(el2("p", "lsq-question", item.question));
+          body.appendChild(el2("p", "lsq-gap", "Needs an answer for the reveal"));
         } else {
-          body.appendChild(el("p", "lsq-question", item.question));
+          body.appendChild(el2("p", "lsq-question", item.question));
           if (showAnswers) {
-            body.appendChild(el("p", "lsq-answer", item.answer));
+            body.appendChild(el2("p", "lsq-answer", item.answer));
           } else {
-            body.appendChild(el("p", "lsq-prompt", "Write your answer on paper · no notes"));
+            body.appendChild(el2("p", "lsq-prompt", "Write your answer on paper · no notes"));
           }
         }
         row.appendChild(body);
         list.appendChild(row);
       });
       if (!b.items.length) {
-        var empty = el("li", "lsq-item is-gap");
-        empty.appendChild(el("span", "lsq-num", "—"));
-        var emptyBody = el("div", "lsq-body");
-        emptyBody.appendChild(el("p", "lsq-gap", "Needs questions"));
-        emptyBody.appendChild(el("p", "lsq-prompt", "Add at least three question–answer pairs in Quiz studio"));
+        var empty = el2("li", "lsq-item is-gap");
+        empty.appendChild(el2("span", "lsq-num", "—"));
+        var emptyBody = el2("div", "lsq-body");
+        emptyBody.appendChild(el2("p", "lsq-gap", "Needs questions"));
+        emptyBody.appendChild(el2("p", "lsq-prompt", "Add at least three question–answer pairs in Quiz studio"));
         empty.appendChild(emptyBody);
         list.appendChild(empty);
       }
       pad.appendChild(list);
-      var bottom = el("div", "lsq-bottom");
-      var status = el("div", "lsq-status");
+      var bottom = el2("div", "lsq-bottom");
+      var status = el2("div", "lsq-status");
       status.setAttribute("aria-live", "polite");
       var caption = s.paused ? "Paused. Resume when the room is ready." : s.phase === "ready" ? "Questions stay on the board. Answers stay hidden until time is up." : s.phase === "quiz" ? "Retrieval in progress — no notes, no phones scoring this round." : s.phase === "answers" ? "Discuss answers together before moving on." : "Retrieval complete. Replay resets the clock.";
-      status.appendChild(el("strong", null, caption));
-      status.appendChild(el(
+      status.appendChild(el2("strong", null, caption));
+      status.appendChild(el2(
         "span",
         null,
         readyCount + " of " + b.items.length + " ready · " + formatClock(b.timeLimit) + " quiz · paper answers · no points"
       ));
       bottom.appendChild(status);
-      var actions = el("div", "lsq-actions");
+      var actions = el2("div", "lsq-actions");
       if (s.phase === "ready") {
         actions.appendChild(button("Start the quiz →", "start", "primary"));
         actions.appendChild(button("Reveal answers now", "reveal"));
@@ -14595,7 +16119,7 @@
         return b.damage - a.damage;
       });
     }
-    function stage(s) {
+    function stage2(s) {
       if (s.hp <= 0) return "defeated";
       if (s.hp <= s.max * 0.34) return "weak";
       if (s.hp <= s.max * 0.67) return "hurt";
@@ -14667,7 +16191,7 @@
       defeated,
       verdict,
       standings,
-      stage,
+      stage: stage2,
       forDeck,
       command,
       clear
@@ -15015,6 +16539,9 @@
     /* A game slide is a single card the engine draws: nothing sits beside it,
        and there is nowhere for a free item to go. */
     game: { slots: { gamecard: region(1, 1, 12, 16) } },
+    /* A live figure (src/render/figures/) draws the whole slide itself, full
+       bleed, the way a game's card does: nowhere for a free item to go. */
+    figure: { slots: { "fig-svg": region(1, 1, 12, 16) } },
     beforeafter: { slots: {
       ...FULL,
       "before-after": region(1, 3, 12, 11),
@@ -18526,6 +20053,10 @@
       group: "show",
       starters: [{ title: "Explore an image", blurb: "One picture the room examines, with details you reveal." }]
     },
+    /* A purpose-built live stage (src/render/figures/): hover, drag and motion
+       drawn for one teaching moment. Made by lesson builders, not from a blank
+       starter, so it offers no starter of its own. */
+    figure: { label: "Live figure", icon: "✦", deck: true, group: "show", starters: [] },
     simulation: {
       label: "What if? graph",
       icon: "↗",
@@ -19052,13 +20583,13 @@
         6: [1, 2, 3, 6, 4, 2],
         7: [1, 1, 2, 4, 6, 3, 1]
       };
-      var bars = shape[f.points || 5] || shape[5];
-      var seen = bars.reduce(function(a, b) {
+      var bars2 = shape[f.points || 5] || shape[5];
+      var seen = bars2.reduce(function(a, b) {
         return a + b;
       }, 0);
       return {
         kind: "scale",
-        counts: bars,
+        counts: bars2,
         total: seen,
         answered: seen,
         players: seen + 3,
@@ -20649,7 +22180,7 @@
       }
     }
     function authorInspector(insp, question, context) {
-      const { el, game, boardSettingLink, questionOps } = context;
+      const { el: el2, game, boardSettingLink, questionOps } = context;
       var boardHint = game.style === "knowledgeflip" ? "Keywords stay visible — there is no study timer. Learners choose a card, explain aloud, then you reveal and claim (+1). Edit each keyword in the rail; the preview shows the shared board." : game.style === "memoryflip" ? "Pairs become a shared board in sets of up to eight. Study, then recall. One class collection — teacher checks each claim." : "Pairs become a shared board in sets of up to eight. Study, then recall with rotating turns. Play the game (or use presenter view) to run the board.";
       if (game.style !== "knowledgeflip") {
         var study = Number(game.questions[0].studySeconds) || 0;
@@ -20657,12 +22188,12 @@
           boardSettingLink("Study time", study ? study + " seconds" : "no study phase")
         );
       }
-      insp.appendChild(el("p", "hint", boardHint));
+      insp.appendChild(el2("p", "hint", boardHint));
       insp.appendChild(questionOps());
       return;
     }
     function authorSettings(body, context) {
-      const { UI, el, game, touched, drawRail, drawPreview, st, draw2 } = context;
+      const { UI, el: el2, game, touched, drawRail, drawPreview, st, draw2 } = context;
       var classOnly = game.style === "memoryflip";
       body.appendChild(
         UI.field(
@@ -20729,7 +22260,7 @@
         );
       }
       body.appendChild(
-        el(
+        el2(
           "p",
           "hint",
           game.style === "knowledgeflip" ? "No study phase. Open the board → choose a keyword → explain → reveal → claim. Collection scores stay on this board; they do not feed the live quiz leaderboard." : "Each accepted claim collects one card. The board shows collection scores and recognises ties. Learners answer aloud; the teacher controls the board or uses presenter view. These collection scores are local to this playthrough and do not change the live quiz leaderboard."
@@ -21438,12 +22969,12 @@
       );
     }
     function authorInspector(insp, question, context) {
-      const { el, game, boardSettingLink, questionOps } = context;
+      const { el: el2, game, boardSettingLink, questionOps } = context;
       var size = Number(question.gridSize) || 3;
       insp.appendChild(boardSettingLink("Card size", size + " × " + size));
-      insp.appendChild(el("p", "hint", poolNote(size, game)));
+      insp.appendChild(el2("p", "hint", poolNote(size, game)));
       insp.appendChild(
-        el(
+        el2(
           "p",
           "hint",
           "Every team is dealt a different card from these terms, so the pool wants more terms than a card has squares. There is no countdown and no points: you call a definition, a team explains the term, and you mark the square. Play the game (or use presenter view) to run it."
@@ -21453,7 +22984,7 @@
       return;
     }
     function authorSettings(body, context) {
-      const { SF, UI, el, game, touched, drawRail, drawPreview, st, draw2 } = context;
+      const { SF, UI, el: el2, game, touched, drawRail, drawPreview, st, draw2 } = context;
       body.appendChild(
         UI.field(
           "Play as",
@@ -21524,7 +23055,7 @@
         )
       );
       body.appendChild(
-        el(
+        el2(
           "p",
           "hint",
           "No timer and no points: a row, column or diagonal wins. Each term is called once, so a square nobody could explain is gone. Claims are recorded in the session report as a spoken round, credited to the team — not to a learner, because a spoken answer has no name on it."
@@ -21830,9 +23361,9 @@
       );
     }
     function authorInspector(insp, question, context) {
-      const { el, questionOps } = context;
+      const { el: el2, questionOps } = context;
       insp.appendChild(
-        el(
+        el2(
           "p",
           "hint",
           "The whole set is one worksheet (3–10 pairs). Learners write on paper during the quiz clock — no notes, this is retrieval. Answers appear together for discussion. Incomplete rows stay on the board as gaps. No phone scoring and no points. Set the quiz length under Game settings."
@@ -21842,7 +23373,7 @@
       return;
     }
     function authorSettings(body, context) {
-      const { UI, el, touched, drawRail, drawPreview, st, draw2 } = context;
+      const { UI, el: el2, touched, drawRail, drawPreview, st, draw2 } = context;
       if ([120, 180, 240].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 180;
       body.appendChild(
         UI.field(
@@ -21866,7 +23397,7 @@
         )
       );
       body.appendChild(
-        el(
+        el2(
           "p",
           "hint",
           "Use 3–10 question–answer pairs. No scoreboard and no phone answers. The class writes on paper (no notes), then you reveal and discuss. A reveal leaves a session-report trace — not phone scores."
@@ -22119,13 +23650,13 @@
       );
     }
     function authorInspector(insp, question, context) {
-      const { SF, el, game, boardSettingLink, questionOps } = context;
+      const { SF, el: el2, game, boardSettingLink, questionOps } = context;
       insp.appendChild(
         boardSettingLink("Target score", String(target(game)))
       );
-      insp.appendChild(el("p", "hint", bowlNote(game, SF)));
+      insp.appendChild(el2("p", "hint", bowlNote(game, SF)));
       insp.appendChild(
-        el(
+        el2(
           "p",
           "hint",
           "This question is one cell. Questions sharing a category and a value stack in the same cell and are asked one at a time. The answer is for you — it goes up only when you reveal it, and then you award the cell to whoever answered."
@@ -22135,7 +23666,7 @@
       return;
     }
     function authorSettings(body, context) {
-      const { SF, UI, el, game, touched, drawRail, drawPreview, st, draw2 } = context;
+      const { SF, UI, el: el2, game, touched, drawRail, drawPreview, st, draw2 } = context;
       body.appendChild(
         UI.field(
           "Play as",
@@ -22202,7 +23733,7 @@
         )
       );
       body.appendChild(
-        el(
+        el2(
           "p",
           "hint",
           "Cells are worth what they say and are spent whether or not anyone answers them, which is what makes reaching for the five hundred a decision. The board ends when it empties or someone reaches the target; ties are named. Awards are recorded in the session report as a spoken round, credited to the team."
@@ -23968,10 +25499,10 @@
       /** @type {import('../types.js').GameStyleKey} */
       gameOrStyle
     )) || "choice";
-    var format = gameObj && gameObj.format ? gameObj.format : "";
-    if (!format) {
+    var format2 = gameObj && gameObj.format ? gameObj.format : "";
+    if (!format2) {
       var mapped = formatStyle(style);
-      format = mapped || style;
+      format2 = mapped || style;
     }
     var theme = gameObj && gameObj.theme || /** @type {import('../types.js').ThemeKey} */
     (opts.theme || "midnight");
@@ -24002,7 +25533,7 @@
         return gameObj;
       }
     }
-    var pre = GAME_FORMAT_PRESETS[format] || GAME_FORMAT_PRESETS[style] || null;
+    var pre = GAME_FORMAT_PRESETS[format2] || GAME_FORMAT_PRESETS[style] || null;
     if (!pre) {
       for (var k in FORMAT_STYLE) {
         if (FORMAT_STYLE[k] === style && GAME_FORMAT_PRESETS[k]) {
@@ -24018,7 +25549,7 @@
     var eng = GAME_STYLES[targetStyle];
     var showcaseGame = makeGame(pre && pre.title || "Sample " + (eng ? eng.label : targetStyle), targetStyle);
     showcaseGame.theme = theme;
-    showcaseGame.format = format;
+    showcaseGame.format = format2;
     if (pre && pre.settings) {
       Object.assign(showcaseGame.settings, pre.settings);
     }
@@ -24716,8 +26247,8 @@
   function normalizeGame(raw) {
     if (!raw || typeof raw !== "object") return null;
     var rawStyle = GAME_STYLES[raw.style] ? raw.style : "choice";
-    var format = String(raw.format || "").slice(0, 40);
-    var mapped = formatStyle(format);
+    var format2 = String(raw.format || "").slice(0, 40);
+    var mapped = formatStyle(format2);
     var style = mapped || rawStyle;
     var remapped = !!(mapped && mapped !== rawStyle);
     var g = Object.assign(makeGame(void 0, style), raw);
@@ -24725,8 +26256,8 @@
     g.kind = "game";
     g.style = style;
     g.title = String(g.title || "Untitled game");
-    if (!format && isSpecialStyle(style) && FORMATS[style]) format = style;
-    g.format = format;
+    if (!format2 && isSpecialStyle(style) && FORMATS[style]) format2 = style;
+    g.format = format2;
     g.theme = resolveTheme(g.theme);
     g.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, g.theme);
     g.sourceDeckId = String(raw.sourceDeckId || "").slice(0, 80);
@@ -24736,7 +26267,7 @@
       settings.bowlTarget = oldFirst && oldFirst.targetScore;
     }
     g.settings = normalizeGameSettings(settings);
-    if (format === "time-traveler" && style === "slider" && rawStyle === "type" && Array.isArray(raw.questions)) {
+    if (format2 === "time-traveler" && style === "slider" && rawStyle === "type" && Array.isArray(raw.questions)) {
       raw = Object.assign({}, raw, { questions: raw.questions.map(healTimeTraveler) });
     }
     g.questions = (Array.isArray(raw.questions) ? raw.questions : []).map(function(q) {
@@ -25367,6 +26898,7 @@
     installCustom,
     installExplore,
     installExperiments,
+    installFigures,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,
