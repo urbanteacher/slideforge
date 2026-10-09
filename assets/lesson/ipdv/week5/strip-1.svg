@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#fbfaf8"/>
+  <text x="80" y="70" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2.6" fill="#c8102e">THE MECHANICS</text><text x="80" y="122" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="50" fill="#14181f">Every interaction is four boxes</text><text x="80" y="162" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#5a6572">The grammar of your guide (§5): input → parameter → predicate → visual response</text>
+  <g opacity="1">
+    <rect x="80" y="240" width="330" height="440" rx="16" fill="#fff" stroke="#c8102e" stroke-width="3.5"/>
+    <rect x="80" y="240" width="330" height="64" rx="16" fill="#c8102e"/><rect x="80" y="280" width="330" height="24" fill="#c8102e"/>
+    <text x="104" y="282" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2" fill="#fff">INPUT</text>
+    <text x="104" y="352" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="23" fill="#14181f">What does the reader do?</text>
+    <text x="104" y="420" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4" fill="#5a6572">IN THE HOVER EXAMPLE</text>
+    <text x="104" y="454" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#0c3354">pointer over a bubble</text>
+    <rect x="96" y="502" width="298" height="74" rx="8" fill="#f1eee8"/>
+    <text x="110" y="530" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="1.3" fill="#c8102e">IN ALTAIR</text>
+    <text x="110" y="562" font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#14181f" style="white-space:pre">on='pointerover'</text>
+    <path d="M418 460 h30 m-9 -9 l9 9 l-9 9" fill="none" stroke="#5a6572" stroke-width="3"/>
+  </g>
+  <g opacity="0.16">
+    <rect x="456" y="240" width="330" height="440" rx="16" fill="#fff" stroke="#0c3354" stroke-width="2"/>
+    <rect x="456" y="240" width="330" height="64" rx="16" fill="#0c3354"/><rect x="456" y="280" width="330" height="24" fill="#0c3354"/>
+    <text x="480" y="282" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2" fill="#fff">PARAMETER</text>
+    <text x="480" y="352" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="23" fill="#14181f">What does the chart store?</text>
+    <text x="480" y="420" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4" fill="#5a6572">IN THE HOVER EXAMPLE</text>
+    <text x="480" y="454" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#0c3354">which country it is</text>
+    <rect x="472" y="502" width="298" height="104" rx="8" fill="#f1eee8"/>
+    <text x="486" y="530" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="1.3" fill="#c8102e">IN ALTAIR</text>
+    <text x="486" y="562" font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#14181f" style="white-space:pre">hover = alt.selection_point(</text><text x="486" y="592" font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#14181f" style="white-space:pre">  fields=['country'])</text>
+    <path d="M794 460 h30 m-9 -9 l9 9 l-9 9" fill="none" stroke="#5a6572" stroke-width="3"/>
+  </g>
+  <g opacity="0.16">
+    <rect x="832" y="240" width="330" height="440" rx="16" fill="#fff" stroke="#0c3354" stroke-width="2"/>
+    <rect x="832" y="240" width="330" height="64" rx="16" fill="#0c3354"/><rect x="832" y="280" width="330" height="24" fill="#0c3354"/>
+    <text x="856" y="282" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2" fill="#fff">PREDICATE</text>
+    <text x="856" y="352" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="23" fill="#14181f">What does it test?</text>
+    <text x="856" y="420" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4" fill="#5a6572">IN THE HOVER EXAMPLE</text>
+    <text x="856" y="454" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#0c3354">is this mark the stored one?</text>
+    <rect x="848" y="502" width="298" height="74" rx="8" fill="#f1eee8"/>
+    <text x="862" y="530" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="1.3" fill="#c8102e">IN ALTAIR</text>
+    <text x="862" y="562" font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#14181f" style="white-space:pre">alt.when(hover)</text>
+    <path d="M1170 460 h30 m-9 -9 l9 9 l-9 9" fill="none" stroke="#5a6572" stroke-width="3"/>
+  </g>
+  <g opacity="0.16">
+    <rect x="1208" y="240" width="330" height="440" rx="16" fill="#fff" stroke="#0c3354" stroke-width="2"/>
+    <rect x="1208" y="240" width="330" height="64" rx="16" fill="#0c3354"/><rect x="1208" y="280" width="330" height="24" fill="#0c3354"/>
+    <text x="1232" y="282" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2" fill="#fff">VISUAL RESPONSE</text>
+    <text x="1232" y="352" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="23" fill="#14181f">What changes on screen?</text>
+    <text x="1232" y="420" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4" fill="#5a6572">IN THE HOVER EXAMPLE</text>
+    <text x="1232" y="454" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#0c3354">it turns red; the rest grey</text>
+    <rect x="1224" y="502" width="298" height="104" rx="8" fill="#f1eee8"/>
+    <text x="1238" y="530" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="1.3" fill="#c8102e">IN ALTAIR</text>
+    <text x="1238" y="562" font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#14181f" style="white-space:pre">.then(alt.value('red'))</text><text x="1238" y="592" font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="15" fill="#14181f" style="white-space:pre">.otherwise(alt.value('grey'))</text>
+    
+  </g>
+  <text x="80" y="760" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#5a6572">Today, every interaction we meet gets this strip. Only the input changes: hover, click, legend, brush, slider.</text>
+</svg>
