@@ -565,8 +565,19 @@
     SF.Shell.register(studioView('game', 'quiz', 'Games'));
     SF.Shell.register(studioView('plan', 'activities', 'Activities'));
     document.documentElement.classList.add('lab-engine');
-    /* The lesson the address asked for. */
-    var asked = askedLesson(askedKey);
+    /* The lesson the address asked for. A lab deck the app ships as a file
+       (js/lab-decks.js) opens as written; anything else is built from SF.LESSONS. */
+    var shipped = askedKey && SF.LAB_DECKS ? SF.LAB_DECKS[askedKey] : null;
+    if (shipped) {
+      fetch(shipped, { cache: 'no-cache' })
+        .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+        .then(function (d) { open(d); })
+        .catch(function () { SF.toast('That lesson could not be loaded.'); });
+      try {
+        if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
+      } catch (e) {}
+    }
+    var asked = shipped ? null : askedLesson(askedKey);
     if (asked) {
       open(JSON.parse(JSON.stringify(asked)));
       try {
