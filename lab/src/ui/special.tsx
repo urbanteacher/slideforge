@@ -254,6 +254,8 @@ type Fig = { src: string; caption?: string; source?: string };
 type Callout = { label: string; note: string };
 type Stat = { value: string; label: string };
 type Bar = { label: string; value: number };
+type Step = { head: string; body: string };
+type Partner = { src: string; caption: string };
 
 /** Edit what a slide design was built from, then build it again in place. */
 export function RecipePanel() {
@@ -398,6 +400,54 @@ export function RecipePanel() {
         <Row label="Button"><Input value={str('action')} onChange={(v) => put('action', v)} placeholder="The call to action" /></Row>
         <Row label="Contact"><Input value={str('contact')} onChange={(v) => put('contact', v)} /></Row>
         <Row label="Outlined word"><Input value={str('word')} onChange={(v) => put('word', v)} placeholder="Optional, along the foot" /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-steps') {
+    const steps = (args.steps as Step[]) ?? [];
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="Title"><Input value={str('title')} onChange={(v) => put('title', v)} /></Row>
+        <List noun="step" items={steps} max={5} onChange={(v) => put('steps', v)} make={() => ({ head: 'A step', body: '' })}
+          render={(x, set) => (
+            <>
+              <Input value={x.head} onChange={(v) => set({ ...x, head: v })} placeholder="The step, in a few words" />
+              <Area rows={2} value={x.body} onChange={(v) => set({ ...x, body: v })} placeholder="One line about it" />
+            </>
+          )} />
+        <PictureTile src={str('src')} onChange={(v) => put('src', v)} />
+        <Row label="Caption"><Input value={str('caption')} onChange={(v) => put('caption', v)} placeholder="Optional, under the picture" /></Row>
+        <Row label="Picture sits"><Select value={str('side') || 'right'} options={[{ value: 'right', label: 'On the right' }, { value: 'left', label: 'On the left' }]} onChange={(v) => put('side', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-logos') {
+    const partners = (args.partners as Partner[]) ?? [];
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="Title"><Input value={str('title')} onChange={(v) => put('title', v)} /></Row>
+        <List noun="partner" items={partners} max={6} onChange={(v) => put('partners', v)} make={() => ({ src: '', caption: '' })}
+          render={(x, set) => (
+            <>
+              <PictureTile src={x.src} onChange={(v) => set({ ...x, src: v })} />
+              <Area rows={2} value={x.caption} onChange={(v) => set({ ...x, caption: v })} placeholder="Who they are and what they brought" />
+            </>
+          )} />
+        <Row label="Line after"><Input value={str('line')} onChange={(v) => put('line', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-showcase') {
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="Title"><Input value={str('title')} onChange={(v) => put('title', v)} /></Row>
+        <PictureTile src={str('src')} label="Screenshot" onChange={(v) => put('src', v)} />
+        <Row label="Number"><Input value={str('big')} onChange={(v) => put('big', v)} placeholder="Optional; counts up" /></Row>
+        <Area rows={2} value={str('bigLabel')} onChange={(v) => put('bigLabel', v)} placeholder="What the number counts" />
+        <div className="desc">A few lines about it, one a line.</div>
+        <Area rows={3} value={str('points')} onChange={(v) => put('points', v)} />
+        <Row label="Address"><Input value={str('url')} onChange={(v) => put('url', v)} placeholder="example.com" /></Row>
+        <Row label="Built with"><Input value={str('built')} onChange={(v) => put('built', v)} placeholder="Python · pandas · Three.js" /></Row>
       </>
     );
   }

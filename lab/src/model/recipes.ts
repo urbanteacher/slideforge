@@ -1,7 +1,7 @@
 import { isBackdrop } from './backdrop';
 import { chartCalloutSlide, exploreSlide, framedPictureSlide, gallerySlide, slideStyle, themeOf, LAYOUT_STYLES } from './layouts';
 import type { Deck, Slide } from './types';
-import { barsSlide, closingSlide, heroSlide, numbersSlide, type BarsArgs, type ClosingArgs, type HeroArgs, type NumbersArgs } from './storyDesigns';
+import { barsSlide, closingSlide, heroSlide, logosSlide, numbersSlide, showcaseSlide, stepsSlide, type BarsArgs, type ClosingArgs, type HeroArgs, type LogosArgs, type NumbersArgs, type ShowcaseArgs, type StepsArgs } from './storyDesigns';
 
 /*
  * Slide designs made of several layers (Explore, Flip to facts, the gallery pile, chart callouts)
@@ -19,8 +19,11 @@ const BUILD: Record<string, (st: ReturnType<typeof slideStyle>, a: Args) => Slid
   'story-hero': (st, a) => heroSlide(st, a as unknown as HeroArgs),
   'story-bars': (st, a) => barsSlide(st, a as unknown as BarsArgs),
   'story-closing': (st, a) => closingSlide(st, a as unknown as ClosingArgs),
+  'story-steps': (st, a) => stepsSlide(st, a as unknown as StepsArgs),
+  'story-logos': (st, a) => logosSlide(st, a as unknown as LogosArgs),
+  'story-showcase': (st, a) => showcaseSlide(st, a as unknown as ShowcaseArgs),
 };
-export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 'Flip to facts', gallery: 'Gallery', callouts: 'Chart callouts', 'story-numbers': 'Big-number row', 'story-hero': 'Photo hero', 'story-bars': 'Comparison bars', 'story-closing': 'Closing question' };
+export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 'Flip to facts', gallery: 'Gallery', callouts: 'Chart callouts', 'story-numbers': 'Big-number row', 'story-hero': 'Photo hero', 'story-bars': 'Comparison bars', 'story-closing': 'Closing question', 'story-steps': 'Steps and a picture', 'story-logos': 'Logo wall', 'story-showcase': 'App showcase' };
 
 /** Build a slide's design again from new arguments, in place. */
 export function rebuildSlide(d: Deck, slideId: string, args: Args) {

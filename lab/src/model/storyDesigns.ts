@@ -197,11 +197,122 @@ export function closingSlide(st: LayoutStyle, a: ClosingArgs): Slide {
   return s;
 }
 
+// ─── Numbered steps and a picture ───────────────────────────────────────────
+
+export interface Step { head: string; body: string }
+export interface StepsArgs { kicker: string; title: string; steps: Step[]; src: string; caption: string; side: 'right' | 'left' }
+export const STEPS_EXAMPLE: StepsArgs = {
+  kicker: 'The kit', title: 'Three parts. One big idea.',
+  steps: [
+    { head: 'Sense', body: 'Gas and particulate-matter sensors on an Arduino, with a screen showing pollution live.' },
+    { head: 'Collect', body: 'A Raspberry Pi gathers every reading, ready to be queried.' },
+    { head: 'Tell the story', body: 'Students build their own data views and apps, and share what they find.' },
+  ],
+  src: '/assets/air-pollution/kit-labelled.jpg', caption: '', side: 'right',
+};
+
+/** Two to five numbered steps down one side, each a head and a line, the numbers in the theme's colour
+ *  set; a framed picture on the other side. The steps arrive one after another. */
+export function stepsSlide(st: LayoutStyle, a: StepsArgs): Slide {
+  const steps = (a.steps ?? []).filter((x) => String(x.head ?? '').trim()).slice(0, 5);
+  const n = Math.max(1, steps.length), right = a.side !== 'left';
+  const tx = right ? L : 1000, px = right ? 1000 : L, colW = 800;
+  const tones = [st.accent, st.accent2 ?? st.accent, st.ink, st.muted, st.accent];
+  const layers: Layer[] = [];
+  if (a.kicker?.trim()) layers.push(text('Kicker', a.kicker, { x: tx, y: 140, w: colW, h: 40, rot: 0 }, { font: st.body, weight: '600', size: 28, color: st.accent, tracking: 0.2, uppercase: true }, rise(0)));
+  layers.push(text('Heading', a.title || ' ', { x: tx, y: 190, w: colW, h: 190, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 80, color: st.ink, tracking: -0.025, lineHeight: 1.04 }, rise(0.1)));
+  const top = 420, rowH = Math.min(180, 520 / n);
+  steps.forEach((x, i) => {
+    const y = top + i * rowH, d = 0.3 + i * 0.18, c = tones[i % tones.length];
+    layers.push(shape(`Step ${i + 1} disc`, { x: tx, y, w: 80, h: 80, rot: 0 }, { shape: 'ellipse', fill: c, label: String(i + 1), labelColor: deep(st), labelSize: 40, labelFont: st.body, labelWeight: '700' }, { type: 'pop', duration: 0.6, delay: d, easing: 'backOut' }));
+    layers.push(text(`Step ${i + 1}`, x.head, { x: tx + 112, y: y - 2, w: colW - 112, h: 52, rot: 0 }, { font: st.body, weight: '700', size: 42, color: st.ink }, rise(d)));
+    if (x.body?.trim()) layers.push(text(`Step ${i + 1} line`, x.body, { x: tx + 112, y: y + 50, w: colW - 112, h: rowH - 60, rot: 0 }, { font: st.body, weight: '400', size: 28, color: st.muted, lineHeight: 1.3 }, rise(d + 0.1)));
+  });
+  if (a.src) {
+    layers.push(shape('Frame', { x: px, y: 160, w: 800, h: 620, rot: 0 }, { fill: '#ffffff', radius: 32 }, { type: right ? 'slideLeft' : 'slideRight', duration: 1, delay: 0.2, easing: 'expoOut' }));
+    layers.push(createLayer('image', { name: 'Picture', box: { x: px, y: 160, w: 800, h: 620, rot: 0 }, params: { src: a.src, fit: 'cover', radius: 32, tone: 'light' }, anim: { type: right ? 'slideLeft' : 'slideRight', duration: 1, delay: 0.2, easing: 'expoOut' } }));
+  }
+  if (a.caption?.trim()) layers.push(text('Caption', a.caption, { x: px, y: 805, w: 800, h: 70, rot: 0 }, { font: st.body, weight: '400', size: 26, color: st.muted, lineHeight: 1.25 }, fade(0.8)));
+  const s = storySlide(st, 'Steps and a picture', layers);
+  s.recipe = { kind: 'story-steps', args: { ...a, steps } as unknown as Record<string, unknown> };
+  return s;
+}
+
+// ─── Logo wall ──────────────────────────────────────────────────────────────
+
+export interface Partner { src: string; caption: string }
+export interface LogosArgs { kicker: string; title: string; partners: Partner[]; line: string }
+export const LOGOS_EXAMPLE: LogosArgs = {
+  kicker: 'Partners', title: 'It took a village',
+  partners: [
+    { src: '/assets/air-pollution/logos/city-heights-e-act-academy.png', caption: 'City Heights E-ACT Academy: where students built it' },
+    { src: '/assets/air-pollution/logos/e-act.png', caption: 'E-ACT: the academy trust behind the school' },
+    { src: '/assets/air-pollution/logos/james-dyson-foundation.png', caption: 'James Dyson Foundation: engineering workshops' },
+    { src: '/assets/air-pollution/logos/bcs.png', caption: 'BCS: Climate Champions and the Barefoot project' },
+  ],
+  line: 'A school, a trust, a foundation and a profession, around one local problem.',
+};
+
+/** Two to six partners, each logo on a white card so its own colours stay true, with a line about what
+ *  they brought; one line after them all. The cards arrive left to right. */
+export function logosSlide(st: LayoutStyle, a: LogosArgs): Slide {
+  const ps = (a.partners ?? []).filter((x) => x.src || String(x.caption ?? '').trim()).slice(0, 6);
+  const n = Math.max(1, ps.length), gap = 60, cw = (W - gap * (n - 1)) / n, ch = Math.min(300, cw * 0.8);
+  const layers: Layer[] = [];
+  if (a.kicker?.trim()) layers.push(text('Kicker', a.kicker, { x: L, y: 140, w: W, h: 40, rot: 0 }, { font: st.body, weight: '600', size: 28, color: st.accent, tracking: 0.2, uppercase: true }, rise(0)));
+  layers.push(text('Heading', a.title || ' ', { x: L, y: 190, w: W, h: 100, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 88, color: st.ink, tracking: -0.025, lineHeight: 1.04 }, rise(0.1)));
+  ps.forEach((x, i) => {
+    const cx = L + i * (cw + gap), d = 0.3 + i * 0.15, pad = Math.round(ch * 0.15);
+    layers.push(shape(`Card ${i + 1}`, { x: cx, y: 380, w: cw, h: ch, rot: 0 }, { fill: '#ffffff', radius: 28 }, rise(d)));
+    if (x.src) layers.push(createLayer('image', { name: `Logo ${i + 1}`, box: { x: cx + pad, y: 380 + pad, w: cw - 2 * pad, h: ch - 2 * pad, rot: 0 }, params: { src: x.src, fit: 'contain', tone: 'light' }, anim: rise(d) }));
+    if (x.caption?.trim()) layers.push(text(`Caption ${i + 1}`, x.caption, { x: cx, y: 380 + ch + 28, w: cw, h: 100, rot: 0 }, { font: st.body, weight: '400', size: 28, color: st.muted, lineHeight: 1.25 }, fade(d + 0.2)));
+  });
+  if (a.line?.trim()) layers.push(text('Line', a.line, { x: L, y: 880, w: W, h: 60, rot: 0 }, { font: st.body, weight: '700', size: 40, color: st.accent2 ?? st.accent }, rise(1)));
+  const s = storySlide(st, 'Logo wall', layers);
+  s.recipe = { kind: 'story-logos', args: { ...a, partners: ps } as unknown as Record<string, unknown> };
+  return s;
+}
+
+// ─── App showcase ───────────────────────────────────────────────────────────
+
+export interface ShowcaseArgs { kicker: string; title: string; src: string; big: string; bigLabel: string; points: string; url: string; built: string }
+export const SHOWCASE_EXAMPLE: ShowcaseArgs = {
+  kicker: 'The next level · Outdoors', title: 'London Air: from live sensors to health',
+  src: '/assets/air-pollution/app-london-3d-crop.jpg', big: '72', bigLabel: 'monitoring sites across London, read live',
+  points: 'NO₂ · PM10 · PM2.5 · O₃ · SO₂\nSource → pollutant → health, borough by borough', url: 'london-air-data.vercel.app', built: 'Three.js · Claude · Python',
+};
+
+/** A tool or app shown off: its screenshot framed large, a number that counts up and what it counts,
+ *  a few lines about it, its address, and what it was built with along the foot. */
+export function showcaseSlide(st: LayoutStyle, a: ShowcaseArgs): Slide {
+  const layers: Layer[] = [];
+  if (a.kicker?.trim()) layers.push(text('Kicker', a.kicker, { x: L, y: 130, w: W, h: 40, rot: 0 }, { font: st.body, weight: '600', size: 28, color: st.accent2 ?? st.accent, tracking: 0.2, uppercase: true }, rise(0)));
+  layers.push(text('Heading', a.title || ' ', { x: L, y: 180, w: W, h: 100, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 76, color: st.ink, tracking: -0.025, lineHeight: 1.04 }, rise(0.1)));
+  if (a.src) {
+    layers.push(shape('Frame', { x: L, y: 310, w: 1180, h: 620, rot: 0 }, { fill: st.panel, radius: 24 }, rise(0.3)));
+    layers.push(createLayer('image', { name: 'Screenshot', box: { x: L + 12, y: 322, w: 1156, h: 596, rot: 0 }, params: { src: a.src, fit: 'contain', radius: 16, tone: 'light' }, anim: rise(0.3) }));
+  }
+  const rx = 1380, rw = 420;
+  if (a.big?.trim()) {
+    layers.push(text('Number', a.big, { x: rx, y: 310, w: rw, h: 150, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 140, color: st.accent, tracking: -0.04, lineHeight: 1 }, count(0.5, 'withSlide')));
+    layers.push(text('Number label', a.bigLabel ?? '', { x: rx, y: 465, w: rw, h: 90, rot: 0 }, { font: st.body, weight: '400', size: 30, color: st.muted, lineHeight: 1.25 }, fade(0.7)));
+  }
+  if (a.points?.trim()) layers.push(text('Points', a.points, { x: rx, y: 580, w: rw, h: 220, rot: 0 }, { font: st.body, weight: '700', size: 30, color: st.ink, lineHeight: 1.35 }, rise(0.8)));
+  if (a.url?.trim()) layers.push(text('Address', a.url, { x: rx, y: 840, w: rw, h: 44, rot: 0 }, { font: st.body, weight: '700', size: 30, color: st.ink, underline: true }, fade(1)));
+  if (a.built?.trim()) layers.push(text('Built with', `BUILT WITH  ·  ${a.built}`, { x: L, y: 960, w: W, h: 40, rot: 0 }, { font: st.body, weight: '700', size: 24, color: st.muted, tracking: 0.12 }, fade(1.1)));
+  const s = storySlide(st, 'App showcase', layers);
+  s.recipe = { kind: 'story-showcase', args: { ...a } as unknown as Record<string, unknown> };
+  return s;
+}
+
 /** The Story designs for the Slide designs panel, in the deck's style. */
 export function storyDesigns(st: LayoutStyle): SlideDesign[] {
   return [
     { id: 'story-hero', name: 'Photo hero', group: STORY_GROUP, blurb: 'A picture across the whole slide, slowly closing in, with a fade and a huge two-part line: the turn in a story.', slide: heroSlide(st, HERO_EXAMPLE) },
     { id: 'story-numbers', name: 'Big-number row', group: STORY_GROUP, blurb: 'Two to four big numbers that count up, each with what it counts; one per click, or all with the slide. Edit them in the Slide panel.', slide: numbersSlide(st, NUMBERS_EXAMPLE) },
+    { id: 'story-steps', name: 'Steps and a picture', group: STORY_GROUP, blurb: 'Two to five numbered steps beside a framed picture, arriving one after another.', slide: stepsSlide(st, STEPS_EXAMPLE) },
+    { id: 'story-logos', name: 'Logo wall', group: STORY_GROUP, blurb: 'Two to six partners, each logo on a white card with what they brought, and a line after them all.', slide: logosSlide(st, LOGOS_EXAMPLE) },
+    { id: 'story-showcase', name: 'App showcase', group: STORY_GROUP, blurb: 'A tool shown off: its screenshot framed large, a number that counts up, a few lines, its address and what it was built with.', slide: showcaseSlide(st, SHOWCASE_EXAMPLE) },
     { id: 'story-bars', name: 'Comparison bars', group: STORY_GROUP, blurb: 'Up to six bars that wipe in to their values, beside a card with one or two numbers: two sides of one argument.', slide: barsSlide(st, BARS_EXAMPLE) },
     { id: 'story-closing', name: 'Closing question', group: STORY_GROUP, blurb: 'End on a question: two big lines, a tag and the when-and-where, a call to action as a button, and an outlined word along the foot.', slide: closingSlide(st, CLOSING_EXAMPLE) },
   ];
