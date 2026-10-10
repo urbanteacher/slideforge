@@ -253,6 +253,7 @@ type Spot = { x: number; y: number; zoom?: number; title: string; body?: string 
 type Fig = { src: string; caption?: string; source?: string };
 type Callout = { label: string; note: string };
 type Stat = { value: string; label: string };
+type Bar = { label: string; value: number };
 
 /** Edit what a slide design was built from, then build it again in place. */
 export function RecipePanel() {
@@ -348,6 +349,55 @@ export function RecipePanel() {
         <Row label="Takeaway"><Input value={str('takeaway')} onChange={(v) => put('takeaway', v)} placeholder="Optional line after the numbers" /></Row>
         <Row label="Source"><Input value={str('source')} onChange={(v) => put('source', v)} placeholder="Where the numbers come from" /></Row>
         <Row label="Numbers arrive"><Select value={str('reveal') || 'click'} options={[{ value: 'click', label: 'One per click' }, { value: 'slide', label: 'With the slide' }]} onChange={(v) => put('reveal', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-hero') {
+    body = (
+      <>
+        <PictureTile src={str('src')} onChange={(v) => put('src', v)} />
+        <Row label="First line"><Input value={str('line1')} onChange={(v) => put('line1', v)} /></Row>
+        <Row label="Big line"><Input value={str('line2')} onChange={(v) => put('line2', v)} placeholder="The biggest words, in the accent" /></Row>
+        <Row label="Line under"><Input value={str('sub')} onChange={(v) => put('sub', v)} placeholder="Optional sentence" /></Row>
+        <Row label="Credit"><Input value={str('credit')} onChange={(v) => put('credit', v)} placeholder="Photo: …" /></Row>
+        <Row label="Words sit"><Select value={str('side') || 'left'} options={[{ value: 'left', label: 'On the left' }, { value: 'bottom', label: 'Along the bottom' }]} onChange={(v) => put('side', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-bars') {
+    const bars = (args.bars as Bar[]) ?? [];
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="Title"><Input value={str('title')} onChange={(v) => put('title', v)} /></Row>
+        <Row label="Bars title"><Input value={str('barsTitle')} onChange={(v) => put('barsTitle', v)} /></Row>
+        <List noun="bar" items={bars} max={6} onChange={(v) => put('bars', v)} make={() => ({ label: 'Group', value: 10 })}
+          render={(b, set) => (
+            <>
+              <Input value={b.label} onChange={(v) => set({ ...b, label: v })} placeholder="What the bar is" />
+              <Row label="Value"><Scrub value={Number(b.value) || 0} min={0} max={1000} step={1} decimals={0} onChange={(v) => set({ ...b, value: v })} /></Row>
+            </>
+          )} />
+        <Row label="Unit"><Input value={str('unit')} onChange={(v) => put('unit', v)} placeholder="%, people, hours…" /></Row>
+        <Row label="Under the bars"><Input value={str('barsNote')} onChange={(v) => put('barsNote', v)} placeholder="Who and when" /></Row>
+        <Row label="Card title"><Input value={str('cardTitle')} onChange={(v) => put('cardTitle', v)} /></Row>
+        <Row label="Card number"><Input value={str('big')} onChange={(v) => put('big', v)} /></Row>
+        <Area rows={2} value={str('bigLabel')} onChange={(v) => put('bigLabel', v)} placeholder="What the card number counts" />
+        <Row label="Second number"><Input value={str('big2')} onChange={(v) => put('big2', v)} placeholder="Optional" /></Row>
+        <Area rows={2} value={str('big2Label')} onChange={(v) => put('big2Label', v)} placeholder="What it counts" />
+        <Row label="Takeaway"><Input value={str('takeaway')} onChange={(v) => put('takeaway', v)} placeholder="Optional; arrives on a click" /></Row>
+        <Row label="Source"><Input value={str('source')} onChange={(v) => put('source', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-closing') {
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="First line"><Input value={str('line1')} onChange={(v) => put('line1', v)} /></Row>
+        <Row label="Second line"><Input value={str('line2')} onChange={(v) => put('line2', v)} placeholder="In the accent" /></Row>
+        <Row label="Tag"><Input value={str('tag')} onChange={(v) => put('tag', v)} placeholder="Optional label" /></Row>
+        <Row label="When and where"><Input value={str('detail')} onChange={(v) => put('detail', v)} /></Row>
+        <Row label="Button"><Input value={str('action')} onChange={(v) => put('action', v)} placeholder="The call to action" /></Row>
+        <Row label="Contact"><Input value={str('contact')} onChange={(v) => put('contact', v)} /></Row>
+        <Row label="Outlined word"><Input value={str('word')} onChange={(v) => put('word', v)} placeholder="Optional, along the foot" /></Row>
       </>
     );
   }

@@ -1,7 +1,7 @@
 import { isBackdrop } from './backdrop';
 import { chartCalloutSlide, exploreSlide, framedPictureSlide, gallerySlide, slideStyle, themeOf, LAYOUT_STYLES } from './layouts';
 import type { Deck, Slide } from './types';
-import { numbersSlide, type NumbersArgs } from './storyDesigns';
+import { barsSlide, closingSlide, heroSlide, numbersSlide, type BarsArgs, type ClosingArgs, type HeroArgs, type NumbersArgs } from './storyDesigns';
 
 /*
  * Slide designs made of several layers (Explore, Flip to facts, the gallery pile, chart callouts)
@@ -16,8 +16,11 @@ const BUILD: Record<string, (st: ReturnType<typeof slideStyle>, a: Args) => Slid
   gallery: (st, a) => gallerySlide(st, String(a.title ?? ''), (a.figs as never) ?? [], String(a.frame ?? '4:3'), a.cap === 'plain' ? 'plain' : 'bar', a.fit === 'cover' ? 'cover' : 'contain'),
   callouts: (st, a) => chartCalloutSlide(st, String(a.title ?? ''), String(a.data ?? ''), String(a.source ?? ''), (a.callouts as never) ?? []),
   'story-numbers': (st, a) => numbersSlide(st, a as unknown as NumbersArgs),
+  'story-hero': (st, a) => heroSlide(st, a as unknown as HeroArgs),
+  'story-bars': (st, a) => barsSlide(st, a as unknown as BarsArgs),
+  'story-closing': (st, a) => closingSlide(st, a as unknown as ClosingArgs),
 };
-export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 'Flip to facts', gallery: 'Gallery', callouts: 'Chart callouts', 'story-numbers': 'Big-number row' };
+export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 'Flip to facts', gallery: 'Gallery', callouts: 'Chart callouts', 'story-numbers': 'Big-number row', 'story-hero': 'Photo hero', 'story-bars': 'Comparison bars', 'story-closing': 'Closing question' };
 
 /** Build a slide's design again from new arguments, in place. */
 export function rebuildSlide(d: Deck, slideId: string, args: Args) {

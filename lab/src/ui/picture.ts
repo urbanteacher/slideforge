@@ -160,15 +160,18 @@ export function addFade(imgId: string, side: FadeSide) {
     all: { box: { ...b }, params: { gradient: false, fill: ink, fillOpacity: 0.7 } },
   };
   const { box, params } = spec[side];
-  const fade = createLayer('shape', {
+  // A see-through gradient draws lighter than its stops, so a side fade is laid twice: the words' side
+  // reads properly dark and the far side stays clear. All over is one even shade.
+  const make = () => createLayer('shape', {
     name: 'Fade for text',
     params: { shape: 'rect', radius: Number(img.params.radius ?? 0), strokeWidth: 0, ...params } as never,
-    box,
+    box: { ...box },
     anim: { ...img.anim },
   });
+  const fades = side === 'all' ? [make()] : [make(), make()];
   st.mutate((d) => {
     const s = d.slides.find((x) => x.id === slide.id)!;
-    s.layers.splice(s.layers.findIndex((l) => l.id === imgId) + 1, 0, fade);
+    s.layers.splice(s.layers.findIndex((l) => l.id === imgId) + 1, 0, ...fades);
   });
-  useStore.getState().set({ selectedId: fade.id });
+  useStore.getState().set({ selectedId: fades[fades.length - 1].id });
 }
