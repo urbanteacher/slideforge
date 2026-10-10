@@ -252,6 +252,7 @@ export function SpecialPanel({ layer }: { layer: Layer }) {
 type Spot = { x: number; y: number; zoom?: number; title: string; body?: string };
 type Fig = { src: string; caption?: string; source?: string };
 type Callout = { label: string; note: string };
+type Stat = { value: string; label: string };
 
 /** Edit what a slide design was built from, then build it again in place. */
 export function RecipePanel() {
@@ -328,6 +329,25 @@ export function RecipePanel() {
               <Area rows={2} value={c.note} onChange={(v) => set({ ...c, note: v })} placeholder="What to notice there" />
             </>
           )} />
+      </>
+    );
+  } else if (recipe.kind === 'story-numbers') {
+    const stats = (args.stats as Stat[]) ?? [];
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} placeholder="A short label above the title" /></Row>
+        <Row label="Title"><Input value={str('title')} onChange={(v) => put('title', v)} /></Row>
+        <Row label="Intro"><Input value={str('intro')} onChange={(v) => put('intro', v)} placeholder="Optional line before the numbers" /></Row>
+        <List noun="number" items={stats} max={4} onChange={(v) => put('stats', v)} make={() => ({ value: '10%', label: 'What it counts' })}
+          render={(st, set) => (
+            <>
+              <Input value={st.value} onChange={(v) => set({ ...st, value: v })} placeholder="The number: 3.1m, 4×, 120,000" />
+              <Area rows={2} value={st.label} onChange={(v) => set({ ...st, label: v })} placeholder="What it counts" />
+            </>
+          )} />
+        <Row label="Takeaway"><Input value={str('takeaway')} onChange={(v) => put('takeaway', v)} placeholder="Optional line after the numbers" /></Row>
+        <Row label="Source"><Input value={str('source')} onChange={(v) => put('source', v)} placeholder="Where the numbers come from" /></Row>
+        <Row label="Numbers arrive"><Select value={str('reveal') || 'click'} options={[{ value: 'click', label: 'One per click' }, { value: 'slide', label: 'With the slide' }]} onChange={(v) => put('reveal', v)} /></Row>
       </>
     );
   }

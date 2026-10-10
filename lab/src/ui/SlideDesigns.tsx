@@ -37,13 +37,14 @@ export function SlideDesignsPanel() {
   useEffect(() => {
     let live = true;
     // Two sources: the Layout bank's feature slides and the Motion lab's, merged into one set of groups.
-    Promise.all([import('../model/fromSlideForge'), import('../assets/layout-bank.json'), import('../model/motionLab'), import('../assets/motion-lab.json'), import('../model/campaignDesigns')]).then(([m, data, ml, mdata, cd]) => {
+    Promise.all([import('../model/fromSlideForge'), import('../assets/layout-bank.json'), import('../model/motionLab'), import('../assets/motion-lab.json'), import('../model/campaignDesigns'), import('../model/storyDesigns')]).then(([m, data, ml, mdata, cd, sd]) => {
       const bank = (data as { default: SFDeck }).default ?? (data as unknown as SFDeck);
       const motion = (mdata as { default: MotionLabData }).default ?? (mdata as unknown as MotionLabData);
       const groups = [...m.SLIDE_DESIGN_GROUPS.slice(0, 1), 'Charts that move', ...m.SLIDE_DESIGN_GROUPS.slice(1), ...ml.MOTION_DESIGN_GROUPS.filter((g) => g !== 'Charts that move')];
       // The campaigns' own slides come after the originals, in their own look whatever the deck's theme.
       // (Games and activities are not here: they are chosen in Browse, in the Quiz studio and Activities.)
-      if (live) setLib({ make: (s) => [...cd.campaignDesigns(), ...m.slideDesigns(bank, s), ...ml.motionDesigns(motion, s)], groups: [...new Set([...cd.CAMPAIGN_GROUPS, ...groups])] });
+      // The Story designs (docs/story-designs-plan.md) lead: editorial slides, in the deck's own style.
+      if (live) setLib({ make: (s) => [...sd.storyDesigns(s), ...cd.campaignDesigns(), ...m.slideDesigns(bank, s), ...ml.motionDesigns(motion, s)], groups: [...new Set([sd.STORY_GROUP, ...cd.CAMPAIGN_GROUPS, ...groups])] });
     });
     return () => { live = false; };
   }, []);
