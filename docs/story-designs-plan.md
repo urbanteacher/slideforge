@@ -62,6 +62,8 @@ Story designs in the Slide designs panel, each built from the style guide, each 
 
 **Start with the big-number row.** It is the most reused, and it proves the recipe round trip.
 
+- [x] **Big-number row** (`lab/src/model/storyDesigns.ts` `numbersSlide`, recipe `story-numbers`): in Slide designs → Story designs. It takes two to four numbers, each with its label, plus kicker, title, intro, takeaway and source. Numbers arrive one per click or with the slide. Edit everything in the Slide panel and press Update the slide.
+
 ### SD-03 · Media, featured decks and Publish (L)
 
 - **A media library:** pictures stored once on the server, behind a persistent disk or object storage, and referenced by URL. That keeps decks small and shareable.
@@ -74,4 +76,5 @@ Fill the Story designs from a brief and a set of photos, through the existing AI
 
 ## Change log
 
+- **10 October 2026:** SD-02's first design, the big-number row, is built and checked in the theme and through the Slide panel.
 - **10 October 2026:** Plan written from the Air Pollution Project deck. SD-01's first three items done: the Frontiers palette, Fade for text, and the Angle help.
