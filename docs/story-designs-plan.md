@@ -67,6 +67,10 @@ Story designs in the Slide designs panel, each built from the style guide, each 
 - [x] **Photo hero** (`heroSlide`, recipe `story-hero`): picture, fade on the left or along the bottom, a two-part line, a line under it, and a credit.
 - [x] **Comparison bars** (`barsSlide`, recipe `story-bars`): up to six bars beside a card with one or two numbers, plus a takeaway and source.
 - [x] **Closing question** (`closingSlide`, recipe `story-closing`): two lines, a tag, the when-and-where, a button, a contact and an outlined word.
+- [x] **Steps and a picture** (`stepsSlide`, `story-steps`) · **Logo wall** (`logosSlide`, `story-logos`) · **App showcase** (`showcaseSlide`, `story-showcase`).
+- [x] **Cover with portrait** (`coverSlide`, `story-cover`) · **Number and why** (`whySlide`, `story-why`) · **Photo mosaic** (`mosaicSlide`, `story-mosaic`) · **Two routes** (`routesSlide`, `story-routes`) · **Wall of phrases** (`wallSlide`, `story-wall`).
+
+**SD-02 is complete:** all twelve designs are built, theme-aware and editable.
 
 ### SD-03 · Media, featured decks and Publish (L)
 
@@ -80,6 +84,7 @@ Fill the Story designs from a brief and a set of photos, through the existing AI
 
 ## Change log
 
+- **10 October 2026:** SD-02 complete: steps and a picture, logo wall, app showcase, cover with portrait, number and why, photo mosaic, two routes and wall of phrases, each checked in the Frontiers theme. The worked example deck now carries the Frontiers Series style guide, and its photo fades are laid twice.
 - **10 October 2026:** SD-02: photo hero, comparison bars and closing question built and checked in the Frontiers theme, and the closing question edited through the Slide panel. Found that see-through shape gradients draw light (noted under SD-01).
 - **10 October 2026:** SD-02's first design, the big-number row, is built and checked in the theme and through the Slide panel.
 - **10 October 2026:** Plan written from the Air Pollution Project deck. SD-01's first three items done: the Frontiers palette, Fade for text, and the Angle help.
