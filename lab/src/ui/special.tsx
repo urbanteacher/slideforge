@@ -256,6 +256,7 @@ type Stat = { value: string; label: string };
 type Bar = { label: string; value: number };
 type Step = { head: string; body: string };
 type Partner = { src: string; caption: string };
+type Reason = { head: string; body: string };
 
 /** Edit what a slide design was built from, then build it again in place. */
 export function RecipePanel() {
@@ -448,6 +449,82 @@ export function RecipePanel() {
         <Area rows={3} value={str('points')} onChange={(v) => put('points', v)} />
         <Row label="Address"><Input value={str('url')} onChange={(v) => put('url', v)} placeholder="example.com" /></Row>
         <Row label="Built with"><Input value={str('built')} onChange={(v) => put('built', v)} placeholder="Python · pandas · Three.js" /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-why') {
+    const reasons = (args.reasons as Reason[]) ?? [];
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="Title"><Input value={str('title')} onChange={(v) => put('title', v)} /></Row>
+        <Row label="Number"><Input value={str('big')} onChange={(v) => put('big', v)} placeholder="Counts up" /></Row>
+        <Area rows={2} value={str('bigLabel')} onChange={(v) => put('bigLabel', v)} placeholder="What it counts" />
+        <Row label="Second number"><Input value={str('second')} onChange={(v) => put('second', v)} placeholder="Optional; on a click" /></Row>
+        <Area rows={2} value={str('secondLabel')} onChange={(v) => put('secondLabel', v)} placeholder="What it counts" />
+        <Row label="Card title"><Input value={str('cardTitle')} onChange={(v) => put('cardTitle', v)} placeholder="Why?" /></Row>
+        <List noun="reason" items={reasons} max={3} onChange={(v) => put('reasons', v)} make={() => ({ head: 'A reason', body: '' })}
+          render={(r, set) => (
+            <>
+              <Input value={r.head} onChange={(v) => set({ ...r, head: v })} placeholder="The reason, in a few words" />
+              <Area rows={2} value={r.body} onChange={(v) => set({ ...r, body: v })} placeholder="One line about it" />
+            </>
+          )} />
+        <Row label="Source"><Input value={str('source')} onChange={(v) => put('source', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-mosaic') {
+    const srcs = ((args.srcs as string[]) ?? []).concat(['', '', '', '']).slice(0, 4);
+    const setSrc = (i: number, v: string) => put('srcs', srcs.map((x, j) => (j === i ? v : x)));
+    body = (
+      <>
+        {['The large picture', 'Top middle', 'Top right', 'Bottom right'].map((label, i) => <PictureTile key={i} src={srcs[i]} label={label} onChange={(v) => setSrc(i, v)} />)}
+        <Row label="First line"><Input value={str('line1')} onChange={(v) => put('line1', v)} /></Row>
+        <Row label="Big line"><Input value={str('line2')} onChange={(v) => put('line2', v)} placeholder="In the accent" /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-routes') {
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="Title"><Input value={str('title')} onChange={(v) => put('title', v)} /></Row>
+        <Row label="Number"><Input value={str('big')} onChange={(v) => put('big', v)} /></Row>
+        <Area rows={2} value={str('bigLabel')} onChange={(v) => put('bigLabel', v)} placeholder="What it counts" />
+        <Row label="Second"><Input value={str('stat2')} onChange={(v) => put('stat2', v)} /></Row>
+        <Area rows={2} value={str('stat2Label')} onChange={(v) => put('stat2Label', v)} placeholder="What it counts" />
+        <Row label="Third"><Input value={str('stat3')} onChange={(v) => put('stat3', v)} /></Row>
+        <Area rows={2} value={str('stat3Label')} onChange={(v) => put('stat3Label', v)} placeholder="What it counts" />
+        <Row label="Diagram title"><Input value={str('cardTitle')} onChange={(v) => put('cardTitle', v)} /></Row>
+        <Row label="From"><Input value={str('from')} onChange={(v) => put('from', v)} placeholder="Home" /></Row>
+        <Row label="To"><Input value={str('to')} onChange={(v) => put('to', v)} placeholder="School" /></Row>
+        <Row label="Worse route"><Input value={str('worse')} onChange={(v) => put('worse', v)} /></Row>
+        <Row label="Better route"><Input value={str('better')} onChange={(v) => put('better', v)} /></Row>
+        <Row label="Source"><Input value={str('source')} onChange={(v) => put('source', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-wall') {
+    body = (
+      <>
+        <div className="desc">The wall: every phrase, one after another.</div>
+        <Area rows={6} value={str('phrases')} onChange={(v) => put('phrases', v)} />
+        <div className="desc">Up to four stamped over it, one a line.</div>
+        <Area rows={4} value={str('highlights')} onChange={(v) => put('highlights', v)} />
+        <Row label="Caption"><Input value={str('caption')} onChange={(v) => put('caption', v)} /></Row>
+      </>
+    );
+  } else if (recipe.kind === 'story-cover') {
+    const logos = ((args.logos as string[]) ?? []).concat(['', '', '']).slice(0, 3);
+    const setLogo = (i: number, v: string) => put('logos', logos.map((x, j) => (j === i ? v : x)));
+    body = (
+      <>
+        <Row label="Kicker"><Input value={str('kicker')} onChange={(v) => put('kicker', v)} /></Row>
+        <Row label="Title"><Input value={str('line1')} onChange={(v) => put('line1', v)} /></Row>
+        <Row label="Title, second line"><Input value={str('line2')} onChange={(v) => put('line2', v)} placeholder="In the accent" /></Row>
+        <Row label="About the talk"><Input value={str('sub')} onChange={(v) => put('sub', v)} /></Row>
+        <Row label="Speaker"><Input value={str('name')} onChange={(v) => put('name', v)} /></Row>
+        <Row label="Role"><Input value={str('role')} onChange={(v) => put('role', v)} /></Row>
+        <PictureTile src={str('src')} label="Portrait (a cut-out PNG)" onChange={(v) => put('src', v)} />
+        <Row label="Outlined word"><Input value={str('word')} onChange={(v) => put('word', v)} placeholder="Optional, behind the portrait" /></Row>
+        {['Logo 1', 'Logo 2', 'Logo 3'].map((label, i) => <PictureTile key={i} src={logos[i]} label={label} onChange={(v) => setLogo(i, v)} />)}
       </>
     );
   }

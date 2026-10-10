@@ -1,7 +1,7 @@
 import { isBackdrop } from './backdrop';
 import { chartCalloutSlide, exploreSlide, framedPictureSlide, gallerySlide, slideStyle, themeOf, LAYOUT_STYLES } from './layouts';
 import type { Deck, Slide } from './types';
-import { barsSlide, closingSlide, heroSlide, logosSlide, numbersSlide, showcaseSlide, stepsSlide, type BarsArgs, type ClosingArgs, type HeroArgs, type LogosArgs, type NumbersArgs, type ShowcaseArgs, type StepsArgs } from './storyDesigns';
+import { barsSlide, closingSlide, coverSlide, heroSlide, logosSlide, mosaicSlide, numbersSlide, routesSlide, showcaseSlide, stepsSlide, wallSlide, whySlide, type BarsArgs, type ClosingArgs, type CoverArgs, type HeroArgs, type LogosArgs, type MosaicArgs, type NumbersArgs, type RoutesArgs, type ShowcaseArgs, type StepsArgs, type WallArgs, type WhyArgs } from './storyDesigns';
 
 /*
  * Slide designs made of several layers (Explore, Flip to facts, the gallery pile, chart callouts)
@@ -22,8 +22,13 @@ const BUILD: Record<string, (st: ReturnType<typeof slideStyle>, a: Args) => Slid
   'story-steps': (st, a) => stepsSlide(st, a as unknown as StepsArgs),
   'story-logos': (st, a) => logosSlide(st, a as unknown as LogosArgs),
   'story-showcase': (st, a) => showcaseSlide(st, a as unknown as ShowcaseArgs),
+  'story-why': (st, a) => whySlide(st, a as unknown as WhyArgs),
+  'story-mosaic': (st, a) => mosaicSlide(st, a as unknown as MosaicArgs),
+  'story-routes': (st, a) => routesSlide(st, a as unknown as RoutesArgs),
+  'story-wall': (st, a) => wallSlide(st, a as unknown as WallArgs),
+  'story-cover': (st, a) => coverSlide(st, a as unknown as CoverArgs),
 };
-export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 'Flip to facts', gallery: 'Gallery', callouts: 'Chart callouts', 'story-numbers': 'Big-number row', 'story-hero': 'Photo hero', 'story-bars': 'Comparison bars', 'story-closing': 'Closing question', 'story-steps': 'Steps and a picture', 'story-logos': 'Logo wall', 'story-showcase': 'App showcase' };
+export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 'Flip to facts', gallery: 'Gallery', callouts: 'Chart callouts', 'story-numbers': 'Big-number row', 'story-hero': 'Photo hero', 'story-bars': 'Comparison bars', 'story-closing': 'Closing question', 'story-steps': 'Steps and a picture', 'story-logos': 'Logo wall', 'story-showcase': 'App showcase', 'story-why': 'Number and why', 'story-mosaic': 'Photo mosaic', 'story-routes': 'Two routes', 'story-wall': 'Wall of phrases', 'story-cover': 'Cover with portrait' };
 
 /** Build a slide's design again from new arguments, in place. */
 export function rebuildSlide(d: Deck, slideId: string, args: Args) {
