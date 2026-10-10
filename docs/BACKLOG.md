@@ -57,7 +57,7 @@ order.
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
 | ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: what M5 still owes, then the lesson features the feature map still marks Missing (feedback settings and the phone preview first). Games and activities, from M0, come after | L · months | In progress · M5 done early; live stage, converter's feedback and timers, and the three studios' frame done (25 Sep) · games and activities last |
 | SD-01 | [Story designs, quick wins](story-designs-plan.md): Frontiers palette, Fade for text on pictures, Angle help done; one gradient convention (needs a migration) and header-and-footer in the worked example open | S | In progress · 10 Oct 2026 |
-| SD-02 | [The Story design set](story-designs-plan.md): twelve editorial designs from the Air Pollution deck, theme-aware and rebuilt from `slide.recipe`. Big-number row done; eleven to go | M–L | In progress · 10 Oct 2026 |
+| SD-02 | [The Story design set](story-designs-plan.md): twelve editorial designs from the Air Pollution deck, theme-aware and rebuilt from `slide.recipe`. Big-number row, photo hero, comparison bars and closing question done; eight to go | M–L | In progress · 10 Oct 2026 |
 | SD-03 | [Media library, featured decks and Publish](story-designs-plan.md) | L | To do · needs a hosting decision |
 | SD-04 | [AI story builder over the Story designs](story-designs-plan.md) | M | To do · after SD-02 |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -783,7 +783,7 @@ The plan is [story-designs-plan.md](story-designs-plan.md). The worked example i
 | ID | Item | Status |
 |---|---|---|
 | SD-01 | Quick wins: Frontiers Series palette; Fade for text (Left, Right, Bottom, All over) on a picture's Design tab; the shape gradient Angle says which way it runs. Open: one gradient convention for shapes and text (migration), the worked example on the deck's header and footer | In progress · 10 Oct 2026 |
-| SD-02 | The Story design set: cover, photo hero, big-number row, number and why card, comparison bars, photo mosaic, steps and picture, logo wall, app showcase, two routes, wall of phrases, closing question. Done: the big-number row (Slide designs → Story designs; edited in the Slide panel) | In progress · 10 Oct 2026 |
+| SD-02 | The Story design set: cover, photo hero, big-number row, number and why card, comparison bars, photo mosaic, steps and picture, logo wall, app showcase, two routes, wall of phrases, closing question. Done: big-number row, photo hero, comparison bars, closing question (Slide designs → Story designs; edited in the Slide panel) | In progress · 10 Oct 2026 |
 | SD-03 | Pictures stored on the server, featured lab decks in the Library, a Publish action | To do |
 | SD-04 | An AI story builder that fills the Story designs from a brief and photos, sources kept in the notes | To do |
 

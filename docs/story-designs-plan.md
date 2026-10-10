@@ -40,6 +40,7 @@ So SlideForge can **show** this kind of slide but cannot yet help anyone **make*
 - [x] **Say which way a shape gradient runs.** The Angle control's help now gives the convention and points to Fade for text.
 - [ ] **One gradient convention.** Move shapes to the CSS convention that text uses. This needs a migration for saved decks, and an update to every built-in design that sets a shape angle (`layouts.ts`, `designs/`, `ukbtDeck.ts`). It is held back on purpose: it changes how existing decks draw.
 - [ ] **The worked example uses the deck's header and footer** instead of its own footer layers.
+- [ ] **A see-through shape gradient draws lighter than its stops.** A fade from 94% to 0% reads at roughly a third of that over a photo, in the editor and in Present. Until the engine is fixed (`engine/raster.ts` `rasterShape` and how the stage composites it), the photo hero and Fade for text lay a side fade twice.
 
 ### SD-02 · The Story design set (M–L)
 
@@ -63,6 +64,9 @@ Story designs in the Slide designs panel, each built from the style guide, each 
 **Start with the big-number row.** It is the most reused, and it proves the recipe round trip.
 
 - [x] **Big-number row** (`lab/src/model/storyDesigns.ts` `numbersSlide`, recipe `story-numbers`): in Slide designs → Story designs. It takes two to four numbers, each with its label, plus kicker, title, intro, takeaway and source. Numbers arrive one per click or with the slide. Edit everything in the Slide panel and press Update the slide.
+- [x] **Photo hero** (`heroSlide`, recipe `story-hero`): picture, fade on the left or along the bottom, a two-part line, a line under it, and a credit.
+- [x] **Comparison bars** (`barsSlide`, recipe `story-bars`): up to six bars beside a card with one or two numbers, plus a takeaway and source.
+- [x] **Closing question** (`closingSlide`, recipe `story-closing`): two lines, a tag, the when-and-where, a button, a contact and an outlined word.
 
 ### SD-03 · Media, featured decks and Publish (L)
 
@@ -76,5 +80,6 @@ Fill the Story designs from a brief and a set of photos, through the existing AI
 
 ## Change log
 
+- **10 October 2026:** SD-02: photo hero, comparison bars and closing question built and checked in the Frontiers theme, and the closing question edited through the Slide panel. Found that see-through shape gradients draw light (noted under SD-01).
 - **10 October 2026:** SD-02's first design, the big-number row, is built and checked in the theme and through the Slide panel.
 - **10 October 2026:** Plan written from the Air Pollution Project deck. SD-01's first three items done: the Frontiers palette, Fade for text, and the Angle help.
