@@ -18,6 +18,7 @@ list (GA-, RP-, TPS-) and the activities build list (AC-).
   - [game-activity-redesign.md](game-activity-redesign.md)
   - [ux-deep-dive.md](ux-deep-dive.md)
   - [lab-engine-plan.md](lab-engine-plan.md)
+  - [story-designs-plan.md](story-designs-plan.md)
 
 **Effort:** S = under half a day · M = one or two days · L = most of a week or more
 **Priority:** P0 fix now · P1 next · P2 worth doing · P3 when there is room
@@ -30,6 +31,7 @@ list (GA-, RP-, TPS-) and the activities build list (AC-).
 - **RP-** · the room pane
 - **TPS-** · Think-Pair-Share
 - **ENG-** · the lab as the engine
+- **SD-** · story designs: editorial slides anyone can build
 
 ---
 
@@ -54,6 +56,10 @@ order.
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
 | ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: what M5 still owes, then the lesson features the feature map still marks Missing (feedback settings and the phone preview first). Games and activities, from M0, come after | L · months | In progress · M5 done early; live stage, converter's feedback and timers, and the three studios' frame done (25 Sep) · games and activities last |
+| SD-01 | [Story designs, quick wins](story-designs-plan.md): Frontiers palette, Fade for text on pictures, Angle help done; one gradient convention (needs a migration) and header-and-footer in the worked example open | S | In progress · 10 Oct 2026 |
+| SD-02 | [The Story design set](story-designs-plan.md): twelve editorial designs from the Air Pollution deck, theme-aware and rebuilt from `slide.recipe`; big-number row first | M–L | To do |
+| SD-03 | [Media library, featured decks and Publish](story-designs-plan.md) | L | To do · needs a hosting decision |
+| SD-04 | [AI story builder over the Story designs](story-designs-plan.md) | M | To do · after SD-02 |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -770,6 +776,17 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-17 | Default slides move plainly: no blurred word motion or Blur in across the layouts, designs and the lab's originals; bullet lists build a point per click with the earlier points dimmed | Done · 26 Sep 2026 · `d8b981e` |
 | LAB-18 | Week 3 · Data Abstraction as a lesson, and ten chart-experiment kinds written once for both engines: a table melted wide to long, grouped and stacked bars into sorted totals, lines with a gap that drops into a derived balance, a 3D default to rescue, the pie's variants, unit charts counted into frequency | Done · 27 Sep 2026 · `39d9e95` `5a7167d` |
 
+## Story designs
+
+The plan is [story-designs-plan.md](story-designs-plan.md). The worked example is Mark Martin's Air Pollution Project deck (`assets/air-pollution/`, `?lesson=air-pollution-story`): 27 editorial slides in the lab's format, built by script, that nobody could yet build in the studio.
+
+| ID | Item | Status |
+|---|---|---|
+| SD-01 | Quick wins: Frontiers Series palette; Fade for text (Left, Right, Bottom, All over) on a picture's Design tab; the shape gradient Angle says which way it runs. Open: one gradient convention for shapes and text (migration), the worked example on the deck's header and footer | In progress · 10 Oct 2026 |
+| SD-02 | The Story design set: cover, photo hero, big-number row, number and why card, comparison bars, photo mosaic, steps and picture, logo wall, app showcase, two routes, wall of phrases, closing question | To do |
+| SD-03 | Pictures stored on the server, featured lab decks in the Library, a Publish action | To do |
+| SD-04 | An AI story builder that fills the Story designs from a brief and photos, sources kept in the notes | To do |
+
 ## The lab as the engine
 
 The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engine, with one deck format, one player, one live host and one registry. It runs from M0 (discovery) to M14 (deleting the classic game, activity and live code). M15, removing the classic Lesson studio, needs its own plan.
@@ -779,6 +796,10 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026; the lesson side next |
 
 ## Change log
+
+### 10 October 2026 — Story designs: the plan, and the quick wins
+
+- **SD-01 (part):** [story-designs-plan.md](story-designs-plan.md) records what the Air Pollution Project deck showed, and the plan from it. Done: a **Frontiers Series** palette under Campaigns (UKBT Black, Bright Blue leading, Green for Our Environment, the UKBT Institute and Black in Academia logos); **Fade for text** on a picture's Design tab, which lays an ordinary gradient shape over the picture in the slide's own dark ground; and the shape gradient's **Angle** help now gives its convention (0° left to right, 90° top to bottom), which differs from text gradients. Checked by building the lab (`npm --prefix lab run build:app`, typecheck clean), finding the palette in Colours & grounds, adding a Left fade to a photo slide and presenting it.
 
 ### 27 September 2026 — Week 3 and the new chart-experiment kinds
 
