@@ -13,7 +13,7 @@ import { layerOf, slideOf, useStore } from '../model/store';
 import type { BlendMode, ClickAction, Easing, EntranceType, HoverType, Layer, LoopType, ParamValue, TransitionType, Trigger } from '../model/types';
 import { ColorField, Row, Scrub, Section, Select, Toggle, newGesture } from './controls';
 import { KindIcon } from './icons';
-import { addCaption, applyFrame, captionsOf, setArrival, setCaptionClear, setCaptionPos, setCaptionStyle, type CaptionStyle } from './picture';
+import { addCaption, addFade, applyFrame, captionsOf, setArrival, setCaptionClear, setCaptionPos, setCaptionStyle, type CaptionStyle } from './picture';
 import { alignLayer, nextDirection, sequenceSize, tidySlide, tidyUp, type Edge } from './snap';
 import { buildSet, itemNoun, setBuildOf, type SetBuild } from './build';
 import { siblingsOf } from './order';
@@ -207,6 +207,13 @@ function LayerDesign({ layer, picture = false }: { layer: Layer; picture?: boole
           {['fit', 'border', 'borderColor', 'radius'].map((key) => k.params.find((d) => d.key === key))
             .filter((d): d is ParamDef => !!d && (!d.when || d.when(layer.params)))
             .map((d) => <ParamRow key={d.key} layer={layer} def={d} setParam={setParam} />)}
+          <Row label="Fade for text" info="Lays a gradient over the picture so words read on it: dark on the side the words sit on, clear on the other. It is an ordinary shape, so move or recolour it afterwards.">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {([['left', 'Left'], ['right', 'Right'], ['bottom', 'Bottom'], ['all', 'All over']] as const).map(([side, label]) => (
+                <button key={side} className="btn-soft" onClick={() => addFade(layer.id, side)}>{label}</button>
+              ))}
+            </div>
+          </Row>
         </Section>
       )}
       <Section title="Layer">

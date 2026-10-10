@@ -137,3 +137,38 @@ export function setArrival(imgId: string, on: 'slide' | 'click') {
     if (on === 'click' && img.anim.type === 'none') { img.anim.type = 'fade'; img.anim.duration = Math.max(0.6, img.anim.duration); }
   });
 }
+
+export type FadeSide = 'left' | 'right' | 'bottom' | 'all';
+
+/** "Fade for text": a shape laid just above the picture, darkening the side the words will sit on —
+ *  the slide's own ground where it is dark, near-black where it is light — and clear on the other side.
+ *  An ordinary gradient shape, so it can be moved, resized or recoloured afterwards. */
+export function addFade(imgId: string, side: FadeSide) {
+  const st = useStore.getState();
+  const slide = slideOf(st);
+  const img = slide.layers.find((l) => l.id === imgId);
+  if (!img?.box) return;
+  const b = img.box;
+  const bg = /^#[0-9a-f]{6}$/i.test(slide.background || '') ? slide.background : '#111111';
+  const lum = (h: string) => { const n = parseInt(h.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
+  const ink = lum(bg) < 0.35 ? bg : '#111111';
+  // Shape gradients count 0° as left to right and 90° as top to bottom (engine/raster.ts rasterShape).
+  const spec: Record<FadeSide, { box: Box; params: Record<string, unknown> }> = {
+    left: { box: { x: b.x, y: b.y, w: Math.round(b.w * 0.7), h: b.h, rot: 0 }, params: { gradient: true, fill: ink, fillOpacity: 0.94, fill2: ink, fill2Opacity: 0, angle: 0 } },
+    right: { box: { x: b.x + Math.round(b.w * 0.3), y: b.y, w: Math.round(b.w * 0.7), h: b.h, rot: 0 }, params: { gradient: true, fill: ink, fillOpacity: 0, fill2: ink, fill2Opacity: 0.94, angle: 0 } },
+    bottom: { box: { x: b.x, y: b.y + Math.round(b.h * 0.4), w: b.w, h: Math.round(b.h * 0.6), rot: 0 }, params: { gradient: true, fill: ink, fillOpacity: 0, fill2: ink, fill2Opacity: 0.94, angle: 90 } },
+    all: { box: { ...b }, params: { gradient: false, fill: ink, fillOpacity: 0.7 } },
+  };
+  const { box, params } = spec[side];
+  const fade = createLayer('shape', {
+    name: 'Fade for text',
+    params: { shape: 'rect', radius: Number(img.params.radius ?? 0), strokeWidth: 0, ...params } as never,
+    box,
+    anim: { ...img.anim },
+  });
+  st.mutate((d) => {
+    const s = d.slides.find((x) => x.id === slide.id)!;
+    s.layers.splice(s.layers.findIndex((l) => l.id === imgId) + 1, 0, fade);
+  });
+  useStore.getState().set({ selectedId: fade.id });
+}

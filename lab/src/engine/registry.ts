@@ -162,7 +162,7 @@ const KINDS: KindDef[] = [
       { key: 'gradient', label: 'Gradient', type: 'bool', default: false, group: 'Fill' },
       { key: 'fill2', label: 'Fill 2', type: 'color', default: '#ffb199', group: 'Fill', when: (p) => !!p.gradient },
       { key: 'fill2Opacity', label: 'Fill 2 opacity', type: 'number', min: 0, max: 1, step: 0.01, default: 1, group: 'Fill', decimals: 2, when: (p) => !!p.gradient, info: 'Fade the gradient out to nothing for a scrim under a caption.' },
-      { key: 'angle', label: 'Angle', type: 'number', min: 0, max: 360, step: 1, default: 135, group: 'Fill', unit: '°', decimals: 0, when: (p) => !!p.gradient },
+      { key: 'angle', label: 'Angle', type: 'number', min: 0, max: 360, step: 1, default: 135, group: 'Fill', unit: '°', decimals: 0, info: 'Fill to Fill 2: 0° runs left to right, 90° top to bottom, 180° right to left. (A text gradient counts from the top instead: 90° is left to right there.) For words over a photo, the picture’s Fade for text sets this for you.', when: (p) => !!p.gradient },
       { key: 'stroke', label: 'Stroke', type: 'color', default: '#111111', group: 'Stroke' },
       { key: 'strokeWidth', label: 'Width', type: 'number', min: 0, max: 60, step: 0.5, default: 0, group: 'Stroke', unit: 'px', decimals: 1 },
       { key: 'strokeOpacity', label: 'Stroke opacity', type: 'number', min: 0, max: 1, step: 0.01, default: 1, group: 'Stroke', decimals: 2, when: (p) => Number(p.strokeWidth) > 0 },

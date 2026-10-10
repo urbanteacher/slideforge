@@ -4,6 +4,7 @@ import { contrast, luminance } from './combos';
 import ukbtWordmark from '../assets/ukbt/ukbt-wordmark.png?inline';
 import ukbtMark from '../assets/ukbt/ukbt-mark.png?inline';
 import ukbtInstitute from '../assets/ukbt/ukbt-institute.svg?inline';
+import blackInAcademia from '../assets/frontiers/black-in-academia.png?inline';
 import nulLogo from '../assets/nul/nu-london-logo.png?inline';
 import nulMonogram from '../assets/nul/nu-monogram.svg?raw';
 
@@ -113,6 +114,27 @@ const CAMPAIGNS: PalettePreset[] = [
     ],
     marks: [{ name: 'UKBT Institute logo', src: ukbtInstitute }, { name: 'UKBT mark', src: ukbtMark }],
     display: 'Uncut Sans', displayWeight: '700', body: 'Uncut Sans', hero: 'Alpha Lyrae',
+  },
+  {
+    // The Frontiers Series (UKBT Institute × Black in Academia): UKBT Black, with Bright Blue leading and
+    // Green for Our Environment. The worked example is the Air Pollution Project deck
+    // (assets/air-pollution/, ?lesson=air-pollution-story); docs/story-designs-plan.md says why.
+    id: 'frontiers', name: 'Frontiers Series', source: 'UKBT Institute × Black in Academia',
+    light: '#ffffff', dark: '#111111', loud: '#4abffd', loudInk: '#292c2f', accent2: '#cefd85',
+    working: { ground: '#292c2f', ink: '#ffffff' },
+    quiet: { ground: '#1b1d20', ink: '#ffffff' },
+    sets: [
+      { loud: '#4abffd', deep: '#cefd85' }, { loud: '#00c57f', deep: '#cefd85' }, { loud: '#cefd85', deep: '#00c57f' },
+      { loud: '#ff9667', deep: '#cefd85' }, { loud: '#b97bf7', deep: '#cefd85' },
+    ],
+    named: [
+      { name: 'ukbt black', value: '#292c2f' }, { name: 'frontiers deep', value: '#1b1d20' }, { name: 'bright blue', value: '#4abffd' },
+      { name: 'ukbt green', value: '#00c57f' }, { name: 'lime green', value: '#cefd85' }, { name: 'orange', value: '#ff9667' },
+      { name: 'purple', value: '#b97bf7' }, { name: 'white', value: '#ffffff' }, { name: 'card grey', value: '#33383d' },
+      { name: 'quiet grey', value: '#b9bec4' },
+    ],
+    marks: [{ name: 'UKBT Institute logo', src: ukbtInstitute }, { name: 'Black in Academia logo', src: blackInAcademia }],
+    display: 'Uncut Sans', displayWeight: '700', body: 'Uncut Sans',
   },
   {
     // css/aiad27.css: cream, ink and five brights with their deeps, set in Uncut Sans.
