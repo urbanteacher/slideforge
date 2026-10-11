@@ -131,7 +131,12 @@ test('a blank first visit, with the Library one click from the canvas', () => {
   /* A first visit opens the lab's blank lesson, not somebody else's lecture:
      only a ?lesson= link builds a lesson as the page starts. */
   assert.ok(!/makeLesson\('ipdv-intro'\)/.test(lab + runtime), 'the cold start must not land in somebody else’s lecture');
-  assert.match(lab, /var asked = askedLesson\(askedKey\);/);
+  /* Both routes a lesson opens by on load hang off the ?lesson= key: a lab deck
+     the app ships as a file (js/lab-decks.js), else a lesson built from SF.LESSONS. */
+  assert.match(lab, /var shipped = askedKey && SF\.LAB_DECKS \? SF\.LAB_DECKS\[askedKey\] : null;/,
+    'a shipped lab deck must open only when ?lesson= names it');
+  assert.match(lab, /var asked = (shipped \? null : )?askedLesson\(askedKey\);/);
+  assert.match(lab, /function askedLesson\(key\) \{\s*if \(!key \|\|/, 'askedLesson must build nothing without a key');
 
   /* And the templates are reachable without knowing they live under File. */
   assert.match(html, /id="btnLibraryOpen"[^>]*>[^<]*Library/);
