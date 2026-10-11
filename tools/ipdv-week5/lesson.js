@@ -77,6 +77,40 @@ function week5() {
     notes: 'Up as they arrive.\nThe promise for today: every technique, we see it in a real chart, name its mechanics, then build it in Altair. ' +
       'Students asked for exactly that: "how does that work in Altair, and what are the mechanics of building with tooltip?"' },
 
+  /* ======================================================== Hook */
+  pic('Starter: a static chart', 'starter-static.png',
+    '1 min. From the 2025 deck\'s starter. Leave it up for 20 seconds. ASK: "What is this chart telling you?"'),
+
+  clip('Starter: the same chart, moving', 'starter-animated.mp4',
+    '1 min. The animated Gapminder version. ASK: "Which one feels clearer? Which one keeps your attention longer? Why?" Take three answers, then: "Let\'s test that."', { transition: 'none' }),
+
+  { type: 'figure', figure: 'bubbles', title: 'Find the United Kingdom',
+    figureEyebrow: 'Before we start', figureAlt: 'A bubble chart of 187 countries, income per person against life expectancy in 2015, every bubble grey and unlabelled.',
+    figureData: W15(),
+    figureSteps: [
+      { caption: '187 countries. One of them is the United Kingdom. Hands up when you have found it.', clock: 'run' },
+      { caption: 'One hover. That card is a tooltip: details on demand.', point: 'United Kingdom', clock: 'stop' },
+      { caption: 'Now hover any country yourself. The chart answers whatever you ask it.', point: 'United Kingdom', clock: 'stop', colour: true, legend: true }
+    ],
+    notes: '2 min. LIVE: the clock starts when the slide arrives.\nASK: "Hands up when you have found the UK." Let it run 20–30 seconds.\n' +
+      'NEXT: a pointer glides to one bubble and its tooltip opens; the clock stops in red. SAY: "Same chart, one hover."\n' +
+      'NEXT: region colours. Hover a few countries (Qatar top right, Lesotho bottom, India, the big one in the middle). The card is drawn as Altair\'s tooltip looks in Jupyter.\n' +
+      'Data: vega_datasets gapminder-health-income.csv (Gapminder, 2015). Bubble area is population.' },
+
+  { type: 'video', title: 'The best stats you’ve ever seen', subtitle: 'Hans Rosling · TED, 2006',
+    video: 'https://www.youtube.com/watch?v=hVimVzgtD6w', videoAutoplay: false, design: { capStyle: 'none' },
+    notes: 'The full talk is about 20 minutes: play only the stretch where the bubbles move, a few minutes at most. Set its start and stop on this slide (Start at / Stop at) once you have picked them. It waits for a press: ask first, then press K or the play button in the bar to play and pause.\nASK before: "Watch what he can do that you couldn\'t on the last slide."\n' +
+      'ASK after, and write the answers up. Three come every time: HE COULD POINT, HE COULD PICK, IT MOVED. And it is the whole world. That is today\'s route.' },
+
+  { type: 'cards', title: 'What did he have that you didn’t?', progressive: true,
+    bullets: [
+      'He could point\tOne country, its numbers, when he wanted them. Details on demand: the tooltip.',
+      'He could pick\tOne country lit while the rest stayed as context. Selection, and views that answer each other.',
+      'It moved\tFifty years in a minute, and he could follow one country through them. Animation, and identity.',
+      'He knew his audience\tA room of non-specialists, one story at a time. Who it is for decides what it does.'
+    ],
+    notes: '1 min. Their answers, named. These become today\'s four stops, starting with the last: the audience. First, where today sits in the course. (His regions were places too: that is next lecture, maps.)' },
+
   { type: 'content', title: 'Before we start',
     bullets: [
       'Reading\tMunzner, Visualization Analysis and Design: 6.5–6.8 (rules of thumb) and Chapter 11 (manipulate view)',
@@ -133,39 +167,6 @@ function week5() {
     ], progressive: true,
     notes: '1 min. Outcome 2 is the one to repeat: every interaction we meet today gets the same four boxes.' },
 
-  /* ======================================================== Hook */
-  pic('Starter: a static chart', 'starter-static.png',
-    '1 min. From the 2025 deck\'s starter. Leave it up for 20 seconds. ASK: "What is this chart telling you?"'),
-  clip('Starter: the same chart, moving', 'starter-animated.mp4',
-    '1 min. The animated Gapminder version. ASK: "Which one feels clearer? Which one keeps your attention longer? Why?" Take three answers, then: "Let\'s test that."', { transition: 'none' }),
-
-  { type: 'figure', figure: 'bubbles', title: 'Find the United Kingdom',
-    figureEyebrow: 'Before we start', figureAlt: 'A bubble chart of 187 countries, income per person against life expectancy in 2015, every bubble grey and unlabelled.',
-    figureData: W15(),
-    figureSteps: [
-      { caption: '187 countries. One of them is the United Kingdom. Hands up when you have found it.', clock: 'run' },
-      { caption: 'One hover. That card is a tooltip: details on demand.', point: 'United Kingdom', clock: 'stop' },
-      { caption: 'Now hover any country yourself. The chart answers whatever you ask it.', point: 'United Kingdom', clock: 'stop', colour: true, legend: true }
-    ],
-    notes: '2 min. LIVE: the clock starts when the slide arrives.\nASK: "Hands up when you have found the UK." Let it run 20–30 seconds.\n' +
-      'NEXT: a pointer glides to one bubble and its tooltip opens; the clock stops in red. SAY: "Same chart, one hover."\n' +
-      'NEXT: region colours. Hover a few countries (Qatar top right, Lesotho bottom, India, the big one in the middle). The card is drawn as Altair\'s tooltip looks in Jupyter.\n' +
-      'Data: vega_datasets gapminder-health-income.csv (Gapminder, 2015). Bubble area is population.' },
-
-  { type: 'video', title: '200 Countries, 200 Years, 4 Minutes', subtitle: 'Hans Rosling · The Joy of Stats · BBC Four, 2010',
-    video: 'https://www.youtube.com/watch?v=jbkSRLYSojo', videoAutoplay: false, design: { capStyle: 'none' },
-    notes: '4 min, or stop at about 1:15 once the bubbles move. It waits for a press: ask first, then click the video to play.\nASK before: "Watch what he can do that you couldn\'t on the last slide."\n' +
-      'ASK after, and write the answers up. Three come every time: HE COULD POINT, HE COULD PICK, IT MOVED. And it is the whole world. That is today\'s route.' },
-
-  { type: 'cards', title: 'What did he have that you didn’t?', progressive: true,
-    bullets: [
-      'He could point\tOne country, its numbers, when he wanted them. Details on demand: the tooltip.',
-      'He could pick\tOne country lit while the rest stayed as context. Selection, and views that answer each other.',
-      'It moved\tFifty years in a minute, and he could follow one country through them. Animation, and identity.',
-      'He knew his audience\tA room of non-specialists, one story at a time. Who it is for decides what it does.'
-    ],
-    notes: '1 min. Their answers, named. These are today\'s four stops, starting with the last: the audience. (His regions were places too: that is next lecture, maps.)' },
-
   { type: 'journey', title: 'Today’s route', subtitle: 'Four stops, one question each', progressive: false,
     bullets: [
       'Audience\tWho is the chart for, and what will they ask?',
@@ -179,15 +180,6 @@ function week5() {
   /* ======================================================== ① Ask */
   section('Who is the chart for?', 'Part 1 · Audience', '20 s. Interaction is for a reader. Which reader, and which question?'),
 
-  { type: 'split', title: 'Why–Persona–Why', image: asset('persona-group.jpg'),
-    bullets: [
-      'Humanise data: abstract numbers feel relatable',
-      'Invoke empathy: the audience connects with the data',
-      'Communicate fast: a persona is grasped quicker than a raw chart',
-      'Make it memorable: in presentations, reports and stories'
-    ], progressive: true,
-    notes: '2 min. From the 2025 deck. WHY (purpose): personas are simplified, fictional but data-informed representations of user groups, customers or audiences.' },
-
   { type: 'split', title: 'A persona is a user, made specific', image: asset('persona-portrait.jpg'),
     bullets: [
       'Illustrate who the users are, and how they differ',
@@ -197,13 +189,14 @@ function week5() {
     ], progressive: true,
     notes: '2 min. Originally proposed to represent perceived users or customers; in practice often current, real ones (2025 deck). Creating personas: gather data, find segments, write a name, background and motivation, keep updating (2025 Week 5 PDF).' },
 
-  { type: 'compare', title: 'When a persona helps, and when it misleads', subtitle: 'Works for\tWatch out for', progressive: true,
+  { type: 'split', title: 'Why–Persona–Why', image: asset('persona-group.jpg'),
     bullets: [
-      'Purpose\tPersuasion and storytelling\tOversimplifying a whole group',
-      'Audience\tNon-technical readers\tStereotypes not grounded in data',
-      'Use\tAdvocacy and policy, e.g. public health\tExploratory analysis: better for communication than discovery'
-    ],
-    notes: '2 min. From the 2025 deck\'s "Why (effectiveness)". A persona is a design hypothesis to test, not evidence (guide §1).' },
+      'Humanise data: abstract numbers feel relatable',
+      'Invoke empathy: the audience connects with the data',
+      'Communicate fast: a persona is grasped quicker than a raw chart',
+      'Make it memorable: in presentations, reports and stories'
+    ], progressive: true,
+    notes: '2 min. From the 2025 deck. WHY (purpose): personas are simplified, fictional but data-informed representations of user groups, customers or audiences.' },
 
   { type: 'compare', title: 'One chart, two readers', subtitle: 'Amira · policy analyst\tSam · reading the news', progressive: true,
     bullets: [
@@ -216,6 +209,14 @@ function week5() {
     notes: '3 min. PERSONAS in use (Guide §1): a persona is a design hypothesis built from research, not evidence about a whole group. ' +
       'It ties to Munzner\'s domain level: who are the users? Interaction is only worth its cost if a reader needs to ask the chart something.\n' +
       'ASK: "Which of you is Sam? Which is Amira? What would you add for each?"' },
+
+  { type: 'compare', title: 'When a persona helps, and when it misleads', subtitle: 'Works for\tWatch out for', progressive: true,
+    bullets: [
+      'Purpose\tPersuasion and storytelling\tOversimplifying a whole group',
+      'Audience\tNon-technical readers\tStereotypes not grounded in data',
+      'Use\tAdvocacy and policy, e.g. public health\tExploratory analysis: better for communication than discovery'
+    ],
+    notes: '2 min. From the 2025 deck\'s "Why (effectiveness)". A persona is a design hypothesis to test, not evidence (guide §1).' },
 
   { type: 'content', title: 'Your turn: one persona, one chart', subtitle: 'Pairs · 3 minutes · Lab Task 1', progressive: true,
     bullets: [
@@ -248,6 +249,18 @@ function week5() {
      `${STRIP[2].key}: ${STRIP[2].ask} For each mark: is it the stored one? alt.when(hover).`,
      `${STRIP[3].key}: ${STRIP[3].ask} .then(...) for the marks that pass, .otherwise(...) for the rest.`,
      'All four. SAY: "Hover, click, legend, brush, slider: only the INPUT box changes. Learn the strip once."']),
+
+  { type: 'table', title: 'Seven things interaction lets a reader do', tableHeader: true,
+    body: 'Technique\tThe reader…\tFor example\tIn Altair\n' +
+      'Select\tmarks something as interesting\thighlight a country\tselection_point\n' +
+      'Explore\tshows something else\tpan and zoom\tbind=\'scales\'\n' +
+      'Reconfigure\tshows a different arrangement\tre-sort the bars\ta radio that changes the sort\n' +
+      'Encode\tshows a different representation\tswitch the measure\tbinding_select on a field\n' +
+      'Abstract / elaborate\tshows more or less detail\toverview + detail; a tooltip\ttooltip=, interval on x\n' +
+      'Filter\tshows something conditionally\tonly one region\ttransform_filter\n' +
+      'Connect\tshows related items\tbrushing and linking\tthe same selection in two charts',
+    notes: '3 min. The 2025 deck\'s list of core techniques. Its source is Yi, Kang, Stasko & Jacko (2007), "Toward a deeper understanding of the role of interaction in information visualization" ' +
+      '(the 2025 slide credited VAD 6.6–6.8; Munzner\'s own treatment is Chapter 11). Every row is in the guide: §5–13.' },
 
   /* ======================================================== ② Point */
   section('What belongs in a tooltip?', 'Part 2 · Point', '20 s. The students\' question: what are the mechanics of building with tooltip?'),
@@ -333,20 +346,13 @@ function week5() {
     ],
     notes: '2 min. The four cases from the 2025 Week 5 deck. Open one live. For each, ASK: "What did I do (input)? What changed (response)?"' },
 
-  { type: 'table', title: 'Seven things interaction lets a reader do', tableHeader: true,
-    body: 'Technique\tThe reader…\tFor example\tIn Altair\n' +
-      'Select\tmarks something as interesting\thighlight a country\tselection_point\n' +
-      'Explore\tshows something else\tpan and zoom\tbind=\'scales\'\n' +
-      'Reconfigure\tshows a different arrangement\tre-sort the bars\ta radio that changes the sort\n' +
-      'Encode\tshows a different representation\tswitch the measure\tbinding_select on a field\n' +
-      'Abstract / elaborate\tshows more or less detail\toverview + detail; a tooltip\ttooltip=, interval on x\n' +
-      'Filter\tshows something conditionally\tonly one region\ttransform_filter\n' +
-      'Connect\tshows related items\tbrushing and linking\tthe same selection in two charts',
-    notes: '3 min. The 2025 deck\'s list of core techniques. Its source is Yi, Kang, Stasko & Jacko (2007), "Toward a deeper understanding of the role of interaction in information visualization" ' +
-      '(the 2025 slide credited VAD 6.6–6.8; Munzner\'s own treatment is Chapter 11). Every row is in the guide: §5–13.' },
-
   clip('See it: selection', 'flourish-selection.mp4',
     '1 min. Flourish (flourish.studio/blog/animated-charts). Hover picks out one series and fades the rest: select, then elaborate. ASK: "Input? Parameter? Response?"'),
+
+  { type: 'code', title: 'You built a dynamic query in Week 1', language: 'python', typewrite: true,
+    code: "year = alt.selection_point(\n    name='year', fields=['year'], value=1955,\n    bind=alt.binding_range(min=1955, max=2005, step=5))\n\nalt.Chart(data.gapminder()).mark_circle().encode(\n    x='fertility:Q',\n    y='life_expect:Q',\n    size='pop:Q',\n    color='cluster:N',\n    tooltip=['country:N', 'year:O'],\n).add_params(year).transform_filter(year)",
+    notes: '2 min. From the Week 1 guide, §4 (Rosling with a year slider). INPUT the slider, PARAMETER the year, PREDICATE transform_filter keeps rows of that year, RESPONSE the frame. ' +
+      'A widget is a selection whose input is an HTML control: binding_range, binding_select, binding_radio, binding_checkbox (guide §12).' },
 
   { type: 'figure', figure: 'linked', title: 'Be the brush',
     figureEyebrow: 'See it, name it, build it', figureAlt: 'A scatter of countries beside a bar chart of countries per region; selections in the scatter filter the bars.',
@@ -375,12 +381,7 @@ function week5() {
       'Legend\tclick on the legend\tone region\talt.when(region)\topacity\n' +
       'Brush\tdrag\ta range of x and y\talt.when(brush) / transform_filter(brush)\tlit marks; filtered bars\n' +
       'Slider\tdrag a slider\ta number: the year\talt.datum.year == year\tthe frame shown',
-    notes: '2 min. The strip, as a table. Only the input column changes much. The slider row is next.' },
-
-  { type: 'code', title: 'You built a dynamic query in Week 1', language: 'python', typewrite: true,
-    code: "year = alt.selection_point(\n    name='year', fields=['year'], value=1955,\n    bind=alt.binding_range(min=1955, max=2005, step=5))\n\nalt.Chart(data.gapminder()).mark_circle().encode(\n    x='fertility:Q',\n    y='life_expect:Q',\n    size='pop:Q',\n    color='cluster:N',\n    tooltip=['country:N', 'year:O'],\n).add_params(year).transform_filter(year)",
-    notes: '2 min. From the Week 1 guide, §4 (Rosling with a year slider). INPUT the slider, PARAMETER the year, PREDICATE transform_filter keeps rows of that year, RESPONSE the frame. ' +
-      'A widget is a selection whose input is an HTML control: binding_range, binding_select, binding_radio, binding_checkbox (guide §12).' },
+    notes: '2 min. The strip, as a table. Only the input column changes much. The slider row is the Week 1 query from earlier: the same strip.' },
 
   { type: 'cards', title: 'Navigate: change where you are looking', progressive: true,
     bullets: [
@@ -419,12 +420,20 @@ function week5() {
 
   clip('See it: transitions', 'flourish-transitions.mp4',
     '1 min. Flourish. A chart moves from one state to the next: the same marks, re-arranged. The eye keeps hold of each line through the change.'),
+
   clip('See it: morphing', 'flourish-morph.mp4',
     '1 min. Flourish. Units regroup by category: morphing between layouts. Each dot is still the same item: object constancy, the idea in two slides.'),
 
   { type: 'video', title: 'Tweening: one state becomes the next', subtitle: 'German election results, transitioned',
     video: asset('german-elections-tweening.mp4'), videoAutoplay: true, design: { capStyle: 'none' },
     notes: '1 min. A transition between two states of the same data. Heer & Robertson (2007): staged transitions (one change at a time) are easier to follow than everything at once.' },
+
+  clip('See it: scrollytelling', 'flourish-scrolly.mp4',
+    '1 min. Flourish. The reader\'s scroll is the clock: each step of the story reveals the next state. Interaction and animation together: the reader controls the pace.'),
+
+  clip('See it: the bar chart race', 'flourish-race.mp4',
+    '1 min. A bar chart race: popular, and a good test. ASK: "What can you read here that you couldn\'t from a line chart? What can\'t you?" ' +
+    'You see rank changes; you lose the values and the comparison across years. Fine to present, poor to analyse.'),
 
   { type: 'video', title: 'Which one feels easier to follow?', subtitle: 'FT · Hurricane Milton, animated map (Observable: effective animation)',
     video: asset('ft-milton-map.mp4'), videoAutoplay: true, design: { capStyle: 'none' },
@@ -435,18 +444,27 @@ function week5() {
     figureEyebrow: 'Name the mechanics', figureAlt: 'The Gapminder chart played twice: jumping from frame to frame, then tweened smoothly.',
     figureData: MOTION(),
     figureSteps: [
-      { caption: 'Frames: one picture per five years, then a jump. This is a slider of years.', play: { from: 1955, to: 2005, seconds: 8 }, tween: false, trail: 'United Kingdom' },
-      { caption: 'Tweens: the in-between drawn too. The eye can follow each bubble.', play: { from: 1955, to: 2005, seconds: 8 }, trail: 'United Kingdom' }
+      { caption: 'Same data, same 50 years, played on one clock. Follow Iran, the red bubble, on both.', panels: 'frames-tweens', play: { from: 1955, to: 2005, seconds: 10 }, trail: 'Iran', label: true,
+        explain: [['Frames', 'One picture every 5 years.', 'Iran jumps, then waits.'], ['Tweens', 'The in-between positions', 'are drawn too: Iran glides.']] },
+      { caption: 'The dots are the data. The line is drawn between them: every point on it is invented.', panels: 'frames-tweens', trace: { from: 1955, to: 2005 }, trail: 'Iran', label: true, dim: true, measured: true,
+        explain: [['What was measured', 'One dot per measured year:', 'eleven dots, 1955 to 2005.'], ['What was drawn', 'The same eleven years (rings),', 'joined by an invented line.']] }
     ],
-    notes: '2 min. Altair alone gives FRAMES: a slider changes the year and the chart redraws (guide §18). Smooth TWEENS need interpolated positions and a timer: the guide\'s player (§19). ' +
-      'Be honest about which you are showing: a tween invents positions between the measured years.' },
+    notes: '2 min. Both charts run on one clock, so nobody has to remember the first while watching the second. Iran crosses the whole chart, 7 babies and 41 years to under 2 and 74.\n' +
+      'ASK while it plays: "Which one can you follow?" The right, because the eye tracks smooth motion; the left makes it find the bubble again after every jump.\n' +
+      'NEXT: the trails stand still. ASK: "Which one is the data?" The dots: Gapminder measured every fifth year. The line is a tween: it invents every position in between.\n' +
+      'Altair alone gives FRAMES: a slider changes the year and the chart redraws (guide §18). Smooth TWEENS need interpolated positions and a timer: the guide\'s player (§19). ' +
+      'Be honest about which you are showing.' },
 
   { type: 'figure', figure: 'motion', title: 'The UK became Bangladesh',
     figureEyebrow: 'Object constancy', figureAlt: 'Two animated charts side by side: without a key the red bubble jumps from the UK to Bangladesh, Pakistan, Japan and Nigeria; with key=country it stays the UK.',
     figureData: MOTION(),
     figureSteps: [
-      { caption: 'Two charts, one difference: the right has key=\'country:N\'. The red bubble starts as the UK in both.', panels: 'pair', year: 1955, trail: 'United Kingdom' },
-      { caption: 'Play. Left: marks are matched to rows by order, so red becomes Bangladesh, Pakistan, Japan… Right: it stays the UK.', panels: 'pair', play: { from: 1955, to: 2005, seconds: 14 }, trail: 'United Kingdom' }
+      { caption: 'Same data, one difference: the right has key=\'country:N\'. Both start at 1955 with the UK in red. Press Next to play.', panels: 'pair', year: 1955, trail: 'United Kingdom', label: true,
+        explain: [['No key', 'Each year, the red mark takes', 'whichever country is 8th in size.'], ['key=\'country:N\'', 'Each mark is one country', 'for all fifty years.']] },
+      { caption: 'Watch the name on the red bubble. Left: it changes country. Right: it stays the United Kingdom.', panels: 'pair', play: { from: 1955, to: 2005, seconds: 14 }, trail: 'United Kingdom', label: true,
+        explain: [['No key', 'Each year, the red mark takes', 'whichever country is 8th in size.'], ['key=\'country:N\'', 'Each mark is one country', 'for all fifty years.']] },
+      { caption: 'The left trail is five countries stitched together. Only the right one is the UK.', panels: 'pair', trace: { from: 1955, to: 2005 }, trail: 'United Kingdom', label: true, dim: true,
+        explain: [['No key: one red trail,', 'five countries: the UK, Bangladesh,', 'Pakistan, Japan, then Nigeria.'], ['With key: one red trail,', 'one country: the UK,', '1955 to 2005.']] }
     ],
     notes: '3 min. OBJECT CONSTANCY (Bostock, 2012). Without a key, Vega pairs old marks with new rows by their index. Here each year\'s rows arrive sorted by population, largest first. ' +
       'The UK is 8th in 1955; as Bangladesh, Pakistan and Nigeria grow past it, the 8th mark is a different country: Bangladesh in 1965, Pakistan in 1980, Japan in 2000, Nigeria in 2005. The red trail leaps across the chart.\n' +
@@ -456,6 +474,13 @@ function week5() {
     code: "frame = alt.param(name='frame_year', value=1955)\n\nalt.Chart(data.gapminder()).mark_circle().encode(\n    x=alt.X('fertility:Q', scale=alt.Scale(domain=[0, 9])),\n    y=alt.Y('life_expect:Q', scale=alt.Scale(domain=[25, 85])),\n    size='pop:Q',\n    color='cluster:N',\n    key='country:N',              # identity: one mark, one country\n).add_params(frame).transform_filter(\n    alt.datum.year == frame       # the frame shown\n)\n# playback: a timer calls view.signal('frame_year', y)  (guide §19)",
     notes: '2 min. Guide §18–19. Fixed domains so the axes do not jump between frames; key= for identity; a parameter for the year; transform_filter for the frame. ' +
       'Altair writes the chart; the guide\'s small player script drives the parameter on a timer (export_player).' },
+
+  { type: 'code', title: 'Demo: a bar chart race in Python', language: 'python', typewrite: true,
+    code: "# pip install bar_chart_race\nimport bar_chart_race as bcr\n\n# wide data: one row per date, one column per country\nbcr.bar_chart_race(\n    df=population_wide,\n    filename='population_race.mp4',\n    n_bars=10,\n    period_length=600,          # ms per period: the pace\n    title='Population growth race · top 10',\n)",
+    notes: '2 min. From the 2025 deck\'s demo (pypi.org/project/bar-chart-race). Not Altair: a matplotlib animation saved as video. ' +
+      'Ask what it costs: the values are hard to read, and the reader cannot pause a video on their own terms.' },
+
+  clip('Demo: what it makes', 'barchartrace-demo.mp4', '30 s. The output of bar_chart_race. Then: "Where would you use this, and where would a line chart be better?"'),
 
   { type: 'figure', figure: 'motion', title: 'Which country changed most?',
     figureEyebrow: 'Animation vs small multiples', figureAlt: 'Eleven small Gapminder charts, one per five years, with the UK in red.',
@@ -475,13 +500,6 @@ function week5() {
     ],
     notes: '1 min. The 2025 deck\'s pros and cons. ASK: "Which cost did Rosling avoid, and how?" (He paused, pointed, and talked over it.)' },
 
-  clip('See it: scrollytelling', 'flourish-scrolly.mp4',
-    '1 min. Flourish. The reader\'s scroll is the clock: each step of the story reveals the next state. Interaction and animation together: the reader controls the pace.'),
-
-  clip('See it: the bar chart race', 'flourish-race.mp4',
-    '1 min. A bar chart race: popular, and a good test. ASK: "What can you read here that you couldn\'t from a line chart? What can\'t you?" ' +
-    'You see rank changes; you lose the values and the comparison across years. Fine to present, poor to analyse.'),
-
   { type: 'compare', title: 'Design choices for animation', subtitle: 'Do\tAvoid', progressive: true,
     bullets: [
       'Purpose\tKnow whether it is for communication, exploration or explanation\tAnimation as decoration',
@@ -491,12 +509,6 @@ function week5() {
       'Test\tWith users; compare against small multiples\tMotion sensitivity ignored'
     ],
     notes: '2 min. The 2025 deck\'s "Design choices" and "When designing with animation": define purpose, match task to interaction, choose transitions carefully, test with users.' },
-
-  { type: 'code', title: 'Demo: a bar chart race in Python', language: 'python', typewrite: true,
-    code: "# pip install bar_chart_race\nimport bar_chart_race as bcr\n\n# wide data: one row per date, one column per country\nbcr.bar_chart_race(\n    df=population_wide,\n    filename='population_race.mp4',\n    n_bars=10,\n    period_length=600,          # ms per period: the pace\n    title='Population growth race · top 10',\n)",
-    notes: '2 min. From the 2025 deck\'s demo (pypi.org/project/bar-chart-race). Not Altair: a matplotlib animation saved as video. ' +
-      'Ask what it costs: the values are hard to read, and the reader cannot pause a video on their own terms.' },
-  clip('Demo: what it makes', 'barchartrace-demo.mp4', '30 s. The output of bar_chart_race. Then: "Where would you use this, and where would a line chart be better?"'),
 
   { type: 'cards', title: 'Move responsibly', progressive: true,
     bullets: [
@@ -519,15 +531,6 @@ function week5() {
     ],
     notes: '2 min. One card per stop.' },
 
-  { type: 'figure', figure: 'worldmap', title: 'Next lecture: the bubbles fly home',
-    figureEyebrow: 'Coming up · Week 7 · Maps', figureAlt: 'Rosling\'s bubbles flying from their places on the chart to their countries on the world map.',
-    figureData: MAP(F.flight()),
-    figureSteps: [
-      { caption: 'Rosling\'s chart: every country a bubble, keyed by country.', projection: 'equalEarth', fly: 'scatter' },
-      { caption: 'Same marks, same keys, a different layout. Next lecture: what that map is doing.', projection: 'equalEarth', fly: 'home' }
-    ],
-    notes: '1 min. The bridge to Week 7. Object constancy across two idioms: the same keyed marks move from a scatter to geographic position. "Next time: when a map adds meaning, and how it lies."' },
-
   { type: 'content', title: 'Next: Lab 5 · Interaction and animation',
     bullets: [
       'Audience\tTask 1: a persona for your chart (guide §1)',
@@ -537,6 +540,15 @@ function week5() {
       'Hand in\tOn Canvas by midday on the Friday after the lab'
     ],
     notes: 'The lab sheet\'s tasks: audience (persona), interactive scatter, animated line, interactive bar, animated histogram, interactive map. Task 6, the map, is a first look at Week 7.' },
+
+  { type: 'figure', figure: 'worldmap', title: 'Next lecture: the bubbles fly home',
+    figureEyebrow: 'Coming up · Week 7 · Maps', figureAlt: 'Rosling\'s bubbles flying from their places on the chart to their countries on the world map.',
+    figureData: MAP(F.flight()),
+    figureSteps: [
+      { caption: 'Rosling\'s chart: every country a bubble, keyed by country.', projection: 'equalEarth', fly: 'scatter' },
+      { caption: 'Same marks, same keys, a different layout. Next lecture: what that map is doing.', projection: 'equalEarth', fly: 'home' }
+    ],
+    notes: '1 min. The bridge to Week 7. Object constancy across two idioms: the same keyed marks move from a scatter to geographic position. "Next time: when a map adds meaning, and how it lies."' },
 
   { type: 'statement', title: 'Questions?', notes: 'Q&A.' }
   ];

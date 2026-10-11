@@ -112,7 +112,7 @@
   }
 
   function start() {
-    var deck = SF.LabEngine.stageDeck && SF.LabEngine.stageDeck();
+    var deck = SF.LabEngine.stageDeck && SF.LabEngine.stageDeck(SF.Player.deck && SF.Player.deck.id);
     if (!deck || !deck.slides || !deck.slides.length) return false;
     deckId = deck.id;
     byId = {};
@@ -143,7 +143,86 @@
   function clearEmbeds() {
     embeds.forEach(function (f) { if (f.parentNode) f.parentNode.removeChild(f); });
     embeds = [];
+    syncVideoButtons();
   }
+
+  /* Play and pause from the show, not only from the service's own button.
+     That button is small, sits on a scaled slide and, once pressed, keeps the
+     keyboard inside the clip, so the arrows scrub the video instead of moving
+     the show. The HUD's play button and K (YouTube's own key) start and stop
+     every clip on the slide by the services' message APIs: YouTube's
+     enablejsapi, and Vimeo's player.js messages, which need no flag. */
+  /** @type {WeakMap<HTMLIFrameElement, boolean>} */ var playing = new WeakMap();
+  /** @param {HTMLIFrameElement} f */
+  function isVimeo(f) { return /player\.vimeo\.com/.test(f.src); }
+  /** @param {HTMLIFrameElement} f @param {any} msg */
+  function tell(f, msg) {
+    try { if (f.contentWindow) f.contentWindow.postMessage(JSON.stringify(msg), '*'); } catch (e) {}
+  }
+  /** @param {HTMLIFrameElement} f */
+  function listen(f) {
+    if (isVimeo(f)) { tell(f, { method: 'addEventListener', value: 'play' }); tell(f, { method: 'addEventListener', value: 'pause' }); tell(f, { method: 'addEventListener', value: 'ended' }); }
+    else tell(f, { event: 'listening', id: 'sf-lab-embed' });
+  }
+  /* A clip the lab plays itself (a file, drawn on its canvas) is the lab player's to start and stop. */
+  function labClips() { return !!(player && onLab && player.hasClips && player.hasClips()); }
+  function videoPlaying() {
+    if (!embeds.length) return labClips() && player.clipsPlaying();
+    return embeds.some(function (f) { return playing.get(f) === true; });
+  }
+  function toggleVideo() {
+    if (!embeds.length) {
+      if (!labClips() || !player.toggleClips()) return false;
+      syncVideoButtons();
+      return true;
+    }
+    var play = !videoPlaying();
+    embeds.forEach(function (f) {
+      if (isVimeo(f)) tell(f, { method: play ? 'play' : 'pause' });
+      else tell(f, { event: 'command', func: play ? 'playVideo' : 'pauseVideo', args: [] });
+      playing.set(f, play);
+    });
+    syncVideoButtons();
+    return true;
+  }
+  function syncVideoButtons() {
+    var on = videoPlaying();
+    document.querySelectorAll('[data-lab-act="video"]').forEach(function (b) {
+      var el = /** @type {HTMLElement} */ (b);
+      el.hidden = !embeds.length && !labClips();
+      var label = (on ? 'Pause the video' : 'Play the video') + ' (K)';
+      el.title = label;
+      el.setAttribute('aria-label', label);
+      el.textContent = el.closest('#hudMore') ? (on ? 'Pause video' : 'Play video') : (on ? '\u23f8' : '\u25b6');
+    });
+  }
+  /* The services report back what their own buttons did, so the HUD button
+     shows the truth after a press inside the clip. */
+  global.addEventListener('message', function (e) {
+    var f = embeds.filter(function (x) { return x.contentWindow === e.source; })[0];
+    if (!f) return;
+    var d = null;
+    try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (err) { return; }
+    if (!d) return;
+    var state = null;
+    if (d.event === 'onStateChange') state = d.info;
+    else if (d.event === 'infoDelivery' && d.info && typeof d.info.playerState === 'number') state = d.info.playerState;
+    if (state != null) playing.set(f, state === 1 || state === 3);
+    else if (d.event === 'play') playing.set(f, true);
+    else if (d.event === 'pause' || d.event === 'ended') playing.set(f, false);
+    else if (d.event === 'ready' && isVimeo(f)) listen(f);
+    else return;
+    syncVideoButtons();
+  });
+  /* A press inside a clip takes the keyboard into it. Hand it back to the show
+     at once, so Next and Previous keep working while the clip plays. */
+  global.addEventListener('blur', function () {
+    if (!SF.Player.open) return;
+    setTimeout(function () {
+      var a = document.activeElement;
+      if (a && embeds.indexOf(/** @type {any} */ (a)) >= 0) { /** @type {HTMLElement} */ (a).blur(); global.focus(); }
+    }, 0);
+  });
   /** @param {HTMLElement} node @param {number} i */
   function placeEmbeds(node, i) {
     clearEmbeds();
@@ -155,6 +234,7 @@
       var p = l.params;
       var src = SF.videoEmbed({ video: p.src, videoStart: p.start, videoEnd: p.end, videoMuted: p.muted !== false, videoAutoplay: p.muted !== false && !!p.autoplay, videoLoop: !!p.loop });
       if (!src) return;
+      if (/youtube(-nocookie)?\.com\/embed\//.test(src)) src += (src.indexOf('?') < 0 ? '?' : '&') + 'enablejsapi=1&origin=' + encodeURIComponent(location.origin);
       var f = document.createElement('iframe');
       f.className = 'lab-embed';
       f.src = src;
@@ -164,9 +244,12 @@
       f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       var b = l.box, W = deck.width || 1920, H = deck.height || 1080;
       f.style.cssText = 'position:absolute;border:0;z-index:5;background:#000;left:' + (b.x / W * 100) + '%;top:' + (b.y / H * 100) + '%;width:' + (b.w / W * 100) + '%;height:' + (b.h / H * 100) + '%';
+      f.addEventListener('load', function () { listen(f); });
+      playing.set(f, !!(p.autoplay && p.muted !== false));
       node.appendChild(f);
       embeds.push(f);
     });
+    syncVideoButtons();
   }
 
   function stop() {
@@ -190,11 +273,12 @@
       onLab = false;
       if (player) player.pause();
       if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      syncVideoButtons();
       return;
     }
     if (!player && !start()) return;
     var i = drawnIndex(slide);
-    if (i == null) { clearEmbeds(); onLab = false; player.pause(); return; }
+    if (i == null) { clearEmbeds(); onLab = false; player.pause(); syncVideoButtons(); return; }
     node.appendChild(canvas);
     /* A redraw of the same slide keeps a clip that is already playing. */
     if (fresh || !embeds.length || embeds[0].parentNode !== node) placeEmbeds(node, i);
@@ -204,12 +288,13 @@
     /* A redraw of the same slide (the desk syncing, a repaint) keeps the builds
        already shown; a new slide starts from its beginning, or fully built
        when the show has come back to it. */
-    if (!fresh) { onLab = true; return; }
+    if (!fresh) { onLab = true; syncVideoButtons(); return; }
     var st = player.state();
     var adjacent = onLab && Math.abs(i - st.index) === 1;
     if (adjacent) player.goto(i, i > st.index ? 1 : -1, back);
     else player.cut(i, back);
     onLab = true;
+    syncVideoButtons();
   }
 
   /* ------------------------------------------------- speaker notes on the wall
@@ -260,6 +345,13 @@
   function addNotesButtons() {
     var tools = document.getElementById('hudDefaultTools');
     var more = tools && tools.querySelector('[data-act="more"]');
+    if (tools && more && !tools.querySelector('[data-lab-act="video"]')) {
+      var v = document.createElement('button');
+      v.type = 'button';
+      v.setAttribute('data-lab-act', 'video');
+      v.onclick = function () { toggleVideo(); };
+      tools.insertBefore(v, more);
+    }
     if (tools && more && !tools.querySelector('[data-lab-act="notes"]')) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -271,6 +363,14 @@
       tools.insertBefore(b, more);
     }
     var list = document.getElementById('hudMore');
+    if (list && !list.querySelector('[data-lab-act="video"]')) {
+      var vm = document.createElement('button');
+      vm.type = 'button';
+      vm.setAttribute('data-lab-act', 'video');
+      vm.onclick = function () { toggleVideo(); };
+      list.insertBefore(vm, list.firstChild);
+    }
+    syncVideoButtons();
     if (list && !list.querySelector('[data-lab-act="notes"]')) {
       var m = document.createElement('button');
       m.type = 'button';
@@ -284,9 +384,11 @@
 
   function onKey(e) {
     if (!SF.Player.open || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key !== 'n' && e.key !== 'N') return;
+    var video = e.key === 'k' || e.key === 'K';
+    if (!video && e.key !== 'n' && e.key !== 'N') return;
     var t = /** @type {HTMLElement|null} */ (e.target);
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+    if (video) { if (toggleVideo()) e.preventDefault(); return; }
     e.preventDefault();
     toggleNotes();
   }
@@ -327,6 +429,8 @@
     SF.Player.on('close', function () { if (notesCard) notesCard.hidden = true; });
     SF.Player.on('open', paintNotes);
     document.addEventListener('keydown', onKey);
+    /* A press on a clip plays or pauses it inside the lab's player: the HUD's button follows. */
+    document.addEventListener('click', function () { if (SF.Player.open) setTimeout(syncVideoButtons, 60); }, true);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addNotesButtons);
     else addNotesButtons();
     /* 'open' comes after the first slide is drawn, so it leaves the stage as that set it. */
@@ -340,6 +444,6 @@
 
   SF.LabStage = { install: install, step: step, stop: stop, reveal: reveal, active: function () { return !!player && onLab; },
     /* For the smokes and for debugging: the lab player on the wall. */
-    player: function () { return player; }, notes: toggleNotes };
+    player: function () { return player; }, notes: toggleNotes, video: toggleVideo };
   install();
 })(window);
