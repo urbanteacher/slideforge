@@ -215,6 +215,7 @@
           writeCard(a.getDeck());
         }
         if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
+        warmShow();
         if (r && r.converted && r.dropped) {
           SF.toast(r.dropped + (r.dropped === 1 ? ' slide stays' : ' slides stay') +
             ' in the classic lesson: the lab does not run games and activities yet. The original is unchanged.');
@@ -401,11 +402,36 @@
     }));
   }
 
+  /* Drawing every slide as a picture is what keeps Present, Teacher Presenter
+     and Host live waiting (most of a minute for a long lesson on a slow
+     machine), and the desk shows "Linking…" all that time. So once a lesson is
+     open, its pictures are drawn quietly ahead of time. The lab keeps each
+     picture until its slide changes (embed.ts stills), so a show started later
+     only draws what was edited since. A show asked for meanwhile waits for the
+     warm-up rather than drawing the same slides a second time beside it. */
+  /** @type {Promise<any>|null} */ var warming = null;
+  function warmShow() {
+    if (!api || warming) return;
+    warming = new Promise(function (r) { setTimeout(r, 1500); })
+      .then(function () { return api.stills(1600, null, 0.9); })
+      .catch(function () {})
+      .then(function () { warming = null; });
+  }
+
   function buildShowDeck(width, quality) {
+    return (warming || Promise.resolve()).then(function () { return drawShowDeck(width, quality); });
+  }
+
+  function drawShowDeck(width, quality) {
     var total = api.getDeck().slides.length, shown = 0;
     var snapshot = JSON.parse(JSON.stringify(api.getDeck()));
     return api.stills(width || 1600, function (done) {
-      if (total > 12 && done - shown >= 10) { shown = done; SF.toast('Preparing the show \u2014 ' + done + ' of ' + total + ' slides'); }
+      if (total > 12 && done - shown >= 10) {
+        shown = done;
+        var say = 'Preparing the show \u2014 ' + done + ' of ' + total + ' slides';
+        SF.toast(say);
+        if (SF.Player.tellPresenter) SF.Player.tellPresenter(say);
+      }
     }, quality || 0.9).then(function (stills) {
       /* The lab's games play as SlideForge's own: its quiz slides under the lab's drawing, its
          boards where the room's state is kept (src/deck/labshow.js). The rest are pictures. */

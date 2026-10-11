@@ -8971,6 +8971,14 @@
       setTimeout(syncPresenter, 500);
       return presenterWin;
     };
+    Player.tellPresenter = function(text2) {
+      if (presenterWin && !presenterWin.closed) {
+        try {
+          presenterWin.postMessage({ type: "sf-presenter-wait", text: String(text2 || "") }, location.origin);
+        } catch (e) {
+        }
+      }
+    };
     function closePresenter() {
       if (presenterWin && !presenterWin.closed) presenterWin.close();
       presenterWin = null;
