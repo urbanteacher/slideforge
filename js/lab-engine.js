@@ -149,6 +149,35 @@
     };
   }
 
+  /* A live figure (src/render/figures/) is SlideForge's to play: the lab cannot draw one. So the
+     lab is handed a picture of its last step, as SVG (a figure's still is plain SVG, never
+     foreignObject, for exactly this), and keeps it as a stand-in slide. The stand-in is what
+     the lab's slide list shows; the show and the handout put the live figure back (ordered). */
+  /** @param {any} d */
+  function figureStills(d) {
+    if (!d || !Array.isArray(d.slides) || !SF.Figures || !SF.renderSlide || typeof document === 'undefined') return d;
+    if (!d.slides.some(function (/** @type {any} */ s) { return s && s.type === 'figure' && !s.figureStill; })) return d;
+    var host = document.createElement('div');
+    host.style.cssText = 'position:fixed;left:-99999px;top:0;width:1280px;height:720px;overflow:hidden';
+    document.body.appendChild(host);
+    var out = Object.assign({}, d, { slides: d.slides.map(function (/** @type {any} */ s) {
+      if (!s || s.type !== 'figure' || s.figureStill) return s;
+      try {
+        host.textContent = '';
+        host.appendChild(SF.renderSlide(d, s, { interactive: false }));
+        var svg = host.querySelector('svg.fig-svg');
+        if (!svg) return s;
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('width', '1280');
+        svg.setAttribute('height', '720');
+        var xml = new XMLSerializer().serializeToString(svg);
+        return Object.assign({}, s, { figureStill: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml) });
+      } catch (e) { return s; }
+    }) });
+    host.remove();
+    return out;
+  }
+
   function lessonGames(d) {
     if (!d || !Array.isArray(d.slides) || !SF.GameStore || !SF.compileGame) return d;
     var games = {}, any = false;
@@ -169,7 +198,7 @@
          made before the converter kept feedback and timers can take them, once. */
       var row = d && saved.filter(function (x) { return x.id === d.id; })[0];
       var source = row && row.sourceId && SF.Store && SF.Store.get ? SF.Store.get(row.sourceId) : null;
-      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, lessonGames(source)) : a.open(lessonGames(d));
+      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, lessonGames(figureStills(source))) : a.open(lessonGames(figureStills(d)));
       Promise.resolve(run).then(function (r) {
         if (r === false) { refreshSaved(); SF.toast('That lesson could not be opened here.'); return; }
         /* Known at once, not after the list is read back: the Library may be
@@ -345,9 +374,13 @@
     }
     var slides = (after[''] || []).slice();
     delete after[''];
+    var bySource = {};
+    (source && source.slides || []).forEach(function (s) { if (s && s.id) bySource[s.id] = s; });
     items.forEach(function (item) {
-      /* One slide, or a game's board compiled as several (src/deck/labshow.js). */
-      slides = slides.concat(make(item));
+      /* One slide, or a game's board compiled as several (src/deck/labshow.js). A live figure's
+         stand-in gives way to the figure itself, so the room can hover it and Next steps it. */
+      var live = item.liveFigure && item.sourceSlideId && bySource[item.sourceSlideId];
+      slides = slides.concat(live ? (item.hidden ? Object.assign({}, live, { hidden: true }) : live) : make(item));
       var more = item.sourceSlideId && after[item.sourceSlideId];
       if (more) { slides = slides.concat(more); delete after[item.sourceSlideId]; }
     });

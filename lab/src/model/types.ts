@@ -141,6 +141,10 @@ export interface Slide {
   /** The SlideForge slide this one was converted from, so a show built for SlideForge's player can
    *  put the lesson's games back after the slide they followed. */
   sourceSlideId?: string;
+  /** A stand-in for one of SlideForge's live figures (src/render/figures/): a picture of its last
+   *  step, so the figure is seen, ordered and named here. The show and the handout put the live
+   *  original in its place (js/lab-engine.js ordered), so the room can still hover and step it. */
+  liveFigure?: boolean;
   /** Which of SlideForge's activities this slide was made from, and which of its slides it is. */
   activity?: { key: string; page: number; settings?: ActivitySettings };
   /** What a slide design was built from (hotspots, pictures, facts, callouts), so the Slide panel
