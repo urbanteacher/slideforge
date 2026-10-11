@@ -27,6 +27,18 @@ For any AI agent (Claude, Cursor, Codex) and for people.
 - **Check a test file exists before writing it.** `cat > tests/x.test.js` over an existing file silently deletes its tests. Append, or edit.
 - `deploy-render` is the deployed branch. Push only when asked, and only as a fast-forward.
 
+## One trunk
+
+There is one source of truth, and it is `deploy-render` on GitHub: what Render runs is what the code says.
+
+- **This folder stays on `deploy-render`.** Then localhost shows what the website shows. Never leave it on another branch.
+- **Start from the latest trunk.** Before any work, fetch and bring `origin/deploy-render` in. In a worktree the app made, use its sync tool rather than `git merge` or `git pull`.
+- **Work on a short-lived branch or worktree taken from `deploy-render`.** Merge it back the same day you finish, as a fast-forward of `deploy-render`. Then delete the branch, and its copy on GitHub if it has one.
+- **Never merge into a side branch.** Work only moves one way: into `deploy-render`. A branch that falls behind is brought up to date from it, never treated as the trunk.
+- **Built files conflict, and are rebuilt, not merged by hand.** That means `js/model.js`, `lab-app/` and `lab-app/stage.js`. Rebuild from the merged source with `npm run build` and `npm --prefix lab run build:app`.
+- **A branch with work that never reached `deploy-render` is a decision, not storage.** Merge it, or ask the user to drop it. Don't start new work on it.
+- **The Lesson studio (`lab/`) is the main app.** New slide, design and motion features go there. The classic editor and player get fixes, and whatever games and live rooms still need from them.
+
 ## Adding a game style
 
 A style is one file in `src/games/`. It is registered in these places:
