@@ -69,6 +69,15 @@ const LAYOUT_CASES = [
 ];
 const LAYOUT_THEMES = ['northeastern', 'studio', 'midnight'];
 
+/* Live figures caught mid-move, added 2026-10-11. A figure's tweens run on
+   its kit's clock (src/render/figures/kit.js), and SF.Figures.seek(ms) holds
+   every one at ms after it began, so the same moment is the same picture.
+   Each case steps the bubbles figure from its overview to a zoom with the
+   pointer gliding in, and holds it: at the start, mid-glide, and arrived
+   (the card pinned open). One theme: a figure draws its own stage. */
+const FIGURE_CASES = { 'figure-bubbles-0ms': 0, 'figure-bubbles-600ms': 600, 'figure-bubbles-1400ms': 1400 };
+const FIGURE_THEME = 'northeastern';
+
 let spawnedServer = null;
 
 function freePort() {
@@ -242,9 +251,10 @@ async function run() {
   });
 
   /* --style names a game style or a layout fixture; both are captures. */
-  if (filterStyle && !catalog.styles.includes(filterStyle) && !LAYOUT_CASES.includes(filterStyle)) {
+  if (filterStyle && !catalog.styles.includes(filterStyle) && !LAYOUT_CASES.includes(filterStyle) && !(filterStyle in FIGURE_CASES)) {
     console.error(`Unknown capture: "${filterStyle}".\nGame styles: ${catalog.styles.join(', ')}`
-      + `\nLayouts: ${LAYOUT_CASES.join(', ')}`);
+      + `\nLayouts: ${LAYOUT_CASES.join(', ')}`
+      + `\nFigures: ${Object.keys(FIGURE_CASES).join(', ')}`);
     await browser.close();
     cleanup();
     process.exit(1);
@@ -282,10 +292,16 @@ async function run() {
       combinations.push({ style: layout, theme, kind: 'layout' });
     }
   }
+  for (const fig of Object.keys(FIGURE_CASES)) {
+    if (filterStyle && filterStyle !== fig) continue;
+    if (filterTheme && filterTheme !== FIGURE_THEME) continue;
+    combinations.push({ style: fig, theme: FIGURE_THEME, kind: 'figure', at: FIGURE_CASES[fig] });
+  }
 
   console.log(`Testing ${combinations.length} captures — `
     + `${styles.length} game styles × ${themes.length} themes, `
-    + `${layoutCases.length} layouts × ${layoutThemes.length} themes...\n`);
+    + `${layoutCases.length} layouts × ${layoutThemes.length} themes, `
+    + `${combinations.filter((c) => c.kind === 'figure').length} figures caught mid-move...\n`);
 
   let passed = 0;
   let updated = 0;
@@ -294,13 +310,13 @@ async function run() {
   const startTime = Date.now();
 
   for (let idx = 0; idx < combinations.length; idx++) {
-    const { style, theme, kind } = combinations[idx];
+    const { style, theme, kind, at } = combinations[idx];
     const key = `${style}--${theme}`;
     const baselinePath = path.join(BASELINES_DIR, `${key}.png`);
     const baselineExists = fs.existsSync(baselinePath);
 
     // 1. Render deterministic slide in browser
-    await page.evaluate(({ st, th, injectTestDiff, kind }) => {
+    await page.evaluate(({ st, th, injectTestDiff, kind, at }) => {
       /* Bingo deals each card with Math.random (js/bingo.js), which is right
          for the game — every participant should get a different card — and
          fatal for a baseline, because the render differs every run. Before
@@ -316,7 +332,31 @@ async function run() {
       };
       try {
       let rd, slide;
-      if (kind === 'layout') {
+      if (kind === 'figure') {
+        /* Eight made-up countries, so the picture never moves with the lecture's data. */
+        const rows = [
+          ['a', 'Arden', 1200, 58, 40, 'south'], ['b', 'Belmar', 3400, 64, 120, 'south'],
+          ['c', 'Corvo', 9000, 71, 60, 'east'], ['d', 'Dunmore', 15000, 74, 200, 'east'],
+          ['e', 'Elsby', 26000, 78, 30, 'west'], ['f', 'Fenwick', 41000, 81, 80, 'west'],
+          ['g', 'Galton', 62000, 82, 15, 'west'], ['h', 'Hollins', 98000, 80, 8, 'east']
+        ].map(([id, name, x, y, size, group]) => ({ id, name, x, y, size, group, income: x, life: y }));
+        slide = { id: 'baseline-figure', type: 'figure', figure: 'bubbles', title: 'A figure caught mid-move',
+          figureEyebrow: 'Visual baseline', figureData: {
+            rows,
+            x: { title: 'Income per person', log: true, domain: [500, 150000], ticks: [1000, 10000, 100000], format: '$,.0f' },
+            y: { title: 'Life expectancy', domain: [50, 85], ticks: [50, 60, 70, 80], format: ',d' },
+            size: { domain: [0, 200], range: [6, 40] },
+            groups: { south: { label: 'South', color: '#2a9d8f' }, east: { label: 'East', color: '#e9c46a' }, west: { label: 'West', color: '#e76f51' } },
+            tooltip: [{ field: 'name', title: 'Country' }, { field: 'income', title: 'Income', format: '$,.0f' }, { field: 'life', title: 'Life', format: '.1f' }],
+            source: 'Made-up data for a baseline' },
+          figureSteps: [
+            { caption: 'Overview first.', colour: true, legend: true },
+            { caption: 'Zoom, then one country.', colour: true, focus: { x: [8000, 150000], y: [70, 84] }, point: 'f' }
+          ] };
+        rd = window.SF.normalizeDeck({ title: 'Baseline', theme: th, slides: [slide] });
+        rd.theme = th;
+        slide = rd.slides[0];
+      } else if (kind === 'layout') {
         /* Fixtures are written out rather than borrowed from a lesson, so a
            baseline never moves because somebody edited the lecture. Content is
            sized to the failure it holds open: four cards because a fourth used
@@ -461,7 +501,7 @@ async function run() {
          an ordinary quiz wearing the race style, which is how a heading that ran
          underneath the countdown passed 642 baselines without one of them
          noticing. Fixed names and positions, because a baseline cannot move. */
-      const renderOpts = { interactive: false };
+      const renderOpts = { interactive: kind === 'figure' };
       if (st === 'race') {
         renderOpts.lanes = [
           { name: 'Red', at: 3 }, { name: 'Blue', at: 2 },
@@ -472,6 +512,13 @@ async function run() {
       const node = window.SF.renderSlide(rd, slide, renderOpts);
       node.style.position = 'relative';
       stage.appendChild(node);
+      if (kind === 'figure') {
+        /* Step to the zoom, as Next would, with the clock already held: every
+           tween it starts is drawn at `at` ms in, and stays there. */
+        window.SF.Figures.seek(at);
+        const live = node._exploreRefresh ? node : node.querySelector('.figure-slide');
+        live._exploreRefresh({ figureStep: 1 });
+      }
 
       if (injectTestDiff) {
         const bug = document.createElement('div');
@@ -487,7 +534,7 @@ async function run() {
       } finally {
         Math.random = realRandom;
       }
-    }, { st: style, th: theme, injectTestDiff: testDiff, kind: kind });
+    }, { st: style, th: theme, injectTestDiff: testDiff, kind: kind, at: at });
 
     await waitForSlideArt(page, '#visualRegressionStage');
     const currentBuffer = await page.locator('#visualRegressionStage .slide').screenshot({ animations: 'disabled' });

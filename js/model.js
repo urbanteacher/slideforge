@@ -4295,26 +4295,64 @@
       return false;
     }
   }
+  var frozen = null;
+  var running = /* @__PURE__ */ new Set();
   function tween(ms, frame, curve) {
     if (ms <= 0 || reduced() || typeof requestAnimationFrame !== "function") {
       frame(1);
       return function() {
       };
     }
-    var start = 0, id = 0, done = false, c = curve || ease.inOut;
-    function tick(now) {
-      if (done) return;
-      if (!start) start = now;
-      var k = Math.min(1, (now - start) / ms);
-      frame(c(k));
-      if (k < 1) id = requestAnimationFrame(tick);
-      else done = true;
+    var start = -1, from = 0, id = 0, c = curve || ease.inOut;
+    var t = {
+      /** Draw at `el` ms in; true once it has arrived. */
+      at: function(el2) {
+        var k = Math.min(1, Math.max(0, el2 / ms));
+        frame(c(k));
+        return k >= 1;
+      },
+      pause: function() {
+        cancelAnimationFrame(id);
+      },
+      resume: function(el2) {
+        from = el2;
+        start = -1;
+        id = requestAnimationFrame(tick);
+      }
+    };
+    function tick(now2) {
+      if (start < 0) start = now2;
+      if (t.at(from + now2 - start)) running.delete(t);
+      else id = requestAnimationFrame(tick);
     }
-    id = requestAnimationFrame(tick);
+    running.add(t);
+    if (frozen != null) t.at(frozen);
+    else id = requestAnimationFrame(tick);
     return function() {
-      done = true;
+      running.delete(t);
       cancelAnimationFrame(id);
     };
+  }
+  function seek(ms) {
+    if (ms == null || !isFinite(ms)) {
+      var was = frozen || 0;
+      frozen = null;
+      running.forEach(function(t) {
+        t.resume(was);
+      });
+      return;
+    }
+    frozen = Math.max(0, ms);
+    running.forEach(function(t) {
+      t.pause();
+      t.at(
+        /** @type {number} */
+        frozen
+      );
+    });
+  }
+  function now() {
+    return frozen != null ? frozen : typeof performance !== "undefined" ? performance.now() : Date.now();
   }
   function format(spec, v) {
     if (v == null || !isFinite(v)) return "n/a";
@@ -4634,15 +4672,15 @@
           paintCard();
         });
       }
-      var started = Date.now(), timer = 0, stopped = 0, cancel = function() {
+      var started = now(), timer = 0, stopped = 0, cancel = function() {
       }, zoomed = d.x.domain.join() + "|" + d.y.domain.join();
       function tick() {
-        if (!clock.isConnected && started < Date.now() - 1e3) {
+        if (!clock.isConnected && started < now() - 1e3) {
           window.clearInterval(timer);
           timer = 0;
           return;
         }
-        var s = Math.floor(((stopped || Date.now()) - started) / 1e3);
+        var s = Math.max(0, Math.floor(((stopped || now()) - started) / 1e3));
         clock.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
       }
       return {
@@ -4666,7 +4704,7 @@
             tick();
             if (!timer) timer = window.setInterval(tick, 250);
           } else if (step.clock === "stop" && fig.interactive) {
-            if (!stopped) stopped = Date.now();
+            if (!stopped) stopped = now();
             window.clearInterval(timer);
             timer = 0;
             tick();
@@ -5239,7 +5277,7 @@
         /** @type {any[]} */
         []
       ), layout = "", cancel = function() {
-      }, now = d.years[0];
+      }, now2 = d.years[0];
       function build(step) {
         var want = step.multiples ? "multiples" : step.panels === "pair" ? "pair" : step.keyed === false ? "one-unkeyed" : "one";
         if (want === layout) return;
@@ -5278,9 +5316,9 @@
           });
           var play = step.play;
           if (!play) {
-            now = step.year || d.years[0];
+            now2 = step.year || d.years[0];
             panels.forEach(function(p) {
-              p.show(now, true);
+              p.show(now2, true);
             });
             return;
           }
@@ -5292,7 +5330,7 @@
           cancel = tween(animate && fig.interactive ? (play.seconds || 10) * 1e3 : 0, function(k) {
             var t = from + span * k;
             if (jump) t = Math.min(to, from + Math.floor((t - from) / gap + 1e-9) * gap);
-            now = t;
+            now2 = t;
             panels.forEach(function(p) {
               p.show(t, false);
             });
@@ -5737,7 +5775,7 @@
         if (next && Number.isInteger(next.figureStep)) show(next.figureStep, true);
       };
     }
-    SF.Figures = { active: active2, count, steps, render: render2, kinds: Object.keys(FIGURES) };
+    SF.Figures = { active: active2, count, steps, render: render2, kinds: Object.keys(FIGURES), seek };
   }
 
   // src/render/words.js
@@ -6775,16 +6813,16 @@
         /** @type {any} */
         rail
       );
-      var now = {};
+      var now2 = {};
       rows2.forEach(function(r, i) {
-        now[r.key] = i;
+        now2[r.key] = i;
       });
       var sig = rows2.map(function(r) {
         return r.key;
       }).join("|");
       if (store._rankSig === sig) return store._climb || null;
       var before = store._ranks;
-      store._ranks = now;
+      store._ranks = now2;
       store._rankSig = sig;
       store._climb = null;
       if (!before) return null;
@@ -11451,14 +11489,14 @@
       return !!(a && b && a.id === b.id);
     }
     function afterPaint() {
-      var now = slide();
-      if (arranging && !sameSlide(arrangedSlide, now)) {
+      var now2 = slide();
+      if (arranging && !sameSlide(arrangedSlide, now2)) {
         setArranging(false);
         return;
       }
-      if (arranging) arrangedSlide = now;
-      if (selectedSlide && sameSlide(selectedSlide, now)) selectedSlide = now;
-      if (selectedSlide && !sameSlide(selectedSlide, now)) {
+      if (arranging) arrangedSlide = now2;
+      if (selectedSlide && sameSlide(selectedSlide, now2)) selectedSlide = now2;
+      if (selectedSlide && !sameSlide(selectedSlide, now2)) {
         selected = null;
         selectedSlide = null;
         verdict = [];
@@ -13506,9 +13544,9 @@
     function afterPaint() {
       var root = box2();
       if (!root) return;
-      var now = slide();
-      if (selectedSlide && now && selectedSlide.id === now.id) selectedSlide = now;
-      if (selectedSlide && !(now && selectedSlide.id === now.id)) {
+      var now2 = slide();
+      if (selectedSlide && now2 && selectedSlide.id === now2.id) selectedSlide = now2;
+      if (selectedSlide && !(now2 && selectedSlide.id === now2.id)) {
         selected = null;
         selectedSlide = null;
         if (cancelDrag) cancelDrag();
@@ -16851,9 +16889,9 @@
       };
       session.tick = () => {
         if (stopped) return;
-        const now = clock.now();
-        const dt = Math.max(0, (now - last) / 1e3);
-        last = now;
+        const now2 = clock.now();
+        const dt = Math.max(0, (now2 - last) / 1e3);
+        last = now2;
         const state2 = player[board5.states][slide.id];
         if (state2.paused || player.blank) return;
         if (tick(session, dt)) {
