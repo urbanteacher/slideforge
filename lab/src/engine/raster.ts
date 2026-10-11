@@ -771,6 +771,9 @@ function rasterModel(layer: Layer): Raster {
 // from its start when its slide comes up and stops when the show moves on, so it is left alone here.
 const videos = new Map<string, HTMLVideoElement>();
 const voiced = new Set<string>();
+// Silent clips the presenter has paused. A silent clip otherwise starts itself again whenever it
+// is drawn, so without this a pause would last one frame.
+const held = new Set<string>();
 export function getVideo(src: string): HTMLVideoElement | null {
   if (!src || typeof document === 'undefined') return null;
   let v = videos.get(src);
@@ -783,10 +786,10 @@ export function getVideo(src: string): HTMLVideoElement | null {
     v.preload = 'auto';
     v.onloadeddata = bump;
     v.src = src;
-    if (!voiced.has(src)) v.play().catch(() => undefined);
+    if (!voiced.has(src) && !held.has(src)) v.play().catch(() => undefined);
     videos.set(src, v);
   }
-  if (v.paused && v.readyState >= 2 && !voiced.has(src)) v.play().catch(() => undefined);
+  if (v.paused && v.readyState >= 2 && !voiced.has(src) && !held.has(src)) v.play().catch(() => undefined);
   return v.readyState >= 2 && v.videoWidth > 0 ? v : null;
 }
 
@@ -803,6 +806,8 @@ export function voicedVideo(layer: Layer): boolean {
  * sound is paused, so nothing talks over the next slide. `null` silences them all (the show paused or ended).
  */
 export function showMedia(layers: Layer[] | null) {
+  // A new slide (or the show coming back to the lab) starts its clips afresh.
+  held.clear();
   const here = new Map((layers ?? []).filter(voicedVideo).map((l) => [String(l.params.src), l]));
   for (const src of voiced) if (!here.has(src)) { const v = videos.get(src); if (v) { v.pause(); v.muted = true; } }
   for (const [src, l] of here) {
@@ -819,11 +824,32 @@ export function showMedia(layers: Layer[] | null) {
   }
 }
 
-/** Play or pause a clip with sound, from a press on it in the show. */
-export function toggleMedia(layer: Layer) {
+/** A clip the lab plays itself: a file, not a YouTube or Vimeo link (those play in the service's own player). */
+export function fileClip(layer: Layer): boolean {
+  return layer.kind === 'video' && layer.visible && !!layer.params.src && !videoEmbed(layer.params);
+}
+
+/** Whether a clip is playing now. */
+export function mediaPlaying(layer: Layer): boolean {
   const v = videos.get(String(layer.params.src ?? ''));
+  return !!v && !v.paused && !v.ended;
+}
+
+/** Play or pause a clip, from a press on it in the show or the presenter's key. `play` forces the way. */
+export function toggleMedia(layer: Layer, play?: boolean) {
+  const src = String(layer.params.src ?? '');
+  const v = videos.get(src);
   if (!v) return;
-  if (v.paused) { v.muted = false; v.play().catch(() => undefined); } else v.pause();
+  const start = play ?? (v.paused || v.ended);
+  if (start) {
+    held.delete(src);
+    if (voicedVideo(layer)) v.muted = false;
+    if (v.ended) v.currentTime = Math.max(0, Number(layer.params.start ?? 0));
+    v.play().catch(() => { v.muted = true; v.play().catch(() => undefined); });
+  } else {
+    if (!voiced.has(src)) held.add(src);
+    v.pause();
+  }
 }
 
 /** Changes whenever a content layer needs redrawing without its params changing (a playing video). */

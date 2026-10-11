@@ -1,7 +1,7 @@
 import type { Deck, Layer, Slide } from '../model/types';
 import { EASE, schedule } from './anim';
 import { ALL_KINDS } from './registry';
-import { MODEL_PLOT, showMedia, toggleMedia, voicedVideo } from './raster';
+import { MODEL_PLOT, showMedia, toggleMedia, fileClip, mediaPlaying } from './raster';
 import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps } from './scene';
 import { experimentControls, experimentStates } from './experiment';
 import { hitButton } from './controls';
@@ -221,6 +221,17 @@ export class DeckPlayer {
     this.flowCache.set(slide, { k, slide: out });
     return out;
   }
+  /** The clips on the slide on screen, for the presenter's play and pause (K, the HUD's button). */
+  hasClips(): boolean { return this.slide.layers.some(fileClip); }
+  clipsPlaying(): boolean { return this.slide.layers.some((l) => fileClip(l) && mediaPlaying(l)); }
+  /** Pause every clip on the slide if any is playing, else play them all. False when there are none. */
+  toggleClips(): boolean {
+    const clips = this.slide.layers.filter(fileClip);
+    if (!clips.length) return false;
+    const play = !this.clipsPlaying();
+    clips.forEach((l) => toggleMedia(l, play));
+    return true;
+  }
   /** Stop drawing while SlideForge's player shows one of its own slides, and start again. */
   pause() { this.paused = true; showMedia(null); }
   resume() { if (this.paused) showMedia(this.slide.layers); this.paused = false; }
@@ -337,8 +348,8 @@ export class DeckPlayer {
     if (c) { if (this.opts.host) e.stopPropagation(); if (c.action !== 'slider') this.press(c.layer, c.action); return; }
     // A press on a before / after moves its handle there; it never advances the show.
     if (this.wipeAt(u, v)) { if (this.opts.host) e.stopPropagation(); return; }
-    // A press on a clip with sound plays or pauses it; it never advances the show.
-    const clip = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, voicedVideo);
+    // A press on a clip plays or pauses it, silent or not; it never advances the show.
+    const clip = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, fileClip);
     if (clip) { if (this.opts.host) e.stopPropagation(); toggleMedia(clip); return; }
     // A press on a scene's card chooses it, or, chosen already, returns to the overview.
     const card = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'scene' && sceneIsSelectable(String(l.params.mode)));

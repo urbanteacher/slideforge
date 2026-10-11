@@ -307,6 +307,13 @@
   }
 
   /** @type {any} */ var lastShowDeck = null;
+  /* The lab deck the last show was built from, as it was then. The wall draws
+     each slide live from it (js/lab-stage.js), and it has to be this one, not
+     whatever the editor has open by the time a slide comes up: the editor can
+     move on (another lesson, a blank one after a delete) while the show runs,
+     and a slide the live drawing does not have falls back to its still, so
+     every clip on it stands still. */
+  /** @type {any} */ var shownLabDeck = null;
 
   /* The show as a SlideForge lesson: what Host live, Rehearse, Teacher
      Presenter and Share all run, so a follow-along link matches the room. */
@@ -363,6 +370,7 @@
 
   function buildShowDeck(width, quality) {
     var total = api.getDeck().slides.length, shown = 0;
+    var snapshot = JSON.parse(JSON.stringify(api.getDeck()));
     return api.stills(width || 1600, function (done) {
       if (total > 12 && done - shown >= 10) { shown = done; SF.toast('Preparing the show \u2014 ' + done + ' of ' + total + ' slides'); }
     }, quality || 0.9).then(function (stills) {
@@ -370,7 +378,7 @@
          boards where the room's state is kept (src/deck/labshow.js). The rest are pictures. */
       var items = SF.labShowSlides ? SF.labShowSlides(stills) : stills;
       var deck = lessonFrom(items, function (/** @type {any} */ it) { return it.sf || pictureSlide(it); });
-      if (!width || width === 1600) lastShowDeck = deck;
+      if (!width || width === 1600) { lastShowDeck = deck; shownLabDeck = snapshot; }
       return deck;
     });
   }
@@ -729,7 +737,11 @@
     hostLive: function () { hostLive(); },
     /* For the live stage (js/lab-stage.js): the lab deck as it is now, and the
        lab's page, for its fonts. */
-    stageDeck: function () { return api ? JSON.parse(JSON.stringify(api.getDeck())) : null; },
+    /** The lab deck to draw a show from: the one it was built from, when `id` is that show's. */
+    stageDeck: function (id) {
+      if (id && shownLabDeck && shownLabDeck.id === id) return JSON.parse(JSON.stringify(shownLabDeck));
+      return api ? JSON.parse(JSON.stringify(api.getDeck())) : null;
+    },
     frameDocument: function () { return frame && frame.contentDocument; },
     /* The lab's tools row carries the shell's second row (Library, the demo,
        Host live, Present and its menu) so the two sit on one line; each of its
