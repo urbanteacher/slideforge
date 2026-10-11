@@ -335,24 +335,8 @@ function week5() {
     notes: '20 s. The rule to leave stop 2 with.' },
 
   /* ======================================================== ③ Pick */
-  section('How do views talk to each other?', 'Part 3 · Pick', '20 s. Selection: one choice, and every view answers.'),
-
-  { type: 'links', title: 'See it: selection, linking and queries',
-    bullets: [
-      'Select · NYT, the 2016 campaign staff network\thttp://www.nytimes.com/interactive/2015/05/17/us/elections/2016-presidential-campaigns-staff-connections-clinton-bush-cruz-paul-rubio-walker.html',
-      'Brush and link · Refugee scholars dashboard\thttps://refugeescholars.netlify.app/home',
-      'Query and filter · rome2rio, London to Boston\thttps://www.rome2rio.com/map/London/Boston#trips',
-      'Navigate · OpenStreetMap, Tower Bridge\thttps://www.openstreetmap.org/#map=17/51.507464/-0.071647'
-    ],
-    notes: '2 min. The four cases from the 2025 Week 5 deck. Open one live. For each, ASK: "What did I do (input)? What changed (response)?"' },
-
-  clip('See it: selection', 'flourish-selection.mp4',
-    '1 min. Flourish (flourish.studio/blog/animated-charts). Hover picks out one series and fades the rest: select, then elaborate. ASK: "Input? Parameter? Response?"'),
-
-  { type: 'code', title: 'You built a dynamic query in Week 1', language: 'python', typewrite: true,
-    code: "year = alt.selection_point(\n    name='year', fields=['year'], value=1955,\n    bind=alt.binding_range(min=1955, max=2005, step=5))\n\nalt.Chart(data.gapminder()).mark_circle().encode(\n    x='fertility:Q',\n    y='life_expect:Q',\n    size='pop:Q',\n    color='cluster:N',\n    tooltip=['country:N', 'year:O'],\n).add_params(year).transform_filter(year)",
-    notes: '2 min. From the Week 1 guide, §4 (Rosling with a year slider). INPUT the slider, PARAMETER the year, PREDICATE transform_filter keeps rows of that year, RESPONSE the frame. ' +
-      'A widget is a selection whose input is an HTML control: binding_range, binding_select, binding_radio, binding_checkbox (guide §12).' },
+  section('How do views talk to each other?', 'Part 3 · Pick · input → stored value → test → response',
+    '20 s. Selection: one choice, and every view answers. The same four boxes as Part 1: only the input changes. Straight into the live figure.'),
 
   { type: 'figure', figure: 'linked', title: 'Be the brush',
     figureEyebrow: 'See it, name it, build it', figureAlt: 'A scatter of countries beside a bar chart of countries per region; selections in the scatter filter the bars.',
@@ -381,7 +365,17 @@ function week5() {
       'Legend\tclick on the legend\tone region\talt.when(region)\topacity\n' +
       'Brush\tdrag\ta range of x and y\talt.when(brush) / transform_filter(brush)\tlit marks; filtered bars\n' +
       'Slider\tdrag a slider\ta number: the year\talt.datum.year == year\tthe frame shown',
-    notes: '2 min. The strip, as a table. Only the input column changes much. The slider row is the Week 1 query from earlier: the same strip.' },
+    notes: '2 min. Names what they just did in Be the brush, as the strip. Only the input column changes much. The slider row is the one they already know: the Week 1 query, next but one.' },
+
+  { type: 'code', title: 'Build it: one brush, two views', language: 'python', typewrite: true,
+    code: "brush = alt.selection_interval()          # input: a drag; stored: a range of x and y\n\nscatter = alt.Chart(world).mark_circle().encode(\n    x=alt.X('income:Q', scale=alt.Scale(type='log')),\n    y='health:Q',\n    color=alt.when(brush)                 # test: is the mark inside the range?\n        .then('region:N')                 # response: lit\n        .otherwise(alt.value('lightgrey')),\n).add_params(brush)\n\nbars = alt.Chart(world).mark_bar().encode(\n    x='count():Q',\n    y='region:N',\n).transform_filter(brush)                 # the second view answers the first\n\nscatter | bars",
+    notes: '2 min. Guide §8–9. The whole of Be the brush\'s last steps in one cell. The brush is declared once, added to the scatter with add_params, and used twice: alt.when(brush) colours the scatter, transform_filter(brush) filters the bars. That second use is linking.\n' +
+      'ASK: "Which line makes the views talk to each other?" transform_filter(brush). Before the first drag every mark is lit (empty=True, the default): add empty=False to start with nothing lit.' },
+
+  { type: 'code', title: 'You built a dynamic query in Week 1', language: 'python', typewrite: true,
+    code: "year = alt.selection_point(\n    name='year', fields=['year'], value=1955,\n    bind=alt.binding_range(min=1955, max=2005, step=5))\n\nalt.Chart(data.gapminder()).mark_circle().encode(\n    x='fertility:Q',\n    y='life_expect:Q',\n    size='pop:Q',\n    color='cluster:N',\n    tooltip=['country:N', 'year:O'],\n).add_params(year).transform_filter(year)",
+    notes: '2 min. The table\'s last row: they have built one already. From the Week 1 guide, §4 (Rosling with a year slider). INPUT the slider, PARAMETER the year, PREDICATE transform_filter keeps rows of that year, RESPONSE the frame. ' +
+      'A widget is a selection whose input is an HTML control: binding_range, binding_select, binding_radio, binding_checkbox (guide §12).' },
 
   { type: 'cards', title: 'Navigate: change where you are looking', progressive: true,
     bullets: [
@@ -390,6 +384,18 @@ function week5() {
       'Semantic zoom\tCloser in, more is drawn, not just bigger: a map adds street names (Munzner 11.5).'
     ],
     notes: '2 min. Navigation is the "zoom" of the mantra. Munzner 11.5 separates geometric zoom (things get bigger) from semantic zoom (things change what they show).' },
+
+  clip('See it: a story you step through', 'flourish-selection.mp4',
+    '1 min. Flourish (flourish.studio/blog/animated-charts), the pound against the dollar. Each press of Next zooms the chart to a window (1985, Black Wednesday, 2016) and annotates it, then the last step zooms back out to 1982–2022: navigation the reader drives. ASK: "Input? What is stored? What changes?" A button; which step you are on; the x window and the note.'),
+
+  { type: 'links', title: 'Try it yourself: selection, linking and queries',
+    bullets: [
+      'Select · NYT, the 2016 campaign staff network\thttp://www.nytimes.com/interactive/2015/05/17/us/elections/2016-presidential-campaigns-staff-connections-clinton-bush-cruz-paul-rubio-walker.html',
+      'Brush and link · Refugee scholars dashboard\thttps://refugeescholars.netlify.app/home',
+      'Query and filter · rome2rio, London to Boston\thttps://www.rome2rio.com/map/London/Boston#trips',
+      'Navigate · OpenStreetMap, Tower Bridge\thttps://www.openstreetmap.org/#map=17/51.507464/-0.071647'
+    ],
+    notes: '2 min, or set for after the lecture. The four cases from the 2025 Week 5 deck, now they have the strip. Open one live. For each, ASK: "What did I do (input)? What is stored? What changed (response)?"' },
 
   /* ======================================================== ④ Move */
   section('When should a chart move?', 'Part 4 · Move', '20 s. Animation: motion, transitions, change over time.'),
