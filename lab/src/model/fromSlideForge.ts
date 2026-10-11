@@ -298,6 +298,15 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       if (!s.chartSource) slide.layers = slide.layers.filter((l) => l.name !== 'Source');
       return { slide, ground: g };
     }
+    case 'figure': {
+      // A live figure is SlideForge's to play. The shell hands its last step over as a picture
+      // (figureStill, js/lab-engine.js), which stands in for it here; with no picture there is
+      // nothing to draw, and the slide stays SlideForge's alone, as before.
+      const still = (s as { figureStill?: string }).figureStill;
+      if (!still) return null;
+      return { slide: framedPictureSlide(st, t, sub, still, '16:9', 'none', ''), ground: g,
+        note: 'A live figure, drawn here as its last step. The show plays the real one: the room can hover it and Next steps it.' };
+    }
     case 'image': {
       // A frame (16:9, 4:3, 1:1…) or facts on the back make it SlideForge's framed picture; else full bleed.
       const frame = String((s.design as { imageFrame?: string } | undefined)?.imageFrame ?? '');
@@ -466,8 +475,9 @@ export function carryDeckVideo(deck: Deck, source: SFSlide[]): number {
  *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. 6: a statement's line fits its frame, and AI Awareness Day 2026 wears its badge, hashtag, slide labels and type. 7: a slide hidden in SlideForge is hidden in the lab. 8: AI Awareness Day 2027 wears its frame (strand, lockup, campaign line, page number) and its labels over the words. 9: AI Awareness Day 2027's compositions are built as its design draws them. 10: its takeaways are the lab's numbered block, its ballot the lab's choice block. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. 11: Week 3's perception
  *  demonstration gets its own preset key, leaving `channels` to the older marks demonstration. 12: a
- *  video slide's clip keeps its sound and plays as the slide arrives; with no caption, nothing covers it. */
-export const CARRIED = 12;
+ *  video slide's clip keeps its sound and plays as the slide arrives; with no caption, nothing covers it.
+ *  13: a live figure gets a stand-in, a picture of its last step; the show still plays the figure. */
+export const CARRIED = 13;
 
 /** Upgrade saved layer names and the Week 3 preset without changing authored data or states. */
 export function carryDeckExperimentPresets(deck: Deck): number {
@@ -486,7 +496,7 @@ export function carryDeckExperimentPresets(deck: Deck): number {
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
  *  missing from a copy because its author deleted it, and it stays deleted. */
-const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'] };
+const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'], 13: ['figure'] };
 
 type Kit = ReturnType<typeof kit>;
 
@@ -498,6 +508,7 @@ function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtCo
   const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
   const made = k.put(out.slide, out.ground, notes);
   if (s.id) made.sourceSlideId = s.id;
+  if (s.type === 'figure') { made.liveFigure = true; made.name = `Live figure · ${s.title ?? ''}`.trim(); }
   // A slide SlideForge keeps out of the show stays out of it: a teacher's preparation is not for the wall.
   if (s.hidden) made.hidden = true;
   carryLive(s, made, k.on(out.ground));
