@@ -559,7 +559,7 @@
 
 <div id="toast"></div>
 
-<script src="js/model.js?v=49"></script>
+<script src="js/model.js?v=50"></script>
 <script src="js/qr.js?v=2"></script>
 <script src="js/ask.js?v=4"></script>
 <script src="js/share.js?v=1"></script>
@@ -1180,6 +1180,11 @@ SF.installExplore(SF);
     var d = ev.data;
     if (ev.origin!==location.origin) return;
     if (d && d.type === 'sf-presenter-cmd' && d.cmd === 'who') toggleNamed();
+    /* The wall is still drawing the lesson's slides: say how far it has got. */
+    if (d && d.type === 'sf-presenter-wait' && d.text && $('waitLead')) {
+      $('waitTitle').textContent = 'Preparing the show…';
+      $('waitLead').textContent = d.text;
+    }
   });
 
   var PACE_LABEL = { lost: 'lost', fast: 'say too fast', slow: 'say too slow' };

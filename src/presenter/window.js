@@ -176,6 +176,15 @@ export function createPresenterWindow(SF, helpers) {
     return presenterWin;
   };
 
+  /* A word for the desk while it has nothing to show yet: the lab's show is
+     drawn slide by slide before the wall starts (js/lab-engine.js), and a desk
+     that only says "Linking…" for that long looks broken. */
+  Player.tellPresenter = function (text) {
+    if (presenterWin && !presenterWin.closed) {
+      try { presenterWin.postMessage({ type: 'sf-presenter-wait', text: String(text || '') }, location.origin); } catch (e) {}
+    }
+  };
+
   function closePresenter() {
     if (presenterWin && !presenterWin.closed) presenterWin.close();
     presenterWin = null;
