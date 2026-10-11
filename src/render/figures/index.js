@@ -21,7 +21,7 @@
  * Installed per page, before installExplore (index.html, presenter.html,
  * view.html), like the other teaching interactions.
  */
-import { W, H, NS, stage as makeStage } from './kit.js';
+import { W, H, NS, stage as makeStage, seek } from './kit.js';
 import { bubbles } from './bubbles.js';
 import { codechart } from './codechart.js';
 import { worldmap } from './worldmap.js';
@@ -131,5 +131,7 @@ export function installFigures(SF) {
     };
   }
 
-  SF.Figures = { active: active, count: count, steps: steps, render: render, kinds: Object.keys(FIGURES) };
+  /* seek(ms) holds every figure's moving parts at ms after they began, and
+     seek(null) lets them go on: a baseline can capture a figure mid-move. */
+  SF.Figures = { active: active, count: count, steps: steps, render: render, kinds: Object.keys(FIGURES), seek: seek };
 }

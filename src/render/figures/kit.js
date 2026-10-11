@@ -65,6 +65,15 @@ export function reduced() {
   try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; }
 }
 
+/* The figures' clock. Live, a tween runs on animation frames. Frozen by
+   seek(ms), every tween — running, or started while frozen — is drawn at ms
+   after it began, so a figure caught mid-move is the same picture every time
+   and a baseline can hold it there. seek(null) lets them run on from ms. */
+/** @type {number|null} */
+var frozen = null;
+/** @type {Set<{at: (el: number) => boolean, pause: () => void, resume: (el: number) => void}>} */
+var running = new Set();
+
 /**
  * Run `frame(k)` from 0 to 1 over `ms`, eased; returns a cancel function. With
  * reduced motion, or no animation frames (a still), it calls frame(1) at once.
@@ -72,17 +81,41 @@ export function reduced() {
  */
 export function tween(ms, frame, curve) {
   if (ms <= 0 || reduced() || typeof requestAnimationFrame !== 'function') { frame(1); return function () {}; }
-  var start = 0, id = 0, done = false, c = curve || ease.inOut;
+  var start = -1, from = 0, id = 0, c = curve || ease.inOut;
+  var t = {
+    /** Draw at `el` ms in; true once it has arrived. */
+    at: function (/** @type {number} */ el) { var k = Math.min(1, Math.max(0, el / ms)); frame(c(k)); return k >= 1; },
+    pause: function () { cancelAnimationFrame(id); },
+    resume: function (/** @type {number} */ el) { from = el; start = -1; id = requestAnimationFrame(tick); }
+  };
   /** @param {number} now */
   function tick(now) {
-    if (done) return;
-    if (!start) start = now;
-    var k = Math.min(1, (now - start) / ms);
-    frame(c(k));
-    if (k < 1) id = requestAnimationFrame(tick); else done = true;
+    if (start < 0) start = now;
+    if (t.at(from + now - start)) running.delete(t); else id = requestAnimationFrame(tick);
   }
-  id = requestAnimationFrame(tick);
-  return function () { done = true; cancelAnimationFrame(id); };
+  running.add(t);
+  if (frozen != null) t.at(frozen); else id = requestAnimationFrame(tick);
+  return function () { running.delete(t); cancelAnimationFrame(id); };
+}
+
+/**
+ * Hold every tween at `ms` after it began, or with null, let them run on.
+ * @param {number|null} ms
+ */
+export function seek(ms) {
+  if (ms == null || !isFinite(ms)) {
+    var was = frozen || 0;
+    frozen = null;
+    running.forEach(function (t) { t.resume(was); });
+    return;
+  }
+  frozen = Math.max(0, ms);
+  running.forEach(function (t) { t.pause(); t.at(/** @type {number} */ (frozen)); });
+}
+
+/** Milliseconds on the figures' clock: the frozen time while seek holds it. */
+export function now() {
+  return frozen != null ? frozen : typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
 /* ------------------------------------------------------------ formats */

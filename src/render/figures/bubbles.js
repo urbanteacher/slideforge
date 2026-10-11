@@ -18,7 +18,7 @@
  *   focus    { x: [lo, hi], y: [lo, hi] } zoom the chart to that window
  *   only     a group key: show only that group's bubbles
  */
-import { NU, W, H, el, set, tween, ease, lerp } from './kit.js';
+import { NU, W, H, el, set, tween, ease, lerp, now } from './kit.js';
 import { scatter, tooltipRows, cardAt } from './plots.js';
 
 var PLOT = { x0: 130, x1: W - 90, y0: 160, y1: H - 140 };
@@ -65,10 +65,11 @@ export var bubbles = {
       svg.addEventListener('pointerleave', function () { hovered = null; paintCard(); });
     }
 
-    var started = Date.now(), timer = 0, stopped = 0, cancel = function () {}, zoomed = d.x.domain.join() + '|' + d.y.domain.join();
+    /* On the kit's clock, so a held figure (seek) shows one time, not the wall's. */
+    var started = now(), timer = 0, stopped = 0, cancel = function () {}, zoomed = d.x.domain.join() + '|' + d.y.domain.join();
     function tick() {
-      if (!clock.isConnected && started < Date.now() - 1000) { window.clearInterval(timer); timer = 0; return; }
-      var s = Math.floor(((stopped || Date.now()) - started) / 1000);
+      if (!clock.isConnected && started < now() - 1000) { window.clearInterval(timer); timer = 0; return; }
+      var s = Math.max(0, Math.floor(((stopped || now()) - started) / 1000));
       clock.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
     }
 
@@ -89,7 +90,7 @@ export var bubbles = {
           stopped = 0; set(clock, { opacity: 1, fill: NU.paper }); tick();
           if (!timer) timer = window.setInterval(tick, 250);
         } else if (step.clock === 'stop' && fig.interactive) {
-          if (!stopped) stopped = Date.now();
+          if (!stopped) stopped = now();
           window.clearInterval(timer); timer = 0; tick(); set(clock, { opacity: 1, fill: NU.red });
         } else { window.clearInterval(timer); timer = 0; set(clock, { opacity: 0 }); }
 

@@ -2371,16 +2371,32 @@ html[data-ws="game"] #btnSorter { display: none; }
 @keyframes sf-zoom-out  { from { opacity: 1 } to { opacity: 0 } }
 @keyframes sf-wipe-in   { from { clip-path: inset(0 0 0 100%) } to { clip-path: inset(0 0 0 0) } }
 
-.tr-fade.entering  { animation: sf-fade-in .34s ease both; }
-.tr-fade.leaving   { animation: sf-fade-out .34s ease both; }
-.tr-push.entering  { animation: sf-push-in .38s cubic-bezier(.4,0,.2,1) both; }
-.tr-push.leaving   { animation: sf-push-out .38s cubic-bezier(.4,0,.2,1) both; }
+/* The motion numbers (tools/motion/README.md): enter on an ease-out, leave on
+   an ease-in about 45% shorter, and travel across the screen on an
+   ease-in-out. Only a leaving slide that can still be seen keeps the long
+   time: a pushed slide moves in step with the one replacing it, and a wiped
+   one is uncovered until the edge has crossed, so it holds and goes last.
+   Every time here is under the player's 700ms clean-up (js/player.js). */
+:root {
+  --sf-ease-out-expo: cubic-bezier(.16, 1, .3, 1);     /* reveals */
+  --sf-ease-out-quint: cubic-bezier(.22, 1, .36, 1);   /* entrances */
+  --sf-ease-in-out-quart: cubic-bezier(.76, 0, .24, 1); /* moves */
+  --sf-ease-in-expo: cubic-bezier(.7, 0, .84, 0);      /* exits */
+  --sf-ease-out-back: cubic-bezier(.34, 1.56, .64, 1); /* a small overshoot */
+  --sf-tr-enter: .45s;
+  --sf-tr-move: .5s;
+  --sf-tr-exit: .25s;
+}
+.tr-fade.entering  { animation: sf-fade-in var(--sf-tr-enter) var(--sf-ease-out-quint) both; }
+.tr-fade.leaving   { animation: sf-fade-out var(--sf-tr-exit) var(--sf-ease-in-expo) both; }
+.tr-push.entering  { animation: sf-push-in var(--sf-tr-move) var(--sf-ease-in-out-quart) both; }
+.tr-push.leaving   { animation: sf-push-out var(--sf-tr-move) var(--sf-ease-in-out-quart) both; }
 .back .tr-push.entering { animation-name: sf-push-in-r; }
 .back .tr-push.leaving  { animation-name: sf-push-out-r; }
-.tr-zoom.entering  { animation: sf-zoom-in .4s cubic-bezier(.3,0,.2,1) both; }
-.tr-zoom.leaving   { animation: sf-zoom-out .3s ease both; }
-.tr-wipe.entering  { animation: sf-wipe-in .42s cubic-bezier(.4,0,.2,1) both; }
-.tr-wipe.leaving   { animation: sf-fade-out .42s ease both; }
+.tr-zoom.entering  { animation: sf-zoom-in var(--sf-tr-move) var(--sf-ease-out-expo) both; }
+.tr-zoom.leaving   { animation: sf-zoom-out var(--sf-tr-exit) var(--sf-ease-in-expo) both; }
+.tr-wipe.entering  { animation: sf-wipe-in var(--sf-tr-move) var(--sf-ease-in-out-quart) both; }
+.tr-wipe.leaving   { animation: sf-fade-out var(--sf-tr-move) var(--sf-ease-in-expo) both; }
 
 /* Fade and zoom: a transition, not a double exposure.
  
@@ -2410,9 +2426,9 @@ html[data-ws="game"] #btnSorter { display: none; }
    Push and wipe never had the fault — they move or clip whole opaque slides,
    so every pixel is only ever showing one of them. */
 .deck-viewport .slide.tr-fade.entering:not([data-overlay])     { animation: none; }
-.deck-viewport .slide.tr-fade.entering:not([data-overlay]) > * { animation: sf-fade-in .34s ease both; }
-.deck-viewport .slide.tr-zoom.entering:not([data-overlay])     { animation: sf-zoom-in-box .4s cubic-bezier(.3,0,.2,1) both; }
-.deck-viewport .slide.tr-zoom.entering:not([data-overlay]) > * { animation: sf-fade-in .4s cubic-bezier(.3,0,.2,1) both; }
+.deck-viewport .slide.tr-fade.entering:not([data-overlay]) > * { animation: sf-fade-in var(--sf-tr-enter) var(--sf-ease-out-quint) both; }
+.deck-viewport .slide.tr-zoom.entering:not([data-overlay])     { animation: sf-zoom-in-box var(--sf-tr-move) var(--sf-ease-out-expo) both; }
+.deck-viewport .slide.tr-zoom.entering:not([data-overlay]) > * { animation: sf-fade-in var(--sf-tr-enter) var(--sf-ease-out-quint) both; }
 
 /* player HUD */
 .hud {
