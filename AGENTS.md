@@ -18,6 +18,7 @@ For any AI agent (Claude, Cursor, Codex) and for people.
 - `node tools/smoke/run.mjs [scenario…]` runs the browser smoke scenarios.
 - `npm run audit:render-surface` fails when a name is added to `SF` from the renderer. If the addition is deliberate, re-record with `--update` and note it in `docs/render-split.md` §7.
 - After changing `server/server.js`, restart the local server; it does not reload.
+- The built-in lessons ship as Lesson-studio copies (`assets/lab-lessons/`, `js/lab-lessons.js`). After changing a lesson, or bumping the converter's `CARRIED`, run `node tools/build-lab-lessons.mjs [key…]` (it needs `lab-app/` built). `tests/lab-lessons.test.js` fails until the copies match. A stale copy is never shown: the browser converts that lesson as before.
 
 ## Committing
 
