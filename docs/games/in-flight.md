@@ -92,7 +92,9 @@ Mark's answers:
 3. **Real names on the wall and in reports: fine.** The Coda (21) and per-student takeaways (24) can use them; they still wait on durable storage.
 4. **Pilot: plain Multiple choice.** The Stations clock (3), Connect Four (5), Word Splash's sort (4) and Connection Maker's drawn links (1) move to the lab backlog, with the other items marked so above.
 
-Item 15 (Muddiest Point's wording) is a one-line fix and is made with the viewing pass.
+Item 15 (Muddiest Point's wording) turned out not to be one line: the spotlight's label comes from the slide's feedback settings, which keep no label of their own, so it moves to the lab backlog with the other wall changes.
+
+**The viewing pass, 12 October:** the ten room smokes pass (`node tools/smoke/run.mjs live-quiz boss lab-lesson room-output presenter-activities quick-poll desk-poll rehearse lowstakes refresh`), with the day's live-room fixes in. They cover joining and rejoining by PIN and QR, a reload during a question, the boss, polls and the desk, rehearsal and a lab lesson's show. `lab-lesson` needed one change: it pressed Next while a slide was still arriving, which now finishes the slide first. Not viewed by eye: Predict's written prediction and Odd One Out's rule (item 11). **Classic is frozen to bug fixes from here (hard rule 7).**
 
 ## Change log
 
