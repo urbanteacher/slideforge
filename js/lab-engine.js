@@ -48,10 +48,51 @@
     var source = sourceLesson(labDeck);
     var s = SF.makeSlide('title');
     s.title = labDeck.title || 'Untitled lesson';
+    var had = SF.Store && SF.Store.get ? SF.Store.get(labDeck.id) : null;
     return SF.normalizeDeck({
       id: labDeck.id, title: labDeck.title, theme: source && source.theme, labCard: true,
       libraryGroup: labDeck.libraryGroup || (source && source.libraryGroup) || undefined,
+      /* A shipped deck's card keeps its key, so a delete in the Library is remembered. */
+      sourceKey: (had && had.sourceKey) || shippedKey(labDeck.id) || undefined,
       modified: Date.now(), slides: [s]
+    });
+  }
+
+  /* ------------------------------------------- the decks SlideForge ships (js/lab-decks.js) */
+
+  /** The shipped deck a key or a card id names, if any. */
+  function shippedEntry(keyOrId) {
+    var all = SF.LAB_DECKS || {};
+    var hit = all[keyOrId];
+    if (!hit) Object.keys(all).some(function (k) { var e = all[k]; if (e && e.id === keyOrId) { hit = e; return true; } return false; });
+    if (typeof hit === 'string') return { file: hit };
+    return hit || null;
+  }
+  /** The key a shipped deck is filed under, from its deck id. */
+  function shippedKey(id) {
+    var all = SF.LAB_DECKS || {};
+    return Object.keys(all).filter(function (k) { var e = all[k]; return e && typeof e === 'object' && e.id === id; })[0] || '';
+  }
+  /** Its deck, as built: the copy written into the app, or else fetched from its file. */
+  function shippedDeck(entry) {
+    if (entry && entry.deck) return Promise.resolve(JSON.parse(JSON.stringify(entry.deck)));
+    return fetch(entry.file, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); });
+  }
+  /* Like a built-in lesson (js/lessons.js seedLibrary), each shipped deck has a card in every
+     browser's Library under its folder, from the start: unless that browser deleted it, which
+     the Library remembers by the card's key. Opening the card the first time opens the deck as
+     built (open, below); from then on it is that browser's own copy. */
+  function seedShipped() {
+    if (!SF.Store || !SF.Store.save || !SF.LAB_DECKS) return;
+    var dismissed = [];
+    try { dismissed = JSON.parse(localStorage.getItem('slideforge.dismissedSeeds.v1') || '[]'); } catch (e) {}
+    Object.keys(SF.LAB_DECKS).forEach(function (key) {
+      var e = shippedEntry(key);
+      if (!e || !e.id || !e.libraryGroup || dismissed.indexOf(key) >= 0 || SF.Store.get(e.id)) return;
+      var s = SF.makeSlide('title');
+      s.title = e.title || key;
+      SF.Store.save(SF.normalizeDeck({ id: e.id, title: e.title || key, labCard: true, libraryGroup: e.libraryGroup,
+        sourceKey: key, modified: Date.now(), slides: [s] }), { force: true });
     });
   }
 
@@ -193,6 +234,9 @@
 
   function open(d) {
     whenReady(function (a) {
+      /* The card of a shipped deck this browser has not opened yet (seedShipped): the deck as built. */
+      var ship = d && d.labCard && !d.labSaved && !saved.some(function (x) { return x.id === d.id; }) ? shippedEntry(d.id) : null;
+      if (ship) { shippedDeck(ship).then(function (deck) { open(deck); }, function () { SF.toast('That lesson could not be loaded.'); }); return; }
       var fromCard = d && !d.labSaved && isCard(d.id);
       /* A saved lab lesson opens with its SlideForge original to hand, so a copy
          made before the converter kept feedback and timers can take them, once. */
@@ -200,7 +244,11 @@
       var source = row && row.sourceId && SF.Store && SF.Store.get ? SF.Store.get(row.sourceId) : null;
       var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, lessonGames(figureStills(source))) : a.open(lessonGames(figureStills(d)));
       Promise.resolve(run).then(function (r) {
-        if (r === false) { refreshSaved(); SF.toast('That lesson could not be opened here.'); return; }
+        if (r === false) {
+          var ship = fromCard ? shippedEntry(d.id) : null;
+          if (ship) { shippedDeck(ship).then(function (deck) { open(deck); }, function () { SF.toast('That lesson could not be loaded.'); }); return; }
+          refreshSaved(); SF.toast('That lesson could not be opened here.'); return;
+        }
         /* Known at once, not after the list is read back: the Library may be
            opened the next moment, and must already show this lesson once. */
         var now = a.getDeck();
@@ -639,14 +687,14 @@
     SF.Shell.register(studioView('game', 'quiz', 'Games'));
     SF.Shell.register(studioView('plan', 'activities', 'Activities'));
     document.documentElement.classList.add('lab-engine');
+    seedShipped();
     /* The lesson the address asked for. A lab deck the app ships as a file
        (js/lab-decks.js) opens as written; anything else is built from SF.LESSONS. */
-    var shipped = askedKey && SF.LAB_DECKS ? SF.LAB_DECKS[askedKey] : null;
+    var shipped = askedKey ? shippedEntry(askedKey) : null;
     if (shipped) {
-      fetch(shipped, { cache: 'no-cache' })
-        .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
-        .then(function (d) { open(d); })
-        .catch(function () { SF.toast('That lesson could not be loaded.'); });
+      /* Asked for by name: it comes back to the Library if it had been deleted there. */
+      if (SF.restoreLibrarySeed) SF.restoreLibrarySeed(askedKey);
+      shippedDeck(shipped).then(function (d) { open(d); }, function () { SF.toast('That lesson could not be loaded.'); });
       try {
         if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
       } catch (e) {}
