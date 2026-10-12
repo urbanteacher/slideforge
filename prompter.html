@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Speaker notes — SlideForge</title>
+<!-- The presenter's notes on their phone or a prompt screen, following the show.
+     The show opens a private channel on the relay (server/server.js, prompterOpen);
+     this page holds its id (?p=) and shows the notes for the slide on the wall,
+     moving when the show moves. Next and Back step the show. -->
+<style>
+  :root { --bg: #0d0e11; --panel: #17191e; --ink: #f2f2f4; --dim: #9aa1ad; --line: #2a2d35; --accent: #ef6a45; --size: 30px; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--dim); }
+  header .pos { font: 700 18px system-ui; color: var(--ink); font-variant-numeric: tabular-nums; }
+  header .clock { margin-left: auto; font-variant-numeric: tabular-nums; }
+  header .dot { width: 9px; height: 9px; border-radius: 50%; background: #666; flex: none; }
+  header .dot.on { background: #3ccf7c; }
+  main { flex: 1; overflow-y: auto; padding: 18px 18px 8px; }
+  .title { font: 700 calc(var(--size) * 0.8) / 1.2 system-ui; margin: 0 0 12px; color: var(--accent); }
+  .notes { font-size: var(--size); line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .notes.empty { color: var(--dim); font-style: italic; }
+  .next { margin-top: 22px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--dim); font-size: calc(var(--size) * 0.6); }
+  .next b { color: var(--ink); font-weight: 600; }
+  .msg { color: var(--dim); font-size: 20px; text-align: center; margin-top: 18vh; padding: 0 20px; }
+  footer { display: flex; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel); }
+  footer button { background: #2a2d35; color: var(--ink); border: 0; border-radius: 10px; padding: 12px 10px; font: 600 15px system-ui; cursor: pointer; }
+  footer .step { flex: 1; font-size: 18px; padding: 16px 10px; }
+  footer .step.go { background: var(--accent); color: #fff; }
+  footer button[aria-pressed="true"] { background: #44495a; }
+  /* Prompter: big words, centred, for a screen read from a distance. Mirror: for beam-splitter glass. */
+  body.prompt main { text-align: center; padding-top: 6vh; }
+  body.prompt .notes { font-size: calc(var(--size) * 1.8); line-height: 1.3; }
+  body.mirror main { transform: scaleX(-1); }
+</style>
+</head>
+<body>
+<header>
+  <span class="dot" id="dot" title="Connection"></span>
+  <span class="pos" id="pos">–</span>
+  <span id="deck"></span>
+  <span class="clock" id="clock"></span>
+</header>
+<main id="main"><p class="msg" id="msg">Connecting to the show…</p></main>
+<footer>
+  <button class="step" id="prev" aria-label="Previous slide">‹ Back</button>
+  <button id="smaller" aria-label="Smaller text">A−</button>
+  <button id="bigger" aria-label="Bigger text">A+</button>
+  <button id="prompt" aria-pressed="false" title="Big centred words, for a screen read from a distance">Prompter</button>
+  <button id="mirror" aria-pressed="false" title="Flip the words, for a teleprompter's glass">Mirror</button>
+  <button class="step go" id="next" aria-label="Next slide">Next ›</button>
+</footer>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var id = new URLSearchParams(location.search).get('p') || '';
+  var state = null, ended = false, ws = null, retry = 0;
+
+  /* The reader's own settings, on this device only. */
+  var prefs = { size: 30, prompt: false, mirror: false };
+  try { Object.assign(prefs, JSON.parse(localStorage.getItem('slideforge.prompter') || '{}')); } catch (e) {}
+  function applyPrefs() {
+    document.documentElement.style.setProperty('--size', prefs.size + 'px');
+    document.body.classList.toggle('prompt', !!prefs.prompt);
+    document.body.classList.toggle('mirror', !!prefs.mirror);
+    $('prompt').setAttribute('aria-pressed', String(!!prefs.prompt));
+    $('mirror').setAttribute('aria-pressed', String(!!prefs.mirror));
+    try { localStorage.setItem('slideforge.prompter', JSON.stringify(prefs)); } catch (e) {}
+  }
+  $('smaller').onclick = function () { prefs.size = Math.max(16, prefs.size - 4); applyPrefs(); };
+  $('bigger').onclick = function () { prefs.size = Math.min(96, prefs.size + 4); applyPrefs(); };
+  $('prompt').onclick = function () { prefs.prompt = !prefs.prompt; applyPrefs(); };
+  $('mirror').onclick = function () { prefs.mirror = !prefs.mirror; applyPrefs(); };
+  applyPrefs();
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function message(text) { $('main').innerHTML = '<p class="msg">' + esc(text) + '</p>'; }
+  function paint() {
+    if (!state) return;
+    $('pos').textContent = (state.index + 1) + ' / ' + state.total;
+    $('deck').textContent = state.deck || '';
+    var notes = String(state.notes || '').trim();
+    $('main').innerHTML =
+      (state.title ? '<h1 class="title">' + esc(state.title) + '</h1>' : '') +
+      '<div class="notes' + (notes ? '' : ' empty') + '">' + (notes ? esc(notes) : 'No notes for this slide.') + '</div>' +
+      (state.next ? '<div class="next">Next: <b>' + esc(state.next) + '</b></div>' : '<div class="next">Last slide.</div>');
+    $('main').scrollTop = 0;
+  }
+  function tick() {
+    var now = new Date(), t = now.toTimeString().slice(0, 5);
+    if (state && state.startedAt) {
+      var s = Math.max(0, Math.floor((Date.now() - state.startedAt) / 1000));
+      t = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ' in · ' + t;
+    }
+    $('clock').textContent = t;
+  }
+  setInterval(tick, 1000); tick();
+
+  function send(cmd) {
+    if (ws && ws.readyState === 1 && !ended) ws.send(JSON.stringify({ t: 'prompterCmd', cmd: cmd }));
+  }
+  $('next').onclick = function () { send('next'); };
+  $('prev').onclick = function () { send('prev'); };
+
+  function connect() {
+    if (!/^[a-f0-9]{32}$/.test(id)) { message('This notes link is not complete. Open it again from the show: ••• → Notes on another device.'); return; }
+    try { ws = new WebSocket((location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host); } catch (e) { message('Could not reach SlideForge.'); return; }
+    ws.onopen = function () { retry = 0; $('dot').classList.add('on'); ws.send(JSON.stringify({ t: 'prompterWatch', id: id })); };
+    ws.onmessage = function (ev) {
+      var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.t === 'prompterState') { state = m.state; paint(); tick(); }
+      else if (m.t === 'prompterEnd') { ended = true; message(m.reason || 'The show has ended.'); $('dot').classList.remove('on'); }
+    };
+    ws.onclose = function () {
+      $('dot').classList.remove('on');
+      if (ended) return;
+      /* A dropped connection (a phone waking, a wifi hop) comes back by itself. */
+      retry = Math.min(retry + 1, 6);
+      setTimeout(connect, 600 * retry);
+    };
+  }
+  connect();
+
+  /* Arrow keys and the space bar step the show, for a clicker or a keyboard on the prompt screen. */
+  addEventListener('keydown', function (e) {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); send('next'); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); send('prev'); }
+  });
+})();
+</script>
+</body>
+</html>

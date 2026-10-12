@@ -2898,6 +2898,162 @@
     if (asked && typeof asked.catch === 'function') asked.catch(function () {});
   };
 
+  /* ------------------------------------------- speaker notes on another device */
+
+  /* The presenter's notes on their phone, or on a prompt screen, moving as the
+     show moves: the relay holds a private channel (server/server.js,
+     prompterOpen), the show tells it where it is on every slide, and
+     prompter.html shows that slide's notes. The phone can press Next and Back.
+     The notes go only to this channel: never to a room, a share, or a phone in
+     the class. The channel ends when the show does. */
+  /** @type {{ws: WebSocket, id: string, watchers: number, startedAt: number}|null} */
+  var prompter = null;
+  /** @type {HTMLElement|null} */
+  var prompterCard = null;
+
+  function prompterLink(id) {
+    return location.origin + location.pathname.replace(/[^/]*$/, '') + 'prompter.html?p=' + id;
+  }
+  /** @param {any} s */
+  function slideName(s) {
+    if (!s) return '';
+    return String(s.title || (s.design && s.design.labTitle) || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  }
+  function prompterSend() {
+    if (!prompter || !prompter.id || prompter.ws.readyState !== 1 || !Player.deck) return;
+    var d = Player.deck, i = Player.idx, s = d.slides[i] || {}, nx = d.slides[i + 1];
+    var state = {
+      index: i, total: d.slides.length, title: slideName(s) || ('Slide ' + (i + 1)),
+      notes: String(s.notes || ''), next: nx ? (slideName(nx) || ('Slide ' + (i + 2))) : '',
+      deck: String(d.title || ''), startedAt: prompter.startedAt
+    };
+    try { prompter.ws.send(JSON.stringify({ t: 'prompterState', state: state })); } catch (e) {}
+  }
+  function prompterStop() {
+    if (prompter) { try { prompter.ws.close(); } catch (e) {} }
+    prompter = null;
+    paintPrompterCard();
+  }
+  function paintPrompterCard() {
+    if (!prompterCard) return;
+    var body = prompterCard.querySelector('.pc-body');
+    if (!body) return;
+    if (!prompter) {
+      body.innerHTML = '<p>Notes on another device are off.</p><button class="pc-btn" data-pc="start">Start again</button>';
+    } else if (!prompter.id) {
+      body.innerHTML = '<p>Connecting…</p>';
+    } else {
+      var url = prompterLink(prompter.id);
+      body.innerHTML =
+        '<div class="pc-qr">' + (SF.qrSvg ? SF.qrSvg(url, { size: 220, title: 'Notes link' }) : '') + '</div>' +
+        '<p>Scan it on your phone, or open the link on the prompt screen. Your notes follow every move, and the phone can press Next and Back.</p>' +
+        '<input class="pc-url" readonly value="' + url.replace(/"/g, '&quot;') + '">' +
+        '<div class="pc-row"><button class="pc-btn" data-pc="copy">Copy link</button><button class="pc-btn pc-stop" data-pc="stop">Stop sharing notes</button></div>' +
+        '<p class="pc-count">' + (prompter.watchers ? prompter.watchers + (prompter.watchers === 1 ? ' screen' : ' screens') + ' following' : 'Nothing following yet') + '</p>' +
+        '<p class="pc-private">Private: only this link shows your notes. Nobody in the room sees it, and it stops when the show ends.</p>';
+    }
+  }
+  function showPrompterCard() {
+    if (!root) return;
+    if (!prompterCard) {
+      prompterCard = document.createElement('div');
+      prompterCard.className = 'prompter-card';
+      prompterCard.setAttribute('role', 'dialog');
+      prompterCard.setAttribute('aria-label', 'Notes on another device');
+      prompterCard.innerHTML = '<div class="pc-head"><b>Notes on another device</b><button class="pc-x" data-pc="close" aria-label="Close">✕</button></div><div class="pc-body"></div>';
+      var css = document.createElement('style');
+      css.textContent =
+        '.prompter-card{position:fixed;right:24px;top:24px;z-index:2000;width:320px;background:#16181d;color:#e9eaee;border:1px solid #2c2f37;border-radius:14px;padding:14px 16px;font:14px/1.45 system-ui,sans-serif;box-shadow:0 18px 48px rgba(0,0,0,.45)}' +
+        '.prompter-card .pc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}' +
+        '.prompter-card .pc-x{background:none;border:0;color:#aaa;font-size:16px;cursor:pointer}' +
+        '.prompter-card .pc-qr{background:#fff;border-radius:10px;padding:8px;display:flex;justify-content:center}' +
+        '.prompter-card .pc-qr svg{width:220px;height:220px}' +
+        '.prompter-card .pc-url{width:100%;box-sizing:border-box;background:#0e0f12;color:#cfd2da;border:1px solid #2c2f37;border-radius:8px;padding:6px 8px;font-size:12px}' +
+        '.prompter-card .pc-row{display:flex;gap:8px;margin-top:8px}' +
+        '.prompter-card .pc-btn{flex:1;background:#2a2d35;color:#fff;border:0;border-radius:8px;padding:8px;cursor:pointer;font:600 13px system-ui}' +
+        '.prompter-card .pc-stop{background:#3a2226;color:#ffb4b4}' +
+        '.prompter-card .pc-count{color:#9aa1ad;margin:8px 0 2px}' +
+        '.prompter-card .pc-private{color:#7d8492;font-size:12px;margin:4px 0 0}';
+      prompterCard.appendChild(css);
+      prompterCard.addEventListener('click', function (e) {
+        var b = /** @type {HTMLElement} */ (e.target).closest('[data-pc]');
+        if (!b) return;
+        e.stopPropagation();
+        var what = b.getAttribute('data-pc');
+        if (what === 'close') { if (prompterCard) prompterCard.remove(); prompterCard = null; }
+        else if (what === 'stop') prompterStop();
+        else if (what === 'start') Player.notesElsewhere();
+        else if (what === 'copy' && prompter && prompter.id && navigator.clipboard) {
+          navigator.clipboard.writeText(prompterLink(prompter.id)).then(function () { toast('Notes link copied.'); }, function () {});
+        }
+      });
+    }
+    if (!prompterCard.parentNode) root.appendChild(prompterCard);
+    paintPrompterCard();
+  }
+
+  /** Put the presenter's notes on another device: the private link, as a QR code and an address. */
+  Player.notesElsewhere = function () {
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') { toast('Notes on another device need the SlideForge server.'); return; }
+    if (!prompter) {
+      var sock;
+      try { sock = new WebSocket((location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host); } catch (e) { toast('Could not reach the SlideForge server.'); return; }
+      var me = { ws: sock, id: '', watchers: 0, startedAt: Date.now() };
+      prompter = me;
+      sock.onopen = function () { sock.send(JSON.stringify({ t: 'prompterOpen' })); };
+      sock.onmessage = function (ev) {
+        var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+        if (prompter !== me || !m) return;
+        if (m.t === 'prompterReady') { me.id = String(m.id || ''); prompterSend(); paintPrompterCard(); }
+        else if (m.t === 'prompterWatchers') { me.watchers = Number(m.n) || 0; paintPrompterCard(); }
+        else if (m.t === 'prompterCmd' && Player.open) { if (m.cmd === 'next') Player.next(); else if (m.cmd === 'prev') Player.prev(); }
+      };
+      sock.onclose = function () { if (prompter === me) { prompter = null; paintPrompterCard(); } };
+    }
+    showPrompterCard();
+  };
+  Player.on('slide', function () { prompterSend(); });
+  Player.on('close', function () { prompterStop(); if (prompterCard) { prompterCard.remove(); prompterCard = null; } });
+
+  /* Its doors: the show's ••• menu, and Present ▾ before a show (which starts one first). */
+  function addNotesElsewhereButtons() {
+    var more = document.getElementById('hudMore');
+    if (more && !more.querySelector('[data-act-notes-elsewhere]')) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-act-notes-elsewhere', '');
+      b.title = 'Your speaker notes on your phone or a prompt screen, following the show';
+      b.textContent = 'Notes on another device';
+      b.onclick = function () { Player.notesElsewhere(); };
+      more.insertBefore(b, more.firstChild);
+    }
+    var menu = document.querySelector('.present-menu');
+    if (menu && !document.getElementById('btnNotesElsewhere')) {
+      var m = document.createElement('button');
+      m.className = 'btn';
+      m.setAttribute('role', 'menuitem');
+      m.id = 'btnNotesElsewhere';
+      m.title = 'Your speaker notes on your phone or a prompt screen, following the show';
+      m.innerHTML = 'Notes on another device <span class="present-hint">phone or prompt screen</span>';
+      m.onclick = function () {
+        if (Player.open) { Player.notesElsewhere(); return; }
+        var present = document.getElementById('btnPresent');
+        if (present) present.click();
+        var tries = 0;
+        (function whenOpen() {
+          if (Player.open) { Player.notesElsewhere(); return; }
+          if (++tries < 600) setTimeout(whenOpen, 100);
+        })();
+      };
+      var after = document.getElementById('btnPresenter');
+      if (after && after.parentNode === menu) menu.insertBefore(m, after.nextSibling); else menu.appendChild(m);
+    }
+  }
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addNotesElsewhereButtons);
+    else addNotesElsewhereButtons();
+  }
+
   /* ------------------------------------------------------------ open/close */
 
   Player.start = function (deck, startIndex, opts) {

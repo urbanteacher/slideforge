@@ -381,7 +381,14 @@
       /* One slide, or a game's board compiled as several (src/deck/labshow.js). A live figure's
          stand-in gives way to the figure itself, so the room can hover it and Next steps it. */
       var live = item.liveFigure && item.sourceSlideId && bySource[item.sourceSlideId];
-      slides = slides.concat(live ? (item.hidden ? Object.assign({}, live, { hidden: true }) : live) : make(item));
+      var made = live ? (item.hidden ? Object.assign({}, live, { hidden: true }) : live) : make(item);
+      /* A slide drawn as a picture has no words of its own; its original's title rides along
+         unseen, for the presenter's notes screen (js/player.js prompterSend). */
+      var from = !live && item.sourceSlideId && bySource[item.sourceSlideId];
+      if (from && from.title) [].concat(made).forEach(function (/** @type {any} */ x) {
+        if (x && !x.title) x.design = Object.assign({}, x.design, { labTitle: String(from.title) });
+      });
+      slides = slides.concat(made);
       var more = item.sourceSlideId && after[item.sourceSlideId];
       if (more) { slides = slides.concat(more); delete after[item.sourceSlideId]; }
     });
@@ -841,7 +848,7 @@
        Host live, Present and its menu) so the two sit on one line; each of its
        buttons presses the shell's own, hidden, so what they do is unchanged. */
     act: function (name, arg) {
-      var ids = { library: 'btnLibraryOpen', demo: 'btnTemplate', live: 'btnLive', present: 'btnPresent',
+      var ids = { library: 'btnLibraryOpen', demo: 'btnTemplate', live: 'btnLive', present: 'btnPresent', notes: 'btnNotesElsewhere',
         presenter: 'btnPresenter', rehearse: 'btnRehearse' };
       var el = name === 'rehearse' && arg
         ? document.querySelector('[data-rehearse-size="' + Number(arg) + '"]')

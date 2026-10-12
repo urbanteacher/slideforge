@@ -32,6 +32,7 @@ export function ShellRight() {
           {(close) => (
             <>
               <button onClick={() => { act('presenter'); close(); }}>Teacher Presenter<small>notes on your screen</small></button>
+              <button onClick={() => { act('notes'); close(); }}>Notes on another device<small>phone or prompt screen</small></button>
               <button onClick={() => { act('rehearse'); close(); }}>▷ Rehearse<small>with a sample class</small></button>
               <div className="menu-note">Rehearse with a class of</div>
               <div className="shell-sizes">

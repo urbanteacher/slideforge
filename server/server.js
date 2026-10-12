@@ -656,6 +656,27 @@ const server = http.createServer(serve);
 /** pin -> room */
 const rooms = new Map();
 
+/* Speaker notes on another device: the presenter's phone, a prompt screen.
+   The show (js/player.js) opens a channel and says where it is on every
+   move; each screen holding the channel's id sees the notes for that slide
+   at the same moment, and may ask the show for Next or Back. The id is the
+   only key: random, never listed, and gone when the show's socket closes.
+   Notes live here only in memory, only while the show runs, and go nowhere
+   else: not to a room, not to a share. */
+const prompters = new Map();
+const PROMPTER_MAX = 500;
+/** What a show may say about where it is, and no more. */
+function prompterState(x) {
+  const n = (v, max) => Math.max(0, Math.min(max, Math.floor(Number(v) || 0)));
+  const t = (v, max) => String(v == null ? '' : v).slice(0, max);
+  x = x || {};
+  return {
+    index: n(x.index, 10000), total: n(x.total, 10000), step: n(x.step, 1000), steps: n(x.steps, 1000),
+    title: t(x.title, 300), notes: t(x.notes, 20000), next: t(x.next, 300), deck: t(x.deck, 300),
+    startedAt: Number(x.startedAt) > 0 ? Math.floor(Number(x.startedAt)) : 0,
+  };
+}
+
 /* How long a room waits for a host who has gone quiet. Long enough to cover a
    page reload, a browser crash and reopen, or a laptop asleep for a minute;
    short enough that a room nobody returns to is not left open. */
@@ -1435,11 +1456,50 @@ ws.attach(server, (sock, req) => {
   /* Fixed at connect: the host's own view of where the app lives, which is
      what the room must hand out. */
   const joinUrl = joinUrlFor(req);
+  /** The notes channel this socket runs ('prompterShow') or watches ('prompterWatch'). */
+  let prompterId = null;
+  let lastCmd = 0;
 
   sock.on('message', (raw) => {
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
     if (!m || typeof m.t !== 'string') return;
+
+    /* ---- speaker notes on another device ---- */
+    if (m.t === 'prompterOpen') {
+      if (role || prompters.size >= PROMPTER_MAX) return;
+      role = 'prompterShow';
+      prompterId = crypto.randomBytes(16).toString('hex');
+      prompters.set(prompterId, { show: sock, watchers: new Set(), state: null });
+      sock.json({ t: 'prompterReady', id: prompterId });
+      return;
+    }
+    if (m.t === 'prompterState') {
+      const pr = role === 'prompterShow' && prompters.get(prompterId);
+      if (!pr) return;
+      pr.state = prompterState(m.state);
+      for (const w of pr.watchers) { if (w.open) w.json({ t: 'prompterState', state: pr.state }); }
+      return;
+    }
+    if (m.t === 'prompterWatch') {
+      const id = String(m.id || '');
+      const pr = !role && /^[a-f0-9]{32}$/.test(id) ? prompters.get(id) : null;
+      if (!pr) { sock.json({ t: 'prompterEnd', reason: 'This notes link is not running. Start it again from the show.' }); return; }
+      role = 'prompterWatch';
+      prompterId = id;
+      pr.watchers.add(sock);
+      if (pr.show.open) pr.show.json({ t: 'prompterWatchers', n: pr.watchers.size });
+      if (pr.state) sock.json({ t: 'prompterState', state: pr.state });
+      return;
+    }
+    if (m.t === 'prompterCmd') {
+      const pr = role === 'prompterWatch' && prompters.get(prompterId);
+      const now = Date.now();
+      if (!pr || !pr.show.open || (m.cmd !== 'next' && m.cmd !== 'prev') || now - lastCmd < 150) return;
+      lastCmd = now;
+      pr.show.json({ t: 'prompterCmd', cmd: m.cmd });
+      return;
+    }
 
     /* ---- host side ---- */
 
@@ -2942,6 +3002,17 @@ ws.attach(server, (sock, req) => {
   });
 
   sock.on('close', () => {
+    if (role === 'prompterShow') {
+      const pr = prompters.get(prompterId);
+      if (pr) for (const w of pr.watchers) { if (w.open) w.json({ t: 'prompterEnd', reason: 'The show has ended.' }); }
+      prompters.delete(prompterId);
+      return;
+    }
+    if (role === 'prompterWatch') {
+      const pr = prompters.get(prompterId);
+      if (pr) { pr.watchers.delete(sock); if (pr.show.open) pr.show.json({ t: 'prompterWatchers', n: pr.watchers.size }); }
+      return;
+    }
     /* A spectator leaving is not an event: nobody was counting them, nothing
        is owed to them, and the room does not change. Drop the socket and go. */
     if (role === 'watcher') {
