@@ -182,7 +182,6 @@ html:not([data-ready]) body { background: #0a0a0b; }
           <span aria-hidden="true">/</span>
           <span id="railTotal"></span>
         </label>
-        <button class="rail-cog" data-ws="deck" id="btnSorter" type="button" title="Block view — the whole deck at once, to rearrange it (⌘G)" aria-label="Block view of all slides">▦</button>
         <!-- A third way into the same settings sheet was a bare ⚙ here. The
              header's Settings and the panel's Theme remain, and ⌘K finds it. -->
       </div>
@@ -220,93 +219,6 @@ html:not([data-ready]) body { background: #0a0a0b; }
           <option value="2">200%</option>
         </select>
         <button class="canvas-bar-btn" id="btnZoomIn" type="button" title="Zoom in (⌘⌥+)" aria-label="Zoom in">+</button>
-      </div>
-      <div class="art-bar" id="artBar" role="group" aria-label="Slide artwork" hidden>
-        <span class="art-what" id="artWhat" aria-live="polite">Click a shape or picture</span>
-        <span class="canvas-mode-help">Arrow keys move · Shift moves faster · Esc finishes</span>
-        <button class="canvas-bar-btn" id="btnArtSmaller" type="button" data-art-needs-selection title="Smaller" aria-label="Smaller">−</button>
-        <button class="canvas-bar-btn" id="btnArtBigger" type="button" data-art-needs-selection title="Bigger" aria-label="Bigger">+</button>
-        <label class="anchor-control" title="Free is placed by hand and can bleed off the slide. On the lattice it is a block.">Place
-          <select id="artPlace" data-art-needs-selection>
-            <option value="free">Free</option>
-            <option value="lattice">On the lattice</option>
-          </select>
-        </label>
-        <label class="anchor-control" title="Whether this artwork paints behind the words or over them">Side
-          <select id="artOrder" data-art-needs-selection>
-            <option value="back">Behind content</option>
-            <option value="front">In front of content</option>
-          </select>
-        </label>
-        <button class="canvas-bar-btn" id="btnArtHide" type="button" data-art-needs-selection title="Hide on this slide">◌ Hide</button>
-        <button class="canvas-bar-btn" id="btnArtDelete" type="button" data-art-needs-selection title="Remove this picture from the slide" aria-label="Remove this picture from the slide">✕</button>
-        <label class="canvas-bar-btn art-pick" title="Place your own picture on this slide">＋ Picture
-          <input type="file" id="artPicture" accept="image/*" aria-label="Place a picture on this slide">
-        </label>
-        <button class="canvas-bar-btn" id="btnArtReset" type="button" title="Drop this slide's artwork changes and follow the theme again">↺ Theme</button>
-      </div>
-      <div class="arrange-bar" id="arrangeBar" role="group" aria-label="Arrange blocks" hidden>
-        <div class="arrange-line">
-          <span class="arrange-what" id="arrangeWhat" aria-live="polite">Click a block</span>
-          <span class="canvas-mode-help">Arrow keys move · Shift + arrows resize · Esc finishes</span>
-        </div>
-        <!-- Three groups, because thirteen controls in one wrapping row came to
-             seven lines and read as one undifferentiated pile. Grouped by the
-             question each answers — how big, where, and what blocks are on the
-             slide at all — rather than by control type, so the row a control is
-             on is a clue to what it does. -->
-        <div class="arrange-group" role="group" aria-label="Size">
-          <span class="arrange-group-label">Size</span>
-          <button class="canvas-bar-btn" id="btnArrangeNarrower" type="button" data-arrange-needs-selection title="Narrower (one column)" aria-label="Narrower (one column)">◀▶</button>
-          <button class="canvas-bar-btn" id="btnArrangeWider" type="button" data-arrange-needs-selection title="Wider (one column)" aria-label="Wider (one column)">▶◀</button>
-          <button class="canvas-bar-btn" id="btnArrangeShorter" type="button" data-arrange-needs-selection title="Shorter (one line)" aria-label="Shorter (one line)">▲▼</button>
-          <button class="canvas-bar-btn" id="btnArrangeTaller" type="button" data-arrange-needs-selection title="Taller (one line)" aria-label="Taller (one line)">▼▲</button>
-          <button class="canvas-bar-btn" id="btnArrangeFit" type="button" data-arrange-needs-selection title="Give this block the lines its words need, and push what is below it down">↕ Fit to text</button>
-        </div>
-        <div class="arrange-group" role="group" aria-label="Place">
-          <span class="arrange-group-label">Place</span>
-          <label class="anchor-control">Across <select id="arrangeAnchorX" data-arrange-needs-selection><option value="">Free</option><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></label>
-          <label class="anchor-control">Down <select id="arrangeAnchorY" data-arrange-needs-selection><option value="">Free</option><option value="top">Top</option><option value="middle">Middle</option><option value="bottom">Bottom</option></select></label>
-          <button class="canvas-bar-btn" id="btnArrangeCentre" type="button" title="Move everything on this slide into the middle of the grid, keeping the spacing between blocks">⌗ Centre</button>
-          <label class="anchor-control" title="Where the words sit inside the rows this block was given — not where the block sits on the slide">In rows <select id="arrangeAlignY" data-arrange-needs-selection>
-            <option value="">Top</option>
-            <option value="middle">Centred</option>
-            <option value="bottom">Bottom</option>
-          </select></label>
-        </div>
-        <div class="arrange-group" role="group" aria-label="Blocks">
-          <span class="arrange-group-label">Blocks</span>
-          <label class="anchor-control" title="Cut this block in two — side by side, or one above the other — and put a new block in the rest">Split
-            <select id="arrangeSplit" data-arrange-needs-selection>
-              <option value="">◫ Split…</option>
-              <optgroup label="Side by side">
-                <option value="col:50">50 · 50</option>
-                <option value="col:40">40 · 60</option>
-                <option value="col:60">60 · 40</option>
-                <option value="col:20">20 · 80</option>
-                <option value="col:80">80 · 20</option>
-              </optgroup>
-              <optgroup label="One above the other">
-                <option value="row:50">50 · 50</option>
-                <option value="row:40">40 · 60</option>
-                <option value="row:60">60 · 40</option>
-                <option value="row:20">20 · 80</option>
-                <option value="row:80">80 · 20</option>
-              </optgroup>
-            </select>
-          </label>
-          <label class="anchor-control" title="Add a block of your own to this slide">Add
-            <select id="arrangeAdd">
-              <option value="">＋ Block…</option>
-            </select>
-          </label>
-          <button class="canvas-bar-btn" id="btnArrangeDuplicate" type="button" title="Copy this block, one row below" aria-label="Copy this block, one row below">⧉</button>
-          <button class="canvas-bar-btn" id="btnArrangeRemove" type="button" title="Remove this block from the slide" aria-label="Remove this block from the slide">✕</button>
-          <!-- Only shown when this slide has blocks taken off it. Hiding with
-               no way back is a trap, not an edit. -->
-          <button class="canvas-bar-btn" id="btnArrangeRestore" type="button" hidden title="Bring back the layout blocks taken off this slide">↩ Bring back</button>
-          <button class="canvas-bar-btn" id="btnArrangeReset" type="button" title="Drop this slide's arrangement and follow the theme again">↺ Theme</button>
-        </div>
       </div>
       <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true" aria-label="Hide the panel">◨</button>
     </div>
@@ -588,8 +500,6 @@ SF.installExplore(SF);
 <script src="js/history.js?v=3"></script>
 <script src="js/shell.js?v=13"></script>
 <script src="js/palette.js?v=1"></script>
-<script src="js/content-tools.js?v=5"></script>
-<script src="js/slide-clip.js?v=1"></script>
 <script src="js/lesson-runtime.js?v=2"></script>
 <script src="js/lab-engine.js?v=33"></script>
 <script src="js/studio.js?v=18"></script>

@@ -115,21 +115,6 @@ test('the statement layout is registered as a deck layout, in Introduce', () => 
     'a statement is taking the theme art again');
 });
 
-test('the editor edits a statement, and does not call its own text hidden', () => {
-  /* The inspector's per-type content fields moved to src/editor/content-fields.js
-     when js/editor.js was split; these two assertions follow them there. */
-  const editor = fs.readFileSync(require.resolve('../src/editor/content-fields.js'), 'utf8');
-  /* Registered for the picker and the renderer is not enough: with no fields
-     of its own, the inspector offered a Heading the layout does not draw and
-     announced the statement's own line as "extra text not shown". */
-  assert.match(editor, /if \(s\.type === 'statement'\)/, 'the inspector has no statement fields');
-  assert.match(editor, /'The line'/, 'there is no field for the line itself');
-
-  const tools = fs.readFileSync(require.resolve('../js/content-tools.js'), 'utf8');
-  assert.match(tools, /'quote','statement','table'/, 'body still counts as hidden on a statement');
-  assert.match(tools, /'section','statement','quote'/, 'subtitle still counts as hidden on a statement');
-});
-
 test('one word is sized to the slide, not to a band', () => {
   /* A word has nothing to wrap, so its size is arithmetic: the pad is 1088px
      wide inside its padding and a bold glyph averages ~0.58em. At the 140px
