@@ -1,0 +1,309 @@
+{
+  "from": "http://localhost:3021/framework/critical-text/3",
+  "live": "https://the-teaching-model.vercel.app/framework/critical-text/3",
+  "head": {
+    "eyebrow": "Stage 3 of 8",
+    "title": "Abstraction: key text or what is missing",
+    "ask": "What reveals the most, or what is left out?"
+  },
+  "panelW": 838,
+  "shots": [
+    {
+      "tab": "Recall",
+      "section": true,
+      "establish": "What to retrieve before you start: the terms this question rests on."
+    },
+    {
+      "tab": "Recall",
+      "title": "",
+      "file": "01.png",
+      "text": "The examiner-report research is computer science only. Critical text analysis has no reports of its own, so these findings come from computer science papers and are not yet known for this subject."
+    },
+    {
+      "tab": "Recall",
+      "title": "Knowledge to recall first",
+      "file": "02.png",
+      "text": "KNOWLEDGE TO RECALL FIRST\nThe case: a laptop advert\nVELOX 14\n5.2 GHz*\nof pure power.\nFaster than you’ll ever need.\n£899\n*Up to 5.2 GHz in Turbo mode. Performance varies by workload.\nVELOX 14\nTechnical specifications\nProcessor\nVelox V5, 4 cores\nClock speed\n2.6 GHz base, up to 5.2 GHz Turbo (one core)\nCache\n8 MB L3\nMemory (RAM)\n8 GB\nStorage\n256 GB SSD\nDisplay\n14-inch, 1920 × 1080\nGraphics\nIntegrated\nCooling\nSingle fan, 15 mm thin case\nBattery\nUp to 10 hours*\n*Measured during local video playback. Performance varies by workload.\n↻ Turn over for the specs\nWhat must I know before I can analyse this advert?",
+      "state": "front"
+    },
+    {
+      "tab": "Recall",
+      "title": "Knowledge to recall first (continued)",
+      "file": "03.png",
+      "text": "Knowledge to recall\tWhat you should know\tWhy it matters here\nAgenda, audience, purpose\tWhat a text wants, and who it is aimed at.\tFrames every later stage of the analysis.\nConnotation\nUSED BY THIS STAGE\n\tThe associations a word carries beyond its literal meaning.\tInterpret “pure power”.\nOmission\nUSED BY THIS STAGE\n\tTexts select what to include and what to leave out.\tMakes “what’s missing” something to look for.\nClock speed and GHz\n3 examiner findings, 1 wrong idea, 2 reports\n\t5.2 GHz = 5.2 billion clock cycles per second.\tKnow what the headline figure actually claims.\nWatch out for: Units: kilo and kibi, 1000 and 1024\n\nPerformance factors\nUSED BY THIS STAGE\n6 examiner findings, 1 wrong idea, 4 reports\n\tCores, cache, memory, cooling and workload affect speed.\tName what the advert leaves out.\nWatch out for: Memory and storage roles: RAM, cache, ROM, secondary storage\n\nUser requirements\tDifferent tasks place different demands on a computer.\tTest “faster than you’ll ever need”.\nCHECK RECALL FIRST",
+      "state": "front"
+    },
+    {
+      "tab": "Recall",
+      "title": "Knowledge to recall first (continued)",
+      "file": "04.png",
+      "text": "What is a text’s agenda?\nWhat is a connotation?\nWhat does 5.2 GHz mean?\nName two other factors that affect performance.\nTHEN APPLY IT\nWhat has the advert chosen not to tell you, and why?",
+      "state": "front"
+    },
+    {
+      "tab": "Recall",
+      "title": "Knowledge to recall first: the back of the case",
+      "file": "05.png",
+      "text": "The case: a laptop advert\nVELOX 14\n5.2 GHz*\nof pure power.\nFaster than you’ll ever need.\n£899\n*Up to 5.2 GHz in Turbo mode. Performance varies by workload.\nVELOX 14\nTechnical specifications\nProcessor\nVelox V5, 4 cores\nClock speed\n2.6 GHz base, up to 5.2 GHz Turbo (one core)\nCache\n8 MB L3\nMemory (RAM)\n8 GB\nStorage\n256 GB SSD\nDisplay\n14-inch, 1920 × 1080\nGraphics\nIntegrated\nCooling\nSingle fan, 15 mm thin case\nBattery\nUp to 10 hours*\n*Measured during local video playback. Performance varies by workload.\n↻ Turn back to the advert",
+      "state": "back"
+    },
+    {
+      "tab": "Question",
+      "section": true,
+      "establish": "What is asked, and answer content: whether a response is accurate and complete."
+    },
+    {
+      "tab": "Question",
+      "title": "",
+      "file": "06.png",
+      "text": "The examiner-report research is computer science only. Critical text analysis has no reports of its own, so these findings come from computer science papers and are not yet known for this subject."
+    },
+    {
+      "tab": "Question",
+      "title": "Question",
+      "file": "07.png",
+      "text": "QUESTION\nChoose your abstraction: the single most revealing line, or what isn't there.\nThe case: a laptop advert\nVELOX 14\n5.2 GHz*\nof pure power.\nFaster than you’ll ever need.\n£899\n*Up to 5.2 GHz in Turbo mode. Performance varies by workload.\nVELOX 14\nTechnical specifications\nProcessor\nVelox V5, 4 cores\nClock speed\n2.6 GHz base, up to 5.2 GHz Turbo (one core)\nCache\n8 MB L3\nMemory (RAM)\n8 GB\nStorage\n256 GB SSD\nDisplay\n14-inch, 1920 × 1080\nGraphics\nIntegrated\nCooling\nSingle fan, 15 mm thin case\nBattery\nUp to 10 hours*\n*Measured during local video playback. Performance varies by workload.\n↻ Turn over for the specs",
+      "state": "front"
+    },
+    {
+      "tab": "Question",
+      "title": "Question (continued)",
+      "file": "08.png",
+      "text": "Your answer should give: Chosen abstraction, with both routes weighed\nREQUIRESEvidence → explanation. What the evidence shows, and why it matters here. \nOften seen instead: quotes or copies the evidence without explaining its significance.\nBEFORE YOU ANSWER\n\nWhat is it really asking? Find the command word first. This practice question carries no marks, so size the answer from its join (explain, argue, compare or judge (extended answer)). In an exam, the marks tell you how far to go.\nUse the case. Every point should name something from it. A true fact that ignores the case can score nothing.\nDon’t hand the question back. Repeating its wording, or copying labels from the source, is not an answer.\n\nThe reports record 356 exam-technique findings, 94 of answers not applied to the scenario and 66 on misusing the information given. Findings, not students.",
+      "state": "front"
+    },
+    {
+      "tab": "Question",
+      "title": "Question: the back of the case",
+      "file": "09.png",
+      "text": "The case: a laptop advert\nVELOX 14\n5.2 GHz*\nof pure power.\nFaster than you’ll ever need.\n£899\n*Up to 5.2 GHz in Turbo mode. Performance varies by workload.\nVELOX 14\nTechnical specifications\nProcessor\nVelox V5, 4 cores\nClock speed\n2.6 GHz base, up to 5.2 GHz Turbo (one core)\nCache\n8 MB L3\nMemory (RAM)\n8 GB\nStorage\n256 GB SSD\nDisplay\n14-inch, 1920 × 1080\nGraphics\nIntegrated\nCooling\nSingle fan, 15 mm thin case\nBattery\nUp to 10 hours*\n*Measured during local video playback. Performance varies by workload.\n↻ Turn back to the advert",
+      "state": "back"
+    },
+    {
+      "tab": "Question",
+      "title": "Join it up",
+      "file": "10.png",
+      "text": "JOIN IT UP\n\nComplete what this question requires: no more reasoning than it asks for, and no less precision.\n\nExplain, argue, compare or judge (extended answer)\n\nThe join this question needs:\n\npoint\n→\nbecause\n→\nso\n→\nin this case\n\nHere, the link to build:\n\nTwo possible routes\n→\nwhat each would reveal\n→\na choice made by which gives stronger evidence for the question\n\nRefused without it: relevant points with no reasoning between them, or not applied to the case.\n\n“a well-developed line of reasoning which is clear and logically structured”\nOCR GCSE J277/01, June 2023, Q6, band 3\n\nWhere answers stopped at one point, the step that broke was reasoning in 39 of 68 examiner findings, against 12 of 119 at other levels; and answers stop short in 32% of question parts whose scheme requires reasons, against 6% where it does not. Where reasons are required, the fix is the link, not more facts. A synthesis to test (hypothesis 10), model-read, not yet checked by a teacher. Why this join."
+    },
+    {
+      "tab": "Question",
+      "title": "What to do",
+      "file": "11.png",
+      "text": "WHAT TO DO\n\nPick out the key line or moment that reveals the most, or identify what’s missing: the voices, perspectives, or facts left out."
+    },
+    {
+      "tab": "Question",
+      "title": "Answers: Student A",
+      "file": "12.png",
+      "text": "ANSWERS\nStudent A\nStudent B\nStudent C: the worked example\n\n0 of 5 elements\na planning count, not marks\n\nThe advert is about a laptop.\n\nNo useful elements: Chooses nothing: neither a revealing line nor what is missing.\n\nWhat may be missing: Interpretation: read what the question is actually asking\n\nFeedback for this answer: “How did you decide between the two routes?” If that is not enough: “Which route gives you something you could use as evidence for your question?”",
+      "answer": "Student A"
+    },
+    {
+      "tab": "Question",
+      "title": "Answers: Student B",
+      "file": "13.png",
+      "text": "ANSWERS\nStudent A\nStudent B\nStudent C: the worked example\n\n2 of 5 elements\na planning count, not marks\n\nRoute A, key text: \"5.2 GHz of pure power.\"1 Route B, what's missing: no cores, cache, battery life or heat2. I'm choosing Route B.\n\n2 of 5 elements. States the points without the because or the so: the link examiners most often find missing when an answer stops at one point.\n\nFeedback for this answer: “Why does that follow? And so what, for this case?”\n\nSTUDENT B’S BREAKDOWN\nIn the join’s terms\n2 useful elements (a planning count, not marks)\n\nUNIT\n\t\nROLE\n\t\nTEXT\n\tDRAWS ON\n1\tPoint\t\"5.2 GHz of pure power.\"\t1\n2\tExplained\tno cores, cache, battery life or heat",
+      "answer": "Student B"
+    },
+    {
+      "tab": "Question",
+      "title": "Answers: Student C: the worked example",
+      "file": "14.png",
+      "text": "ANSWERS\nStudent A\nStudent B\nStudent C: the worked example\n\n5 of 5 elements\na planning count, not marks\nRoute A, key text: \"5.2 GHz of pure power.\"1 It joins a measurable number to an unmeasurable word2, so \"pure\" borrows the number's authority3. Route B, what's missing: no cores, cache, battery life or heat4. I'm choosing Route B, because it gives stronger evidence for my question5.\nEvery unit: the worked example.\nNext check: A fresh, independent task: “A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.”",
+      "answer": "Student C: the worked example"
+    },
+    {
+      "tab": "Question",
+      "title": "Answers: Student C: the worked example (continued)",
+      "file": "15.png",
+      "text": "BREAKDOWN\nIn the join’s terms\n5 useful elements (a planning count, not marks)\n\nUNIT\n\t\nROLE\n\t\nTEXT\n\tDRAWS ON\n1\tPoint\t\"5.2 GHz of pure power.\"\t1\n2\tExplained\ta measurable number to an unmeasurable word\t\n3\tSo\t\"pure\" borrows the number's authority\t\n4\tPoint\tno cores, cache, battery life or heat\t\n5\tBecause\tit gives stronger evidence for my question",
+      "answer": "Student C: the worked example"
+    },
+    {
+      "tab": "Question",
+      "title": "Transfer check",
+      "file": "16.png",
+      "text": "TRANSFER CHECK\nNEAR: THE SAME LINK, A NEW CASE\n“A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.”\nFAR: THE SAME PRINCIPLE, SOMEWHERE ELSE\n“From two sources on the same historical event, choose the one line that best supports your argument, and say why you rejected the other.” This tests choosing evidence by purpose, not this advert.\n\nScore both on the same SOLO scale as the stage. Ideally set after a delay and without support. If one fails, check the new topic’s knowledge first: a failure may be missing knowledge, not the answering skill. Drafted items, not yet tried with students."
+    },
+    {
+      "tab": "How to answer",
+      "section": true,
+      "establish": "How to approach this question: the steps, the routine and the ladder of support."
+    },
+    {
+      "tab": "How to answer",
+      "title": "",
+      "file": "17.png",
+      "text": "The examiner-report research is computer science only. Critical text analysis has no reports of its own, so these findings come from computer science papers and are not yet known for this subject."
+    },
+    {
+      "tab": "How to answer",
+      "title": "Answer routine",
+      "file": "18.png",
+      "text": "ANSWER ROUTINE\n31% of coded examiner-report findings describe wrong ideas. Each step is meant to guard against one kind of mistake: a design to test.\n1. Decode\n24%\nFind the command word. Size the answer from the question; in an exam, the marks say how far to go. Every point must use the case.\nGuards against exam technique, not applied to the scenario, misusing the information given.\n2. Retrieve\n46%\nBring: Connotation, Omission, Performance factors.\nGuards against misconceptions, found difficult.\n3. Reason\n7%\nOne route that earns the link: Two possible routes → what each would reveal → a choice made by which gives stronger evidence for the question.\nGuards against stopped short.\n4. Refine\n8%\nUse technical terms where accuracy depends on them; keep the rest clear and natural.\nGuards against imprecise wording.\n5. Review\n14%\nRe-read the question: does the answer do everything it asks?\nGuards against slips and calculation errors.\nAfter marking, log each lost mark by the step that failed. A design to try, not a tested result: the routine and its evidence."
+    },
+    {
+      "tab": "How to answer",
+      "title": "The question",
+      "file": "19.png",
+      "text": "THE QUESTION\nThe case: a laptop advert\nVELOX 14\n5.2 GHz*\nof pure power.\nFaster than you’ll ever need.\n£899\n*Up to 5.2 GHz in Turbo mode. Performance varies by workload.\nVELOX 14\nTechnical specifications\nProcessor\nVelox V5, 4 cores\nClock speed\n2.6 GHz base, up to 5.2 GHz Turbo (one core)\nCache\n8 MB L3\nMemory (RAM)\n8 GB\nStorage\n256 GB SSD\nDisplay\n14-inch, 1920 × 1080\nGraphics\nIntegrated\nCooling\nSingle fan, 15 mm thin case\nBattery\nUp to 10 hours*\n*Measured during local video playback. Performance varies by workload.\n↻ Turn over for the specs\nChoose your abstraction: the single most revealing line, or what isn't there.",
+      "state": "front"
+    },
+    {
+      "tab": "How to answer",
+      "title": "The question (continued)",
+      "file": "20.png",
+      "text": "Your answer should give: Chosen abstraction, with both routes weighed",
+      "state": "front"
+    },
+    {
+      "tab": "How to answer",
+      "title": "The question: the back of the case",
+      "file": "21.png",
+      "text": "The case: a laptop advert\nVELOX 14\n5.2 GHz*\nof pure power.\nFaster than you’ll ever need.\n£899\n*Up to 5.2 GHz in Turbo mode. Performance varies by workload.\nVELOX 14\nTechnical specifications\nProcessor\nVelox V5, 4 cores\nClock speed\n2.6 GHz base, up to 5.2 GHz Turbo (one core)\nCache\n8 MB L3\nMemory (RAM)\n8 GB\nStorage\n256 GB SSD\nDisplay\n14-inch, 1920 × 1080\nGraphics\nIntegrated\nCooling\nSingle fan, 15 mm thin case\nBattery\nUp to 10 hours*\n*Measured during local video playback. Performance varies by workload.\n↻ Turn back to the advert",
+      "state": "back"
+    },
+    {
+      "tab": "How to answer",
+      "title": "The mental operations this question needs",
+      "file": "22.png",
+      "text": "THE MENTAL OPERATIONS THIS QUESTION NEEDS\n\nOperations you move between, not steps in a fixed order: you might go back to retrieve after interpreting the question, or rebuild a connection after checking.\n\nInterpret\nWHERE STUDENT A’S ANSWER BREAKS DOWN\nChoose one route: the most revealing line, or what is missing.\nConnect\nLink the choice to the question it will help answer.\nTeaching method from the research, not specific to this question · lever 1: writing explanations as cause linked to effect\nExpress\nState the choice, then why it is the stronger evidence.\nCheck\nIs the choice something the next stage can use?\n\nSeparate from the command word (the response asked for), the answer’s structure (isolated or connected ideas) and the mark scheme (what this question rewards). Draft guidance written for this app."
+    },
+    {
+      "tab": "How to answer",
+      "title": "Step by step: Recognition",
+      "file": "23.png",
+      "text": "STEP BY STEP: RECOGNITION\n\nSpot the right feature, term or pattern when it is in front of you.\n\nRead or look through the whole item first.\nMark each thing that matches what you are looking for.\nSay why each one counts, and what you ruled out.\n\nKnowledge to bring: ConnotationOmissionPerformance factors\n\nCHECK YOUR ANSWER\n\nCould I tell this apart from something that looks similar?"
+    },
+    {
+      "tab": "How to answer",
+      "title": "Fluency practice",
+      "file": "24.png",
+      "text": "FLUENCY PRACTICE\n\nPractice for when you can already do it accurately: the aim now is quick and smooth.\n\nA GOOD ANSWER\nCorrect without hesitation, with few prompts.\nPRACTISE BY\nShort, regular, timed repetition. Cut the prompts as you improve.\nTO REACH GENERALISATION\nTry it on a different case from the one you practised. That is generalisation."
+    },
+    {
+      "tab": "How to answer",
+      "title": "",
+      "file": "25.png",
+      "text": "Stages of mastery from the instructional hierarchy (Haring and Eaton, 1978). Draft: each stage’s placement is judged from its power words, not from examiner data. Draft guidance written for this app."
+    },
+    {
+      "tab": "How to answer",
+      "title": "The missing-link ladder",
+      "file": "26.png",
+      "text": "THE MISSING-LINK LADDER\nThe link to build: Two possible routes → what each would reveal → a choice made by which gives stronger evidence for the question\n1. Independent\nChoose your abstraction: the single most revealing line, or what isn't there.\n2. Neutral prompt\n“How did you decide between the two routes?”\n3. Partial hint\n“Which route gives you something you could use as evidence for your question?”\n4. Model\nShow the worked example (Student C on the Question tab), then withdraw it.\n5. New task: independent (no hints), but asked\n“A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.”\nRepair, unprompted, in a later and different task: In a later analysis, gives the reason for a choice of abstraction in terms of what it lets them argue, without being asked why. \nRung 5 shows independent performance when asked; later independent use, unprompted, gives stronger evidence of learning. If rung 5 fails, check the new topic’s knowledge first.\nReached the link\nUnaided\nAfter a neutral prompt\nAfter a hint\nOnly with the model\nIn a new task, unaided"
+    },
+    {
+      "tab": "How to answer",
+      "title": "The missing-link ladder (continued)",
+      "file": "27.png",
+      "text": "Go straight to the new task if the student succeeds unaided. If help was needed, withdraw it and ask for an independent reattempt first. Drafted for Nodes under the model’s rules. Not yet tried with students; the rung is kept in this browser only."
+    },
+    {
+      "tab": "Mark scheme",
+      "section": true,
+      "establish": "Awarded credit: what meets the marking criteria, from the mark schemes themselves."
+    },
+    {
+      "tab": "Mark scheme",
+      "title": "What kind of mark scheme this is",
+      "file": "28.png",
+      "text": "The examiner-report research is computer science only. Critical text analysis has no reports of its own, so these findings come from computer science papers and are not yet known for this subject.\nWHAT KIND OF MARK SCHEME THIS IS\n\nNOT EXAMINED This framework is not examined, so it has no mark scheme of its own. Anything below is borrowed from the closest examined stage, and says so.\nNo demand check here: the demand audit covers six command words (Identify, Complete, Describe, State, Give and Explain).\nClosest examined stage: Computer Science (GCSE), command word 11, Justify. Choosing a route and saying why is a Justify: the choice, then the reasons that fit it. This framework is not examined, so the evidence below is that stage’s."
+    },
+    {
+      "tab": "Mark scheme",
+      "title": "How the marks are awarded",
+      "file": "29.png",
+      "text": "HOW THE MARKS ARE AWARDED\n3 marks\nThe choice (1), then two reasons, or a reason and its follow-on.\nOCR J277/01, June 2023, Q3(c)(i), compression for a text file: lossless (1); no data is removed (1) … and a text file needs every character to work (1).\n4 marks\nIn OCR 2024 and 2025 the choice earns nothing: all 4 marks are for reasons that fit it, each linked to the user.\nOCR J277/01, June 2024, Q5(b)(i), storage for a musician: solid state is robust (1) … which matters if the device is moved (1), and so on.\n\nNOT CREDITED\n\nReasons that do not match the choice made.\nComparisons with no object: “faster”, without saying faster at what.\nReading a mark scheme"
+    },
+    {
+      "tab": "Mark scheme",
+      "title": "What examiners saw",
+      "file": "30.png",
+      "text": "WHAT EXAMINERS SAW\n\nOCR J277/01, June 2024, Q5(b)(i): magnetic or solid state storage for a musician\n\nWEAKER ANSWERS\n\n“Solid state is faster”, without saying faster at what.\n\nSTRONGER ANSWERS\n\nLinks each property to the user: solid state is robust, which matters because the musician may move the device.\n\nParaphrased from the examiners’ report for that paper."
+    },
+    {
+      "tab": "Mark scheme",
+      "title": "What the mark schemes show",
+      "file": "31.png",
+      "text": "WHAT THE MARK SCHEMES SHOW\n\nPartly consistent with this level\n\nThe marks reward reasons linked to the context (relational). The judgement is required, but earns at most 1 mark on its own.\n\nIN THE PAPERS\n8 question parts, 2–4 marks\nHOW MARKS ARE EARNED\nThe choice earns 1 mark in some papers and none in others. The rest of the marks are for reasons that match the choice, with follow-on marks for linking each one to the context.\n\nThe most-used command words are not on this ladder: State (49 parts), Identify (37), Shade (29), Write (26), Give (24) and Tick (21), about half of all parts. They are marked as one fact or several separate points, so they sit with Define and Describe.\n\nRead from the 368 question parts that have a mark scheme, of 384 in 12 GCSE Computer Science papers (AQA 8525 June 2022–23, OCR J277 June 2022–25; 16 OCR J277/02 parts have none in this set), with their examiners’ reports. Readings by this app, not yet checked by a teacher."
+    },
+    {
+      "tab": "Mark scheme",
+      "title": "Marks and substance, across every command word",
+      "file": "32.png",
+      "text": "MARKS AND SUBSTANCE, ACROSS EVERY COMMAND WORD\nThe command word signals the kind of response; the content and the context decide the thinking it takes. The marks show how much substance is wanted: up to 5 marks, count roughly one unit of substance per mark, as a planning aid that the actual mark scheme overrides. At 6 marks or more, 7 of the 32 parts are levels-marked and judged as a whole; the other 25 stay points-marked.\nMarks\tWhat it needs\tHow the marks fall\n1\n115 parts\n\tOne precise point.\t\nThe exact term or fact: “cache size”, not “cache”.\nMostly State, Shade, Give, Identify and Define.\n2\n111 parts\n\tTwo points, or one point and its expansion.\t\nDefine: what it is, and what sets it apart.\n“Describe one …” or “Explain one …”: the point, then how or why.\n3\n51 parts\n\tThree units of substance.\t\nThree separate points (“State three …”).\nA name or choice, then two points describing or justifying it.\nA three-step chain or process.\n4\n49 parts\n\tFour units, usually in pairs.\t\nTwo points, each expanded or applied to the scenario (2 + 2).\nA choice and three reasons, or four reasons with no mark for the choice.\nFour steps in order, or four table rows."
+    },
+    {
+      "tab": "Mark scheme",
+      "title": "Marks and substance, across every command word (continued)",
+      "file": "33.png",
+      "text": "5\n10 parts\n\tMostly building: completing code or a table, one mark per element.\t\nEach correct element earns its own mark.\n6+\n32 parts\n\tTwo different kinds of question, and most are still points-marked.\t\nWrite an algorithm (13 of the 32): one mark for each required feature, such as the inputs, the decision, the loop and each output.\nDiscuss (7 of the 32, 6–9 marks, levels-marked): the whole answer is judged for coverage, application to the scenario, balance and structure. The papers' eighth levels-marked part is a 4-mark Explain.\nThe other 12 are points-marked: one mark per creditable point.\nCounted from the 368 question parts with a mark scheme, of 384 in the same 12 papers, whatever their command word. Each count says what it includes. Readings by this app, not yet checked by a teacher."
+    },
+    {
+      "tab": "Mark scheme",
+      "title": "Sources for this stage",
+      "file": "34.png",
+      "text": "SOURCES FOR THIS STAGE\n\nThe exact questions cited on this stage. Check each claim against its source.\n\nOCR GCSE J277/01, June 2023: Q6, Q3(c)(i)\nQuestion paper\nMark scheme\nExaminers’ report\nOCR GCSE J277/01, June 2024: Q5(b)(i)\nQuestion paper\nMark scheme\nExaminers’ report"
+    },
+    {
+      "tab": "Analysis",
+      "section": true,
+      "establish": "A learning diagnosis to investigate: possible difficulties and the probes to test them, not verdicts."
+    },
+    {
+      "tab": "Analysis",
+      "title": "",
+      "file": "35.png",
+      "text": "The examiner-report research is computer science only. Critical text analysis has no reports of its own, so these findings come from computer science papers and are not yet known for this subject."
+    },
+    {
+      "tab": "Analysis",
+      "title": "Four views of this stage",
+      "file": "36.png",
+      "text": "FOUR VIEWS OF THIS STAGE\nEach view has a different source of evidence. Only the first three are evidence; the fourth is what to try.\n1. ASSESSMENT DEMAND\n\nEvidence → explanation: What the evidence shows, and why it matters here.\n\nSOLO demanded: relational. No demand audit for this command word.\n\nThe question only: no demand audit for this command word\n2. AWARDED EVIDENCE\n\nNot examined: no mark scheme of its own.\n\nNo mark scheme read for this stage\n3. REPORTED BREAKDOWN\n\nTypically described: quotes or copies the evidence without explaining its significance.\n\nAn observation about answers. It does not show whether a student lacked the knowledge, misread the question or ran out of time.\n\nComputer science reports, not this subject’s\n4. INSTRUCTIONAL RESPONSE"
+    },
+    {
+      "tab": "Analysis",
+      "title": "Four views of this stage (continued)",
+      "file": "37.png",
+      "text": "One successful route: Two possible routes → what each would reveal → a choice made by which gives stronger evidence for the question. \nA teaching hypothesis, not the mark scheme: other routes can earn the same credit.\nProbe: “How did you decide between the two routes?” Hint: “Which route gives you something you could use as evidence for your question?”"
+    },
+    {
+      "tab": "Analysis",
+      "title": "Four views of this stage (continued)",
+      "file": "38.png",
+      "text": "Then an independent reattempt, and a new task (independent: no hints, but asked): “A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.” Later independent use, unprompted and in a different task, gives stronger evidence of learning.\nA teaching hypothesis, not yet tested with students"
+    },
+    {
+      "tab": "Analysis",
+      "title": "Behind this stage",
+      "file": "39.png",
+      "text": "POWER WORDS\nselect\nabstract\nomit\nidentify absence\nBACKBONE\nC Compare and analyse\nBLOOM\n4 Analyse\nCOGNITIVE\nRecognition\nMASTERY\nFluency\nDraws on recall: ConnotationOmissionPerformance factors\nBEHIND THIS STAGE\nNEEDED FOR FULL MARKS\nDRAFT\n4 Relational ideas connected into a whole\n2 Unistructural\none unit: a single point.\n3 Multistructural\nseveral units, each credited on its own.\n4 Relational\nthe units linked: expansions and follow-ons credited. The level this stage is placed at."
+    },
+    {
+      "tab": "Analysis",
+      "title": "SOLO × process — stage 3, Abstraction",
+      "file": "40.png",
+      "text": "SOLO × PROCESS — STAGE 3, ABSTRACTION\nSOLO × process\nMechanism groups\nClassification\nSample student\nStudent A\nStudent B\nStudent C\nThe structure each answer showed, down the side; the process to investigate, across. Letters place this stage's three students: the same answers as on its Question tab. Below the grid, each answer, a possible explanation, a probe and a teaching response. Readings of answers, not of minds."
+    },
+    {
+      "tab": "Analysis",
+      "title": "SOLO × process — stage 3, Abstraction (continued)",
+      "file": "41.png",
+      "text": "STRUCTURE DEMONSTRATED (SOLO)\nPROCESS TO INVESTIGATE\n\tRETRIEVAL\tRECOGNITION\tCOMPREHENSION\tCONNECTION\tAPPLICATION\tTRANSFER\tNONE SHOWN\nPrestructural\t—\t—\tA\t—\t—\t—\t\nUnistructural\t—\t—\t—\t—\t—\t—\t\nMultistructural\t—\t—\t—\tB\t—\t—\t\nRelational\t—\t—\t—\t—\t—\t—\tC\nExtended abstract\t—\t—\t—\t—\t—\t—\nThe two axes record different things: down the side, the structure an answer showed; across the top, the process suspected of holding it back, which is still to investigate. They can come from different tasks."
+    },
+    {
+      "tab": "Analysis",
+      "title": "SOLO × process — stage 3, Abstraction (continued)",
+      "file": "42.png",
+      "text": "A\n\nStructure demonstrated: Prestructural \n(from: written answer)\n. Process to investigate: Comprehension \n(from: written answer)\n.\n\nWritten answer\nThe advert is about a laptop.\n\nPossibly missing: Interpretation. Possible explanation: Chooses nothing: neither a revealing line nor what is missing. Probe: “How did you decide between the two routes?” If that is not enough: “Which route gives you something you could use as evidence for your question?” Teaching response, if the probe confirms it: practise reading what the question actually asks.\nB\n\nStructure demonstrated: Multistructural \n(from: written answer)\n. Process to investigate: Connection \n(from: written answer)\n.\n\nWritten answer\nRoute A, key text: \"5.2 GHz of pure power.\" Route B, what's missing: no cores, cache, battery life or heat. I'm choosing Route B.\n\nPossibly missing: Connection. Possible explanation: States the points without the because or the so: the link examiners most often find missing when an answer stops at one point. Probe: “Why does that follow? And so what, for this case?” Teaching response, if the probe confirms it: model the link from cause to effect, then fade the model."
+    },
+    {
+      "tab": "Analysis",
+      "title": "SOLO × process — stage 3, Abstraction (continued)",
+      "file": "43.png",
+      "text": "C\n\nStructure demonstrated: Relational \n(from: written answer)\n. Process to investigate: none shown on this task. Next check, not an observation: transfer.\n\nWritten answer\nRoute A, key text: \"5.2 GHz of pure power.\" It joins a measurable number to an unmeasurable word, so \"pure\" borrows the number's authority. Route B, what's missing: no cores, cache, battery life or heat. I'm choosing Route B, because it gives stronger evidence for my question.\n\nOn this task, nothing shown missing. Next check, not an observation: A fresh, independent task: “A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.” Teaching response: if it does not transfer, check the new topic's knowledge first, then return to the hint."
+    }
+  ]
+}

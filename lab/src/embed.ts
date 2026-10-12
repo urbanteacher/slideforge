@@ -58,6 +58,10 @@ const STRANDS = ['safe', 'smart', 'creative', 'responsible', 'future'];
  *  campaign strand (aiad26-smart), the colour set that leads: Smart is orange, not the first set. */
 function paletteFor(theme = ''): { palette: string; frame: boolean; set?: string } {
   if (theme.startsWith('northeastern')) return { palette: 'nul', frame: true };
+  if (theme.startsWith('nodes')) {
+    const i = ['u', 'a', 'c', 'x', 'j'].indexOf(theme.split('-')[1] ?? '');
+    return { palette: 'nodes', frame: false, set: i >= 0 ? String(i + 1) : undefined };
+  }
   if (theme.startsWith('ukbt-institute')) return { palette: 'ukbt-institute', frame: false };
   if (theme.startsWith('ukbt')) return { palette: 'ukbt', frame: false };
   const m = /^(aiad2[67])(?:-([a-z]+))?/.exec(theme);

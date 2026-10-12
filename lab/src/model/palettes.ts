@@ -75,6 +75,26 @@ const CAMPAIGNS: PalettePreset[] = [
     display: 'Iowan Old Style', displayWeight: '700', body: 'Avenir Next',
   },
   {
+    // Nodes (the-teaching-model.vercel.app, src/app/globals.css): ink #182033 on white cards over cool grey,
+    // ink for the quiet slides, and the U A C X J backbone as the colour sets, each with the ink the app
+    // sets on it (Okabe-Ito colours, chosen to read for colour-blind viewers). Archivo throughout.
+    id: 'nodes', name: 'Nodes', source: 'Nodes · src/app/globals.css',
+    light: '#ffffff', dark: '#182033', loud: '#0072b2', loudInk: '#ffffff', accent2: '#009e73',
+    quiet: { ground: '#182033', ink: '#ffffff' },
+    sets: [
+      { loud: '#0072b2', deep: '#182033', ink: '#ffffff' }, { loud: '#009e73', deep: '#182033', ink: '#ffffff' },
+      { loud: '#e69f00', deep: '#182033', ink: '#182033' }, { loud: '#d55e00', deep: '#182033', ink: '#ffffff' },
+      { loud: '#cc79a7', deep: '#182033', ink: '#182033' },
+    ],
+    named: [
+      { name: 'ink', value: '#182033' }, { name: 'muted', value: '#566074' }, { name: 'line', value: '#bfc5d1' },
+      { name: 'cool grey', value: '#eceef2' }, { name: 'tint', value: '#dde1e8' }, { name: 'white', value: '#ffffff' },
+      { name: 'U understand', value: '#0072b2' }, { name: 'A apply', value: '#009e73' }, { name: 'C compare', value: '#e69f00' },
+      { name: 'X challenge', value: '#d55e00' }, { name: 'J judge', value: '#cc79a7' },
+    ],
+    display: 'Archivo', displayWeight: '750', body: 'Archivo',
+  },
+  {
     // UK Black Tech's published design system (the tokens given 2026-09-15): set on Dark Blue with white
     // type, UKBT Black for the quiet slides, and five brights for the loud ones, each read in
     // Contrast Black. Uncut Sans for reading, Alpha Lyrae Medium for the hero.

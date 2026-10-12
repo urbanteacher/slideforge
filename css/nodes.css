@@ -1,0 +1,47 @@
+/* Nodes (the-teaching-model.vercel.app).
+   The app's own tokens (src/app/globals.css): ink on cool grey, white cards, and
+   the U A C X J backbone, Okabe-Ito colours chosen to read for colour-blind viewers.
+
+     #182033  ink        #566074  muted      #eceef2  cool grey
+     #0072B2  U understand  #009E73  A apply   #E69F00  C compare
+     #D55E00  X challenge   #CC79A7  J judge
+
+   Archivo throughout, set wide and heavy for headings as the wordmark is. The
+   Lesson studio's palette is 'nodes' in lab/src/model/palettes.ts. */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap');
+
+.theme-nodes {
+  --nd-ink: #182033;
+  --nd-U: #0072b2;
+  --nd-A: #009e73;
+  --nd-C: #e69f00;
+  --nd-X: #d55e00;
+  --nd-J: #cc79a7;
+
+  --s-bg: #eceef2;
+  --s-fg: #182033;
+  --s-dim: #566074;
+  --s-accent: #0072b2;
+  --s-accent-2: #009e73;
+  --s-rule: #bfc5d1;
+  --s-card: #ffffff;
+  --s-scrim: rgba(236, 238, 242, .72);
+  --s-font: 'Archivo', 'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+
+  background: var(--s-bg);
+}
+
+.theme-nodes h1,
+.theme-nodes h2 {
+  font-family: var(--s-font);
+  font-weight: 750;
+  font-stretch: 112%;
+  letter-spacing: -.01em;
+}
+
+.theme-nodes .accent-bar {
+  height: 5px;
+  width: 92px;
+  border-radius: 0;
+  background: var(--nd-U);
+}

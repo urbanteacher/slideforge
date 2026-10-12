@@ -1,0 +1,1319 @@
+{
+ "uk": {
+  "from": "https://the-teaching-model.vercel.app/framework/gcse-cs/2",
+  "framework": "Computer Science (GCSE)",
+  "stages": [
+   {
+    "n": 1,
+    "short": "Define",
+    "task": "Define the CPU and explain it in your own words."
+   },
+   {
+    "n": 2,
+    "short": "Describe",
+    "task": "Describe the main components of the CPU."
+   },
+   {
+    "n": 3,
+    "short": "Calculate",
+    "task": "Calculate the time for one clock cycle at 3.2 GHz, in nanoseconds."
+   },
+   {
+    "n": 4,
+    "short": "Draw",
+    "task": "Write your design as pseudocode."
+   },
+   {
+    "n": 5,
+    "short": "Complete",
+    "task": "Trace this program: LOAD 7, ADD 5, SUB 2, OUTPUT."
+   },
+   {
+    "n": 6,
+    "short": "Discuss",
+    "task": "Discuss the advantages and disadvantages of a higher clock speed for the media department."
+   },
+   {
+    "n": 7,
+    "short": "Explain",
+    "task": "Explain the fetch stage, and why the PC is advanced."
+   },
+   {
+    "n": 8,
+    "short": "Suggest",
+    "task": "A school media department edits video. What do its users need from a CPU, and under what constraints?"
+   },
+   {
+    "n": 9,
+    "short": "Compare",
+    "task": "Compare a 4 GHz dual-core with a 3 GHz quad-core."
+   },
+   {
+    "n": 10,
+    "short": "Evaluate",
+    "task": "Who is affected when CPUs are marketed on GHz alone?"
+   },
+   {
+    "n": 11,
+    "short": "Justify",
+    "task": "Which laptop should the department buy? Justify your answer."
+   },
+   {
+    "n": 12,
+    "short": "Design",
+    "task": "Plan a simulator of the CPU. What will you keep, and what will you leave out?"
+   },
+   {
+    "n": 13,
+    "short": "Refine",
+    "task": "Test your simulator, then fix any failure."
+   }
+  ],
+  "stage": {
+   "n": 2,
+   "short": "Describe",
+   "ask": "What are its characteristics?",
+   "task": "Describe the main components of the CPU.",
+   "outcome": "A list of components, each with its specific role"
+  },
+  "research": {
+   "relationship": {
+    "id": "meaning",
+    "label": "Term → precise meaning",
+    "requires": "The right term, with its exact meaning.",
+    "difficulty": "Gives the right word with an imprecise description or an incorrect definition."
+   },
+   "apart": {
+    "theme": "cpu-agency",
+    "title": "CPU parts and what they hold or do",
+    "findings": 15,
+    "boards": [
+     "AQA",
+     "Cambridge",
+     "OCR",
+     "Pearson"
+    ],
+    "a": [
+     "Registers (PC, MAR, MDR, CIR, ACC)",
+     "Hold one thing: an address, an instruction or a value."
+    ],
+    "b": [
+     "Control unit",
+     "Directs the work: decodes instructions and sends the control signals that coordinate the other parts."
+    ],
+    "test": "Does it hold something, or do something? A register only holds."
+   },
+   "findings": {
+    "word": "describe",
+    "n": 253,
+    "types": {
+     "strong_answer": 72,
+     "misconception": 69,
+     "imprecise_wording": 32,
+     "found_difficult": 23,
+     "stuck_at_level": 22,
+     "slip_or_calculation_error": 13,
+     "not_applied_to_scenario": 12,
+     "exam_technique": 6,
+     "used_given_information": 4
+    }
+   }
+  },
+  "recall": {
+   "question": "What must I retrieve before I can work with the CPU at GCSE?",
+   "items": [
+    {
+     "term": "CPU",
+     "meaning": "Central Processing Unit: a component that executes program instructions.",
+     "use": "The anchor term for every element.",
+     "used": false,
+     "links": {
+      "n": 39,
+      "misconceptions": 20,
+      "reports": 17,
+      "boards": [
+       "AQA",
+       "Cambridge",
+       "OCR",
+       "Pearson",
+       "WJEC"
+      ]
+     }
+    },
+    {
+     "term": "Components",
+     "meaning": "Control unit (decodes instructions and sends the control signals that coordinate the fetch-decode-execute cycle; it does not execute them itself), ALU, registers (program counter PC, memory address register MAR, memory data register MDR, current instruction register CIR, accumulator ACC), cache, buses and clock.",
+     "use": "Describe features and trace the cycle.",
+     "used": true,
+     "links": {
+      "n": 43,
+      "misconceptions": 16,
+      "reports": 13,
+      "boards": [
+       "AQA",
+       "Cambridge",
+       "OCR",
+       "Pearson",
+       "WJEC"
+      ]
+     }
+    },
+    {
+     "term": "Fetch-decode-execute",
+     "meaning": "The repeated cycle: the PC gives the address, the instruction passes through the MAR, MDR and CIR, is decoded and executed, and results go to the accumulator. The PC then moves on.",
+     "use": "Explain the process and trace programs.",
+     "used": false,
+     "links": {
+      "n": 12,
+      "misconceptions": 6,
+      "reports": 8,
+      "boards": [
+       "AQA",
+       "Cambridge",
+       "OCR",
+       "WJEC"
+      ]
+     }
+    },
+    {
+     "term": "Clock speed and units",
+     "meaning": "Clock pulses per second, in hertz (Hz). 1 GHz = one billion cycles per second = 1,000,000,000 Hz; CPUs today commonly run at 3 to 5 GHz (1980s: 3 to 5 MHz). A cycle is not a completed instruction.",
+     "use": "Calculate accurately and avoid overclaiming.",
+     "used": false,
+     "links": {
+      "n": 11,
+      "misconceptions": 6,
+      "reports": 8,
+      "boards": [
+       "AQA",
+       "Cambridge",
+       "Pearson",
+       "WJEC"
+      ]
+     }
+    },
+    {
+     "term": "Performance factors",
+     "meaning": "Clock speed, cache size (multi-level L1, L2, L3), number of cores and memory. Cores each run their own instructions but can wait for each other; overclocking raises speed but also power use and heat.",
+     "use": "Explain, compare and evaluate performance.",
+     "used": false,
+     "links": {
+      "n": 6,
+      "misconceptions": 1,
+      "reports": 4,
+      "boards": [
+       "AQA",
+       "Pearson",
+       "WJEC"
+      ]
+     }
+    },
+    {
+     "term": "GPU",
+     "meaning": "A processor with many simpler cores for parallel tasks.",
+     "use": "Compare and transfer.",
+     "used": false,
+     "links": {
+      "n": 0,
+      "misconceptions": 0,
+      "reports": 0,
+      "boards": []
+     }
+    }
+   ],
+   "checks": [
+    "What does CPU stand for?",
+    "Name three registers.",
+    "What are the three stages of the cycle?",
+    "How many Hz are in 1 GHz?",
+    "Name three factors that affect performance."
+   ],
+   "bridge": "Explain how a larger cache improves performance."
+  },
+  "routine": {
+   "wrongIdeas": 31,
+   "rows": [
+    {
+     "n": 1,
+     "name": "Decode",
+     "share": 24,
+     "prompt": "The command word is “describe”. Size the answer from the question; in an exam, the marks say how far to go.",
+     "guards": "exam technique, not applied to the scenario, misusing the information given"
+    },
+    {
+     "n": 2,
+     "name": "Retrieve",
+     "share": 46,
+     "prompt": "Bring: Components. Keep apart Registers (PC, MAR, MDR, CIR, ACC) and Control unit.",
+     "guards": "misconceptions, found difficult"
+    },
+    {
+     "n": 3,
+     "name": "Reason",
+     "share": 7,
+     "prompt": "Mostly recall here: finish the pair, the term with its exact meaning.",
+     "guards": "stopped short"
+    },
+    {
+     "n": 4,
+     "name": "Refine",
+     "share": 8,
+     "prompt": "Use technical terms where accuracy depends on them; keep the rest clear and natural.",
+     "guards": "imprecise wording"
+    },
+    {
+     "n": 5,
+     "name": "Review",
+     "share": 14,
+     "prompt": "Re-read the question: does the answer do everything it asks?",
+     "guards": "slips and calculation errors"
+    }
+   ]
+  },
+  "ladder": {
+   "relation": "Component → its role in running a program",
+   "probe": "“Take one component. What does it do while a program runs?”",
+   "hint": "“The PC holds an address. The address of what?” Then withdraw the hint and ask for the full description of each component.",
+   "transfer": "“Describe the main parts of a computer around the CPU: main memory, secondary storage, input and output.”",
+   "repair": "In a later description, gives each component with its role, without being asked."
+  },
+  "join": {
+   "rule": "Complete what this question requires: no more reasoning than it asks for, and no less precision.",
+   "size": "Describe components: pair each name with its role",
+   "links": [
+    "each component",
+    "its specific role"
+   ],
+   "refused": "a surface answer (“the brains of the computer”), an action for a purpose (“the MAR fetches”), or a confusable term (“main memory” for “RAM”)",
+   "quote": {
+    "text": "Careful that the purpose is not an action such as fetches, takes, retrieves.",
+    "cite": "OCR GCSE J277/01, June 2024, Q6(b)"
+   },
+   "recall": true
+  },
+  "worked": {
+   "units": [
+    "decodes instructions and sends control signals that coordinate the other parts",
+    "performs arithmetic and logical operations",
+    "tiny, fast stores inside the CPU",
+    "the PC holds the address of the next instruction to be fetched",
+    "fast memory close to the processor, for frequently used data and instructions",
+    "provides timing signals that keep the CPU's operations in step"
+   ],
+   "labels": [
+    "Control unit: its purpose",
+    "ALU: its purpose",
+    "Registers: what they are",
+    "The PC: what it holds",
+    "Cache: its purpose",
+    "Clock: its purpose"
+   ],
+   "text": "Control unit: decodes instructions and sends control signals that coordinate the other parts.\nALU: performs arithmetic and logical operations.\nRegisters: tiny, fast stores inside the CPU; the PC holds the address of the next instruction to be fetched.\nCache: fast memory close to the processor, for frequently used data and instructions.\nClock: provides timing signals that keep the CPU's operations in step."
+  },
+  "students": {
+   "A": {
+    "answer": "The CPU has a hard drive and RAM.",
+    "feedback": "“Take one component. What does it do while a program runs?” If that is not enough: “The PC holds an address. The address of what?” Then withdraw the hint and ask for the full description of each component."
+   },
+   "B": {
+    "answer": "Control unit: decodes instructions and sends control signals.\nALU: the brain of the CPU.\nRegisters: store data.\nCache: stores data.\nClock: controls the speed of the computer.",
+    "why": "Only the control unit has its exact purpose. “Stores data” could be any memory, so it says nothing about registers or cache; the ALU as “the brain” is a label; and the clock sends timing signals, it does not “control the speed”.",
+    "feedback": "“What exactly does it hold or do? Say it without a label.”"
+   },
+   "C": {
+    "feedback": "A fresh, independent task: “Describe the main parts of a computer around the CPU: main memory, secondary storage, input and output.”"
+   }
+  },
+  "marks": {
+   "pattern": [
+    {
+     "when": "Divide the marks by the number of things asked for",
+     "earns": "1 mark per thing: state each point. 2 marks per thing: a point and its expansion."
+    },
+    {
+     "when": "“Describe one …”, 2 marks",
+     "earns": "Mark 1: the point. Mark 2: how it works or why it helps.",
+     "example": "AQA 8525/2, June 2022, Q15.2, a security measure beyond a password: a code sent to a phone (1); a hacker would also need the phone (1)."
+    },
+    {
+     "when": "3 marks",
+     "earns": "Three points; or a name (1) and two points describing it; or three steps in order.",
+     "example": "AQA 8525/2, June 2023, Q8.2, the role of the clock, control unit and a register: 1 mark for each component. OCR J277/01, June 2023, Q4(b), name and describe one threat: the threat (1), what it does (1) … and what it achieves (1)."
+    },
+    {
+     "when": "“Describe two benefits …”, 4 marks",
+     "earns": "Each benefit (1) and its application to the scenario (1).",
+     "example": "OCR J277/01, June 2024, Q2(b)(i), wired network at an airport: fast connection (1) so check-in is not delayed (1). The same 2 + 2 shape for “one benefit and one drawback”."
+    },
+    {
+     "when": "“Describe two differences …”, 2 marks",
+     "earns": "1 mark per difference. Each must say both sides.",
+     "example": "AQA 8525/2, June 2022, Q14.2: a LAN covers a small area, a WAN a wide one (1)."
+    },
+    {
+     "when": "Describe the steps or the process",
+     "earns": "1 mark per step, in order and precise.",
+     "example": "OCR J277/02, June 2022, Q3(c), linear search: start at the first value (1); check every value in order (1). “One by one” alone is not enough."
+    }
+   ],
+   "rejects": [
+    "Vague roles: “controls the computer”, “fast memory”.",
+    "Steps that miss one of the ideas the mark needs."
+   ],
+   "example": "AQA 8525/2, June 2023, Q8.2: describe the role of the clock, control unit and a register",
+   "weak": "Vague roles: the control unit “controls the computer”; a register is “fast memory”, with no word on what it holds.",
+   "strong": "Gives each component its specific job, such as a register holding the address of the next instruction.",
+   "marking": "One mark for each relevant point. A few also credit an expansion of a point."
+  },
+  "readings": [
+   {
+    "student": "A",
+    "solo": "Prestructural: misses the point (one written answer)",
+    "bottleneck": "Retrieval",
+    "gap": "Possible explanation: Names storage and memory, not the CPU’s own components. Probe: “Take one component. What does it do while a program runs?” If that is not enough: “The PC holds an address. The address of what?” Then withdraw the hint and ask for the full description of each component. Teaching response, if the probe confirms it: secure the term and its exact meaning before building on it."
+   },
+   {
+    "student": "B",
+    "solo": "Unistructural (one written answer)",
+    "bottleneck": "Comprehension",
+    "gap": "Possible explanation: Only the control unit has its exact purpose. “Stores data” could be any memory, so it says nothing about registers or cache; the ALU as “the brain” is a label; and the clock sends timing signals, it does not “control the speed”. Probe: “What exactly does it hold or do? Say it without a label.” Teaching response, if the probe confirms it: secure the term and its exact meaning before building on it."
+   },
+   {
+    "student": "C",
+    "solo": "Multistructural: meets the stage's demand (one written answer)",
+    "bottleneck": null,
+    "gap": "On this task, nothing shown missing. Next check, not an observation: A fresh, independent task: “Describe the main parts of a computer around the CPU: main memory, secondary storage, input and output.” Teaching response: if it does not transfer, check the new topic's knowledge first, then return to the hint."
+   }
+  ],
+  "sources": [
+   {
+    "label": "OCR GCSE J277/01, June 2024",
+    "qs": [
+     "Q6(b)",
+     "Q2(b)(i)"
+    ],
+    "qp": "https://www.ocr.org.uk/Images/727534-question-paper-computer-systems.pdf",
+    "ms": "https://www.ocr.org.uk/Images/727652-mark-scheme-computer-systems.pdf",
+    "er": "https://www.ocr.org.uk/Images/727492-examiners-report-computer-systems.pdf"
+   },
+   {
+    "label": "AQA GCSE 8525/2, June 2023",
+    "qs": [
+     "Q8.2"
+    ],
+    "qp": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2023/june/AQA-85252-QP-JUN23.PDF",
+    "ms": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2023/june/AQA-85252-MS-JUN23.PDF",
+    "er": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2023/june/AQA-85252-WRE-JUN23.PDF"
+   },
+   {
+    "label": "AQA GCSE 8525/2, June 2022",
+    "qs": [
+     "Q15.2",
+     "Q14.2"
+    ],
+    "qp": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2022/june/AQA-85252-QP-JUN22.PDF",
+    "ms": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2022/june/AQA-85252-MS-JUN22.PDF",
+    "er": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2022/june/AQA-85252-WRE-JUN22.PDF"
+   },
+   {
+    "label": "OCR GCSE J277/01, June 2023",
+    "qs": [
+     "Q4(b)"
+    ],
+    "qp": "https://www.ocr.org.uk/Images/704760-question-paper-computer-systems.pdf",
+    "ms": "https://www.ocr.org.uk/Images/704882-mark-scheme-computer-systems.pdf",
+    "er": "https://www.ocr.org.uk/Images/704717-examiners-report-computer-systems.pdf"
+   },
+   {
+    "label": "OCR GCSE J277/02, June 2022",
+    "qs": [
+     "Q3(c)"
+    ],
+    "qp": "https://www.ocr.org.uk/Images/677831-question-paper-computational-thinking-algorithms-and-programming.pdf",
+    "ms": "https://www.ocr.org.uk/Images/677962-mark-scheme-computational-thinking-algorithms-and-programming.pdf",
+    "er": "https://www.ocr.org.uk/Images/688264-examiners-report-computational-thinking-algorithms-and-programming.pdf"
+   }
+  ]
+ },
+ "sg": {
+  "from": "https://the-teaching-model.vercel.app/framework/sg-computing/2",
+  "framework": "Computing (O-Level / G3)",
+  "stages": [
+   {
+    "n": 1,
+    "short": "State",
+    "task": "State what the program counter holds."
+   },
+   {
+    "n": 2,
+    "short": "Describe",
+    "task": "Describe the function of the processor and main memory."
+   },
+   {
+    "n": 3,
+    "short": "Trace",
+    "task": "Produce a trace table for the program LOAD 7, ADD 5, SUB 2, OUTPUT, HALT."
+   },
+   {
+    "n": 4,
+    "short": "Use",
+    "task": "Export times are in B2:B31. Label each as “Slow” or “OK”, then count the slow ones."
+   },
+   {
+    "n": 5,
+    "short": "Explain",
+    "task": "Explain why a 5.2 GHz dual-core laptop can export video more slowly than a 3.0 GHz quad-core one."
+   },
+   {
+    "n": 6,
+    "short": "Compare",
+    "task": "Compare and contrast main memory and secondary storage in terms of speed, capacity and volatility."
+   },
+   {
+    "n": 7,
+    "short": "Justify",
+    "task": "Justify adding validation to the simulator’s input."
+   },
+   {
+    "n": 8,
+    "short": "Design",
+    "task": "Design and write a CPU simulator, then design test cases for it."
+   }
+  ],
+  "stage": {
+   "n": 2,
+   "short": "Describe",
+   "ask": "Can I give several relevant features?",
+   "task": "Describe the function of the processor and main memory.",
+   "outcome": "Each part’s function, and how the two work together"
+  },
+  "research": {
+   "relationship": {
+    "id": "meaning",
+    "label": "Term → precise meaning",
+    "requires": "The right term, with its exact meaning.",
+    "difficulty": "Gives the right word with an imprecise description or an incorrect definition."
+   },
+   "apart": {
+    "theme": "cpu-agency",
+    "title": "CPU parts and what they hold or do",
+    "findings": 15,
+    "boards": [
+     "AQA",
+     "Cambridge",
+     "OCR",
+     "Pearson"
+    ],
+    "a": [
+     "Registers (PC, MAR, MDR, CIR, ACC)",
+     "Hold one thing: an address, an instruction or a value."
+    ],
+    "b": [
+     "Control unit",
+     "Directs the work: decodes instructions and sends the control signals that coordinate the other parts."
+    ],
+    "test": "Does it hold something, or do something? A register only holds."
+   },
+   "findings": {
+    "word": "describe",
+    "n": 253,
+    "types": {
+     "strong_answer": 72,
+     "misconception": 69,
+     "imprecise_wording": 32,
+     "found_difficult": 23,
+     "stuck_at_level": 22,
+     "slip_or_calculation_error": 13,
+     "not_applied_to_scenario": 12,
+     "exam_technique": 6,
+     "used_given_information": 4
+    }
+   }
+  },
+  "recall": {
+   "question": "What must I retrieve before Paper 1 and Paper 2?",
+   "items": [
+    {
+     "term": "Computing fundamentals",
+     "meaning": "CPU, registers (the program counter holds the address of the next instruction), the fetch-decode-execute cycle, data representation.",
+     "use": "Define, state and describe.",
+     "used": true,
+     "links": {
+      "n": 34,
+      "misconceptions": 17,
+      "reports": 5,
+      "boards": [
+       "Cambridge",
+       "Pearson"
+      ]
+     }
+    },
+    {
+     "term": "Spreadsheet functions",
+     "meaning": "IF(condition, value if true, value if false) chooses a result; COUNTIF(range, condition) counts the cells that meet a condition; SUM, AVERAGE, and absolute references such as $B$2.",
+     "use": "Answer the spreadsheet question.",
+     "used": false,
+     "links": {
+      "n": 0,
+      "misconceptions": 0,
+      "reports": 0,
+      "boards": []
+     }
+    },
+    {
+     "term": "Lists and loops",
+     "meaning": "Lists, for and while loops, if/elif branches.",
+     "use": "Write and trace programs.",
+     "used": false,
+     "links": {
+      "n": 32,
+      "misconceptions": 11,
+      "reports": 6,
+      "boards": [
+       "Cambridge",
+       "Pearson"
+      ]
+     }
+    },
+    {
+     "term": "Test data types",
+     "meaning": "Normal, boundary and erroneous.",
+     "use": "Prove a solution works.",
+     "used": false,
+     "links": {
+      "n": 1,
+      "misconceptions": 0,
+      "reports": 1,
+      "boards": [
+       "Pearson"
+      ]
+     }
+    },
+    {
+     "term": "Impact of computing",
+     "meaning": "Privacy, intellectual property, and the social, ethical, legal and economic effects of computing.",
+     "use": "Answer structured impact questions.",
+     "used": false,
+     "links": {
+      "n": 9,
+      "misconceptions": 0,
+      "reports": 4,
+      "boards": [
+       "Cambridge",
+       "Pearson"
+      ]
+     }
+    },
+    {
+     "term": "Image size",
+     "meaning": "Width × height (in pixels) × colour depth (bits per pixel) gives the size in bits.",
+     "use": "Answer calculation questions.",
+     "used": false,
+     "links": {
+      "n": 4,
+      "misconceptions": 3,
+      "reports": 2,
+      "boards": [
+       "Pearson"
+      ]
+     }
+    }
+   ],
+   "checks": [
+    "Which register holds the next instruction’s address?",
+    "What does COUNTIF do?",
+    "Name the three types of test data.",
+    "How do you calculate an image’s size in bits?"
+   ],
+   "bridge": "Write a formula that labels an export as “Slow” if it took more than 300 seconds."
+  },
+  "routine": {
+   "wrongIdeas": 31,
+   "rows": [
+    {
+     "n": 1,
+     "name": "Decode",
+     "share": 24,
+     "prompt": "The command word is “describe”. Size the answer from the question; in an exam, the marks say how far to go.",
+     "guards": "exam technique, not applied to the scenario, misusing the information given"
+    },
+    {
+     "n": 2,
+     "name": "Retrieve",
+     "share": 46,
+     "prompt": "Bring: Computing fundamentals. Keep apart Registers (PC, MAR, MDR, CIR, ACC) and Control unit.",
+     "guards": "misconceptions, found difficult"
+    },
+    {
+     "n": 3,
+     "name": "Reason",
+     "share": 7,
+     "prompt": "Mostly recall here: finish the pair, the term with its exact meaning.",
+     "guards": "stopped short"
+    },
+    {
+     "n": 4,
+     "name": "Refine",
+     "share": 8,
+     "prompt": "Use technical terms where accuracy depends on them; keep the rest clear and natural.",
+     "guards": "imprecise wording"
+    },
+    {
+     "n": 5,
+     "name": "Review",
+     "share": 14,
+     "prompt": "Re-read the question: does the answer do everything it asks?",
+     "guards": "slips and calculation errors"
+    }
+   ]
+  },
+  "ladder": {
+   "relation": "Processor and main memory → what each does → how they work together over the buses",
+   "probe": "“How do the two work together?”",
+   "hint": "“Where does the processor get its next instruction from?”",
+   "transfer": "“Describe the function of secondary storage and how it works with main memory.”",
+   "repair": "In a later description, says how the parts interact, not only what each is, without being asked."
+  },
+  "join": {
+   "rule": "Complete what this question requires: no more reasoning than it asks for, and no less precision.",
+   "size": "Describe components: pair each name with its role",
+   "links": [
+    "each component",
+    "its specific role"
+   ],
+   "refused": "a surface answer (“the brains of the computer”), an action for a purpose (“the MAR fetches”), or a confusable term (“main memory” for “RAM”)",
+   "quote": {
+    "text": "Careful that the purpose is not an action such as fetches, takes, retrieves.",
+    "cite": "OCR GCSE J277/01, June 2024, Q6(b)"
+   },
+   "recall": true
+  },
+  "worked": {
+   "units": [
+    "The processor fetches, decodes and executes instructions",
+    "Main memory holds the program and the data being worked on",
+    "The processor reads from and writes to memory over the buses"
+   ],
+   "labels": [
+    "The processor: its function",
+    "Main memory: its function",
+    "How they work together"
+   ],
+   "text": "The processor fetches, decodes and executes instructions. Main memory holds the program and the data being worked on. The processor reads from and writes to memory over the buses."
+  },
+  "students": {
+   "A": {
+    "answer": "Main memory keeps files when the computer is off.",
+    "feedback": "“How do the two work together?” If that is not enough: “Where does the processor get its next instruction from?”"
+   },
+   "B": {
+    "answer": "The processor fetches, decodes and executes instructions. Main memory stores files.",
+    "why": "The processor is right, but “stores files” describes secondary storage: main memory holds the program and the data being worked on, and nothing joins the two.",
+    "feedback": "“What exactly does it hold or do? Say it without a label.”"
+   },
+   "C": {
+    "feedback": "A fresh, independent task: “Describe the function of secondary storage and how it works with main memory.”"
+   }
+  },
+  "marks": {
+   "pattern": [
+    {
+     "when": "2 marks (every specimen Describe)",
+     "earns": "Two points, or the point and how it works."
+    },
+    {
+     "when": "3 marks",
+     "earns": "Three points, often one then its parts as follow-ons.",
+     "example": "Cambridge 2210/11, June 2024, Q4(a), the structure of a packet: split into three sections … the header … the payload … the trailer."
+    },
+    {
+     "when": "Describe a process, up to 8 marks",
+     "earns": "One mark per step, many of them follow-ons of the step before.",
+     "example": "Cambridge 2210/11, June 2024, Q9(b)(i), parity with ARQ: “Any eight from” steps, such as the data is sent and a timer started … the packet is resent if no acknowledgement arrives."
+    }
+   ],
+   "rejects": [
+    "Detail the question did not ask for earns nothing, though it costs nothing either."
+   ],
+   "example": "Cambridge 2210/11, June 2024, Q4(a): describe the structure of a data packet",
+   "weak": "Describes what each section contains, when the question asked for the structure.",
+   "strong": "Names the three sections, header, payload and trailer, as the structure.",
+   "marking": "Every Describe in the specimen is worth 2: two points, or a point and how it works. Cambridge lists the points to credit, with follow-ons marked “…”."
+  },
+  "readings": [
+   {
+    "student": "A",
+    "solo": "Prestructural: misses the point (one written answer)",
+    "bottleneck": "Retrieval",
+    "gap": "Possible explanation: Describes secondary storage, not main memory. Probe: “How do the two work together?” If that is not enough: “Where does the processor get its next instruction from?” Teaching response, if the probe confirms it: secure the term and its exact meaning before building on it."
+   },
+   {
+    "student": "B",
+    "solo": "Unistructural (one written answer)",
+    "bottleneck": "Comprehension",
+    "gap": "Possible explanation: The processor is right, but “stores files” describes secondary storage: main memory holds the program and the data being worked on, and nothing joins the two. Probe: “What exactly does it hold or do? Say it without a label.” Teaching response, if the probe confirms it: secure the term and its exact meaning before building on it."
+   },
+   {
+    "student": "C",
+    "solo": "Multistructural: meets the stage's demand (one written answer)",
+    "bottleneck": null,
+    "gap": "On this task, nothing shown missing. Next check, not an observation: A fresh, independent task: “Describe the function of secondary storage and how it works with main memory.” Teaching response: if it does not transfer, check the new topic's knowledge first, then return to the hint."
+   }
+  ],
+  "sources": [
+   {
+    "label": "OCR GCSE J277/01, June 2024",
+    "qs": [
+     "Q6(b)"
+    ],
+    "qp": "https://www.ocr.org.uk/Images/727534-question-paper-computer-systems.pdf",
+    "ms": "https://www.ocr.org.uk/Images/727652-mark-scheme-computer-systems.pdf",
+    "er": "https://www.ocr.org.uk/Images/727492-examiners-report-computer-systems.pdf"
+   },
+   {
+    "label": "Cambridge O Level 2210/11, June 2024",
+    "qs": [
+     "Q4(a)",
+     "Q9(b)(i)"
+    ],
+    "qp": null,
+    "ms": null,
+    "er": "https://www.cambridgeinternational.org/Images/570403-june-2024-examiner-report.pdf"
+   }
+  ]
+ },
+ "cn": {
+  "from": "https://the-teaching-model.vercel.app/framework/china-it/2",
+  "framework": "Information Technology (Gaokao)",
+  "stages": [
+   {
+    "n": 1,
+    "short": "Know",
+    "task": "Is the reading “97%” data or information? And “exports slow down at peak times”?"
+   },
+   {
+    "n": 2,
+    "short": "Describe",
+    "task": "Describe the lab’s monitoring system as an information system."
+   },
+   {
+    "n": 3,
+    "short": "Calculate",
+    "task": "A screen recording is 1920 × 1080 pixels with 24-bit colour. How many bytes does one frame need, uncompressed?"
+   },
+   {
+    "n": 4,
+    "short": "Analyse",
+    "task": "The system shows CPU usage at 40% during slow exports. What does this tell you, and what would you check next?"
+   },
+   {
+    "n": 5,
+    "short": "Design",
+    "task": "Design an algorithm to find the longest stretch of seconds when CPU usage stayed above 90%."
+   },
+   {
+    "n": 6,
+    "short": "Evaluate",
+    "task": "The system records which student is logged in. Is that acceptable?"
+   }
+  ],
+  "stage": {
+   "n": 2,
+   "short": "Describe",
+   "ask": "Can I name its parts and what they do?",
+   "task": "Describe the lab’s monitoring system as an information system.",
+   "outcome": "Several parts described"
+  },
+  "research": {
+   "relationship": {
+    "id": "context",
+    "label": "Concept → context",
+    "requires": "The concept applied to this case, not described in general.",
+    "difficulty": "Knows the concept but applies it wrongly, or not at all."
+   },
+   "apart": null,
+   "findings": {
+    "word": "describe",
+    "n": 253,
+    "types": {
+     "strong_answer": 72,
+     "misconception": 69,
+     "imprecise_wording": 32,
+     "found_difficult": 23,
+     "stuck_at_level": 22,
+     "slip_or_calculation_error": 13,
+     "not_applied_to_scenario": 12,
+     "exam_technique": 6,
+     "used_given_information": 4
+    }
+   }
+  },
+  "recall": {
+   "question": "What must I retrieve before I can work with this system?",
+   "items": [
+    {
+     "term": "Data",
+     "meaning": "A symbolic record describing things (images, sounds, characters, numbers), such as a temperature reading of 21 °C. Information is what data means once it is processed and interpreted, such as “the room is warmest after lunch”.",
+     "use": "Separate raw readings from conclusions.",
+     "used": false,
+     "links": {
+      "n": 0,
+      "misconceptions": 0,
+      "reports": 0,
+      "boards": []
+     }
+    },
+    {
+     "term": "Algorithm",
+     "meaning": "A clear, step-by-step description of how to solve a problem.",
+     "use": "Trace and complete the program.",
+     "used": false,
+     "links": {
+      "n": 27,
+      "misconceptions": 8,
+      "reports": 6,
+      "boards": [
+       "Cambridge",
+       "Pearson"
+      ]
+     }
+    },
+    {
+     "term": "Information system",
+     "meaning": "A human–computer system with three parts: users, hardware and software, and data.",
+     "use": "Analyse the monitoring system.",
+     "used": true,
+     "links": {
+      "n": 0,
+      "misconceptions": 0,
+      "reports": 0,
+      "boards": []
+     }
+    },
+    {
+     "term": "Information society",
+     "meaning": "A society organised around creating, sharing and using information.",
+     "use": "Judge responsible use of the data.",
+     "used": false,
+     "links": {
+      "n": 9,
+      "misconceptions": 0,
+      "reports": 4,
+      "boards": [
+       "Cambridge",
+       "Pearson"
+      ]
+     }
+    },
+    {
+     "term": "Data structures",
+     "meaning": "Queues are first in, first out; stacks are last in, first out.",
+     "use": "Answer the export-queue question.",
+     "used": false,
+     "links": {
+      "n": 18,
+      "misconceptions": 5,
+      "reports": 5,
+      "boards": [
+       "Cambridge",
+       "Pearson"
+      ]
+     }
+    },
+    {
+     "term": "CPU usage",
+     "meaning": "The percentage of time the processor is busy.",
+     "use": "Interpret the readings.",
+     "used": false,
+     "links": {
+      "n": 6,
+      "misconceptions": 2,
+      "reports": 3,
+      "boards": [
+       "Cambridge",
+       "Pearson"
+      ]
+     }
+    }
+   ],
+   "checks": [
+    "Give an example of data, and of information, from the scenario.",
+    "What is an algorithm?",
+    "Name the three parts of an information system.",
+    "Is a queue first in, first out, or last in, first out?"
+   ],
+   "bridge": "The system shows 40% CPU and the exports are slow. What data would you collect next, and why?"
+  },
+  "routine": {
+   "wrongIdeas": 31,
+   "rows": [
+    {
+     "n": 1,
+     "name": "Decode",
+     "share": 24,
+     "prompt": "The command word is “describe”. Size the answer from the question; in an exam, the marks say how far to go. Every point must use the case.",
+     "guards": "exam technique, not applied to the scenario, misusing the information given"
+    },
+    {
+     "n": 2,
+     "name": "Retrieve",
+     "share": 46,
+     "prompt": "Bring: Information system.",
+     "guards": "misconceptions, found difficult"
+    },
+    {
+     "n": 3,
+     "name": "Reason",
+     "share": 7,
+     "prompt": "Mostly recall here: finish the pair, the term with its exact meaning.",
+     "guards": "stopped short"
+    },
+    {
+     "n": 4,
+     "name": "Refine",
+     "share": 8,
+     "prompt": "Use technical terms where accuracy depends on them; keep the rest clear and natural.",
+     "guards": "imprecise wording"
+    },
+    {
+     "n": 5,
+     "name": "Review",
+     "share": 14,
+     "prompt": "Re-read the question: does the answer do everything it asks?",
+     "guards": "slips and calculation errors"
+    }
+   ]
+  },
+  "ladder": {
+   "relation": "The system → its parts (users, hardware, software, data) → how they connect",
+   "probe": "“How do the parts work together?”",
+   "hint": "“Where does the data come from, and who uses it?”",
+   "transfer": "“Describe a school library’s borrowing system as an information system.”",
+   "repair": "In a later description, says how the parts connect, not only lists them, without being asked."
+  },
+  "join": {
+   "rule": "Complete what this question requires: no more reasoning than it asks for, and no less precision.",
+   "size": "Explain, argue, compare or judge (extended answer)",
+   "links": [
+    "point",
+    "because",
+    "so",
+    "in this case"
+   ],
+   "refused": "relevant points with no reasoning between them, or not applied to the case",
+   "quote": {
+    "text": "a well-developed line of reasoning which is clear and logically structured",
+    "cite": "OCR GCSE J277/01, June 2023, Q6, band 3"
+   },
+   "recall": true
+  },
+  "worked": {
+   "units": [
+    "technicians and students",
+    "the laptops and a server",
+    "the monitoring program",
+    "CPU readings, logins and the export queue"
+   ],
+   "labels": [
+    "Point",
+    "Point",
+    "Point",
+    "Point"
+   ],
+   "text": "Users: technicians and students. Hardware: the laptops and a server. Software: the monitoring program. Data: CPU readings, logins and the export queue."
+  },
+  "students": {
+   "A": {
+    "answer": "It is a computer program.",
+    "feedback": "“How do the parts work together?” If that is not enough: “Where does the data come from, and who uses it?”"
+   },
+   "B": {
+    "answer": null,
+    "why": null,
+    "feedback": "“Why does that follow? And so what, for this case?”"
+   },
+   "C": {
+    "feedback": "A fresh, independent task: “Describe a school library’s borrowing system as an information system.”"
+   }
+  },
+  "marks": {
+   "pattern": [
+    {
+     "when": "1 mark, single choice",
+     "earns": "The correct data flow.",
+     "example": "Zhejiang June 2025, Q13(1): sensor → smart terminal → server → database (B)."
+    },
+    {
+     "when": "2 marks, open",
+     "earns": "One change, described fully. The key gives a sample answer.",
+     "example": "Zhejiang June 2025, Q13(5), adding water-temperature monitoring: add the sensor’s driver to the terminal software, include temperature in the processing, and store it on the server."
+    }
+   ],
+   "rejects": [],
+   "example": null,
+   "weak": null,
+   "strong": null,
+   "marking": "Two 1-mark single-choice items on how data flows through the system, and one open 2-mark description with a sample answer."
+  },
+  "readings": [
+   {
+    "student": "A",
+    "solo": "Prestructural: misses the point (one written answer)",
+    "bottleneck": "Retrieval",
+    "gap": "Possible explanation: Names one part only: no users, hardware or data. Probe: “How do the parts work together?” If that is not enough: “Where does the data come from, and who uses it?” Teaching response, if the probe confirms it: secure the term and its exact meaning before building on it."
+   },
+   {
+    "student": "B",
+    "solo": "Multistructural (one written answer)",
+    "bottleneck": "Connection",
+    "gap": "Possible explanation: the answer stops before the join is complete. Probe: “Why does that follow? And so what, for this case?” Teaching response, if the probe confirms it: model the link from cause to effect, then fade the model."
+   },
+   {
+    "student": "C",
+    "solo": "Multistructural: meets the stage's demand (one written answer)",
+    "bottleneck": null,
+    "gap": "On this task, nothing shown missing. Next check, not an observation: A fresh, independent task: “Describe a school library’s borrowing system as an information system.” Teaching response: if it does not transfer, check the new topic's knowledge first, then return to the hint."
+   }
+  ],
+  "sources": [
+   {
+    "label": "OCR GCSE J277/01, June 2023",
+    "qs": [
+     "Q6"
+    ],
+    "qp": "https://www.ocr.org.uk/Images/704760-question-paper-computer-systems.pdf",
+    "ms": "https://www.ocr.org.uk/Images/704882-mark-scheme-computer-systems.pdf",
+    "er": "https://www.ocr.org.uk/Images/704717-examiners-report-computer-systems.pdf"
+   },
+   {
+    "label": "Zhejiang information technology, June 2025",
+    "qs": [
+     "Q13(1)",
+     "Q13(5)"
+    ],
+    "qp": "https://zy.21cnjy.com/23274375",
+    "ms": null,
+    "er": null
+   }
+  ]
+ },
+ "ladders": {
+  "uk": {
+   "title": "Computer Science (GCSE)",
+   "stages": [
+    {
+     "n": 1,
+     "short": "Define",
+     "k": "U",
+     "solo": 2
+    },
+    {
+     "n": 2,
+     "short": "Describe",
+     "k": "U",
+     "solo": 3
+    },
+    {
+     "n": 3,
+     "short": "Calculate",
+     "k": "A",
+     "solo": 3
+    },
+    {
+     "n": 4,
+     "short": "Draw",
+     "k": "A",
+     "solo": 3
+    },
+    {
+     "n": 5,
+     "short": "Complete",
+     "k": "A",
+     "solo": 3
+    },
+    {
+     "n": 6,
+     "short": "Discuss",
+     "k": "C",
+     "solo": 4
+    },
+    {
+     "n": 7,
+     "short": "Explain",
+     "k": "U",
+     "solo": 4
+    },
+    {
+     "n": 8,
+     "short": "Suggest",
+     "k": "A",
+     "solo": 4
+    },
+    {
+     "n": 9,
+     "short": "Compare",
+     "k": "C",
+     "solo": 4
+    },
+    {
+     "n": 10,
+     "short": "Evaluate",
+     "k": "X",
+     "solo": 5
+    },
+    {
+     "n": 11,
+     "short": "Justify",
+     "k": "J",
+     "solo": 5
+    },
+    {
+     "n": 12,
+     "short": "Design",
+     "k": "C",
+     "solo": 5
+    },
+    {
+     "n": 13,
+     "short": "Refine",
+     "k": "X",
+     "solo": 5
+    }
+   ]
+  },
+  "sg": {
+   "title": "Computing (O-Level / G3)",
+   "stages": [
+    {
+     "n": 1,
+     "short": "State",
+     "k": "U",
+     "solo": 2
+    },
+    {
+     "n": 2,
+     "short": "Describe",
+     "k": "U",
+     "solo": 3
+    },
+    {
+     "n": 3,
+     "short": "Trace",
+     "k": "A",
+     "solo": 3
+    },
+    {
+     "n": 4,
+     "short": "Use",
+     "k": "A",
+     "solo": 3
+    },
+    {
+     "n": 5,
+     "short": "Explain",
+     "k": "C",
+     "solo": 4
+    },
+    {
+     "n": 6,
+     "short": "Compare",
+     "k": "C",
+     "solo": 4
+    },
+    {
+     "n": 7,
+     "short": "Justify",
+     "k": "X",
+     "solo": 5
+    },
+    {
+     "n": 8,
+     "short": "Design",
+     "k": "J",
+     "solo": 5
+    }
+   ]
+  },
+  "cn": {
+   "title": "Information Technology (Gaokao)",
+   "stages": [
+    {
+     "n": 1,
+     "short": "Know",
+     "k": "U",
+     "solo": 2
+    },
+    {
+     "n": 2,
+     "short": "Describe",
+     "k": "U",
+     "solo": 3
+    },
+    {
+     "n": 3,
+     "short": "Calculate",
+     "k": "A",
+     "solo": 3
+    },
+    {
+     "n": 4,
+     "short": "Analyse",
+     "k": "C",
+     "solo": 4
+    },
+    {
+     "n": 5,
+     "short": "Design",
+     "k": "J",
+     "solo": 5
+    },
+    {
+     "n": 6,
+     "short": "Evaluate",
+     "k": "X",
+     "solo": 5
+    }
+   ]
+  }
+ },
+ "roadmap": {
+  "framing": "From what assessments require, through what materials explicitly teach, to what students can construct independently.",
+  "question": "In three education systems (England, Singapore and China), which relationships do comparable computing exam questions require students to express; how explicitly do each system’s curriculum documents and teaching materials teach those relationships; and can students construct them unaided on matched tasks?",
+  "purpose": "It tests where answer-building is made visible, rather than assuming high-performing systems already do it better.",
+  "stages": [
+   {
+    "id": "required",
+    "label": "Required linkage",
+    "question": "What relationships must the answer express?",
+    "evidence": "Exam papers and mark schemes, each question part coded for the relationship it requires.",
+    "status": "Provisional",
+    "now": "Started: UK papers with full mark schemes; Singapore specimen papers marked by borrowed Cambridge schemes; one Zhejiang paper with reference answers from a resource site. Enough to explore, not yet to establish differences between systems."
+   },
+   {
+    "id": "taught",
+    "label": "Taught linkage",
+    "question": "How do teaching materials make constructing those relationships explicit?",
+    "evidence": "Specifications, syllabuses, textbooks and classroom materials for matched topics and tasks, read against one checklist.",
+    "status": "Next",
+    "now": "Not started. The crucial next step for the argument."
+   },
+   {
+    "id": "independent",
+    "label": "Independent linkage",
+    "question": "Can students construct them without support, including later and on a different task?",
+    "evidence": "Students’ answers to matched tasks, recorded on the missing-link ladder: unaided, after a prompt, a hint or the model, and on a new task later.",
+    "status": "Later",
+    "now": "Not started: needs the student study in each system."
+   }
+  ],
+  "checklist": [
+   "Labels the purpose of each answer element.",
+   "Models decisions about selecting and connecting knowledge.",
+   "Contrasts incomplete and complete responses.",
+   "Provides practice with progressively less support.",
+   "Checks independent use."
+  ],
+  "rule": "Where a feature is absent, record “not found in the sampled materials”, never that a country does not teach it.",
+  "comparable": "Comparable means the same topic, the same command word and the same level, as with Describe on all three ladders."
+ }
+}

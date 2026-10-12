@@ -41,6 +41,8 @@ export const FONTS = [
   'Iowan Old Style',
   // AI Awareness Day's face.
   'Poppins',
+  // Nodes' face (Google Fonts), wide for the wordmark.
+  'Archivo',
 ];
 
 export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [

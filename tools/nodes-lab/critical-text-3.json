@@ -1,0 +1,259 @@
+{
+  "from": "https://the-teaching-model.vercel.app/framework/critical-text/3",
+  "framework": "Critical Text Analysis",
+  "stages": [
+    {
+      "n": 1,
+      "short": "Themes",
+      "task": "Read the advert twice. What ideas keep coming back?"
+    },
+    {
+      "n": 2,
+      "short": "Ambience",
+      "task": "Who is this for, what does it want, and what reaction is it after?"
+    },
+    {
+      "n": 3,
+      "short": "Abstraction",
+      "task": "Choose your abstraction: the single most revealing line, or what isn't there."
+    },
+    {
+      "n": 4,
+      "short": "Question",
+      "task": "Turn that into a question someone could argue about."
+    },
+    {
+      "n": 5,
+      "short": "Answer",
+      "task": "Answer it, using what's missing as your evidence."
+    },
+    {
+      "n": 6,
+      "short": "Transfer",
+      "task": "Where else does this trick show up?"
+    },
+    {
+      "n": 7,
+      "short": "Interrogate",
+      "task": "(Classmate) But GHz does matter, so isn't the advert fair?"
+    },
+    {
+      "n": 8,
+      "short": "Perform",
+      "task": "Rate your answer: secure, developing or emerging?"
+    }
+  ],
+  "stage": {
+    "n": 3,
+    "short": "Abstraction",
+    "ask": "What reveals the most, or what is left out?",
+    "task": "Choose your abstraction: the single most revealing line, or what isn't there.",
+    "outcome": "Chosen abstraction, with both routes weighed"
+  },
+  "research": {
+    "relationship": {
+      "id": "evidence",
+      "label": "Evidence → explanation",
+      "requires": "What the evidence shows, and why it matters here.",
+      "difficulty": "Quotes or copies the evidence without explaining its significance."
+    },
+    "apart": null,
+    "findings": null
+  },
+  "recall": {
+    "question": "What must I know before I can analyse this advert?",
+    "items": [
+      {
+        "term": "Agenda, audience, purpose",
+        "meaning": "What a text wants, and who it is aimed at.",
+        "use": "Frames every later stage of the analysis.",
+        "used": false,
+        "links": null
+      },
+      {
+        "term": "Connotation",
+        "meaning": "The associations a word carries beyond its literal meaning.",
+        "use": "Interpret “pure power”.",
+        "used": true,
+        "links": null
+      },
+      {
+        "term": "Omission",
+        "meaning": "Texts select what to include and what to leave out.",
+        "use": "Makes “what’s missing” something to look for.",
+        "used": true,
+        "links": null
+      },
+      {
+        "term": "Clock speed and GHz",
+        "meaning": "5.2 GHz = 5.2 billion clock cycles per second.",
+        "use": "Know what the headline figure actually claims.",
+        "used": false,
+        "links": {
+          "n": 3,
+          "misconceptions": 1,
+          "reports": 2,
+          "boards": [
+            "WJEC"
+          ]
+        }
+      },
+      {
+        "term": "Performance factors",
+        "meaning": "Cores, cache, memory, cooling and workload affect speed.",
+        "use": "Name what the advert leaves out.",
+        "used": true,
+        "links": {
+          "n": 6,
+          "misconceptions": 1,
+          "reports": 4,
+          "boards": [
+            "AQA",
+            "Pearson",
+            "WJEC"
+          ]
+        }
+      },
+      {
+        "term": "User requirements",
+        "meaning": "Different tasks place different demands on a computer.",
+        "use": "Test “faster than you’ll ever need”.",
+        "used": false,
+        "links": null
+      }
+    ],
+    "checks": [
+      "What is a text’s agenda?",
+      "What is a connotation?",
+      "What does 5.2 GHz mean?",
+      "Name two other factors that affect performance."
+    ],
+    "bridge": "What has the advert chosen not to tell you, and why?"
+  },
+  "routine": {
+    "wrongIdeas": 31,
+    "rows": [
+      {
+        "n": 1,
+        "name": "Decode",
+        "share": 24,
+        "prompt": "Find the command word. Size the answer from the question; in an exam, the marks say how far to go. Every point must use the case.",
+        "guards": "exam technique, not applied to the scenario, misusing the information given"
+      },
+      {
+        "n": 2,
+        "name": "Retrieve",
+        "share": 46,
+        "prompt": "Bring: Connotation, Omission, Performance factors.",
+        "guards": "misconceptions, found difficult"
+      },
+      {
+        "n": 3,
+        "name": "Reason",
+        "share": 7,
+        "prompt": "One route that earns the link: Two possible routes → what each would reveal → a choice made by which gives stronger evidence for the question.",
+        "guards": "stopped short"
+      },
+      {
+        "n": 4,
+        "name": "Refine",
+        "share": 8,
+        "prompt": "Use technical terms where accuracy depends on them; keep the rest clear and natural.",
+        "guards": "imprecise wording"
+      },
+      {
+        "n": 5,
+        "name": "Review",
+        "share": 14,
+        "prompt": "Re-read the question: does the answer do everything it asks?",
+        "guards": "slips and calculation errors"
+      }
+    ]
+  },
+  "ladder": {
+    "relation": "Two possible routes → what each would reveal → a choice made by which gives stronger evidence for the question",
+    "probe": "“How did you decide between the two routes?”",
+    "hint": "“Which route gives you something you could use as evidence for your question?”",
+    "transfer": "“A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.”",
+    "repair": "In a later analysis, gives the reason for a choice of abstraction in terms of what it lets them argue, without being asked why."
+  },
+  "join": {
+    "rule": "Complete what this question requires: no more reasoning than it asks for, and no less precision.",
+    "size": "Explain, argue, compare or judge (extended answer)",
+    "links": [
+      "point",
+      "because",
+      "so",
+      "in this case"
+    ],
+    "refused": "relevant points with no reasoning between them, or not applied to the case",
+    "quote": {
+      "text": "a well-developed line of reasoning which is clear and logically structured",
+      "cite": "OCR GCSE J277/01, June 2023, Q6, band 3"
+    },
+    "recall": false
+  },
+  "worked": {
+    "units": [
+      "\"5.2 GHz of pure power.\"",
+      "a measurable number to an unmeasurable word",
+      "\"pure\" borrows the number's authority",
+      "no cores, cache, battery life or heat",
+      "it gives stronger evidence for my question"
+    ],
+    "labels": [
+      "Point",
+      "Explained",
+      "So",
+      "Point",
+      "Because"
+    ],
+    "text": "Route A, key text: \"5.2 GHz of pure power.\" It joins a measurable number to an unmeasurable word, so \"pure\" borrows the number's authority. Route B, what's missing: no cores, cache, battery life or heat. I'm choosing Route B, because it gives stronger evidence for my question."
+  },
+  "students": {
+    "A": {
+      "answer": "The advert is about a laptop.",
+      "feedback": "“How did you decide between the two routes?” If that is not enough: “Which route gives you something you could use as evidence for your question?”"
+    },
+    "B": {
+      "answer": "Route A, key text: \"5.2 GHz of pure power.\" Route B, what's missing: no cores, cache, battery life or heat. I'm choosing Route B.",
+      "why": "States the points without the because or the so: the link examiners most often find missing when an answer stops at one point.",
+      "feedback": "“Why does that follow? And so what, for this case?”"
+    },
+    "C": {
+      "feedback": "A fresh, independent task: “A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.”"
+    }
+  },
+  "marks": null,
+  "readings": [
+    {
+      "student": "A",
+      "solo": "Prestructural: misses the point (one written answer)",
+      "bottleneck": "Comprehension",
+      "gap": "Possible explanation: Chooses nothing: neither a revealing line nor what is missing. Probe: “How did you decide between the two routes?” If that is not enough: “Which route gives you something you could use as evidence for your question?” Teaching response, if the probe confirms it: practise reading what the question actually asks."
+    },
+    {
+      "student": "B",
+      "solo": "Multistructural (one written answer)",
+      "bottleneck": "Connection",
+      "gap": "Possible explanation: States the points without the because or the so: the link examiners most often find missing when an answer stops at one point. Probe: “Why does that follow? And so what, for this case?” Teaching response, if the probe confirms it: model the link from cause to effect, then fade the model."
+    },
+    {
+      "student": "C",
+      "solo": "Relational: meets the stage's demand (one written answer)",
+      "bottleneck": null,
+      "gap": "On this task, nothing shown missing. Next check, not an observation: A fresh, independent task: “A phone advert says: ‘108 MP camera. Every detail, captured.’ Choose your abstraction: the most revealing line, or what isn’t there. Weigh both routes.” Teaching response: if it does not transfer, check the new topic's knowledge first, then return to the hint."
+    }
+  ],
+  "sources": [
+    {
+      "label": "OCR GCSE J277/01, June 2023",
+      "qs": [
+        "Q6"
+      ],
+      "qp": "https://www.ocr.org.uk/Images/704760-question-paper-computer-systems.pdf",
+      "ms": "https://www.ocr.org.uk/Images/704882-mark-scheme-computer-systems.pdf",
+      "er": "https://www.ocr.org.uk/Images/704717-examiners-report-computer-systems.pdf"
+    }
+  ]
+}
