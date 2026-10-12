@@ -1533,9 +1533,22 @@ ws.attach(server, (sock, req) => {
         mode: room.mode,
         teams: room.teams,
         title: room.title,
-        session: { id: room.audit.meta.id, title: room.title, createdAt: room.audit.meta.createdAt }
+        session: { id: room.audit.meta.id, title: room.title, createdAt: room.audit.meta.createdAt },
+        /* Where the open question stands, so a reloaded host knows whether it
+           was already revealed, locked or split rather than starting from
+           nothing. Older hosts ignore the field. */
+        question: room.question && (room.phase === 'question' || room.phase === 'revealed') ? {
+          id: room.question.id,
+          revealed: room.phase === 'revealed',
+          closed: !!room.answersClosed,
+          split: !!room.question.split
+        } : null
       });
       pushPlayers(room);
+      /* And the answers so far with their revision: a reloaded host had no
+         snapshot, so its first reveal quoted revision 0 and was bounced as
+         stale. */
+      if (room.phase === 'question') pushTally(room);
       log('room ' + room.pin + ' host back');
       return;
     }
@@ -2221,7 +2234,8 @@ ws.attach(server, (sock, req) => {
           questions: qs, endsAt: Date.now() + seconds * 1000, players: new Map(),
           heat: qs.map(q => ({answered: 0, wrong: 0, picks: q.options.map(() => 0)})), timer: null};
         room.sprint.timer = setTimeout(() => { if (rooms.has(room.pin)) closeSprint(room); }, seconds * 1000);
-        record(room, 'sprint', {gameId: room.sprint.gameId, seconds, questions: qs.length});
+        record(room, 'sprint', {gameId: room.sprint.gameId, seconds, questions: qs.length,
+          sprintId: room.sprint.id, items: qs.map(q => ({id: q.id, question: q.question, options: q.options, correct: q.correct}))});
         for (const p of room.players.values()) if (!p.manual) sendSprintQuestion(room, p);
         sprintProgress(room);
 
@@ -2422,8 +2436,18 @@ ws.attach(server, (sock, req) => {
         if (room.at.activity !== 'question' && room.phase !== 'lobby') {
           room.phase = 'idle';
           room.question = null;
-          room.joinOpen = true;
-          admitWaiting(room);
+          /* The join window belongs to a round. Inside a game (every slide a
+             game contributes carries its gameId) it stays shut until the
+             host's `round` opens the next one, as the phones and the join
+             card say. Outside any game — a lesson's own content between
+             loose checks — it reopens, so a late arrival is not held for a
+             round that never comes. A host that sends no gameId at all (an
+             older page mid-session) keeps the old rule: reopen. */
+          const inGame = typeof m.gameId === 'string' && m.gameId !== '';
+          if (!inGame) {
+            room.joinOpen = true;
+            admitWaiting(room);
+          }
           pushPlayers(room);
         }
         /* A new note stage starts its count at nought, on the wall too. */
@@ -2574,27 +2598,55 @@ ws.attach(server, (sock, req) => {
       if (typeof m.resumeToken === 'string' && m.resumeToken.length === 64) {
         const returning = [...target.players.values(), ...target.waiting.values()].find(p => p.resumeToken === m.resumeToken);
         if (returning) {
-          if (returning.sock && returning.sock.open) { sock.json({t:'error',message:'You are already connected in another tab.'}); return; }
+          /* The same identity coming back while its old socket still looks
+             open. Usually that socket is dead (a network that vanished
+             without a close frame) and refusing the rejoin stranded the
+             phone until TCP gave up. So the newest connection wins: the old
+             one is told why and closed. A genuine second tab of the same
+             player takes the seat from the first, which then shows it was
+             replaced and can take it back with Rejoin. */
+          const stale = returning.sock && returning.sock.open ? returning.sock : null;
           role = 'player'; room = target; me = returning; me.sock = sock;
+          if (stale) {
+            /* me.sock is already the new socket, so the old one's close
+               handler sees it is not current and records nothing itself. */
+            record(room, 'leave', {id:me.id, replaced:true});
+            try { stale.json({t:'replaced'}); stale.close(4001, 'replaced'); } catch (e) {}
+          }
           record(room, 'resume', {id:me.id});
           if (room.waiting.has(me.id) && room.joinOpen) admitWaiting(room);
           const held = room.waiting.has(me.id);
           sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken,reactions:room.reactions,phonesBlank:room.phonesBlank,floor:floorIsOpen(room)});
           if (!held) {
             sendContext(room, sock);
-            if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
-              const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
-              if (!room.question.timeLimit || remaining > 0) {
+            const q = room.question;
+            if (room.phase === 'question' && q && q.eligible.has(me.id)) {
+              const remaining = q.timeLimit ? Math.max(0, q.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
+              if (!q.timeLimit || remaining > 0) {
                 sock.json(questionMessage(room, remaining, me));
                 /* Every input, not just scalars: a rejoining phone with a
-                   Ranking answer used to be told it was a single choice. */
-                if (me.answer != null) sock.json(lockedMessage(room.question, me.answer));
+                   Ranking answer used to be told it was a single choice.
+                   `sure` rides along so the phone does not ask again. */
+                if (me.answer != null) sock.json(Object.assign(lockedMessage(q, me.answer), {sure: me.sure}));
+                /* What else had happened to this question while the phone
+                   was away: the hint, the showdown split, the lock. */
+                if (q.hintAt && me.answer == null) sock.json({t: 'hintOut'});
+                if (q.split && !room.answersClosed) {
+                  sock.json({ t: 'showdown', id: q.id, counts: q.split, options: q.options, mine: me.answer });
+                  if (me.switched) sock.json({ t: 'switched', choice: me.answer });
+                }
+                if (room.answersClosed) sock.json({ t: 'answersClosed', id: q.id, answered: me.answer != null });
               }
+            } else if (room.phase === 'sprint' && room.sprint && !me.manual) {
+              /* Beat the Clock: back to this phone's own place in the run. */
+              sendSprintQuestion(room, me);
             } else if (room.prompt) {
               sock.json(promptMessage(room));
               const values = room.replies.get(me.id) || [];
               if (values.length) sock.json(room.prompt.kind === 'poll' || room.prompt.kind === 'scale' ? {t:'replied',choice:values[0]} : {t:'replied',used:values.length,max:room.prompt.max});
             }
+            /* A fresh join is handed the Q&A list; a resume was not. */
+            sock.json(qaForPlayer(room, me.id));
           }
           pushPlayers(room); pushTally(room); return;
         }
@@ -2883,17 +2935,26 @@ ws.attach(server, (sock, req) => {
     if (role === 'player' && m.t === 'sprintA') {
       const sprint = room && room.sprint;
       if (!sprint || Date.now() > sprint.endsAt) return;
+      /* A phone names the sprint it is answering, so a late tap from one
+         run cannot land in the next. Older phones send no id and are still
+         taken, as before. */
+      if (m.id != null && String(m.id) !== sprint.id) return;
       const st = sprintState(sprint, me);
       const q = sprint.questions[st.i];
       if (!q || !Number.isInteger(m.choice) || m.choice < 0 || m.choice >= q.options.length) return;
       const right = m.choice === q.correct;
-      const pts = sprintPoints(right, (Date.now() - st.shownAt) / 1000);
+      const elapsedMs = Math.max(0, Date.now() - st.shownAt);
+      const pts = sprintPoints(right, elapsedMs / 1000);
       const before = me.score;
       me.score = Math.max(0, me.score + pts);
       st.gained += me.score - before;
       if (right) st.right++; else st.wrong++;
       const h = sprint.heat[st.i];
       h.answered++; if (!right) h.wrong++; h.picks[m.choice]++;
+      /* Per learner, per question, so the report can say who got which
+         one, not just the run's totals (sprintEnd still carries those). */
+      record(room, 'sprintAnswer', {sprintId: sprint.id, gameId: sprint.gameId, playerId: me.id,
+        questionId: q.id, index: st.i, choice: m.choice, right, gained: me.score - before, elapsedMs});
       st.i++;
       st.shownAt = Date.now();
       const next = sprintQuestion(sprint, st);
@@ -2905,10 +2966,16 @@ ws.attach(server, (sock, req) => {
     }
 
     if (role === 'player' && m.t === 'answer') {
-      if (!room || !rooms.has(room.pin) || room.phase !== 'question' || !room.question || !room.question.eligible.has(me.id)) return;
+      /* A refused answer is said so, rather than dropped in silence: the
+         phone shows its answer as pending until it hears `locked` or this.
+         Older phones ignore the message, as they ignore any unknown type. */
+      const refuse = (reason, message) => sock.json({ t: 'answerRefused', reason, message, switch: m.switch === true });
+      if (!room || !rooms.has(room.pin)) return;
+      if (room.phase !== 'question' || !room.question) { refuse('closed', 'That question has closed, so this answer did not count.'); return; }
+      if (!room.question.eligible.has(me.id)) { refuse('ineligible', 'This question opened before you joined. The next one is yours.'); return; }
       if (room.question.spoken) return;
-      if (room.question.timeLimit && Date.now() - room.askedAt > room.question.timeLimit * 1000) return;
-      if (room.answersClosed) return;                      // the host is revealing
+      if (room.question.timeLimit && Date.now() - room.askedAt > room.question.timeLimit * 1000) { refuse('late', 'Time was up, so this answer did not count.'); return; }
+      if (room.answersClosed) { refuse('closed', 'Answers are locked, so this one did not count.'); return; }
       /* The one exception to one answer per question: once a showdown's
          split is on the wall, each phone may change its mind, once. */
       if (me.answer != null && room.question.split && m.switch === true && !me.switched &&
@@ -2923,14 +2990,18 @@ ws.attach(server, (sock, req) => {
         pushTally(room);
         return;
       }
-      if (me.answer != null) return;                       // one answer per question
+      if (me.answer != null) {                             // one answer per question
+        if (m.switch === true) refuse('switch', 'Your answer stays as it was.');
+        else sock.json(Object.assign(lockedMessage(room.question, me.answer), {sure: me.sure}));
+        return;
+      }
       /* Held as the raw response: an option index, or the text they typed.
          The relay stores it without interpreting it — every read of it is
          gated on room.question.input, never on the value's own shape. */
       let response;
       if (room.question.input === 'text') {
         response = String(m.text == null ? '' : m.text).trim().slice(0, 120);
-        if (!response) return;
+        if (!response) { refuse('invalid', 'That answer was empty. Try again.'); return; }
       } else if (room.question.input === 'number') {
         /* Kept as a number and nothing more. Whether it is near enough is the
            host's judgement; all that matters here is that it is a real value.
@@ -2940,19 +3011,19 @@ ws.attach(server, (sock, req) => {
            starting at zero is an answer at the low end rather than no answer
            at all. Nothing missing may become a placement. */
         if (typeof m.value !== 'number' || !Number.isFinite(m.value) ||
-            Math.abs(m.value) > 1e12) return;
+            Math.abs(m.value) > 1e12) { refuse('invalid', 'That answer could not be read. Try again.'); return; }
         response = m.value;
       } else if (room.question.input === 'sort') {
         /* One column (0 A only, 1 Both, 2 B only) per statement, in order. */
         if (!Array.isArray(m.sort) || m.sort.length !== room.question.options.length ||
-            m.sort.some(v => !Number.isInteger(v) || v < 0 || v > 2)) return;
+            m.sort.some(v => !Number.isInteger(v) || v < 0 || v > 2)) { refuse('invalid', 'That answer could not be read. Try again.'); return; }
         response = m.sort.slice();
       } else if (room.question.input === 'fill') {
         /* One word-bank index per gap. A word may fill two gaps, so repeats
            are allowed; anything out of range is not. */
         const n = room.question.options.length;
         if (!Array.isArray(m.fill) || m.fill.length !== room.question.gaps ||
-            m.fill.some(v => !Number.isInteger(v) || v < 0 || v >= n)) return;
+            m.fill.some(v => !Number.isInteger(v) || v < 0 || v >= n)) { refuse('invalid', 'That answer could not be read. Try again.'); return; }
         response = m.fill.slice();
       } else if (room.question.input === 'order') {
         /* A permutation of the options and nothing else. Checked here rather
@@ -2962,16 +3033,16 @@ ws.attach(server, (sock, req) => {
            the first response in this protocol that is not a scalar, so it is
            also the first that can be malformed in interesting ways. */
         const n = room.question.options.length;
-        if (!Array.isArray(m.order) || m.order.length !== n) return;
+        if (!Array.isArray(m.order) || m.order.length !== n) { refuse('invalid', 'That answer could not be read. Try again.'); return; }
         const seen = new Set();
         for (const v of m.order) {
-          if (!Number.isInteger(v) || v < 0 || v >= n || seen.has(v)) return;
+          if (!Number.isInteger(v) || v < 0 || v >= n || seen.has(v)) { refuse('invalid', 'That answer could not be read. Try again.'); return; }
           seen.add(v);
         }
         response = m.order.slice();
       } else {
         const choice = Number(m.choice);
-        if (!Number.isInteger(choice) || !(choice >= 0 && choice < room.question.options.length)) return;
+        if (!Number.isInteger(choice) || !(choice >= 0 && choice < room.question.options.length)) { refuse('invalid', 'That answer could not be read. Try again.'); return; }
         response = choice;
       }
       me.answer = response;

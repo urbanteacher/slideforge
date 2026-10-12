@@ -19,8 +19,12 @@ class Socket extends EventEmitter {
     this.buf = Buffer.alloc(0);
     this.fragments = [];
     this.fragOp = null;
+    /* Any frame from the peer counts as a sign of life, a pong included. */
+    this.lastSeen = Date.now();
+    live.add(this);
 
     raw.on('data', (chunk) => {
+      this.lastSeen = Date.now();
       this.buf = Buffer.concat([this.buf, chunk]);
       try {
         this._drain();
@@ -35,6 +39,7 @@ class Socket extends EventEmitter {
   }
 
   _dead() {
+    live.delete(this);
     if (!this.open) return;
     this.open = false;
     this.emit('close');
@@ -122,11 +127,35 @@ class Socket extends EventEmitter {
     body.writeUInt16BE(code || 1000, 0);
     if (reason) body.write(reason, 2);
     this._frame(OP.CLOSE, body);
+    live.delete(this);
     this.open = false;
     try { this.raw.end(); } catch (e) {}
     this.emit('close');
   }
 }
+
+/* Keep-alive. A phone whose network vanished without a close frame used to
+   look connected until TCP gave up, minutes later, and its rejoin was refused
+   meanwhile. Every socket is pinged on an interval; browsers answer pings in
+   the network stack, not in page script, so a backgrounded tab still answers.
+   One that has sent nothing for a few intervals is dropped as dead, which
+   fires the same 'close' a real disconnect would. */
+const live = new Set();
+const HEARTBEAT_MS = Math.max(50, Number(process.env.SLIDEFORGE_WS_HEARTBEAT_MS) || 25000);
+const SILENT_LIMIT_MS = HEARTBEAT_MS * 3;
+const heartbeat = setInterval(() => {
+  const now = Date.now();
+  for (const sock of [...live]) {
+    if (!sock.open) { live.delete(sock); continue; }
+    if (now - sock.lastSeen > SILENT_LIMIT_MS) {
+      try { sock.raw.destroy(); } catch (e) {}
+      sock._dead();
+    } else {
+      sock._frame(OP.PING, Buffer.alloc(0));
+    }
+  }
+}, HEARTBEAT_MS);
+if (heartbeat.unref) heartbeat.unref();
 
 function decode(buf) {
   if (buf.length < 2) return null;

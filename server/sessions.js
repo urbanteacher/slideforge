@@ -81,6 +81,7 @@ function project(session, active = false) {
   const { meta, events } = session;
   const people = new Map(), checks = [], feedback = [], questions = [], signals = [];
   const oral = new Map();
+  const sprints = [];
   let end = null, startedAt = null;
   const person = id => people.get(id);
   for (const e of events) {
@@ -110,6 +111,14 @@ function project(session, active = false) {
     else if (e.type === 'answer') {
       const q = checks.find(q => q.attempt === d.attempt);
       if (q && !q.responses.some(r => r.playerId === d.playerId)) q.responses.push({ ...d, at: e.at, right: null });
+      if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
+    } else if (e.type === 'switch') {
+      /* Showdown: the one switch after the split. The reveal marks the
+         switched answer, so the report must show it too; the first answer is
+         kept beside it. */
+      const q = checks.find(q => q.attempt === d.attempt);
+      const r = q && !q.revealedAt && q.responses.find(r => r.playerId === d.playerId);
+      if (r) { if (!r.switched) r.firstChoice = r.choice; r.choice = d.choice; r.switched = true; }
       if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
     } else if (e.type === 'manualAnswer') {
       const q=checks.find(q => q.attempt === d.attempt);
@@ -143,8 +152,21 @@ function project(session, active = false) {
         });
         (d.scores || []).forEach(s => { if (person(s.id)) person(s.id).score = s.score; });
       }
+    } else if (e.type === 'sprint') {
+      /* Beat the Clock, self-paced. Older journals carry only the counts. */
+      sprints.push({ sprintId: d.sprintId != null ? d.sprintId : null, gameId: d.gameId, seconds: d.seconds,
+        questions: d.questions, items: Array.isArray(d.items) ? d.items : [],
+        startedAt: e.at, endedAt: null, answers: null, right: null, responses: [] });
+    } else if (e.type === 'sprintAnswer') {
+      /* One tap in a sprint: who, which question, what, and whether right. */
+      const run = [...sprints].reverse().find(r => r.sprintId === d.sprintId && !r.endedAt) || sprints[sprints.length - 1];
+      if (run) run.responses.push({ playerId: d.playerId, questionId: d.questionId, index: d.index,
+        choice: d.choice, right: d.right === true, gained: d.gained, elapsedMs: d.elapsedMs, at: e.at });
+      if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
     } else if (e.type === 'sprintEnd') {
       /* Beat the Clock, self-paced: the run's scores. */
+      const run = [...sprints].reverse().find(r => !r.endedAt);
+      if (run) { run.endedAt = e.at; run.answers = d.answers; run.right = d.right; }
       (d.scores || []).forEach(s => { if (person(s.id)) person(s.id).score = s.score; });
     } else if (e.type === 'oralCredit') {
       /* A Concept Chain link credited while its term stayed open. */
@@ -208,13 +230,17 @@ function project(session, active = false) {
       confidentlyWrong: answers.filter(r => r.sure === true && r.right === false).length,
       unsureButRight: answers.filter(r => r.sure === false && r.right === true).length,
       feedbackContributions: feedback.reduce((n, f) => n + f.responses.filter(r => r.playerId === p.id).reduce((sum, r) => sum + r.values.length, 0), 0),
-      questionsAsked: questions.filter(q => q.playerId === p.id && q.state !== 'dismissed').length
+      questionsAsked: questions.filter(q => q.playerId === p.id && q.state !== 'dismissed').length,
+      /* Sprint taps are counted apart from the checks: a sprint is one run
+         of many questions per person, not a question the room shares. */
+      sprintAnswered: sprints.reduce((n, r) => n + r.responses.filter(x => x.playerId === p.id).length, 0),
+      sprintCorrect: sprints.reduce((n, r) => n + r.responses.filter(x => x.playerId === p.id && x.right).length, 0)
     };
   });
   return { schemaVersion: 1, id: meta.id, title: meta.title, mode: meta.mode, teams: meta.teams,
     createdAt: meta.createdAt, startedAt, endedAt: end && end.at, updatedAt,
     status, reason: end ? end.reason : status === 'interrupted' ? 'Relay stopped before the session ended.' : null,
-    persisted: session.persisted, attendance: roster, checks, feedback,
+    persisted: session.persisted, attendance: roster, checks, feedback, sprints,
     /* Oral rounds sit beside the checks rather than inside them: they are
        credited to a team or to the class, so they have no place in a grid
        whose rows are people. */
