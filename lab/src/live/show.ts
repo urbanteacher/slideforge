@@ -1,0 +1,89 @@
+// What the room steps through: one step per slide the room sees, read from a lab deck. A lab game's slides
+// carry what the room needs (slide.game, designs/engage/games.ts tagGame and finishGame): its cover, its
+// questions (game.quiz, SlideForge's own compiled question) and their answers. As in src/deck/labshow.js,
+// a question is asked where its first drawing stands, its answer is that question's reveal (not a step of
+// its own), and the game's scores follow its last slide.
+//
+// Slice 1 (M7) asks multiple-choice questions only. Any other question is shown, not asked.
+
+import type { Deck, Slide } from '../core';
+import { gameStyle } from '@sf/games/registry.js';
+
+/** A question as the room asks and marks it: SlideForge's quiz slide (src/games), with its game. */
+export interface RoomQuiz extends SFQuizSlide {
+  id: string; question: string; options: string[]; correct: number; explanation: string;
+  timeLimit: number; points: number; style: string; input: string; gameId: string;
+  confidence?: boolean; voteOnly?: boolean; unmarked?: boolean; scoreSpoken?: boolean; sourceSlideId?: string; headPrompt?: string;
+}
+
+export interface RoomSlide {
+  /** The slide id the room is told (`at.slideId`). */
+  id: string;
+  title: string;
+  /** What the phones may show of it (`at.text`). */
+  text: string;
+  activity: 'content' | 'moment' | 'question';
+  /** The game this slide belongs to: landing on a new one opens a round. */
+  gameId?: string;
+  /** The phone's skin for this slide (`at.style`). */
+  style: string;
+  quiz?: RoomQuiz;
+  /** A game's scores: the room is sent `finish` when it comes up. */
+  results?: boolean;
+}
+
+export interface RoomShow { title: string; slides: RoomSlide[] }
+
+const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
+/** A game's own phone skin off its questions (classic `Live.mechanic`): Multiple choice is 'points'. */
+const mechanicOf = (style: string) => String(gameStyle(style)?.mechanic ?? 'quiz');
+
+/** A lab question as the room's quiz: the game's question with the Game panel's settings over it (labshow.js quizSlide). */
+function quizOf(s: Slide): RoomQuiz {
+  const g = s.game!, set = g.settings ?? {};
+  const q = Object.assign({ type: 'quiz', style: 'choice', input: 'choice', correct: 0, points: 1000, explanation: '', options: [], question: '' }, copy(g.quiz ?? {})) as unknown as RoomQuiz;
+  q.id = s.id;
+  q.timeLimit = (set.seconds ?? 0) > 0 ? set.seconds! : 0;
+  if (set.points != null) q.points = set.points;
+  q.gameId = g.id;
+  if (s.sourceSlideId) q.sourceSlideId = s.sourceSlideId;
+  return q;
+}
+
+/** The room's steps for a lab deck. */
+export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
+  const slides = deck.slides.filter((s) => !s.hidden);
+  const out: RoomSlide[] = [];
+  const asked = new Set<string>();
+  const lastOf = new Map<string, number>();
+  slides.forEach((s, k) => { if (s.game?.id) lastOf.set(s.game.id, k); });
+  const firstStyle = slides.find((s) => s.game?.quiz)?.game?.quiz?.style;
+  const deckStyle = mechanicOf(String(firstStyle ?? 'choice'));
+
+  slides.forEach((s, k) => {
+    const g = s.game;
+    if (!g?.id) {
+      out.push({ id: s.id, title: s.name, text: '', activity: 'content', style: deckStyle });
+    } else {
+      const style = mechanicOf(String(g.quiz?.style ?? g.format));
+      const qs = slides.filter((x) => x.game?.id === g.id && x.game.role === 'question' && x.game.quiz);
+      if (g.role === 'question' && g.quiz) {
+        const key = g.key ?? s.id;
+        if (!asked.has(key)) {
+          asked.add(key);
+          const quiz = quizOf(s);
+          out.push(quiz.input === 'choice'
+            ? { id: s.id, title: quiz.question, text: quiz.question, activity: 'question', gameId: g.id, style: quiz.style, quiz }
+            : { id: s.id, title: quiz.question, text: quiz.question, activity: 'moment', gameId: g.id, style });
+        }
+      } else if (g.role !== 'answer') {
+        const text = g.role === 'cover' ? `${new Set(qs.map((x) => x.game!.key ?? x.id)).size} questions` : '';
+        out.push({ id: s.id, title: g.role === 'cover' ? g.label : s.name, text, activity: 'moment', gameId: g.id, style, results: g.role === 'end' });
+      }
+      if (lastOf.get(g.id) === k && !slides.some((x) => x.game?.id === g.id && x.game.role === 'end')) {
+        out.push({ id: `${g.id}:scores`, title: `${g.label} — scores`, text: '', activity: 'moment', gameId: g.id, style, results: true });
+      }
+    }
+  });
+  return { title: deck.title, slides: out };
+}

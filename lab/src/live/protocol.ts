@@ -1,0 +1,89 @@
+// The live room's wire protocol, as the lab host speaks it (docs/games/protocol.md, M0.2). Only what a
+// Multiple choice session needs, plus rehost and reconnect. The relay (server/server.js), the phones
+// (join.html) and the teacher-entry window (manual.html) do not change (hard rule 5): these are the
+// shapes they already accept and send. Section numbers are the protocol doc's.
+
+/** A player's response as the relay stores it. Choice: the option index. */
+export type Response = number | string | number[];
+
+/** One answer in a `tally` or `markStale` (§6.3). */
+export interface TallyAnswer { id: number; name: string; team: number | null; response: Response; sure: boolean | null; elapsedMs: number }
+
+/** One row of the roster in `players` (§4.2). */
+export interface PlayerRow { id: number; name: string; score: number; connected: boolean; away: boolean; manual: boolean; team: number | null; correct?: number }
+
+/** What a `at` says about the slide on the wall (§5). */
+export interface AtFields {
+  slideId: string; title: string; n: number; total: number;
+  activity: 'content' | 'question' | 'feedback' | 'moment';
+  text: string; step: number; style: string; role: string; participation: string; headPrompt: string;
+  stage: null;
+}
+
+/** The phone companion fields an `idle` carries (§10). */
+export interface Companion { style: string; role: string; participation: string; headPrompt: string }
+
+/** A multiple-choice `question` (§6.1), with the fields and the values classic sends (`js/live.js` sendOpenQuestion). */
+export interface QuestionFields {
+  id: string; n: number; total: number; question: string;
+  voteOnly: boolean; unmarked: boolean; sourceSlideId: string;
+  input: 'choice'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
+  confidence: boolean; range: null; options: string[]; timeLimit: number; points: number; style: string;
+  headPrompt?: string;
+}
+
+/** A teacher's answer by key (§6.4). Choice only here; `clear` takes the answer back. */
+export interface ManualAnswerFields { id: string; playerId: number; choice?: number; clear?: boolean }
+
+/** H→R: what the host sends. */
+export type HostMessage =
+  | { t: 'host'; title: string; mode: 'individual' | 'teams'; teams: { name: string }[] }
+  | { t: 'rehost'; pin: string; hostToken: string }
+  | { t: 'begin' }
+  | { t: 'round'; gameId: string }
+  | ({ t: 'at' } & AtFields)
+  | ({ t: 'idle' } & Companion)
+  | ({ t: 'question' } & QuestionFields)
+  | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string }
+  | { t: 'manualAdd'; names: string[]; team: number }
+  | ({ t: 'manualAnswer' } & ManualAnswerFields)
+  | { t: 'manualRemove'; playerId: number; mode: 'kick' | 'delete' }
+  | { t: 'report' }
+  | { t: 'finish'; title: string; note?: string; kind?: string }
+  | { t: 'end' };
+
+export interface Session { id: string; token?: string; title: string; createdAt: number }
+
+/** R→H: what the relay sends the host. Anything else arrives as `Other` and is ignored. */
+export type RelayMessage =
+  | { t: 'hosted'; session: Session; hostToken: string; pin: string; joinUrl: string; mode: string; teams: string[] }
+  | { t: 'rehosted'; phase: Phase; pin: string; hostToken: string; joinUrl: string; mode: string; teams: string[]; title?: string; session: Session; question?: { id: string; revealed: boolean; closed: boolean; split: boolean } | null }
+  | { t: 'rehostFailed'; reason: string }
+  | { t: 'error'; message: string }
+  | { t: 'players'; pin: string; joinUrl: string; joinOpen: boolean; waiting: number; round: number; list: PlayerRow[]; mode: string; rows: unknown[]; counts: number[] | null }
+  | { t: 'tally'; id: string; counts: number[] | null; answered: number; sured: number; total: number; split: unknown; switched: number; waiting: number; allIn: boolean; manual: boolean; rev: number; answers: TallyAnswer[] }
+  | { t: 'markStale'; id: string; rev: number; answers: TallyAnswer[] }
+  | { t: 'manualError'; message: string; playerId?: number; id?: string }
+  | { t: 'teamAnswers'; correct: number; counts: number[][] }
+  | { t: 'sessionReport'; report: unknown }
+  | { t: 'sessionClosed'; report: unknown }
+  | Other;
+export interface Other { t: 'recording' | 'bookmarks' | 'signals' | 'qa' | 'reaction' | 'oralCount'; [field: string]: unknown }
+
+/** The room's phase (§2), as the relay keeps it and the host follows it. */
+export type Phase = 'lobby' | 'running' | 'question' | 'revealed' | 'idle' | 'sprint';
+
+/** The team names classic hosts with when the deck says none (src/model.js makeQuizConfig). */
+export const DEFAULT_TEAMS = ['Red', 'Blue', 'Green', 'Yellow'];
+
+/** How long classic waits after `end` before it closes its socket, so `sessionClosed` arrives (§11). */
+export const END_CLOSE_MS = 1500;
+/** How long classic waits for confidence taps before an automatic reveal (§17, step 9). */
+export const SURE_GRACE_MS = 5000;
+
+export function parseRelay(raw: unknown): RelayMessage | null {
+  try {
+    const m = JSON.parse(String(raw)) as RelayMessage;
+    return m && typeof m.t === 'string' ? m : null;
+  } catch { return null; }
+}
