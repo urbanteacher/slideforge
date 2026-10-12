@@ -1,3 +1,6 @@
+// Every slide is built from a layout, so the layer kinds are registered from here too: a module built on its
+// own (the converter, a test) has them without importing an entry (kinds/index.ts).
+import '../kinds';
 import { contentHeight } from '../engine';
 import { CARD_PAD, CARD_TOP } from './cards';
 import { aspectOf, setAspect, createLayer, createSlide, type Anim, type Box, type Deck, type Layer, type Params, type Slide, type StyleGuide } from '../core';

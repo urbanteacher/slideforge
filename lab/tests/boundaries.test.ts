@@ -18,7 +18,7 @@ const NO_INDEX_YET: string[] = [];
 /** Entries still imported from a folder, until they move into app/. Empty when M1.5 is done. */
 const ENTRY_IMPORTS: string[] = [];
 /** core/ or engine/ files still reaching into a kind, until the kind's code moves out of them. Empty when M1.5 is done. */
-const REACHES_KINDS: string[] = ['engine/raster.ts → kinds/video/index.ts'];
+const REACHES_KINDS: string[] = [];
 
 const all = () => sourceFiles().flatMap(importsOf);
 

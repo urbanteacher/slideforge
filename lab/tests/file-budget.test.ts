@@ -9,7 +9,6 @@ const BUDGET = 800;
 
 /** Files still over the budget, and why each one is waiting. */
 const ALLOWED: Record<string, string> = {
-  'engine/raster.ts': 'one drawing function per kind; split into kinds/<kind>/raster.ts (M1.5 step 3)',
   'engine/registry.ts': 'every layer and effect kind; split into kinds/<kind>/def.ts and kinds/effects/ (M1.5 step 4)',
   'layouts/layouts.ts': 'every layout; split into layouts/ by family (M1.5 step 5)',
   'experiments/experimentKinds.ts': 'every experiment kind; split by kind (M1.5)',

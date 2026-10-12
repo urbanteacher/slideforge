@@ -1,7 +1,8 @@
 import type { Deck, Layer, Slide } from '../core';
 import { EASE, animTotal, schedule } from './anim';
 import { ALL_KINDS } from './registry';
-import { MODEL_PLOT, showMedia, toggleMedia, fileClip, mediaPlaying } from './raster';
+import { MODEL_PLOT } from './raster';
+import { showMedia, toggleMedia, fileClip, mediaPlaying } from './media';
 import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps, experimentControls, experimentStates, hitButton } from '../experiments';
 import { reducesMotion, type MotionSetting } from './motion';
 import { Renderer, type FrameOpts } from './renderer';

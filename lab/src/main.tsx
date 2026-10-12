@@ -1,3 +1,5 @@
+// Every layer kind, registered with the engine before anything draws (kinds/index.ts).
+import './kinds';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 import { labApi, App } from './app';

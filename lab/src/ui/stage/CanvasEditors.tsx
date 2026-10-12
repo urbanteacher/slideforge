@@ -1,6 +1,7 @@
 import { Plus, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { chartSpots, parseChartData, kind } from '../../engine';
+import { kind } from '../../engine';
+import { chartSpots, parseChartData } from '../../kinds/chart';
 import { useStore } from '../../store';
 import type { Layer } from '../../core';
 import { newGesture } from '../controls/controls';

@@ -1,12 +1,11 @@
 import { Image as ImageIcon, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, MonitorPlay, Play, RotateCcw, Shuffle, WandSparkles } from 'lucide-react';
 import { setVideoLayout, videoLayoutOf, type VideoLayout } from './video';
-import { videoService } from '../../kinds/video';
 import { ActivityPanel, GamePanel, RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
 import { RECIPE_NAMES } from '../../designs';
 import { EngagementPanel } from './Engagement';
 import { backdropOf, setBackdrop, themeOf, setSlideGround, type BackdropMode } from '../../layouts';
 import { useRef } from 'react';
-import { animTotal, isTextUnit, presetOf, presetTiming, schedule, autoHeight, textSize, CATEGORY_LABEL, FONTS, defaultParams, kind, type Spacing, type Speed, type ParamDef } from '../../engine';
+import { animTotal, isTextUnit, presetOf, presetTiming, schedule, autoHeight, textSize, CATEGORY_LABEL, FONTS, defaultParams, kind, videoService, type Spacing, type Speed, type ParamDef } from '../../engine';
 import { layerOf, slideOf, useStore } from '../../store';
 import type { BlendMode, ClickAction, Easing, EntranceType, HoverType, Layer, LoopType, ParamValue, TransitionType, Trigger } from '../../core';
 import { ColorField, Row, Scrub, Section, Select, Toggle, newGesture } from '../controls/controls';

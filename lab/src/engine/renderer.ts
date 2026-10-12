@@ -2,7 +2,8 @@ import type { BlendMode, Layer, Slide, TransitionType } from '../core';
 import { EASE, IDLE_STATE, animTotal, layerState, schedule, stepLight, type LayerState } from './anim';
 import { CONTENT_GLSL, MAIN, PRELUDE, VERT } from './glsl';
 import { REDUCED_CHANGE } from './motion';
-import { contentFrame, getAssetVersion, groupSizes, rasterise, textSize } from './raster';
+import { getAssetVersion, groupSizes, rasterise, textSize } from './raster';
+import { contentFrame } from './media';
 import { kind } from './registry';
 
 const BLEND_INDEX: Record<BlendMode, number> = {

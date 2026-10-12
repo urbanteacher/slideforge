@@ -1,4 +1,5 @@
 // Entry for the standalone player bundle that is inlined into exported .html decks.
+import '../kinds';
 import type { Deck } from '../core';
 import { DeckPlayer } from '../engine';
 

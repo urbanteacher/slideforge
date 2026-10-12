@@ -1,5 +1,5 @@
 import { createLayer, uid, type Deck, type LiveFigure, type Slide } from '../core';
-import { videoEmbed } from '../kinds/video';
+import { videoEmbed } from '../engine';
 import { CHART_DARK, CHART_LIGHT } from '../charts';
 import { EXPERIMENTS, experimentPreset } from '../experiments';
 import { LAYOUTS, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
