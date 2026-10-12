@@ -1,5 +1,5 @@
 // The demonstrations built on the chart-experiment kinds, with their tables (from experimentKinds.ts).
-import type { KState } from './experimentKinds';
+import type { KState } from './experimentKinds.ts';
 
 interface KPreset { label: string; prompt: string; data: string; states: KState[] }
 const NESTED = 'Level\tAsks\tThreat\nDomain situation\tWho are the target users?|What do they need to do?\tYou misunderstood|their needs\nData/task abstraction\tWhat is shown? (data)|Why are they looking? (task)\tYou’re showing them|the wrong thing\nIdiom\tHow is it shown? (encoding)|How is it manipulated? (interaction)\tThe way you show it|doesn’t work\nAlgorithm\tHow is it computed|efficiently?\tYour code is|too slow';
