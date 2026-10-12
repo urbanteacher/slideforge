@@ -73,7 +73,7 @@ S('Cover', [
     R(80 + i * 420, 800, 390, 64, { radius: 32, fill: s.col, strokeWidth: 0, name: `Pill ${s.short}` }, enter()),
     T(s.name, 80 + i * 420, 812, 390, 40, { size: 28, weight: '800', align: 'center', color: '#ffffff', name: `Pill label ${s.short}` }, enter()),
   ]),
-], { bg: C.ink, notes: 'Describe is the one command word on all three Nodes ladders: UK GCSE (command word 2), Singapore O-Level (2) and China IT (2). Same word, the same SOLO level (several ideas), the same topic. What changes is the relationship each system asks the answer to show.' });
+], { bg: C.ink, notes: 'Describe is the one command word on all three Nodes ladders: UK GCSE (command word 2), Singapore O-Level (2) and China IT (2). Same word, the same place on each ladder (several ideas), the same topic. Command words organise this comparison; the whole task determines its demand.' });
 
 /* ---------------------------------------------------------------- the structure */
 divider('The structure', 'Each system’s ladder of command words, as Nodes draws it: where Describe sits, and what sits around it.');
@@ -82,7 +82,7 @@ S('Three ladders', [...nav('The structure'), eyebrow('Three ladders, one level')
     T(`${s.name} · ${D.ladders[s.k].stages.length} command words`, X(i), 300, 560, 40, { size: 26, weight: '800', color: s.col, name: `Ladder title ${s.short}` }, enter()),
     ...ladder(X(i), 350, 560, D.ladders[s.k].stages, { bandH: 128, d: 40, label: 17, gloss: false, ring: 'Describe', ringAnim: i ? after() : onClick() }),
   ]),
-  note('Same level, different neighbours: what comes before and after Describe is not the same in each system.', 1010),
+  note('Command words organise this comparison; the whole task determines its demand.', 1010),
 ], { notes: 'The three SOLO ladders as Nodes draws them. Describe is command word 2 in each, multistructural (several ideas, not yet connected). UK has 13 command words, Singapore 8, China 6. Click to ring Describe on all three.' });
 for (const s of SYS) {
   const L = D.ladders[s.k];
@@ -141,10 +141,10 @@ S('The link each needs', [...nav('The link'), eyebrow('The link each answer need
   }),
 ], { notes: SYS.map(s => `${s.name}: ${D[s.k].ladder.relation} (${D[s.k].research.relationship.label}: ${D[s.k].research.relationship.requires})`).join('\n') });
 S('What the link adds', [...nav('The link'), eyebrow('What each system adds to “Describe”'),
-  heading('UK pairs a part with its job. Singapore adds how the parts work together. China places the parts inside one system, in its setting.', 186, 48),
+  heading('UK pairs a part with its job. Singapore asks each part’s function; Nodes extends it to how they work together. China places the parts in one system.', 186, 48),
   ...[
     ['One part at a time', 'Name each component, then its exact job. Precision on every line.', 'Control unit → decodes instructions and sends control signals.'],
-    ['Parts, then the interaction', 'Each part’s function, and the “how”: what passes between them.', 'The processor reads from and writes to memory over the buses.'],
+    ['Each function, then the link', 'Each part’s function. As an extension, Nodes adds the “how”: what passes between them.', 'The processor reads from and writes to memory over the buses.'],
     ['The whole system, in context', 'The system’s parts in this case: its users, hardware, software and data.', 'Users: technicians and students. Data: CPU readings, logins and the export queue.'],
   ].flatMap(([h, t, ex], i) => [
     card(i, 420, 560, true), ...flag(i, 420, SYS[i]),
@@ -152,7 +152,51 @@ S('What the link adds', [...nav('The link'), eyebrow('What each system adds to �
     T(t, X(i) + 32, 620, 500, 140, { size: 32 }, after()),
     T(ex, X(i) + 32, 790, 500, 160, { size: 28, weight: '600', color: SYS[i].col }, after()),
   ]),
-], { notes: 'UK: decompose and name precisely. Singapore: the function of each part and how they interact. China: describe the system as a whole, applied to the scenario.' });
+], { notes: 'UK: decompose and name precisely. Singapore: the function of each part; how they interact is a Nodes extension, linked to syllabus outcome 1.1.3, not required by the question as written. China: describe the system as a whole, applied to the scenario.' });
+
+/* Separate roles or an integrated explanation? The minimum each question requires, beside what Nodes adds as teaching.
+   Both Nodes tasks are drafted for Nodes. A precise list is a full answer when the question asks for a list of roles. */
+{
+  const KIND = { separate: ['Separate roles', '#cfe3f1', C.U], one: ['One part', C.tint, C.muted], extension: ['Nodes extension', C.Cc, C.ink], integrated: ['Integrated', C.A, '#ffffff'] };
+  const ROWS = [
+    ['The question requires', 'The Nodes task as written', [
+      ['separate', 'Describe the main components of the CPU: each one’s role.'],
+      ['separate', 'Describe the function of the processor and main memory: each one’s function.'],
+    ]],
+    ['Nodes adds', 'The expected answer, as teaching', [
+      ['separate', 'Nothing beyond the list: a precise list of roles is the full answer.'],
+      ['extension', 'How the two work together over the buses: teaches connected understanding.'],
+    ]],
+    ['The syllabus', 'OCR J277 1.1.1 · SEAB 7155 1.1.3', [
+      ['separate', 'Each component’s role, and what it manages, stores or controls.'],
+      ['integrated', 'A separate outcome: the function of the buses in reading from and writing to memory.'],
+    ]],
+  ];
+  const CX = [640, 1250], CW = 590;
+  S('Separate roles or an integrated explanation?', [...nav('The link'), eyebrow('What the question requires, and what Nodes adds'),
+    heading('Separate roles or an integrated explanation?', 186, 52),
+    ...SYS.slice(0, 2).map((sy, j) => T(sy.name.toUpperCase(), CX[j], 300, CW, 34, { size: 24, weight: '800', color: sy.col, tracking: 0.08, name: `Column ${sy.short}` }, still)),
+    ...ROWS.flatMap(([label, src, cells], r) => {
+      const y = 350 + r * 170;
+      return [
+        R(80, y, 540, 150, { radius: 14, fill: C.card, stroke: C.line, strokeWidth: 1, name: `Row ${label}` }, onClick()),
+        T(label, 104, y + 24, 500, 44, { size: 32, weight: '800', name: 'Row label' }, after()),
+        T(src, 104, y + 76, 500, 60, { size: 20, color: C.muted, lineHeight: 1.2, name: 'Source' }, after()),
+        ...cells.flatMap(([k, text], j) => {
+          const [name, fill, color] = KIND[k];
+          return [
+            R(CX[j], y, CW, 150, { radius: 14, fill: SYS[j].tint, strokeWidth: 0, name: `Cell ${SYS[j].short}` }, after()),
+            R(CX[j] + 20, y + 16, 230, 40, { radius: 20, fill, strokeWidth: 0, name: `Kind ${name}` }, after()),
+            T(name, CX[j] + 20, y + 23, 230, 28, { size: 19, weight: '800', align: 'center', color, name: 'Kind label' }, after()),
+            T(text, CX[j] + 20, y + 68, CW - 40, 72, { size: 24, weight: '600', lineHeight: 1.15, name: 'Cell text' }, after()),
+          ];
+        }),
+      ];
+    }),
+    R(80, 870, 1760, 120, { radius: 16, fill: C.ink, strokeWidth: 0, name: 'Caveat card' }, onClick()),
+    T('As written, both questions ask for separate roles. The integrated explanation is a Nodes extension, linked to a syllabus outcome. Whether a Singapore exam requires it needs its question and marking criteria.', 120, 886, 1680, 90, { size: 26, weight: '700', color: '#ffffff', lineHeight: 1.2, name: 'Caveat' }, after()),
+  ], { notes: 'Separate roles or an integrated explanation? Both Nodes tasks are written for Nodes.\nThe minimum each requires: UK, each component’s role; Singapore, each part’s function. A precise list is the full answer when the question asks for a list of roles; it is not a weak answer.\nWhat Nodes adds: in Singapore, how the two work together over the buses, as teaching that builds connected understanding. It is linked to SEAB 7155 outcome 1.1.3 (the function of data and address buses in reading from and writing to memory), a separate outcome, and is not required by the question as written.\nThe specimen paper on file, 7155/01 Q2(a), asks for the purpose of main memory alone. Whether any Singapore exam requires the interaction has to be checked against the question and what its marking criteria require the statements to mean; the number of marks does not settle the SOLO level.\nThis is a hypothesis about these examples, not a finding, and says nothing about how students in either system revise or answer.' });
+}
 
 /* ---------------------------------------------------------------- the answer */
 divider('The answer', 'The answer that earns it in each system, element by element: the worked example from each Nodes stage.');
@@ -213,8 +257,8 @@ S('How the marks fall', [...nav('The marks'), eyebrow('How the marks fall'), hea
 divider('The difference', 'What the papers show, side by side, and what they cannot show.');
 {
   const ROWS = [
-    ['The unit of the answer', 'One part at a time', 'Two parts and how they interact', 'The whole system, in its setting'],
-    ['The link', 'Component → its specific role', 'Each part → its function → how they work together', 'The system → its parts → how they connect'],
+    ['The unit of the answer', 'One part at a time', 'Two parts, each with its function', 'The whole system, in its setting'],
+    ['The link', 'Component → its specific role', 'Each part → its function (Nodes extends: → how they work together)', 'The system → its parts → how they connect'],
     ['How it is marked', 'One mark per relevant point', '2 marks: two points, or a point and how', 'Single choice, all or nothing; one open change'],
     ['The typical slip', 'A label or a vague role', 'Main memory confused with storage; nothing joining the parts', 'A general label, not this system’s parts'],
   ];
@@ -247,7 +291,7 @@ S('Teaching all three', [...nav('The difference'), eyebrow('In the classroom'),
   T('Teach the CPU once. Then ask for it in each system’s shape, and name the link each one needs.', 80, 300, 1760, 60, { size: 38, color: C.muted }, enter()),
   ...[
     ['Precise', 'Name each part, then its exact job.', 'Describe the main components of the CPU.'],
-    ['Connected', 'Each part’s function, then what passes between them.', 'Describe the function of the processor and main memory.'],
+    ['Connected', 'Each part’s function; then, as an extension, what passes between them.', 'Describe the function of the processor and main memory.'],
     ['In context', 'This system’s parts: users, hardware, software, data, and how they connect.', 'Describe the lab’s monitoring system as an information system.'],
   ].flatMap(([h, t, q], i) => [
     card(i, 420, 520, true), ...flag(i, 420, SYS[i]),
@@ -287,6 +331,68 @@ S('Teaching all three', [...nav('The difference'), eyebrow('In the classroom'),
     R(80, 900, 1760, 100, { radius: 16, fill: C.amber, strokeWidth: 0, name: 'Rule card' }, onClick()),
     T(RM.rule, 110, 920, 1700, 60, { size: 30, weight: '700' }, after()),
   ], { notes: `Apply the same checklist to matched topics and tasks in each qualification.\n${RM.checklist.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n${RM.rule}\n${RM.comparable}` });
+
+  /* Part 2's first results, from Nodes' Across systems page: a finding is a pill, coloured by how much was found. */
+  const PILL = { 'Found': [C.A, '#ffffff', 'Found'], 'Partly found': [C.Cc, C.ink, 'Partly found'], 'Related guidance only': ['#cfe3f1', C.U, 'Related only'], 'Not found in the sampled materials': [C.tint, C.muted, 'Not found'] };
+  const pill = (x, y, w, finding, anim) => {
+    const [fill, color, label] = PILL[finding];
+    return [R(x, y, w, 40, { radius: 20, fill, strokeWidth: 0, name: `Finding: ${label}` }, anim),
+      T(label, x, y + 7, w, 28, { size: 19, weight: '800', align: 'center', color, name: 'Finding label' }, after())];
+  };
+  const UKR = D.taughtUK, TD = D.taughtDocs;
+  S('Taught linkage: the UK examiner reports', [...nav('The difference'), eyebrow('Taught linkage · first results · UK examiner reports'),
+    heading('The reports show what a full answer needed, not how to teach students to build one.', 186, 48),
+    ...UKR.coded.flatMap((c, i) => {
+      const y = 340 + i * 112;
+      return [
+        R(80, y, 1760, 96, { radius: 16, fill: C.card, stroke: C.line, strokeWidth: 1, name: `Row ${i + 1}` }, onClick()),
+        dot(104, y + 18, 60, C.ink, String(i + 1), after()),
+        T(c.item, 190, y + 28, 860, 50, { size: 26, weight: '700', name: 'Checklist item' }, after()),
+        ...pill(1060, y + 28, 200, c.finding, after()),
+        T(c.short, 1290, y + 28, 530, 50, { size: 26, color: C.muted, fit: 'shrink', name: 'What the reports do' }, after()),
+      ];
+    }),
+    note(`${UKR.corpus} Advice to teachers, written after marking.`, 920),
+  ], { notes: `Question: what do the UK boards make explicit to teachers about building an answer?\n${UKR.corpus}\n${UKR.coded.map((c, i) => `${i + 1}. ${c.item} ${c.finding}${c.reports ? ` (${c.reports} of 21 reports)` : ''}. ${c.reading} For example: ${c.where.join('; ')}.`).join('\n')}\n${UKR.reading}` });
+
+  const COLX = [620, 1030, 1440], COLW = 400;
+  S('Taught linkage: three systems’ documents', [...nav('The difference'), eyebrow('Taught linkage · the official curriculum documents'),
+    heading('Each system makes a different part of the answer visible.', 186, 48),
+    ...SYS.map((sy, j) => T(sy.short.toUpperCase(), COLX[j], 268, COLW, 34, { size: 24, weight: '800', color: sy.col, tracking: 0.08, name: `Column ${sy.short}` }, still)),
+    ...TD.coded.flatMap((c, i) => {
+      const y = 316 + i * 130;
+      const cell = (j) => {
+        const v = c[['UK', 'Singapore', 'China'][j]];
+        return [R(COLX[j], y, COLW, 116, { radius: 14, fill: SYS[j].tint, strokeWidth: 0, name: `Cell ${SYS[j].short}` }, after()),
+          ...pill(COLX[j] + 16, y + 12, 170, v.finding, after()),
+          T(v.short, COLX[j] + 16, y + 58, COLW - 32, 56, { size: 22, weight: '600', lineHeight: 1.12, name: 'Cell text' }, after())];
+      };
+      return [
+        R(80, y, 520, 116, { radius: 14, fill: C.card, stroke: C.line, strokeWidth: 1, name: `Row ${i + 1}` }, onClick()),
+        T(`${i + 1}. ${c.item}`, 104, y + 22, 480, 76, { size: 24, weight: '700', lineHeight: 1.15, fit: 'shrink', name: 'Checklist item' }, after()),
+        ...cell(0), ...cell(1), ...cell(2),
+      ];
+    }),
+    note('Exam specifications (UK, Singapore) beside a national curriculum standard (China). Singapore’s teaching syllabus is not yet reviewed.', 980),
+  ], { notes: `${TD.systems.map(s => `${s.id}: ${s.docs}`).join('\n')}\n${TD.coded.map((c, i) => `${i + 1}. ${c.item}\n${['UK', 'Singapore', 'China'].map(k => `  ${k}: ${c[k].finding}. ${c[k].reading} (${c[k].where})`).join('\n')}`).join('\n')}` });
+
+  const SHOWS = [
+    'Command words that say what the whole answer does, and AQA ties programming to explaining how programs work.',
+    'The required relationship written into each outcome: firewalls enforce security by monitoring packets against rules.',
+    'Demonstration, half-made work and possible answers by level: for practical work and one written item.',
+  ];
+  S('What the documents show', [...nav('The difference'), eyebrow('Taught linkage · what it shows'),
+    heading('Knowledge and relationships are specified. A full sequence for teaching the written answer was not found.', 186, 52),
+    ...SYS.flatMap((sy, i) => [
+      R(X(i), 380, 560, 380, { radius: 22, fill: sy.tint, strokeWidth: 0, name: `Card ${sy.short}` }, onClick()),
+      R(X(i), 380, 560, 10, { radius: 0, fill: sy.col, strokeWidth: 0, name: 'Top' }, after()),
+      T(sy.short.toUpperCase(), X(i) + 36, 420, 490, 36, { size: 26, weight: '800', color: sy.col, tracking: 0.08, name: 'System' }, after()),
+      T(SHOWS[i], X(i) + 36, 476, 490, 260, { size: 34, weight: '700', lineHeight: 1.2, fit: 'shrink', name: 'What it shows' }, after()),
+    ]),
+    R(80, 800, 1760, 120, { radius: 16, fill: C.ink, strokeWidth: 0, name: 'Gap card' }, onClick()),
+    T(`The question for Nodes: ${TD.question}`, 120, 826, 1680, 70, { size: 32, weight: '800', color: '#ffffff', fit: 'shrink', name: 'Gap' }, after()),
+    note('A finding about the sampled documents, not teaching across the three systems. Textbooks and classroom materials come next.', 970),
+  ], { notes: `${TD.reading}\nFound: the document explicitly teaches constructing a written answer this way. Related guidance only: an adjacent practice (content guidance, practical scaffolding, assessment of performance), not the thing itself.\nThe question for Nodes: ${TD.question}` });
 }
 {
   const links = [
@@ -295,14 +401,19 @@ S('Teaching all three', [...nav('The difference'), eyebrow('In the classroom'),
     ['SEAB 7155/01 specimen paper, 2025', 'https://isomer-user-content.by.gov.sg/334/c96eb69a-ed24-491a-8234-7eebc546a0e4/7155_y25_sp_1.pdf'],
     ['Cambridge 2210, June 2024: examiner report', 'https://www.cambridgeinternational.org/Images/570403-june-2024-examiner-report.pdf'],
     ['Zhejiang IT, June 2025: paper and answers', 'https://zy.21cnjy.com/23274375'],
+    ['AQA 8525 specification and command words', 'https://filestore.aqa.org.uk/resources/computing/specifications/AQA-8525-SP-2020.PDF'],
+    ['OCR J277 specification, version 3.1', 'https://www.ocr.org.uk/Images/558027-specification-gcse-computer-science-j277.pdf'],
+    ['SEAB 7155 O-Level Computing syllabus, 2026', 'https://isomer-user-content.by.gov.sg/334/293afc22-1ca0-4230-b072-fa050e186267/7155_y26_sy.pdf'],
+    ['China MOE curriculum standards, 2017 (IT is 17-1847)', 'http://www.moe.gov.cn/srcsite/A26/s8001/201801/W020180116404040376273.zip'],
+    ['Across systems in Nodes: the full coding', 'https://the-teaching-model.vercel.app/evidence/compare#taught-docs'],
   ];
   S('Sources', [...nav('The difference'), eyebrow('Sources'), heading('Check each claim against its source.', 186, 56),
     ...links.flatMap(([label, url], i) => {
-      const l = T(`${label} ↗`, 80, 320 + i * 90, 1760, 56, { size: 34, weight: '700', color: C.U, underline: true, name: `Link ${i + 1}` }, enter());
+      const l = T(`${label} ↗`, i < 6 ? 80 : 980, 320 + (i % 6) * 100, 860, 80, { size: 28, weight: '700', color: C.U, underline: true, lineHeight: 1.15, fit: 'shrink', name: `Link ${i + 1}` }, enter());
       l.interact = { ...l.interact, click: 'link', url };
       return [l];
     }),
   ], { notes: links.map(([l, u]) => `${l}: ${u}`).join('\n') });
 }
 
-window.__deck = { id: 'nodes-describe-three-systems', title: 'One command word, three systems: Describe', width: 1920, height: 1080, version: 1, slides };
+window.__deck = { id: 'nodes-describe-three-systems', libraryGroup: 'nodes', title: 'One command word, three systems: Describe', width: 1920, height: 1080, version: 1, slides };

@@ -19673,6 +19673,7 @@
     { id: "nul", label: "Northeastern" },
     { id: "ukbt", label: "UK Black Tech" },
     { id: "ukbt-institute", label: "UKBT Institute" },
+    { id: "nodes", label: "Nodes" },
     { id: "aiad26", label: "AI Awareness Day 2026" },
     { id: "aiad27", label: "AI Awareness Day 2027" },
     { id: "other", label: "Other" }
@@ -19681,6 +19682,7 @@
     if (theme === "northeastern") return "nul";
     if (theme === "ukbt") return "ukbt";
     if (theme === "ukbt-institute") return "ukbt-institute";
+    if (theme === "nodes") return "nodes";
     if (theme && theme.indexOf("aiad26-") === 0) return "aiad26";
     if (theme && theme.indexOf("aiad27-") === 0) return "aiad27";
     return "other";

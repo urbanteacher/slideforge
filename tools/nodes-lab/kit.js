@@ -9,7 +9,7 @@
  * Runs in the page of the lab's dev server (tools/nodes-lab/build.mjs injects it), so it uses the
  * lab's real createLayer and createSlide. The words are the stage's own (tools/nodes-lab/critical-text-3.json,
  * exported from Nodes by tools/export-stage-lesson.ts, and the stage's tabs as Nodes shows them). */
-import { createLayer, createSlide } from '/src/model/defaults.ts';
+import { createLayer, createSlide } from '/src/core/defaults.ts';
 
 const W = 1920;
 const C = {

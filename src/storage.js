@@ -42,6 +42,7 @@ export const LIBRARY_GROUPS = [
   { id: 'nul', label: 'Northeastern' },
   { id: 'ukbt', label: 'UK Black Tech' },
   { id: 'ukbt-institute', label: 'UKBT Institute' },
+  { id: 'nodes', label: 'Nodes' },
   { id: 'aiad26', label: 'AI Awareness Day 2026' },
   { id: 'aiad27', label: 'AI Awareness Day 2027' },
   { id: 'other', label: 'Other' }
@@ -51,6 +52,7 @@ export function libraryGroupFromTheme(theme) {
   if (theme === 'northeastern') return 'nul';
   if (theme === 'ukbt') return 'ukbt';
   if (theme === 'ukbt-institute') return 'ukbt-institute';
+  if (theme === 'nodes') return 'nodes';
   /* All five principles into one folder. They are five themes because each
      carries its own colour and badge, but they are one campaign and a teacher
      running the day wants them in one place — not scattered through Other with

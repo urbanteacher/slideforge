@@ -485,7 +485,7 @@
    "short": "Describe",
    "ask": "Can I give several relevant features?",
    "task": "Describe the function of the processor and main memory.",
-   "outcome": "Each part’s function, and how the two work together"
+   "outcome": "Each part’s function; as an extension, how the two work together"
   },
   "research": {
    "relationship": {
@@ -1294,8 +1294,8 @@
     "label": "Taught linkage",
     "question": "How do teaching materials make constructing those relationships explicit?",
     "evidence": "Specifications, syllabuses, textbooks and classroom materials for matched topics and tasks, read against one checklist.",
-    "status": "Next",
-    "now": "Not started. The crucial next step for the argument."
+    "status": "Started",
+    "now": "Started: the UK examiner reports, and each system's official curriculum documents, read against the checklist below. Textbooks and classroom materials are still to come."
    },
    {
     "id": "independent",
@@ -1315,5 +1315,194 @@
   ],
   "rule": "Where a feature is absent, record “not found in the sampled materials”, never that a country does not teach it.",
   "comparable": "Comparable means the same topic, the same command word and the same level, as with Describe on all three ladders."
+ },
+ "taughtUK": {
+  "corpus": "21 GCSE computer science examiner reports, 2019 to 2025: AQA 8525 (5), OCR J277 (8), Pearson Edexcel 1CP2 (3), WJEC and Eduqas (5).",
+  "coded": [
+   {
+    "item": "Labels the purpose of each answer element.",
+    "short": "The second mark explained, question by question",
+    "finding": "Partly found",
+    "reports": 6,
+    "reading": "Reports name the job of the second mark question by question: the expansion that gives the reason, or the further detail the describe command word requires. They do it after marking, for one question at a time, not as a routine students are taught to apply.",
+    "where": [
+     "OCR J277/02, June 2024, Q4(b)",
+     "Pearson 1CP2/01, 2025, Q1(b)(ii)",
+     "AQA 8525/1, June 2023"
+    ]
+   },
+   {
+    "item": "Models decisions about selecting and connecting knowledge.",
+    "short": "“Apply it to the scenario”: said, not shown",
+    "finding": "Partly found",
+    "reports": 16,
+    "reading": "The most common advice: apply the point to the scenario, avoid generic or vague answers, use the specific term. It says what the answer must do, but not how to choose the knowledge or make the connection.",
+    "where": [
+     "OCR J277/01, June 2024, Q2(b)(i)",
+     "AQA 8525/2, June 2022",
+     "Pearson 1CP2/01, 2025"
+    ]
+   },
+   {
+    "item": "Contrasts incomplete and complete responses.",
+    "short": "Marked candidate answers (OCR, Pearson)",
+    "finding": "Found",
+    "reports": 12,
+    "reading": "OCR and Pearson reproduce candidates' answers with the marks they earned and what was missing, and OCR sets what candidates who did well did against those who did less well. AQA and WJEC describe stronger and weaker answers in prose, without reproducing them.",
+    "where": [
+     "OCR J277/01, June 2022, Q3(d), Exemplar 3",
+     "OCR J277/01, June 2025",
+     "Pearson 1CP2/01, 2025"
+    ]
+   },
+   {
+    "item": "Provides practice with progressively less support.",
+    "short": "Practice advice is for programming",
+    "finding": "Not found in the sampled materials",
+    "reports": 0,
+    "reading": "Practice advice is about programming, attempting every question and past papers. Where scaffolding is mentioned it describes the exam question itself (Pearson's programming paper has none), not support to withdraw over time.",
+    "where": [
+     "OCR J277/02, June 2022 to 2025",
+     "Pearson 1CP2/02, 2023 and 2025"
+    ]
+   },
+   {
+    "item": "Checks independent use.",
+    "short": "Only the exam itself",
+    "finding": "Not found in the sampled materials",
+    "reports": 0,
+    "reading": "OCR says the paper may ask candidates to apply knowledge to unfamiliar contexts, so the exam is the only check described. No report describes checking, before the exam, whether students build an answer unaided.",
+    "where": [
+     "OCR J277/02, June 2022 to 2025"
+    ]
+   }
+  ],
+  "reading": "In the UK reports, answer-building is made visible after the event: what a full answer needed, and where answers fell short. What the reports leave to teachers is the teaching in between: modelling the choice and the connection, and withdrawing support until students build the answer alone. That is the gap Nodes is built for, and it is a finding about these reports, not about UK teaching.",
+  "next": "The official curriculum documents for all three systems follow, coded against the same checklist."
+ },
+ "taughtDocs": {
+  "systems": [
+   {
+    "id": "UK",
+    "docs": "AQA 8525 specification and command words; OCR J277 specification, version 3.1 (May 2026)."
+   },
+   {
+    "id": "Singapore",
+    "docs": "SEAB O-Level Computing 7155 syllabus (2026). MOE's 2024 G3 Computing teaching and learning syllabus, which is indexed with sections on pedagogy and assessment, was not examined: its official link returned “not found” on 12 October 2026 and its cover restricts it to education officers. Singapore’s teaching guidance is therefore not yet reviewed."
+   },
+   {
+    "id": "China",
+    "docs": "Ministry of Education, high-school Information Technology curriculum standard (2017; the Ministry's 2020 notice changed only its preface). Read from a scan by OCR."
+   }
+  ],
+  "coded": [
+   {
+    "item": "Labels the purpose of each answer element.",
+    "UK": {
+     "short": "Command words and component roles: content guidance",
+     "finding": "Related guidance only",
+     "reading": "OCR defines Explain as “a detailed account including reasons or causes”; AQA as “set out purposes or reasons”. OCR’s CPU guidance asks for each component’s role and what it manages, stores or controls. This specifies what to know and what the whole answer does, not the elements to put in it.",
+     "where": "OCR J277 PDF p.8 (6), p.34–35 (32–33); AQA command words"
+    },
+    "Singapore": {
+     "short": "Outcomes state the relationship: content guidance",
+     "finding": "Related guidance only",
+     "reading": "Outcomes carry the relationship itself: the function of each component and the buses; firewalls enforce security by monitoring packets against configurable rules. That specifies the content of an answer, not the elements students should put in one.",
+     "where": "SEAB 7155 PDF p.6, p.12"
+    },
+    "China": {
+     "short": "Outcomes name the action, not the parts",
+     "finding": "Not found in the sampled materials",
+     "reading": "Outcomes name the action (描述, 理解) and the level, not the parts of an answer.",
+     "where": "Module 2 requirements, PDF p.25–27 (16–18)"
+    }
+   },
+   {
+    "item": "Models decisions about selecting and connecting knowledge.",
+    "UK": {
+     "short": "Programming to articulate how programs work",
+     "finding": "Related guidance only",
+     "reading": "AQA ties programming experience to students being able to “articulate how programs work” and argue that a program is correct: instructional intent, but no model of selecting and connecting knowledge in a written answer.",
+     "where": "AQA 8525 PDF p.9 (9)"
+    },
+    "Singapore": {
+     "short": "No teaching advice in the exam syllabus",
+     "finding": "Not found in the sampled materials",
+     "reading": "The exam syllabus sets outcomes and the exam; it gives no teaching advice.",
+     "where": "SEAB 7155"
+    },
+    "China": {
+     "short": "Demonstration and case analysis",
+     "finding": "Related guidance only",
+     "reading": "Teaching tips ask teachers to analyse typical systems with students and guide them to sum up the components, and to combine teacher demonstration with practice. It models analysing a system, not writing an answer.",
+     "where": "Module 2 teaching tips, PDF p.25–26 (16–17); PDF p.38 (29)"
+    }
+   },
+   {
+    "item": "Contrasts incomplete and complete responses.",
+    "UK": {
+     "short": "In the examiner reports, not the specifications",
+     "finding": "Not found in the sampled materials",
+     "reading": "Not in the specifications; the examiner reports do this.",
+     "where": "AQA 8525; OCR J277"
+    },
+    "Singapore": {
+     "short": "Not in the syllabus",
+     "finding": "Not found in the sampled materials",
+     "reading": "Not in the syllabus.",
+     "where": "SEAB 7155"
+    },
+    "China": {
+     "short": "Possible answers by level, with marks",
+     "finding": "Partly found",
+     "reading": "Case 3, a written item (propose the functions of an English-learning app), groups possible answers by level with scoring guidance. It sets weaker and stronger answers side by side, but does not show an incomplete answer being repaired.",
+     "where": "Case 3, PDF p.67–68 (58–59)"
+    }
+   },
+   {
+    "item": "Provides practice with progressively less support.",
+    "UK": {
+     "short": "Practice advice is for programming",
+     "finding": "Not found in the sampled materials",
+     "reading": "Practice advice is for programming (“as much opportunity as possible”), not written answers.",
+     "where": "AQA 8525 PDF p.9 (9)"
+    },
+    "Singapore": {
+     "short": "Not in the syllabus",
+     "finding": "Not found in the sampled materials",
+     "reading": "Not in the syllabus.",
+     "where": "SEAB 7155"
+    },
+    "China": {
+     "short": "Practical scaffolding; written answers not established",
+     "finding": "Related guidance only",
+     "reading": "Imitate first, then explore: teachers analyse good work, then give half-finished work for students to complete independently. This is scaffolding for a practical module (3D design); its use for written answers is not established.",
+     "where": "Module 5 teaching tips, PDF p.38–39 (29–30)"
+    }
+   },
+   {
+    "item": "Checks independent use.",
+    "UK": {
+     "short": "The exam assesses performance only",
+     "finding": "Not found in the sampled materials",
+     "reading": "The exam assesses performance (AO2: apply knowledge in context). Nothing checks whether students construct the answer once instructional support is withdrawn.",
+     "where": "OCR J277 PDF p.36 (34)"
+    },
+    "Singapore": {
+     "short": "The exam assesses performance only",
+     "finding": "Not found in the sampled materials",
+     "reading": "The exam assesses performance; nothing checks independence after support is withdrawn.",
+     "where": "SEAB 7155 PDF p.3"
+    },
+    "China": {
+     "short": "Assessment of practical work during the course",
+     "finding": "Related guidance only",
+     "reading": "Process assessment by classroom observation and evaluation of students’ work, and students completing an information system alone or in groups. This assesses practical performance; it does not check independent written answers after support is withdrawn.",
+     "where": "PDF p.26 (17), p.61 (52)"
+    }
+   }
+  ],
+  "reading": "The sampled documents specify required knowledge and relationships, and provide some relevant teaching and assessment guidance: the UK’s command words, Singapore’s relationships written into outcomes, China’s demonstration, scaffolding and answers by level. This review has not identified a complete sequence that explicitly teaches written-answer construction and progressively withdraws support. That is a finding about the sampled documents, not teaching across the three systems.",
+  "question": "Where is the process of constructing the required response made explicit to students?"
  }
 }

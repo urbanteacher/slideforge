@@ -62,6 +62,7 @@
         { id: 'nul', label: 'Northeastern' },
         { id: 'ukbt', label: 'UK Black Tech' },
         { id: 'ukbt-institute', label: 'UKBT Institute' },
+        { id: 'nodes', label: 'Nodes' },
         { id: 'other', label: 'Other' }
       ];
     }

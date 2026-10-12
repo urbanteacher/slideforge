@@ -492,4 +492,4 @@ for (const [who, solo, process, answer, missing, col] of [
   ], { notes: `Student ${who}. Structure: ${solo}. Process to investigate: ${process}.\n${missing}` });
 }
 
-window.__deck = { id: 'nodes-critical-text-3', title: 'Abstraction: key text or what is missing', width: 1920, height: 1080, version: 1, slides };
+window.__deck = { id: 'nodes-critical-text-3', libraryGroup: 'nodes', title: 'Abstraction: key text or what is missing', width: 1920, height: 1080, version: 1, slides };
