@@ -101,7 +101,33 @@ const MIME = {
    trust assumption the rest of the relay makes.
    ------------------------------------------------------------------------- */
 
-const DATA_DIRS = { deck: path.join(ROOT, 'data', 'decks'), game: path.join(ROOT, 'data', 'games') };
+const DATA_DIRS = {
+  deck: path.join(ROOT, 'data', 'decks'), game: path.join(ROOT, 'data', 'games'),
+  /* Lesson-studio lessons, whole (the browser keeps them in IndexedDB). */
+  lesson: path.join(ROOT, 'data', 'lessons')
+};
+const DATA_SUB = { deck: 'decks', game: 'games', lesson: 'lessons' };
+/* Every file the export has written, so a later export can remove the ones
+   whose document is gone without touching a file someone put there by hand.
+   A dot-file, so the static server never serves it. */
+const DATA_WRITTEN = path.join(ROOT, 'data', '.written.json');
+
+function readWritten() {
+  try { const w = JSON.parse(fs.readFileSync(DATA_WRITTEN, 'utf8')); return w && typeof w === 'object' ? w : {}; }
+  catch (e) { return {}; }
+}
+function writeWritten(w) {
+  try { fs.mkdirSync(path.dirname(DATA_WRITTEN), { recursive: true }); fs.writeFileSync(DATA_WRITTEN, JSON.stringify(w, null, 2), 'utf8'); }
+  catch (e) { /* the export still worked; only the tidy-up loses its memory */ }
+}
+/* The name the export used before it named files by id alone (js/shell.js
+   slugify, until October 2026): the title, then the id's first eight. A file
+   whose name is that of its own contents was written by the export. */
+function legacyExportName(doc) {
+  let base = String((doc && doc.title) || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
+  if (!base) base = 'untitled';
+  return base + '-' + String((doc && doc.id) || '').slice(0, 8).toLowerCase().replace(/[^a-z0-9]/g, '') + '.json';
+}
 
 /* The endpoints below write to the project folder with no authentication,
    which is the LAN bargain stated above: whoever can reach the port is
@@ -257,8 +283,8 @@ function jsonReply(res, code, obj) {
 }
 
 function listData(res) {
-  const out = { decks: [], games: [] };
-  for (const kind of ['deck', 'game']) {
+  const out = { decks: [], games: [], lessons: [] };
+  for (const kind of ['deck', 'game', 'lesson']) {
     let names = [];
     try { names = fs.readdirSync(DATA_DIRS[kind]); } catch (e) { names = []; }
     for (const name of names) {
@@ -266,7 +292,7 @@ function listData(res) {
       try {
         const raw = fs.readFileSync(path.join(DATA_DIRS[kind], name), 'utf8');
         const doc = JSON.parse(raw);
-        out[kind === 'deck' ? 'decks' : 'games'].push({
+        out[DATA_SUB[kind]].push({
           file: name,
           id: doc.id || '',
           title: doc.title || name,
@@ -500,6 +526,7 @@ function saveData(req, res) {
       return jsonReply(res, 400, { error: 'Bad JSON' });
     }
     const kind = msg && msg.kind;
+    if (kind === 'prune') return pruneData(res, msg.keep);
     const slug = msg && msg.slug;
     if (!DATA_DIRS[kind]) return jsonReply(res, 400, { error: 'Unknown kind' });
     if (!SLUG.test(String(slug || ''))) return jsonReply(res, 400, { error: 'Bad name' });
@@ -510,13 +537,47 @@ function saveData(req, res) {
       fs.mkdirSync(DATA_DIRS[kind], { recursive: true });
       const file = path.join(DATA_DIRS[kind], slug + '.json');
       fs.writeFileSync(file, JSON.stringify(msg.doc, null, 2), 'utf8');
+      const written = readWritten();
+      written[DATA_SUB[kind] + '/' + slug + '.json'] = true;
+      writeWritten(written);
       log('saved ' + kind + ' "' + (msg.doc.title || slug) + '" to data/' +
-          (kind === 'deck' ? 'decks' : 'games') + '/' + slug + '.json');
+          DATA_SUB[kind] + '/' + slug + '.json');
       jsonReply(res, 200, { ok: true, file: slug + '.json' });
     } catch (e) {
       jsonReply(res, 500, { error: e.message });
     }
   });
+}
+
+/* After an export: remove each file the export wrote earlier whose document
+   is no longer in the browser. `keep` is { deck: [file…], game: […], lesson: […] },
+   every file this export wrote. A file the export did not write is left alone. */
+function pruneData(res, keep) {
+  if (!keep || typeof keep !== 'object') return jsonReply(res, 400, { error: 'Nothing to keep was sent' });
+  const written = readWritten();
+  let removed = 0;
+  for (const kind of Object.keys(DATA_DIRS)) {
+    const mine = new Set(Array.isArray(keep[kind]) ? keep[kind].map(String) : []);
+    /* A kind the browser sent no list for is not tidied: absence is not "keep nothing". */
+    if (!Array.isArray(keep[kind])) continue;
+    let names = [];
+    try { names = fs.readdirSync(DATA_DIRS[kind]); } catch (e) { names = []; }
+    for (const name of names) {
+      if (!name.endsWith('.json') || mine.has(name)) continue;
+      const rel = DATA_SUB[kind] + '/' + name;
+      let ours = !!written[rel];
+      if (!ours) {
+        try { ours = legacyExportName(JSON.parse(fs.readFileSync(path.join(DATA_DIRS[kind], name), 'utf8'))) === name; }
+        catch (e) { ours = false; }
+      }
+      if (!ours) continue;
+      try { fs.unlinkSync(path.join(DATA_DIRS[kind], name)); removed++; delete written[rel]; }
+      catch (e) { /* left for the next export */ }
+    }
+  }
+  writeWritten(written);
+  if (removed) log('removed ' + removed + ' old export file' + (removed === 1 ? '' : 's') + ' from data/');
+  jsonReply(res, 200, { ok: true, removed });
 }
 
 function serve(req, res) {
