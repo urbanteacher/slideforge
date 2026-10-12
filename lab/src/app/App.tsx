@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { cloneLayer, idbGet, blankDeck, type Deck } from '../core';
 import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '../store';
 import { isLabDeck, saveCurrent } from './embed';
+import { ShowLayer } from '../show';
 import { registerGuideFonts } from '../theme';
 import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse } from '../ui';
 import { present } from './showInSlideForge';
@@ -163,6 +164,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       {!panelHidden && <Inspector />}
       {galleryOpen && <Gallery />}
       {toast && <div className="toast">{toast}</div>}
+      <ShowLayer />
     </div>
   );
 }

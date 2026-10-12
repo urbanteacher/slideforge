@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { exportHtml, exportJson, exportPng, renderStill, editableSlides, exportPptx } from '../export';
 import { blankDeck, demoDeck, type Deck } from '../core';
 import { ukbtDeck, ukbtInstituteDeck, nulDeck } from '../decks';
+import { hasRoomGame, openStudioShow, studioRoomEnabled } from '../show';
 import { slideOf, useStore } from '../store';
 import { FormatBar, Menu } from '../ui';
 import { hasShell, ShellLeft, ShellRight } from './ShellRow';
@@ -86,6 +87,7 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
       <div className="spacer" />
       <div className="tb-run" role="group" aria-label="Edit and show">
         {/* Embedded, the shell's Present is the one. On its own, Present opens SlideForge's show. */}
+        {studioRoomEnabled() && <button className="btn-outline" title="The studio's own room: phones join, and the wall is drawn here (?studioRoom=1)" disabled={!hasRoomGame(deck)} onClick={() => openStudioShow({ room: true })}>Host live (studio)</button>}
         {!embedded && <button className="btn-accent" title="Present in SlideForge, with its full controls (⌘↵)" onClick={present}><Play size={14} />Present</button>}
         {embedded && hasShell() && <ShellRight />}
       </div>
