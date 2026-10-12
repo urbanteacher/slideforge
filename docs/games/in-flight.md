@@ -83,6 +83,18 @@ For Mark, at gate 1. Each is a yes or no.
 4. **Are you happy for these to wait for the new studio, rather than be built in the current app?** The Stations rotation clock, Connect Four as a game, Word Splash's "know it / seen it / new" sort on phones, and Connection Maker drawing each accepted link between the two ideas.
 5. **Real names on the wall and in reports:** is that ever a problem in your classes? The end-of-lesson Coda, nicknames and per-student takeaways all wait on this answer.
 
+## Decided at gate 1 (12 October 2026)
+
+Mark's answers:
+
+1. **Check on screen before the freeze: yes.** A viewing pass of what was built but never seen (items 11, 12 and 25), fixing only what is broken. The freeze starts when it is done.
+2. **Phone and teacher-entry changes before the freeze: none.** Tally entry for polls and scales (2), Heads Up words on phones (9), phones in the lesson's colours (19) and nicknames (22) are not built in classic. If wanted later, they come in the new host.
+3. **Real names on the wall and in reports: fine.** The Coda (21) and per-student takeaways (24) can use them; they still wait on durable storage.
+4. **Pilot: plain Multiple choice.** The Stations clock (3), Connect Four (5), Word Splash's sort (4) and Connection Maker's drawn links (1) move to the lab backlog, with the other items marked so above.
+
+Item 15 (Muddiest Point's wording) is a one-line fix and is made with the viewing pass.
+
 ## Change log
 
 - 12 October 2026: written.
+- 12 October 2026: gate 1 decisions recorded.
