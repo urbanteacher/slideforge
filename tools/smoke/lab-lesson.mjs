@@ -107,7 +107,8 @@ try {
       seen++;
       SF.Player.goTo(i, 1); await wait(250);
       const s = p.state();
-      if (s.steps > 0) { SF.Player.next(); await wait(150); walked = { wall: SF.Player.idx, wallBefore: i, step: p.state().step, steps: s.steps }; }
+      // Arrived first: a Next while the slide is still coming in finishes it rather than building (player.ts settle).
+      if (s.steps > 0) { if (p.settle) p.settle(); SF.Player.next(); await wait(150); walked = { wall: SF.Player.idx, wallBefore: i, step: p.state().step, steps: s.steps }; }
     }
     return { first, walked };
   });
