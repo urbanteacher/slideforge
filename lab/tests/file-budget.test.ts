@@ -9,7 +9,6 @@ const BUDGET = 800;
 
 /** Files still over the budget, and why each one is waiting. */
 const ALLOWED: Record<string, string> = {
-  'experiments/experimentKinds.ts': 'every experiment kind; split by kind (M1.5)',
 };
 
 test(`no lab source file is over ${BUDGET} lines, beyond the files still being split`, () => {
