@@ -363,6 +363,8 @@ export function RecipePanel() {
         <Row label="Line under"><Input value={str('sub')} onChange={(v) => put('sub', v)} placeholder="Optional sentence" /></Row>
         <Row label="Credit"><Input value={str('credit')} onChange={(v) => put('credit', v)} placeholder="Photo: …" /></Row>
         <Row label="Words sit"><Select value={str('side') || 'left'} options={[{ value: 'left', label: 'On the left' }, { value: 'bottom', label: 'Along the bottom' }]} onChange={(v) => put('side', v)} /></Row>
+        <Row label="Fade colour" info="The shade behind the words, fading out across the picture."><ColorField value={str('fadeColor') || '#121416'} onChange={(v) => put('fadeColor', v)} /></Row>
+        <Row label="Fade strength" info="How dark the fade is behind the words. 0 leaves the picture clear."><Scrub value={Number(args.fadeStrength ?? 96)} min={0} max={100} step={1} decimals={0} unit="%" onChange={(v) => put('fadeStrength', v)} /></Row>
       </>
     );
   } else if (recipe.kind === 'story-bars') {

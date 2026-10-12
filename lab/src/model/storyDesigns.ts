@@ -87,7 +87,11 @@ const pill = (st: LayoutStyle, name: string, value: string, x: number, y: number
 
 // ─── Photo hero ─────────────────────────────────────────────────────────────
 
-export interface HeroArgs { src: string; line1: string; line2: string; sub: string; credit: string; side: 'left' | 'bottom' }
+export interface HeroArgs {
+  src: string; line1: string; line2: string; sub: string; credit: string; side: 'left' | 'bottom';
+  /** The fade behind the words: its colour (the theme's darkest by default) and how dark it gets, 0–100. */
+  fadeColor?: string; fadeStrength?: number;
+}
 export const HERO_EXAMPLE: HeroArgs = {
   src: '/assets/air-pollution/roadside-sensor.jpg', line1: 'So we', line2: 'built it.',
   sub: 'A low-cost sensor, wired up by students, logging a real London street.', credit: '', side: 'left',
@@ -96,7 +100,8 @@ export const HERO_EXAMPLE: HeroArgs = {
 /** A picture across the whole slide, slowly closing in, with a fade on one side and a huge line on it:
  *  the turn in a story. The second line is in the accent and the biggest thing on the slide. */
 export function heroSlide(st: LayoutStyle, a: HeroArgs): Slide {
-  const ink = shade(st), bottom = a.side === 'bottom';
+  const ink = a.fadeColor || shade(st), bottom = a.side === 'bottom';
+  const k = Math.max(0, Math.min(1, Number(a.fadeStrength ?? 96) / 100));
   const layers: Layer[] = [];
   // Always there, empty until a picture is chosen: an empty image layer draws a placeholder, so it is
   // plain where the photo goes and it can be selected and a picture dropped on it.
@@ -105,8 +110,9 @@ export function heroSlide(st: LayoutStyle, a: HeroArgs): Slide {
   // Two of the same fade, one over the other: a see-through gradient draws lighter than its stops,
   // and doubling it keeps the words' side properly dark while the far side stays clear.
   const fadeLayer = () => (bottom
-    ? shape('Fade for text', { x: 0, y: 380, w: 1920, h: 700, rot: 0 }, { fill: ink, fillOpacity: 0, gradient: true, fill2: ink, fill2Opacity: 0.96, angle: 90 })
-    : shape('Fade for text', { x: 0, y: 0, w: 1400, h: 1080, rot: 0 }, { fill: ink, fillOpacity: 0.96, gradient: true, fill2: ink, fill2Opacity: 0, angle: 0 }));
+    ? shape('Fade for text', { x: 0, y: 380, w: 1920, h: 700, rot: 0 }, { fill: ink, fillOpacity: 0, gradient: true, fill2: ink, fill2Opacity: k, angle: 90 })
+    : shape('Fade for text', { x: 0, y: 0, w: 1400, h: 1080, rot: 0 }, { fill: ink, fillOpacity: k, gradient: true, fill2: ink, fill2Opacity: 0, angle: 0 }));
+  // Both fades come from the two controls in the Slide panel (fadeColor, fadeStrength), so a rebuild keeps them.
   layers.push(fadeLayer(), fadeLayer());
   const w = bottom ? W : 1100, y0 = bottom ? 560 : 300;
   layers.push(text('Line 1', a.line1 || ' ', { x: L, y: y0, w, h: 170, rot: 0 }, { font: st.display, weight: st.displayWeight, size: bottom ? 120 : 160, color: '#ffffff', tracking: -0.04, lineHeight: 1 }, rise(0.5)));
