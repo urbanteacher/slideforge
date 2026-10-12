@@ -10,7 +10,6 @@ import { Filmstrip } from './Filmstrip';
 import { Gallery } from './Gallery';
 import { Inspector } from './Inspector';
 import { LeftPanel } from './LeftPanel';
-import { Present } from './Present';
 import { present } from './showInSlideForge';
 import { Stage } from './Stage';
 import { TopBar } from './TopBar';
@@ -29,7 +28,6 @@ const isTyping = (t: EventTarget | null) => {
 
 /** `embedded`: SlideForge's shell owns the document row (name, File, Save), so the lab shows its tools only. */
 export function App({ embedded = false, onReady }: { embedded?: boolean; onReady?: () => void }) {
-  const presenting = useStore((s) => s.presenting);
   const galleryOpen = useStore((s) => s.galleryOpen);
   const toast = useStore((s) => s.toast);
   const panelHidden = useStore((s) => s.panelHidden);
@@ -92,7 +90,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       const st = useStore.getState();
-      if (st.presenting || isTyping(e.target)) return;
+      if (isTyping(e.target)) return;
       const mod = e.metaKey || e.ctrlKey;
       const sel = layerOf(st);
       const k = e.key.toLowerCase();
@@ -154,7 +152,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       if (!mod && k === 'a') { st.set({ leftTab: 'add' }); return; }
     };
     const onPaste = (e: ClipboardEvent) => {
-      if (isTyping(e.target) || useStore.getState().presenting) return;
+      if (isTyping(e.target)) return;
       const f = [...(e.clipboardData?.files ?? [])].find((x) => /^(image|video)\//.test(x.type));
       if (f) { e.preventDefault(); addMediaFile(f); }
     };
@@ -177,7 +175,6 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
         <Filmstrip />
       </main>
       {!panelHidden && <Inspector />}
-      {presenting && <Present />}
       {galleryOpen && <Gallery />}
       {toast && <div className="toast">{toast}</div>}
     </div>

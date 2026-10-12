@@ -53,7 +53,7 @@ export function Filmstrip() {
   // ⌘G, as in SlideForge: the whole deck at once.
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g' && !useStore.getState().presenting) { e.preventDefault(); setSorter((v) => !v); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g') { e.preventDefault(); setSorter((v) => !v); }
     };
     addEventListener('keydown', on);
     return () => removeEventListener('keydown', on);

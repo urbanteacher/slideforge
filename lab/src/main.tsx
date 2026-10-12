@@ -8,6 +8,13 @@ const embedded = new URLSearchParams(location.search).get('embed') === '1';
 type Host = { SF?: { LabEngine?: { ready: (api: typeof labApi) => void; failed?: (why: string) => void } } };
 const host = embedded && window.parent !== window ? (window.parent as unknown as Host) : null;
 
+// One app: the built lab opened on its own (lab-app/index.html) is SlideForge's Lesson studio, so it
+// goes to SlideForge, which opens the same studio with the same saved lessons (one IndexedDB, one
+// origin) and the Library, Save and Present around it. The development server keeps a bare lab.
+if (!embedded && import.meta.env.PROD && location.pathname.includes('/lab-app/')) {
+  location.replace(location.pathname.slice(0, location.pathname.indexOf('/lab-app/') + 1));
+}
+
 if (embedded) {
   // The shell's own shortcuts still work with the focus in here: Save, the command palette,
   // the studio switch and the shortcut list are the shell's, so they go up to it.

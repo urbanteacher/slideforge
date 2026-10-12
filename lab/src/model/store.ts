@@ -30,7 +30,6 @@ interface State {
   future: Deck[];
   lastMerge: { key: string; t: number } | null;
   saveState: 'saved' | 'saving' | 'unsaved';
-  presenting: boolean;
   playToken: number;
   editingTextId: string | null;
   /** A layer inside a group that was double-clicked into: it is selected on its own, not with its group. */
@@ -111,7 +110,6 @@ export const useStore = create<State>((set, get) => ({
   future: [],
   lastMerge: null,
   saveState: 'saved',
-  presenting: false,
   backOf: null,
   view: 'lesson',
   playToken: 0,

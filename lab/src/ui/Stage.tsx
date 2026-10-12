@@ -137,7 +137,7 @@ export function Stage() {
     const loop = () => {
       raf = requestAnimationFrame(loop);
       const st = useStore.getState();
-      if (st.presenting || !r || r.gl.isContextLost()) return;
+      if (!r || r.gl.isContextLost()) return;
       const s = slideOf(st);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       // The slide shape can change under a running renderer.

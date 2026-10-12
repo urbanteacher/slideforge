@@ -3,9 +3,8 @@ import { act, hasShell } from './ShellRow';
 
 // One show: SlideForge's player, with its own bar (Room view, Quick poll, Freeze, Draw, Blank,
 // Join QR, Teacher Presenter). Inside SlideForge the lab presses the shell's Present. A lab window
-// on its own opens SlideForge beside it and hands this lesson over (js/lab-engine.js, labPresent);
-// only when the browser refuses that window does the lab's own show stand in, so Present never
-// does nothing.
+// on its own (the development server) opens SlideForge beside it and hands this lesson over
+// (js/lab-engine.js, labPresent). The lab has no show of its own: SlideForge's player is the one.
 
 /** Where SlideForge is: the app the lab is served from, or the local server in development. */
 function slideForgeAddress(): string {
@@ -19,7 +18,7 @@ export function present() {
   if (hasShell()) { act('present'); return; }
   const target = slideForgeAddress();
   const show = window.open(`${target}?labPresent=1`, 'sf_show');
-  if (!show) { st.set({ presenting: true }); return; }
+  if (!show) { st.showToast('The browser blocked the show window. Allow pop-ups for this site, then press Present again.'); return; }
   const origin = new URL(target).origin;
   const reply = (e: MessageEvent) => {
     if (e.source !== show || e.origin !== origin || (e.data as { type?: string } | null)?.type !== 'sf-lab-ready') return;
