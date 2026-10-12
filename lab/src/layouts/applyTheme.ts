@@ -1,4 +1,5 @@
-import { groundParams, slideStyle, themeOf, type LayoutStyle } from './layouts';
+import { groundParams } from './blocks';
+import { slideStyle, themeOf, type LayoutStyle } from './style';
 import type { Deck, Layer, Slide } from '../core';
 
 // One theme per deck. Choosing a theme restyles every slide at once, the way changing a SlideForge

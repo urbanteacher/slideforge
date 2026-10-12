@@ -413,7 +413,7 @@ test('the Look switch builds a Check again the other way and keeps what the less
 test('true or false has the same two looks: two doors lit green where they stand, or the walls', { skip }, async () => {
   const { gameSlides } = await bundle('src/designs/engage/formats.ts');
   const { relookGame } = await bundle('src/designs/gameLook.ts');
-  const { LAYOUT_STYLES } = await bundle('src/layouts/layouts.ts');
+  const { LAYOUT_STYLES } = await bundle('src/layouts/style.ts');
   const sample = JSON.parse(fs.readFileSync(path.join(LAB, 'src/assets/games.json'), 'utf8')).games.find((g) => g.format === 'truefalse');
   const st = LAYOUT_STYLES[0];
   const slides = gameSlides({ ...sample, look: 'buttons' }, st);

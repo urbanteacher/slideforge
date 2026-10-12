@@ -247,7 +247,7 @@ function outline(): Outline[] {
 /** For the visual baseline (tools/lab-baseline.mjs): the lab's built-in slides as decks to open — the
  *  gallery's layouts in every style, the lab originals, and the slide designs in two styles. */
 async function checkDecks(): Promise<Deck[]> {
-  const [L, fsf, bank, ml, motion, cd, sd] = await Promise.all([import('../layouts/layouts'), import('../decks/fromSlideForge'), import('../assets/layout-bank.json'), import('../decks/motionLab'), import('../assets/motion-lab.json'), import('../decks/campaignDesigns'), import('../designs/storyDesigns')]);
+  const [L, fsf, bank, ml, motion, cd, sd] = await Promise.all([import('../layouts'), import('../decks/fromSlideForge'), import('../assets/layout-bank.json'), import('../decks/motionLab'), import('../assets/motion-lab.json'), import('../decks/campaignDesigns'), import('../designs/storyDesigns')]);
   const base = blankDeck();
   const deck = (id: string, slides: Slide[]): Deck => ({ ...structuredClone(base), id: `check-${id}`, title: id, slides });
   const out: Deck[] = [];

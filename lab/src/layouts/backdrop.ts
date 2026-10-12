@@ -1,6 +1,6 @@
 import { kind } from '../engine';
 import { createLayer, type Deck, type Layer, type Slide } from '../core';
-import { themeOf } from './layouts';
+import { themeOf } from './style';
 
 // SlideForge's "Backdrop motion" for a slide: Still, Drift, Grid or Glow. One Backdrop motion layer
 // under everything, coloured from the slide itself — the deck theme's accent when it has one,

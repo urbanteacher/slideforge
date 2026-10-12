@@ -9,7 +9,6 @@ const BUDGET = 800;
 
 /** Files still over the budget, and why each one is waiting. */
 const ALLOWED: Record<string, string> = {
-  'layouts/layouts.ts': 'every layout; split into layouts/ by family (M1.5 step 5)',
   'experiments/experimentKinds.ts': 'every experiment kind; split by kind (M1.5)',
   'ui/panels/Inspector.tsx': 'branches per kind; becomes a frame for each kind’s Inspector (M1.5 step 6)',
   'ui/panels/special.tsx': 'the special kinds’ inspectors; split by kind (M1.5)',

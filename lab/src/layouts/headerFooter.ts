@@ -1,7 +1,7 @@
 import { current, isDraft } from 'immer';
 import { kind } from '../engine';
 import { createLayer, type Deck, type HFItem, type HFKind, type HFSlot, type HeaderFooter, type Layer, type Slide } from '../core';
-import { gridFor } from './layouts';
+import { gridFor } from './style';
 
 // Header and footer, the way SlideForge's Header & footer pane has them: six slots, a deck-wide
 // default, and an override for one slide. The difference is where the words live. Every filled slot
