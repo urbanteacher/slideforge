@@ -416,9 +416,13 @@ async function run() {
               'Audience\tKnow what they need\tDo not assume colour reads the same',
               'Start\tUse a familiar chart\tDo not overload one view',
               'Labels\tAxes, units, legends\tDo not hide the range'] },
-          /* Six labelled rows is the case that overflowed by 26px. Held open
-             deliberately: the verdict is that it should be split, and a
-             baseline is how we notice if it silently starts "fitting". */
+          /* Six labelled rows is the case that overflowed by 26px, and once
+             the grid centred itself, over its own heading. It was held open
+             to be split by hand; since 27 Sep the renderer steps a compare
+             grid down until it fits (fitRows, data-fit in css/app.css), so
+             this baseline now pins the fitted grid. The title is the old
+             verdict, kept so the image does not move for a label. A grid
+             past the last rung is covered by the fit-check smoke. */
           'layout-compare6': { type: 'compare', title: 'Six rows — the case that does not fit', subtitle: 'Do\tDon\u2019t',
             bullets: [
               'Audience\tKnow their expertise and what they need\tDo not assume colour means the same to everyone',

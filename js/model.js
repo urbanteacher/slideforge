@@ -354,6 +354,15 @@
     const first = String(cls || "").trim().split(/\s+/)[0];
     return first ? `${el2.tagName.toLowerCase()}.${first}` : el2.tagName.toLowerCase();
   }
+  function firstWord(el2) {
+    if (!el2) return "";
+    const walk = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
+    while (walk.nextNode()) {
+      const word = (walk.currentNode.textContent || "").match(/\S+/);
+      if (word) return word[0];
+    }
+    return "";
+  }
   function clipper(el2, root) {
     for (let node = el2; node && node !== root.parentElement; node = node.parentElement) {
       const style = getComputedStyle(node);
@@ -366,6 +375,28 @@
     if (rect.bottom > frame.bottom + tolerance) out.push(["bottom", rect.bottom - frame.bottom]);
     if (rect.right > frame.right + tolerance) out.push(["right", rect.right - frame.right]);
     if (rect.left < frame.left - tolerance) out.push(["left", frame.left - rect.left]);
+    return out;
+  }
+  function boxSpill(box2) {
+    const out = { top: 0, bottom: 0, above: null, below: null };
+    if (!box2?.isConnected || !box2.clientHeight) return out;
+    for (
+      const kid of
+      /** @type {HTMLElement[]} */
+      [...box2.children]
+    ) {
+      if (!kid.offsetHeight || /absolute|fixed/.test(getComputedStyle(kid).position)) continue;
+      const top = kid.offsetParent === box2 ? kid.offsetTop : kid.offsetTop - box2.offsetTop - box2.clientTop;
+      const bottom = top + kid.offsetHeight - box2.clientHeight;
+      if (-top > out.top) {
+        out.top = -top;
+        out.above = kid;
+      }
+      if (bottom > out.bottom) {
+        out.bottom = bottom;
+        out.below = kid;
+      }
+    }
     return out;
   }
   function measureSlideFit(root, opts = {}) {
@@ -419,6 +450,17 @@
           }
         }
       }
+    }
+    const scale2 = rect.width / /** @type {HTMLElement} */
+    (root.offsetWidth || rect.width);
+    for (
+      const box2 of
+      /** @type {HTMLElement[]} */
+      [...root.querySelectorAll("[data-fit-box]")]
+    ) {
+      const spill = boxSpill(box2);
+      if (spill.top * scale2 > tolerance) add(describe(box2), "spill-top", spill.top * scale2, firstWord(spill.above));
+      if (spill.bottom * scale2 > tolerance) add(describe(box2), "spill-bottom", spill.bottom * scale2, firstWord(spill.below));
     }
     return {
       fits: !issues.length,
@@ -27025,6 +27067,7 @@
     LAYOUT_SLOT_TEMPLATES,
     measureSlideFit,
     probeLayoutFit,
+    boxSpill,
     svgScale,
     FIT_TOLERANCE,
     LEGIBLE_FLOOR,

@@ -66,7 +66,7 @@ code already living behind the build:
 | `src/render/compositions.js` | `createCompositionRenderer` — called by `render.js` itself |
 | `src/render/layout-slots.js` | `layoutRegionsFor`, `insertionRegionFor`, `LAYOUT_SLOT_TEMPLATES` |
 | `src/render/regions.js` | `applyChromeRegions`, `chromePositions`, `CHROME_SLOTS` |
-| `src/render/fit-check.js` | `measureSlideFit`, `probeLayoutFit`, `svgScale` |
+| `src/render/fit-check.js` | `measureSlideFit`, `probeLayoutFit`, `boxSpill`, `svgScale` |
 | `src/render/motion-lab.js` | `MOTION_SCENES`, `MOTION_LOOKS`, scene state |
 | `src/render/canvas-regions.js` | `bindCanvasRegions` |
 | `src/render/body-region.js` | `declareBodyRegion`, `measureBodyRegion` |

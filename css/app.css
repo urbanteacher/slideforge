@@ -6195,7 +6195,7 @@ html[data-ws="deck"] #railCount { display: none; }
 .info-takeaway { margin-top: 20px; padding-top: 14px; border-top: 2px solid var(--s-accent); font-size: 21px; line-height: 1.35; }
 
 /* --- stat tiles */
-.stats-grid { display: grid; gap: 22px; flex: 1; min-height: 0; align-content: center; grid-template-columns: repeat(3, 1fr); }
+.stats-grid { display: grid; gap: 22px; flex: 1; min-height: 0; align-content: safe center; grid-template-columns: repeat(3, 1fr); }
 .stats-grid.stats-n1 { grid-template-columns: 1fr; max-width: 60%; margin: 0 auto; }
 .stats-grid.stats-n2 { grid-template-columns: repeat(2, 1fr); }
 .stats-grid.stats-n4 { grid-template-columns: repeat(4, 1fr); gap: 18px; }
@@ -6235,7 +6235,12 @@ html[data-ws="deck"] #railCount { display: none; }
 .stat-fill { height: 100%; width: calc(var(--share) * 100%); background: var(--s-accent); border-radius: inherit; transition: width .5s ease; }
 
 /* --- versus */
-.compare { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; justify-content: center; }
+/* Centred, but `safe`: rows taller than the room left for them fall back to
+   the top and run downward, rather than centring out of both ends of the box
+   and over the heading. The same holds for every box in this block that
+   centres into a flex share (stat tiles, claim rows, funnel, spectrum); the
+   timeline and stepper float on auto margins, which are safe already. */
+.compare { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; justify-content: safe center; }
 .compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .compare-labelled .compare-row { grid-template-columns: .6fr 1fr 1fr; }
 .compare-cell {
@@ -6251,6 +6256,23 @@ html[data-ws="deck"] #railCount { display: none; }
 .compare-head .compare-right { border-bottom-color: var(--s-fg); opacity: .8; }
 .compare-row:not(.compare-head) .compare-left { border-left: 5px solid var(--s-accent); }
 .compare-row:not(.compare-head) .compare-right { border-left: 5px solid color-mix(in srgb, var(--s-fg) 45%, transparent); }
+/* Rungs for fitRows in js/render.js, tried in order until the rows fit their
+   box. Padding and gaps give way before type does, and the last rung stops at
+   20px, the fit check's legibility floor: below that the room cannot read it,
+   so the grid is left to spill and be reported rather than shrunk further. */
+.compare[data-fit="1"] { gap: 8px; }
+.compare[data-fit="1"] .compare-cell { font-size: 23px; padding: 13px 20px; }
+.compare[data-fit="1"] .compare-head .compare-cell { font-size: 21px; padding: 4px 20px 10px; }
+.compare[data-fit="2"] { gap: 6px; }
+.compare[data-fit="2"] .compare-row { column-gap: 12px; }
+.compare[data-fit="2"] .compare-cell { font-size: 21px; line-height: 1.3; padding: 9px 18px; }
+.compare[data-fit="2"] .compare-head .compare-cell { font-size: 20px; padding: 2px 18px 8px; }
+.compare[data-fit="2"] .compare-aspect { font-size: 20px; }
+.compare[data-fit="3"] { gap: 4px; }
+.compare[data-fit="3"] .compare-row { column-gap: 10px; }
+.compare[data-fit="3"] .compare-cell { font-size: 20px; line-height: 1.25; padding: 6px 14px; }
+.compare[data-fit="3"] .compare-head .compare-cell { font-size: 20px; padding: 0 14px 6px; }
+.compare[data-fit="3"] .compare-aspect { font-size: 20px; line-height: 1.2; }
 
 /* --- iceberg: what you see, and the mass under it
 
@@ -6358,7 +6380,7 @@ html[data-ws="deck"] #railCount { display: none; }
    "Climate modelling" did exactly that. */
 .spectrum {
   flex: 1; min-height: 0;
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column; justify-content: safe center;
   position: relative;
   padding: 0 120px;
 }
@@ -6436,7 +6458,7 @@ html[data-ws="deck"] #railCount { display: none; }
 /* --- claim & source */
 .claim-quote { margin: 0 0 18px; padding: 0 0 0 26px; border-left: 6px solid var(--s-accent); }
 .claim-quote p { margin: 0; font-size: 34px; line-height: 1.24; font-weight: 700; color: var(--s-fg); }
-.claim-rows { margin: 0; display: grid; gap: 10px; flex: 1; min-height: 0; align-content: center; }
+.claim-rows { margin: 0; display: grid; gap: 10px; flex: 1; min-height: 0; align-content: safe center; }
 .claim-row {
   display: grid;
   grid-template-columns: 150px 1fr;
@@ -6553,7 +6575,7 @@ html[data-ws="deck"] #railCount { display: none; }
 .fake-tells li { font-size: 21px; line-height: 1.35; color: var(--s-fg); }
 
 /* --- funnel */
-.slide .funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; justify-content: center; align-items: center; }
+.slide .funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; justify-content: safe center; align-items: center; }
 .slide .funnel-up { flex-direction: column-reverse; }
 .funnel-band {
   width: var(--w, 100%); min-width: 40%;

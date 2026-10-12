@@ -192,6 +192,7 @@ Three read-only reviews, running in parallel, covered:
 | CA-26 | Undo or redo closes Layout and Artwork (slides are compared by object, not by id) | arrange | P2 | S | **Done** 23 Sep |
 | CA-27 | A resize drag can be left running (no blur or cancel handling, unlike move) | arrange | P2 | S | **Done** 23 Sep |
 | CA-28 | Fit badges and the text-size fitter measure before web fonts load | fit-check | P2 | S | **Done** 23 Sep · picker badges; the size fitter not yet |
+| CA-56 | **New:** a compare grid taller than its room centred out of both ends, over its heading and past its takeaway, and the fit check passed it | render × fit-check | P1 | S | **Done** 27 Sep · compare steps down; stats, claim rows and funnel only stop at the top |
 | **Editor text on the projector** (widens UX-03) ||||||
 | CA-30 | `infoEmpty` shows "Add … in the inspector" on 8 layouts; there are also image, video and URL prompts, the "needs http(s)" warning, and empty free-block labels | render | P0 | S | **Done** 23 Sep |
 | **Keyboard** ||||||
@@ -804,6 +805,17 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 - **SD-02 (part):** Slide designs has a **Story designs** group. Its first design, the **big-number row**, is built from the deck's style and kept as `slide.recipe` `story-numbers`, so the Slide panel edits its kicker, title, two to four numbers with labels, takeaway, source and arrival (one per click or with the slide), then builds it again. Checked by inserting it in the Frontiers Series theme, changing a number and its label in the Slide panel, and rebuilding.
 
 - **SD-01 (part):** [story-designs-plan.md](story-designs-plan.md) records what the Air Pollution Project deck showed, and the plan from it. Done: a **Frontiers Series** palette under Campaigns (UKBT Black, Bright Blue leading, Green for Our Environment, the UKBT Institute and Black in Academia logos); **Fade for text** on a picture's Design tab, which lays an ordinary gradient shape over the picture in the slide's own dark ground; and the shape gradient's **Angle** help now gives its convention (0° left to right, 90° top to bottom), which differs from text gradients. Checked by building the lab (`npm --prefix lab run build:app`, typecheck clean), finding the palette in Colours & grounds, adding a Left fade to a photo slide and presenting it.
+
+### 27 September 2026 — A compare grid can no longer cover its heading
+
+- **CA-56:** Week 3's movie-to-music comparison had five labelled rows of two-line cells, which is more than the room left under the heading. `.compare` centred them, so the grid overflowed both ways: the column heads rode up over the title and the last row ran past the takeaway's rule. Every word was still on the slide, so `measureSlideFit` passed it. The slide was fixed by shortening its words (`a1184e1`); this fixes the engine. Five changes:
+  - `.compare` is now `justify-content: safe center`, so rows that do not fit start at the top and run downward. The same holds for the other boxes in the infographic block that centre into a flex share: the stat tiles, claim rows, funnel and spectrum. The timeline and stepper use auto margins, which were safe already.
+  - `fitRows` in `js/render.js` measures a compare grid once it is laid out, and tries three rungs (`data-fit` 1–3) of tighter padding and smaller type. The last rung stops at 20px, the legibility floor.
+  - Compare, stats, claim rows and funnel mark their box `data-fit-box`.
+  - A new `boxSpill` in `src/render/fit-check.js` measures how far a box's rows reach past its edges.
+  - `measureSlideFit` reports that as `spill-top` or `spill-bottom`. Only compare steps down; the other three are only reported.
+
+  Measured: Week 3's original wording fits on rung 1 in the Northeastern and Editorial themes and on rung 2 in Brutal. Eight rows fit on rung 3. Twelve rows spill 131px, are reported, and still sit below the heading. Checked by `npm test` (541 pass), the `fit-check` smoke (new compare assertions, and the 97-slide bank still has only its one known overflow) and `npm run visual:check`. The visual check's only new failure was `layout-compare6`, the six-row fixture held open on 18 Sep to be split by hand. It now fits, so its three baselines are re-recorded. `layout-beforeafter` and `randomchallenge` fail at `a1184e1` too, and some game-style captures differ between runs. Details in [the fit check](fit-check.md).
 
 ### 27 September 2026 — Week 3 and the new chart-experiment kinds
 

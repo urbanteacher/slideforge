@@ -39,6 +39,18 @@ function describe(el) {
   return first ? `${el.tagName.toLowerCase()}.${first}` : el.tagName.toLowerCase();
 }
 
+/** The first word painted inside an element. Not textContent, which runs a
+ * row's cells together into one word. */
+function firstWord(el) {
+  if (!el) return '';
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  while (walk.nextNode()) {
+    const word = (walk.currentNode.textContent || '').match(/\S+/);
+    if (word) return word[0];
+  }
+  return '';
+}
+
 /** The nearest ancestor that would hide a glyph leaving its box. */
 function clipper(el, root) {
   for (let node = el; node && node !== root.parentElement; node = node.parentElement) {
@@ -64,6 +76,44 @@ function escapes(rect, frame, tolerance) {
   if (rect.bottom > frame.bottom + tolerance) out.push(['bottom', rect.bottom - frame.bottom]);
   if (rect.right > frame.right + tolerance) out.push(['right', rect.right - frame.right]);
   if (rect.left < frame.left - tolerance) out.push(['left', frame.left - rect.left]);
+  return out;
+}
+
+/**
+ * How far a box's rows reach past its own top and bottom, in layout pixels.
+ *
+ * For the boxes a layout stamps `data-fit-box`: a flex or grid region that
+ * takes whatever height the heading and takeaway leave and holds its rows
+ * inside it (compare, stat tiles, claim rows, funnel). Overflow there never
+ * reaches the slide frame, so the word test below cannot see it — the rows
+ * simply paint over the heading above or the takeaway below, both of which are
+ * on the slide. So this measures the rows against the box instead.
+ *
+ * Offsets rather than client rects, because a build step waiting to come in
+ * is translated down half an em: a rect would count that as a row hanging out
+ * of the bottom, and an offset is where the row is laid out, which is what
+ * decides whether it fits. Hidden children and positioned decoration are not
+ * rows and are skipped.
+ *
+ * `above` and `below` are the rows that reach furthest out of each end, for a
+ * report a person can find on the slide.
+ *
+ * @param {HTMLElement} box
+ * @returns {{top:number, bottom:number, above:HTMLElement|null, below:HTMLElement|null}}
+ */
+export function boxSpill(box) {
+  /** @type {{top:number, bottom:number, above:HTMLElement|null, below:HTMLElement|null}} */
+  const out = { top: 0, bottom: 0, above: null, below: null };
+  if (!box?.isConnected || !box.clientHeight) return out;
+  for (const kid of /** @type {HTMLElement[]} */ ([...box.children])) {
+    if (!kid.offsetHeight || /absolute|fixed/.test(getComputedStyle(kid).position)) continue;
+    const top = kid.offsetParent === box
+      ? kid.offsetTop
+      : kid.offsetTop - box.offsetTop - box.clientTop;
+    const bottom = top + kid.offsetHeight - box.clientHeight;
+    if (-top > out.top) { out.top = -top; out.above = kid; }
+    if (bottom > out.bottom) { out.bottom = bottom; out.below = kid; }
+  }
   return out;
 }
 
@@ -141,6 +191,18 @@ export function measureSlideFit(root, opts = {}) {
         }
       }
     }
+  }
+
+  /* Rows out of their own box, which covers something else on the slide. The
+     word test above is blind to it whenever the neighbour is on the slide:
+     a compare grid centred in too little room once rode up over its heading
+     and down past its takeaway with every glyph inside the frame. Reported in
+     screen pixels like the rest, so a scaled thumbnail reads the same. */
+  const scale = rect.width / (/** @type {HTMLElement} */ (root).offsetWidth || rect.width);
+  for (const box of /** @type {HTMLElement[]} */ ([...root.querySelectorAll('[data-fit-box]')])) {
+    const spill = boxSpill(box);
+    if (spill.top * scale > tolerance) add(describe(box), 'spill-top', spill.top * scale, firstWord(spill.above));
+    if (spill.bottom * scale > tolerance) add(describe(box), 'spill-bottom', spill.bottom * scale, firstWord(spill.below));
   }
 
   return {

@@ -1634,6 +1634,7 @@
     style = style === 'ring' || style === 'bar' ? style : 'tile';
     var grid = el('div', 'stats-grid stats-' + style + ' stats-n' + Math.min(items.length, 6));
     grid.setAttribute('role', 'list');
+    grid.dataset.fitBox = '';
     var scale = infoScale(items);
     items.forEach(function (it) {
       var tile = asStep(el('div', 'stat'), slide);
@@ -1787,6 +1788,7 @@
     if (!items.length) return infoEmpty(pad, 'what is behind it');
 
     var list = el('dl', 'claim-rows');
+    list.dataset.fitBox = '';
     items.forEach(function (it) {
       var row = asStep(el('div', 'claim-row'), slide);
       row.appendChild(rich('dt', 'claim-key', slide, 'bullets.' + it.index, it.label || '—'));
@@ -1945,6 +1947,7 @@
     var labelled = rows.some(function (r) { return r.aspect; });
     var table = el('div', 'compare' + (labelled ? ' compare-labelled' : ''));
     table.setAttribute('role', 'table');
+    table.dataset.fitBox = '';
     var head = el('div', 'compare-row compare-head');
     head.setAttribute('role', 'row');
     if (labelled) head.appendChild(el('div', 'compare-aspect', ''));
@@ -1961,6 +1964,40 @@
     });
     pad.appendChild(table);
     if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+    fitRows(table, 3);
+  }
+
+  /* Step a box's rows down until they fit the height they were given.
+
+     A compare grid gets whatever the heading and the takeaway leave, and five
+     labelled rows of two-line cells need more than that: centred, they rode up
+     over the heading and down past the takeaway rule, with every word still
+     on the slide so nothing complained. Week 3 was fixed by cutting its words;
+     this is the engine doing it instead. `data-fit` 1..steps is a rung of
+     smaller type and tighter padding in the stylesheet, largest first, and the
+     last rung stops at the legibility floor. Past that the rows spill, and the
+     fit check reports it rather than this hiding it.
+
+     Measured, because whether five rows fit depends on the theme's face, how
+     long the heading runs and whether there is a takeaway. The render is
+     detached, so the measuring waits for the box to be laid out: a
+     ResizeObserver fires when it first gets a size wherever it is mounted —
+     editor, rail, wall, print — and again if that size changes. Fonts settle
+     later than layout and change row heights without resizing the box, so
+     they get one more pass. */
+  function fitRows(box, steps) {
+    var refit = function () {
+      if (!box.isConnected || !box.clientHeight) return;
+      box.removeAttribute('data-fit');
+      for (var n = 1; n <= steps && SF.boxSpill(box).bottom > 1; n++) box.dataset.fit = String(n);
+    };
+    if (typeof ResizeObserver === 'undefined') return;
+    var fonts = typeof document !== 'undefined' && document.fonts;
+    var waited = false;
+    new ResizeObserver(function () {
+      refit();
+      if (!waited && fonts && box.isConnected) { waited = true; fonts.ready.then(refit); }
+    }).observe(box);
   }
 
   /* Stages that narrow. Each band is a little narrower than the one above,
@@ -1973,6 +2010,7 @@
     if (!items.length) return infoEmpty(pad, 'stages');
     var up = (slide.design || {}).funnelDirection === 'up';
     var list = el('ol', 'funnel' + (up ? ' funnel-up' : ''));
+    list.dataset.fitBox = '';
     var nums = items.map(function (it) { return SF.infoNumber(it.value); });
     var numeric = nums.every(function (n) { return isFinite(n) && n >= 0; }) && Math.max.apply(null, nums) > 0;
     var top = numeric ? Math.max.apply(null, nums) : 0;
