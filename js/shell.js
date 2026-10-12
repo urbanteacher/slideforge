@@ -1175,26 +1175,25 @@
 
   /** Every document in one file, for a backup you can carry around. */
   function exportBundle() {
-    var decks = SF.Store.list();
-    var games = SF.GameStore.list();
-    if (!decks.length && !games.length) { SF.toast('Nothing saved yet'); return; }
-    var stamp = new Date().toISOString().slice(0, 10);
-    download('slideforge-backup-' + stamp + '.sfbundle.json', {
-      kind: 'slideforge-bundle',
-      version: 1,
-      exported: new Date().toISOString(),
-      decks: decks,
-      games: games
-    });
-    SF.toast('Backed up ' + decks.length + ' presentation' + (decks.length === 1 ? '' : 's') +
-             ' and ' + games.length + ' game' + (games.length === 1 ? '' : 's'));
+    if (!SF.Docs.list().length) { SF.toast('Nothing saved yet'); return; }
+    SF.Docs.bundle().then(function (b) {
+      var stamp = new Date().toISOString().slice(0, 10);
+      download('slideforge-backup-' + stamp + '.sfbundle.json', b);
+      /* A studio lesson is a card in decks and the lesson itself in labDecks: count it once. */
+      var lessons = b.labDecks.length;
+      var older = b.decks.filter(function (d) { return !d.labCard; }).length;
+      var n = lessons + older;
+      SF.toast('Backed up ' + n + ' lesson' + (n === 1 ? '' : 's') +
+               ' and ' + b.games.length + ' game' + (b.games.length === 1 ? '' : 's'));
+    }, function () { SF.toast('The backup could not be made'); });
   }
 
   /** Restore a bundle by id, so re-importing is a restore not a duplicate. */
   function importBundle(raw) {
     var decks = (Array.isArray(raw.decks) ? raw.decks : []).map(SF.normalizeDeck).filter(Boolean);
     var games = (Array.isArray(raw.games) ? raw.games : []).map(SF.normalizeGame).filter(Boolean);
-    if (!decks.length && !games.length) { SF.toast('That backup is empty'); return; }
+    var lessons = Array.isArray(raw.labDecks) ? raw.labDecks : [];
+    if (!decks.length && !games.length && !lessons.length) { SF.toast('That backup is empty'); return; }
 
     var existing = {};
     SF.Store.list().forEach(function (d) { existing[d.id] = 1; });
@@ -1205,20 +1204,19 @@
        being restored: it opens, as importing a single deck does. Without this
        the studio kept whatever it had open (often a blank "Untitled") and the
        lesson waited in the Library. */
-    var lesson = decks.length === 1 && workspaces.deck ? decks[0] : null;
+    var lesson = decks.length === 1 && !lessons.length && workspaces.deck ? decks[0] : null;
 
     SF.ask({
       title: lesson
         ? 'Import “' + (lesson.title || 'Untitled') + '”?'
-        : 'Restore ' + decks.length + ' presentation(s) and ' + games.length + ' game(s)?',
+        : 'Restore ' + (lessons.length + decks.filter(function (d) { return !d.labCard; }).length) + ' lesson(s) and ' + games.length + ' game(s)?',
       detail: replacing
         ? replacing + ' already here will be replaced by the backup version.'
         : lesson ? 'It opens in the studio and is saved to your Library.' : 'Nothing here will be overwritten.',
       confirm: lesson ? 'Import' : 'Restore', danger: replacing > 0
     }, function () {
 
-    games.forEach(function (g) { SF.GameStore.save(g); });
-    decks.forEach(function (d) { SF.Store.save(d); });
+    SF.Docs.restore(raw).then(function () {
 
     if (lesson) {
       activate('deck', { toast: false });
@@ -1238,6 +1236,7 @@
     active.draw();
     SF.toast('Restored ' + (decks.length + games.length) + ' documents');
 
+    }, function () { SF.toast('Part of that backup could not be restored'); });   // SF.Docs.restore
     });   // SF.ask
   }
 

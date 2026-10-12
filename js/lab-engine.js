@@ -331,7 +331,7 @@
      for those three the lab draws each of its slides as a picture, and the
      show is built as a SlideForge lesson: every lab slide a full-bleed picture,
      with the original lesson's games and activities back after the slide they
-     followed. Present stays the lab's own show, with everything that moves. */
+     followed. Present draws the lab's slides live (js/lab-stage.js), with everything that moves. */
 
   /** The lesson this lab deck came from, as SlideForge saved it, if it is still here. */
   function sourceLesson(labDeck) {
@@ -776,10 +776,6 @@
         if (chrome) writeCard(d);
         if (chrome && SF.Shell && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
       }
-      /* Out of the show: out of full screen with it. */
-      if (!a.isPresenting() && frame && document.fullscreenElement === frame) {
-        document.exitFullscreen().catch(function () {});
-      }
     });
     var run = waiting; waiting = [];
     run.forEach(function (fn) { fn(a); });
@@ -841,6 +837,22 @@
     },
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
     openLesson: openLesson, openKey: openKey,
+    /** Every lesson the lab has saved, whole, for the backup (js/docs.js). The one on screen is written first. */
+    savedDecks: function () {
+      return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) {
+        return a.flush().catch(function () {}).then(function () { return a.listSaved(); }).then(function (/** @type {any[]} */ rows) {
+          return Promise.all((rows || []).map(function (r) { return a.readSaved(r.id); }));
+        }).then(function (/** @type {any[]} */ decks) { return decks.filter(Boolean); });
+      });
+    },
+    /** Lessons from a backup, filed in the lab with their Library cards. Resolves to how many were filed. */
+    restoreDecks: function (/** @type {any[]} */ decks) {
+      return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) {
+        return Promise.all((decks || []).map(function (d) {
+          return a.restoreSaved(d).then(function (/** @type {boolean} */ ok) { if (ok) writeCard(d); return ok; });
+        }));
+      }).then(function (/** @type {boolean[]} */ done) { refreshSaved(); return done.filter(Boolean).length; });
+    },
     /** The id of the lesson open in the lab: the Library's card for it. */
     currentId: function () { return enabled() && api ? api.getDeck().id : ''; },
     /* The Library renamed or moved the lesson that is open: the lab's deck takes it. */

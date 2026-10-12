@@ -252,6 +252,17 @@ export const labApi = {
     return true;
   },
   listSaved,
+  /** A saved lab deck as it is stored, for the backup (js/docs.js). */
+  async readSaved(id: string): Promise<Deck | null> {
+    const d = await idbGet<Deck>(key(id));
+    return isLabDeck(d) ? d : null;
+  },
+  /** A deck from a backup, filed under its own id as it was (js/docs.js). */
+  async restoreSaved(d: unknown): Promise<boolean> {
+    if (!isLabDeck(d)) return false;
+    await persistDeck(d);
+    return true;
+  },
   async remove(id: string) {
     await serial(async () => {
       await idbDelete(key(id));
@@ -265,7 +276,6 @@ export const labApi = {
   setGroup(group: string | undefined) {
     useStore.getState().mutate((d) => { if (group) d.libraryGroup = group; else delete d.libraryGroup; });
   },
-  present() { useStore.getState().set({ presenting: true }); },
   currentSlideId: () => useStore.getState().slideId,
   /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
    *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. Entering the
@@ -282,14 +292,13 @@ export const labApi = {
   outline,
   /** The slides of a SlideForge lesson the lab cannot build: its games and activities. */
   cannotBuild: (slides: SFSlide[]) => (slides ?? []).filter((s) => !convertsSlide(s)).map((s) => s.id).filter(Boolean) as string[],
-  isPresenting: () => useStore.getState().presenting,
   async flush() {
     await saveCurrent();
     useStore.setState({ saveState: 'saved' });
   },
   subscribe(cb: () => void) {
     return useStore.subscribe((s, p) => {
-      if (s.deck !== p.deck || s.saveState !== p.saveState || s.presenting !== p.presenting) cb();
+      if (s.deck !== p.deck || s.saveState !== p.saveState) cb();
     });
   },
 };
