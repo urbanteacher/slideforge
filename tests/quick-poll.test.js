@@ -402,13 +402,13 @@ test('each format is asked for the shape it actually uses', async () => {
   assert.equal(r.questions[1].correct, 1);
 });
 
-test('a format with no brief says so rather than writing the wrong thing', async () => {
+test('Quiz bowl has its own brief now, so it is asked for rather than refused', async () => {
   const { AI } = gameAiModule({ reply: { questions: [] } });
-  /* Bowl is a board of categories, not a flat question list — no AI_SPEC yet. */
+  /* Bowl had no AI_SPEC and was refused with "not written by AI yet". It is
+     a board of categories, and its brief asks for cells. */
   const res = await AI.generateQuestionsForGame(
     { id: 'g6', style: 'bowl', title: 'Bowl', questions: [] }, { topic: 'Distances' });
-  assert.match(res.error, /not written by AI yet/);
-  assert.match(res.error, /Browse quizzes/);
+  assert.doesNotMatch(String(res.error), /not written by AI yet/);
 });
 
 test('slider estimates are written as target bands, not choices', async () => {
