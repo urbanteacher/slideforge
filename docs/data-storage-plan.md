@@ -47,6 +47,19 @@ There is no free way to keep data on Render. Render stays the host; the data goe
 
 The code still talks to storage through one adapter (step 1 of section 6). Because Supabase Storage speaks the S3 API, moving pictures to S3 or Cloudflare R2 later (R2: 10 GB free and free downloads) is a configuration change, not a rewrite.
 
+### With our JavaScript
+
+SlideForge has two kinds of front end: the Lesson studio (`lab/`: Vite 8, React 19, TypeScript), and the classic app (plain `<script>` tags, about 37 in `index.html`, with no bundler). Both have to save.
+
+| | Supabase (`@supabase/supabase-js`) | AWS Amplify Gen 2 |
+|---|---|---|
+| Vite (Lesson studio) | `npm install @supabase/supabase-js`, then the URL and key come from `import.meta.env.VITE_SUPABASE_*` | Supported: the quickstart is React and Vite ([docs.amplify.aws](https://docs.amplify.aws/react/start/quickstart/)) |
+| Plain scripts (classic app) | One `<script>` from jsDelivr, pinned to an exact version, which gives `window.supabase.createClient` | Not covered. It's npm imports and TypeScript only, so the classic app would need a bundler first |
+| What else it brings | Nothing | An `amplify/` backend folder, `npx ampx sandbox` running beside `npm run dev`, AWS credentials with deploy permissions, and an `amplify_outputs.json` |
+| Hosting | Any host, Render included | Built for Amplify Hosting or your own AWS account; other hosts aren't covered |
+
+Vite works well with both. Only Supabase also works with the classic app as it stands, which is the deciding point.
+
 ## 4. How Render and Supabase connect
 
 - **The browser talks to Supabase directly.** The project URL and its public "anon" key go into the page (they're public by design; Row Level Security is what protects data). Render serves the app as it does now.
