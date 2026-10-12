@@ -379,7 +379,6 @@
         commitVerdict(cur,hold.choice);
       }
     }
-    else if(data.action==='verdictCancel') { Live.pendingVerdict=null; syncManual(); }
     else if(data.action==='tally') {
       /* Tally entry: counts per option for a room answering on paper. */
       var qs=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
@@ -929,7 +928,7 @@
     if (!lobby) refs();
     Live.deck = deck;
     Live.players = [];
-    Live.revealed = {};
+    Live.revealed = restoreRevealed(held.pin);
     connect(held);
     return true;
   };
@@ -943,6 +942,7 @@
     Live.session = null;
     Live.recordingFailed = false;
     Live.revealed = {};
+    try { sessionStorage.removeItem(REVEALED_KEY); } catch (e) {}
     Live.pin = null;
     drawPlayers();
     pinEl.textContent = '····';
@@ -960,7 +960,13 @@
     this.bossHp = 0;
     this.bossMax = 0;
     if (this.mechanic === 'boss') {
-      var quizQs = (deck.slides || []).filter(function (s) { return s.type === 'quiz'; });
+      /* Its own game's questions, not every quiz slide in the deck: a
+         lesson with a boss battle and a quiz beside it gave the boss the
+         other game's HP too. The boss is the lead game (run.mechanic is
+         taken from it), so its id is the first game id on a quiz slide. */
+      var allQs = (deck.slides || []).filter(function (s) { return s.type === 'quiz'; });
+      var bossGame = (allQs.filter(function (s) { return s.style === 'boss'; })[0] || allQs[0] || {}).gameId;
+      var quizQs = bossGame ? allQs.filter(function (s) { return s.gameId === bossGame; }) : allQs;
       this.bossMax = SF.bossMaxHp(quizQs.map(function (s) {
         return { difficulty: s.difficulty || 'medium' };
       }));
@@ -999,7 +1005,27 @@
        and the room must actually be hostless. */
     try { sessionStorage.setItem(HELD_KEY, JSON.stringify({ pin: pin, token: token })); } catch (e) {}
   }
-  function forgetRoom() { try { sessionStorage.removeItem(HELD_KEY); } catch (e) {} }
+  function forgetRoom() {
+    try { sessionStorage.removeItem(HELD_KEY); sessionStorage.removeItem(REVEALED_KEY); } catch (e) {}
+  }
+  /* What this tab has revealed, kept beside the held room. A reload used to
+     wipe Live.revealed, so a question already scored looked open again. */
+  var REVEALED_KEY = 'slideforge.hostedRoom.revealed';
+  function rememberRevealed() {
+    try {
+      var held = heldRoom();
+      if (!held || !held.pin) return;
+      sessionStorage.setItem(REVEALED_KEY, JSON.stringify({ pin: held.pin, ids: Object.keys(Live.revealed) }));
+    } catch (e) {}
+  }
+  function restoreRevealed(pin) {
+    var out = {};
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(REVEALED_KEY) || 'null');
+      if (saved && saved.pin === pin && Array.isArray(saved.ids)) saved.ids.forEach(function (id) { out[id] = true; });
+    } catch (e) {}
+    return out;
+  }
   function heldRoom() {
     try { return JSON.parse(sessionStorage.getItem(HELD_KEY) || 'null'); } catch (e) { return null; }
   }
@@ -1140,6 +1166,12 @@
         if (pinEl) pinEl.textContent = m.pin;
         if (urlEl && m.joinUrl) urlEl.textContent = String(m.joinUrl).replace(/^https?:\/\//, '');
         rememberRoom(m.pin, m.hostToken);
+        /* The relay says where the open question stood (newer relays only). */
+        if (m.question && m.question.id) {
+          if (m.question.revealed) { Live.revealed[m.question.id] = true; rememberRevealed(); }
+          if (m.question.closed) Live.locked[m.question.id] = true;
+          if (m.question.split) Live.splitShown[m.question.id] = true;
+        }
         /* A lesson that had already started comes back started. Only the
            lobby is a state worth returning to. */
         if (m.phase && m.phase !== 'lobby') {
@@ -1253,10 +1285,6 @@
         }
         break;
 
-      case 'scores':
-        Live.players = m.list || [];
-        break;
-
       case 'sprintProgress':
         if (Live.sprint && m.id === Live.sprint.id) { Live.sprint.progress = m; paintSprint(); }
         break;
@@ -1267,6 +1295,7 @@
           Live.sprint.over = true;
           clearInterval(Live.sprint.timer);
           Live.sprint.slides.forEach(function (x) { Live.revealed[x.id] = true; });
+          rememberRevealed();
           paintSprint();
           paintRail();
           syncManual();
@@ -1947,6 +1976,7 @@
     clearInterval(Live.sprint.timer);
     Live.sprintDone[Live.sprint.gameId] = true;
     Live.sprint.slides.forEach(function (x) { Live.revealed[x.id] = true; });
+    rememberRevealed();
     Live.sprint = null;
   }
   /* Next during the sprint stops the clock (twice, so a stray press cannot);
@@ -2868,6 +2898,9 @@
     send({
       t: 'at',
       slideId: s.id,
+      /* Which game the slide belongs to ('' outside any): the relay keeps the
+         join window shut inside a game until the next round opens it. */
+      gameId: s.gameId || '',
       title: s.title || s.question || s.gameTitle || '',
       n: pos.index + 1,
       total: pos.total,
@@ -3347,6 +3380,7 @@
     }
     if (chain) closeProposals();
     Live.revealed[s.id] = true;
+    rememberRevealed();
     /* A lab game's question draws the lab's own answer slide on the wall (js/lab-stage.js). */
     if (SF.LabStage && SF.LabStage.reveal) SF.LabStage.reveal(s);
     stopDrip();

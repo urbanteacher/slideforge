@@ -213,7 +213,7 @@
     who: function () {
       if (!presenter.win() || presenter.win().closed) { Player.openPresenter(); toast('Named answers are in presenter view'); }
       else presenter.win().focus();
-      setTimeout(function () { if (presenter.win() && !presenter.win().closed) { try { presenter.win().postMessage({ type: 'sf-presenter-cmd', cmd: 'who' }, '*'); } catch (e) {} } }, 400);
+      setTimeout(function () { if (presenter.win() && !presenter.win().closed) { try { presenter.win().postMessage({ type: 'sf-presenter-cmd', cmd: 'who' }, location.origin); } catch (e) {} } }, 400);
     },
     ink: function () { if (SF.Teaching) SF.Teaching.toggleBar(); },
     blank: function () { Player.toggleBlank(); }, white: function () { Player.toggleBlank('white'); },
