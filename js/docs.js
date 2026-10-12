@@ -56,15 +56,39 @@
     var decks = (Array.isArray(raw && raw.decks) ? raw.decks : []).map(SF.normalizeDeck).filter(Boolean);
     var games = (Array.isArray(raw && raw.games) ? raw.games : []).map(SF.normalizeGame).filter(Boolean);
     var lessons = Array.isArray(raw && raw.labDecks) ? raw.labDecks : [];
-    games.forEach(function (/** @type {any} */ g) { SF.GameStore.save(g); });
-    decks.forEach(function (/** @type {any} */ d) { SF.Store.save(d); });
+    /* SF.Store.save answers false when the browser refuses the write (its storage is full: one
+       classic lecture with pasted pictures can be bigger than all of localStorage). Each one
+       refused is named, so the caller can say what was not kept rather than claim it was. */
+    /** @type {string[]} */ var notKept = [];
+    var keptGames = 0, keptDecks = 0;
+    games.forEach(function (/** @type {any} */ g) {
+      if (SF.GameStore.save(g) === false) notKept.push(g.title || 'Untitled game'); else keptGames++;
+    });
+    decks.forEach(function (/** @type {any} */ d) {
+      if (SF.Store.save(d) === false) notKept.push(d.title || 'Untitled lesson'); else keptDecks++;
+    });
     if (!lessons.length || !SF.LabEngine || !SF.LabEngine.restoreDecks) {
-      return Promise.resolve({ decks: decks.length, games: games.length, lessons: 0 });
+      return Promise.resolve({ decks: keptDecks, games: keptGames, lessons: 0, notKept: notKept });
     }
     return SF.LabEngine.restoreDecks(lessons).then(function (/** @type {number} */ n) {
-      return { decks: decks.length, games: games.length, lessons: n };
+      if (n < lessons.length) notKept.push((lessons.length - n) + ' Lesson-studio ' + (lessons.length - n === 1 ? 'lesson' : 'lessons'));
+      return { decks: keptDecks, games: keptGames, lessons: n, notKept: notKept };
     });
   }
 
-  SF.Docs = { list: list, bundle: bundle, restore: restore };
+  /**
+   * What a restore did not keep, in words for a toast; '' when everything was kept.
+   * @param {any} result  what restore() resolved to
+   * @param {boolean} [stillOpen]  the lesson is open in the studio all the same
+   */
+  function notKeptMessage(result, stillOpen) {
+    var names = (result && result.notKept) || [];
+    if (!names.length) return '';
+    var list = names.length <= 3 ? names.map(function (n) { return '\u201c' + n + '\u201d'; }).join(', ') : names.length + ' documents';
+    return 'Not saved: ' + list + ' did not fit in this browser\u2019s storage, so ' +
+      (names.length === 1 ? 'it was' : 'they were') + ' not kept in the Library.' +
+      (stillOpen ? ' The lesson is still open in the studio, which keeps its own copy.' : ' Keep the file you imported.');
+  }
+
+  SF.Docs = { list: list, bundle: bundle, restore: restore, notKeptMessage: notKeptMessage };
 })(window);

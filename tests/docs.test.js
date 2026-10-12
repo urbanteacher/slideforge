@@ -41,10 +41,10 @@ test('a restore files the studio lessons back, and a version 1 backup still rest
   const filed = [];
   const { SF, saved } = load({ restoreDecks: (ds) => { filed.push(...ds); return Promise.resolve(ds.length); } });
   const r = await SF.Docs.restore({ decks: [{ id: 'a', slides: [] }], games: [], labDecks: [{ id: 'lab-a' }] });
-  assert.deepEqual(plain(r), { decks: 1, games: 0, lessons: 1 });
+  assert.deepEqual(plain(r), { decks: 1, games: 0, lessons: 1, notKept: [] });
   assert.deepEqual(filed.map((d) => d.id), ['lab-a']);
   const v1 = await SF.Docs.restore({ version: 1, decks: [{ id: 'b', slides: [] }], games: [{ id: 'g' }] });
-  assert.deepEqual(plain(v1), { decks: 1, games: 1, lessons: 0 });
+  assert.deepEqual(plain(v1), { decks: 1, games: 1, lessons: 0, notKept: [] });
   assert.deepEqual(saved.decks.map((d) => d.id), ['a', 'b']);
 });
 
