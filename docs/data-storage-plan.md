@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Nothing built yet.
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`).
 
 ## 1. The problem
 
@@ -83,7 +83,7 @@ Needs fixing first, whether or not we go online:
 1. **`SF.Store` is synchronous** (`list()` and `get()` return values). A cloud store is asynchronous. Plan: keep localStorage as the instant local copy, and sync it in the background, so callers stay synchronous.
 2. **Two libraries in two stores.** Classic decks are in localStorage, studio decks in IndexedDB, and the Library merges them as "cards" (`js/lab-engine.js`). Online, they become one `documents` table with a `kind` column.
 3. **Pictures as data URLs.** They make decks megabytes each, hit the 8 MB share cap and the browser quota, and store the same picture again in every copy. Online, pictures become uploaded files referenced by URL, and they're de-duplicated by content hash.
-4. **The backup leaves out Lesson-studio decks.** `exportBundle` (`js/shell.js`) writes only `SF.Store` and `SF.GameStore`. That's a bug today, and it gets fixed in step 1.
+4. ~~**The backup leaves out Lesson-studio decks.**~~ Fixed on 12 October: the backup (version 2) carries them in `labDecks`, and a restore files them back.
 5. **The repository is heavy.** `.git` is 472 MB, mainly MP4s in `assets/lesson/` (one is 44 MB) and lesson bundles with embedded images in `lessons/`. Once a bucket exists, large media move there and the code keeps only links. Git LFS would be the alternative.
 6. **Untracked build folders** (`.codex-deck-build/`, `.codex-finalizer/`) sit in the tree. Ignore them or remove them.
 
@@ -91,10 +91,14 @@ Needs fixing first, whether or not we go online:
 
 Each step is its own commit and works on its own.
 
-1. **One storage adapter, and a complete backup.**
-   - `SF.Docs` wraps both stores (`SF.Store` and the studio's IndexedDB) behind `list`, `get`, `save` and `remove`, with a `kind` column.
-   - Fix `exportBundle` to include studio decks.
-   - No behaviour change, no network.
+1. **One storage adapter, and a complete backup. Done, 12 October.**
+   - `SF.Docs` (`js/docs.js`) reads both stores (`SF.Store` and the studio's IndexedDB):
+     - `list()` returns every document with a `kind`: `lesson`, `classic` or `game`;
+     - `bundle()` builds the backup;
+     - `restore()` files it back.
+   - The studio side is `SF.LabEngine.savedDecks` and `restoreDecks`, over `readSaved` and `restoreSaved` in `lab/src/embed.ts`.
+   - File → Export and Import go through it.
+   - Tests: `tests/docs.test.js`.
 2. **The Supabase project.**
    - Created in London.
    - Tables:
@@ -132,5 +136,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 4. **Built-in lessons:** keep them in the code (simple, versioned with the app), or move them to the shared online folder (step 7)?
 
 ## Change log
+
+- 12 October 2026: step 1 built. `SF.Docs` reads both stores, and the backup carries Lesson-studio lessons.
 
 - 12 October 2026: plan written.
