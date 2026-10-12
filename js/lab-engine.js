@@ -408,6 +408,15 @@
 
   /* One slide per lab slide, made by `make`, with the lesson's games and
      activities back in their places: the order the show runs. */
+  /* A live figure from the lab slide's own copy of it (slide.figure, converter version 15): the
+     SlideForge figure slide the show plays, with the slide's notes less the lab's own line about it. */
+  /** @param {any} item */
+  function figureSlide(item) {
+    if (!item || !item.figure || !item.figure.figure) return null;
+    var notes = String(item.notes || '').split('\n\n').filter(function (p) { return p.indexOf('LAB \u2014 ') !== 0; }).join('\n\n');
+    return Object.assign({ id: item.sourceSlideId || item.id, type: 'figure' }, item.figure, { notes: notes, hidden: item.hidden || undefined });
+  }
+
   function ordered(items, make, source) {
     /* What the lab cannot build, less what it has: a lesson's game the lab
        built from its compiled copy plays as the lab's, not a second time. */
@@ -428,7 +437,7 @@
     items.forEach(function (item) {
       /* One slide, or a game's board compiled as several (src/deck/labshow.js). A live figure's
          stand-in gives way to the figure itself, so the room can hover it and Next steps it. */
-      var live = item.liveFigure && item.sourceSlideId && bySource[item.sourceSlideId];
+      var live = item.liveFigure && (figureSlide(item) || (item.sourceSlideId && bySource[item.sourceSlideId]));
       var made = live ? (item.hidden ? Object.assign({}, live, { hidden: true }) : live) : make(item);
       /* A slide drawn as a picture has no words of its own; its original's title rides along
          unseen, for the presenter's notes screen (js/player.js prompterSend). */

@@ -668,3 +668,45 @@ test('a video slide comes into the lab with its sound, playing as it arrives, ba
   assert.ok(!old.slides[0].layers.some((l) => l.name === 'Caption band'));
   assert.equal(carryDeckVideo(old, [video]), 0, 'a clip already set is left alone');
 });
+
+test('AI Awareness Day 2026 comes into the lab whole: claim & source, then / now / next, the iceberg and the spectrum', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  for (const key of ['aiad26-safe', 'aiad26-responsible']) {
+    const src = lesson(key);
+    const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+    const made = new Set(deck.slides.map((s) => s.sourceSlideId));
+    const left = src.slides.filter((s) => !made.has(s.id)).map((s) => s.type);
+    assert.deepEqual(left, [], key + ' leaves slides behind');
+  }
+  const safe = deckFromSlideForge(asData(lesson('aiad26-safe')), 'nul', { games: '' });
+  const words = (s) => s.layers.filter((l) => l.kind === 'text').map((l) => l.params.text);
+  // 500,000 to 8 million is sixteenfold, worked out as SlideForge works it out; to an unknown, nothing.
+  const shift = safe.slides.find((s) => words(s).includes('nobody knows'));
+  assert.ok(shift, 'then / now / next is built');
+  assert.deepEqual(shift.layers.filter((l) => l.name === 'Change').map((l) => l.params.text), ['×16']);
+  // Claim & source builds a row per click, as the lesson asks (progressive).
+  const claim = safe.slides.find((s) => words(s).includes('No method shown'));
+  assert.ok(claim.layers.some((l) => l.anim.trigger === 'onClick' && l.anim.step), 'its rows come a click at a time');
+});
+
+test('a live figure comes into the lab with the figure itself, and a copy made before gets it from its lesson', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckFigures, CARRIED } = await converter();
+  const src = lesson('ipdv-ia-w5');
+  // The shell draws each figure's still in a browser (js/lab-engine.js figureStills); here a stand-in picture.
+  src.slides.forEach((s) => { if (s.type === 'figure') s.figureStill = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E'; });
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const figures = src.slides.filter((s) => s.type === 'figure');
+  const live = deck.slides.filter((s) => s.liveFigure);
+  assert.equal(live.length, figures.length, 'every figure has its slide');
+  live.forEach((s) => {
+    const from = figures.find((f) => f.id === s.sourceSlideId);
+    assert.equal(s.figure.figure, from.figure);
+    assert.deepEqual(s.figure.figureSteps, from.figureSteps);
+    assert.deepEqual(s.figure.figureData, from.figureData);
+  });
+  assert.equal(deck.carried, CARRIED);
+  // An older copy kept the picture alone: it takes each figure from the lesson, once.
+  live.forEach((s) => { delete s.figure; });
+  assert.equal(carryDeckFigures(deck, src.slides), figures.length);
+  assert.equal(carryDeckFigures(deck, src.slides), 0, 'a second time changes nothing');
+});

@@ -8,7 +8,7 @@ import {
   railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, type LayoutStyle,
 } from './layouts';
 import { gameClock } from './layouts';
-import type { Deck, FeedbackKind, Slide, SlideFeedback } from './types';
+import type { Deck, FeedbackKind, LiveFigure, Slide, SlideFeedback } from './types';
 import { syncHeaderFooter } from './headerFooter';
 import { addThemeArt, themeGround, type ArtContext } from './themeArt';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
@@ -486,8 +486,8 @@ export function carryDeckVideo(deck: Deck, source: SFSlide[]): number {
  *  video slide's clip keeps its sound and plays as the slide arrives; with no caption, nothing covers it.
  *  13: a live figure gets a stand-in, a picture of its last step; the show still plays the figure.
  *  14: the infographics that take a claim apart are built: claim & source, then / now / next, the
- *  iceberg and the spectrum. */
-export const CARRIED = 14;
+ *  iceberg and the spectrum. 15: a live figure's stand-in carries the figure itself (slide.figure). */
+export const CARRIED = 15;
 
 /** Upgrade saved layer names and the Week 3 preset without changing authored data or states. */
 export function carryDeckExperimentPresets(deck: Deck): number {
@@ -501,6 +501,28 @@ export function carryDeckExperimentPresets(deck: Deck): number {
     changed++;
   }
   return changed;
+}
+
+/** A SlideForge figure slide's live figure, whole: what the show needs to play it. */
+export function figureOf(s: SFSlide): LiveFigure {
+  const f = s as SFSlide & Partial<LiveFigure>;
+  const out: LiveFigure = { figure: String(f.figure ?? '') };
+  for (const k of ['figureData', 'figureSteps', 'title', 'figureGround', 'figureEyebrow', 'figureCredit', 'figureAlt'] as const) {
+    if (f[k] !== undefined) (out as unknown as Record<string, unknown>)[k] = structuredClone(f[k]);
+  }
+  return out;
+}
+
+/** A lab copy made before version 15 kept only a figure's picture; the show took the figure from the
+ *  SlideForge lesson. Each stand-in gets its figure from that lesson now, once. */
+export function carryDeckFigures(deck: Deck, source: SFSlide[]): number {
+  const byId = new Map(source.filter((s) => s.id && s.type === 'figure').map((s) => [s.id, s] as const));
+  let n = 0;
+  for (const sl of deck.slides) {
+    const from = sl.liveFigure && !sl.figure && sl.sourceSlideId ? byId.get(sl.sourceSlideId) : undefined;
+    if (from) { sl.figure = figureOf(from); n++; }
+  }
+  return n;
 }
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
@@ -518,7 +540,7 @@ function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtCo
   const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
   const made = k.put(out.slide, out.ground, notes);
   if (s.id) made.sourceSlideId = s.id;
-  if (s.type === 'figure') { made.liveFigure = true; made.name = `Live figure · ${s.title ?? ''}`.trim(); }
+  if (s.type === 'figure') { made.liveFigure = true; made.figure = figureOf(s); made.name = `Live figure · ${s.title ?? ''}`.trim(); }
   // A slide SlideForge keeps out of the show stays out of it: a teacher's preparation is not for the wall.
   if (s.hidden) made.hidden = true;
   carryLive(s, made, k.on(out.ground));

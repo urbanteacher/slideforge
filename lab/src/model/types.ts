@@ -5,6 +5,12 @@
 export type ParamValue = number | string | boolean | [number, number];
 export type Params = Record<string, ParamValue>;
 
+/** A SlideForge live figure (src/types.d.ts: the `figure` slide's fields). */
+export interface LiveFigure {
+  figure: string; figureData?: unknown; figureSteps?: unknown[]; title?: string;
+  figureGround?: string; figureEyebrow?: string; figureCredit?: string; figureAlt?: string;
+}
+
 export interface Box {
   x: number; // slide px, top-left
   y: number;
@@ -145,6 +151,10 @@ export interface Slide {
    *  step, so the figure is seen, ordered and named here. The show and the handout put the live
    *  original in its place (js/lab-engine.js ordered), so the room can still hover and step it. */
   liveFigure?: boolean;
+  /** The live figure itself, as SlideForge plays it (src/render/figures): which figure, its data and
+   *  steps, and its frame. Kept on the lab slide since converter version 15, so the show builds the
+   *  figure from the lesson in the lab, not from the SlideForge lesson it came from. */
+  figure?: LiveFigure;
   /** Which of SlideForge's activities this slide was made from, and which of its slides it is. */
   activity?: { key: string; page: number; settings?: ActivitySettings };
   /** What a slide design was built from (hotspots, pictures, facts, callouts), so the Slide panel

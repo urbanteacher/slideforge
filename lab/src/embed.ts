@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { CARRIED, carryDeck27, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
+import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { enterView, useStore, type LabView } from './model/store';
@@ -149,6 +149,7 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   if (from < 3) repairAddresses(copy);
   if (from < 7) carryDeckHidden(copy, source.slides);
   if (from < 12) carryDeckVideo(copy, source.slides);
+  if (from < 15) carryDeckFigures(copy, source.slides);
   copy.carried = CARRIED;
   return copy;
 }
@@ -160,7 +161,7 @@ function show(d: Deck) {
 
 /** One slide as a picture for SlideForge's player: what Host live, Teacher Presenter and Rehearse
  *  show until the lab has a live host of its own. */
-export interface Still { id: string; sourceSlideId?: string; /** A stand-in for a SlideForge live figure: the show plays the original. */ liveFigure?: boolean; image: string; notes: string; hidden: boolean; name: string; feedback?: Slide['feedback']; /** A game's slide: what the live room plays it by (src/deck/labshow.js). */ game?: Slide['game'] }
+export interface Still { id: string; sourceSlideId?: string; /** A stand-in for a SlideForge live figure: the show plays the figure. */ liveFigure?: boolean; /** That figure, as SlideForge plays it. */ figure?: Slide['figure']; image: string; notes: string; hidden: boolean; name: string; feedback?: Slide['feedback']; /** A game's slide: what the live room plays it by (src/deck/labshow.js). */ game?: Slide['game'] }
 
 // A slide is immutable, so an unchanged one keeps its picture; the deck-wide things drawn on it
 // (the header and footer, the style guide, its page number) are checked too.
@@ -192,7 +193,7 @@ async function stills(width = 1600, onProgress?: (done: number, total: number) =
       // A breath between slides, so the page stays responsive while a long deck is drawn.
       await new Promise((r) => setTimeout(r, 0));
     }
-    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, liveFigure: s.liveFigure, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined, game: s.game ? structuredClone(s.game) : undefined });
+    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, liveFigure: s.liveFigure, figure: s.figure ? structuredClone(s.figure) : undefined, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined, game: s.game ? structuredClone(s.game) : undefined });
     onProgress?.(i + 1, deck.slides.length);
   }
   return out;
