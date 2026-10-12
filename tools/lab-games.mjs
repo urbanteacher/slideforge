@@ -2,7 +2,7 @@
 /* SlideForge's game formats, for the lab (SlideForge Studio).
  *
  * The same process as the Layout bank and the activities: the lab builds each game itself
- * (lab/src/model/games.ts); SlideForge says what each game is. For every catalogue format this
+ * (lab/src/designs/engage/games.ts); SlideForge says what each game is. For every catalogue format this
  * takes SlideForge's own sample game (SF.getShowcaseGame, what Quiz studio's demo plays), runs it
  * through SlideForge's own compiler (SF.compileGame — the intro, How to play, each question or the
  * board, in the order the room sees them), keeps the content fields and writes one file. The rules

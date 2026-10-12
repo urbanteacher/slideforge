@@ -2,7 +2,7 @@
 /* The 54 activities' content, for the lab (SlideForge Studio).
  *
  * The same process as the Layout bank (tools/lab-layout-bank.mjs): the lab builds each activity
- * itself, from its own layouts and layers (lab/src/model/activities.ts); what it needs from
+ * itself, from its own layouts and layers (lab/src/designs/engage/); what it needs from
  * SlideForge is only what each activity says. This reads the catalogue through SlideForge's own
  * code — the slides an activity makes (SF.Activities.makeSlides) and, for a game, the starter game
  * Quiz studio would make (SF.createPresetGame) — keeps the content fields, and writes one file.
