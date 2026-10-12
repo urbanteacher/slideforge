@@ -38,142 +38,10 @@
   var workspaces = {};
   var active = null;
   var LAST_WS = 'slideforge.workspace';
-  var ZOOM_KEY = 'slideforge.canvasZoom';
-  var PANEL_KEY = 'slideforge.canvasPanel';
 
-  /* ----------------------------------------------------------- canvas view
-
-     Zoom, and the Design & Engagement panel — the two chrome controls every
-     slide tool puts within reach of the canvas rather than in a menu.
-
-     Zoom is a multiple of Fit, not of the slide's own 1280x720. Fit already
-     caps at 980px so the notes strip keeps its room, which means a true
-     "100%" would be a percentage of a cap nobody can see. Fit is the honest
-     name for the default, and the rest read as "bigger than that". */
-
-  var ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2];
-  var zoom = 1;
-
-  /** Width the canvas takes at Fit: the largest 16:9 box the stage can show
-      whole. Height is in the min because a slide that runs off the bottom is
-      not fitted, and because leaving one axis to the stylesheet is what broke
-      this — see sizeCanvas. */
-  function fitWidth(wrap) {
-    var cs = getComputedStyle(wrap);
-    var availW = wrap.clientWidth -
-      parseFloat(cs.paddingLeft || '0') - parseFloat(cs.paddingRight || '0');
-    var availH = wrap.clientHeight -
-      parseFloat(cs.paddingTop || '0') - parseFloat(cs.paddingBottom || '0');
-    var banner = $('demoBanner');
-    if (banner && !banner.hidden) availH -= banner.offsetHeight;
-    return Math.max(160, Math.min(availW, 980, availH * 16 / 9));
-  }
-
-  /* Both axes, always — at Fit as well as zoomed.
-
-     The stylesheet sizes the canvas with `width: 100%` and `aspect-ratio`,
-     and that pair is circular inside a grid: the row is sized from the item's
-     height, the item's height comes from its width, and its width comes back
-     from the row. Chrome settles on one answer and keeps it, so the canvas
-     stayed 850px wide no matter what the stage did — hiding the panel gave
-     the stage 300 more pixels and the slide did not move. Measuring the stage
-     and pinning both numbers is the way out; the CSS stays as the pre-script
-     default. 9/16 is the ratio the stylesheet states, and the two must agree. */
-  function sizeCanvas() {
-    var wrap = document.querySelector('.stage-wrap');
-    var box = $('previewBox');
-    if (!wrap || !box) return;
-    /* An engine may put something on the canvas that is not a slide — the
-       activity catalogue is a scrolling panel, not a 1280x720 picture — and
-       says so with this class. Pinning that to 16:9 letterboxed it to a third
-       of the stage with ten thousand pixels of content scrolling inside, and
-       the stylesheet could never win the argument, because what is pinned
-       here is inline. Hand the box back to the stylesheet instead. */
-    if (box.classList.contains('canvas-free')) {
-      box.style.removeProperty('max-width');
-      box.style.removeProperty('width');
-      box.style.removeProperty('height');
-      return;
-    }
-    var w = Math.round(fitWidth(wrap) * zoom);
-    box.style.maxWidth = 'none';
-    box.style.width = w + 'px';
-    box.style.height = Math.round(w * 9 / 16) + 'px';
-  }
-
-  /* Rescale the slide already on the canvas. Cheaper than a redraw and it
-     keeps the scroll position, which matters when zoomed past Fit — but only
-     a .slide can be re-fitted in place, so anything else falls back. */
-  function refitCanvas() {
-    var box = $('previewBox');
-    if (!box) return;
-    var slide = box.querySelector('.slide');
-    if (slide && SF.fit) SF.fit(box, slide);
-    else if (active && active.draw) active.draw();
-  }
-
-  function applyCanvas() { sizeCanvas(); refitCanvas(); }
-
-  function setZoom(z) {
-    zoom = ZOOMS.indexOf(z) >= 0 ? z : 1;
-    var sel = /** @type {HTMLSelectElement|null} */ ($('zoomLevel'));
-    if (sel) sel.value = String(zoom);
-    var out = $('btnZoomOut'), into = $('btnZoomIn');
-    if (out) out.toggleAttribute('disabled', zoom === ZOOMS[0]);
-    if (into) into.toggleAttribute('disabled', zoom === ZOOMS[ZOOMS.length - 1]);
-    try { localStorage.setItem(ZOOM_KEY, String(zoom)); } catch (e) {}
-    applyCanvas();
-  }
-
-  function stepZoom(dir) {
-    var i = ZOOMS.indexOf(zoom);
-    setZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, (i < 0 ? 2 : i) + dir))]);
-  }
-
-  function panelOpen() {
-    var app = $('app');
-    return !(app && app.classList.contains('no-inspector'));
-  }
-
-  function setPanel(open) {
-    var app = $('app');
-    if (app) app.classList.toggle('no-inspector', !open);
-    var b = $('btnInspector');
-    if (b) {
-      b.setAttribute('aria-pressed', String(open));
-      b.title = (open ? 'Hide' : 'Show') +
-        ' the Design & Engagement panel (⌘\\)';
-      /* An icon, as the lab's panel button is; its name is in the tooltip. */
-      b.textContent = open ? '◨' : '◧';
-      b.setAttribute('aria-label', (open ? 'Hide' : 'Show') + ' the panel');
-    }
-    try { localStorage.setItem(PANEL_KEY, open ? '1' : '0'); } catch (e) {}
-    /* The stage just changed width, so Fit means something else now. */
-    applyCanvas();
-  }
-
-  function installCanvasBar() {
-    var stored = null, storedPanel = null;
-    try {
-      stored = localStorage.getItem(ZOOM_KEY);
-      storedPanel = localStorage.getItem(PANEL_KEY);
-    } catch (e) {}
-
-    var out = $('btnZoomOut'), into = $('btnZoomIn');
-    var sel = /** @type {HTMLSelectElement|null} */ ($('zoomLevel'));
-    if (out) out.onclick = function () { stepZoom(-1); };
-    if (into) into.onclick = function () { stepZoom(1); };
-    if (sel) {
-      var levels = sel;
-      levels.onchange = function () { setZoom(Number(levels.value)); };
-    }
-    var panelBtn = $('btnInspector');
-    if (panelBtn) panelBtn.onclick = function () { setPanel(!panelOpen()); };
-
-    setPanel(storedPanel !== '0');
-    setZoom(stored ? Number(stored) : 1);
-  }
-
+  /* The classic canvas's zoom, side panel and notes strip were here. The
+     Lesson studio (js/lab-engine.js) draws in its own frame over that part of
+     the page, with its own zoom, panel and notes, so they were removed. */
 
   /* ------------------------------------------------------------ shared UI */
 
@@ -515,20 +383,6 @@
     if (active && active.flush) active.flush();   // commit edits in flight
     active = ws;
 
-    /* Back to the default: the canvas holds a slide unless the engine taking
-       over says otherwise. This describes what is on the canvas right now, so
-       it cannot outlive the engine that put it there — left set, it would
-       stop the shell pinning geometry in a studio that needs it. */
-    var canvas = $('previewBox');
-    if (canvas && canvas.classList.contains('canvas-free')) {
-      canvas.classList.remove('canvas-free');
-      /* And pin it again. The engine that just left had the inline width and
-         height cleared on its behalf; leaving them off puts the canvas back on
-         `width:100%` plus `aspect-ratio`, which is the circular pair sizeCanvas
-         exists to escape. */
-      sizeCanvas();
-    }
-
     document.body.classList.toggle('ws-deck', key === 'deck');
     document.body.classList.toggle('ws-game', key === 'game');
     document.body.classList.toggle('ws-plan', key === 'plan');
@@ -554,68 +408,6 @@
       SF.toast(key === 'deck' ? 'Presentation' : key === 'plan' ? 'Lesson plan' : 'Game');
     }
   }
-
-    /* ---------------------------------------------------------- notes strip
-     Folded by default, and remembered. Open, the strip is 114px of the stage
-     column on every slide whether or not that slide has notes, and the column
-     is the one the canvas is competing for — the same budget the three studio
-     bands used to take another 122px of.
-
-     Folding is only safe because of the dot: a slide that has notes says so
-     while they are out of sight. Without it this would be a way to lose
-     writing quietly, which is worse than the space it saves. */
-  var NOTES_OPEN_KEY = 'sf.notes.open';
-
-  function notesStripOpen(open) {
-    var strip = $('notesStrip'), toggle = $('notesToggle');
-    if (!strip || !toggle) return;
-    strip.setAttribute('data-open', open ? 'true' : 'false');
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    try { localStorage.setItem(NOTES_OPEN_KEY, open ? '1' : '0'); } catch (e) {}
-    if (open) {
-      var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-      if (area) area.focus();
-    }
-  }
-
-  /* The one place that knows a slide's notes have changed, so the dot cannot
-     drift from the text. Callers set notes through here rather than assigning
-     to the textarea, which is what kept the marker honest. */
-  SF.setNotes = function (text) {
-    var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-    if (area) area.value = text == null ? '' : String(text);
-    SF.markNotes();
-  };
-
-  SF.markNotes = function () {
-    var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-    var dot = $('notesDot');
-    if (!dot) return;
-    dot.hidden = !(area && String(area.value || '').trim());
-  };
-
-  /* The listener sits directly under its own lookup, and this note sits above
-     the function rather than between them: menu-wiring.test.js looks for a
-     handler within 400 characters of the id it belongs to, and a comment long
-     enough to explain itself was spending that budget. The rule is right —
-     a lookup and its listener drifting apart is how a control ends up with
-     none — so the prose moved instead of the code. */
-  SF.installNotesStrip = function () {
-    var strip = $('notesStrip');
-    var toggle = $('notesToggle');
-    if (!toggle || !strip || toggle.dataset.wired) return;
-    toggle.dataset.wired = '1';
-    var box = strip;
-    toggle.addEventListener('click', function () {
-      notesStripOpen(box.getAttribute('data-open') !== 'true');
-    });
-    var remembered = '0';
-    try { remembered = localStorage.getItem(NOTES_OPEN_KEY) || '0'; } catch (e) {}
-    notesStripOpen(remembered === '1');
-    var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-    if (area) area.addEventListener('input', SF.markNotes);
-    SF.markNotes();
-  };
 
   /** Push the active document's title/theme into the shared chrome. */
   function syncChrome() {
@@ -756,7 +548,17 @@
   /** Engines call this from their debounced save path. */
   function touch() {
     if (active) active._dirty = true;
+    noteEdit();
     setStored('saving');
+  }
+
+  /* An edit to the open document: the quiet "While editing" restore point
+     (js/history.js noteChange) is scheduled from here. Safe on every change;
+     History coalesces them itself (90 s of quiet, at most one every 4 minutes,
+     or one per 5 minutes of steady work). */
+  function noteEdit() {
+    if (!active || !active.doc || !SF.History || !SF.History.noteChange) return;
+    SF.History.noteChange(active.doc());
   }
 
   /* Autosave pulse next to the title. The Library folder chip is where the
@@ -855,10 +657,7 @@
     ['btnShareTop', 'Share a read-only link…', 'File', 'send copy url'],
     ['btnLibraryOpen', 'Library', 'File', 'templates lessons'],
     ['btnTemplate', 'Open the demo deck', 'Help', 'every layout example'],
-    ['btnPresenter', 'Teacher Presenter (notes on your screen)', 'Present', 'pop out speaker view notes'],
-    ['btnZoomIn', 'Zoom in', 'View', 'bigger', null, '⌥='],
-    ['btnZoomOut', 'Zoom out', 'View', 'smaller', null, '⌥−'],
-    ['btnInspector', 'Show or hide the right panel', 'View', 'inspector design content engagement', '\\']
+    ['btnPresenter', 'Teacher Presenter (notes on your screen)', 'Present', 'pop out speaker view notes']
   ];
 
   function usable(node) {
@@ -885,7 +684,6 @@
       out.push({ id: 'shell.' + b[0], label: b[1], group: b[2], words: b[3], keys: keys,
         run: function () { var n = $(b[0]); if (n) n.click(); } });
     });
-    out.push({ id: 'view.fit', label: 'Zoom to fit', group: 'View', keys: cmd + '⌥0', run: function () { setZoom(1); } });
     Object.keys(workspaces).forEach(function (key) {
       if (active && key === active.key) return;
       var tab = document.querySelector('[data-go="' + key + '"]');
@@ -915,12 +713,28 @@
     var scoped = ws.key === 'game' && SF.LessonBank && SF.LessonBank.savedList
       ? SF.LessonBank.savedList(ws.doc())
       : null;
+    /* In the Quiz studio the list is saved games (SF.GameStore), not lessons:
+       they are opened, and deleted, there rather than through the lesson store. */
+    var games = !!(scoped && SF.GameStore);
     picker({
       title: scoped ? scoped.title : (ws.key === 'game' ? 'Saved quizzes & games' : 'Saved'),
-      items: function () { return scoped ? scoped.items : ws.store.list(); },
+      items: function () { return scoped ? SF.LessonBank.savedList(ws.doc()).items : ws.store.list(); },
       empty: scoped ? scoped.empty : (ws.key === 'game' ? 'No saved quizzes yet.' : 'Nothing saved yet.'),
-      describe: ws.describe,
+      describe: games ? function (g) {
+        var n = (g.questions || []).length;
+        return n + (n === 1 ? ' question' : ' questions');
+      } : ws.describe,
       onPick: function (it) {
+        if (games) {
+          var game = SF.GameStore.get(it.id);
+          if (!game) { SF.toast('“' + it.title + '” is no longer saved here — it was deleted, perhaps in another tab.'); return; }
+          if (ws.openGame) { ws.openGame(game); ws._dirty = false; return; }
+          ws.setDoc(game);
+          ws._dirty = false;
+          syncChrome();
+          ws.draw();
+          return;
+        }
         /* The list was read when the picker opened; another tab can have
            deleted the record since, and setDoc(null) took the editor down. */
         var picked = ws.store.get(it.id);
@@ -936,7 +750,7 @@
         SF.ask({ title: 'Delete “' + it.title + '”?',
           detail: 'This cannot be undone.',
           confirm: 'Delete', danger: true }, function () {
-            removeDocs(ws, [it.id]);
+            if (games) SF.GameStore.remove(it.id); else removeDocs(ws, [it.id]);
             done();
           });
       },
@@ -948,7 +762,7 @@
           confirm: n === 1 ? 'Delete' : 'Delete ' + n,
           danger: true
         }, function () {
-          removeDocs(ws, ids);
+          if (games) ids.forEach(function (id) { SF.GameStore.remove(id); }); else removeDocs(ws, ids);
           done();
         });
       }
@@ -957,17 +771,12 @@
 
   /* ------------------------------------------------------------ file I/O */
 
-  /** Filename-safe, stable across saves so re-exporting overwrites in place. */
-  function slugify(title, id) {
-    var base = String(title || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 48);
-    if (!base) base = 'untitled';
-    /* The id keeps two documents with the same name apart, and means a
-       re-export lands on the same file rather than piling up copies. */
-    return base + '-' + String(id || '').slice(0, 8).toLowerCase().replace(/[^a-z0-9]/g, '');
+  /** A document's file name in data/: from its id alone, so a rename or a
+      re-export lands on the same file rather than beside it. (Until October
+      2026 it was the title and the id's first eight characters, so a renamed
+      lesson left its old file behind; server/server.js still recognises those.) */
+  function fileSlug(id) {
+    return String(id || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^[^a-z0-9]+/, '').slice(0, 64);
   }
 
   /** Is the app being served by the relay (so it can write files)? */
@@ -1035,37 +844,67 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
 
-  /* ---- write every document into the project folder ---- */
+  /* ---- write every document into the project folder ----
+
+     Classic lessons and games from SF.Store and SF.GameStore, and the Lesson
+     studio's lessons whole, from IndexedDB (SF.LabEngine.savedDecks): a
+     lesson's one-slide Library card is not the lesson. Each file is named by
+     its document's id, so an export overwrites the last one; then the relay
+     removes the files earlier exports wrote whose document is gone (and never
+     a file it did not write). */
 
   function exportAllToFolder() {
-    var decks = SF.Store.list();
+    var lab = SF.LabEngine && SF.LabEngine.savedDecks ? SF.LabEngine.savedDecks() : Promise.resolve([]);
+    SF.toast('Gathering the lessons…');
+    lab.then(function (lessons) { writeFolder(lessons || []); }, function () {
+      SF.toast('The Lesson studio’s lessons could not be read, so nothing was written.');
+    });
+  }
+
+  function writeFolder(lessons) {
+    var inLab = {};
+    lessons.forEach(function (d) { inLab[d.id] = 1; });
+    /* A card whose lesson travels as itself is left out; a card with no lesson
+       here (a shipped deck never opened) stays, so the Library keeps it. */
+    var decks = SF.Store.list().filter(function (d) { return !(d.labCard && inLab[d.id]); });
     var games = SF.GameStore.list();
     var jobs = decks.map(function (d) { return { kind: 'deck', doc: d }; })
-      .concat(games.map(function (g) { return { kind: 'game', doc: g }; }));
+      .concat(games.map(function (g) { return { kind: 'game', doc: g }; }))
+      .concat(lessons.map(function (l) { return { kind: 'lesson', doc: l }; }))
+      .filter(function (j) { return !!fileSlug(j.doc.id); });
 
     if (!jobs.length) { SF.toast('Nothing saved yet'); return; }
 
     var done = 0, failed = 0;
+    /** @type {Record<string, string[]>} */
+    var keep = { deck: [], game: [], lesson: [] };
     SF.toast('Writing ' + jobs.length + ' file' + (jobs.length === 1 ? '' : 's') + '…');
 
     /* One at a time rather than in parallel: the relay is a single process and
        the point is a clear report at the end, not speed. */
     var next = function (i) {
       if (i >= jobs.length) {
-        SF.toast(failed
-          ? done + ' written, ' + failed + ' failed — see the relay output'
-          : 'Wrote ' + done + ' file' + (done === 1 ? '' : 's') + ' to data/');
+        /* Every file this export means to be there, written or not: a failed
+           write keeps its earlier copy, which is under the same name. */
+        fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: 'prune', keep: keep })
+        }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (p) {
+          var gone = p && p.removed ? ' · removed ' + p.removed + ' old file' + (p.removed === 1 ? '' : 's') : '';
+          SF.toast(failed
+            ? done + ' written, ' + failed + ' failed — see the relay output' + gone
+            : 'Wrote ' + done + ' file' + (done === 1 ? '' : 's') + ' to data/' + gone);
+        });
         return;
       }
       var job = jobs[i];
+      var slug = fileSlug(job.doc.id);
+      keep[job.kind].push(slug + '.json');
       fetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          kind: job.kind,
-          slug: slugify(job.doc.title, job.doc.id),
-          doc: job.doc
-        })
+        body: JSON.stringify({ kind: job.kind, slug: slug, doc: job.doc })
       }).then(function (r) {
         if (r.ok) done++; else failed++;
       }).catch(function () {
@@ -1080,61 +919,80 @@
   function restoreFromFolder() {
     fetch('/api/data').then(function (r) { return r.json(); }).then(function (idx) {
       var files = (idx.decks || []).map(function (f) { return { kind: 'deck', f: f }; })
-        .concat((idx.games || []).map(function (f) { return { kind: 'game', f: f }; }));
+        .concat((idx.games || []).map(function (f) { return { kind: 'game', f: f }; }))
+        .concat((idx.lessons || []).map(function (f) { return { kind: 'lesson', f: f }; }));
 
       if (!files.length) {
-        SF.toast('No files in data/ yet — use Export → All to the app folder first');
+        SF.toast('No files in data/ yet — use Export → Everything, into the app folder first');
         return;
       }
 
-      var here = SF.Store.list().length + SF.GameStore.list().length;
+      var here = SF.Store.list().filter(function (d) { return !d.labCard; }).length + SF.GameStore.list().length;
 
-      /* A restore replaces rather than merges. Merging looks friendlier but is
-         wrong for the case this exists to serve: you restore *because* browser
-         storage was lost, and the app has already re-seeded its samples by the
-         time you get here — so merging leaves you with duplicates of
-         everything. The folder is the source of truth; this makes the browser
-         match it. Single-file Import is still there for merging one document. */
-      var msg = 'Replace everything in this browser with the ' + files.length +
+      /* A restore replaces rather than merges for older lessons and games:
+         you restore *because* browser storage was lost, and the app has
+         re-seeded its samples by then, so merging leaves duplicates. Lesson-
+         studio lessons are replaced by id, and ones not in the folder are
+         kept: an export from before it carried them would otherwise wipe them. */
+      var msg = 'Replace the older lessons and games in this browser with the ' + files.length +
         ' document' + (files.length === 1 ? '' : 's') + ' in data/?\n\n' +
         (here
-          ? 'The ' + here + ' currently here will be discarded, including any edits ' +
-            'not yet exported.'
-          : 'Nothing is currently stored here.');
+          ? 'The ' + here + ' here will be discarded, including any edits not yet exported. '
+          : 'No older lessons or games are stored here. ') +
+        'Lesson-studio lessons in the folder replace their copies here; the others here are kept.';
       SF.ask({ title: 'Replace everything here?', detail: msg,
         confirm: 'Replace', danger: true }, function () {
 
-      SF.Store.clear();
-      SF.GameStore.clear();
-
-      var loaded = 0;
-      var pending = files.length;
-      files.forEach(function (x) {
-        var dir = x.kind === 'deck' ? 'decks' : 'games';
-        fetch('data/' + dir + '/' + encodeURIComponent(x.f.file))
-          .then(function (r) { return r.json(); })
+      /* Everything is read first. Nothing here is cleared until there is
+         something to put back. */
+      /** @type {{decks: any[], games: any[], labDecks: any[]}} */
+      var bundle = { decks: [], games: [], labDecks: [] };
+      Promise.all(files.map(function (x) {
+        var dir = x.kind === 'deck' ? 'decks' : x.kind === 'game' ? 'games' : 'lessons';
+        return fetch('data/' + dir + '/' + encodeURIComponent(x.f.file))
+          .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (raw) {
-            var doc = x.kind === 'deck' ? SF.normalizeDeck(raw) : SF.normalizeGame(raw);
-            if (doc) {
-              (x.kind === 'deck' ? SF.Store : SF.GameStore).save(doc);
-              loaded++;
-            }
+            if (!raw || typeof raw !== 'object') return;
+            (x.kind === 'deck' ? bundle.decks : x.kind === 'game' ? bundle.games : bundle.labDecks).push(raw);
           })
-          .catch(function () {})
-          .then(function () {
-            if (--pending) return;
-            SF.toast('Restored ' + loaded + ' document' + (loaded === 1 ? '' : 's'));
-            /* Both engines are now holding documents that were just deleted,
-               so re-point them at what actually came back. */
+          .catch(function () {});
+      })).then(function () {
+        var usable = bundle.decks.map(SF.normalizeDeck).filter(Boolean).length +
+          bundle.games.map(SF.normalizeGame).filter(Boolean).length + bundle.labDecks.length;
+        if (!usable) {
+          SF.toast('None of the files in data/ could be read, so nothing here was changed.');
+          return;
+        }
+        if (SF.History && SF.History.ready() && active && active.doc) {
+          SF.History.snapshot(active.doc(), 'Before restoring from the app folder');
+        }
+        /* The Library cards of Lesson-studio lessons stay: those lessons stay. */
+        SF.Store.list().forEach(function (d) { if (!d.labCard) SF.Store.remove(d.id); });
+        SF.GameStore.clear();
+        SF.Docs.restore(bundle).then(function (result) {
+          var lost = SF.Docs.notKeptMessage ? SF.Docs.notKeptMessage(result, false) : '';
+          var n = result.decks + result.games + result.lessons;
+          SF.toast(lost || ('Restored ' + n + ' document' + (n === 1 ? '' : 's')));
+          /* The open lesson is reopened from what came back when the folder
+             had a copy of it; the lab would otherwise write its old copy back. */
+          var deckWs = workspaces.deck;
+          if (deckWs && deckWs.lab) {
+            var openId = deckWs.doc() && deckWs.doc().id;
+            if (bundle.labDecks.some(function (d) { return d && d.id === openId; })) {
+              deckWs.setDoc({ id: openId, labSaved: true });
+            }
+            deckWs._dirty = false;
+          } else {
             Object.keys(workspaces).forEach(function (k) {
               var ws = workspaces[k];
               var fresh = ws.store.list()[0] || ws.blank();
               ws.setDoc(fresh);
               ws._dirty = false;
             });
-            syncChrome();
-            active.draw();
-          });
+          }
+          syncChrome();
+          active.draw();
+        }, function () { SF.toast('Part of the folder could not be restored'); });
       });
 
       });   // SF.ask
@@ -1216,14 +1074,16 @@
       confirm: lesson ? 'Import' : 'Restore', danger: replacing > 0
     }, function () {
 
-    SF.Docs.restore(raw).then(function () {
+    SF.Docs.restore(raw).then(function (result) {
+    /* A save the browser refused is said, never left for the teacher to find at the next reload. */
+    var lost = SF.Docs.notKeptMessage ? SF.Docs.notKeptMessage(result, !!lesson) : '';
 
     if (lesson) {
       activate('deck', { toast: false });
       workspaces.deck.setDoc(lesson);
       workspaces.deck._dirty = false;
       syncChrome();
-      SF.toast('Imported “' + (lesson.title || 'Untitled') + '” · ' + lesson.slides.length + ' slides');
+      SF.toast(lost || ('Imported “' + (lesson.title || 'Untitled') + '” · ' + lesson.slides.length + ' slides'));
       return;
     }
 
@@ -1234,7 +1094,7 @@
     });
     syncChrome();
     active.draw();
-    SF.toast('Restored ' + (decks.length + games.length) + ' documents');
+    SF.toast(lost || ('Restored ' + (result.decks + result.games + result.lessons) + ' documents'));
 
     }, function () { SF.toast('Part of that backup could not be restored'); });   // SF.Docs.restore
     });   // SF.ask
@@ -1383,7 +1243,7 @@
         if (served) {
           items.splice(items.length - 1, 0, {
             id: 'folder', title: 'Everything, into the app folder',
-            blurb: 'Writes each one to data/ next to the app, so the folder is self-contained and can be committed.'
+            blurb: 'Writes every lesson (Lesson-studio lessons whole) and every game to data/ next to the app, so the folder is self-contained and can be committed. Each export replaces the last, and files of documents deleted since are removed.'
           });
         }
         picker({
@@ -1506,11 +1366,10 @@
           return (SF.LESSONS || []).filter(function (l) { return l.title === doc.title; })[0] || null;
         }
 
+        /* Every document, through SF.Docs: older lessons, games, and a card per
+           Lesson-studio lesson (whose lesson is in IndexedDB). */
         function savedCount() {
-          try {
-            var raw = JSON.parse(localStorage.getItem('slideforge.decks.v1') || '[]');
-            return (Array.isArray(raw) ? raw : Object.values(raw)).length;
-          } catch (e) { return 0; }
+          try { return SF.Docs ? SF.Docs.list().length : 0; } catch (e) { return 0; }
         }
 
         picker({
@@ -1635,10 +1494,16 @@
                 keys.filter(function (k) {
                   return k && (k.indexOf('slideforge.decks') === 0 || k.indexOf('slideforge.games') === 0 ||
                     k.indexOf('slideforge.lastDeck') === 0 || k.indexOf('slideforge.lastGame') === 0 ||
-                    k === 'slideforge.presentation' || k === 'slideforge.workspace' ||
-                    k.indexOf('slideforge.selection.') === 0);
+                    k === 'slideforge.workspace');
                 }).forEach(function (k) { localStorage.removeItem(k); });
-                location.href = location.origin + '/?_=' + Date.now();
+                /* And the Lesson studio's lessons, in its own IndexedDB: without
+                   this their Library cards went and the lessons stayed. */
+                var labGone = SF.LabEngine && SF.LabEngine.clearAll ? SF.LabEngine.clearAll() : Promise.resolve();
+                var reload = function () { location.href = location.origin + '/?_=' + Date.now(); };
+                labGone.then(reload, function () {
+                  SF.toast('The Lesson studio’s lessons could not all be deleted.');
+                  setTimeout(reload, 2500);
+                });
               });
             }
           }
@@ -1764,8 +1629,18 @@
                   return SF.History.get(row.id);
                 }).then(function (old2) {
                   if (!old2) { SF.toast('That version could not be read.'); return; }
-                  active.setDoc(active.key === 'game' ? SF.normalizeGame(old2) : active.lab ? old2 : SF.normalizeDeck(old2));
-                  active.store.save(active.doc());
+                  /* By what the restore point is, not by which studio is on screen: the
+                     Quiz studio is a view of the lesson, and passing the lesson through
+                     normalizeGame made it a game. An engine that restores itself (the
+                     lab) takes the point as it is and saves it. */
+                  if (active.restoreDoc) {
+                    active.restoreDoc(old2);
+                  } else {
+                    var isGame = old2.kind === 'game' || Array.isArray(old2.questions);
+                    active.setDoc(isGame ? SF.normalizeGame(old2) : SF.normalizeDeck(old2));
+                    active.store.save(active.doc());
+                  }
+                  active._dirty = false;
                   syncChrome();
                   if (active.draw) active.draw();
                   SF.toast('Restored. The version you were on is in this list as “Before restoring”.');
@@ -1885,7 +1760,6 @@
     /* The lab is SlideForge's three studios (js/lab-engine.js): the Lesson
        studio, the Quiz studio and Activities. */
     if (SF.LabEngine) SF.LabEngine.install();
-    SF.installNotesStrip();
 
     var want = null;
     try { want = localStorage.getItem(LAST_WS); } catch (e) {}
@@ -1925,36 +1799,6 @@
        lesson-shell flash on Quiz studio refresh. */
     document.documentElement.setAttribute('data-ready', '1');
 
-    installCanvasBar();
-
-    /* Size first, draw second: Fit is a share of the stage, so the box has to
-       be its new width before the slide is scaled into it. */
-    /* A redraw rebuilds the canvas and the panel, and so throws away whatever
-       is being typed into: the block on the slide, or a panel field that
-       saves on change. On a phone the keyboard opening is itself a resize, so
-       tapping a field could wipe it. While someone is typing, the canvas is
-       sized at once and the redraw waits until the focus has left. */
-    var drawWhenFree = false;
-    function typingNow() {
-      var a = /** @type {HTMLElement|null} */ (document.activeElement);
-      if (!a || a === document.body) return false;
-      return a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable ||
-        (a.tagName === 'INPUT' && /^(text|search|url|email|tel|number|)$/.test(/** @type {HTMLInputElement} */ (a).type || ''));
-    }
-    window.addEventListener('resize', function () {
-      sizeCanvas();
-      if (typingNow()) { drawWhenFree = true; return; }
-      active.draw();
-    });
-    document.addEventListener('focusout', function () {
-      if (!drawWhenFree) return;
-      setTimeout(function () {
-        if (!drawWhenFree || typingNow()) return;
-        drawWhenFree = false;
-        sizeCanvas();
-        active.draw();
-      }, 0);
-    });
     /* Deliberately a flush, not a save: every edit is already persisted by the
        engines' debounce, and an unconditional write at unload can clobber
        newer data with an idle in-memory copy. */
@@ -2002,12 +1846,6 @@
         activate(active.key === 'deck' ? 'game' : 'deck');
         return;
       }
-      /* e.code, not e.key: Option on macOS turns Alt+= into a different
-         character entirely, and the physical key is what was pressed. */
-      if (mod && e.code === 'Backslash') { e.preventDefault(); setPanel(!panelOpen()); return; }
-      if (mod && e.altKey && e.code === 'Equal') { e.preventDefault(); stepZoom(1); return; }
-      if (mod && e.altKey && e.code === 'Minus') { e.preventDefault(); stepZoom(-1); return; }
-      if (mod && e.altKey && e.code === 'Digit0') { e.preventDefault(); setZoom(1); return; }
 
       if (typing) return;
       if (e.key === '?' && !mod) { e.preventDefault(); showShortcuts(); return; }
@@ -2024,6 +1862,7 @@
     save: save,
     openSaved: openSaved,
     touch: touch,
+    noteEdit: noteEdit,
     /* Engines call this when a debounced write has actually landed. */
     /* Pass the store's answer: false means the write was refused, and the
        header has to say so rather than claim it landed. */
@@ -2034,9 +1873,6 @@
     openModal: openModal,
     shareLesson: shareLesson,
     lessonDoc: lessonDoc,
-    /* Re-measure the canvas after an engine changes what is on it. Geometry
-       is the shell's; what the canvas holds is the engine's. */
-    sizeCanvas: sizeCanvas,
     current: function () { return active; },
     openPalette: openPalette,
     UI: UI

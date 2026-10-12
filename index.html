@@ -199,42 +199,14 @@ html:not([data-ready]) body { background: #0a0a0b; }
     <div class="stage-wrap">
       <div id="previewBox"></div>
     </div>
-    <!-- Canvas bar: the status strip every slide tool has along the bottom.
-         Zoom on the left of it, the Design/Engagement panel switch on the
-         right, because that panel is the thing the zoom is competing with
-         for width. -->
+    <!-- Canvas bar. Its zoom, the panel switch and the notes strip went with
+         the classic editor: the Lesson studio has its own. -->
     <div class="canvas-bar">
       <label class="btn canvas-add canvas-add-item" data-ws="deck" title="Put one thing on this slide — a heading, some text, a picture, a chart. The slide itself stays as it is.">＋ Item
         <select id="canvasAddItem" aria-label="Add an item to this slide">
           <option value="">＋ Item…</option>
         </select>
       </label>
-      <div class="canvas-zoom" role="group" aria-label="Canvas zoom">
-        <button class="canvas-bar-btn" id="btnZoomOut" type="button" title="Zoom out (⌘⌥−)" aria-label="Zoom out">−</button>
-        <select class="canvas-zoom-level" id="zoomLevel" aria-label="Zoom level">
-          <option value="0.5">50%</option>
-          <option value="0.75">75%</option>
-          <option value="1">Fit</option>
-          <option value="1.25">125%</option>
-          <option value="1.5">150%</option>
-          <option value="2">200%</option>
-        </select>
-        <button class="canvas-bar-btn" id="btnZoomIn" type="button" title="Zoom in (⌘⌥+)" aria-label="Zoom in">+</button>
-      </div>
-      <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true" aria-label="Hide the panel">◨</button>
-    </div>
-    <!-- Folded by default. Open, it is 114px of the stage column on every
-         slide whether or not that slide has notes, and the column is the same
-         one the canvas is competing for. The label is the button now, so the
-         strip costs one row until you want it; the dot next to it says this
-         slide has notes, so folding can never hide writing you cannot see. -->
-    <div class="notes-strip" id="notesStrip" data-open="false">
-      <button class="notes-toggle" id="notesToggle" type="button" aria-expanded="false" aria-controls="notes">
-        <span class="notes-caret" aria-hidden="true">›</span>
-        <span id="notesLabel">Speaker notes — visible in presenter view only</span>
-        <span class="notes-dot" id="notesDot" hidden title="This slide has notes">●</span>
-      </button>
-      <textarea id="notes" placeholder="Notes…" spellcheck="true"></textarea>
     </div>
     <!-- Quiz studio and Activities: the strip the Lesson studio keeps its
          slides in. Its questions or the lesson's activities, as slides; or
@@ -309,23 +281,24 @@ html:not([data-ready]) body { background: #0a0a0b; }
 <!-- ------------------------------------------------------------ shortcuts -->
 <div id="cheats">
   <div class="card">
-    <!-- Every key here is bound in js/editor.js or js/shell.js; shown only
-         when the sheet is opened from the editor. -->
+    <!-- Every key here is bound in the Lesson studio (lab/src/ui/App.tsx)
+         or in js/shell.js (the five the lab sends up: lab/src/main.tsx);
+         shown only when the sheet is opened from the studio. -->
     <div class="editing-keys">
     <h3>Editing keys</h3>
     <table>
-      <tr><td><kbd>↑</kbd> <kbd>↓</kbd> or <kbd>J</kbd> <kbd>K</kbd></td><td>Previous / next slide</td></tr>
-      <tr><td><kbd>⌥</kbd>+<kbd>↑</kbd> <kbd>↓</kbd> · <kbd>⌥</kbd>+<kbd>Home</kbd> <kbd>End</kbd></td><td>Move the slide up or down · to the start or end</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>X</kbd>, then <kbd>↑</kbd> <kbd>↓</kbd> and <kbd>Enter</kbd></td><td>Pick the slide up and put it down somewhere else</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>C</kbd> · <kbd>⌘</kbd>+<kbd>V</kbd> · <kbd>⌘</kbd>+<kbd>D</kbd></td><td>Copy · paste · duplicate the slide</td></tr>
-      <tr><td><kbd>H</kbd> · <kbd>Delete</kbd></td><td>Hide the slide from the show · delete it</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>Z</kbd> · <kbd>⇧</kbd>+<kbd>⌘</kbd>+<kbd>Z</kbd></td><td>Undo · redo</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>G</kbd> · <kbd>⌘</kbd>+<kbd>F</kbd></td><td>Every slide at once · find in the lesson</td></tr>
-      <tr><td>Click words on the slide</td><td>Type in place · <kbd>⌘</kbd>+<kbd>B</kbd> <kbd>I</kbd> <kbd>U</kbd> format · <kbd>⇧</kbd>+<kbd>Enter</kbd> new line · <kbd>Enter</kbd> or <kbd>Esc</kbd> done</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>\</kbd> · <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>=</kbd> <kbd>−</kbd> <kbd>0</kbd></td><td>Hide the right panel · zoom in, out, fit</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>S</kbd> · <kbd>⌘</kbd>+<kbd>E</kbd></td><td>Save to the Library · switch to Quiz studio</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>Enter</kbd> or <kbd>F5</kbd></td><td>Present from this slide</td></tr>
-      <tr><td><kbd>⌘</kbd>+<kbd>K</kbd></td><td>Find any command, or a slide by number or title</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> or <kbd>PgUp</kbd> <kbd>PgDn</kbd></td><td>Previous / next slide, with nothing selected</td></tr>
+      <tr><td><kbd>T</kbd> · <kbd>A</kbd></td><td>Add a text box · open Add, in the left panel</td></tr>
+      <tr><td><kbd>Enter</kbd> · <kbd>Esc</kbd></td><td>Type in the selected text box · done, then let go of the selection</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>B</kbd> <kbd>I</kbd> <kbd>U</kbd></td><td>Bold, italic, underline the selected text box</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> · with <kbd>⇧</kbd></td><td>Nudge the selected item · ten times as far</td></tr>
+      <tr><td><kbd>⌥</kbd>+<kbd>↑</kbd> <kbd>↓</kbd></td><td>Move the selected item one place earlier or later</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>C</kbd> · <kbd>⌘</kbd>+<kbd>V</kbd> · <kbd>⌘</kbd>+<kbd>D</kbd></td><td>Copy · paste · duplicate the selected item (copy and paste the slide when nothing is selected)</td></tr>
+      <tr><td><kbd>Delete</kbd></td><td>Delete the selected item</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>Z</kbd> · <kbd>⇧</kbd>+<kbd>⌘</kbd>+<kbd>Z</kbd> or <kbd>⌘</kbd>+<kbd>Y</kbd></td><td>Undo · redo</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>S</kbd> · <kbd>⌘</kbd>+<kbd>E</kbd></td><td>Save to the Library · switch between the Lesson and Quiz studios</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>Enter</kbd></td><td>Present from this slide</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>K</kbd></td><td>Find any command</td></tr>
       <tr><td><kbd>?</kbd> · <kbd>Esc</kbd></td><td>Show this list · close it</td></tr>
     </table>
     </div>
@@ -501,11 +474,11 @@ SF.installExplore(SF);
 <script src="js/rounds.js?v=1"></script>
 <script src="js/print.js?v=5"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=17"></script>
+<script src="js/shell.js?v=18"></script>
 <script src="js/palette.js?v=1"></script>
 <script src="js/lesson-runtime.js?v=2"></script>
-<script src="js/lab-engine.js?v=39"></script>
-<script src="js/docs.js?v=1"></script>
+<script src="js/lab-engine.js?v=40"></script>
+<script src="js/docs.js?v=2"></script>
 <script src="js/studio.js?v=18"></script>
 <script src="js/live-activities.js?v=1"></script>
 <script src="js/adapt.js?v=2"></script>

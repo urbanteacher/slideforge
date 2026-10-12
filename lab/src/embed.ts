@@ -4,7 +4,7 @@ import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { enterView, useStore, type LabView } from './model/store';
 import type { Deck, Slide } from './model/types';
-import { idbDelete, idbGet, idbSet } from './persist/idb';
+import { idbDelete, idbGet, idbKeys, idbSet } from './persist/idb';
 import { editableSlides, exportPptx, type SlideFormat } from './export/pptx';
 import { saveSlide } from './ui/SlideMenu';
 
@@ -32,9 +32,14 @@ export async function listSaved(): Promise<SavedRow[]> {
   return (await idbGet<SavedRow[]>(INDEX)) ?? [];
 }
 
+// Set by clearAll (Lecture setup → Clear everything): from then until the page reloads, nothing is
+// written, so the autosave, the page-hide flush and the shell's flush cannot put the lesson back.
+let cleared = false;
+
 /** Keep one deck under its own id, and list it for the shell's Open. */
 export function persistDeck(d: Deck): Promise<SavedRow[]> {
   return serial(async () => {
+    if (cleared) return [];
     const deck = { ...d, modified: Date.now() };
     await idbSet(key(d.id), deck);
     const rows = (await listSaved()).filter((r) => r.id !== d.id);
@@ -46,6 +51,7 @@ export function persistDeck(d: Deck): Promise<SavedRow[]> {
 
 /** The deck on screen, written now: the last-open slot and its own record. */
 export async function saveCurrent(): Promise<void> {
+  if (cleared) return;
   const st = useStore.getState();
   await idbSet('current', { deck: st.deck, slideId: st.slideId });
   await persistDeck(st.deck);
@@ -305,6 +311,14 @@ export const labApi = {
     if (!isLabDeck(d)) return false;
     await persistDeck(d);
     return true;
+  },
+  /** Every lesson this browser keeps here deleted, and the open one, and no more writes until the
+   *  page reloads (the shell reloads it straight after). Lecture setup → Clear everything. */
+  async clearAll(): Promise<void> {
+    cleared = true;
+    await serial(async () => {
+      for (const k of await idbKeys()) await idbDelete(k);
+    });
   },
   async remove(id: string) {
     await serial(async () => {

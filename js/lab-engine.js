@@ -244,8 +244,20 @@
     return fetch(e.file, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
 
-  function open(d) {
+  /** @param {any} d @param {boolean} [asIs] a restore point: this very deck, not the saved copy under its id */
+  function open(d, asIs) {
     whenReady(function (a) {
+      if (asIs && a.isLabDeck(d)) {
+        Promise.resolve(a.open(d)).then(function () {
+          writeCard(a.getDeck());
+          return a.flush();
+        }).then(function () {
+          refreshSaved();
+          if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
+          warmShow();
+        }, function () { if (SF.Shell && SF.Shell.stored) SF.Shell.stored(false); });
+        return;
+      }
       /* The card of a shipped deck this browser has not opened yet (seedShipped): the deck as built. */
       var ship = d && d.labCard && !d.labSaved && !saved.some(function (x) { return x.id === d.id; }) ? shippedEntry(d.id) : null;
       if (ship) { shippedDeck(ship).then(function (deck) { open(deck); }, function () { SF.toast('That lesson could not be loaded.'); }); return; }
@@ -305,6 +317,42 @@
     /* The last opened, so the Library puts it first. */
     if (SF.Store && SF.Store.save) SF.Store.save(d);
     open(JSON.parse(JSON.stringify(d)));
+    return true;
+  }
+
+  /* A saved game (SF.GameStore) opened in the Quiz studio. A game lives in a lesson in the lab, so it
+     opens as a lesson of its own holding it, built from the game as the lab builds a lesson's games.
+     The lesson's id comes from the game's, so opening the same game again opens that lesson, with
+     whatever was changed in it, rather than a fresh copy. */
+  /** @param {any} g */
+  function openGame(g) {
+    if (!enabled() || !g || !g.id) return false;
+    if (api) api.flush();
+    if (api && SF.History && SF.History.ready() && api.getDeck().slides.length) {
+      SF.History.snapshot(doc(), 'Before opening another lesson');
+    }
+    open({
+      id: 'quiz-' + g.id, title: g.title || 'Untitled game', theme: g.theme,
+      libraryGroup: g.libraryGroup || undefined,
+      slides: [{ id: 'quiz-' + g.id + '-game', type: 'game', gameId: g.id }]
+    });
+    return true;
+  }
+
+  /* File → New → Blank game, in the Quiz studio: a new multiple-choice game, kept in the game store
+     so Open saved quiz lists it, and opened as above. Other formats are in Browse, on the left. */
+  function newGame() {
+    if (!SF.makeGame || !SF.GameStore) return false;
+    var g = SF.makeGame('Untitled game', 'choice');
+    var lesson = api ? api.getDeck() : null;
+    if (lesson && lesson.libraryGroup) g.libraryGroup = lesson.libraryGroup;
+    /* Forced: an untouched blank is otherwise not written, and the lab builds the game from the store. */
+    if (SF.GameStore.save(g, { force: true }) === false) {
+      SF.toast('Not saved: this browser\u2019s storage is full, so the new game could not be kept.');
+      return false;
+    }
+    openGame(g);
+    SF.toast('New game: multiple choice. For another format, pick one in Browse, on the left.');
     return true;
   }
 
@@ -623,7 +671,9 @@
     fileSuffix: '.lesson.json',
     store: store,
     doc: doc,
-    setDoc: open,
+    setDoc: function (/** @type {any} */ d) { open(d); },
+    /* History → Restore: the restore point as it was, saved over the lesson, not the saved copy under its id. */
+    restoreDoc: function (/** @type {any} */ d) { open(d, true); },
     blank: function () { return api ? api.blank() : placeholder; },
     draw: function () { showFrame(true); whenReady(function (a) { if (a.setView) a.setView('lesson'); }); },
     describe: function (d) {
@@ -706,7 +756,11 @@
        same frame, shown as its games or its activities (lab/src/model/store.ts
        LabView). What is made there goes into the lesson; the classic studios'
        panes and canvas are not used. */
-    SF.Shell.register(studioView('game', 'quiz', 'Games'));
+    var quiz = studioView('game', 'quiz', 'Games');
+    /* New → Blank game, and File → Open saved quiz, in the Quiz studio (js/shell.js). */
+    quiz.newDoc = newGame;
+    quiz.openGame = openGame;
+    SF.Shell.register(quiz);
     SF.Shell.register(studioView('plan', 'activities', 'Activities'));
     document.documentElement.classList.add('lab-engine');
     seedShipped();
@@ -794,7 +848,10 @@
         /* The name and folder are the shell's chrome. Only when they change: rewriting
            the title field on every edit would move the caret of someone typing in it. */
         var chrome = d.title !== lastDeck.title || d.libraryGroup !== lastDeck.libraryGroup || d.id !== lastDeck.id;
+        var sameLesson = d.id === lastDeck.id;
         lastDeck = d; ws._dirty = true;
+        /* An edit, not another lesson opening: the quiet restore point (js/history.js). */
+        if (sameLesson && SF.Shell && SF.Shell.noteEdit && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.noteEdit();
         if (chrome) writeCard(d);
         if (chrome && SF.Shell && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
       }
@@ -894,6 +951,19 @@
           return a.restoreSaved(d).then(function (/** @type {boolean} */ ok) { if (ok) writeCard(d); return ok; });
         }));
       }).then(function (/** @type {boolean[]} */ done) { refreshSaved(); return done.filter(Boolean).length; });
+    },
+    /** Lecture setup → Clear everything: every Lesson-studio lesson in this browser deleted.
+        Resolves once they are gone; the lab writes nothing more until the page reloads. */
+    clearAll: function () {
+      saved = [];
+      if (api && api.clearAll) return Promise.resolve(api.clearAll());
+      /* The lab never started (no WebGL2, a failed load): nothing has the database open, so it goes whole. */
+      return new Promise(function (resolve) {
+        try {
+          var req = global.indexedDB.deleteDatabase('slideforge-studio');
+          req.onsuccess = req.onerror = req.onblocked = function () { resolve(undefined); };
+        } catch (e) { resolve(undefined); }
+      });
     },
     /** The id of the lesson open in the lab: the Library's card for it. */
     currentId: function () { return enabled() && api ? api.getDeck().id : ''; },
