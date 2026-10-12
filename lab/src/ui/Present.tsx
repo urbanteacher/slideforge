@@ -1,12 +1,11 @@
-import { ChevronLeft, ChevronRight, Maximize, StickyNote, Waves, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { reducesMotion, type MotionSetting } from '../engine/motion';
 import { DeckPlayer } from '../engine/player';
 import { useStore } from '../model/store';
 import { videoEmbed } from '../model/video';
 
-const MOTION_LABEL: Record<MotionSetting, string> = { system: 'Auto', reduce: 'Reduced', full: 'Full' };
-
+/** The lab's show, kept only for a standalone lab window with no SlideForge to hand it to (the
+ *  browser refused the window). It has no bar of its own: SlideForge's player and its HUD are the
+ *  show. Keys still work here: arrows and Space, Home and End, N for notes, F, and Esc. */
 export function Present() {
   // The show is the deck without its hidden slides; starting on a hidden one starts at the next shown.
   const full = useStore((s) => s.deck);
@@ -21,14 +20,7 @@ export function Present() {
   const player = useRef<DeckPlayer | null>(null);
   const [state, setState] = useState({ index: startIndex, step: 0, steps: 0 });
   const [notes, setNotes] = useState(false);
-  const [idle, setIdle] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  // This show's motion, for the room in front of it: Auto (the deck's setting, then the computer's),
-  // Reduced or Full. M, or the HUD's button, goes round the three; it lasts until the show ends.
-  const [motion, setMotion] = useState<MotionSetting>('system');
-  const cycleMotion = () => setMotion((m) => (m === 'system' ? 'reduce' : m === 'reduce' ? 'full' : 'system'));
-  useEffect(() => { player.current?.setMotion(motion); }, [motion]);
-  const calm = reducesMotion(motion, deck.motion);
 
   useEffect(() => {
     const fit = () => {
@@ -62,23 +54,17 @@ export function Present() {
       else if (e.key === 'End') p.goto(deck.slides.length - 1, 1, true);
       else if (e.key === 'n' || e.key === 'N') setNotes((v) => !v);
       else if (e.key === 'f' || e.key === 'F') toggleFs();
-      else if (e.key === 'm' || e.key === 'M') cycleMotion();
     };
     const toggleFs = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); };
     (window as unknown as { __sfExit?: () => void }).__sfExit = exit;
     (document.activeElement as HTMLElement | null)?.blur?.();
     addEventListener('keydown', on, true);
-    let t = 0;
-    const move = () => { setIdle(false); clearTimeout(t); t = window.setTimeout(() => setIdle(true), 2200); };
-    addEventListener('pointermove', move);
-    move();
-    return () => { removeEventListener('keydown', on, true); removeEventListener('pointermove', move); clearTimeout(t); };
+    return () => { removeEventListener('keydown', on, true); };
   }, []);
 
   const slide = deck.slides[state.index];
   // A YouTube or Vimeo layer plays in the real player, framed where the layer sits on the slide.
   const embeds = slide.layers.filter((l) => l.kind === 'video' && l.visible && l.box && videoEmbed(l.params)).map((l) => ({ id: l.id, box: l.box!, src: videoEmbed(l.params), title: l.name }));
-  const exit = () => (window as unknown as { __sfExit?: () => void }).__sfExit?.();
 
   return (
     <div className="present">
@@ -90,20 +76,7 @@ export function Present() {
             allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
         ))}
       </div>
-      <div className="present-progress" style={{ width: `${((state.index + 1) / deck.slides.length) * 100}%` }} />
       {notes && <div className="notes"><h4>Notes · slide {state.index + 1}</h4>{slide.notes || <span style={{ color: '#777' }}>No notes for this slide.</span>}</div>}
-      <div className={`present-hud${idle ? ' idle' : ''}`}>
-        <button title="Previous (←)" onClick={() => player.current?.prev()}><ChevronLeft size={16} /></button>
-        <span className="present-count">{state.index + 1} / {deck.slides.length}</span>
-        {state.steps > 0 && <span className="steps" title="Build steps on this slide">{Array.from({ length: state.steps }, (_, i) => <i key={i} className={i < state.step ? 'on' : ''} />)}</span>}
-        <button title="Next (→ / click)" onClick={() => player.current?.next()}><ChevronRight size={16} /></button>
-        <button title="Speaker notes (N)" onClick={() => setNotes((v) => !v)}><StickyNote size={15} /></button>
-        <button className={`present-motion${calm ? ' calm' : ''}`} aria-label={`Motion: ${MOTION_LABEL[motion]}${motion === 'system' ? (calm ? ', reduced' : ', full') : ''}`}
-          title={`Motion (M): ${MOTION_LABEL[motion]} — ${motion === 'system' ? `follows ${deck.motion === 'reduce' ? 'the deck, set to reduce' : 'this computer'}, so ${calm ? 'reduced' : 'full'} now` : motion === 'reduce' ? 'entrances fade, charts cross-fade, backdrops hold still' : 'every animation, even on a computer set to reduce motion'}`}
-          onClick={cycleMotion}><Waves size={15} /><span>{MOTION_LABEL[motion]}</span></button>
-        <button title="Fullscreen (F)" onClick={() => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); }}><Maximize size={15} /></button>
-        <button title="Exit (Esc)" onClick={exit}><X size={16} /></button>
-      </div>
     </div>
   );
 }

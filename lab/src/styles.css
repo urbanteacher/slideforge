@@ -301,17 +301,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .video-layouts .btn-soft { justify-content: flex-start; text-align: left; }
 .video-layouts .btn-soft.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 .present-embed { position: absolute; border: 0; background: #000; }
-.present-hud { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(18,18,20,.82); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; backdrop-filter: blur(12px); transition: opacity .35s, transform .35s var(--ease); z-index: 2; }
-.present-hud.idle { opacity: 0; transform: translateX(-50%) translateY(8px); pointer-events: none; }
-.present-hud button { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #ddd; }
-.present-hud button:hover { background: rgba(255,255,255,.08); color: #fff; }
-.present-count { font-variant-numeric: tabular-nums; color: #aaa; padding: 0 8px; font-size: 12px; }
-.steps { display: flex; gap: 4px; padding: 0 6px; }
-.steps i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.2); transition: background .2s; }
-.steps i.on { background: var(--accent); }
-.present-hud .present-motion span { font-size: 12px; color: #aaa; }
-.present-hud .present-motion.calm { color: var(--accent); }
-.present-progress { position: fixed; left: 0; bottom: 0; height: 3px; background: var(--accent); transition: width .5s var(--ease); z-index: 2; }
 .notes { position: fixed; right: 18px; bottom: 76px; width: 380px; max-height: 40vh; overflow: auto; background: rgba(18,18,20,.92); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px 16px; color: #ddd; font-size: 15px; line-height: 1.5; white-space: pre-wrap; z-index: 2; animation: pop .2s var(--ease); }
 .notes h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 @keyframes fadein { from { opacity: 0 } }
@@ -407,9 +396,11 @@ input, select, textarea { font: inherit; color: inherit; }
    nothing between the others; the layers keep room for a few rows and their tools, so the tools never sit
    over the next section's heading. When the open sections need more than the pane has, the pane scrolls. */
 .fold.open { min-height: 132px; }
-.fold.open.fold-layers { min-height: 150px; }
+.fold.open.fold-layers { min-height: min(330px, 55vh); }
 aside.left:not(.browse-pane) { overflow-y: auto; }
-.fold.open.fold-layers { flex: 1 1 50%; }
+/* The layers come first: a slide has a dozen of them, and 150px showed two rows, so the list never
+   matched the slide. They keep room for about six rows and their tools, and take twice the share. */
+.fold.open.fold-layers { flex: 2 1 50%; }
 .fold.open.fold-layouts { flex: 1 1 50%; }
 .fold:not(.open) { flex: 0 0 auto; }
 .fold-head { padding: 8px 8px 6px; }

@@ -644,6 +644,30 @@
         if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
       } catch (e) {}
     }
+    /* A lab window on its own asks for SlideForge's show (lab/src/ui/showInSlideForge.ts): it opens
+       this page with ?labPresent=1 and, once told the page is ready, sends its lesson. The lesson is
+       opened as a lab deck, then presented here, with this player's own bar. Only the window that
+       opened this one is listened to, and only from this app or a local development server. */
+    var labPresent = false;
+    try { labPresent = new URLSearchParams(location.search).get('labPresent') === '1'; } catch (e) {}
+    if (labPresent && global.opener) {
+      var trusted = function (o) { return o === location.origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o); };
+      var onShow = function (ev) {
+        var m = ev.data;
+        if (ev.source !== global.opener || !trusted(ev.origin) || !m || m.type !== 'sf-lab-present' || !m.deck || !Array.isArray(m.deck.slides)) return;
+        global.removeEventListener('message', onShow);
+        open(m.deck);
+        var tries = 0;
+        (function startWhenOpen() {
+          if (api && api.getDeck() && api.getDeck().id === m.deck.id) { ws.play(); return; }
+          if (++tries < 150) setTimeout(startWhenOpen, 100);
+          else SF.toast('The lesson could not be opened for the show.');
+        })();
+      };
+      global.addEventListener('message', onShow);
+      try { global.opener.postMessage({ type: 'sf-lab-ready' }, '*'); } catch (e) {}
+      try { if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || '')); } catch (e) {}
+    }
     var asked = shipped ? null : askedLesson(askedKey);
     if (asked) {
       open(JSON.parse(JSON.stringify(asked)));

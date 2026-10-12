@@ -9,11 +9,12 @@ import type { Deck } from '../model/types';
 import { FormatBar } from './FormatBar';
 import { Menu } from './Menu';
 import { hasShell, ShellLeft, ShellRight } from './ShellRow';
+import { present } from './showInSlideForge';
 
 export function TopBar({ embedded = false }: { embedded?: boolean }) {
   const deck = useStore((s) => s.deck);
   const saveState = useStore((s) => s.saveState);
-  const { set, mutate, loadDeck, showToast } = useStore.getState();
+  const { mutate, loadDeck, showToast } = useStore.getState();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const openFile = async (f: File) => {
@@ -75,8 +76,8 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
       <FormatBar />
       <div className="spacer" />
       <div className="tb-run" role="group" aria-label="Edit and show">
-        {/* Embedded, the shell's Present is the one: it runs this show, full screen. */}
-        {!embedded && <button className="btn-accent" title="Slideshow, full screen (⌘↵)" onClick={() => set({ presenting: true })}><Play size={14} />Present</button>}
+        {/* Embedded, the shell's Present is the one. On its own, Present opens SlideForge's show. */}
+        {!embedded && <button className="btn-accent" title="Present in SlideForge, with its full controls (⌘↵)" onClick={present}><Play size={14} />Present</button>}
         {embedded && hasShell() && <ShellRight />}
       </div>
       </div>

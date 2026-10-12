@@ -11,6 +11,7 @@ import { Gallery } from './Gallery';
 import { Inspector } from './Inspector';
 import { LeftPanel } from './LeftPanel';
 import { Present } from './Present';
+import { present } from './showInSlideForge';
 import { Stage } from './Stage';
 import { TopBar } from './TopBar';
 import { toggleFormat } from './format';
@@ -97,7 +98,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       const k = e.key.toLowerCase();
       if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? st.redo() : st.undo(); return; }
       if (mod && k === 'y') { e.preventDefault(); st.redo(); return; }
-      if (mod && e.key === 'Enter') { e.preventDefault(); st.set({ presenting: true }); return; }
+      if (mod && e.key === 'Enter') { e.preventDefault(); present(); return; }
       if (mod && k === 'd' && sel) { e.preventDefault(); st.duplicateLayer(sel.id); return; }
       if (mod && sel && (k === 'b' || k === 'i' || k === 'u')) { e.preventDefault(); toggleFormat(sel, k === 'b' ? 'bold' : k === 'i' ? 'italic' : 'underline'); return; }
       if (mod && k === 'c' && sel) { st.set({ clipboard: structuredClone(sel) }); return; }

@@ -8,7 +8,8 @@ import { Menu } from './Menu';
 type Shell = { act?: (name: string, arg?: number) => void };
 const shell = (): Shell | undefined =>
   window.parent !== window ? (window.parent as unknown as { SF?: { LabEngine?: Shell } }).SF?.LabEngine : undefined;
-const act = (name: string, arg?: number) => shell()?.act?.(name, arg);
+/** Press one of the shell's own buttons. */
+export const act = (name: string, arg?: number) => shell()?.act?.(name, arg);
 
 export const hasShell = () => !!shell()?.act;
 
