@@ -103,6 +103,21 @@ function repairAddresses(d: Deck): number {
   return n;
 }
 
+/** A shipped lesson keeps each picture once (tools/build-lab-lessons.mjs packPictures): each
+ *  '@picture:<n>' is that picture again, as a deck made here would carry it. */
+function unpackPictures(d: Deck & { pictures?: string[] }) {
+  const pics = d.pictures;
+  if (!Array.isArray(pics)) return;
+  delete d.pictures;
+  const walk = (v: unknown): unknown => {
+    if (typeof v === 'string') { const m = /^@picture:(\d+)$/.exec(v); return m && pics[+m[1]] !== undefined ? pics[+m[1]] : v; }
+    if (Array.isArray(v)) { for (let i = 0; i < v.length; i++) v[i] = walk(v[i]); return v; }
+    if (v && typeof v === 'object') { for (const k of Object.keys(v)) (v as Record<string, unknown>)[k] = walk((v as Record<string, unknown>)[k]); return v; }
+    return v;
+  };
+  walk(d);
+}
+
 export function convertClassic(c: ClassicDeck): Deck {
   const slides = Array.isArray(c.slides) ? c.slides : [];
   const images = addresses;
@@ -228,8 +243,10 @@ export const labApi = {
   saveState: () => useStore.getState().saveState,
   isLabDeck,
   blank: (): Deck => blankDeck(),
-  /** Open a document the shell hands over: a lab deck as it is, a SlideForge lesson as its lab copy. */
-  async open(d: unknown): Promise<{ converted: boolean; dropped: number }> {
+  /** Open a document the shell hands over: a lab deck as it is, a SlideForge lesson as its lab copy.
+   *  `prebuilt`: the lab copy the app ships of this built-in lesson (assets/lab-lessons/), used in
+   *  place of converting it here when this browser has no copy of its own yet. */
+  async open(d: unknown, prebuilt?: unknown): Promise<{ converted: boolean; dropped: number }> {
     if (isLabDeck(d)) { show(d); return { converted: false, dropped: 0 }; }
     const c = d as ClassicDeck;
     if (!c || !c.id) return { converted: false, dropped: 0 };
@@ -238,6 +255,22 @@ export const labApi = {
       const d2 = carryOnce(saved, c);
       show(d2);
       if (d2 !== saved) await persistDeck(d2);
+      return { converted: false, dropped: 0 };
+    }
+    if (isLabDeck(prebuilt) && prebuilt.carried === CARRIED) {
+      unpackPictures(prebuilt);
+      // The shipped copy, made this lesson's own: its id, its original, its name and folder. Its slides
+      // name the slide each came from by place ('#4', tools/build-lab-lessons.mjs), the same lesson's
+      // slides in the same order (js/lesson-hash.js), so each takes this lesson's own slide id.
+      const own: Deck = { ...structuredClone(prebuilt), id: `lab-${c.id}`, sourceId: c.id, title: c.title || prebuilt.title };
+      const ids = (c.slides ?? []).map((s) => (s as { id?: string }).id);
+      for (const s of own.slides) {
+        const at = /^#(\d+)$/.exec(s.sourceSlideId ?? '');
+        if (at) { if (ids[+at[1]]) s.sourceSlideId = ids[+at[1]]; else delete s.sourceSlideId; }
+      }
+      if (c.libraryGroup) own.libraryGroup = c.libraryGroup;
+      show(own);
+      await persistDeck(own);
       return { converted: false, dropped: 0 };
     }
     const deck = convertClassic(c);
@@ -255,6 +288,9 @@ export const labApi = {
     return true;
   },
   listSaved,
+  /** A SlideForge lesson converted, and nothing else: not shown, not saved. For the build of the copies
+   *  the app ships (tools/build-lab-lessons.mjs). */
+  convert: (c: ClassicDeck): Deck => convertClassic(c),
   /** A saved lab deck as it is stored, for the backup (js/docs.js). */
   async readSaved(id: string): Promise<Deck | null> {
     const d = await idbGet<Deck>(key(id));

@@ -232,6 +232,18 @@
     return any ? Object.assign({}, d, { labGames: games }) : d;
   }
 
+  /* The copy of a built-in lesson the app ships, converted ahead of time (js/lab-lessons.js, built by
+     tools/build-lab-lessons.mjs): used when this browser has no lab copy of the lesson yet, and only
+     for the lesson it was made from. A lesson edited since, or rebuilt from a changed js/lessons.js,
+     has another fingerprint (js/lesson-hash.js) and is converted here as before. */
+  /** @param {any} d @returns {Promise<any>} */
+  function prebuilt(d) {
+    var all = SF.LAB_LESSONS || {}, e = d && d.sourceKey ? all[d.sourceKey] : null;
+    if (!e || !SF.lessonHash || saved.some(function (r) { return r.id === 'lab-' + d.id; })) return Promise.resolve(null);
+    if (SF.lessonHash(SF.normalizeDeck(JSON.parse(JSON.stringify(d)))) !== e.hash) return Promise.resolve(null);
+    return fetch(e.file, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  }
+
   function open(d) {
     whenReady(function (a) {
       /* The card of a shipped deck this browser has not opened yet (seedShipped): the deck as built. */
@@ -242,7 +254,8 @@
          made before the converter kept feedback and timers can take them, once. */
       var row = d && saved.filter(function (x) { return x.id === d.id; })[0];
       var source = row && row.sourceId && SF.Store && SF.Store.get ? SF.Store.get(row.sourceId) : null;
-      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, lessonGames(figureStills(source))) : a.open(lessonGames(figureStills(d)));
+      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, lessonGames(figureStills(source)))
+        : prebuilt(d).then(function (pre) { return pre ? a.open(d, pre) : a.open(lessonGames(figureStills(d))); });
       Promise.resolve(run).then(function (r) {
         if (r === false) {
           var ship = fromCard ? shippedEntry(d.id) : null;
@@ -847,6 +860,11 @@
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
     openLesson: openLesson, openKey: openKey,
     /** The lesson on screen as a PowerPoint file, every slide a picture with its notes (File → Export). */
+    /** A lesson converted for the copies the app ships, with its figures' stills and its games: not
+        shown, not saved (tools/build-lab-lessons.mjs). */
+    convertForBuild: function (/** @type {any} */ d) {
+      return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) { return a.convert(lessonGames(figureStills(d))); });
+    },
     /** The slide on screen on its own: 'png', 'pptx' or 'pptx-edit' (File → Export → This slide). */
     saveSlide: function (/** @type {string} */ format) { whenReady(function (a) { a.saveSlide(format); }); },
     /* editableText: the plain words become PowerPoint text boxes over a picture drawn without them. */
