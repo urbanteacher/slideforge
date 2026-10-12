@@ -1072,7 +1072,9 @@
         sprint.busy = true;
         sprint.picked = i;
         pad.dataset.locked = '1';
-        ws.send(JSON.stringify({ t: 'sprintA', choice: i }));
+        /* The sprint's id, so the relay can drop a tap from a run that has
+           already ended. */
+        ws.send(JSON.stringify({ t: 'sprintA', choice: i, id: sprint.id }));
         if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
       });
       pad.appendChild(b);
@@ -1145,6 +1147,27 @@
   }
 
   var ended = false;
+  /* The relay hands our seat to a newer connection with the same identity
+     (a reload, or a second tab) and says so before closing this one. */
+  var replaced = false;
+
+  /* An answer is pending from the tap until the relay's `locked` confirms
+     it, or `answerRefused` says why it did not count. The pad still locks on
+     the tap, so it cannot be sent twice; only the words wait. */
+  var answerPending = false, answerTimer = null;
+  function answerSent() {
+    answerPending = true;
+    clearTimeout(answerTimer);
+    answerTimer = setTimeout(function () {
+      if (!answerPending) return;
+      $('qTime').textContent = 'Not confirmed yet';
+    }, 5000);
+  }
+  function answerSettled() {
+    answerPending = false;
+    clearTimeout(answerTimer);
+  }
+  function lockWord() { return answerPending ? 'Sending\u2026' : 'Locked in'; }
   function rememberIdentity(m) {
     if (!m.resumeToken || !pending) return;
     try {
@@ -1181,12 +1204,16 @@
     ws.onerror = function () { fail('Could not reach the quiz. Check the Wi-Fi and try again.'); };
     ws.onclose = function () {
       if (ended) return;
+      var wasReplaced = replaced;
+      replaced = false;
       $('reconnectBtn').disabled = false;
       $('reconnectBtn').style.display = '';
       if ($('scJoin').classList.contains('on')) return;
       stopTick();
       $('oTitle').textContent = 'Disconnected';
-      $('oNote').textContent = 'The connection to the quiz dropped.';
+      $('oNote').textContent = wasReplaced
+        ? 'This lesson was opened in another tab or on another device. Rejoin to bring it back here.'
+        : 'The connection to the quiz dropped.';
       $('oScore').textContent = me.score;
       $('oRank').textContent = '';
       show('scOver');
@@ -1311,6 +1338,7 @@
         break;
 
       case 'question':
+        answerSettled();
         askQuestion(m);
         roundTick(m);
         break;
@@ -1359,7 +1387,31 @@
         show('scWait');
         break;
 
+      case 'replaced':
+        replaced = true;
+        break;
+
+      case 'answerRefused':
+        answerSettled();
+        if (m.switch) {
+          $('sdNote').textContent = m.message || 'Your answer stays as it was.';
+          break;
+        }
+        $('qTime').textContent = m.reason === 'late' ? 'Too late' : m.reason === 'invalid' ? 'Not sent' : 'Not counted';
+        $('qTime').classList.remove('hurry');
+        if ($('creditNote')) {
+          $('creditNote').textContent = m.message || 'That answer did not count.';
+          $('creditNote').classList.remove('mine');
+          $('creditNote').hidden = false;
+          clearTimeout(creditTimer);
+          creditTimer = setTimeout(function () { $('creditNote').hidden = true; }, 6000);
+        }
+        /* Unreadable, not late: the question is still open, so let them try again. */
+        if (m.reason === 'invalid') unlockAnswer();
+        break;
+
       case 'locked':
+        answerSettled();
         if (Array.isArray(m.sort)) {
           if ($('qPad')._sortLock) $('qPad')._sortLock(m.sort);
           $('qTime').textContent = 'Locked in';
@@ -1375,7 +1427,11 @@
         /* Asked only once the answer is safely in, and only if the game wants
            it — a question they can no longer change is the right moment to
            ask how sure they were. */
-        if (askConfidence) askSure();
+        if (askConfidence) {
+          askSure();
+          /* Back after a reconnect having already said: show it, do not ask again. */
+          if (typeof m.sure === 'boolean') paintSure(m.sure);
+        }
         break;
 
       case 'signalled':
@@ -1829,10 +1885,8 @@
     $('sureWrap').style.display = 'none';
   }
 
-  function sendSure(sure) {
-    if (!ws || ws.readyState !== 1) return;
+  function paintSure(sure) {
     var wrap = $('sureWrap');
-    if (wrap.classList.contains('answered')) return;
     wrap.classList.add('answered');
     Array.prototype.forEach.call(wrap.querySelectorAll('.pick'), function (b) {
       var mine = (b.dataset.sure === '1') === sure;
@@ -1840,6 +1894,13 @@
       b.classList.toggle('dim', !mine);
     });
     $('sureLead').textContent = sure ? 'Noted — you were sure' : 'Noted — a guess';
+  }
+
+  function sendSure(sure) {
+    if (!ws || ws.readyState !== 1) return;
+    var wrap = $('sureWrap');
+    if (wrap.classList.contains('answered')) return;
+    paintSure(sure);
     ws.send(JSON.stringify({ t: 'sure', sure: sure }));
     if (navigator.vibrate) { try { navigator.vibrate(10); } catch (e) {} }
   }
@@ -2300,11 +2361,12 @@
       lock.addEventListener('click', function () {
         if (chosen < 0 || pad.dataset.locked || !ws || ws.readyState !== 1) return;
         pad.dataset.locked = '1';
+        answerSent();
         ws.send(JSON.stringify({ t: 'answer', choice: chosen }));
         words.classList.add('locked');
         lock.disabled = true;
         lock.textContent = 'Locked in — watch the screen';
-        $('qTime').textContent = 'Locked in';
+        $('qTime').textContent = lockWord();
         $('qTime').classList.remove('hurry');
         if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
       });
@@ -2432,6 +2494,7 @@
         e.stopPropagation();
         if (pad.dataset.locked || !ws || ws.readyState !== 1) return;
         pad.dataset.locked = '1';
+        answerSent();
         ws.send(JSON.stringify({ t: 'answer', choice: i, sure: opt[1] }));
         row.remove();
         lockPad(i);
@@ -2454,6 +2517,7 @@
       if (pad.dataset.locked) return;
       if (predicting) { offerBet(pad, i); return; }
       pad.dataset.locked = '1';
+      answerSent();
       ws.send(JSON.stringify({ t: 'answer', choice: i }));
       lockPad(i);
       if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
@@ -2481,6 +2545,7 @@
     var value = Number($('qRange').value);
     if (!isFinite(value)) return;
     wrap.dataset.locked = '1';
+    answerSent();
     ws.send(JSON.stringify({ t: 'answer', value: value }));
     lockPlaced(value);
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
@@ -2495,7 +2560,7 @@
     $('qNumMine').textContent = 'Sent: ' + withUnit(value);
     $('qNumMine').style.display = '';
     $('qNumLead').textContent = 'Answer sent';
-    $('qTime').textContent = 'Locked in';
+    $('qTime').textContent = lockWord();
     $('qTime').classList.remove('hurry');
   }
 
@@ -2506,6 +2571,7 @@
     var text = $('qText').value.trim();
     if (!text) { try { $('qText').focus(); } catch (e) {} return; }
     wrap.dataset.locked = '1';
+    answerSent();
     ws.send(JSON.stringify({ t: 'answer', text: text }));
     lockTyped(text);
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
@@ -2518,6 +2584,7 @@
     /* Authored indices in the learner's sequence. The relay checks it is a
        real permutation before it keeps it. */
     var order = orderItems.map(function (item) { return item.i; });
+    answerSent();
     ws.send(JSON.stringify({ t: 'answer', order: order }));
     lockOrder(order);
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
@@ -2540,7 +2607,7 @@
     $('qOrderMine').textContent = 'Order sent';
     $('qOrderMine').style.display = '';
     $('qOrderLead').textContent = 'Order sent';
-    $('qTime').textContent = 'Locked in';
+    $('qTime').textContent = lockWord();
   }
 
   function lockTyped(text) {
@@ -2554,7 +2621,7 @@
     $('qTypeLead').textContent = document.body.dataset.gameStyle === 'emoji'
       ? 'Guess sent — watch the reveal'
       : 'Answer sent';
-    $('qTime').textContent = 'Locked in';
+    $('qTime').textContent = lockWord();
     $('qTime').classList.remove('hurry');
   }
 
@@ -2587,6 +2654,23 @@
     btn.disabled = false;
   }
 
+  /* Undo an optimistic lock after the relay could not read the answer. */
+  function unlockAnswer() {
+    var pad = $('qPad');
+    delete pad.dataset.locked;
+    Array.prototype.forEach.call(pad.children, function (b) { b.classList.remove('mine', 'dim'); });
+    var words = pad.querySelector('.locked');
+    if (words) words.classList.remove('locked');
+    ['qTypeWrap', 'qNumWrap', 'qOrderWrap'].forEach(function (id) {
+      var w = $(id);
+      if (!w) return;
+      delete w.dataset.locked;
+      w.classList.remove('locked');
+    });
+    if ($('qOrderSend')) $('qOrderSend').disabled = false;
+    Array.prototype.forEach.call(pad.querySelectorAll('button[disabled]'), function (b) { b.disabled = false; });
+  }
+
   function lockPad(choice) {
     var pad = $('qPad');
     pad.dataset.locked = '1';
@@ -2594,7 +2678,7 @@
       if (i === choice) b.classList.add('mine');
       else b.classList.add('dim');
     });
-    $('qTime').textContent = 'Locked in';
+    $('qTime').textContent = lockWord();
     $('qTime').classList.remove('hurry');
   }
 
