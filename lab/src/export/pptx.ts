@@ -33,11 +33,41 @@ export function editable(l: Layer): boolean {
   return true;
 }
 
+/** A layer's box as the slide shows it, turned: the upright rectangle round it. */
+function bounds(l: Layer) {
+  const b = l.box!, a = ((b.rot || 0) * Math.PI) / 180;
+  const w = Math.abs(b.w * Math.cos(a)) + Math.abs(b.h * Math.sin(a)), h = Math.abs(b.w * Math.sin(a)) + Math.abs(b.h * Math.cos(a));
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+  return { x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 };
+}
+
+/**
+ * The layers set as text on this slide. PowerPoint draws its text boxes over the picture, so words
+ * that something in the picture covers (a panel, a photo, words with an effect, laid over them) would
+ * come out on top of it. Those stay in the picture with what covers them, and the slide keeps its
+ * order. Layers with no box (grain, a backdrop, an effect over the whole slide) are not counted.
+ * Layers are drawn first to last, so the last is on top.
+ */
+export function editableIds(slide: Slide): Set<string> {
+  const out = new Set<string>();
+  const above: ReturnType<typeof bounds>[] = [];
+  for (let i = slide.layers.length - 1; i >= 0; i--) {
+    const l = slide.layers[i];
+    if (!l.visible || l.face === 'back' || !l.box) continue;
+    const b = bounds(l);
+    const covered = above.some((o) => o.x0 < b.x1 && b.x0 < o.x1 && o.y0 < b.y1 && b.y0 < o.y1);
+    if (editable(l) && !covered) out.add(l.id);
+    else above.push(b);
+  }
+  return out;
+}
+
 /** The slide's editable words, measured as the renderer draws them: the size it fits them to and the
  *  height its lines take, so a box sits where the words were. */
 export function slideTexts(slide: Slide): PptxText[] {
   const groups = groupSizes(slide.layers);
-  return slide.layers.filter(editable).map((l) => {
+  const ids = editableIds(slide);
+  return slide.layers.filter((l) => ids.has(l.id)).map((l) => {
     const p = l.params as Record<string, unknown>;
     const g = p.fitGroup ? groups.get(String(p.fitGroup)) : undefined;
     const size = g ?? textSize(l);
@@ -63,7 +93,7 @@ export async function editableSlides(deck: Deck, onProgress?: (done: number, tot
   const out: PptxSlide[] = [];
   for (const s of deck.slides) {
     const texts = slideTexts(s);
-    const hide = new Set(s.layers.filter(editable).map((l) => l.id));
+    const hide = editableIds(s);
     out.push({ image: renderStill(s, deck, width, 'image/jpeg', 2, quality, hide), notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, texts });
     onProgress?.(out.length, deck.slides.length);
     // A breath between slides, so the page stays responsive while a long deck is drawn.
