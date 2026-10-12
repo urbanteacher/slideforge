@@ -64,16 +64,18 @@ function Show() {
     toastTimer.current = setTimeout(() => setToast(''), 2200);
   };
 
-  // What one Next does: the slide's own builds first, then the room (or the next slide, without one).
+  // What one Next does: in the lobby, start the room; otherwise the slide's own builds first, then the room
+  // (or, without one, the next slide).
   const next = useCallback(() => {
     const p = player.current, r = roomRef.current;
     if (!p) return;
     if (!roomOn) { p.next(); return; }
-    if (p.settle() || p.build()) return;
     const act = nextAction({ room: r.state, steps, at: r.at, sinceAsked: r.sinceAsked() });
-    if (act === 'start') r.begin(stepAt(steps, p.index));
-    else if (act === 'ask' || act === 'reveal' || act === 'advance') r.next();
-    else if (act === 'wait') say(r.at < 0 ? 'Waiting for players to join' : 'Give them a moment, then press Next to show the answer');
+    if (act === 'start') { r.begin(stepAt(steps, p.index)); return; }
+    if (act === 'wait' && (r.at < 0 || r.state.phase === 'lobby')) { say('Waiting for players to join'); return; }
+    if (p.settle() || p.build()) return;
+    if (act === 'ask' || act === 'reveal' || act === 'advance') r.next();
+    else if (act === 'wait') say('Give them a moment, then press Next to show the answer');
     else if (act === 'end') exit();
   }, [roomOn, steps, exit]);
 

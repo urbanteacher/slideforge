@@ -23,13 +23,20 @@ export function closeStudioShow(): void {
   useShow.setState({ open: false, room: false });
 }
 
-/** ?studioRoom=1 turns the studio's own room on. Read from this page, and from the page around it when the
- *  lab is the shell's frame (lab-app/index.html?embed=1 has no query of its own). */
-export function studioRoomEnabled(): boolean {
+function readFlag(): boolean {
   const flag = (search: string) => new URLSearchParams(search).get('studioRoom') === '1';
   try { if (flag(location.search)) return true; } catch { /* no location */ }
   try { return window.parent !== window && flag(window.parent.location.search); } catch { return false; }
 }
+
+// Read once, when the lab loads. The shell takes its query string off the address when ?lesson= opens a lesson
+// (js/lab-engine.js, frozen), which can be before this frame has loaded: use ?studioRoom=1 on its own, and open
+// the lesson from the Library.
+const FLAG = readFlag();
+
+/** ?studioRoom=1 turns the studio's own room on. Read from this page, and from the page around it when the
+ *  lab is the shell's frame (lab-app/index.html?embed=1 has no query of its own). */
+export function studioRoomEnabled(): boolean { return FLAG; }
 
 /** The relay's socket: this page's own host, as classic does. The development server has no relay, so it is
  *  SlideForge's local one. */
