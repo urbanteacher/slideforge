@@ -1364,6 +1364,9 @@
             blurb: 'Downloads "' + doc.title + '" as a single file.' }
         ];
         if (active.key === 'deck') {
+          if (active.lab && SF.LabEngine && SF.LabEngine.exportPptx) {
+            items.push({ id: 'pptx', title: 'PowerPoint (.pptx)', blurb: 'Every slide as a picture, exactly as it looks here, with your speaker notes in PowerPoint\u2019s notes. Opens in PowerPoint, Keynote and Google Slides. The words are not editable, and video, motion and games show as a still.' });
+          }
           items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results. A student copy, or a teacher copy with each check as its answer.' });
           items.push({
             id: 'md',
@@ -1376,7 +1379,7 @@
           blurb: 'Downloads every presentation and game together as a backup.'
         });
         if (served) {
-          items.splice(active.key === 'deck' ? 2 : 1, 0, {
+          items.splice(items.length - 1, 0, {
             id: 'folder', title: 'Everything, into the app folder',
             blurb: 'Writes each one to data/ next to the app, so the folder is self-contained and can be committed.'
           });
@@ -1394,6 +1397,7 @@
                slide fully built, as a picture, with its games in place. */
             if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.printDeck ? SF.LabEngine.printDeck() : SF.LabEngine.showDeck());
             if (it.id === 'pdf') return SF.Print.open(active.doc());
+            if (it.id === 'pptx') return SF.LabEngine.exportPptx();
             if (it.id === 'md') return exportMarkdown();
             if (it.id === 'folder') return exportAllToFolder();
             exportBundle();

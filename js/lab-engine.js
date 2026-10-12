@@ -837,6 +837,16 @@
     },
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
     openLesson: openLesson, openKey: openKey,
+    /** The lesson on screen as a PowerPoint file, every slide a picture with its notes (File → Export). */
+    exportPptx: function () {
+      SF.toast('Making the PowerPoint\u2026');
+      whenReady(function (a) {
+        a.pptx(function (/** @type {number} */ done, /** @type {number} */ total) {
+          if (done === total || done % 10 === 0) SF.toast('Making the PowerPoint\u2026 ' + done + ' of ' + total + ' slides');
+        }).then(function () { SF.toast('Exported a PowerPoint: each slide a picture, with its speaker notes'); },
+          function () { SF.toast('The PowerPoint could not be made'); });
+      });
+    },
     /** Every lesson the lab has saved, whole, for the backup (js/docs.js). The one on screen is written first. */
     savedDecks: function () {
       return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) {

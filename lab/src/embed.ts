@@ -5,6 +5,7 @@ import { renderStill } from './export/exporters';
 import { enterView, useStore, type LabView } from './model/store';
 import type { Deck, Slide } from './model/types';
 import { idbDelete, idbGet, idbSet } from './persist/idb';
+import { exportPptx } from './export/pptx';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
 // over its workspace and drives it through this: the shell keeps the title, File, Library, Save and
@@ -290,6 +291,12 @@ export const labApi = {
   },
   stills,
   outline,
+  /** The lesson as a PowerPoint file, every slide a picture (export/pptx.ts). Resolves when it has downloaded. */
+  async pptx(onProgress?: (done: number, total: number) => void) {
+    const deck = useStore.getState().deck;
+    const shots = await stills(1920, onProgress, 0.92);
+    await exportPptx(deck, shots.map((s) => ({ image: s.image, notes: s.notes, hidden: s.hidden, name: s.name })));
+  },
   /** The slides of a SlideForge lesson the lab cannot build: its games and activities. */
   cannotBuild: (slides: SFSlide[]) => (slides ?? []).filter((s) => !convertsSlide(s)).map((s) => s.id).filter(Boolean) as string[],
   async flush() {
