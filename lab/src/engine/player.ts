@@ -1,5 +1,5 @@
 import type { Deck, Layer, Slide } from '../model/types';
-import { EASE, schedule } from './anim';
+import { EASE, animTotal, schedule } from './anim';
 import { ALL_KINDS } from './registry';
 import { MODEL_PLOT, showMedia, toggleMedia, fileClip, mediaPlaying } from './raster';
 import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps } from './scene';
@@ -112,8 +112,34 @@ export class DeckPlayer {
 
   private emit() { this.opts.onChange?.(this.index, this.built ? this.steps() : this.clicks.length, this.steps()); }
 
+  /** When the layers already started on this slide have all arrived (seconds, slide clock). */
+  private arrivedAt(): number {
+    const sch = schedule(this.slide, this.clicks);
+    let end = 0;
+    for (const l of this.slide.layers) {
+      const s = sch.start.get(l.id);
+      if (s === undefined || !Number.isFinite(s)) continue;
+      const lines = (sch.lines.get(l.id) ?? []).filter(Number.isFinite);
+      end = Math.max(end, Math.max(s, ...lines) + animTotal(l));
+    }
+    return end;
+  }
+  /**
+   * Next while the slide is still arriving finishes it, as PowerPoint does, rather than moving on
+   * past words the room has not seen: everything already in motion jumps to where it ends. A
+   * second Next then builds or moves on. True when it finished something.
+   */
+  settle(): boolean {
+    if (this.built) return false;
+    const t = this.now() - this.slideStart, end = this.arrivedAt();
+    if (t >= end - 0.05) return false;
+    this.slideStart -= end - t;
+    return true;
+  }
+
   next() {
     if (this.trans) this.finishTransition();
+    if (this.settle()) return;
     // A layer a button has taken over carries on from where it was sent: Next moves it one further,
     // and past its last state moves the show on.
     for (const l of this.slide.layers) {

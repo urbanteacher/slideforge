@@ -398,6 +398,9 @@
     if (!player || !onLab || dir < 0) return false;
     var s = P.deck && P.deck.slides[P.idx];
     if (!isLabSlide(s)) return false;
+    /* Still arriving: this press finishes the slide (lab/src/engine/player.ts settle), the next moves on.
+       The bar's ›, the keys, the clicker and the phone's Next on the notes page all come through here. */
+    if (player.settle && player.settle()) return true;
     if (player.build()) return true;
     /* Present on its own, with no room to mark it: once the question's builds are shown, Next shows
        the lab's answer. Live, the room's reveal does (js/live.js revealNow). A question read before
