@@ -12,7 +12,7 @@ import { slideOf, useStore } from '../model/store';
 import type { Box, Layer, Slide } from '../model/types';
 import { newGesture } from './controls';
 import { toggleFormat } from './format';
-import { addMediaFile } from './insert';
+import { addMediaFile, choosePicture } from './insert';
 import { moveInOrder, moveLine, moveUnit, siblingsOf, type Unit } from './order';
 import { useSlideContextMenu } from './SlideMenu';
 import { FEEDBACK } from './Engagement';
@@ -391,6 +391,8 @@ export function Stage() {
     // Double-click goes inside a group to the part under the pointer, and straight into its words.
     selectLayer(hit.id);
     set({ partId: hit.id });
+    // A picture: straight to choosing its file, the way double-click goes into a text's words.
+    if (hit.kind === 'image') { choosePicture(hit.id); return; }
     if (hit.kind === 'text' || editsOnCanvas(hit)) set({ editingTextId: hit.id });
   };
 

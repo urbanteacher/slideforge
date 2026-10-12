@@ -534,7 +534,7 @@ function SlideDesign() {
       <Section title="Speaker notes">
         <textarea className="textarea" placeholder="What you want to say on this slide… (press N while presenting)" value={slide.notes} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.notes = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} />
       </Section>
-      <div className="hint">Transition, backdrop motion and the build order are in <b>Animate</b>. Drop an image anywhere on the canvas, or paste one with <kbd>⌘V</kbd>; double-click text to edit it in place.</div>
+      <div className="hint">Transition, backdrop motion and the build order are in <b>Animate</b>. Drop an image anywhere on the canvas, or paste one with <kbd>⌘V</kbd>. Double-click a picture to replace it, or text to edit it in place.</div>
     </>
   );
 }

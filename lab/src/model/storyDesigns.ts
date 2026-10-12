@@ -98,7 +98,9 @@ export const HERO_EXAMPLE: HeroArgs = {
 export function heroSlide(st: LayoutStyle, a: HeroArgs): Slide {
   const ink = shade(st), bottom = a.side === 'bottom';
   const layers: Layer[] = [];
-  if (a.src) layers.push(createLayer('image', { name: 'Picture', box: { x: 0, y: 0, w: 1920, h: 1080, rot: 0 }, params: { src: a.src, fit: 'cover', tone: 'light', motion: 'zoom', motionSecs: '30' }, anim: fade(0) }));
+  // Always there, empty until a picture is chosen: an empty image layer draws a placeholder, so it is
+  // plain where the photo goes and it can be selected and a picture dropped on it.
+  layers.push(createLayer('image', { name: 'Picture', box: { x: 0, y: 0, w: 1920, h: 1080, rot: 0 }, params: { src: a.src ?? '', fit: 'cover', tone: 'light', motion: 'zoom', motionSecs: '30' }, anim: fade(0) }));
   // Shape gradients run 0° left to right, 90° top to bottom (engine/raster.ts rasterShape).
   // Two of the same fade, one over the other: a see-through gradient draws lighter than its stops,
   // and doubling it keeps the words' side properly dark while the far side stays clear.
@@ -228,9 +230,10 @@ export function stepsSlide(st: LayoutStyle, a: StepsArgs): Slide {
     layers.push(text(`Step ${i + 1}`, x.head, { x: tx + 112, y: y - 2, w: colW - 112, h: 52, rot: 0 }, { font: st.body, weight: '700', size: 42, color: st.ink }, rise(d)));
     if (x.body?.trim()) layers.push(text(`Step ${i + 1} line`, x.body, { x: tx + 112, y: y + 50, w: colW - 112, h: rowH - 60, rot: 0 }, { font: st.body, weight: '400', size: 28, color: st.muted, lineHeight: 1.3 }, rise(d + 0.1)));
   });
-  if (a.src) {
+  {
+    // The picture's place stays on the slide with no picture chosen yet (see heroSlide).
     layers.push(shape('Frame', { x: px, y: 160, w: 800, h: 620, rot: 0 }, { fill: '#ffffff', radius: 32 }, { type: right ? 'slideLeft' : 'slideRight', duration: 1, delay: 0.2, easing: 'expoOut' }));
-    layers.push(createLayer('image', { name: 'Picture', box: { x: px, y: 160, w: 800, h: 620, rot: 0 }, params: { src: a.src, fit: 'cover', radius: 32, tone: 'light' }, anim: { type: right ? 'slideLeft' : 'slideRight', duration: 1, delay: 0.2, easing: 'expoOut' } }));
+    layers.push(createLayer('image', { name: 'Picture', box: { x: px, y: 160, w: 800, h: 620, rot: 0 }, params: { src: a.src ?? '', fit: 'cover', radius: 32, tone: 'light' }, anim: { type: right ? 'slideLeft' : 'slideRight', duration: 1, delay: 0.2, easing: 'expoOut' } }));
   }
   if (a.caption?.trim()) layers.push(text('Caption', a.caption, { x: px, y: 805, w: 800, h: 70, rot: 0 }, { font: st.body, weight: '400', size: 26, color: st.muted, lineHeight: 1.25 }, fade(0.8)));
   const s = storySlide(st, 'Steps and a picture', layers);
@@ -288,9 +291,10 @@ export function showcaseSlide(st: LayoutStyle, a: ShowcaseArgs): Slide {
   const layers: Layer[] = [];
   if (a.kicker?.trim()) layers.push(text('Kicker', a.kicker, { x: L, y: 130, w: W, h: 40, rot: 0 }, { font: st.body, weight: '600', size: 28, color: st.accent2 ?? st.accent, tracking: 0.2, uppercase: true }, rise(0)));
   layers.push(text('Heading', a.title || ' ', { x: L, y: 180, w: W, h: 100, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 76, color: st.ink, tracking: -0.025, lineHeight: 1.04 }, rise(0.1)));
-  if (a.src) {
+  {
+    // The screenshot's place stays on the slide with none chosen yet (see heroSlide).
     layers.push(shape('Frame', { x: L, y: 310, w: 1180, h: 620, rot: 0 }, { fill: st.panel, radius: 24 }, rise(0.3)));
-    layers.push(createLayer('image', { name: 'Screenshot', box: { x: L + 12, y: 322, w: 1156, h: 596, rot: 0 }, params: { src: a.src, fit: 'contain', radius: 16, tone: 'light' }, anim: rise(0.3) }));
+    layers.push(createLayer('image', { name: 'Screenshot', box: { x: L + 12, y: 322, w: 1156, h: 596, rot: 0 }, params: { src: a.src ?? '', fit: 'contain', radius: 16, tone: 'light' }, anim: rise(0.3) }));
   }
   const rx = 1380, rw = 420;
   if (a.big?.trim()) {
@@ -491,9 +495,10 @@ export function coverSlide(st: LayoutStyle, a: CoverArgs): Slide {
   const logos = (a.logos ?? []).filter(Boolean).slice(0, 3);
   const layers: Layer[] = [];
   if (a.word?.trim()) layers.push(text('Outlined word', a.word, { x: 1030, y: 70, w: 1100, h: 560, rot: 0 }, { font: st.display, weight: '700', size: 560, color: st.accent, tracking: -0.04, lineHeight: 0.9, fit: 'grow', hollow: true, outline: 3, outlineColor: st.accent }, fade(0.1), 0.22));
-  if (a.src) {
+  {
+    // The portrait's place stays on the slide with none chosen yet (see heroSlide).
     layers.push(shape('Disc', { x: 1180, y: 360, w: 600, h: 600, rot: 0 }, { shape: 'ellipse', fill: st.accent }, { type: 'zoomIn', duration: 1.1, delay: 0.3, easing: 'expoOut' }));
-    layers.push(createLayer('image', { name: 'Portrait', box: { x: 1225, y: 455, w: 500, h: 625, rot: 0 }, params: { src: a.src, fit: 'contain', focus: [0.5, 1], tone: 'light' }, anim: rise(0.6) }));
+    layers.push(createLayer('image', { name: 'Portrait', box: { x: 1225, y: 455, w: 500, h: 625, rot: 0 }, params: { src: a.src ?? '', fit: 'contain', focus: [0.5, 1], tone: 'light' }, anim: rise(0.6) }));
   }
   logos.forEach((src, i) => layers.push(createLayer('image', { name: `Logo ${i + 1}`, box: { x: L + i * 260, y: 92, w: 220, h: 64, rot: 0 }, params: { src, fit: 'contain', tone: 'light' }, anim: fade(0.2 + i * 0.1) })));
   if (a.kicker?.trim()) layers.push(text('Kicker', a.kicker, { x: L, y: 290, w: 1100, h: 40, rot: 0 }, { font: st.body, weight: '600', size: 28, color: st.accent2 ?? st.accent, tracking: 0.2, uppercase: true }, rise(0)));

@@ -634,6 +634,16 @@ function rasterImage(layer: Layer): Raster | null {
     ctx.beginPath(); ctx.roundRect(0, 0, w, h, r); ctx.clip();
     ctx.fillStyle = 'rgba(128,128,128,0.25)'; ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = 'rgba(128,128,128,0.6)'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]); ctx.strokeRect(1, 1, w - 2, h - 2);
+    // No picture chosen yet (not one still loading): say so, so the empty place reads as a slot to fill.
+    if (!p.src && w > 160 && h > 90) {
+      const size = Math.max(18, Math.min(40, Math.min(w, h) * 0.07));
+      ctx.setLineDash([]); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(110,110,116,0.95)';
+      ctx.font = `600 ${size}px Inter, system-ui, sans-serif`;
+      ctx.fillText(String(layer.name || 'Picture'), w / 2, h / 2 - size * 0.7);
+      ctx.font = `400 ${size * 0.7}px Inter, system-ui, sans-serif`;
+      ctx.fillText('Double-click to choose a picture, or drop one here', w / 2, h / 2 + size * 0.5, w - 40);
+    }
     return p.src ? null : { canvas, rect: [-pad, -pad, rw, rh] };
   }
   const iw = img.naturalWidth, ih = img.naturalHeight;
@@ -863,7 +873,7 @@ const videoCanvas = new Map<string, HTMLCanvasElement | OffscreenCanvas>();
 function rasterVideo(layer: Layer): Raster | null {
   const p = layer.params;
   // A YouTube or Vimeo link: the service's still, with a note that the link was understood. The
-  // show frames the real player over it (ui/Present.tsx).
+  // show frames the real player over it (js/lab-stage.js).
   if (videoEmbed(p)) {
     const { canvas, ctx, w, h, rect } = boxCanvas(layer, 2);
     const r = Math.min(Number(p.radius ?? 0), w / 2, h / 2);

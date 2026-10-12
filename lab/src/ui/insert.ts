@@ -22,15 +22,58 @@ function centreBox(iw: number, ih: number, x?: number, y?: number) {
 
 const layerName = (f: File, fallback: string) => f.name.replace(/\.[^.]+$/, '').slice(0, 28) || fallback;
 
+/** Put a picture in a picture layer. On a Story design's slide the design's own fields change too
+ *  (the picture, portrait, screenshot or a logo it builds from), so building the slide again keeps it. */
+export function setPicture(layerId: string, src: string) {
+  const st = useStore.getState();
+  st.updateSlide((s) => {
+    const l = s.layers.find((x) => x.id === layerId);
+    if (!l) return;
+    l.params.src = src;
+    const args = s.recipe?.args as Record<string, unknown> | undefined;
+    if (!args) return;
+    if (['Picture', 'Screenshot', 'Portrait'].includes(l.name) && 'src' in args) args.src = src;
+    const logo = /^Logo (\d+)$/.exec(l.name);
+    if (logo && Array.isArray(args.logos)) {
+      const i = Number(logo[1]) - 1, list = args.logos as unknown[];
+      if (typeof list[i] === 'string' || list[i] === undefined) list[i] = src;
+      else if (list[i] && typeof list[i] === 'object') (list[i] as { src?: string }).src = src;
+    }
+  });
+  st.selectLayer(layerId);
+}
+
+/** Choose a file for a picture layer: what a double-click on a picture does. */
+export function choosePicture(layerId: string) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  // On the page while it is open: a browser can refuse to open a chooser for an input it does not have.
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.onchange = async () => {
+    const f = input.files?.[0];
+    input.remove();
+    if (f) setPicture(layerId, await fileToDataUrl(f));
+  };
+  input.addEventListener('cancel', () => input.remove());
+  input.click();
+}
+
 export async function addImageFile(f: File, x?: number, y?: number) {
   const src = await fileToDataUrl(f);
-  // Dropped on an empty picture box — a placeholder, a header or footer logo slot — it fills that box.
+  const st = useStore.getState();
+  const slide = st.deck.slides.find((s) => s.id === st.slideId);
+  const at = (l: { box?: { x: number; y: number; w: number; h: number } }) => !!l.box && x !== undefined && y !== undefined
+    && x >= l.box.x && x <= l.box.x + l.box.w && y >= l.box.y && y <= l.box.y + l.box.h;
+  // A picture that is selected is replaced: by a paste, or by a drop on it. A drop on an empty picture
+  // box (a placeholder, a header or footer logo slot) fills it, selected or not. Anywhere else, a new
+  // picture is added.
+  const chosen = slide?.layers.find((l) => l.id === st.selectedId && l.kind === 'image');
+  if (chosen && (x === undefined || at(chosen))) { setPicture(chosen.id, src); return; }
   if (x !== undefined && y !== undefined) {
-    const st = useStore.getState();
-    const slide = st.deck.slides.find((s) => s.id === st.slideId);
-    const empty = slide && [...slide.layers].reverse().find((l) => l.kind === 'image' && l.visible && !l.params.src && l.box
-      && x >= l.box.x && x <= l.box.x + l.box.w && y >= l.box.y && y <= l.box.y + l.box.h);
-    if (empty) { st.updateLayer(empty.id, (l) => { l.params.src = src; }); st.selectLayer(empty.id); return; }
+    const empty = slide && [...slide.layers].reverse().find((l) => l.kind === 'image' && l.visible && !l.params.src && at(l));
+    if (empty) { setPicture(empty.id, src); return; }
   }
   const img = new Image();
   img.src = src;
