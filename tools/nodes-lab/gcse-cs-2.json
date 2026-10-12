@@ -1,0 +1,436 @@
+{
+  "from": "https://the-teaching-model.vercel.app/framework/gcse-cs/2",
+  "framework": "Computer Science (GCSE)",
+  "stages": [
+    {
+      "n": 1,
+      "short": "Define",
+      "task": "Define the CPU and explain it in your own words."
+    },
+    {
+      "n": 2,
+      "short": "Describe",
+      "task": "Describe the main components of the CPU."
+    },
+    {
+      "n": 3,
+      "short": "Calculate",
+      "task": "Calculate the time for one clock cycle at 3.2 GHz, in nanoseconds."
+    },
+    {
+      "n": 4,
+      "short": "Draw",
+      "task": "Write your design as pseudocode."
+    },
+    {
+      "n": 5,
+      "short": "Complete",
+      "task": "Trace this program: LOAD 7, ADD 5, SUB 2, OUTPUT."
+    },
+    {
+      "n": 6,
+      "short": "Discuss",
+      "task": "Discuss the advantages and disadvantages of a higher clock speed for the media department."
+    },
+    {
+      "n": 7,
+      "short": "Explain",
+      "task": "Explain the fetch stage, and why the PC is advanced."
+    },
+    {
+      "n": 8,
+      "short": "Suggest",
+      "task": "A school media department edits video. What do its users need from a CPU, and under what constraints?"
+    },
+    {
+      "n": 9,
+      "short": "Compare",
+      "task": "Compare a 4 GHz dual-core with a 3 GHz quad-core."
+    },
+    {
+      "n": 10,
+      "short": "Evaluate",
+      "task": "Who is affected when CPUs are marketed on GHz alone?"
+    },
+    {
+      "n": 11,
+      "short": "Justify",
+      "task": "Which laptop should the department buy? Justify your answer."
+    },
+    {
+      "n": 12,
+      "short": "Design",
+      "task": "Plan a simulator of the CPU. What will you keep, and what will you leave out?"
+    },
+    {
+      "n": 13,
+      "short": "Refine",
+      "task": "Test your simulator, then fix any failure."
+    }
+  ],
+  "stage": {
+    "n": 2,
+    "short": "Describe",
+    "ask": "What are its characteristics?",
+    "task": "Describe the main components of the CPU.",
+    "outcome": "A list of components, each with its specific role"
+  },
+  "research": {
+    "relationship": {
+      "id": "meaning",
+      "label": "Term → precise meaning",
+      "requires": "The right term, with its exact meaning.",
+      "difficulty": "Gives the right word with an imprecise description or an incorrect definition."
+    },
+    "apart": {
+      "theme": "cpu-agency",
+      "title": "CPU parts and what they hold or do",
+      "findings": 15,
+      "boards": [
+        "AQA",
+        "Cambridge",
+        "OCR",
+        "Pearson"
+      ],
+      "a": [
+        "Registers (PC, MAR, MDR, CIR, ACC)",
+        "Hold one thing: an address, an instruction or a value."
+      ],
+      "b": [
+        "Control unit",
+        "Directs the work: decodes instructions and sends the control signals that coordinate the other parts."
+      ],
+      "test": "Does it hold something, or do something? A register only holds."
+    },
+    "findings": {
+      "word": "describe",
+      "n": 253,
+      "types": {
+        "strong_answer": 72,
+        "misconception": 69,
+        "imprecise_wording": 32,
+        "found_difficult": 23,
+        "stuck_at_level": 22,
+        "slip_or_calculation_error": 13,
+        "not_applied_to_scenario": 12,
+        "exam_technique": 6,
+        "used_given_information": 4
+      }
+    }
+  },
+  "recall": {
+    "question": "What must I retrieve before I can work with the CPU at GCSE?",
+    "items": [
+      {
+        "term": "CPU",
+        "meaning": "Central Processing Unit: a component that executes program instructions.",
+        "use": "The anchor term for every element.",
+        "used": false,
+        "links": {
+          "n": 39,
+          "misconceptions": 20,
+          "reports": 17,
+          "boards": [
+            "AQA",
+            "Cambridge",
+            "OCR",
+            "Pearson",
+            "WJEC"
+          ]
+        }
+      },
+      {
+        "term": "Components",
+        "meaning": "Control unit (decodes instructions and sends the control signals that coordinate the fetch-decode-execute cycle; it does not execute them itself), ALU, registers (program counter PC, memory address register MAR, memory data register MDR, current instruction register CIR, accumulator ACC), cache, buses and clock.",
+        "use": "Describe features and trace the cycle.",
+        "used": true,
+        "links": {
+          "n": 43,
+          "misconceptions": 16,
+          "reports": 13,
+          "boards": [
+            "AQA",
+            "Cambridge",
+            "OCR",
+            "Pearson",
+            "WJEC"
+          ]
+        }
+      },
+      {
+        "term": "Fetch-decode-execute",
+        "meaning": "The repeated cycle: the PC gives the address, the instruction passes through the MAR, MDR and CIR, is decoded and executed, and results go to the accumulator. The PC then moves on.",
+        "use": "Explain the process and trace programs.",
+        "used": false,
+        "links": {
+          "n": 12,
+          "misconceptions": 6,
+          "reports": 8,
+          "boards": [
+            "AQA",
+            "Cambridge",
+            "OCR",
+            "WJEC"
+          ]
+        }
+      },
+      {
+        "term": "Clock speed and units",
+        "meaning": "Clock pulses per second, in hertz (Hz). 1 GHz = one billion cycles per second = 1,000,000,000 Hz; CPUs today commonly run at 3 to 5 GHz (1980s: 3 to 5 MHz). A cycle is not a completed instruction.",
+        "use": "Calculate accurately and avoid overclaiming.",
+        "used": false,
+        "links": {
+          "n": 11,
+          "misconceptions": 6,
+          "reports": 8,
+          "boards": [
+            "AQA",
+            "Cambridge",
+            "Pearson",
+            "WJEC"
+          ]
+        }
+      },
+      {
+        "term": "Performance factors",
+        "meaning": "Clock speed, cache size (multi-level L1, L2, L3), number of cores and memory. Cores each run their own instructions but can wait for each other; overclocking raises speed but also power use and heat.",
+        "use": "Explain, compare and evaluate performance.",
+        "used": false,
+        "links": {
+          "n": 6,
+          "misconceptions": 1,
+          "reports": 4,
+          "boards": [
+            "AQA",
+            "Pearson",
+            "WJEC"
+          ]
+        }
+      },
+      {
+        "term": "GPU",
+        "meaning": "A processor with many simpler cores for parallel tasks.",
+        "use": "Compare and transfer.",
+        "used": false,
+        "links": {
+          "n": 0,
+          "misconceptions": 0,
+          "reports": 0,
+          "boards": []
+        }
+      }
+    ],
+    "checks": [
+      "What does CPU stand for?",
+      "Name three registers.",
+      "What are the three stages of the cycle?",
+      "How many Hz are in 1 GHz?",
+      "Name three factors that affect performance."
+    ],
+    "bridge": "Explain how a larger cache improves performance."
+  },
+  "routine": {
+    "wrongIdeas": 31,
+    "rows": [
+      {
+        "n": 1,
+        "name": "Decode",
+        "share": 24,
+        "prompt": "The command word is “describe”. Size the answer from the question; in an exam, the marks say how far to go.",
+        "guards": "exam technique, not applied to the scenario, misusing the information given"
+      },
+      {
+        "n": 2,
+        "name": "Retrieve",
+        "share": 46,
+        "prompt": "Bring: Components. Keep apart Registers (PC, MAR, MDR, CIR, ACC) and Control unit.",
+        "guards": "misconceptions, found difficult"
+      },
+      {
+        "n": 3,
+        "name": "Reason",
+        "share": 7,
+        "prompt": "Mostly recall here: finish the pair, the term with its exact meaning.",
+        "guards": "stopped short"
+      },
+      {
+        "n": 4,
+        "name": "Refine",
+        "share": 8,
+        "prompt": "Use technical terms where accuracy depends on them; keep the rest clear and natural.",
+        "guards": "imprecise wording"
+      },
+      {
+        "n": 5,
+        "name": "Review",
+        "share": 14,
+        "prompt": "Re-read the question: does the answer do everything it asks?",
+        "guards": "slips and calculation errors"
+      }
+    ]
+  },
+  "ladder": {
+    "relation": "Component → its role in running a program",
+    "probe": "“Take one component. What does it do while a program runs?”",
+    "hint": "“The PC holds an address. The address of what?” Then withdraw the hint and ask for the full description of each component.",
+    "transfer": "“Describe the main parts of a computer around the CPU: main memory, secondary storage, input and output.”",
+    "repair": "In a later description, gives each component with its role, without being asked."
+  },
+  "join": {
+    "rule": "Complete what this question requires: no more reasoning than it asks for, and no less precision.",
+    "size": "Describe components: pair each name with its role",
+    "links": [
+      "each component",
+      "its specific role"
+    ],
+    "refused": "a surface answer (“the brains of the computer”), an action for a purpose (“the MAR fetches”), or a confusable term (“main memory” for “RAM”)",
+    "quote": {
+      "text": "Careful that the purpose is not an action such as fetches, takes, retrieves.",
+      "cite": "OCR GCSE J277/01, June 2024, Q6(b)"
+    },
+    "recall": true
+  },
+  "worked": {
+    "units": [
+      "decodes instructions and sends control signals that coordinate the other parts",
+      "performs arithmetic and logical operations",
+      "tiny, fast stores inside the CPU",
+      "the PC holds the address of the next instruction to be fetched",
+      "fast memory close to the processor, for frequently used data and instructions",
+      "provides timing signals that keep the CPU's operations in step"
+    ],
+    "labels": [
+      "Control unit: its purpose",
+      "ALU: its purpose",
+      "Registers: what they are",
+      "The PC: what it holds",
+      "Cache: its purpose",
+      "Clock: its purpose"
+    ],
+    "text": "Control unit: decodes instructions and sends control signals that coordinate the other parts.\nALU: performs arithmetic and logical operations.\nRegisters: tiny, fast stores inside the CPU; the PC holds the address of the next instruction to be fetched.\nCache: fast memory close to the processor, for frequently used data and instructions.\nClock: provides timing signals that keep the CPU's operations in step."
+  },
+  "students": {
+    "A": {
+      "answer": "The CPU has a hard drive and RAM.",
+      "feedback": "“Take one component. What does it do while a program runs?” If that is not enough: “The PC holds an address. The address of what?” Then withdraw the hint and ask for the full description of each component."
+    },
+    "B": {
+      "answer": "Control unit: decodes instructions and sends control signals.\nALU: the brain of the CPU.\nRegisters: store data.\nCache: stores data.\nClock: controls the speed of the computer.",
+      "why": "Only the control unit has its exact purpose. “Stores data” could be any memory, so it says nothing about registers or cache; the ALU as “the brain” is a label; and the clock sends timing signals, it does not “control the speed”.",
+      "feedback": "“What exactly does it hold or do? Say it without a label.”"
+    },
+    "C": {
+      "feedback": "A fresh, independent task: “Describe the main parts of a computer around the CPU: main memory, secondary storage, input and output.”"
+    }
+  },
+  "marks": {
+    "pattern": [
+      {
+        "when": "Divide the marks by the number of things asked for",
+        "earns": "1 mark per thing: state each point. 2 marks per thing: a point and its expansion."
+      },
+      {
+        "when": "“Describe one …”, 2 marks",
+        "earns": "Mark 1: the point. Mark 2: how it works or why it helps.",
+        "example": "AQA 8525/2, June 2022, Q15.2, a security measure beyond a password: a code sent to a phone (1); a hacker would also need the phone (1)."
+      },
+      {
+        "when": "3 marks",
+        "earns": "Three points; or a name (1) and two points describing it; or three steps in order.",
+        "example": "AQA 8525/2, June 2023, Q8.2, the role of the clock, control unit and a register: 1 mark for each component. OCR J277/01, June 2023, Q4(b), name and describe one threat: the threat (1), what it does (1) … and what it achieves (1)."
+      },
+      {
+        "when": "“Describe two benefits …”, 4 marks",
+        "earns": "Each benefit (1) and its application to the scenario (1).",
+        "example": "OCR J277/01, June 2024, Q2(b)(i), wired network at an airport: fast connection (1) so check-in is not delayed (1). The same 2 + 2 shape for “one benefit and one drawback”."
+      },
+      {
+        "when": "“Describe two differences …”, 2 marks",
+        "earns": "1 mark per difference. Each must say both sides.",
+        "example": "AQA 8525/2, June 2022, Q14.2: a LAN covers a small area, a WAN a wide one (1)."
+      },
+      {
+        "when": "Describe the steps or the process",
+        "earns": "1 mark per step, in order and precise.",
+        "example": "OCR J277/02, June 2022, Q3(c), linear search: start at the first value (1); check every value in order (1). “One by one” alone is not enough."
+      }
+    ],
+    "rejects": [
+      "Vague roles: “controls the computer”, “fast memory”.",
+      "Steps that miss one of the ideas the mark needs."
+    ],
+    "example": "AQA 8525/2, June 2023, Q8.2: describe the role of the clock, control unit and a register",
+    "weak": "Vague roles: the control unit “controls the computer”; a register is “fast memory”, with no word on what it holds.",
+    "strong": "Gives each component its specific job, such as a register holding the address of the next instruction.",
+    "marking": "One mark for each relevant point. A few also credit an expansion of a point."
+  },
+  "readings": [
+    {
+      "student": "A",
+      "solo": "Prestructural: misses the point (one written answer)",
+      "bottleneck": "Retrieval",
+      "gap": "Possible explanation: Names storage and memory, not the CPU’s own components. Probe: “Take one component. What does it do while a program runs?” If that is not enough: “The PC holds an address. The address of what?” Then withdraw the hint and ask for the full description of each component. Teaching response, if the probe confirms it: secure the term and its exact meaning before building on it."
+    },
+    {
+      "student": "B",
+      "solo": "Unistructural (one written answer)",
+      "bottleneck": "Comprehension",
+      "gap": "Possible explanation: Only the control unit has its exact purpose. “Stores data” could be any memory, so it says nothing about registers or cache; the ALU as “the brain” is a label; and the clock sends timing signals, it does not “control the speed”. Probe: “What exactly does it hold or do? Say it without a label.” Teaching response, if the probe confirms it: secure the term and its exact meaning before building on it."
+    },
+    {
+      "student": "C",
+      "solo": "Multistructural: meets the stage's demand (one written answer)",
+      "bottleneck": null,
+      "gap": "On this task, nothing shown missing. Next check, not an observation: A fresh, independent task: “Describe the main parts of a computer around the CPU: main memory, secondary storage, input and output.” Teaching response: if it does not transfer, check the new topic's knowledge first, then return to the hint."
+    }
+  ],
+  "sources": [
+    {
+      "label": "OCR GCSE J277/01, June 2024",
+      "qs": [
+        "Q6(b)",
+        "Q2(b)(i)"
+      ],
+      "qp": "https://www.ocr.org.uk/Images/727534-question-paper-computer-systems.pdf",
+      "ms": "https://www.ocr.org.uk/Images/727652-mark-scheme-computer-systems.pdf",
+      "er": "https://www.ocr.org.uk/Images/727492-examiners-report-computer-systems.pdf"
+    },
+    {
+      "label": "AQA GCSE 8525/2, June 2023",
+      "qs": [
+        "Q8.2"
+      ],
+      "qp": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2023/june/AQA-85252-QP-JUN23.PDF",
+      "ms": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2023/june/AQA-85252-MS-JUN23.PDF",
+      "er": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2023/june/AQA-85252-WRE-JUN23.PDF"
+    },
+    {
+      "label": "AQA GCSE 8525/2, June 2022",
+      "qs": [
+        "Q15.2",
+        "Q14.2"
+      ],
+      "qp": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2022/june/AQA-85252-QP-JUN22.PDF",
+      "ms": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2022/june/AQA-85252-MS-JUN22.PDF",
+      "er": "https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2022/june/AQA-85252-WRE-JUN22.PDF"
+    },
+    {
+      "label": "OCR GCSE J277/01, June 2023",
+      "qs": [
+        "Q4(b)"
+      ],
+      "qp": "https://www.ocr.org.uk/Images/704760-question-paper-computer-systems.pdf",
+      "ms": "https://www.ocr.org.uk/Images/704882-mark-scheme-computer-systems.pdf",
+      "er": "https://www.ocr.org.uk/Images/704717-examiners-report-computer-systems.pdf"
+    },
+    {
+      "label": "OCR GCSE J277/02, June 2022",
+      "qs": [
+        "Q3(c)"
+      ],
+      "qp": "https://www.ocr.org.uk/Images/677831-question-paper-computational-thinking-algorithms-and-programming.pdf",
+      "ms": "https://www.ocr.org.uk/Images/677962-mark-scheme-computational-thinking-algorithms-and-programming.pdf",
+      "er": "https://www.ocr.org.uk/Images/688264-examiners-report-computational-thinking-algorithms-and-programming.pdf"
+    }
+  ]
+}

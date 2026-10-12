@@ -179,17 +179,17 @@ const LINES_C = [
   { t: 'Route B, what\'s missing: no cores, cache, battery life or heat.', role: 'Point', c: C.U },
   { t: 'I\'m choosing Route B, because it gives stronger evidence for my question.', role: 'Because', c: C.A },
 ];
-S('Answers: Student A', [...nav('Question'), eyebrow('Answers'), ...answerTabs(0),
+S('Answers: weak', [...nav('Question'), eyebrow('Answers'), ...answerTabs(0),
   ...elementDots(0, 5, 80, 340),
-  T(stu.A.answer, 80, 420, 1760, 90, { size: 60, weight: '600', color: C.muted, name: 'Student A answer' }, enter()),
+  T(stu.A.answer, 80, 420, 1760, 90, { size: 60, weight: '600', color: C.muted, name: 'Weak answer' }, enter()),
   R(80, 458, 900, 6, { radius: 3, fill: C.X, strokeWidth: 0, name: 'Strike' }, onClick({ type: 'wipeRight' })),
   T('No useful elements: chooses nothing, neither a revealing line nor what is missing.', 80, 560, 1760, 60, { size: 36, weight: '700' }, after({ delay: 0 })),
   T('What may be missing: interpretation. Read what the question is actually asking.', 80, 640, 1760, 60, { size: 34, color: C.muted }, onClick()),
   R(80, 760, 1760, 160, { fill: C.green, strokeWidth: 0, radius: 18 }, onClick()),
   R(80, 760, 10, 160, { fill: C.A, strokeWidth: 0, radius: 0, name: 'Accent' }, after({ delay: 0 })),
   T(`Feedback for this answer: ${stu.A.feedback}`, 120, 784, 1680, 120, { size: 32 }, after({ delay: 0 })),
-], { notes: `Student A: ${stu.A.answer}\n0 of 5 elements. Feedback: ${stu.A.feedback}` });
-S('Answers: Student B', [...nav('Question'), eyebrow('Answers'), ...answerTabs(1),
+], { notes: `The weak answer: ${stu.A.answer}\n0 of 5 elements. Feedback: ${stu.A.feedback}` });
+S('Answers: stable', [...nav('Question'), eyebrow('Answers'), ...answerTabs(1),
   ...elementDots(2, 5, 80, 340),
   T(LINES_C[0].t, 80, 420, 1760, 60, { size: 44, weight: '600', highlight: true, highlightColor: '#cfe3f2' }, enter()),
   T(LINES_C[3].t, 80, 490, 1760, 60, { size: 44, weight: '600', highlight: true, highlightColor: '#cfe3f2' }, enter({ delay: 0.1 })),
@@ -198,8 +198,8 @@ S('Answers: Student B', [...nav('Question'), eyebrow('Answers'), ...answerTabs(1
   R(80, 810, 1760, 120, { fill: C.green, strokeWidth: 0, radius: 18 }, onClick()),
   R(80, 810, 10, 120, { fill: C.A, strokeWidth: 0, radius: 0, name: 'Accent' }, after({ delay: 0 })),
   T(`Feedback for this answer: ${stu.B.feedback}`, 120, 846, 1680, 60, { size: 34 }, after({ delay: 0 })),
-], { notes: `Student B: ${stu.B.answer}\n2 of 5 elements: ${stu.B.why}\nFeedback: ${stu.B.feedback}` });
-S('Answers: Student C', [...nav('Question'), eyebrow('Answers'), ...answerTabs(2),
+], { notes: `The stable answer: ${stu.B.answer}\n2 of 5 elements: ${stu.B.why}\nFeedback: ${stu.B.feedback}` });
+S('Answers: excellent', [...nav('Question'), eyebrow('Answers'), ...answerTabs(2),
   ...elementDots(5, 5, 80, 340),
   ...LINES_C.flatMap((ln, i) => {
     const y = 420 + i * 92;
@@ -212,8 +212,8 @@ S('Answers: Student C', [...nav('Question'), eyebrow('Answers'), ...answerTabs(2
       T(ln.role, 1500, y + 10, 300, 40, { size: 28, weight: '800', align: 'center', color: ln.c, name: `Role label ${ln.role}` }, shared ? fadeIn() : after({ delay: 0 })),
     ];
   }),
-  note('Every unit: the worked example. The two points Student B had are in blue; the three links B left out arrive one per click.', 900),
-], { transition: { type: 'morph', duration: 0.9 }, notes: `Student C, the worked example: ${wk.text}\nUnits: ${wk.units.map((u, i) => `${i + 1} ${wk.labels[i]}: ${u}`).join('; ')}.` });
+  note('Every unit: the worked example. The two points the stable answer had are in blue; the three links B left out arrive one per click.', 900),
+], { transition: { type: 'morph', duration: 0.9 }, notes: `The excellent answer, the worked example: ${wk.text}\nUnits: ${wk.units.map((u, i) => `${i + 1} ${wk.labels[i]}: ${u}`).join('; ')}.` });
 S('Next check', [...nav('Question'), eyebrow('Next check'),
   heading('A fresh, independent task', 186, 64),
   R(80, 340, 1760, 300, { fill: C.green, strokeWidth: 0, radius: 18 }, fadeIn()),
@@ -263,7 +263,7 @@ S('The mental operations', [...nav('How to answer'), eyebrow('The mental operati
   heading('Operations you move between, not steps in a fixed order.', 186, 52),
   T('You might go back to retrieve after interpreting the question, or rebuild a connection after checking.', 80, 270, 1760, 50, { size: 30, color: C.muted }, fadeIn()),
   ...[
-    ['Interpret', 'Choose one route: the most revealing line, or what is missing.', C.X, 'Where Student A’s answer breaks down'],
+    ['Interpret', 'Choose one route: the most revealing line, or what is missing.', C.X, 'Where the weak answer breaks down'],
     ['Connect', 'Link the choice to the question it will help answer.', C.U, 'Teaching method: write explanations as cause linked to effect'],
     ['Express', 'State the choice, then why it is the stronger evidence.', C.U, ''],
     ['Check', 'Is the choice something the next stage can use?', C.U, ''],
@@ -278,7 +278,7 @@ S('The mental operations', [...nav('How to answer'), eyebrow('The mental operati
     ];
   }),
   note('Separate from the command word, the answer’s structure and the mark scheme. Draft guidance written for this app.', 900),
-], { notes: 'The mental operations: Interpret (where Student A breaks down), Connect, Express, Check. Operations you move between, not steps in a fixed order.' });
+], { notes: 'The mental operations: Interpret (where the weak answer breaks down), Connect, Express, Check. Operations you move between, not steps in a fixed order.' });
 S('Step by step: Recognition', [...nav('How to answer'), eyebrow('Step by step: Recognition'),
   heading('Spot the right feature, term or pattern when it is in front of you.', 186, 52),
   ...['Read or look through the whole item first.', 'Mark each thing that matches what you are looking for.', 'Say why each one counts, and what you ruled out.'].flatMap((t, i) => [
@@ -306,7 +306,7 @@ S('The missing-link ladder', [...nav('How to answer'), eyebrow('The missing-link
     ['1. Independent', st.task],
     ['2. Neutral prompt', lad.probe],
     ['3. Partial hint', lad.hint],
-    ['4. Model', 'Show the worked example (Student C on the Question tab), then withdraw it.'],
+    ['4. Model', 'Show the worked example (the excellent answer on the Question tab), then withdraw it.'],
     ['5. New task: independent, but asked', lad.transfer],
   ].flatMap(([n, t], i) => {
     const y = 330 + i * 118, w = 160 + i * 70;

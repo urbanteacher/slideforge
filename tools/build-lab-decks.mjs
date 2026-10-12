@@ -20,6 +20,7 @@ const DECKS = [
   { key: 'nodes-critical-text-3', file: 'lessons/nodes/critical-text-3.lesson.json', inline: false },
   { key: 'nodes-describe-three-systems', file: 'lessons/nodes/describe-three-systems.lesson.json', inline: false },
   { key: 'nodes-talk', file: 'lessons/nodes/Nodes-Talk.lesson.json', inline: false },
+  { key: 'nodes-cpu-lesson', file: 'lessons/nodes/cpu-lesson.lesson.json', inline: false },
 ];
 
 const entries = {};

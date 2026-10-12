@@ -122,7 +122,7 @@ function elementDots(n, of, x, y, color = C.U) {
 }
 /* The three answers' switcher, as the app draws it, with one of them on. */
 function answerTabs(on, y = 230) {
-  const names = ['Student A', 'Student B', 'Student C: the worked example'];
+  const names = ['Weak answer', 'Stable answer', 'Excellent answer: the worked example'];
   let x = 80; const out = [];
   names.forEach((n, i) => {
     const w = Math.round(n.length * 15 + 60), lit = i === on;
