@@ -488,3 +488,18 @@ test('a practice copy carries the games one learner can play, and says which nee
   assert.ok(run.slides.some((s) => s.type === 'quiz'), 'the quiz plays in the viewer');
   assert.equal(deck.slides[1].type, 'game', 'the lesson itself is untouched');
 });
+
+test('a blank answer above the right one still leaves the right one marked', () => {
+  /* Blank options are dropped when a question is compiled; the right answer
+     moves up with them. It was clamped instead, so the wrong option scored. */
+  const SF = loadModel();
+  const choice = SF.GAME_STYLES.choice;
+  const s = {};
+  choice.compile({ question: 'Which?', options: ['', 'A', 'B', 'C'], correct: 2 }, {}, s);
+  assert.deepEqual(s.options, ['A', 'B', 'C']);
+  assert.equal(s.options[s.correct], 'B');
+  assert.ok(choice.mark(s, 1) && !choice.mark(s, 0));
+  const t = {};
+  choice.compile({ question: 'Which?', options: ['A', '', 'B'], correct: 2 }, {}, t);
+  assert.equal(t.options[t.correct], 'B');
+});

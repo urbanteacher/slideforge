@@ -81,7 +81,10 @@ const coreStyles = {
         if (live) kept.push(i);
         return live;
       });
-      s.correct = Math.max(0, Math.min(s.options.length - 1, q.correct));
+      /* The right answer by the option it names, not its old place: with a
+         blank above it, its index on the slide is smaller. */
+      var at = kept.indexOf(q.correct);
+      s.correct = at >= 0 ? at : 0;
       if (Array.isArray(q.misconceptions) && q.misconceptions.some(Boolean)) {
         var labels = [];
         for (var k = 0; k < kept.length; k++) labels.push(q.misconceptions[kept[k]] || '');
