@@ -1,0 +1,123 @@
+# Data storage: saving lessons online
+
+Status: plan, 12 October 2026. Nothing built yet.
+
+## 1. The problem
+
+Everything a teacher makes is saved only in the browser it was made in.
+
+| What | Where it lives now | Survives |
+|---|---|---|
+| Classic-editor lessons and games | localStorage (`slideforge.decks.v1`, `slideforge.games.v1`), via `SF.Store` (`src/storage.js`) | That browser, until its data is cleared |
+| Lesson-studio decks | IndexedDB `slideforge-studio`, keys `deck:<id>` and an index (`lab/src/persist/idb.ts`, `lab/src/embed.ts`) | The same |
+| Pictures | Data URLs inside the deck (`fileToDataUrl` in `lab/src/ui/Inspector.tsx`, and `src/editor/artwork.js`, `deck-settings.js`, `header-footer.js`) | Wherever the deck is |
+| Library folders | localStorage `slideforge.libraryFolders.v1` | That browser |
+| Restore points | IndexedDB `slideforge` (`js/history.js`) | That browser |
+| Share links | Server files in `SHARE_DIR`, up to 40, each up to 8 MB (`server/server.js`) | **Until the next deploy or restart** on Render's free plan |
+| Live-session reports | Server journal files | The same |
+| Built-in lessons (IPDV weeks, Air Pollution) | Written into the code (`js/lessons.js`, `js/lab-decks.js`, `lessons/`) | Everywhere, because they are code |
+
+The built-in lessons look "online" only because they are hard-coded. A picture changed in the app is not on Render, and a lesson made on the laptop is not on a phone.
+
+**Save to Library → another folder moves the lesson.** `saveToLibrary` sets `doc.libraryGroup` to the chosen folder; it does not copy it.
+
+## 2. What Render offers
+
+From [render.com/docs/free](https://render.com/docs/free) and [render.com/docs/disks](https://render.com/docs/disks):
+
+- **The free web service** loses its files on every redeploy, restart and spin-down, can't attach a disk, and sleeps after 15 minutes without visitors (about a minute to wake).
+- **Free Postgres** is 1 GB and expires 30 days after creation. It's deleted 14 days later unless upgraded, and has no backups.
+- **Free Key Value** is in memory only.
+- **A persistent disk** needs a paid service (Starter, about $7 a month, plus the disk).
+
+There is no free way to keep data on Render. Render stays the host; the data goes to a provider built for it.
+
+## 3. Supabase or AWS
+
+| | Supabase (free plan) | AWS |
+|---|---|---|
+| What you get | Postgres (500 MB), file storage (1 GB, S3-compatible), sign-in (50,000 monthly users), all in one project | S3, Cognito and DynamoDB or RDS, wired together yourself or through Amplify |
+| Free terms | Free indefinitely. A project pauses after **1 week without use**; a weekly ping prevents it. 2 active projects. No backups on free. | New accounts: the Free plan gives up to $200 of credits and **closes after 6 months** or when the credits run out ([aws.amazon.com/free](https://aws.amazon.com/free/)). After that, pay as you go. |
+| Fit with this code | One script include and a public key. The browser talks to it directly, and Row Level Security keeps each teacher's rows private. Works from plain JS (classic) and React (Lesson studio) alike. | Needs IAM roles, a Cognito pool and signed S3 uploads. Amplify Gen 2 expects its own build and CDK stack, which this repo doesn't use. |
+| Docs | Good, short, one place | The most thorough anywhere, but spread over many services, and much of it assumes AWS-hosted apps |
+| Moving away later | Plain Postgres (dump and restore) and an S3-compatible bucket | Not applicable |
+| UK data | London region (eu-west-2), with a DPA available | London region, with a DPA |
+
+**Decision: Supabase.** AWS has better documentation for very large systems, but for this app it means more moving parts and a free period that ends. Supabase gives sign-in, a database and a bucket in one project, free, with an API the existing code can call from the browser.
+
+The code still talks to storage through one adapter (step 1 of section 6). Because Supabase Storage speaks the S3 API, moving pictures to S3 or Cloudflare R2 later (R2: 10 GB free and free downloads) is a configuration change, not a rewrite.
+
+## 4. How Render and Supabase connect
+
+- **The browser talks to Supabase directly.** The project URL and its public "anon" key go into the page (they're public by design; Row Level Security is what protects data). Render serves the app as it does now.
+- **Render's server needs Supabase only for shares and session reports.** It uses the service key, stored as a Render environment variable and never sent to a browser. Shares then survive deploys without a paid disk.
+- **Locally,** the same two values sit in `.env` (git-ignored). Without them the app keeps working exactly as today, browser-only, so a laptop with no connection is never broken.
+
+```
+browser ──(sign-in, lessons, pictures)──► Supabase  (Postgres + Storage + Auth)
+   │
+   └──(live rooms, relay, AI)──► Render server ──(shares, reports; service key)──► Supabase
+```
+
+## 5. Hygiene of the current code
+
+Ready:
+- **Lesson studio saves through one place.** `persistDeck` and `saveCurrent` in `lab/src/embed.ts` are already async and serialised, so a cloud copy slots in beside IndexedDB.
+- **The classic editor saves through one place** (`SF.Store` in `src/storage.js`), and most of the other ~30 localStorage keys are per-device preferences (zoom, panels, prompter size) that should stay local.
+- **The server already has a hosted switch** (`SLIDEFORGE_HOSTED`) and a durable-share check (`shareIsDurable`).
+
+Needs fixing first, whether or not we go online:
+1. **`SF.Store` is synchronous** (`list()` and `get()` return values). A cloud store is asynchronous. Plan: keep localStorage as the instant local copy, and sync it in the background, so callers stay synchronous.
+2. **Two libraries in two stores.** Classic decks are in localStorage, studio decks in IndexedDB, and the Library merges them as "cards" (`js/lab-engine.js`). Online, they become one `documents` table with a `kind` column.
+3. **Pictures as data URLs.** They make decks megabytes each, hit the 8 MB share cap and the browser quota, and store the same picture again in every copy. Online, pictures become uploaded files referenced by URL, and they're de-duplicated by content hash.
+4. **The backup leaves out Lesson-studio decks.** `exportBundle` (`js/shell.js`) writes only `SF.Store` and `SF.GameStore`. That's a bug today, and it gets fixed in step 1.
+5. **The repository is heavy.** `.git` is 472 MB, mainly MP4s in `assets/lesson/` (one is 44 MB) and lesson bundles with embedded images in `lessons/`. Once a bucket exists, large media move there and the code keeps only links. Git LFS would be the alternative.
+6. **Untracked build folders** (`.codex-deck-build/`, `.codex-finalizer/`) sit in the tree. Ignore them or remove them.
+
+## 6. Build order
+
+Each step is its own commit and works on its own.
+
+1. **One storage adapter, and a complete backup.**
+   - `SF.Docs` wraps both stores (`SF.Store` and the studio's IndexedDB) behind `list`, `get`, `save` and `remove`, with a `kind` column.
+   - Fix `exportBundle` to include studio decks.
+   - No behaviour change, no network.
+2. **The Supabase project.**
+   - Created in London.
+   - Tables:
+     - `documents (id, owner, kind, title, folder, modified, body jsonb)`
+     - `folders`
+     - `assets (hash, owner, path, bytes, type)`
+   - Row Level Security: owner only.
+   - A `media` bucket.
+   - A GitHub Action that pings it weekly so it never pauses.
+3. **Sign-in.** Email magic link first, with NU London Microsoft sign-in as an option (open question 2). Signed out, the app is as today.
+4. **Sync lessons.**
+   - On save, write locally, then push to Supabase.
+   - On open, pull any newer versions.
+   - When a lesson was edited on two devices, the newer one wins, and the older one is kept as a restore point (`js/history.js`) rather than lost.
+5. **Pictures to the bucket.**
+   - New pictures upload and are stored as URLs.
+   - Existing data URLs are moved the first time a deck syncs.
+   - Export and share still embed pictures, so a file you download is complete on its own.
+6. **Shares and reports to Supabase.** The server writes them to the database or bucket instead of `SHARE_DIR`, so they survive deploys. This lifts the 40-share limit.
+7. **Built-in lessons as data.** Lessons hard-coded today (`js/lab-decks.js`, `lessons/`) can be published to a shared "built-in" folder in Supabase instead of the code. Large MP4s move to the bucket. The code then keeps only the starter decks.
+
+Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make it scale.
+
+## 7. Costs
+
+- Supabase free: £0. If the 500 MB database or 1 GB of files fills up, Pro is $25 a month (8 GB database, 100 GB files, daily backups).
+- Render: unchanged (free). Shares and reports no longer need a paid disk.
+- Cloudflare R2, if pictures and video outgrow 1 GB: free up to 10 GB.
+
+## 8. Open questions
+
+1. **Who signs in:** teachers only, or students too (for their own copies and notes)? Teachers only is the proposal; students keep using links.
+2. **Sign-in method:** email magic link, or NU London Microsoft accounts? A Microsoft sign-in may need the university's IT to register the app.
+3. **University policy:** is storing staff email addresses and teaching material with Supabase (London region, DPA signed) acceptable to NU London?
+4. **Built-in lessons:** keep them in the code (simple, versioned with the app), or move them to the shared online folder (step 7)?
+
+## Change log
+
+- 12 October 2026: plan written.
