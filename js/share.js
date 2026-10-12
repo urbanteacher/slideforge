@@ -30,6 +30,19 @@
     return copy;
   }
 
+  /* Share is offered by the editor and by Teacher Presenter's desk; the show is in the editor's window. */
+  function notesElsewhere() {
+    var P = SF.Player;
+    if (P && P.open && P.notesElsewhere) { P.notesElsewhere(); return; }
+    var start = document.getElementById('btnNotesElsewhere');
+    if (start) { start.click(); return; }
+    try {
+      var wall = global.opener && global.opener.SF && global.opener.SF.Player;
+      if (wall && wall.notesElsewhere) { wall.notesElsewhere(); global.opener.focus(); return; }
+    } catch (e) {}
+    (SF.toast || function () {})('Start the show first, then choose this again.');
+  }
+
   function shareLessonDoc(doc, opts) {
     opts = opts || {};
     var toast = opts.toast || (SF.toast ? function (m) { SF.toast(m); } : function () {});
@@ -43,7 +56,7 @@
     var liveNow = !!opts.live;
     SF.askChoice({
       title: 'Share “' + (doc.title || 'this lesson') + '”',
-      detail: 'Either one puts a copy on this server at an address nobody can guess. They cannot ' +
+      detail: 'The first three put a copy on this server, without your notes, at an address nobody can guess. They cannot ' +
         'edit it and it is not listed anywhere — but a link that escapes is a lesson that ' +
         'escaped. Games are not carried across; the slides are. You get a key that withdraws it.',
       options: [
@@ -57,9 +70,14 @@
             'including through a build, and cannot run ahead. No PIN, and nobody watching ' +
             'appears in your reports.',
           why: 'Needs a room running — press Host live first, then share again. It only ' +
-            'works while you are presenting.' }
+            'works while you are presenting.' },
+        { value: 'notes', label: 'Your notes on your phone or a prompt screen',
+          detail: 'For you, not the room: a private link to your speaker notes, which follow the show as it moves. ' +
+            'Your phone can press Next and Back. It starts the show if it is not running, and stops when the show ends.' }
       ]
     }, function (choice) {
+      /* Not a copy on the server: the notes go to the show's own private channel (js/player.js). */
+      if (choice === 'notes') { notesElsewhere(); return; }
       toast('Uploading a copy…');
       fetch('/api/share', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },

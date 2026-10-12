@@ -5694,6 +5694,8 @@ html[data-ws="deck"] #railCount { display: none; }
 .ask-choice .choice {
   display: block; width: 100%; text-align: left;
   padding: 14px 16px; line-height: 1.35;
+  /* A button keeps to one line everywhere else (.btn); a choice's reason wraps inside its card. */
+  white-space: normal; overflow-wrap: anywhere;
 }
 .ask-choice .choice strong { display: block; font-size: 15px; }
 .ask-choice .choice span { display: block; margin-top: 4px; font-size: 13px; opacity: .72; }
