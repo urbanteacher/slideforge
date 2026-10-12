@@ -133,8 +133,12 @@ test('a blank first visit, with the Library one click from the canvas', () => {
   assert.ok(!/makeLesson\('ipdv-intro'\)/.test(lab + runtime), 'the cold start must not land in somebody else’s lecture');
   /* Both routes a lesson opens by on load hang off the ?lesson= key: a lab deck
      the app ships as a file (js/lab-decks.js), else a lesson built from SF.LESSONS. */
-  assert.match(lab, /var shipped = askedKey && SF\.LAB_DECKS \? SF\.LAB_DECKS\[askedKey\] : null;/,
+  assert.match(lab, /var shipped = askedKey \? shippedEntry\(askedKey\) : null;/,
     'a shipped lab deck must open only when ?lesson= names it');
+  /* A shipped deck is also filed in the Library from the start (seedShipped), as a card: filing
+     it must never open it, or the first visit would land in that deck. */
+  const seed = lab.slice(lab.indexOf('function seedShipped'), lab.indexOf('function writeCard'));
+  assert.ok(seed.length > 0 && !/\bopen\(|openLesson|shippedDeck\(/.test(seed), 'filing a shipped deck must not open it');
   assert.match(lab, /var asked = (shipped \? null : )?askedLesson\(askedKey\);/);
   assert.match(lab, /function askedLesson\(key\) \{\s*if \(!key \|\|/, 'askedLesson must build nothing without a key');
 
