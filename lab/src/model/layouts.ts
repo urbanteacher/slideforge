@@ -1246,14 +1246,17 @@ export function icebergSlide(st: LayoutStyle, title: string, above: string, rows
     rule(st, { x: GRID.left, y: water, w: W, h: 4, rot: 0 }, st.accent, 4),
   ];
   layers.push(...byClick(shown.map(([label, value, note], i) => {
-    const y = water + 24 + i * each, h = each - 16, w = tipW + (W - tipW) * ((i + 1) / n);
-    const valueW = Math.min(520, w * 0.34);
+    // Each layer wider than the one above it, from most of the width to all of it: room for its words.
+    const y = water + 24 + i * each, h = each - 16, w = W * (0.62 + 0.38 * ((i + 1) / n));
+    const valueW = Math.min(500, w * 0.32), textX = GRID.left + valueW + 24, textW = w - valueW - 52;
+    // The name and its note side by side, each the full height of the layer, so a long note keeps its size.
+    const labelW = note ? textW * 0.34 : textW;
     const band: Layer[] = [
       shape('Layer', { x: GRID.left, y, w, h, rot: 0 }, { shape: 'rect', radius: 12, fill: st.accent, fillOpacity: 0.12 + 0.5 * ((i + 1) / n) }),
       text('Value', value, { x: GRID.left + 28, y: y + h * 0.14, w: valueW - 28, h: h * 0.72, rot: 0 }, { font: st.display, weight: '800', size: 64, color: st.ink, lineHeight: 1, fit: 'fill', fitGroup: 'berg-values' }),
-      text('What', label, { x: GRID.left + valueW + 24, y: y + 8, w: w - valueW - 52, h: h * 0.46, rot: 0 }, { font: st.body, weight: '700', size: 40, color: st.ink, fit: 'fill', fitGroup: 'berg-labels' }),
+      text('What', label, { x: textX, y: y + 6, w: labelW - 24, h: h - 12, rot: 0 }, { font: st.body, weight: '700', size: 40, color: st.ink, valign: 'middle', fitGroup: 'berg-labels' }),
     ];
-    if (note) band.push(body(st, note, { x: GRID.left + valueW + 24, y: y + h * 0.5, w: w - valueW - 52, h: h * 0.46, rot: 0 }, 36, { color: st.ink, fit: 'shrink', fitGroup: 'berg-notes' }));
+    if (note) band.push(body(st, note, { x: textX + labelW, y: y + 6, w: textW - labelW, h: h - 12, rot: 0 }, 36, { color: st.ink, fit: 'shrink', valign: 'middle', lineHeight: 1.2, fitGroup: 'berg-notes' }));
     return band;
   }), uniq('berg'), clicks));
   if (source) layers.push(sourceLine(st, source));
