@@ -838,6 +838,8 @@
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
     openLesson: openLesson, openKey: openKey,
     /** The lesson on screen as a PowerPoint file, every slide a picture with its notes (File → Export). */
+    /** The slide on screen on its own: 'png', 'pptx' or 'pptx-edit' (File → Export → This slide). */
+    saveSlide: function (/** @type {string} */ format) { whenReady(function (a) { a.saveSlide(format); }); },
     /* editableText: the plain words become PowerPoint text boxes over a picture drawn without them. */
     exportPptx: function (/** @type {boolean} */ editableText) {
       SF.toast('Making the PowerPoint\u2026');

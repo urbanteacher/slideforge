@@ -5,7 +5,8 @@ import { renderStill } from './export/exporters';
 import { enterView, useStore, type LabView } from './model/store';
 import type { Deck, Slide } from './model/types';
 import { idbDelete, idbGet, idbSet } from './persist/idb';
-import { editableSlides, exportPptx } from './export/pptx';
+import { editableSlides, exportPptx, type SlideFormat } from './export/pptx';
+import { saveSlide } from './ui/SlideMenu';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
 // over its workspace and drives it through this: the shell keeps the title, File, Library, Save and
@@ -291,6 +292,8 @@ export const labApi = {
   },
   stills,
   outline,
+  /** The slide on screen saved on its own (File → Export → This slide). */
+  saveSlide: (format: SlideFormat) => saveSlide(useStore.getState().slideId, format),
   /** The lesson as a PowerPoint file (export/pptx.ts): every slide a picture, or with `editableText` its
    *  plain words as text boxes over a picture drawn without them. Resolves when it has downloaded. */
   async pptx(onProgress?: (done: number, total: number) => void, editableText = false) {

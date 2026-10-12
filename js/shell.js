@@ -1365,6 +1365,7 @@
         ];
         if (active.key === 'deck') {
           if (active.lab && SF.LabEngine && SF.LabEngine.exportPptx) {
+            items.push({ id: 'slide', title: 'This slide', blurb: 'Only the slide on screen: as a picture (.png), or as a one-slide PowerPoint, as a picture or with editable text.' });
             items.push({ id: 'pptx', title: 'PowerPoint (.pptx), slides as pictures', blurb: 'Every slide as a picture, exactly as it looks here, with your speaker notes in PowerPoint\u2019s notes. Opens in PowerPoint, Keynote and Google Slides. The words are not editable, and video, motion and games show as a still.' });
             items.push({ id: 'pptx-edit', title: 'PowerPoint (.pptx), editable text', blurb: 'The headings and body text as PowerPoint text boxes you can change, over a picture of everything else. Words with special effects (gradients, outlines, highlighter, panels) and the header and footer stay part of the picture. PowerPoint uses its own font when the slide\u2019s font is not installed, so lines may break a little differently.' });
           }
@@ -1398,6 +1399,20 @@
                slide fully built, as a picture, with its games in place. */
             if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.printDeck ? SF.LabEngine.printDeck() : SF.LabEngine.showDeck());
             if (it.id === 'pdf') return SF.Print.open(active.doc());
+            if (it.id === 'slide') {
+              return picker({
+                title: 'Save this slide',
+                items: function () {
+                  return [
+                    { id: 'png', title: 'Picture (.png)', blurb: 'The slide at full size, exactly as it looks, every reveal shown.' },
+                    { id: 'pptx', title: 'PowerPoint (.pptx), as a picture', blurb: 'A one-slide PowerPoint: the slide as a picture, with its speaker notes.' },
+                    { id: 'pptx-edit', title: 'PowerPoint (.pptx), editable text', blurb: 'A one-slide PowerPoint with its headings and body text as text boxes you can change.' }
+                  ];
+                },
+                describe: function (f) { return f.blurb; },
+                onPick: function (f) { SF.LabEngine.saveSlide(f.id); }
+              });
+            }
             if (it.id === 'pptx') return SF.LabEngine.exportPptx(false);
             if (it.id === 'pptx-edit') return SF.LabEngine.exportPptx(true);
             if (it.id === 'md') return exportMarkdown();

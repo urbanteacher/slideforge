@@ -1,6 +1,6 @@
 import type { Deck, Layer, Slide } from '../model/types';
 import { groupSizes, layoutText, textSize } from '../engine/raster';
-import { download, renderStill, slug } from './exporters';
+import { download, exportPng, renderStill, slug } from './exporters';
 
 /** A text box PowerPoint can edit, in the slide's own pixels and the layer's own type. */
 export interface PptxText {
@@ -89,12 +89,15 @@ export function slideTexts(slide: Slide): PptxText[] {
 
 /** Every slide of the deck as the editable file has it: the picture drawn without its editable words,
  *  and those words as text. Drawn here rather than taken from the show's stills, which have the words in. */
+/** One slide as the editable file has it. Drawn against the whole deck, so its page number is its own. */
+function editableSlide(deck: Deck, s: Slide, width = 1920, quality = 0.92): PptxSlide {
+  return { image: renderStill(s, deck, width, 'image/jpeg', 2, quality, editableIds(s)), notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, texts: slideTexts(s) };
+}
+
 export async function editableSlides(deck: Deck, onProgress?: (done: number, total: number) => void, width = 1920, quality = 0.92): Promise<PptxSlide[]> {
   const out: PptxSlide[] = [];
   for (const s of deck.slides) {
-    const texts = slideTexts(s);
-    const hide = editableIds(s);
-    out.push({ image: renderStill(s, deck, width, 'image/jpeg', 2, quality, hide), notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, texts });
+    out.push(editableSlide(deck, s, width, quality));
     onProgress?.(out.length, deck.slides.length);
     // A breath between slides, so the page stays responsive while a long deck is drawn.
     await new Promise((r) => setTimeout(r, 0));
@@ -136,6 +139,21 @@ export async function buildPptx(deck: Deck, slides: PptxSlide[]): Promise<Blob> 
     if (s.hidden) slide.hidden = true;
   }
   return (await pptx.write({ outputType: 'blob' })) as Blob;
+}
+
+export type SlideFormat = 'png' | 'pptx' | 'pptx-edit';
+
+/** One slide on its own: its picture at full size, or a one-slide PowerPoint, as a picture or with its
+ *  words editable. A hidden slide comes out shown: it is the one asked for. */
+export async function exportSlide(deck: Deck, slideId: string, format: SlideFormat) {
+  const i = deck.slides.findIndex((s) => s.id === slideId);
+  if (i < 0) return;
+  const s = deck.slides[i];
+  if (format === 'png') { await exportPng(s, deck, i); return; }
+  const one = format === 'pptx-edit'
+    ? editableSlide(deck, s)
+    : { image: renderStill(s, deck, 1920, 'image/jpeg', 2, 0.92), notes: s.notes ?? '', hidden: false, name: s.name };
+  download(`${slug(deck.title)}-slide-${i + 1}${format === 'pptx-edit' ? '-editable' : ''}.pptx`, await buildPptx(deck, [{ ...one, hidden: false }]));
 }
 
 export async function exportPptx(deck: Deck, slides: PptxSlide[], editableText = false) {

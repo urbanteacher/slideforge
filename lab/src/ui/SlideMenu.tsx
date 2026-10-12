@@ -1,10 +1,11 @@
-import { ClipboardPaste, Copy, CopyPlus, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { ClipboardPaste, Copy, CopyPlus, Eye, EyeOff, ImageDown, Presentation, Trash2 } from 'lucide-react';
+import { exportSlide, type SlideFormat } from '../export/pptx';
 import { useEffect, useState, type ReactNode } from 'react';
 import { cloneSlide } from '../model/defaults';
 import { useStore } from '../model/store';
 import type { Slide } from '../model/types';
 
-// SlideForge's "⋯ Slide" actions: copy, paste, duplicate, hide or delete a slide. The same menu is
+// SlideForge's "⋯ Slide" actions: copy, paste, duplicate, hide, save on its own or delete a slide. The same menu is
 // on the toolbar, on a right-click in the filmstrip and on a right-click on the slide's ground.
 // A hidden slide stays in the editor, dimmed; Preview and the HTML export skip it.
 
@@ -37,6 +38,18 @@ export function toggleHidden(id: string) {
   st.showToast(hide ? 'Hidden from the show. It stays here, and Preview and the exported deck skip it.' : 'Back in the show.');
 }
 
+/** One slide saved on its own (export/pptx.ts exportSlide), with a word while it is made. */
+export async function saveSlide(id: string, format: SlideFormat) {
+  const st = useStore.getState();
+  if (format !== 'png') st.showToast('Making the PowerPoint…');
+  try {
+    await exportSlide(st.deck, id, format);
+    st.showToast(format === 'png' ? 'Saved the slide as a picture' : format === 'pptx' ? 'Saved the slide as PowerPoint' : 'Saved the slide as PowerPoint, with editable text');
+  } catch {
+    st.showToast('The slide could not be saved');
+  }
+}
+
 function items(id: string, close: () => void): ReactNode {
   const st = useStore.getState();
   const s = st.deck.slides.find((x) => x.id === id);
@@ -48,6 +61,10 @@ function items(id: string, close: () => void): ReactNode {
       <button disabled={!slideClipboard.has()} onClick={run(() => { useStore.getState().selectSlide(id); slideClipboard.paste(); })}><ClipboardPaste size={15} />Paste slide after<small>⌘V</small></button>
       <button onClick={run(() => st.duplicateSlide(id))}><CopyPlus size={15} />Duplicate slide</button>
       <button onClick={run(() => toggleHidden(id))}>{s.hidden ? <Eye size={15} /> : <EyeOff size={15} />}{s.hidden ? 'Show in the presentation and the PDF' : 'Hide from the presentation and the PDF'}</button>
+      <hr />
+      <button onClick={run(() => saveSlide(id, 'png'))}><ImageDown size={15} />Save slide as a picture<small>.png</small></button>
+      <button onClick={run(() => saveSlide(id, 'pptx'))}><Presentation size={15} />Save slide as PowerPoint<small>.pptx</small></button>
+      <button onClick={run(() => saveSlide(id, 'pptx-edit'))}><Presentation size={15} />Save slide as PowerPoint, editable text<small>.pptx</small></button>
       <hr />
       <button className="danger" disabled={st.deck.slides.length <= 1} onClick={run(() => st.deleteSlide(id))}><Trash2 size={15} />Delete slide</button>
     </>
@@ -66,7 +83,7 @@ export function useSlideContextMenu(): [ReactNode, (e: React.MouseEvent, id: str
     return () => { removeEventListener('pointerdown', off); removeEventListener('keydown', esc); };
   }, [at]);
   const node = at && (
-    <div className="menu context-menu" role="menu" style={{ position: 'fixed', left: Math.min(at.x, innerWidth - 240), top: Math.min(at.y, innerHeight - 230) }}>
+    <div className="menu context-menu" role="menu" style={{ position: 'fixed', left: Math.min(at.x, innerWidth - 240), top: Math.max(8, Math.min(at.y, innerHeight - 340)) }}>
       {items(at.id, () => setAt(null))}
     </div>
   );
