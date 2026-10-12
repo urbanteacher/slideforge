@@ -13,7 +13,7 @@
  * The decks: the gallery's layouts in every style, the lab originals, the slide designs (three styles),
  * and the shipped lessons in assets/lab-lessons/ (the Layout bank and the Motion-lab-built decks among
  * them). It serves the app itself (server/server.js on a spare port) and draws with the committed
- * build in lab-app/, through the lab's embedded api (checkDecks, checkStills in lab/src/embed.ts).
+ * build in lab-app/, through the lab's embedded api (checkDecks, checkStills in lab/src/app/embed.ts).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -35,6 +35,7 @@ async function draw(out) {
   const server = spawn(process.execPath, ['server/server.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
   const browser = await chromium.launch({ args: ARGS });
   const hashes = {};
+  const video = [];
   try {
     await new Promise((r) => setTimeout(r, 800));
     const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
@@ -76,19 +77,22 @@ async function draw(out) {
           deck = (await api.checkDecks()).find((d) => d.id === id);
         }
         await api.open(deck);
-        return api.checkStills(width);
+        const video = api.getDeck().slides.map((s) => s.layers.some((l) => l.kind === "video" && l.visible));
+        return { urls: await api.checkStills(width), video };
       }, { ...job, width: WIDTH });
       const dir = path.join(out, job.id);
       fs.mkdirSync(dir, { recursive: true });
-      shots.forEach((url, i) => {
+      shots.urls.forEach((url, i) => {
         const buf = Buffer.from(url.split(',')[1], 'base64');
         const name = `${job.id}#${i}`;
         hashes[name] = sha(buf);
+        if (shots.video[i]) video.push(name);
         fs.writeFileSync(path.join(dir, `${String(i).padStart(3, '0')}.png`), buf);
       });
-      console.log(`${job.id}: ${shots.length} slides`);
+      console.log(`${job.id}: ${shots.urls.length} slides`);
     }
     fs.writeFileSync(path.join(out, 'hashes.json'), JSON.stringify(hashes, null, 1));
+    fs.writeFileSync(path.join(out, "video.json"), JSON.stringify(video));
     console.log(`${Object.keys(hashes).length} slides drawn into ${out}`);
   } finally {
     await browser.close();
@@ -129,9 +133,13 @@ async function differing(a, b) {
 
 async function compare(a, b, noiseRun) {
   const r = await differing(a, b);
-  const unstable = noiseRun ? new Set((await differing(a, noiseRun)).far.map((f) => f.split(' ')[0])) : new Set();
-  const far = r.far.filter((f) => !unstable.has(f.split(' ')[0]));
-  console.log(`${r.total} slides: ${r.identical} identical, ${r.near} within 0.1%, ${far.length} differing, ${r.far.length - far.length} differing but unstable between two runs of the first build (${unstable.size} unstable in all), ${r.missing.length} only in one run`);
+  // A playing clip is drawn at whatever frame it has reached: those slides cannot be compared.
+  const clips = new Set(fs.existsSync(path.join(a, "video.json")) ? JSON.parse(fs.readFileSync(path.join(a, "video.json"), "utf8")) : []);
+  const unstable = noiseRun ? new Set((await differing(a, noiseRun)).far.map((f) => f.split(" ")[0])) : new Set();
+  const name = (f) => f.split(" ")[0];
+  const far = r.far.filter((f) => !unstable.has(name(f)) && !clips.has(name(f)));
+  const video = r.far.filter((f) => clips.has(name(f))).length;
+  console.log(`${r.total} slides: ${r.identical} identical, ${r.near} within 0.1%, ${far.length} differing; not comparable: ${video} with a playing clip, ${r.far.length - far.length - video} unstable between two runs of the first build; ${r.missing.length} only in one run`);
   for (const f of far) console.log('  differs:', f);
   for (const m of r.missing) console.log('  only in one run:', m);
   process.exitCode = far.length || r.missing.length ? 1 : 0;
