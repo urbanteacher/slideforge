@@ -4,6 +4,8 @@
 // - Each folder's index.ts is its public interface: code outside a folder imports only that index. A folder is
 //   a top-level folder of src/, or one kind's folder in kinds/. assets/ and generated/ are data, imported as
 //   they are. A dynamic import() may name a file inside a folder, so that file stays a chunk of its own.
+//   A kind's folder has a second public file, its Inspector.tsx: the inspector frame (ui/) shows it, and
+//   it stays out of the kind's index.ts so the export player, which imports every kind, never bundles React.
 // - The files at the top of src/ are entries: nothing imports them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -37,13 +39,19 @@ test('code outside a folder imports only its index.ts', () => {
     if (!i.to || i.dynamic) return false;
     const to = unitOf(i.to);
     if (!to || to === unitOf(i.from) || DATA.includes(to.split('/')[0]) || NO_INDEX_YET.includes(to)) return false;
-    return !/^index\.tsx?$/.test(i.to.slice(to.length + 1));
+    const file = i.to.slice(to.length + 1);
+    return !(/^index\.tsx?$/.test(file) || (to.startsWith('kinds/') && file === 'Inspector.tsx'));
   }).map((i) => `${i.from} → ${i.to}`);
   assert.deepEqual(bad, []);
 });
 
 test('nothing in a folder imports the files at the top of src/ (they are entries)', () => {
   const bad = all().filter((i) => i.to && unitOf(i.to) === '' && unitOf(i.from) !== '' && !ENTRY_IMPORTS.includes(i.to)).map((i) => `${i.from} → ${i.to}`);
+  assert.deepEqual(bad, []);
+});
+
+test('no index.ts reaches a kind’s Inspector.tsx (the player imports the indexes)', () => {
+  const bad = all().filter((i) => i.to && /(^|\/)index\.ts$/.test(i.from) && /^kinds\/[^/]+\/Inspector\.tsx$/.test(i.to)).map((i) => `${i.from} → ${i.to}`);
   assert.deepEqual(bad, []);
 });
 

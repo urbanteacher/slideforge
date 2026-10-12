@@ -6,7 +6,7 @@ import { createLayer, type Deck, type GuideTheme, type StyleGuide } from '../../
 import { LAYOUT_STYLES, guideStyle, themeOf, applyTheme, setSlideGround, varyGrounds } from '../../layouts';
 import { layerOf, slideOf, useStore } from '../../store';
 import { ColorField, Row, Select } from '../controls/controls';
-import { fileToDataUrl, readDataUrl } from './Inspector';
+import { fileToDataUrl, readDataUrl } from '../controls/files';
 
 // Colours & grounds. A deck in one colour is the easy mistake, so a palette here always comes as three
 // grounds that work together — working (light), quiet (dark) and loud (colour) — picked from a

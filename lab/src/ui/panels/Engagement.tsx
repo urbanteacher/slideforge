@@ -4,7 +4,7 @@ import { enterView, slideOf, useStore, type LabView } from '../../store';
 import type { FeedbackKind } from '../../core';
 import { focusBrowse } from './Browse';
 import { Section, Tip } from '../controls/controls';
-import { FeedbackSettings } from './special';
+import { FeedbackSettings } from './activity';
 
 // SlideForge's Engagement tab: the audience feedback a slide asks the room for, recorded and marked
 // in the editor for SlideForge's live room to run. Games and activities are chosen in Browse (Browse.tsx),

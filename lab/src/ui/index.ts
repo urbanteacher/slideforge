@@ -13,3 +13,6 @@ export { toggleFormat } from './stage/format';
 export { addMediaFile } from './stage/insert';
 export { moveInOrder } from './stage/order';
 export { groupOf } from './stage/snap';
+// The controls the kinds’ own inspectors are built from (kinds/<kind>/Inspector.tsx).
+export { ColorField, Row, Scrub, Section, Select } from './controls/controls';
+export { Area, Chips, Input, List, PictureTile, useLayerParams } from './controls/fields';

@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { createLayer, type Layer } from '../../core';
 import { slideOf, useStore } from '../../store';
 import { addImageFile } from '../stage/insert';
-import { fileToDataUrl } from './Inspector';
+import { fileToDataUrl } from '../controls/files';
 
 // Pictures, in one place: add them, see this slide's, replace or remove one, choose fill or fit,
 // and reuse one already in the deck. The picture itself is still moved and sized on the canvas,

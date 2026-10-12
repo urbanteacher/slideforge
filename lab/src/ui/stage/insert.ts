@@ -3,7 +3,7 @@ import { createLayer, hasFlagshipTextImage, textImageForSlide, type Slide } from
 import { headingClock } from '../../designs';
 import { LAYOUT_STYLES, cell, gridFor, itemStyle, slideStyle, themeOf } from '../../layouts';
 import { useStore } from '../../store';
-import { fileToDataUrl, readDataUrl } from '../panels/Inspector';
+import { fileToDataUrl, readDataUrl } from '../controls/files';
 
 // Media arrives from the Add menu, a drop on the canvas or a paste. All three land here, sized to
 // the file's own proportions and centred on (x, y), or on the slide when no point is given.
