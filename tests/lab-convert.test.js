@@ -446,8 +446,18 @@ test('true or false has the same two looks: two doors lit green where they stand
 
 /* Several of the lab's modules as one build, so they share one store; built inside the lab, where its
    packages resolve. */
+/* The lab's exporter imports its player as a built script (src/generated/player.iife.js), which is
+   made by vite.player.config.ts and kept out of git. A checkout that has never run the lab's dev
+   server or build lacks it, and every bundle that reaches the exporter failed there. Build it once,
+   as the lab's predev and prebuild do. */
+function ensurePlayer() {
+  if (fs.existsSync(path.join(LAB, 'src', 'generated', 'player.iife.js'))) return;
+  execFileSync(process.execPath, [VITE, 'build', '--config', 'vite.player.config.ts', '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
+}
+
 async function together(name, code) {
   measuringCanvas();
+  ensurePlayer();
   const entry = path.join(LAB, `.sf-test-${name}.ts`);
   const out = path.join(LAB, 'node_modules', '.sf-test', name);
   fs.writeFileSync(entry, code);
