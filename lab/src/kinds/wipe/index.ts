@@ -1,5 +1,6 @@
 // kinds/wipe/: the before / after layer. Its public interface: what kinds/index.ts registers.
 import { rasterWipe } from './raster';
-import type { KindDrawing } from '../../engine';
+import { wipeDef } from './def';
+import type { LayerKind } from '../../engine';
 
-export const wipeDrawing: KindDrawing = { raster: rasterWipe };
+export const wipeKind: LayerKind = { def: wipeDef, raster: rasterWipe };
