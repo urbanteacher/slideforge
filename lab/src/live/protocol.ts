@@ -47,7 +47,10 @@ export type HostMessage =
   | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string }
   | { t: 'manualAdd'; names: string[]; team: number }
   | ({ t: 'manualAnswer' } & ManualAnswerFields)
+  | { t: 'manualRename'; playerId: number; name: string }
+  | { t: 'manualTeam'; playerId: number; team: number }
   | { t: 'manualRemove'; playerId: number; mode: 'kick' | 'delete' }
+  | { t: 'manualTally'; id: string; counts: number[] }
   | { t: 'report' }
   | { t: 'finish'; title: string; note?: string; kind?: string }
   | { t: 'end' };

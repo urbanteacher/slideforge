@@ -39,12 +39,14 @@ export interface RoomState {
   /** The last `error` or `rehostFailed` reason. */
   error: string | null;
   report: unknown;
+  /** The relay's last word on whether it is writing the session's journal (`recording`); null until it says. */
+  recording: boolean | null;
 }
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], scores: {}, question: null, tally: null,
-  revealed: [], manualError: null, error: null, report: null,
+  revealed: [], manualError: null, error: null, report: null, recording: null,
 });
 
 export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean }) => void;
@@ -122,6 +124,7 @@ export class Room {
         if (s.tally && s.tally.id === m.id) s.tally = { ...s.tally, rev: m.rev, answers: m.answers };
         break;
       case 'manualError': s.manualError = { message: m.message, playerId: m.playerId, id: m.id }; break;
+      case 'recording': s.recording = m.persisted !== false; break;
       case 'sessionReport': s.report = m.report; break;
       case 'sessionClosed': Object.assign(s, { live: false, report: m.report }); break;
       default: return;

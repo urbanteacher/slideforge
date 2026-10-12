@@ -3,6 +3,7 @@
 
 import { create } from 'zustand';
 import { useStore } from '../store';
+import type { ShowHooks } from './hooks';
 
 interface ShowState {
   open: boolean;
@@ -10,13 +11,17 @@ interface ShowState {
   room: boolean;
   /** The slide the show starts on (the one being edited). */
   slideId: string | null;
+  /** What the shell around the lab lends the show (hooks.ts); none when the lab is on its own. */
+  hooks: ShowHooks | null;
+  /** The room has begun (someone pressed Start): past this the show does not hand the lesson to the classic host. */
+  begun: boolean;
 }
 
-export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null }));
+export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null, hooks: null, begun: false }));
 
 /** Open the studio's own slideshow on the lesson in the studio, from the slide being edited. */
-export function openStudioShow(opts: { room?: boolean; slideId?: string } = {}): void {
-  useShow.setState({ open: true, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId });
+export function openStudioShow(opts: { room?: boolean; slideId?: string; hooks?: ShowHooks } = {}): void {
+  useShow.setState({ open: true, begun: false, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId, hooks: opts.hooks ?? useShow.getState().hooks });
 }
 
 export function closeStudioShow(): void {
@@ -43,6 +48,13 @@ export function studioRoomEnabled(): boolean { return FLAG; }
 export function relayUrl(): string {
   if (location.protocol === 'file:' || import.meta.env.DEV) return 'ws://localhost:8787';
   return (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host;
+}
+
+/** Where manual.html is, for the teacher-entry window: one level up from the lab (lab-app/), on the relay's own origin
+ *  in the development server (which has none). The window and the room must share an origin: a BroadcastChannel does. */
+export function manualPage(): string {
+  if (location.protocol === 'file:' || import.meta.env.DEV) return 'http://localhost:8787/manual.html';
+  return new URL('../manual.html', location.href).href;
 }
 
 /** The join address when the relay's own is missing (classic joinAddress). */

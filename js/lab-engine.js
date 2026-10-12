@@ -633,8 +633,71 @@
     });
   }
 
-  function hostLive() {
+  /* Host live, the classic way: the lesson as a SlideForge show, into SF.Live.host (the bridge). */
+  function classicHostLive() {
     withShow(function (show) { SF.Live.host(show.run); });
+  }
+
+  /* The studio's own show over the lab's frame (lab/src/show, M7 slice 3). While it is up the frame fills the
+     viewport (css/studio.css html.lab-show) and the page is full screen; both are given back when it closes. */
+  function enterStudioShow() {
+    document.documentElement.classList.add('lab-show');
+    var d = document.documentElement;
+    if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function () {});
+  }
+
+  function leaveStudioShow() {
+    document.documentElement.classList.remove('lab-show');
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    if (frame && frame.contentWindow) { try { frame.contentWindow.blur(); } catch (e) {} }
+  }
+
+  /* What the show is lent (lab/src/show/hooks.ts): the way out, the way back to the classic room, the toast, and
+     the session reports, which the shell keeps. */
+  function studioHooks() {
+    var R = SF.Reports;
+    return {
+      exited: leaveStudioShow,
+      fallback: function (reason) {
+        leaveStudioShow();
+        SF.toast(reason + '. Hosting with the classic room instead.');
+        classicHostLive();
+      },
+      toast: function (t) { SF.toast(t); },
+      reports: R ? {
+        track: function (s) { R.track(s); },
+        recording: function (ok) { R.recording(ok); },
+        receive: function (r) { R.receive(r); },
+        refresh: function (id) { R.refresh(id); },
+        open: function () { R.open(); }
+      } : undefined
+    };
+  }
+
+  /* Host live. A lesson whose games are all plain Multiple choice, and nothing else the studio's room cannot run,
+     is hosted by the lab's own host and show (lab/src/show canHostInStudio). Anything else, and any failure to
+     start, is the classic room, unchanged. */
+  function hostLive() {
+    var a = api;
+    if (a && a.hostInStudio && a.whyNotInStudio) {
+      var why = a.whyNotInStudio();
+      if (!why) {
+        /* Full screen is asked for now, inside the click. */
+        enterStudioShow();
+        var started = false;
+        try { started = a.hostInStudio(studioHooks()); }
+        catch (e) { console.error(e); }
+        if (started) {
+          if (frame) { try { frame.focus(); frame.contentWindow.focus(); } catch (e) {} }
+          return;
+        }
+        leaveStudioShow();
+        SF.toast('The studio\u2019s room could not start. Hosting with the classic room instead.');
+      } else if (window.console) {
+        console.info('Host live: the classic room, because ' + why);
+      }
+    }
+    classicHostLive();
   }
 
   function rehearse(size) {

@@ -108,9 +108,12 @@ export class LiveHost {
   }
 
   /** Mark every answer in the latest tally and send the verdicts (classic sendReveal for a choice question). */
-  reveal(answers?: TallyAnswer[], rev?: number): void {
+  reveal(answers?: TallyAnswer[], rev?: number, correct?: number): void {
     const q = this.slide?.quiz;
     if (!q || this.state.revealed.includes(q.id)) return;
+    // "The answer is C", said by pressing C in the teacher-entry window (classic revealWith): the room is marked
+    // against that option, the key notwithstanding. Set on the question itself, as classic sets it on the slide.
+    if (correct != null && Number.isInteger(correct) && correct >= 0 && correct < q.options.length) q.correct = correct;
     this.clearSure();
     const t = this.state.tally && this.state.tally.id === q.id ? this.state.tally : null;
     const list = answers ?? t?.answers ?? [];
@@ -127,11 +130,23 @@ export class LiveHost {
     this.send({ t: 'manualAdd', names, team });
   }
 
-  /** The teacher's answer by key for a learner without a phone (manual.html's `answer`). */
-  manualAnswer(playerId: number, choice: ManualChoice): void {
+  /** The teacher's answer by key for a learner without a phone (manual.html's `answer`). `id` is the question the
+   *  window means: the relay refuses it when it is not the one open (a manualError, shown in the window). */
+  manualAnswer(playerId: number, choice: ManualChoice, id?: string): void {
     const q = this.state.question;
-    if (!q) return;
-    this.send(choice == null ? { t: 'manualAnswer', id: q.id, playerId, clear: true } : { t: 'manualAnswer', id: q.id, playerId, choice });
+    if (!q && !id) return;
+    const qid = id ?? q!.id;
+    this.send(choice == null ? { t: 'manualAnswer', id: qid, playerId, clear: true } : { t: 'manualAnswer', id: qid, playerId, choice });
+  }
+
+  manualRename(playerId: number, name: string): void { this.send({ t: 'manualRename', playerId, name }); }
+  manualTeam(playerId: number, team: number): void { this.send({ t: 'manualTeam', playerId, team }); }
+  manualRemove(playerId: number, mode: 'kick' | 'delete'): void { this.send({ t: 'manualRemove', playerId, mode }); }
+
+  /** Counts per option for a room answering on paper (manual.html's `tally`): added to the tally, never scored. */
+  manualTally(counts: number[]): void {
+    const q = this.state.question;
+    if (q && !this.state.revealed.includes(q.id)) this.send({ t: 'manualTally', id: q.id, counts });
   }
 
   /** Ask the relay for the session's report (`sessionReport`). */

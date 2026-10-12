@@ -334,6 +334,9 @@ html.lab-engine:is([data-ws="deck"],[data-ws="game"],[data-ws="plan"]) #app>.rai
 html.lab-engine:is([data-ws="deck"],[data-ws="game"],[data-ws="plan"]) #app>.stage-area,
 html.lab-engine:is([data-ws="deck"],[data-ws="game"],[data-ws="plan"]) #app>.inspector{display:none}
 html.lab-engine:not(:is([data-ws="deck"],[data-ws="game"],[data-ws="plan"])) .lab-frame{display:none}
+/* The studio's own show (Host live from a Multiple-choice lesson, js/lab-engine.js): the frame fills the viewport, over
+   the shell's rows; below the toast (z-index 200) so the shell can still speak. */
+html.lab-show .lab-frame{position:fixed;inset:0;width:100vw;height:100vh;z-index:150}
 html.lab-engine[data-ws="deck"] #btnOpenLesson{display:block}
 /* While the lab loads, and if it never does. */
 .lab-loading{grid-row:2;grid-column:1/-1;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--ui-bg);color:var(--ui-dim);font-size:13px}

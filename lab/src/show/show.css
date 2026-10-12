@@ -62,3 +62,22 @@
 .wall-board li:first-child { background: var(--accent-soft); }
 .board-rank { color: var(--muted); font-variant-numeric: tabular-nums; }
 .board-score { font-variant-numeric: tabular-nums; color: var(--accent-2); }
+
+/* The standings rail, beside the slide (classic's rail): the show leaves it room on the right (Show.tsx RAIL_U). */
+.show.has-rail { padding-right: calc(var(--u) * 420); box-sizing: border-box; }
+.show.has-rail .show-stage { margin-right: 0; }
+.wall-layer .wall-strip { transition: left .2s; }
+.show.has-rail .wall-strip { left: calc(50% - var(--u) * 210); max-width: calc(100% - var(--u) * 460); }
+.wall-rail { position: absolute; top: 0; right: 0; bottom: 0; width: calc(var(--u) * 420); box-sizing: border-box; padding: calc(var(--u) * 28) calc(var(--u) * 24); background: rgba(14,14,16,.96); border-left: 1px solid var(--line-2); display: flex; flex-direction: column; gap: calc(var(--u) * 10); overflow: hidden; pointer-events: none; }
+.wall-rail h2 { margin: 0; font-size: calc(var(--u) * 36); }
+.rail-sub { margin: 0; color: var(--muted); font-size: calc(var(--u) * 30); }
+.wall-rail ol { list-style: none; margin: calc(var(--u) * 8) 0 0; padding: 0; display: grid; gap: calc(var(--u) * 8); }
+.wall-rail li { display: grid; grid-template-columns: calc(var(--u) * 48) 1fr auto auto; align-items: baseline; gap: calc(var(--u) * 8); padding: calc(var(--u) * 6) calc(var(--u) * 14); background: var(--field); border-radius: calc(var(--u) * 12); font-size: calc(var(--u) * 32); }
+.wall-rail li:first-child { background: var(--accent-soft); }
+.wall-rail li.away { opacity: .5; }
+.board-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rail-gain { font-style: normal; font-weight: 700; color: #6bdc9a; font-size: calc(var(--u) * 28); }
+.rail-join { margin: auto 0 0; color: var(--muted); font-size: calc(var(--u) * 28); word-break: break-all; }
+.strip-timer.over { color: #ff6b6b; }
+.ended-actions { display: flex; gap: calc(var(--u) * 24); margin-top: calc(var(--u) * 40); }
+.ended-actions .wall-start { grid-area: auto; }

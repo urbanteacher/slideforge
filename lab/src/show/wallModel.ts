@@ -5,6 +5,7 @@
 // the instant the question appears; then Next reveals; then Next moves on).
 
 import type { RoomState } from '../live';
+import { railOf, type Rail } from './rail';
 import type { Step } from './steps';
 
 /** Classic's grace after a question is asked, before Next may reveal it (js/live.js GRACE_MS). */
@@ -12,7 +13,7 @@ export const GRACE_MS = 1500;
 
 export interface WallOption { index: number; label: string; count: number; correct: boolean }
 export interface WallPlayer { id: number; name: string; connected: boolean }
-export interface WallRow { rank: number; name: string; score: number; connected: boolean }
+export interface WallRow { id: number; rank: number; name: string; score: number; connected: boolean }
 
 export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'ended';
 
@@ -34,6 +35,8 @@ export interface Wall {
   board: WallRow[];
   /** A scores step with no question after it: its leaderboard is the final one. */
   final: boolean;
+  /** The standings beside the slide (classic's rail); null when it stays off. */
+  rail: Rail | null;
 }
 
 export interface WallInput {
@@ -41,6 +44,8 @@ export interface WallInput {
   steps: Step[];
   /** Index into `steps` of the step on the wall; -1 before the room begins. */
   at: number;
+  /** Everyone's points when the question on the wall was asked, by player id (what the rail's gains are measured from). */
+  before?: Record<number, number>;
   /** The teacher asked for the scores (the S key), over any step. */
   scoresOn: boolean;
   /** Fallback join address when the relay's own is missing (classic: this page's origin + /join.html). */
@@ -67,7 +72,7 @@ export function countsOf(room: RoomState, optionCount: number): number[] {
 export function boardOf(room: RoomState): WallRow[] {
   return [...room.players]
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
-    .map((p, i, all) => ({ rank: i > 0 && all[i - 1].score === p.score ? 0 : i + 1, name: p.name, score: p.score, connected: p.connected }))
+    .map((p, i, all) => ({ id: p.id, rank: i > 0 && all[i - 1].score === p.score ? 0 : i + 1, name: p.name, score: p.score, connected: p.connected }))
     .map((r, i, rows) => ({ ...r, rank: r.rank || rows[i - 1].rank }));
 }
 
@@ -77,7 +82,10 @@ export function wallOf(i: WallInput): Wall {
   const joinUrl = room.joinUrl || i.fallbackJoin;
   const join = room.pin ? { address: shortAddress(joinUrl), pin: room.pin, link: joinLink(joinUrl, room.pin) } : null;
   const players = room.players.map((p) => ({ id: p.id, name: p.name, connected: p.connected }));
-  const base = { join, players, question: null, board: boardOf(room), final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const board = boardOf(room);
+  const quizId = step?.room.quiz?.id;
+  const rail = railOf({ board, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
+  const base = { join, players, question: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };

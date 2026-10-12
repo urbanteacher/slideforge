@@ -3,6 +3,7 @@ import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, c
 import { imageSettled } from '../engine';
 import { renderStill, editableSlides, exportPptx, type SlideFormat } from '../export';
 import { enterView, useStore, type LabView } from '../store';
+import { canHostInStudio, openStudioShow, type ShowHooks } from '../show';
 import { saveSlide } from '../ui';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
@@ -364,6 +365,17 @@ export const labApi = {
     useStore.getState().mutate((d) => { if (group) d.libraryGroup = group; else delete d.libraryGroup; });
   },
   currentSlideId: () => useStore.getState().slideId,
+  /** The shell's Host live (lab-engine-plan M7 slice 3): when every game in the lesson is plain Multiple choice
+   *  and nothing else needs the classic room, open the studio's own show with its own room, over this frame, and
+   *  say true. False: the shell hosts the lesson the classic way. `hooks` is what the shell lends the show. */
+  hostInStudio(hooks: ShowHooks): boolean {
+    const st = useStore.getState();
+    if (!canHostInStudio(st.deck).ok) return false;
+    openStudioShow({ room: true, slideId: st.slideId, hooks });
+    return true;
+  },
+  /** Why Host live would not run in the studio's room (for the shell's note to the console and the tests). */
+  whyNotInStudio: (): string => canHostInStudio(useStore.getState().deck).reason,
   /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
    *  slide on screen stays when it is in the view; otherwise the view's first slide is shown. Entering the
    *  Quiz studio or Activities opens Engage, once. */

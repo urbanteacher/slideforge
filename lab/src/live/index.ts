@@ -6,7 +6,9 @@
 //   host.begin(); host.next(); …           // the teacher's Start and Next
 //   host.subscribe((room) => …);           // players, tallies, scores, as the relay reports them
 //   await host.end();
+//   new ManualBridge(host).start()          // serve the teacher-entry window (manual.html#<key>)
 export { LiveHost, type HostOptions, type ManualChoice } from './host';
+export { ManualBridge, manualState, newKey, type ChannelLike } from './manual';
 export { showFromDeck, type RoomQuiz, type RoomShow, type RoomSlide } from './show';
 export { Room, emptyRoom, type Listener, type OpenQuestion, type RoomState, type Tally } from './room';
 export { Connection, DEFAULT_BACKOFF, type Backoff, type ConnectionOptions, type SocketFactory, type SocketLike } from './connection';
