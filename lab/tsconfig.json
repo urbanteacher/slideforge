@@ -22,7 +22,9 @@
   },
   "include": [
     "src",
+    "tests",
     "vite.config.ts",
+    "vite.test.config.ts",
     "vite.player.config.ts"
   ]
 }

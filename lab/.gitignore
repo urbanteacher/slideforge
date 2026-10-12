@@ -3,3 +3,4 @@ dist
 src/generated/player.iife.js
 .DS_Store
 exports
+.test-build

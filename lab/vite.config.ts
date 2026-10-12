@@ -41,7 +41,14 @@ const devRebuildPlayer = (): Plugin => ({
   },
 });
 
+/** SlideForge's game and activity logic, imported where it lives (../src) rather than copied: '@sf/games/…',
+ *  '@sf/activities/…'. Typed in src/sf.d.ts. Until the classic room is retired (lab-engine-plan M14) the
+ *  same files build into js/model.js too, so they stay plain JavaScript with no DOM and no SF global. */
+export const SF_ALIAS = { '@sf': resolve(import.meta.dirname, '../src') };
+
 export default defineConfig({
   plugins: [react(), devSaveExports(), devRebuildPlayer()],
-  server: { port: 5199 },
+  resolve: { alias: SF_ALIAS },
+  // ../src is outside the lab's root: the dev server may read it.
+  server: { port: 5199, fs: { allow: [resolve(import.meta.dirname, '..')] } },
 });
