@@ -1,7 +1,7 @@
 import { ChevronDown, FileCode, FileJson, FilePlus, FolderOpen, ImageDown, Play, Presentation, Sparkles } from 'lucide-react';
 import { useRef } from 'react';
 import { exportHtml, exportJson, exportPng, renderStill } from '../export/exporters';
-import { exportPptx } from '../export/pptx';
+import { editableSlides, exportPptx } from '../export/pptx';
 import { blankDeck, demoDeck } from '../model/defaults';
 import { ukbtDeck, ukbtInstituteDeck } from '../model/ukbtDeck';
 import { nulDeck } from '../model/nulDeck';
@@ -70,6 +70,12 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
               await exportPptx(deck, deck.slides.map((s) => ({ image: renderStill(s, deck, 1920, 'image/jpeg', 2, 0.92), notes: s.notes ?? '', hidden: !!s.hidden, name: s.name })));
               showToast('Exported a PowerPoint: each slide a picture, with its notes');
             }}><Presentation size={15} />Export PowerPoint (slides as pictures)<small>.pptx</small></button>
+            <button onClick={async () => {
+              close();
+              showToast('Making the PowerPoint…');
+              await exportPptx(deck, await editableSlides(deck), true);
+              showToast('Exported a PowerPoint with editable text');
+            }}><Presentation size={15} />Export PowerPoint (editable text)<small>.pptx</small></button>
             <button onClick={() => { const st = useStore.getState(); exportPng(slideOf(st), deck, deck.slides.indexOf(slideOf(st))); close(); }}><ImageDown size={15} />Export this slide as an image<small>.png</small></button>
             <div className="menu-note">Your work also autosaves in this browser. HTML decks keep every animation, transition and interaction.</div>
           </>

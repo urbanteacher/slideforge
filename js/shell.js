@@ -1365,7 +1365,8 @@
         ];
         if (active.key === 'deck') {
           if (active.lab && SF.LabEngine && SF.LabEngine.exportPptx) {
-            items.push({ id: 'pptx', title: 'PowerPoint (.pptx)', blurb: 'Every slide as a picture, exactly as it looks here, with your speaker notes in PowerPoint\u2019s notes. Opens in PowerPoint, Keynote and Google Slides. The words are not editable, and video, motion and games show as a still.' });
+            items.push({ id: 'pptx', title: 'PowerPoint (.pptx), slides as pictures', blurb: 'Every slide as a picture, exactly as it looks here, with your speaker notes in PowerPoint\u2019s notes. Opens in PowerPoint, Keynote and Google Slides. The words are not editable, and video, motion and games show as a still.' });
+            items.push({ id: 'pptx-edit', title: 'PowerPoint (.pptx), editable text', blurb: 'The headings and body text as PowerPoint text boxes you can change, over a picture of everything else. Words with special effects (gradients, outlines, highlighter, panels) and the header and footer stay part of the picture. PowerPoint uses its own font when the slide\u2019s font is not installed, so lines may break a little differently.' });
           }
           items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results. A student copy, or a teacher copy with each check as its answer.' });
           items.push({
@@ -1397,7 +1398,8 @@
                slide fully built, as a picture, with its games in place. */
             if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.printDeck ? SF.LabEngine.printDeck() : SF.LabEngine.showDeck());
             if (it.id === 'pdf') return SF.Print.open(active.doc());
-            if (it.id === 'pptx') return SF.LabEngine.exportPptx();
+            if (it.id === 'pptx') return SF.LabEngine.exportPptx(false);
+            if (it.id === 'pptx-edit') return SF.LabEngine.exportPptx(true);
             if (it.id === 'md') return exportMarkdown();
             if (it.id === 'folder') return exportAllToFolder();
             exportBundle();

@@ -838,12 +838,15 @@
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
     openLesson: openLesson, openKey: openKey,
     /** The lesson on screen as a PowerPoint file, every slide a picture with its notes (File → Export). */
-    exportPptx: function () {
+    /* editableText: the plain words become PowerPoint text boxes over a picture drawn without them. */
+    exportPptx: function (/** @type {boolean} */ editableText) {
       SF.toast('Making the PowerPoint\u2026');
       whenReady(function (a) {
         a.pptx(function (/** @type {number} */ done, /** @type {number} */ total) {
           if (done === total || done % 10 === 0) SF.toast('Making the PowerPoint\u2026 ' + done + ' of ' + total + ' slides');
-        }).then(function () { SF.toast('Exported a PowerPoint: each slide a picture, with its speaker notes'); },
+        }, !!editableText).then(function () {
+          SF.toast(editableText ? 'Exported a PowerPoint with editable text, and your speaker notes' : 'Exported a PowerPoint: each slide a picture, with its speaker notes');
+        },
           function () { SF.toast('The PowerPoint could not be made'); });
       });
     },

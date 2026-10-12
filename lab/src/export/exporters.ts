@@ -72,14 +72,15 @@ function still(): { canvas: HTMLCanvasElement; r: Renderer } {
 }
 
 /** Render a fully built slide to an image data URL. */
-export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2, quality = 0.9): string {
+export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2, quality = 0.9, hidden?: Set<string>): string {
   const { canvas, r } = still();
   r.deckW = deck.width;
   // A thumbnail can be drawn against a bare size with no slides; it simply has no page number.
   r.order = (deck.slides ?? []).filter((s) => !s.hidden).map((s) => s.id);
   r.deckH = deck.height;
   r.setSize(width, Math.round((width * deck.height) / deck.width));
-  r.drawSlide(slide, { time, mouse: [0.5, 0.5], t: Infinity, clicks: [] }, null);
+  // `hidden`: layers left out of the picture, as the editable PowerPoint does with the words it sets as text.
+  r.drawSlide(slide, { time, mouse: [0.5, 0.5], t: Infinity, clicks: [], hidden }, null);
   const url = canvas.toDataURL(type, quality);
   // Thumbnails are drawn for every slide in turn; keeping each one's textures would hold the whole
   // deck on the GPU (93 slides of pictures and type was enough to crash it), so only this slide's stay.
