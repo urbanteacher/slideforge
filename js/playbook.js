@@ -22,12 +22,29 @@
       phases: 'vote → the split → one switch → reveal',
       timer: 'Optional. A timed statement shows its split half-way through the clock.',
       players: 'Individuals or teams; every phone votes and may switch once.',
-      scoring: 'The final answer is marked. Switching is free; the reveal counts who switched, never who.',
+      scoring: 'The final answer is marked, with the points and countdown chosen in Game settings. Switching is free; the reveal counts who switched, never who.',
       howToPlay: [
         'A statement appears. Every phone votes True or False.',
         'Next shows the room its own split, on the wall and on every phone.',
         'Each learner may switch once, or hold.',
         'Next reveals the answer: where the room stood at the split, where it ended, and how many changed their minds.'
+      ]
+    },
+    /* Plain True or false: no split and no switch — those are Showdown's
+       (compileGame sets showdown only for the true-false format). */
+    'truefalse': {
+      title: 'True or False',
+      aim: 'A quick check of one claim at a time — true, or not?',
+      judgement: 'auto',
+      demo: 'class',
+      phases: 'statement → vote → reveal → reason',
+      timer: 'Optional per statement, from Game settings.',
+      players: 'Individuals or teams; every phone votes True or False.',
+      scoring: 'A right answer earns the points chosen in Game settings; on a timed statement, a faster one earns more.',
+      howToPlay: [
+        'A statement appears. Every phone votes True or False.',
+        'Votes arrive on the wall as they come in, unless Game settings hold them for the reveal.',
+        'Next reveals the answer and why. Once every phone has voted it reveals itself.'
       ]
     },
     'low-stakes-quiz': {
@@ -575,7 +592,7 @@
     type: 'type',
     slider: 'slider',
     order: 'order',
-    truefalse: 'true-false',
+    truefalse: 'truefalse',
     speed: 'beat-the-clock',
     boss: 'boss-battle',
     race: 'horse-race',
@@ -600,10 +617,9 @@
   /* Describe the implemented SlideForge flow, not promises from the source
      catalogue. Overrides here win over the entries above, so one that goes
      stale hides a rebuilt game's own description — keep them in step. */
-  Object.assign(BOOK['true-false'], {
-    players: 'Individuals or teams answer together.',
-    scoring: 'Uses the points and countdown chosen in Game settings.'
-  });
+  /* True/False Showdown's old override here ("Uses the points and countdown
+     chosen in Game settings", "answer together") hid its own scoring and
+     switch lines; the entry now says both. */
   Object.assign(BOOK['emoji-guess'], {
     judgement: 'auto', demo: 'class', players: 'Learners type an accepted concept name.',
     phases: 'emoji clue → optional support → type → reveal',
@@ -620,7 +636,7 @@
   Object.assign(BOOK['question-cube'], {
     title: 'Question Cube', phases: 'roll a face → think → answer aloud → the teacher marks → roll again',
     judgement: 'judge', demo: 'judge',
-    scoring: 'Counts accepted answers (with teams, credits the speaker’s team).',
+    scoring: 'Counts answers marked Answered — no points, with or without teams.',
     howToPlay: [
       'Next rolls the cube: a fresh face each time — Define, Compare, Why, Example, What if, Benefits and limits — and its question for today’s topic.',
       'Choose who answers in Live answers (Pick for me cold-calls fairly). They answer aloud.',
@@ -639,6 +655,7 @@
      Recommendations guide setup; they never trim an existing lesson. */
   var SETUP = {
     'true-false': ['Statement', 'Statement to judge', 'Write one unambiguous claim and explain the misconception in the reveal. The room sees its split and may switch once.', 'Learners vote, see the split, hold or switch', 'question'],
+    'truefalse': ['Statement', 'Statement to judge', 'Write one unambiguous claim, mixing true and false, and explain the misconception in the reveal.', 'Learners vote True or False', 'question'],
     'low-stakes-quiz': ['Question', 'Recall question', 'Prepare 3–10 short question-and-answer pairs for one readable worksheet.', 'Class writes on paper', 'board'],
     'quiz-bowl': ['Cell', 'Question behind this cell', 'Group questions into up to six categories. Set a value and a private answer for each cell.', 'Teacher awards spoken answers', 'board'],
     'beat-the-clock': ['Question', 'Quick-fire question', 'Keep prompts and choices short enough to read under pressure. Add a varied question pool.', 'Learners choose an answer', 'question'],
