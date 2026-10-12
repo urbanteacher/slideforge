@@ -15,6 +15,21 @@
    * @param {function(string): boolean} [opts.watchOn]  register share id for follow
    * @param {function(string)=} [opts.toast]  status messages
    */
+  /* An audience link never carries the speaker notes. They were in every shared
+     copy, unseen on the page but in the lesson anyone with the link could fetch
+     (/api/share/<id>). The presenter's notes go only to their own private link:
+     Notes on another device (js/player.js). */
+  /** @param {any} doc */
+  function withoutNotes(doc) {
+    var copy = JSON.parse(JSON.stringify(doc));
+    (copy.slides || []).forEach(function (/** @type {any} */ s) {
+      if (!s) return;
+      delete s.notes;
+      (s.layers || []).forEach(function (/** @type {any} */ l) { if (l) delete l.notes; });
+    });
+    return copy;
+  }
+
   function shareLessonDoc(doc, opts) {
     opts = opts || {};
     var toast = opts.toast || (SF.toast ? function (m) { SF.toast(m); } : function () {});
@@ -49,9 +64,9 @@
       fetch('/api/share', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         /* Practice carries the solo-playable games inside the copy. */
-        body: JSON.stringify({ doc: choice === 'practice' && SF.practiceDoc
+        body: JSON.stringify({ doc: withoutNotes(choice === 'practice' && SF.practiceDoc
           ? SF.practiceDoc(doc, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; })
-          : doc })
+          : doc) })
       }).then(function (r) {
         return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
       }).then(function (j) {
