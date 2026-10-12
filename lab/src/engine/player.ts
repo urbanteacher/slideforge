@@ -1,10 +1,8 @@
-import type { Deck, Layer, Slide } from '../model/types';
+import type { Deck, Layer, Slide } from '../core';
 import { EASE, animTotal, schedule } from './anim';
 import { ALL_KINDS } from './registry';
 import { MODEL_PLOT, showMedia, toggleMedia, fileClip, mediaPlaying } from './raster';
-import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps } from './scene';
-import { experimentControls, experimentStates } from './experiment';
-import { hitButton } from './controls';
+import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps, experimentControls, experimentStates, hitButton } from '../experiments';
 import { reducesMotion, type MotionSetting } from './motion';
 import { Renderer, type FrameOpts } from './renderer';
 

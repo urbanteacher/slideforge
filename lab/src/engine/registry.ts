@@ -1,5 +1,5 @@
-import type { BlendMode, Params, ParamValue } from '../model/types';
-import { EXPERIMENTS } from './experiment';
+import type { BlendMode, Params, ParamValue } from '../core';
+import { EXPERIMENTS } from '../experiments';
 
 export type Category = 'source' | 'generate' | 'distort' | 'colour' | 'light' | 'stylise';
 

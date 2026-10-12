@@ -11,10 +11,10 @@ const BUDGET = 800;
 const ALLOWED: Record<string, string> = {
   'engine/raster.ts': 'one drawing function per kind; split into kinds/<kind>/raster.ts (M1.5 step 3)',
   'engine/registry.ts': 'every layer and effect kind; split into kinds/<kind>/def.ts and kinds/effects/ (M1.5 step 4)',
-  'model/layouts.ts': 'every layout; split into layouts/ by family (M1.5 step 5)',
-  'engine/experimentKinds.ts': 'every experiment kind; split by kind (M1.5)',
-  'ui/Inspector.tsx': 'branches per kind; becomes a frame for each kind’s Inspector (M1.5 step 6)',
-  'ui/special.tsx': 'the special kinds’ inspectors; split by kind (M1.5)',
+  'layouts/layouts.ts': 'every layout; split into layouts/ by family (M1.5 step 5)',
+  'experiments/experimentKinds.ts': 'every experiment kind; split by kind (M1.5)',
+  'ui/panels/Inspector.tsx': 'branches per kind; becomes a frame for each kind’s Inspector (M1.5 step 6)',
+  'ui/panels/special.tsx': 'the special kinds’ inspectors; split by kind (M1.5)',
 };
 
 test(`no lab source file is over ${BUDGET} lines, beyond the files still being split`, () => {

@@ -46,7 +46,7 @@ export const THEMES = {
   cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f', ground: 'dark', art: {"className": "cine-art", "html": "<div class=\"cine-bar cine-top\"></div><div class=\"cine-bar cine-bottom\"></div><div class=\"cine-streak\"></div><div class=\"cine-vignette\"></div>", "layouts": ["title", "section"]}, defaults: {} },
   brutal: { name: 'Brutal · Mono', swatch: '#111111', ground: 'dark', art: {"className": "brut-art", "html": "<div class=\"brut-grid\"></div><div class=\"brut-marks\"></div>", "layouts": ["title", "section"]}, defaults: {} },
   /* Nodes (the-teaching-model.vercel.app): ink on cool grey, white cards, and the U A C X J backbone
-     colours. css/nodes.css; the Lesson studio's palette is 'nodes' in lab/src/model/palettes.ts. */
+     colours. css/nodes.css; the Lesson studio's palette is 'nodes' in lab/src/theme/palettes.ts. */
   nodes: { name: 'Nodes', swatch: '#0072b2', ground: { default: 'light', title: 'dark', section: 'dark', quote: 'dark' }, art: null, defaults: {} },
   midnight: { name: 'Midnight', swatch: '#1b2a4a', ground: 'dark', art: null, defaults: {} },
   paper:    { name: 'Paper',    swatch: '#f4f1ea', ground: 'light', art: null, defaults: {} },

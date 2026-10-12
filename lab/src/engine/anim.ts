@@ -1,7 +1,6 @@
-import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../model/types';
-import { experimentStates } from './experiment';
-import { sceneSteps } from './scene';
-import { beatsOf, isTableKind } from './chartKinds';
+import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../core';
+import { experimentStates, sceneSteps } from '../experiments';
+import { beatsOf, isTableKind } from '../charts';
 import { isWordMotion, shuffledRank, wordsTotal } from './words';
 
 /** A CSS cubic-bezier(x1, y1, x2, y2) as a function of progress: solve x for t, return y. */

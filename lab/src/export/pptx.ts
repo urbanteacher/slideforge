@@ -1,5 +1,5 @@
-import type { Deck, Layer, Slide } from '../model/types';
-import { groupSizes, layoutText, textSize } from '../engine/raster';
+import type { Deck, Layer, Slide } from '../core';
+import { groupSizes, layoutText, textSize } from '../engine';
 import { download, exportPng, renderStill, slug } from './exporters';
 
 /** A text box PowerPoint can edit, in the slide's own pixels and the layer's own type. */

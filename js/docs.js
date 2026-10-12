@@ -4,7 +4,7 @@
    - SlideForge's own (src/storage.js: SF.Store and SF.GameStore, in
      localStorage): games, older lessons, and the Library's card for each
      Lesson-studio lesson;
-   - the Lesson studio's (lab/src/embed.ts, in IndexedDB): the lessons
+   - the Lesson studio's (lab/src/app/embed.ts, in IndexedDB): the lessons
      themselves, with their pictures.
 
    The Library and the backup used to read only the first, so a backup

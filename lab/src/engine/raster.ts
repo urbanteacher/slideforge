@@ -1,9 +1,8 @@
-import type { Layer, Params } from '../model/types';
+import type { Layer, Params } from '../core';
 import { DIM_TO, EASE, textUnitCount, unitProgress } from './anim';
-import { drawTableChart, isTableKind } from './chartKinds';
-import { drawExperiment } from './experiment';
-import { drawScene } from './scene';
-import { videoEmbed, videoService, videoStill } from '../model/video';
+import { drawTableChart, isTableKind } from '../charts';
+import { drawExperiment, drawScene } from '../experiments';
+import { videoEmbed, videoService, videoStill } from '../kinds/video';
 import { FRAME_K, isWordMotion, reach, unitDelays, unitLook, type UnitLook } from './words';
 
 // Rasterises content layers (text / shape / image) into 2D canvases that the renderer uploads as

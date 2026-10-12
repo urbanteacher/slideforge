@@ -1,7 +1,7 @@
 import playerSrc from '../generated/player.iife.js?raw';
-import { Renderer } from '../engine/renderer';
-import type { Deck, Slide } from '../model/types';
-import { guideFontCss } from '../model/guide';
+import { Renderer } from '../engine';
+import type { Deck, Slide } from '../core';
+import { guideFontCss } from '../theme';
 
 export function download(name: string, data: Blob | string, type = 'application/octet-stream') {
   const blob = typeof data === 'string' ? new Blob([data], { type }) : data;

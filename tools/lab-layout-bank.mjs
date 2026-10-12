@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* The Layout bank's content, for the lab (SlideForge Studio).
  *
- * The lab builds these slides itself, from its own layouts (lab/src/model/fromSlideForge.ts);
+ * The lab builds these slides itself, from its own layouts (lab/src/decks/fromSlideForge.ts);
  * what it needs from SlideForge is only what each slide says — its type, title, points, table,
  * chart data, notes — and the pictures it shows. This reads the lesson through SlideForge's own
  * buildLesson, keeps the content fields, embeds the pictures it names, and writes one file.

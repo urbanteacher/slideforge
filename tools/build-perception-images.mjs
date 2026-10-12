@@ -5,7 +5,7 @@
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { KIND_PRESETS, kindPicture } from '../lab/src/engine/experimentKinds.ts';
+import { KIND_PRESETS, kindPicture } from '../lab/src/experiments/experimentKinds.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const INK = '#1a1a1a';

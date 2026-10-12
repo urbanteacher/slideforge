@@ -8,7 +8,7 @@ export default defineConfig({
     outDir: '../lab-app',
     emptyOutDir: false,
     lib: {
-      entry: 'src/engine/stage-entry.ts',
+      entry: 'src/app/stage-entry.ts',
       name: 'SlideForgeLabStage',
       formats: ['iife'],
       fileName: () => 'stage.js',

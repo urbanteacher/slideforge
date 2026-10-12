@@ -163,7 +163,7 @@
      lesson goes over with each game its slides play, compiled by SlideForge
      (SF.compileGame) and described as the lab's own games are
      (tools/lab-games.mjs): its format, name, and how to play. The lab then
-     builds each one on its own game walls (lab/src/model/fromSlideForge.ts). */
+     builds each one on its own game walls (lab/src/decks/fromSlideForge.ts). */
   /** One of SlideForge's games as the lab builds it: compiled by SlideForge, described as the lab's
       own games are, and looking as SlideForge showed it (buttons for multiple choice and true or
       false). */
@@ -753,7 +753,7 @@
     mount();
     SF.Shell.register(ws);
     /* The Quiz studio and Activities are the lab too: the same lesson, in the
-       same frame, shown as its games or its activities (lab/src/model/store.ts
+       same frame, shown as its games or its activities (lab/src/store/store.ts
        LabView). What is made there goes into the lesson; the classic studios'
        panes and canvas are not used. */
     var quiz = studioView('game', 'quiz', 'Games');
@@ -775,7 +775,7 @@
         if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
       } catch (e) {}
     }
-    /* A lab window on its own asks for SlideForge's show (lab/src/ui/showInSlideForge.ts): it opens
+    /* A lab window on its own asks for SlideForge's show (lab/src/app/showInSlideForge.ts): it opens
        this page with ?labPresent=1 and, once told the page is ready, sends its lesson. The lesson is
        opened as a lab deck, then presented here, with this player's own bar. Only the window that
        opened this one is listened to, and only from this app or a local development server. */

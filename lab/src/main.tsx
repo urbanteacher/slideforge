@@ -1,7 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import './styles.css';
-import { labApi } from './embed';
-import { App } from './ui/App';
+import { labApi, App } from './app';
 
 // ?embed=1: SlideForge's shell has loaded the lab in a frame as its lesson engine (js/lab-engine.js).
 const embedded = new URLSearchParams(location.search).get('embed') === '1';

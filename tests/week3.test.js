@@ -1,5 +1,5 @@
 /* Week 3 (data abstraction): its lesson, and the chart-experiment kinds it
- * brought, which are written once in lab/src/engine/experimentKinds.ts and
+ * brought, which are written once in lab/src/experiments/experimentKinds.ts and
  * drawn by both engines. Node strips the file's types, so it is imported as is. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -8,7 +8,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
-const kinds = () => import(path.join(ROOT, 'lab/src/engine/experimentKinds.ts'));
+const kinds = () => import(path.join(ROOT, 'lab/src/experiments/experimentKinds.ts'));
 
 function sf() {
   const store = {};

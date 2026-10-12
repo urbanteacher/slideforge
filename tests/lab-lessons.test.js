@@ -18,7 +18,7 @@ function shipped() {
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'js', 'lab-lessons.js'), 'utf8'), c);
   return c.window.SF.LAB_LESSONS || {};
 }
-const CARRIED = Number(/export const CARRIED = (\d+);/.exec(fs.readFileSync(path.join(ROOT, 'lab/src/model/fromSlideForge.ts'), 'utf8'))[1]);
+const CARRIED = Number(/export const CARRIED = (\d+);/.exec(fs.readFileSync(path.join(ROOT, 'lab/src/decks/fromSlideForge.ts'), 'utf8'))[1]);
 
 test('each shipped lesson copy is there, and made by the converter version the lab has', () => {
   const all = shipped();

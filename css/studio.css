@@ -352,7 +352,7 @@ html.lab-engine:not(:is([data-ws="deck"],[data-ws="game"],[data-ws="plan"])) .la
 .lab-notes h4{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-dim)}
 .lab-notes-none{color:#777}
 .hud [data-lab-act="notes"].on{background:var(--ui-accent-soft);color:var(--ui-accent)}
-/* The lab's tools row carries the shell's second row (lab/src/ui/ShellRow.tsx): one line, not two. */
+/* The lab's tools row carries the shell's second row (lab/src/app/ShellRow.tsx): one line, not two. */
 html.lab-engine:is([data-ws="deck"],[data-ws="game"],[data-ws="plan"]) .topbar>.bar-break,
 html.lab-engine:is([data-ws="deck"],[data-ws="game"],[data-ws="plan"]) .topbar>.header-row2{display:none}
 

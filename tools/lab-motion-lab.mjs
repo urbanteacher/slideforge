@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* The Motion lab lesson's content, for the lab (SlideForge Studio).
  *
- * The lab builds these slides itself (lab/src/model/motionLab.ts and fromSlideForge.ts); what it
+ * The lab builds these slides itself (lab/src/decks/motionLab.ts and fromSlideForge.ts); what it
  * needs from SlideForge is what each slide says and the pictures and clips it shows. This reads the
  * lesson from js/lessons.js — its authored slides, then the section, the ten motion specimens and
  * the five visual studies the file appends to it — and embeds the media it names. It reads source

@@ -15,7 +15,7 @@
  * or pointers.
  *
  * The Lesson studio converts the slides it can build and plays the rest as
- * SlideForge's own (lab/src/embed.ts cannotBuild); a figure is one of the
+ * SlideForge's own (lab/src/app/embed.ts cannotBuild); a figure is one of the
  * rest, so it plays natively there too.
  *
  * Installed per page, before installExplore (index.html, presenter.html,

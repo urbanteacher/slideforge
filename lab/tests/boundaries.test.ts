@@ -14,9 +14,11 @@ const KIND_SIDE = ['kinds', 'games', 'activities', 'live'];
 const DATA = ['assets', 'generated'];
 
 /** Folders that have no index.ts yet, so are still imported file by file. Empty when M1.5 is done. */
-const NO_INDEX_YET: string[] = ['engine', 'model', 'ui', 'export', 'persist'];
+const NO_INDEX_YET: string[] = [];
 /** Entries still imported from a folder, until they move into app/. Empty when M1.5 is done. */
-const ENTRY_IMPORTS: string[] = ['embed.ts'];
+const ENTRY_IMPORTS: string[] = [];
+/** core/ or engine/ files still reaching into a kind, until the kind's code moves out of them. Empty when M1.5 is done. */
+const REACHES_KINDS: string[] = ['engine/raster.ts → kinds/video/index.ts'];
 
 const all = () => sourceFiles().flatMap(importsOf);
 
@@ -26,7 +28,7 @@ test('every relative import names a file that exists', () => {
 });
 
 test('core/ and engine/ import no kind, game, activity or live code', () => {
-  const bad = all().filter((i) => i.to && NO_KINDS.includes(unitOf(i.from)) && KIND_SIDE.includes(i.to.split('/')[0])).map((i) => `${i.from} → ${i.to}`);
+  const bad = all().filter((i) => i.to && NO_KINDS.includes(unitOf(i.from)) && KIND_SIDE.includes(i.to.split('/')[0])).map((i) => `${i.from} → ${i.to}`).filter((b) => !REACHES_KINDS.includes(b));
   assert.deepEqual(bad, []);
 });
 
@@ -50,5 +52,6 @@ test('the allowlists hold nothing stale', () => {
   const units = new Set([...files].map(unitOf));
   const stale = NO_INDEX_YET.filter((u) => !units.has(u) || files.has(`${u}/index.ts`) || files.has(`${u}/index.tsx`));
   const entries = ENTRY_IMPORTS.filter((e) => !all().some((i) => i.to === e && unitOf(i.from) !== ''));
-  assert.deepEqual([...stale, ...entries], []);
+  const reaches = REACHES_KINDS.filter((r) => !all().some((i) => `${i.from} → ${i.to}` === r));
+  assert.deepEqual([...stale, ...entries, ...reaches], []);
 });

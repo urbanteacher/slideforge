@@ -1,7 +1,7 @@
 /* A SlideForge lesson converted into the lab, and a lab copy brought up to
  * date when a newer converter can build more of its lesson.
  *
- * The converter is the lab's TypeScript (lab/src/model/fromSlideForge.ts), so
+ * The converter is the lab's TypeScript (lab/src/decks/fromSlideForge.ts), so
  * it is built here with the lab's own Vite, as a server bundle, and imported.
  * Without the lab's node_modules there is nothing to build it with, and the
  * tests say so rather than failing. */
@@ -41,7 +41,7 @@ async function converter() {
   if (built) return built;
   measuringCanvas();
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-lab-convert-'));
-  execFileSync(process.execPath, [VITE, 'build', '--ssr', 'src/model/fromSlideForge.ts', '--outDir', out, '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
+  execFileSync(process.execPath, [VITE, 'build', '--ssr', 'src/decks/fromSlideForge.ts', '--outDir', out, '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
   built = await import(pathToFileURL(path.join(out, 'fromSlideForge.js')).href);
   return built;
 }
@@ -242,7 +242,7 @@ test('in the live room, each Check the lab built is SlideForge\u2019s own quiz q
   const { deckFromSlideForge } = await converter();
   const src = lessonWithGames('ipdv-vc-hybrid');
   const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
-  // What the lab hands the room: a picture of each slide, carrying its game (lab/src/embed.ts stills).
+  // What the lab hands the room: a picture of each slide, carrying its game (lab/src/app/embed.ts stills).
   const stills = deck.slides.map((s) => ({ id: s.id, sourceSlideId: s.sourceSlideId, image: 'still.jpg', notes: s.notes || '', hidden: false, name: s.name, game: s.game }));
   const room = src.SF.labShowSlides(stills).map((it) => it.sf).filter((s) => s && s.type === 'quiz');
   assert.equal(room.length, 5, 'five questions for the phones');
@@ -389,7 +389,7 @@ test('a lesson’s Check comes in as two slides: four buttons under the question
 
 test('the Look switch builds a Check again the other way and keeps what the lesson hangs on it', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
-  const { relookGame } = await bundle('src/model/gameLook.ts');
+  const { relookGame } = await bundle('src/designs/gameLook.ts');
   const src = lessonWithGames('ipdv-vc-hybrid');
   const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
   const check = src.slides.find((s) => s.type === 'game');
@@ -411,9 +411,9 @@ test('the Look switch builds a Check again the other way and keeps what the less
 });
 
 test('true or false has the same two looks: two doors lit green where they stand, or the walls', { skip }, async () => {
-  const { gameSlides } = await bundle('src/model/designs/formats.ts');
-  const { relookGame } = await bundle('src/model/gameLook.ts');
-  const { LAYOUT_STYLES } = await bundle('src/model/layouts.ts');
+  const { gameSlides } = await bundle('src/designs/engage/formats.ts');
+  const { relookGame } = await bundle('src/designs/gameLook.ts');
+  const { LAYOUT_STYLES } = await bundle('src/layouts/layouts.ts');
   const sample = JSON.parse(fs.readFileSync(path.join(LAB, 'src/assets/games.json'), 'utf8')).games.find((g) => g.format === 'truefalse');
   const st = LAYOUT_STYLES[0];
   const slides = gameSlides({ ...sample, look: 'buttons' }, st);
@@ -469,7 +469,7 @@ async function together(name, code) {
 
 test('the Quiz studio and Activities are views of the open lesson: its games, its activities', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
-  const { labApi: api, useStore, inView } = await together('views', "export { labApi } from './src/embed';\nexport { useStore, inView } from './src/model/store';\n");
+  const { labApi: api, useStore, inView } = await together('views', "export { labApi } from './src/app/embed';\nexport { useStore, inView } from './src/store/store';\n");
   const src = lessonWithGames('ipdv-vc-hybrid');
   const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
   const games = deck.slides.filter((s) => inView(s, 'quiz'));
@@ -497,7 +497,7 @@ test('the Quiz studio and Activities are views of the open lesson: its games, it
 
 test('the reason goes where the Game panel says: under the question, under the buttons, or the notes only', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
-  const { relookGame } = await bundle('src/model/gameLook.ts');
+  const { relookGame } = await bundle('src/designs/gameLook.ts');
   const src = lessonWithGames('ipdv-vc-hybrid');
   const check = src.slides.find((s) => s.type === 'game');
   const place = (reason) => {
@@ -526,7 +526,7 @@ test('the reason goes where the Game panel says: under the question, under the b
 
 test('a Buttons game an older lab built is set right as its lesson opens', { skip }, async () => {
   const { deckFromSlideForge } = await converter();
-  const { relookGame, repairGames } = await bundle('src/model/gameLook.ts');
+  const { relookGame, repairGames } = await bundle('src/designs/gameLook.ts');
   const src = lessonWithGames('ipdv-vc-hybrid');
   const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
   const check = src.slides.find((s) => s.type === 'game');

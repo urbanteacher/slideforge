@@ -1,0 +1,42 @@
+import { isBackdrop, chartCalloutSlide, exploreSlide, framedPictureSlide, gallerySlide, slideStyle, themeOf, LAYOUT_STYLES } from '../layouts';
+import type { Deck, Slide } from '../core';
+import { barsSlide, closingSlide, coverSlide, heroSlide, logosSlide, mosaicSlide, numbersSlide, routesSlide, showcaseSlide, stepsSlide, wallSlide, whySlide, type BarsArgs, type ClosingArgs, type CoverArgs, type HeroArgs, type LogosArgs, type MosaicArgs, type NumbersArgs, type RoutesArgs, type ShowcaseArgs, type StepsArgs, type WallArgs, type WhyArgs } from './storyDesigns';
+
+/*
+ * Slide designs made of several layers (Explore, Flip to facts, the gallery pile, chart callouts)
+ * remember what they were built from. Editing that and building again keeps the slide where it is —
+ * its id, notes, name, ground and transition — and its header, footer and backdrop; the design's own
+ * layers are made afresh in the deck's style.
+ */
+type Args = Record<string, unknown>;
+const BUILD: Record<string, (st: ReturnType<typeof slideStyle>, a: Args) => Slide> = {
+  explore: (st, a) => exploreSlide(st, String(a.title ?? ''), String(a.src ?? ''), (a.spots as never) ?? [], Number(a.aspect) || 16 / 9),
+  flip: (st, a) => framedPictureSlide(st, String(a.caption ?? ''), String(a.credit ?? ''), String(a.src ?? ''), String(a.frame ?? '4:3'), a.cap === 'plain' ? 'plain' : 'bar', String(a.facts ?? '')),
+  gallery: (st, a) => gallerySlide(st, String(a.title ?? ''), (a.figs as never) ?? [], String(a.frame ?? '4:3'), a.cap === 'plain' ? 'plain' : 'bar', a.fit === 'cover' ? 'cover' : 'contain'),
+  callouts: (st, a) => chartCalloutSlide(st, String(a.title ?? ''), String(a.data ?? ''), String(a.source ?? ''), (a.callouts as never) ?? []),
+  'story-numbers': (st, a) => numbersSlide(st, a as unknown as NumbersArgs),
+  'story-hero': (st, a) => heroSlide(st, a as unknown as HeroArgs),
+  'story-bars': (st, a) => barsSlide(st, a as unknown as BarsArgs),
+  'story-closing': (st, a) => closingSlide(st, a as unknown as ClosingArgs),
+  'story-steps': (st, a) => stepsSlide(st, a as unknown as StepsArgs),
+  'story-logos': (st, a) => logosSlide(st, a as unknown as LogosArgs),
+  'story-showcase': (st, a) => showcaseSlide(st, a as unknown as ShowcaseArgs),
+  'story-why': (st, a) => whySlide(st, a as unknown as WhyArgs),
+  'story-mosaic': (st, a) => mosaicSlide(st, a as unknown as MosaicArgs),
+  'story-routes': (st, a) => routesSlide(st, a as unknown as RoutesArgs),
+  'story-wall': (st, a) => wallSlide(st, a as unknown as WallArgs),
+  'story-cover': (st, a) => coverSlide(st, a as unknown as CoverArgs),
+};
+export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 'Flip to facts', gallery: 'Gallery', callouts: 'Chart callouts', 'story-numbers': 'Big-number row', 'story-hero': 'Photo hero', 'story-bars': 'Comparison bars', 'story-closing': 'Closing question', 'story-steps': 'Steps and a picture', 'story-logos': 'Logo wall', 'story-showcase': 'App showcase', 'story-why': 'Number and why', 'story-mosaic': 'Photo mosaic', 'story-routes': 'Two routes', 'story-wall': 'Wall of phrases', 'story-cover': 'Cover with portrait' };
+
+/** Build a slide's design again from new arguments, in place. */
+export function rebuildSlide(d: Deck, slideId: string, args: Args) {
+  const s = d.slides.find((x) => x.id === slideId);
+  if (!s?.recipe || !BUILD[s.recipe.kind]) return;
+  const st = slideStyle(themeOf(d) ?? LAYOUT_STYLES[0], s);
+  const made = BUILD[s.recipe.kind](st, args);
+  // The ground first, the backdrop just above it, the design, then the header and footer on top.
+  const own = made.layers.filter((l) => !isBackdrop(l)), back = s.layers.filter(isBackdrop), chrome = s.layers.filter((l) => l.params.hfSlot);
+  s.layers = [own[0], ...back, ...own.slice(1), ...chrome];
+  s.recipe = { kind: s.recipe.kind, args };
+}

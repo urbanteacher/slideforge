@@ -1,4 +1,4 @@
-import type { Anim, Easing, Layer, PlanStep, WordArc } from '../model/types';
+import type { Anim, Easing, Layer, PlanStep, WordArc } from '../core';
 
 // SlideForge's word motion (src/render/words.js and the sf-word-* keyframes in css/app.css), drawn
 // unit by unit on the canvas. Two ways in:

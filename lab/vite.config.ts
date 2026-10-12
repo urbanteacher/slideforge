@@ -30,7 +30,7 @@ const devRebuildPlayer = (): Plugin => ({
   configureServer(server) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     server.watcher.on('change', (file) => {
-      if (!/[\\/]src[\\/](engine|model)[\\/]/.test(file)) return;
+      if (!/[\\/]src[\\/](app|core|engine|kinds|charts|experiments|theme)[\\/]/.test(file)) return;
       clearTimeout(timer);
       timer = setTimeout(() => {
         build({ configFile: resolve(import.meta.dirname, 'vite.player.config.ts'), logLevel: 'warn' })

@@ -16,7 +16,7 @@
     "skipLibCheck": false,
     "resolveJsonModule": true,
     /* src/render/experiments.js takes its Week 3 kinds from the lab's
-       engine (lab/src/engine/experimentKinds.ts), which esbuild bundles. */
+       engine (lab/src/experiments/experimentKinds.ts), which esbuild bundles. */
     "allowImportingTsExtensions": true
   },
   "include": [

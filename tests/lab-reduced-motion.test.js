@@ -21,8 +21,8 @@ const built = {};
 async function lab(entry) {
   if (built[entry]) return built[entry];
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-lab-motion-'));
-  execFileSync(process.execPath, [VITE, 'build', '--ssr', `src/engine/${entry}.ts`, '--outDir', out, '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
-  built[entry] = await import(pathToFileURL(path.join(out, `${entry}.js`)).href);
+  execFileSync(process.execPath, [VITE, 'build', '--ssr', `src/${entry.includes('/') ? entry : 'engine/' + entry}.ts`, '--outDir', out, '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
+  built[entry] = await import(pathToFileURL(path.join(out, `${path.basename(entry)}.js`)).href);
   return built[entry];
 }
 
@@ -107,7 +107,7 @@ function recorder() {
 }
 
 test('a chart experiment cross-fades between its states rather than morphing', { skip }, async () => {
-  const { drawExperiment } = await lab('experiment');
+  const { drawExperiment } = await lab('experiments/experiment');
   const draw = (p) => { const r = recorder(); drawExperiment(r.ctx, 1600, 700, { preset: 'polling', ...p }); return r.marks; };
   const before = new Set(draw({ _step: 0 }).map((m) => m.at)), after = new Set(draw({ _step: 1 }).map((m) => m.at));
   assert.ok(before.size && after.size);

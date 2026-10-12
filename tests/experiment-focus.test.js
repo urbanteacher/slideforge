@@ -6,7 +6,7 @@ const { build } = require('esbuild');
 let engine;
 async function load() {
   if (!engine) engine = build({
-    entryPoints: [path.join(__dirname, '../lab/src/engine/experiment.ts')],
+    entryPoints: [path.join(__dirname, '../lab/src/experiments/experiment.ts')],
     bundle: true, platform: 'node', format: 'esm', write: false,
   }).then((r) => import('data:text/javascript;base64,' + Buffer.from(r.outputFiles[0].text).toString('base64')));
   return engine;

@@ -7,7 +7,7 @@ export default defineConfig({
     outDir: 'src/generated',
     emptyOutDir: false,
     lib: {
-      entry: 'src/engine/player-entry.ts',
+      entry: 'src/app/player-entry.ts',
       name: 'SlideForgePlayer',
       formats: ['iife'],
       fileName: () => 'player.iife.js',

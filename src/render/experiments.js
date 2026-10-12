@@ -9,7 +9,7 @@
  *
  * Installed by src/model.js; nothing here runs at install.
  */
-import { KIND_PRESETS, kindPicture, resolveExperimentPreset } from '../../lab/src/engine/experimentKinds.ts';
+import { KIND_PRESETS, kindPicture, resolveExperimentPreset } from '../../lab/src/experiments/experimentKinds.ts';
 
 export function installExperiments(SF) {
   var presets = {

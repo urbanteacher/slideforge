@@ -43,7 +43,7 @@ export function nodeLessons() {
 
 /* A lab deck carries each picture as data in every place it is used: a theme's logo is on every slide.
    The shipped copy keeps each once, in `pictures`, and refers to it as '@picture:<n>'; the lab puts
-   them back when it takes the copy (lab/src/embed.ts unpackPictures). */
+   them back when it takes the copy (lab/src/app/embed.ts unpackPictures). */
 function packPictures(deck) {
   const pictures = [], at = new Map();
   const walk = (v) => {

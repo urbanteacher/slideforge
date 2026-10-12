@@ -5,7 +5,7 @@
  *
  * The lab draws its slides; SlideForge's player, relay and phones run the room. A lab show reaches
  * the room as pictures (js/lab-engine.js), and a picture asks the phones nothing. So each of the
- * lab's game slides carries what SlideForge needs to play it (lab/src/model/designs/games.ts,
+ * lab's game slides carries what SlideForge needs to play it (lab/src/designs/engage/games.ts,
  * formats.ts: slide.game), and this turns the lab's slides into the show SlideForge plays:
  *
  *  - a question becomes SlideForge's own quiz slide — the question, its options, its answer, the
