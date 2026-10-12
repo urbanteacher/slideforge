@@ -218,6 +218,11 @@ export interface Slide {
   /** Position within that group, 0-based. */
   activityPage?: number;
   activityPresentation?: 'rows' | 'steps' | 'panels' | 'brief' | 'stages';
+  /** An activity's worked answer, turned over after the room's attempt. */
+  modelAnswer?: string;
+  /** The model answer came from the activity library, written about another
+   *  subject: it stays off the wall until the author rewrites or accepts it. */
+  modelAnswerDraft?: boolean;
   id: string;
   type: SlideType;
   title: string;
@@ -322,6 +327,8 @@ export interface Slide {
   errorFrom?: number;
   errorTo?: number;
   fix?: string;
+  /** Spoken games: the game's *Score spoken answers* setting, read by the relay. */
+  scoreSpoken?: boolean;
   /** Which deck slide this was expanded from, set by `buildRunDeck`. */
   sourceSlideId?: string;
   /** Typed answer key, and the spellings that count. */
@@ -543,6 +550,11 @@ export interface Question {
   word?: string;
   clues?: string;
   dripInterval?: number;
+  /** Spot the Error: the wrong words, as written in the sentence, and what they should be. */
+  error?: string;
+  fix?: string;
+  /** Fill the Gaps: wrong words for the bank, comma-separated after `normalize`. */
+  lures?: string;
   studySeconds?: number;
   gridSize?: number;
   rotateClaims?: boolean;

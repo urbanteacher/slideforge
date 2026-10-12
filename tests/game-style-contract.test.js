@@ -171,3 +171,19 @@ test('one style times the whole game, not each question', () => {
      showing their per-question timer rather than the game total. */
   assert.notEqual(styles.headsup.timesWholeGame, true);
 });
+
+/* AGENTS.md, "Adding a game style", step 5. Spot's `error` and `fix` and
+   Fill's `lures` were kept by their engines but missing from the type, so
+   nothing that read them was checked. */
+test('every field a style’s starter fills is declared on Question', () => {
+  const SF = load();
+  const src = fs.readFileSync(path.resolve(__dirname, '..', 'src/types.d.ts'), 'utf8');
+  const body = src.split('export interface Question {')[1].split('\n}')[0];
+  const missing = [];
+  Object.keys(SF.GAME_STYLES).forEach((style) => {
+    Object.keys(SF.GAME_STYLES[style].make()).forEach((f) => {
+      if (!new RegExp('\\n\\s*' + f + '\\??:').test(body)) missing.push(style + '.' + f);
+    });
+  });
+  assert.deepEqual(missing, []);
+});
