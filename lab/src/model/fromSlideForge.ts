@@ -3,7 +3,7 @@ import { videoEmbed } from './video';
 import { CHART_DARK, CHART_LIGHT } from '../engine/chartKinds';
 import { EXPERIMENTS, experimentPreset } from '../engine/experiment';
 import {
-  LAYOUTS, beforeAfterSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide,
+  LAYOUTS, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide,
   gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide,
   railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, type LayoutStyle,
 } from './layouts';
@@ -257,6 +257,14 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
     }
     case 'funnel': return { slide: funnelSlide(st, t, sub, triples(b)), ground: g };
     case 'timeline': return { slide: timelineSlide(st, t, sub, triples(b)), ground: g };
+    case 'sourcecheck': return { slide: sourcecheckSlide(st, t, sub, triples(b), s.body ?? '', !!s.progressive), ground: g };
+    case 'shift': return { slide: shiftSlide(st, t, sub, triples(b), s.body ?? '', !!s.progressive), ground: g };
+    case 'iceberg': return { slide: icebergSlide(st, t, sub, triples(b), s.body ?? '', !!s.progressive), ground: g };
+    case 'spectrum': {
+      // The two ends, written with a bar or a tab between them, as compare's headings are.
+      const ends = sub.split(/\t|\|/).map((x) => x.trim());
+      return { slide: spectrumSlide(st, t, [ends[0] ?? '', ends[1] ?? ''], triples(b), s.body ?? '', !!s.progressive), ground: g };
+    }
     case 'cards': {
       const items = pairs(b);
       const slide = cardsSlide(st, t, items);
@@ -476,8 +484,10 @@ export function carryDeckVideo(deck: Deck, source: SFSlide[]): number {
  *  next opens (embed.ts), taking only what that version could not build. 11: Week 3's perception
  *  demonstration gets its own preset key, leaving `channels` to the older marks demonstration. 12: a
  *  video slide's clip keeps its sound and plays as the slide arrives; with no caption, nothing covers it.
- *  13: a live figure gets a stand-in, a picture of its last step; the show still plays the figure. */
-export const CARRIED = 13;
+ *  13: a live figure gets a stand-in, a picture of its last step; the show still plays the figure.
+ *  14: the infographics that take a claim apart are built: claim & source, then / now / next, the
+ *  iceberg and the spectrum. */
+export const CARRIED = 14;
 
 /** Upgrade saved layer names and the Week 3 preset without changing authored data or states. */
 export function carryDeckExperimentPresets(deck: Deck): number {
@@ -496,7 +506,7 @@ export function carryDeckExperimentPresets(deck: Deck): number {
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
  *  missing from a copy because its author deleted it, and it stays deleted. */
-const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'], 13: ['figure'] };
+const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'], 13: ['figure'], 14: ['sourcecheck', 'shift', 'iceberg', 'spectrum'] };
 
 type Kit = ReturnType<typeof kit>;
 
