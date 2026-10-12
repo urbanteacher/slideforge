@@ -1192,7 +1192,101 @@
     });
   });
   /* Scored multiple-choice engines share the choice brief. */
-  ['race', 'speed', 'boss'].forEach(function (k) { AI_SPECS[k] = AI_SPECS.choice; });
+  ['race', 'speed'].forEach(function (k) { AI_SPECS[k] = AI_SPECS.choice; });
+
+  /* Boss Battle is choice plus a difficulty, and the difficulty is the game:
+     it sets each hit's damage (easy 1, medium 2, hard 3, boss 5) and the
+     boss's HP is their sum. On the plain choice brief every question came
+     back medium, so the ladder the format is built on never appeared. The
+     model is asked for a climb; a row that names no band takes its place on
+     the climb by position, so a forgetful reply still ends on the boss. */
+  var BOSS_BANDS = ['easy', 'medium', 'hard', 'boss'];
+  function bossBand(raw, i, n) {
+    var d = String(raw || '').trim().toLowerCase();
+    if (d === 'med') d = 'medium';
+    if (BOSS_BANDS.indexOf(d) > -1) return d;
+    if (!(n > 0) || !(i >= 0)) return 'medium';
+    return i === n - 1 ? 'boss' : BOSS_BANDS[Math.min(2, Math.floor(i * 4 / n))];
+  }
+  AI_SPECS.boss = {
+    family: 'Boss battle (multiple choice that climbs in difficulty)',
+    row: '{"question":"...","options":["...","..."],"correct":0,"difficulty":"easy","explanation":"..."}',
+    required: ['question', 'options'],
+    rules: AI_SPECS.choice.rules + ' "difficulty" is easy, medium, hard or boss, by how hard ' +
+      'the question really is: easy is recall, medium applies it, hard needs reasoning. ' +
+      'Climb from easy, and make the last one the single "boss" question, the hardest of all.',
+    toQuestion: function (row, i, n) {
+      return Object.assign(AI_SPECS.choice.toQuestion(row), {
+        difficulty: bossBand(row.difficulty, i, n)
+      });
+    }
+  };
+
+  /* Quiz Bowl: cells on a category board. The answer is for the teacher,
+     who hears it aloud and awards the cell, so it is short and there are no
+     options. A cell's value is how hard it is. */
+  AI_SPECS.bowl = {
+    family: 'Quiz bowl (category board)',
+    row: '{"category":"Cells","pointValue":200,"question":"...","answer":"short answer"}',
+    required: ['category', 'question', 'answer'],
+    rules: 'Each row is one cell on a board. Use two or three short categories ' +
+      '(one or two words each), with the questions shared between them. ' +
+      '"pointValue" is 100, 200, 300, 400 or 500, and rises with difficulty within ' +
+      'a category. The answer is one to five words, for the teacher to check a ' +
+      'spoken answer against. No options.',
+    toQuestion: function (row) {
+      return {
+        question: String(row.question || '').trim(),
+        category: String(row.category || '').trim(),
+        pointValue: Number(row.pointValue != null ? row.pointValue : row.value),
+        answer: String(row.answer || '').trim()
+      };
+    }
+  };
+
+  /* Spot the Error: one sentence with one real mistake in it. The room taps
+     the wrong words, so they must appear in the sentence word for word —
+     the engine rejects a row whose error it cannot find. Same guardrail as
+     the error-analysis activities: a learner's mistake, not a typo. */
+  AI_SPECS.spot = {
+    family: 'Spot the error (one wrong idea in a sentence)',
+    row: '{"question":"a sentence with one mistake","error":"the wrong words","fix":"what they should be","explanation":"..."}',
+    required: ['question', 'error'],
+    rules: 'One sentence of at most 30 words, true except for one mistake a learner ' +
+      'genuinely makes: a wrong idea, not a typo or spelling slip. "error" is the ' +
+      'one to three wrong words, copied exactly as they appear in the sentence. ' +
+      '"fix" is what replaces them. The explanation says why the original is wrong.',
+    toQuestion: function (row) {
+      return {
+        question: String(row.question || row.sentence || '').trim(),
+        error: String(row.error || '').trim(),
+        fix: String(row.fix || '').trim(),
+        explanation: String(row.explanation || '').trim()
+      };
+    }
+  };
+
+  /* Fill the Gaps: a passage with its missing words in [square brackets] and
+     lures for the word bank. The lures are the point of the reveal — a lure
+     half the room chose is the misconception — so they must tempt. Always
+     set, so the starter's osmosis lures never ride along under another topic. */
+  AI_SPECS.fill = {
+    family: 'Fill the gaps (passage with a word bank)',
+    row: '{"question":"Water moves by [osmosis] across a [membrane].","lures":["diffusion","cell wall"],"explanation":"..."}',
+    required: ['question', 'lures'],
+    rules: 'One or two sentences with one to four key terms missing, each written ' +
+      'inside [square brackets] where it belongs. "lures" is two to four wrong ' +
+      'words of the same kind that a learner might plausibly put in a gap, never ' +
+      'one of the bracketed words. One word or a short phrase per gap.',
+    toQuestion: function (row) {
+      var lures = Array.isArray(row.lures) ? row.lures : String(row.lures || '').split(/[,\n]/);
+      return {
+        question: String(row.question || row.passage || '').trim(),
+        lures: lures.map(function (w) { return String(w).trim(); }).filter(Boolean).join(', '),
+        explanation: String(row.explanation || '').trim()
+      };
+    }
+  };
 
   /* Question Cube is a format on Random Challenge's engine: six faces, one
      of each of Rosenshine's question types, each a question on the topic.
@@ -1321,10 +1415,12 @@
        engine saw would under-report, and the toast is the teacher's only
        sign that they got fewer than they asked for. */
     var rejected = all.length - rows.length;
-    rows.forEach(function (row) {
+    rows.forEach(function (row, i) {
       var q;
       try {
-        q = Object.assign(SF.makeQuestion(game.style), spec.toQuestion(row));
+        /* Position and count, for a spec whose rows form a sequence (Boss
+           Battle's difficulty climb). The others ignore them. */
+        q = Object.assign(SF.makeQuestion(game.style), spec.toQuestion(row, i, rows.length));
       } catch (e) { rejected++; return; }
       if (fixed) q.options = fixed.slice();
       q = SF.normalizeQuestion(q, game.style);
