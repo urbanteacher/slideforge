@@ -1,4 +1,4 @@
-import { blankDeck } from './model/defaults';
+import { TEMPLATES, blankDeck } from './model/defaults';
 import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide, fitStatement } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
@@ -247,6 +247,39 @@ function outline(): Outline[] {
   });
 }
 
+/** For the visual baseline (tools/lab-baseline.mjs): the lab's built-in slides as decks to open — the
+ *  gallery's layouts in every style, the lab originals, and the slide designs in two styles. */
+async function checkDecks(): Promise<Deck[]> {
+  const [L, fsf, bank, ml, motion, cd, sd] = await Promise.all([import('./model/layouts'), import('./model/fromSlideForge'), import('./assets/layout-bank.json'), import('./model/motionLab'), import('./assets/motion-lab.json'), import('./model/campaignDesigns'), import('./model/storyDesigns')]);
+  const base = blankDeck();
+  const deck = (id: string, slides: Slide[]): Deck => ({ ...structuredClone(base), id: `check-${id}`, title: id, slides });
+  const out: Deck[] = [];
+  for (const st of L.LAYOUT_STYLES) out.push(deck(`gallery-${st.id}`, L.LAYOUTS.map((l) => L.layoutFor(l, st, base))));
+  out.push(deck('originals', TEMPLATES.map((t) => t.make())));
+  const b = ((bank as { default?: SFDeck }).default ?? bank) as SFDeck;
+  const m = ((motion as { default?: unknown }).default ?? motion) as Parameters<typeof ml.motionDesigns>[0];
+  for (const st of L.LAYOUT_STYLES.slice(0, 3)) {
+    out.push(deck(`designs-${st.id}`, [...sd.storyDesigns(st), ...cd.campaignDesigns(), ...fsf.slideDesigns(b, st), ...ml.motionDesigns(m, st)].map((x) => x.slide)));
+  }
+  return out;
+}
+
+/** For the visual baseline: every slide of the deck on screen as a PNG, once its pictures have loaded. */
+async function checkStills(width = 960): Promise<string[]> {
+  const deck = useStore.getState().deck;
+  const draw = () => deck.slides.map((s) => renderStill(s, deck, width, 'image/png', 2));
+  draw();
+  const srcs = new Set<string>();
+  for (const s of deck.slides) for (const l of s.layers) {
+    const src = (l.params as Record<string, unknown>)?.src;
+    if (typeof src === 'string' && src && l.kind !== 'video') srcs.add(src);
+  }
+  await Promise.all([...srcs].map(imageSettled));
+  await document.fonts?.ready;
+  await new Promise((r) => setTimeout(r, 400));
+  return draw();
+}
+
 /** What the shell can ask of the lab. */
 export const labApi = {
   getDeck: (): Deck => useStore.getState().deck,
@@ -347,6 +380,8 @@ export const labApi = {
   },
   stills,
   outline,
+  checkDecks,
+  checkStills,
   /** The slide on screen saved on its own (File → Export → This slide). */
   saveSlide: (format: SlideFormat) => saveSlide(useStore.getState().slideId, format),
   /** The lesson as a PowerPoint file (export/pptx.ts): every slide a picture, or with `editableText` its
