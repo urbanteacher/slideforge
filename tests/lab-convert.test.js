@@ -765,3 +765,25 @@ test('a quiz slide left in a lesson comes in as a question and its answer, the l
   // A question with no words asks nothing, and stays SlideForge's.
   assert.equal(convertsSlide({ id: 'x', type: 'quiz', question: '' }), false);
 });
+
+test('an explanation slide comes in with its question, the right answer on green and its reasoning a paragraph a click (M13)', { skip }, async () => {
+  const { deckFromSlideForge, convertsSlide } = await converter();
+  const src = lesson('layout-bank');
+  const why = { id: 'old-why', type: 'explain', question: 'Which colour is the accent?', options: ['Red', 'Green'], correct: 1, input: 'choice',
+    questionNumber: 3, body: 'Green carries the brand.\n\nRed is kept for warnings.', subtitle: 'Style guide, p. 4', progressive: true };
+  const typed = { id: 'old-why2', type: 'explain', question: 'Name the ground.', input: 'text', answer: 'Ink', body: 'It is the darkest colour.' };
+  src.slides.splice(2, 0, why, typed);
+  assert.ok(convertsSlide(why) && convertsSlide(typed));
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const made = deck.slides.find((s) => s.sourceSlideId === why.id);
+  const said = (s, name) => s.layers.filter((l) => l.name === name).map((l) => l.params.text);
+  assert.deepEqual(said(made, 'Heading'), [why.question]);
+  assert.deepEqual(said(made, 'Number'), ['Q3']);
+  assert.deepEqual(said(made, 'Answer key'), ['B']);
+  assert.deepEqual(said(made, 'Answer text'), ['Green']);
+  assert.deepEqual(said(made, 'Reason'), ['Green carries the brand.', 'Red is kept for warnings.']);
+  assert.ok(made.layers.filter((l) => l.name === 'Reason').every((l) => l.anim.trigger === 'onClick'), 'a paragraph a click');
+  assert.deepEqual(said(made, 'Source'), [why.subtitle]);
+  const t = deck.slides.find((s) => s.sourceSlideId === typed.id);
+  assert.deepEqual([said(t, 'Answer key')[0], said(t, 'Answer text')[0]], ['✎', 'Ink']);
+});

@@ -2,7 +2,7 @@ import { createLayer, uid, type Deck, type LiveFigure, type Slide } from '../cor
 import { videoEmbed } from '../engine';
 import { CHART_DARK, CHART_LIGHT } from '../charts';
 import { EXPERIMENTS, LOOKS, SCENES, experimentPreset } from '../experiments';
-import { LAYOUTS, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
+import { LAYOUTS, explainSlide, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
 import { feedbackOf, gameSlides, fitSize, type ShowcaseGame } from '../designs';
 import { addThemeArt, themeGround, type ArtContext } from '../theme';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
@@ -369,6 +369,13 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       const look = String(s.design?.motionLook ?? '');
       const factor = String(s.body ?? '').trim() && Number.isFinite(Number(s.body)) ? Math.max(-10, Math.min(10, Number(s.body))) : 2;
       return { slide: sceneSlide({ mode, look: LOOKS[look] ? look : 'editorial', title: t, subtitle: sub, items: b.filter((x) => x.trim()).slice(0, 4), image: img(s.image), factor }, LOOKS, SCENES), ground: g };
+    }
+    case 'explain': {
+      // A question's explanation: the answer by its letter, or as text for a typed or number question.
+      const q = s as SFSlide & { question?: string; options?: string[]; correct?: number; input?: string; answer?: string; questionNumber?: number };
+      const typed = q.input === 'text' || q.input === 'number';
+      return { slide: explainSlide(st, { number: q.questionNumber, question: q.question ?? t, key: q.input === 'number' ? '↔' : typed ? '✎' : 'ABCDEF'[Number(q.correct)] ?? '?',
+        answer: typed ? String(q.answer ?? '') : String(q.options?.[Number(q.correct)] ?? ''), body: s.body ?? '', source: sub, clicks: !!s.progressive }), ground: g };
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
