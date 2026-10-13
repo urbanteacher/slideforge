@@ -195,7 +195,9 @@ export class LiveHost {
     const qid = id ?? q!.id;
     this.send(choice == null ? { t: 'manualAnswer', id: qid, playerId, clear: true }
       : typeof choice === 'string' ? { t: 'manualAnswer', id: qid, playerId, text: choice }
-        : typeof choice === 'object' ? ('order' in choice ? { t: 'manualAnswer', id: qid, playerId, order: choice.order } : { t: 'manualAnswer', id: qid, playerId, value: choice.value })
+        : typeof choice === 'object' ? ('order' in choice ? { t: 'manualAnswer', id: qid, playerId, order: choice.order }
+          : 'fill' in choice ? { t: 'manualAnswer', id: qid, playerId, fill: choice.fill }
+            : 'sort' in choice ? { t: 'manualAnswer', id: qid, playerId, sort: choice.sort } : { t: 'manualAnswer', id: qid, playerId, value: choice.value })
           : { t: 'manualAnswer', id: qid, playerId, choice });
   }
 
@@ -326,7 +328,7 @@ export class LiveHost {
 
   private atFields(s: RoomSlide, activity: AtFields['activity'], reading = false): AtFields {
     const c = s.quiz && activity === 'question' ? styleFor(s.quiz).companion?.(s.quiz, reading ? 'reading' : 'asking') : undefined;
-    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: s.quiz && activity === 'question' ? this.helped.get(s.quiz.id) ?? 0 : 0, style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '', stage: null };
+    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: s.quiz && activity === 'question' ? this.helped.get(s.quiz.id) ?? 0 : 0, style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt || (s.quiz && activity === 'question' ? s.quiz.headPrompt ?? '' : ''), stage: null };
   }
 
   private questionFields(q: RoomQuiz): QuestionFields {

@@ -41,7 +41,7 @@ export function manualState(host: Pick<LiveHost, 'state' | 'slide'>): Record<str
     players: s.players, teams: s.teams, mode: s.mode, pin: s.pin,
     recipient: { type: 'room' }, pendingVerdict: null, recentSpeakers: [], handCounts: null, proposals: [], onTable: '', lastCredit: null, oralCount: 0,
     question: quiz && asked
-      ? { id: quiz.id, question: quiz.question, input: styleFor(quiz).input, options: quiz.options, gaps: 0, bins: null, spoken: false, scoreSpoken: false, style: quiz.style, range: styleFor(quiz).range(quiz), revealed }
+      ? { id: quiz.id, question: quiz.question, input: styleFor(quiz).input, options: quiz.options, gaps: styleFor(quiz).manualQuestion?.(quiz).gaps ?? 0, bins: styleFor(quiz).manualQuestion?.(quiz).bins ?? null, spoken: false, scoreSpoken: false, style: quiz.style, range: styleFor(quiz).range(quiz), revealed }
       : null,
     // Marked here, where the key is, and only after the reveal: the window must not give the answer away early.
     answers: (t?.answers ?? []).map((a) => ({ id: a.id, response: a.response, sure: a.sure, right: revealed && quiz ? styleFor(quiz).mark(quiz, a.response) : null })),

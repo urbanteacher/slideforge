@@ -1,7 +1,7 @@
 // The wall's views for the styles beyond Multiple choice's bars, a number line and typed groups (WallViews.tsx):
 // each paints a view model the style's `wall` made (live/styles). Real text and ARIA, no canvas (hard rule 4).
 
-import type { HeatModel, SlotsModel, SplitModel } from '../live';
+import type { GapsModel, HeatModel, SlotsModel, SplitModel } from '../live';
 
 /** A Ranking's reveal: the right order, a heat bar a place for how many of the room had the right item there,
  *  and the pair the room swapped most often. */
@@ -64,6 +64,33 @@ export function HeatView({ model }: { model: HeatModel }) {
         ))}
       </ol>
       <p className="heat-answer" data-testid="heat-answer">{model.answer}</p>
+    </div>
+  );
+}
+
+/** Fill the gaps' reveal: the passage with the right word in each gap, and under it, gap by gap, what the room put there
+ *  (most chosen first, the right word marked). A lure many chose is the misconception, named without naming anyone. */
+export function GapsView({ model }: { model: GapsModel }) {
+  const { parts, gaps, total } = model;
+  return (
+    <div className="gaps" data-testid="gaps">
+      <p className="gaps-text" data-testid="gaps-text">
+        {parts.map((p, i) => (
+          <span key={i}>{p}{gaps[i] && <b className="gaps-word">{gaps[i].word}</b>}</span>
+        ))}
+      </p>
+      <ol className="gaps-picks" aria-label="What the room put in each gap">
+        {gaps.map((g, i) => (
+          <li key={i} data-testid="gap">
+            <span className="gap-no">Gap {i + 1}</span>
+            {g.picks.length === 0 && <i className="gap-none">no picks</i>}
+            {g.picks.map((p, k) => (
+              <span key={k} className={`gap-pick${p.right ? ' right' : ''}`} data-testid="gap-pick">{p.right ? '✓ ' : ''}{p.text} <b>{p.n}</b></span>
+            ))}
+          </li>
+        ))}
+      </ol>
+      <p className="gaps-total" data-testid="gaps-total">{total} {total === 1 ? 'answer' : 'answers'}</p>
     </div>
   );
 }

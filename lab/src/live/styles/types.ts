@@ -16,10 +16,10 @@ import type { TypedGroup } from '../typed';
 
 /** One answer the teacher enters by key: an option index, the words typed for a Type answer question, a number for
  *  a Slider (`{ value }`), or null to take it back. */
-export type ManualChoice = number | string | { value: number } | { order: number[] } | null;
+export type ManualChoice = number | string | { value: number } | { order: number[] } | { fill: number[] } | { sort: number[] } | null;
 
 /** What the manual window sends for one answer (docs/games/protocol.md §15.1). */
-export interface ManualEntry { id?: string; playerId?: unknown; choice?: unknown; text?: unknown; value?: unknown; order?: unknown; clear?: unknown }
+export interface ManualEntry { id?: string; playerId?: unknown; choice?: unknown; text?: unknown; value?: unknown; order?: unknown; fill?: unknown; sort?: unknown; clear?: unknown }
 
 /** One answer on a number line: where it stands (0-100) and the row it takes when others share its place. */
 export interface LineMark { id: number; value: number; pct: number; row: number; right: boolean }
@@ -57,11 +57,20 @@ export type WallDetail =
   | { kind: 'slots'; slots: SlotsModel | null }
   | { kind: 'split'; split: SplitModel }
   | { kind: 'heat'; heat: HeatModel | null }
+  | { kind: 'gaps'; gaps: GapsModel | null }
   | { kind: 'typed'; groups: TypedGroup[] | null }
   | { kind: 'line'; line: LineModel | null };
 
 /** Spot the error's reveal: every word of the passage with how many of the room tapped it (the heat), the error's words marked, and the answer said. */
 export interface HeatModel { words: { index: number; label: string; count: number; error: boolean }[]; total: number; answer: string }
+
+/** Fill the gaps' reveal: the passage with the right word in each gap, and for each gap what the room put there, most chosen first. */
+export interface GapsModel {
+  parts: string[];
+  gaps: { word: string; picks: { text: string; n: number; right: boolean }[] }[];
+  /** The answers that were a full set of picks. */
+  total: number;
+}
 
 /** What the phones are told about a style beyond its question (classic's phoneCompanion): their role, what to do, a heading. */
 export interface Briefing { role: string; participation: string; headPrompt: string }
@@ -115,6 +124,8 @@ export interface StyleEntry {
   afterReveal?: { prompt: string };
   /** Points the host hands the relay with the verdicts (`reveal.gains`), as [player, points]; undefined: the relay scores by the verdicts alone. */
   gains?(q: RoomQuiz, answers: Answer[]): [number, number][];
+  /** What the teacher-entry window needs to know of the question beside its options: the gaps of a Fill the gaps, the columns of a sort. */
+  manualQuestion?(q: RoomQuiz): { gaps?: number; bins?: string[] };
   /** The wall's view of the question, from the answers in. */
   wall(q: RoomQuiz, answers: Answer[], revealed: boolean, ctx?: WallContext): WallDetail;
   /** The teacher's entry by key as an answer to send, or undefined when it is not one for this style. */
@@ -137,6 +148,8 @@ export function defineStyle(g: Given): StyleEntry {
     manual: g.input === 'text' ? (a) => (typeof a.text === 'string' ? a.text : undefined)
       : g.input === 'number' ? (a) => (typeof a.value === 'number' && Number.isFinite(a.value) ? { value: a.value } : undefined)
         : g.input === 'order' ? (a) => (Array.isArray(a.order) && a.order.every((v) => Number.isInteger(v)) ? { order: a.order as number[] } : undefined)
+          : g.input === 'fill' ? (a) => (Array.isArray(a.fill) && a.fill.every((v) => Number.isInteger(v)) ? { fill: a.fill as number[] } : undefined)
+            : g.input === 'sort' ? (a) => (Array.isArray(a.sort) && a.sort.every((v) => Number.isInteger(v)) ? { sort: a.sort as number[] } : undefined)
           : (a) => (Number.isInteger(a.choice) ? (a.choice as number) : undefined),
     ...g,
   };

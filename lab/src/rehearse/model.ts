@@ -45,7 +45,7 @@ export function profiles(n: number, rng: Rng = Math.random): Profile[] {
 }
 
 /** What a phone sends to answer (join.html: `answer` with a choice, text or value). */
-export type Answer = { t: 'answer'; choice: number } | { t: 'answer'; text: string } | { t: 'answer'; value: number } | { t: 'answer'; order: number[] };
+export type Answer = { t: 'answer'; choice: number } | { t: 'answer'; text: string } | { t: 'answer'; value: number } | { t: 'answer'; order: number[] } | { t: 'answer'; fill: number[] } | { t: 'answer'; sort: number[] };
 
 /** What the relay sends a phone for a question: the part the simulated phone reads. */
 export interface QuestionFrame { id: string; input?: string; options?: string[]; range?: { min: number; max: number; step: number } | null; timeLimit?: number; confidence?: boolean }
@@ -79,6 +79,13 @@ export function answerFor(quiz: RoomQuiz, frame: QuestionFrame, p: Profile, rng:
   }
   const n = (frame.options ?? quiz.options ?? []).filter((o) => String(o).trim()).length;
   if (n === 0) return null;
+  if (input === 'fill' || input === 'sort') {
+    // The right picks, one wrong when the learner slips: a word from the bank in a gap, another column for a statement.
+    const want = ((input === 'fill' ? quiz.gapAnswers : quiz.sortAnswers) as number[] | undefined) ?? [];
+    const picks = want.slice();
+    if (!right && picks.length) { const k = Math.floor(rng() * picks.length); picks[k] = (picks[k] + 1) % (input === 'fill' ? n : 3); }
+    return input === 'fill' ? { t: 'answer', fill: picks } : { t: 'answer', sort: picks };
+  }
   if (input === 'order') {
     // The items are authored in the right order: a right answer is that order; a wrong one swaps two neighbours.
     const order = Array.from({ length: n }, (_, i) => i);

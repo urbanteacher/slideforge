@@ -37,6 +37,8 @@ export interface QuestionFields {
   predict?: true; showdown?: true; timeTravel?: true; timeline?: unknown[];
   /** Emoji guess: the clues as the phone draws them. */
   clueMode?: 'emoji'; clues?: string;
+  /** Fill the gaps: the text around the gaps. Compare & contrast's sort: the three columns. */
+  fillParts?: string[]; bins?: string[];
 }
 
 /** A feedback `prompt` (§9): what the room is asked, with the fields classic sends (js/live.js syncPrompt). `ends` is a scale's two
@@ -55,7 +57,7 @@ export type Digest =
   | { kind: 'brainstorm'; items: { name: string; pid: number; text: string; seq: number }[]; total: number };
 
 /** A teacher's answer by key (§6.4): an option, the words typed for a Type answer question, or the number for a Slider; `clear` takes it back. */
-export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; clear?: boolean }
+export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; fill?: number[]; sort?: number[]; clear?: boolean }
 
 /** H→R: what the host sends. */
 export type HostMessage =

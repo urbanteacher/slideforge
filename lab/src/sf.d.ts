@@ -72,6 +72,16 @@ declare module '@sf/games/order.js' {
   export function orderScore(slide: SFQuizSlide, response: unknown): number;
 }
 
+declare module '@sf/games/fill.js' {
+  /** The share, 0 to 1, of a Fill the gaps' gaps a response gets right (a word-bank index per gap); 0 for anything else. */
+  export function fillScore(slide: SFQuizSlide, response: unknown): number;
+}
+
+declare module '@sf/games/compare.js' {
+  /** The share, 0 to 1, of a Compare & contrast sort's statements a response puts in the right column; 0 for anything else. */
+  export function sortScore(slide: SFQuizSlide, response: unknown): number;
+}
+
 declare module '@sf/games/definition.js' {
   /** The reading time a Definition challenge takes: 20, 30, 45 or 60 seconds; 30 for anything else. */
   export function clampDefinitionSeconds(seconds: unknown): number;
