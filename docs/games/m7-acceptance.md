@@ -96,3 +96,13 @@ Repeat steps 1 to 5 with a lesson whose only game is **Type answer** (Quiz studi
 4. In manual.html, type an answer for a learner you added and press Record: it counts with the phones' after the reveal.
 5. Add a Ranking challenge game to the same lesson: Host live now opens the classic room.
 
+
+## Slider (added 13 October 2026)
+
+Repeat steps 1 to 5 with a lesson whose only game is **Slider** (Quiz studio, Browse, Slider, Add to the lesson). Time traveler is a different format and still opens the classic room.
+
+1. Host live opens the studio's show and room, not SlideForge's.
+2. Each question reaches the phones as a number slider with the question's range and unit. While it is open the wall shows only "n of m answered", not the answers or the band.
+3. Place one answer inside the tolerance and one outside. After the reveal the wall draws a number line with the target and its tolerance band, a dot for each answer (the right ones green), and says the accepted answer with its unit. The standings panel shows the gains.
+4. In manual.html, enter a number for a learner you added and press Record: it counts with the phones' after the reveal.
+5. Add a Ranking challenge game to the same lesson: Host live now opens the classic room.
