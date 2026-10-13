@@ -57,6 +57,9 @@ export class LiveHost {
   /** A style with a reading phase (Definition challenge): the questions whose reading is over (asked), and the reading clock. */
   private readDone = new Set<string>();
   private readTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Questions whose reveal the host has sent. The relay may refuse one (`markStale`: an answer came in after the marks were made), and the
+   *  host sends it again; until then the teacher's Next moves on, as classic's does (its own record of what it revealed), not reveals again. */
+  private revealSent = new Set<string>();
   /** How many of a question's help steps the teacher has released (a style with `help`), by question id. */
   private helped = new Map<string, number>();
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
@@ -102,7 +105,7 @@ export class LiveHost {
    *  restart, see replay); else move on. */
   next(): void {
     const q = this.slide?.quiz;
-    if (q && this.begun && !this.state.revealed.includes(q.id)) {
+    if (q && this.begun && !this.isRevealed(q.id)) {
       if (this.state.phase === 'question' && this.state.question?.id === q.id) {
         // A style with a step before its reveal (lock the predictions, show the split) takes it on the first Next.
         if (!this.release() && !this.gate()) this.reveal();
@@ -124,6 +127,8 @@ export class LiveHost {
     this.send({ t: 'at', ...this.atFields(s, 'question', false) });
     return true;
   }
+
+  private isRevealed(id: string): boolean { return this.state.revealed.includes(id) || this.revealSent.has(id); }
 
   /** The question on the wall is in its reading phase (a style that has one, before it is asked). */
   reading(): boolean {
@@ -178,6 +183,7 @@ export class LiveHost {
       correct: said.correct, answer: said.answer, explanation: q.explanation ?? '',
       ...(style.gains ? { gains: style.gains(q, list) } : {}),
     });
+    this.revealSent.add(q.id);
     if (style.afterReveal) this.openAfterReveal(style.afterReveal.prompt);
   }
 
@@ -279,7 +285,8 @@ export class LiveHost {
         if (!this.ending) this.held = null;
         break;
       case 'markStale':
-        this.reveal(m.answers, m.rev);
+        // Only for the question still on the wall (classic: the pending slide is the one the relay names): a late one for a question the show has left is no business of this one.
+        if (!this.ending && this.slide?.quiz?.id === m.id) this.reveal(m.answers, m.rev);
         break;
       case 'tally':
         this.maybeAutoReveal();
@@ -304,7 +311,7 @@ export class LiveHost {
     const s = this.slide;
     if (!s) return;
     this.stale = false;
-    const revealed = !!s.quiz && this.state.revealed.includes(s.quiz.id);
+    const revealed = !!s.quiz && this.isRevealed(s.quiz.id);
     const asking = ask && s.activity === 'question' && !!s.quiz && !revealed;
     // A style that opens in a reading phase (Definition challenge) tells the room to read, and asks when the reading is over.
     const reading = asking && !!styleFor(s.quiz!).reading && !this.readDone.has(s.quiz!.id);

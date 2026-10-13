@@ -1,6 +1,7 @@
 // The registry of the game styles the studio's room runs. A new style is one file in this folder and one line in
 // STYLES (plus, when its wall needs a view the wall does not have yet, that view in show/WallViews.tsx).
 import { choice } from './choice';
+import { compare } from './compare';
 import { definition } from './definition';
 import { emoji } from './emoji';
 import { fill } from './fill';
@@ -15,7 +16,7 @@ import { truefalse } from './truefalse';
 import { type } from './type';
 import type { StyleEntry } from './types';
 
-export const STYLES: StyleEntry[] = [choice, truefalse, type, slider, order, oddone, predict, showdown, timetraveler, spot, definition, emoji, fill];
+export const STYLES: StyleEntry[] = [choice, truefalse, type, slider, order, oddone, predict, showdown, timetraveler, spot, definition, emoji, fill, compare];
 
 /** The entry for a game format of the lab (`slide.game.format`), or undefined when the room does not run it. */
 export const styleForFormat = (format: string): StyleEntry | undefined => STYLES.find((s) => s.formats.includes(format));
@@ -37,4 +38,4 @@ export function styleNames(): string {
   return n.length > 1 ? `${n.slice(0, -1).join(', ')} or ${n[n.length - 1]}` : n[0] ?? '';
 }
 
-export type { Answer, GapsModel, HeatModel, LineMark, LineModel, SlotsModel, SplitModel, WallContext, ManualChoice, ManualEntry, Range, StyleEntry, WallDetail } from './types';
+export type { Answer, GapsModel, HeatModel, LineMark, LineModel, SlotsModel, SortModel, SplitModel, WallContext, ManualChoice, ManualEntry, Range, StyleEntry, WallDetail } from './types';

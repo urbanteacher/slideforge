@@ -3,7 +3,7 @@
 // Pure: it reads the lab deck, and nothing else.
 //
 // Yes only when the room has nothing it cannot run: every game in the lesson is of a style the room runs (the
-// registry in live/styles: Multiple choice, True or false, True / false showdown, Type answer, Slider, Time traveler, Ranking, Odd one out, Predict the outcome), the lesson asks at least one
+// registry in live/styles: Multiple choice, True or false, True / false showdown, Type answer, Slider, Time traveler, Ranking, Odd one out, Predict the outcome, Spot the error, Definition challenge, Emoji guess, Fill in the blanks, Compare & contrast's sort), the lesson asks at least one
 // question or audience feedback prompt (poll, word cloud, brainstorm or scale, M9), and no slide carries an
 // activity, a live figure, a stand-in for a SlideForge check, or feedback on a game slide. Those are SlideForge's
 // to run until the lab's host runs them (M10 onward). Feedback that is not complete (no prompt, a poll without two
@@ -30,6 +30,8 @@ function blocker(s: Slide): string {
   if (!style) return `"${g.label}" is ${g.format}, not ${styleNames()}`;
   const q = g.quiz as { style?: string; input?: string } | undefined;
   if (g.role === 'question' && q && ((q.style ?? g.format) !== style.key || (q.input ?? style.input) !== style.input)) return `"${g.label}" has a question that is not ${style.name}`;
+  const why = g.role === 'question' && q ? style.unsupported?.(q) : '';
+  if (why) return `"${g.label}" has a question that ${why}`;
   return '';
 }
 

@@ -1,7 +1,7 @@
 // The wall's views for the styles beyond Multiple choice's bars, a number line and typed groups (WallViews.tsx):
 // each paints a view model the style's `wall` made (live/styles). Real text and ARIA, no canvas (hard rule 4).
 
-import type { GapsModel, HeatModel, SlotsModel, SplitModel } from '../live';
+import type { GapsModel, HeatModel, SlotsModel, SortModel, SplitModel } from '../live';
 
 /** A Ranking's reveal: the right order, a heat bar a place for how many of the room had the right item there,
  *  and the pair the room swapped most often. */
@@ -91,6 +91,31 @@ export function GapsView({ model }: { model: GapsModel }) {
         ))}
       </ol>
       <p className="gaps-total" data-testid="gaps-total">{total} {total === 1 ? 'answer' : 'answers'}</p>
+    </div>
+  );
+}
+
+/** Compare & contrast's reveal: a column for each of the three, each statement in the column it belongs in with how the room
+ *  sorted it (a count under each column), and the statement the room misfiled most named. */
+export function SortView({ model }: { model: SortModel }) {
+  const { bins, rows, total, misfiled } = model;
+  return (
+    <div className="sort" data-testid="sort">
+      <ol className="sort-rows" aria-label="Each statement, its column, and how the room sorted it">
+        {rows.map((r, i) => (
+          <li key={i} data-testid="sort-row">
+            <span className="sort-text">{r.text}</span>
+            <span className="sort-cols">
+              {bins.map((b, k) => (
+                <span key={k} className={`sort-col${k === r.right ? ' right' : ''}`} data-testid="sort-col" title={b}>
+                  <span className="sort-bin">{k === r.right ? '✓ ' : ''}{b}</span> <b>{r.counts[k] ?? 0}</b>
+                </span>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ol>
+      {misfiled && <p className="sort-misfiled" data-testid="sort-misfiled">Most misfiled: {misfiled.text} ({misfiled.n} of {total})</p>}
     </div>
   );
 }

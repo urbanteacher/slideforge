@@ -58,6 +58,7 @@ export type WallDetail =
   | { kind: 'split'; split: SplitModel }
   | { kind: 'heat'; heat: HeatModel | null }
   | { kind: 'gaps'; gaps: GapsModel | null }
+  | { kind: 'sort'; sort: SortModel | null }
   | { kind: 'typed'; groups: TypedGroup[] | null }
   | { kind: 'line'; line: LineModel | null };
 
@@ -70,6 +71,15 @@ export interface GapsModel {
   gaps: { word: string; picks: { text: string; n: number; right: boolean }[] }[];
   /** The answers that were a full set of picks. */
   total: number;
+}
+
+/** Compare & contrast's reveal: each statement, the column it belongs in, how many of the room put it in each column, and the one most misfiled. */
+export interface SortModel {
+  bins: string[];
+  rows: { text: string; right: number; counts: number[] }[];
+  /** The answers that sorted every statement. */
+  total: number;
+  misfiled: { text: string; n: number } | null;
 }
 
 /** What the phones are told about a style beyond its question (classic's phoneCompanion): their role, what to do, a heading. */
@@ -118,6 +128,8 @@ export interface StyleEntry {
   help?(q: RoomQuiz): ('pattern' | 'hint')[];
   /** The game's questions as one set, once they are all compiled (Time traveler: one line for the game, a timeline that grows). */
   link?(qs: RoomQuiz[]): void;
+  /** Why a question of this format is not one this entry runs ('' when it is): a mode of the style that is still the classic host's. */
+  unsupported?(q: { [field: string]: unknown }): string;
   /** The room is never revealed by itself (everyone answered): only the teacher reveals. */
   held?: boolean;
   /** After the reveal the room is asked this (a brainstorm prompt, classic's quick prompt); it closes when the show leaves the question. */
