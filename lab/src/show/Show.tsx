@@ -4,7 +4,7 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Columns2, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, QrCode, Trophy, Vote, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Columns2, Ellipsis, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, QrCode, Trophy, Vote, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { KeySheet, QuestionsList, QuickPollForm, ROOM_VIEW_SAYS, ShowSide, controlFor, keyName, nextRoomView, presenterUrl, toggleBoard, type CmdData, type RoomView, type Screen, type ShowAction } from '../presenter';
@@ -113,6 +113,14 @@ function Show() {
   const finishedRef = useRef(false);
   const failed = useRef(false);
   const [bar, setBar] = useState(true);
+  const [more, setMore] = useState(false);
+  const moreRef = useRef(false); moreRef.current = more;
+  useEffect(() => { // a click anywhere outside the More menu closes it
+    if (!more) return;
+    const off = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.('.show-more-wrap')) setMore(false); };
+    document.addEventListener('pointerdown', off);
+    return () => document.removeEventListener('pointerdown', off);
+  }, [more]);
   const [toast, setToast] = useState('');
   // M11a: the screen blanked, the overview, a slide number being typed, the notes card, and when the show began.
   const [screen, setScreen] = useState<Screen>('none');
@@ -369,6 +377,7 @@ function Show() {
       if (name == null) return;
       const k = e.key;
       // The shortcuts sheet has the keys while it is up: ? or Esc closes it.
+      if (moreRef.current && k === 'Escape') { e.preventDefault(); setMore(false); return; } // Esc closes the More menu first
       if (sheetRef.current) { if (k === 'Escape' || k === '?') { e.preventDefault(); setSheet(false); } return; }
       // The overview has the keys while it is up: arrows move, Enter goes, Esc and O close it.
       const ov = overviewRef.current;
@@ -561,26 +570,34 @@ function Show() {
 
       {/* The bar hides itself, so the way out never does: a small button in the corner, always there. */}
       <button className="show-exit" onClick={exit} aria-label={roomOn ? 'End the room and exit' : 'Exit the slideshow'} title={roomOn ? 'End the room and exit (Esc)' : 'Exit (Esc)'}><X size={16} />{roomOn ? 'End room' : 'Exit'}</button>
-      <div className={`show-bar${bar ? ' on' : ''}`} role="toolbar" aria-label="Slideshow controls">
+      <div className={`show-bar${bar || more ? ' on' : ''}`} role="toolbar" aria-label="Slideshow controls">
         <button onClick={() => prevRef.current()} aria-label="Previous"><ArrowLeft size={16} /></button>
         <button onClick={() => nextRef.current()} aria-label="Next"><ArrowRight size={16} /></button>
         <span className="show-count" aria-label={`Slide ${index + 1} of ${deck.slides.length}${frozen != null ? ', frozen' : ''}`}>{index + 1} / {deck.slides.length}{frozen != null && <span className="show-frozen" title={`Frozen (Z): you are on slide ${frozen + 1}`}> ❄ {frozen + 1}</span>}</span>
         {roomOn && <button onClick={() => runCmd('join')} aria-pressed={joinCard} aria-label="Join card (J)" title="Join card (J): the PIN and QR for latecomers"><QrCode size={16} /></button>}
         <button onClick={() => setInkOn((v) => !v)} aria-pressed={inkOn} aria-label="Draw (D)" title="Draw on the slide (D or I): pen, highlighter, eraser, spotlight (L)"><PenLine size={16} /></button>
-        <button onClick={() => setOverview(index)} aria-label="Slide overview (O)" title="Slide overview (O). Type a number and Enter to jump"><LayoutGrid size={16} /></button>
         <button onClick={() => runCmd(screen === 'black' ? 'resume' : 'black')} aria-pressed={screen === 'black'} aria-label="Black screen (B)" title="Black screen (B or .). W for white"><MonitorOff size={16} /></button>
-        <button onClick={openPresenter} aria-label="Teacher Presenter (P)" title="Teacher Presenter (P): notes, next slide and every control in their own window"><Monitor size={16} /></button>
-        <button onClick={notesElsewhere} aria-label="Notes on another device (Shift+N)" title="Notes on another device (Shift+N): the private link and QR open in the Teacher Presenter"><Smartphone size={16} /></button>
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
         {(roomOn || canLive) && <button onClick={() => (roomOn ? setDeskCard((c) => (c === 'poll' ? '' : 'poll')) : openStudioShow({ room: true, slideId: slide.id }))} aria-pressed={roomOn && (deskCard === 'poll' || !!room.state.quick)} aria-label="Quick poll (V)" title={roomOn ? 'Quick poll (V): ask the room something on the fly' : 'Quick poll (V): starts Host live, then ask the room something on the fly'}><Vote size={16} /></button>}
-        {roomOn && <button onClick={() => setDeskCard((c) => (c === 'qa' ? '' : 'qa'))} aria-pressed={deskCard === 'qa'} aria-label="Questions from the room" title="Questions from the room: approve, show on the wall, mark answered, hide"><MessageCircleQuestion size={16} />{room.state.qa.pending || ''}</button>}
         {(roomOn || canLive) && <button onClick={() => (roomOn ? runCmd('roomView') : openStudioShow({ room: true, slideId: slide.id }))} aria-pressed={roomOn && roomView !== 'hidden'} aria-label="Room view (E)" title={roomOn ? `Room view (E): ${ROOM_VIEW_SAYS[roomView]}. Press again for hidden, beside, full` : 'Room view (E): starts Host live, then the standings beside the slide or the full board'}><Columns2 size={16} /></button>}
-        {roomOn && <button onClick={() => runCmd('scores')} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S). E: room view hidden, beside, full"><Trophy size={16} /></button>}
-        {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && canLive)) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
-        {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
-        {roomOn && hooks?.share && <button onClick={() => hooks.share?.()} aria-label="Share" title="Share: a link to read or practise the lesson, or a big screen that follows this room"><Share2 size={16} /></button>}
         <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F). ? lists every key"><Maximize size={16} /></button>
+        <span className="show-more-wrap">
+          <button onClick={() => setMore((v) => !v)} aria-expanded={more} aria-haspopup="menu" aria-label="More controls" title="More controls"><Ellipsis size={16} />{roomOn && room.state.qa.pending ? <span className="show-more-dot" aria-label={`${room.state.qa.pending} questions waiting`}>{room.state.qa.pending}</span> : null}</button>
+          {more && (
+            <div className="show-more" role="menu" aria-label="More controls" onClick={() => setMore(false)}>
+              <button role="menuitem" onClick={() => setOverview(index)}><LayoutGrid size={15} />Slide overview<kbd>O</kbd></button>
+              <button role="menuitem" onClick={openPresenter}><Monitor size={15} />Teacher Presenter<kbd>P</kbd></button>
+              <button role="menuitem" onClick={notesElsewhere}><Smartphone size={15} />Notes on another device<kbd>⇧N</kbd></button>
+              {roomOn && <button role="menuitem" aria-pressed={deskCard === 'qa'} onClick={() => setDeskCard((c) => (c === 'qa' ? '' : 'qa'))}><MessageCircleQuestion size={15} />Questions from the room{room.state.qa.pending ? ` (${room.state.qa.pending})` : ''}<kbd>Q</kbd></button>}
+              {roomOn && <button role="menuitem" aria-pressed={scoresOn} onClick={() => runCmd('scores')}><Trophy size={15} />Scores<kbd>S</kbd></button>}
+              {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && canLive)) && <button role="menuitem" aria-pressed={rehearsing > 0 || rehearseCard} onClick={() => setRehearseCard((v) => !v)}><Users size={15} />Rehearse{rehearsing > 0 ? ` (${rehearsing})` : ''}</button>}
+              {roomOn && <button role="menuitem" onClick={openEntry}><Keyboard size={15} />Teacher entry<kbd>K</kbd></button>}
+              {roomOn && hooks?.share && <button role="menuitem" onClick={() => hooks.share?.()}><Share2 size={15} />Share</button>}
+              <button role="menuitem" onClick={() => setSheet(true)}><Keyboard size={15} />Every key<kbd>?</kbd></button>
+            </div>
+          )}
+        </span>
         {!roomOn && canLive && (
           <button className="show-live" onClick={() => openStudioShow({ room: true, slideId: slide.id })} title="Run this lesson live with phones"><Radio size={15} />Host live</button>
         )}
