@@ -102,7 +102,9 @@ function gameCard(lib: Lib, g: ShowcaseGame, st: Style): Card {
 function nodesCard(f: NodesFormatT, st: Style): Card {
   return {
     id: 'n:' + f.id, title: f.label, kind: f.part, blurb: f.aim, steps: f.howTo, game: false, nodes: true,
-    options: [{ id: 'lab', label: 'Add', make: () => f.slides(st, f.starter) }],
+    options: f.variants?.length
+      ? f.variants.map((v, i) => ({ id: i ? v.id : 'lab', label: v.label, make: () => f.slides(st, v.content) }))
+      : [{ id: 'lab', label: 'Add', make: () => f.slides(st, f.starter) }],
     toast: (n) => `${f.label} added: ${n} slides. Edit its words on the slide; the answers are in the notes.`,
   };
 }
@@ -179,9 +181,14 @@ export const QUICK_PICKS: Record<BrowseKind, { id: string; label: string; hint: 
     { id: 'g:memory-match', label: 'Memory match', hint: 'Pair the terms' },
   ],
   nodes: [
+    { id: 'n:framework', label: 'Framework', hint: 'Every stage on one topic, from recall on' },
     { id: 'n:join-it-up', label: 'Join it up', hint: 'Build the chain the question needs' },
+    { id: 'n:label-parts', label: 'Label the parts', hint: 'Mixed up: point, explained, so, because' },
+    { id: 'n:same-word', label: 'Same word, different links', hint: 'One command word, three relationships' },
     { id: 'n:three-answers', label: 'Three answers', hint: 'Weak, stable, excellent: which and why' },
+    { id: 'n:model-marks', label: 'Model marks', hint: 'Rank and mark answers, then your own' },
     { id: 'n:which-step', label: 'Which step broke?', hint: 'Find where a wrong answer broke' },
+    { id: 'n:before-during-after', label: 'Before, during, after', hint: 'Answer construction, made visible' },
   ],
 };
 

@@ -15,6 +15,8 @@ export interface NodesFormat<C = unknown> {
   /** What the phones do, in a few words (the wall's ON PHONES cue). */
   phones: string;
   starter: C;
+  /** Other starters it comes in, each its own Add in Browse (the Framework: 16 stages or 13). */
+  variants?: { id: string; label: string; content: C }[];
   slides: (st: LayoutStyle, content: C) => Slide[];
 }
 
