@@ -187,3 +187,16 @@
 .report-screen tr.correct td:last-child { color: #4fd18b; }
 .report-screen tr.incorrect td:last-child { color: #ff9a8a; }
 .report-screen tr.unanswered td { color: var(--muted); }
+
+/* Draw (M11b): a 2D canvas over the slide (never the WebGL one), and its bar. */
+.ink-canvas { position: absolute; inset: 0; z-index: 2; pointer-events: none; touch-action: none; }
+.ink-canvas.on { pointer-events: auto; cursor: crosshair; }
+.ink-bar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 9; display: flex; align-items: center; gap: 4px; padding: 6px 8px; background: rgba(18,18,20,.94); border: 1px solid var(--line-2); border-radius: 12px; }
+.ink-bar button { display: inline-flex; align-items: center; justify-content: center; height: 32px; min-width: 32px; padding: 0 8px; background: transparent; color: var(--text); border: 0; border-radius: 8px; cursor: pointer; font: inherit; }
+.ink-bar button:hover:not(:disabled), .ink-bar button[aria-pressed="true"] { background: var(--field-2); }
+.ink-bar button:disabled { opacity: .4; cursor: default; }
+.ink-bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ink-bar .ink-swatch { min-width: 22px; width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid transparent; }
+.ink-bar .ink-swatch[aria-pressed="true"] { border-color: var(--text); background-clip: padding-box; }
+.ink-sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 4px; }
+.ink-done { background: var(--accent-soft) !important; color: var(--accent-2) !important; }

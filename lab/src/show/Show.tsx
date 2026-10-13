@@ -4,7 +4,7 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, Radio, Smartphone, Users, StickyNote, Trophy, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, PenLine, Radio, Smartphone, Users, StickyNote, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { ShowSide, presenterUrl, type PresenterCmd, type Screen } from '../presenter';
@@ -19,6 +19,8 @@ import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studi
 import { useRoom } from './useRoom';
 import { FeedbackView } from './FeedbackViews';
 import { ReportScreen } from './ReportScreen';
+import { Ink } from './ink';
+import { InkBar, InkCanvas } from './InkLayer';
 import { SimulatedClass } from '../rehearse';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
 import { nextAction, wallOf } from './wallModel';
@@ -80,6 +82,13 @@ function Show() {
   jumpRef.current = jump;
   const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [notesCard, setNotesCard] = useState(false);
+  // Draw: the ink over the slide (ink.ts), whether it takes the pointer, and a count that repaints it.
+  const ink = useRef(new Ink()).current;
+  const [inkOn, setInkOn] = useState(false);
+  const inkOnRef = useRef(false);
+  inkOnRef.current = inkOn;
+  const [inkV, setInkV] = useState(0);
+  const inkChanged = useCallback(() => setInkV((v) => v + 1), []);
   const [reportOpen, setReportOpen] = useState(false);
   /** Rehearse: the size of the simulated class in the room (0 none), and whether its card is up. */
   const [rehearsing, setRehearsing] = useState(roomOn ? rehearse0 : 0);
@@ -261,6 +270,12 @@ function Show() {
         return;
       }
       if (jumpRef.current && k === 'Escape') { setJump(''); return; }
+      if (k === 'd' || k === 'D') { setInkOn((v) => !v); return; }
+      if (inkOnRef.current) {
+        if (k === 'Escape') { setInkOn(false); return; }
+        if (k === 'z' || k === 'Z') { ink.undo(); inkChanged(); return; }
+        if (k === 'x' || k === 'X') { ink.clear(); inkChanged(); return; }
+      }
       if (k === 'b' || k === 'B' || k === '.') { runRef.current('black'); return; }
       if (k === 'w' || k === 'W' || k === ',') { runRef.current('white'); return; }
       if (k === 'o' || k === 'O') { setOverview(player.current?.index ?? 0); return; }
@@ -276,7 +291,7 @@ function Show() {
     (document.activeElement as HTMLElement | null)?.blur?.();
     addEventListener('keydown', on, true);
     return () => removeEventListener('keydown', on, true);
-  }, [exit, roomOn, deck, toggleFs, goIndex]);
+  }, [exit, roomOn, deck, toggleFs, goIndex, ink, inkChanged]);
 
   const wake = useCallback(() => {
     setBar(true);
@@ -286,6 +301,8 @@ function Show() {
   useEffect(() => { wake(); return () => { if (hideTimer.current) clearTimeout(hideTimer.current); }; }, [wake]);
 
   const slide = deck.slides[index];
+  // The marks belong to the slide on the wall: leaving it clears them (as classic's ink does).
+  useEffect(() => { ink.setSlide(String(index)); inkChanged(); }, [index, ink, inkChanged]);
   const embeds = slide.layers.filter((l) => l.kind === 'video' && l.visible && l.box && videoEmbed(l.params)).map((l) => ({ id: l.id, box: l.box!, src: videoEmbed(l.params), title: l.name }));
   const wall = roomOn ? wallOf({ room: room.state, steps, at: room.at, before: room.before, teamBefore: room.teamBefore, scoresOn, fallbackJoin: joinFallback() }) : null;
   const fbOpen = roomOn && !finished && wall?.view === 'feedback' ? room.state.feedback : null;
@@ -342,6 +359,7 @@ function Show() {
     <div className={`show${railWidth ? ' has-rail' : ''}`} role="dialog" aria-label="Slideshow" onMouseMove={wake} onFocus={wake} style={{ ['--u' as string]: 'calc(100vw / 1920)', ['--rail-w' as string]: railWidth || undefined }}>
       <div className="show-stage" style={{ width: size.w, height: size.h }} onClick={() => nextRef.current()}>
         <canvas ref={canvasRef} style={{ width: size.w, height: size.h }} aria-label={slide.name} />
+        <InkCanvas ink={ink} on={inkOn} w={size.w} h={size.h} version={inkV} onChange={inkChanged} />
         {embeds.map((e) => (
           <iframe key={`${index}-${e.id}`} className="show-embed" src={e.src} title={e.title}
             style={{ left: `${(e.box.x / deck.width) * 100}%`, top: `${(e.box.y / deck.height) * 100}%`, width: `${(e.box.w / deck.width) * 100}%`, height: `${(e.box.h / deck.height) * 100}%` }}
@@ -375,6 +393,7 @@ function Show() {
           onStop={() => { link.current?.stop(); repaint((n) => n + 1); }}
           onCopy={(url) => { void navigator.clipboard?.writeText(url).then(() => say('Notes link copied'), () => say('Could not copy the link')); }} />
       )}
+      {inkOn && <InkBar ink={ink} version={inkV} onChange={inkChanged} onDone={() => setInkOn(false)} />}
       {rehearseCard && (
         <RehearseCard size={rehearsing} inRoom={roomOn} onClose={() => setRehearseCard(false)}
           onPick={(n) => { setRehearseCard(false); if (roomOn) { setRehearsing(n); say(`A rehearsal class of ${n} is joining`); } else openStudioShow({ room: true, slideId: slide.id, rehearse: n }); }}
@@ -388,6 +407,7 @@ function Show() {
         <button onClick={() => nextRef.current()} aria-label="Next"><ArrowRight size={16} /></button>
         <span className="show-count" aria-label={`Slide ${index + 1} of ${deck.slides.length}`}>{index + 1} / {deck.slides.length}</span>
         <button onClick={() => setNotes((v) => !v)} aria-pressed={notes} aria-label="Speaker notes (N)" title="Speaker notes (N)"><StickyNote size={16} /></button>
+        <button onClick={() => setInkOn((v) => !v)} aria-pressed={inkOn} aria-label="Draw (D)" title="Draw on the slide (D): pen, highlighter, eraser"><PenLine size={16} /></button>
         <button onClick={() => setOverview(index)} aria-label="Slide overview (O)" title="Slide overview (O). Type a number and Enter to jump"><LayoutGrid size={16} /></button>
         <button onClick={() => runCmd(screen === 'black' ? 'resume' : 'black')} aria-pressed={screen === 'black'} aria-label="Black screen (B)" title="Black screen (B or .). W for white"><MonitorOff size={16} /></button>
         <button onClick={openPresenter} aria-label="Teacher Presenter" title="Teacher Presenter: notes, next slide and controls in their own window"><Monitor size={16} /></button>
