@@ -18,6 +18,7 @@ import { Elapsed, NotesCard, Overview, ScreenCover } from './ShowTools';
 import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
 import { FeedbackView } from './FeedbackViews';
+import { ReportScreen } from './ReportScreen';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
 import { nextAction, wallOf } from './wallModel';
 
@@ -78,6 +79,9 @@ function Show() {
   jumpRef.current = jump;
   const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [notesCard, setNotesCard] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const reportRef = useRef(false);
+  reportRef.current = reportOpen;
   const [, repaint] = useState(0);
   const link = useRef<PrompterLink | null>(null);
   const startedAt = useRef(Date.now()).current;
@@ -227,6 +231,7 @@ function Show() {
         return;
       }
       if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) { if (k === 'Escape') t.blur(); return; } // typing (the class list) is not a show key
+      if (reportRef.current) { if (k === 'Escape') setReportOpen(false); return; } // the report page scrolls and reads; only Esc is the show's
       if ((k === ' ' || k === 'Enter') && onControl) return; // a focused button is pressed, not Next
       // A slide number typed (digits, then Enter): the jump. Esc clears it.
       const digits = pushDigit(jumpRef.current, k);
@@ -342,12 +347,14 @@ function Show() {
           {!finished && wall.view === 'feedback' && wall.feedback && <FeedbackView fb={wall.feedback} />}
           {(finished || wall.view === 'ended') && (
             <Ended wall={wall} closing={!room.state.ended} onClose={close}
-              onReport={hooks?.reports && room.state.session ? () => hooks.reports!.open() : undefined} />
+              onReport={room.state.session ? () => setReportOpen(true) : undefined}
+              onShellReport={hooks?.reports && room.state.session ? () => hooks.reports!.open() : undefined} />
           )}
           {!room.state.connected && room.state.pin && !room.state.ended && <p className="wall-reconnect" role="status">Reconnecting to the room…</p>}
         </div>
       )}
 
+      {reportOpen && room.state.session && <ReportScreen relay={relayUrl()} session={room.state.session} points={room.state.scores} onClose={() => setReportOpen(false)} />}
       {notes && <aside className="show-notes" aria-label="Speaker notes"><h4>Notes · slide {index + 1}</h4>{slide.notes || <span className="dim">No notes for this slide.</span>}</aside>}
       <ScreenCover screen={screen} onResume={() => setScreen('none')} />
       {overview != null && <Overview slides={deck.slides} current={index} at={overview} onGo={(i) => { setOverview(null); goIndex(i); }} onClose={() => setOverview(null)} />}

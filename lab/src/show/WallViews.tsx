@@ -218,9 +218,8 @@ export function RailView({ rail }: { rail: Rail }) {
   );
 }
 
-/** The room has ended (or is ending): the final standings, and the way to the session report. The report itself is
- *  the relay's, read by the shell's Reports (hooks.reports): it is not drawn here. */
-export function Ended({ wall, closing, onReport, onClose }: { wall: Wall; closing: boolean; onReport?: () => void; onClose: () => void }) {
+/** The room has ended (or is ending): the final standings, and the way to the class report (ReportScreen), and to the shell's Reports. */
+export function Ended({ wall, closing, onReport, onShellReport, onClose }: { wall: Wall; closing: boolean; onReport?: () => void; onShellReport?: () => void; onClose: () => void }) {
   const rows = wall.board.slice(0, TOP);
   return (
     <section className="wall wall-board wall-ended" aria-label="The room has ended" data-testid="ended">
@@ -236,7 +235,8 @@ export function Ended({ wall, closing, onReport, onClose }: { wall: Wall; closin
         </ol>
       )}
       <div className="ended-actions">
-        {onReport && <button className="wall-start" onClick={onReport} disabled={closing}>Open the report</button>}
+        {onReport && <button className="wall-start" onClick={onReport} disabled={closing} data-testid="open-report">Class report</button>}
+        {onShellReport && <button className="wall-start" onClick={onShellReport} disabled={closing}>Open in Reports</button>}
         <button className="wall-start" onClick={onClose}>Back to the lesson</button>
       </div>
     </section>
