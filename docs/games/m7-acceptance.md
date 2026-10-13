@@ -197,3 +197,17 @@ Host each from the shell's Host live, in a lesson whose games are only these. Th
 6. **The overview.** In any show press O (or the grid button): every slide is a tile with its picture (they appear one by one within a second or two, the ones on screen first), its number and name. Game slides carry a badge naming the game ("Quiz · Multiple choice", "Horse race", "Bingo"), activity slides "Activity · <its name>", feedback slides "Poll", "Word cloud", "Brainstorm" or "Scale". Arrows, Enter and Esc still work, and the show is not held up while the pictures draw.
 
 What to look for that no test covers: the full boards at the back of a room and on a projector (four bingo cards at once, a long Quiz bowl question, eight memory cards); that clicking a card or a cell does nothing it should not while paused; and the overview's pictures on a long lesson (a hundred slides) on a slow machine.
+
+## SlideForge's activities in the studio's room (added 13 October 2026, M10 part 1)
+
+Add the activities from the Lesson studio's Activities (either look) to a lesson and press Host live in the shell. The studio's own room opens, not the classic host.
+
+1. **Think-Pair-Share.** Join three phones. Press Start: the wall strip says "4 stages · 7 min · First: Think"; the phones wait. Press Next: the slide builds Think, the strip lights Think, says "Silent thinking" and starts a 1:00 clock; the phones ask for a private note. Write on two phones: the strip says "2 of 3 have written something". Next: Pair ("Turn to your partner", 2:00). Next: Share ("Ideas arrive here, without names", 3:00): the phones ask for one idea, and the rail lists the ideas without names. Press Spotlight on one: it goes up across the top, named "Share". Next: Connect ("Phones down"); the idea box closes on the phones, the spotlight stays. Next again ends the lesson.
+2. **The clock.** Let a stage's clock run out: it turns red and says "Time. Next: Pair"; the show does not move on. Press +30s (on the wall or in the Teacher Presenter): the clock reads 0:30 and the phones show the new time.
+3. **The Socratic seminar.** The brief ("The best garden design …") stays under every stage, on the wall and the phones. Inner circle and Switch say "Talk in your group".
+4. **I do, We do, You do.** At "You do alone" the phones say work, with Need help. Tap Need help on a phone: the Teacher Presenter says "1 asks for help"; the wall does not.
+5. **Plus, Minus, Interesting.** Each of the three stages opens its own idea box; spotlight one from each: the three stand side by side, each named for its stage.
+6. **A feedback activity** (Exit ticket, Word splash, the Reflection ladder): the slide's prompt is open on the phones as soon as it is up, and the rail or the full screen shows the replies as any feedback slide; a held one (the ladder, the four corners) shows only the count until Show results.
+7. **A slide activity** (Do now, Flipped instruction's three pages): the phones wait; the slide's own clock, when it has one, runs on the slide.
+
+What to look for that no test covers: the strip at the back of a room (the track and the clock over the slide's own columns), a routine whose slide builds more or fewer steps than it has stages, and a phone that joins in the middle of a stage (it should show that stage's job and the seconds left).
