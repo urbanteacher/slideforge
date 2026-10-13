@@ -28,7 +28,7 @@ The studio's show is the default (M14 step 1). The File menu's **Use the classic
 | `"X" is <format>, not …` | **closed** | falls back | Every SlideForge format runs in the room. The only format left is the lab's own **Mind reveal** (a paper recall game). In the room, its end slide would be taken as a scores step. |
 | `… has a question that is not <style>` / round mixes styles | **closed** | falls back | Damaged or hand-mixed games. The room cannot mark them. |
 | `… its discussion mode is still SlideForge's to run` (Compare & contrast) | **closed** | falls back | The room runs only the sort. |
-| `the lesson has no … question or feedback prompt to ask, or activity to run` | n/a | falls back | **Must stay.** A teacher hosts a lesson that asks nothing to use the classic room's quick poll, questions box and reactions. The studio's room has none of them. |
+| `the lesson has no … question or feedback prompt to ask, or activity to run` | n/a | **closed** (13 Oct) | The studio's room now has the teacher's quick poll (`lab/src/live/quick.ts`) and the questions box (`lab/src/live/questions.ts`), so `canHostInStudio` hosts plain slides. Only a lesson with no shown slide is refused. The classic room's reactions are not ported: the phones can still react, and the studio's wall shows nothing for it. |
 | `the lesson has no shown slide` | nothing to show | | Kept. |
 | The relay never answers, or the studio's show throws | falls back | falls back | **Must stay.** This is the safety net (`hooks.fallback`). |
 
@@ -43,7 +43,7 @@ The studio's show is the default (M14 step 1). The File menu's **Use the classic
 | `js/rounds.js` | 199 | `index.html`, `view.html` | **Stays** (`view.html`) |
 | `js/stages.js` | 233 | `index.html`, `view.html` | **Stays** (`view.html`) |
 | `js/teaching.js` | 255 | `index.html`, `view.html`; Draw and steps in `js/player.js`; 1 test | **Stays** (`view.html`, the classic show) |
-| `js/quick-poll.js` | 133 | `index.html`, `view.html`; the classic room's quick poll, the reason a no-question lesson stays classic | **Stays** |
+| `js/quick-poll.js` | 133 | `index.html`, `view.html`; the classic room's quick poll (a lesson that asks nothing no longer needs it) | **Stays** |
 | `js/manual.js` | 858 | `manual.html`, which the studio's room uses too (hard rule 5) | **Stays** |
 | `js/demo.js` | 575 | `index.html` (classic Rehearse for every lesson the room guard refuses, and its fallback), `view.html` | **Stays** |
 | `js/lab-stage.js` | 452 | `index.html`: the classic show draws lab slides live over their pictures | **Stays** while the classic show falls back for lab lessons |
@@ -55,14 +55,14 @@ The studio's show is the default (M14 step 1). The File menu's **Use the classic
 | `src/presenter/window.js` | 748 | bundled; `SF.Player.openPresenter` | **Stays** |
 | Bridge in `js/lab-engine.js`: `pictureSlide` (426), `carried` (463), `figureSlide` (499), `ordered` (505), `lessonFrom` (544), `warmShow` (562), `buildShowDeck`/`drawShowDeck` (570-), `wordsDeck` (638), `buildShow` (640), `withShow` (651), `classicHostLive` (661), `classicPlay` (729), `classicRehearse` (836), `teacherPresenter`'s classic half (844), `followShow` (1079) | about 450 of 1,260 | every classic fallback; Share (`shareDeck`), the handout and print (`printDeck`, `printsAsPages`), the held room (`heldRoomDeck`), the practice notes (`wordsDeck`); `tests/lab-handout.test.js` | **Stays** |
 
-Nothing listed is unreachable. Each file is loaded by `view.html` (Share), or by a fallback that cannot close until the converter builds the leftover slide types and the studio's room has the quick poll and questions box, or by both.
+Nothing listed is unreachable. Each file is loaded by `view.html` (Share), or by a fallback that cannot close until the converter builds the leftover slide types and the studio's room has the quick poll and questions box, or by both. (Both of those are now done: see sections 4 and 4b.)
 
 ## 4. What M14 deleted
 
 Nothing. Section 3 has the reasons. These deletions could happen next, in this order:
 
 1. ~~**Port the leftover slide types** to the converter.~~ **Done in M13** (converter version 16). `classicOnly` now says nothing for any built-in lesson. It still speaks for a game the lab cannot make and for an unknown slide type. The shipped lesson copies must be rebuilt (`node tools/build-lab-lessons.mjs`, after `lab-app/` is rebuilt): until then the browser converts each lesson itself, as it does for a stale copy.
-2. **Give the studio's room a quick poll and a questions box**, then let it host a lesson that asks nothing.
+2. ~~**Give the studio's room a quick poll and a questions box**, then let it host a lesson that asks nothing.~~ **Done 13 Oct** (section 4b).
 3. **Carry every live figure** (re-convert the lessons whose stand-ins have no `slide.figure`).
 4. With 1 to 3 done, classic Present, Teacher Presenter, Rehearse and Host live serve only the safety net. Retire the safety net by owner decision, then remove `classicHostLive`, `classicPlay`, `classicRehearse`, `teacherPresenter`'s classic half, `js/lab-stage.js`, `js/live-activities.js`, `presenter.html` and its scripts, and the `index.html` script tags for `js/live.js` and `js/demo.js`.
 5. `js/player.js`, `js/live.js`, `js/demo.js`, `js/teaching.js`, `js/rounds.js`, `js/stages.js`, `js/quick-poll.js` and the quiz and live renderers then stay only for `view.html`, and go with M12 (a lab viewer for Share).
@@ -91,3 +91,21 @@ So once steps 1 to 4 are done, step 5 no longer waits on a lab viewer: `view.htm
 
 - **13 Oct 2026.** Written for M14 steps 1 to 5. The studio's show is the default, `classicOnly` was added, the plain show's fallbacks were closed, and the shell takes no keys under the studio's show. No file was deleted (section 3).
 - **13 Oct 2026, M13.** The converter builds the slide types `classicOnly` listed (section 2, first row): motion, a leftover quiz slide, explain, results, spot the fake and blank. A game the lab can build no longer keeps a lesson classic when the lab copy lacks it. Built-in lessons passing `classicOnly`: 41 of 41, up from 40. Section 4 step 1 is done. That unblocks no deletion on its own: steps 2 and 3, and the safety net, still hold every file in section 3.
+
+## 4b. What the studio's quick poll and questions box unblock (13 Oct 2026)
+
+The studio's room now has the two things that kept a lesson that asks nothing on the classic room:
+
+- **The quick poll** (`lab/src/live/quick.ts`). From the show's bar (or V), and from the Teacher Presenter. It has classic's presets: Yes / No, True / False, A to D, 1 to 5, and a word cloud. The room sends classic's `prompt` frame, and `promptEnd` when the teacher ends it. It is replayed against `feedback-quick-poll.json` with no difference.
+- **The questions box** (`lab/src/live/questions.ts`). The relay's `qa` is kept in the room state. The teacher approves a question, shows it on the wall (`qaPin`), marks it answered, hides it, or reopens it (`qaModerate`), from the show's Questions card or the Teacher Presenter. The floor (auto, open, shut) is set there too. The phones' list on a fresh join is the relay's to send, as in classic.
+
+So `canHostInStudio` hosts plain slides, and section 2's "no question" reason is closed. What this changes in section 3:
+
+| File | Before | Now |
+|---|---|---|
+| `js/quick-poll.js` | needed by every no-question lesson hosted live | only the classic room's fallbacks (`classicOnly`, uncarried figures, the safety net) and `view.html` |
+| `js/live.js`'s Q&A, floor and quick-prompt paths, `src/render/live.js` `questionCard` | the same | the same as the rest of `js/live.js`: the fallbacks and `view.html` |
+| `classicHostLive` in `js/lab-engine.js` | every lesson that asks nothing | only the fallbacks |
+
+What is left before step 4: the uncarried live figures (step 3), and the safety net, which is an owner decision. The classic room's reactions are not ported. No lesson needs classic for them, since the phones' reactions reach the relay either way.
+
