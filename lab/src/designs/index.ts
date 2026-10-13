@@ -13,3 +13,6 @@ export { canWrite, replaceGame, writeGame } from './gameAI';
 export { GAME_LOOKS, REASONS, relookGame, repairGames } from './gameLook';
 export { applyGameSettings } from './gameSettings';
 export { RECIPE_NAMES, rebuildSlide } from './recipes';
+export { canWriteNodes, writeNodes } from './nodesAI';
+export { NODES } from './nodes';
+export type { NodesFormat } from './nodes';

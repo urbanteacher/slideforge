@@ -749,3 +749,8 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
+
+/* A Nodes format's card: picture, title and kind; how it runs folds open. */
+.browse-how { margin: 0 0 10px; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; }
+.browse-how summary { cursor: pointer; font-weight: 600; color: var(--text); }
+.browse-how p { margin: 8px 0 6px; color: var(--text); line-height: 1.45; }

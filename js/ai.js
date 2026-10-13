@@ -1732,6 +1732,9 @@
     generatePollFromPrompt: generatePollFromPrompt,
     extractSlideTerms: extractSlideTerms,
     generateWordMotion: generateWordMotion,
+    /* Prompt out, parsed JSON back, for a writer that shapes its own answer (the Lesson studio's Nodes
+       formats, lab/src/designs/nodesAI.ts): one request per challenge, its slides drawn from what comes back. */
+    generateJson: function (system, user, maxTokens) { return callServerRaw(system, user, maxTokens); },
     /* Exposed for tests and future studio UI that lists AI-writable formats. */
     gameSpec: function (style) { return AI_SPECS[style] || null; },
     /** The spec a game is written with: its format's, else its engine's. */

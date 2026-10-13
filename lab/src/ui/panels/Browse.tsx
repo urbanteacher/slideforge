@@ -293,12 +293,18 @@ function Browse({ kind }: { kind: BrowseKind }) {
                 <div className="browse-card-text">
                   <b>{c.nodes ? <Network size={12} /> : c.game ? <Gamepad2 size={12} /> : <Timer size={12} />}{c.title}</b>
                   <small>{c.kind}</small>
-                  <span>{c.blurb}</span>
+                  {!c.nodes && <span>{c.blurb}</span>}
                 </div>
               </button>
               {isOpen && (
                 <div className="browse-card-body">
-                  {c.steps.length > 0 && <ol className="browse-steps">{c.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>}
+                  {c.nodes ? (
+                    <details className="browse-how">
+                      <summary>How it runs</summary>
+                      <p>{c.blurb}</p>
+                      {c.steps.length > 0 && <ol className="browse-steps">{c.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>}
+                    </details>
+                  ) : c.steps.length > 0 && <ol className="browse-steps">{c.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>}
                   <div className="browse-add">
                     {c.options.map((o) => (
                       <button key={o.id} className={`btn-soft${o.id === 'lab' ? ' accent' : ''}`} onClick={() => add(c, o)} title={c.options.length > 1 ? `Add it in this design: ${o.label}` : 'Add it after the slide on screen'}>

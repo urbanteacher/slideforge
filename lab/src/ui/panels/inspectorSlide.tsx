@@ -4,6 +4,7 @@ import { slideOf, useStore } from '../../store';
 import { ColorField, Row, Section, Select, newGesture } from '../controls/controls';
 import { tidySlide } from '../stage/snap';
 import { ActivityPanel } from './activity';
+import { NodesPanel } from './nodes';
 import { GamePanel } from './game';
 import { RecipePanel } from './recipe';
 import { WandSparkles } from 'lucide-react';
@@ -54,6 +55,7 @@ export function SlideDesign() {
       <RecipePanel />
       <GamePanel />
       <ActivityPanel />
+      <NodesPanel />
       <Section title="Slide">
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>
