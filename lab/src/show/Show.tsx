@@ -50,6 +50,14 @@ function giveUp(reason: string): void {
   else { hooks?.toast?.(begun ? `The studio's room stopped: ${reason}. The room has ended.` : reason); hooks?.exited?.(); }
 }
 
+/** The document that is full screen: the shell's page when the studio is in its frame (the shell asks for full
+ *  screen on its own page at Present), else this one. The frame's own document never sees the page's full screen,
+ *  so asking it would ask again rather than leave. */
+function fsDoc(): Document {
+  try { if (window.parent !== window && window.parent.document) return window.parent.document; } catch { /* another origin */ }
+  return document;
+}
+
 export function ShowLayer() {
   const open = useShow((s) => s.open);
   const room = useShow((s) => s.room);
@@ -151,7 +159,8 @@ function Show() {
 
   /** Leave the show: back to the editor, on the slide the show was on. */
   const close = useCallback(() => {
-    if (document.fullscreenElement) void document.exitFullscreen();
+    const fs = fsDoc();
+    if (fs.fullscreenElement) void fs.exitFullscreen();
     const id = deck.slides[player.current?.index ?? 0]?.id;
     if (id) useStore.getState().selectSlide(id);
     useShow.setState({ open: false, room: false });
@@ -270,8 +279,9 @@ function Show() {
   }, [target]);
 
   const toggleFs = useCallback(() => {
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else void document.documentElement.requestFullscreen?.().catch(() => say('The browser did not allow full screen'));
+    const fs = fsDoc();
+    if (fs.fullscreenElement) void fs.exitFullscreen();
+    else void fs.documentElement.requestFullscreen?.().catch(() => say('The browser did not allow full screen'));
   }, []);
 
   useEffect(() => {
@@ -320,7 +330,7 @@ function Show() {
       if (k === 'o' || k === 'O') { setOverview(player.current?.index ?? 0); return; }
       if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(k)) { e.preventDefault(); nextRef.current(); }
       else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); prevRef.current(); }
-      else if (k === 'Escape') { if (!document.fullscreenElement) exit(); }
+      else if (k === 'Escape') { if (!fsDoc().fullscreenElement) exit(); }
       else if (k === 'Home' && !roomOn) player.current?.goto(0, -1, true);
       else if (k === 'End' && !roomOn) player.current?.goto(deck.slides.length - 1, 1, true);
       else if (k === 'n' || k === 'N') setNotes((v) => !v);
