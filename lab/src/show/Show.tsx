@@ -16,7 +16,7 @@ import { Boundary } from './Boundary';
 import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit, whoAnswered } from './desk';
 import { PrompterLink, prompterLinkFor } from './prompter';
 import { qrSvg } from './qr';
-import { Elapsed, Overview, RehearseCard, ScreenCover } from './ShowTools';
+import { Overview, RehearseCard, ScreenCover } from './ShowTools';
 import { JoinCard } from './JoinCard';
 import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
@@ -569,7 +569,6 @@ function Show() {
         <button onClick={() => runCmd(screen === 'black' ? 'resume' : 'black')} aria-pressed={screen === 'black'} aria-label="Black screen (B)" title="Black screen (B or .). W for white"><MonitorOff size={16} /></button>
         <button onClick={openPresenter} aria-label="Teacher Presenter (P)" title="Teacher Presenter (P): notes, next slide and every control in their own window"><Monitor size={16} /></button>
         <button onClick={notesElsewhere} aria-label="Notes on another device (Shift+N)" title="Notes on another device (Shift+N): the private link and QR open in the Teacher Presenter"><Smartphone size={16} /></button>
-        <Elapsed since={startedAt} />
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
         {roomOn && <button onClick={() => setDeskCard((c) => (c === 'poll' ? '' : 'poll'))} aria-pressed={deskCard === 'poll' || !!room.state.quick} aria-label="Quick poll (V)" title="Quick poll (V): ask the room something on the fly"><Vote size={16} /></button>}
