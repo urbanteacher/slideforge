@@ -4,10 +4,12 @@ The Lesson studio's show (`lab/src/show/`) and its Teacher Presenter window (`la
 `lab/src/presenter/controls.ts`: the show's keys, the `?` sheet and the Teacher Presenter's buttons all read that table, so they never drift;
 this page was written from it. Room and Phones controls need a live room (Host live); without one the key says so.
 
-- **The wall's bar** has previous, next, the slide count (with a snowflake and the teacher's slide while frozen), Draw, overview, black
-  screen, the Teacher Presenter, notes on another device, full screen and exit (the clock is in the Teacher Presenter). Quick poll (V) and the room view (E) are
-  always there (before a room, they start Host live). Once a room is live it adds the join card, Scores, Show results, Close prompt, Questions, Rehearse, Teacher entry and Share. Speaker notes
-  are not on the bar (N still shows them on the wall); everything else is a key on the wall and a button in the Teacher Presenter.
+- **The wall's bar** shows previous, next, the slide count (with a snowflake and the teacher's slide while frozen), the join card (once a
+  room is live), Draw, black screen, Quick poll (V), the room view (E), Show results and Close prompt (while a prompt is open), full
+  screen, More, Host live (before a room) and exit. Quick poll and the room view start Host live when no room is running.
+- **More (…)** holds the rest: slide overview, the Teacher Presenter, notes on another device, and once a room is live Questions (its
+  waiting count also shows on the More button), Scores, Rehearse, Teacher entry and Share, then every key (`?`). A click outside or Esc
+  closes it. Speaker notes are not on the bar (N still shows them on the wall); everything is also a key and a Teacher Presenter button.
 - **The Teacher Presenter** groups its buttons Slides, Screen, Room and Phones. Each button's title names its wall key, and a button is
   pressed while its control is on. A state line above them says whether the wall is frozen, black or white, being drawn on, whether the phones
   are blanked (or going dark, with the seconds left), the floor, the room view, the join card and reactions. The window's keys are the
