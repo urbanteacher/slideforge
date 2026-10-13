@@ -2,13 +2,23 @@
 // The marks are ink.ts's; this paints them and turns the pointer into strokes. The canvas takes the pointer only while Draw is on
 // (otherwise a click on the slide is still Next), and a click on it never reaches the stage underneath.
 
-import { Eraser, Highlighter, PenLine, Trash2, Undo2 } from 'lucide-react';
+import { Eraser, Highlighter, ListChecks, PenLine, Sun, Trash2, Undo2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { HIGHLIGHTER_ALPHA, INK_COLORS, type Ink, type InkTool, type Stroke } from './ink';
+import { HIGHLIGHTER_ALPHA, INK_COLORS, SPOT_DIM, type Ink, type InkTool, type Spot, type Stroke } from './ink';
 
 /** Paint strokes on a canvas of `w` by `h` pixels. A highlighter is one path drawn at one opacity, so a mark does not darken where it crosses itself. */
-export function paintInk(ctx: CanvasRenderingContext2D, strokes: readonly Stroke[], w: number, h: number): void {
+export function paintInk(ctx: CanvasRenderingContext2D, strokes: readonly Stroke[], w: number, h: number, spot: Spot | null = null): void {
   ctx.clearRect(0, 0, w, h);
+  if (spot) {
+    ctx.save();
+    ctx.fillStyle = `rgba(0,0,0,${SPOT_DIM})`;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.ellipse((spot.x + spot.w / 2) * w, (spot.y + spot.h / 2) * h, Math.max(1, spot.w * w / 2), Math.max(1, spot.h * h / 2), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   for (const s of strokes) {
@@ -34,7 +44,7 @@ export function InkCanvas({ ink, on, w, h, version, onChange }: { ink: Ink; on: 
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
     const ctx = c.getContext('2d');
-    if (ctx) paintInk(ctx, ink.strokes, c.width, c.height);
+    if (ctx) paintInk(ctx, ink.strokes, c.width, c.height, ink.spot);
   }, [ink, w, h, version]);
   const at = (e: React.PointerEvent): [number, number] => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -52,10 +62,11 @@ export function InkCanvas({ ink, on, w, h, version, onChange }: { ink: Ink; on: 
 
 const TOOLS: { tool: InkTool; label: string; icon: typeof PenLine }[] = [
   { tool: 'pen', label: 'Pen', icon: PenLine }, { tool: 'highlighter', label: 'Highlighter', icon: Highlighter }, { tool: 'eraser', label: 'Eraser', icon: Eraser },
+  { tool: 'spot', label: 'Spotlight (L): drag over what the room should look at; click to put it out', icon: Sun },
 ];
 
-/** The tools: pen, highlighter, eraser, a few colours, undo (Z), clear (X), done (D or Esc). */
-export function InkBar({ ink, version, onChange, onDone }: { ink: Ink; version: number; onChange: () => void; onDone: () => void }) {
+/** The tools: pen, highlighter, eraser, spotlight, a few colours, undo (Z), clear (X), every step, done (D or Esc). */
+export function InkBar({ ink, version, onChange, onDone, onSteps }: { ink: Ink; version: number; onChange: () => void; onDone: () => void; onSteps: () => void }) {
   void version;
   return (
     <div className="ink-bar" role="toolbar" aria-label="Draw on the slide" data-testid="ink-bar">
@@ -64,12 +75,13 @@ export function InkBar({ ink, version, onChange, onDone }: { ink: Ink; version: 
       ))}
       <span className="ink-sep" aria-hidden="true" />
       {INK_COLORS.map((c) => (
-        <button key={c} className="ink-swatch" style={{ background: c }} onClick={() => { ink.color = c; if (ink.tool === 'eraser') ink.tool = 'pen'; onChange(); }}
-          aria-pressed={ink.color === c && ink.tool !== 'eraser'} aria-label={`Colour ${c}`} title={c} />
+        <button key={c} className="ink-swatch" style={{ background: c }} onClick={() => { ink.color = c; if (ink.tool === 'eraser' || ink.tool === 'spot') ink.tool = 'pen'; onChange(); }}
+          aria-pressed={ink.color === c && (ink.tool === 'pen' || ink.tool === 'highlighter')} aria-label={`Colour ${c}`} title={c} />
       ))}
       <span className="ink-sep" aria-hidden="true" />
       <button onClick={() => { ink.undo(); onChange(); }} disabled={!ink.canUndo} aria-label="Undo the last mark (Z)" title="Undo the last mark (Z)"><Undo2 size={16} /></button>
-      <button onClick={() => { ink.clear(); onChange(); }} disabled={ink.count === 0} aria-label="Clear the marks on this slide (X)" title="Clear the marks on this slide (X)"><Trash2 size={16} /></button>
+      <button onClick={() => { ink.clear(); onChange(); }} disabled={ink.count === 0 && !ink.spot} aria-label="Clear the marks on this slide (X)" title="Clear the marks on this slide (X)"><Trash2 size={16} /></button>
+      <button onClick={onSteps} aria-label="Show every step on this slide (A)" title="Show every step on this slide (A)"><ListChecks size={16} /></button>
       <button className="ink-done" onClick={onDone} aria-label="Done drawing (D or Esc)" title="Done drawing (D or Esc)">Done</button>
     </div>
   );

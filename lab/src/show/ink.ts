@@ -3,7 +3,12 @@
 // resized. Strokes belong to the slide they were drawn on. As in classic (js/teaching.js), marks are cleared when the show leaves
 // the slide; `keep` keeps them for the length of the show instead. Undo takes back the last mark, or the last erasing.
 
-export type InkTool = 'pen' | 'highlighter' | 'eraser';
+/** `spot`: the spotlight, a dragged ellipse that stays lit while the rest of the slide is darkened (classic's spot mode). */
+export type InkTool = 'pen' | 'highlighter' | 'eraser' | 'spot';
+/** The spotlight's box, in fractions of the stage. */
+export interface Spot { x: number; y: number; w: number; h: number }
+/** How dark the spotlight makes the rest of the slide. */
+export const SPOT_DIM = 0.72;
 export type Pt = [number, number];
 export interface Stroke { tool: 'pen' | 'highlighter'; color: string; /** The line's width as a fraction of the stage's width. */ width: number; points: Pt[] }
 
@@ -47,6 +52,9 @@ export class Ink {
   private active: Stroke | null = null;
   private erasing: { at: number; stroke: Stroke }[] | null = null;
   private aspect = 9 / 16;
+  private spotFrom: Pt | null = null;
+  /** The spotlight on the slide on the wall, or null. It goes with the slide, and Clear takes it away. */
+  spot: Spot | null = null;
 
   /** The marks on the slide on the wall. */
   get strokes(): readonly Stroke[] { return this.marks.get(this.key) ?? []; }
@@ -62,6 +70,7 @@ export class Ink {
     if (key === this.key) return;
     if (!this.keep) { this.marks.delete(this.key); this.ops.delete(this.key); }
     this.key = key;
+    this.spot = null;
   }
 
   /** Start a mark (pen, highlighter) or an erasing at a point. */
@@ -69,6 +78,7 @@ export class Ink {
     this.end();
     const pt: Pt = [clamp01(p[0]), clamp01(p[1])];
     if (this.tool === 'eraser') { this.erasing = []; this.erase(pt); return; }
+    if (this.tool === 'spot') { this.spotFrom = pt; this.spot = null; return; }
     const width = this.tool === 'highlighter' ? HIGHLIGHTER_WIDTH : PEN_WIDTH;
     this.active = { tool: this.tool, color: this.color, width, points: [pt] };
     const list = this.marks.get(this.key) ?? [];
@@ -78,6 +88,11 @@ export class Ink {
 
   extend(p: Pt): void {
     const pt: Pt = [clamp01(p[0]), clamp01(p[1])];
+    if (this.spotFrom) {
+      const [a, b] = this.spotFrom;
+      this.spot = { x: Math.min(a, pt[0]), y: Math.min(b, pt[1]), w: Math.abs(pt[0] - a), h: Math.abs(pt[1] - b) };
+      return;
+    }
     if (this.active) {
       const last = this.active.points[this.active.points.length - 1];
       if (Math.hypot(pt[0] - last[0], (pt[1] - last[1]) * this.aspect) >= 0.0008) this.active.points.push(pt);
@@ -86,6 +101,9 @@ export class Ink {
 
   /** The pointer is up: the mark (or the erasing) is one step to undo. */
   end(): void {
+    // A click without a drag puts the spotlight out.
+    if (this.spotFrom && this.spot && (this.spot.w < 0.01 || this.spot.h < 0.01)) this.spot = null;
+    this.spotFrom = null;
     if (this.active) this.push({ add: this.active });
     else if (this.erasing && this.erasing.length) this.push({ removed: this.erasing });
     this.active = null;
@@ -121,6 +139,7 @@ export class Ink {
   /** Wipe the slide's marks (one step: undo brings them all back). */
   clear(): void {
     this.end();
+    this.spot = null;
     const list = this.marks.get(this.key) ?? [];
     if (list.length === 0) return;
     this.push({ removed: list.map((stroke, at) => ({ at, stroke })) });

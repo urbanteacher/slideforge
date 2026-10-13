@@ -207,6 +207,15 @@ export class DeckPlayer {
     this.emit();
     return true;
   }
+  /** Every build of this slide at once, and whatever is arriving settled (the show's "Show every step"). False: it was already built. */
+  buildAll(): boolean {
+    if (this.trans) this.finishTransition();
+    const settled = this.settle();
+    if (this.built || this.clicks.length >= this.steps()) return settled;
+    this.built = true;
+    this.emit();
+    return true;
+  }
   /** Straight to a slide, with no transition: SlideForge's player has just cut to it. */
   cut(i: number, built = false) {
     if (i < 0 || i >= this.deck.slides.length) return;
