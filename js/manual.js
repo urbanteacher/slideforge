@@ -379,20 +379,14 @@ if($('ownTabs')) Array.prototype.forEach.call($('ownTabs').querySelectorAll('[da
 function paintLiveGate(){
  var btn=$('startLiveRoom'), hint=$('liveRoomHint'), pin=$('liveRoomPin');
  if(!btn) return;
- if(state.active){
-  btn.textContent='New room…';
-  btn.setAttribute('aria-label','End this room and start a new live room with a fresh PIN');
-  if(hint) hint.textContent='Room is open. Add names below. Share the PIN only if phones will join.';
-  if(pin){
-   pin.hidden=!state.pin;
-   pin.textContent=state.pin ? ('PIN '+state.pin) : '';
-  }
- }else{
-  btn.textContent='Start live room';
-  btn.setAttribute('aria-label','Start a live room for the register');
-  if(hint) hint.textContent='Start a live room to take the register. Phones are optional — add names here for paper or whiteboards.';
-  if(pin){ pin.hidden=true; pin.textContent=''; }
- }
+ /* The show owns the room (Host live), so this page never starts or replaces one: the button stays hidden. */
+ btn.hidden=true;
+ if(pin){ pin.hidden=true; pin.textContent=''; }
+ if(hint) hint.textContent=state.active
+  ? 'Room open'+(state.pin?' · PIN '+state.pin:'')+'. Add names below; share the PIN only if phones will join.'
+  : 'Not connected to a room. Press Host live in the show, then open Teacher entry from its More menu (…). Phones are optional: names added here work for paper and whiteboards.';
+ var search=$('rosterSearch'), roster=$('classRoster'), find=document.querySelector('label[for=rosterSearch]');
+ [search,roster,find].forEach(function(el){ if(el) el.hidden=!state.active; });
 }
 if($('startLiveRoom')) $('startLiveRoom').onclick=function(){
  if(state.active){
@@ -581,7 +575,7 @@ function render(){
     ? people.length+' in the room · '+entered.length+' teacher-entered · '+onPhones.length+' on devices'
       + (state.pin ? ' · PIN '+state.pin : '')
     : 'Room open'+(state.pin ? ' · PIN '+state.pin : '')+' — add a name below')
-  : 'Start a live room to take the register (phones optional).';
+  : '';
  paintLiveGate();
  paintClassRoster(people);
  if(people.length) $('error').textContent='';
@@ -598,7 +592,7 @@ function render(){
     was up — including in the lobby, where there is no next question yet.
     It is a status, not a prompt. */
  var heading = q ? q.question
-  : !state.active ? 'Start a live room to record answers'
+  : !state.active ? 'Open a room first: Host live in the show'
   : !state.showing ? 'Start the lesson, then open a quiz slide'
   : 'This slide has no check — advance to a quiz slide to record answers';
  $('question').textContent=heading;
@@ -609,7 +603,7 @@ function render(){
     report it earns. Every reason it cannot be pressed is now written next to
     it, and it is only actually disabled for the reason a teacher can fix by
     waiting. */
- var why = !state.active ? 'Start a live room above, then add names.'
+ var why = !state.active ? 'Open a room first: Host live in the show, then add names.'
   : (q && !q.revealed) ? 'A question is on screen. Add names once you have revealed it or moved on.'
   : (state.mode==='teams' && !(state.teams||[]).length) ? 'This room is in teams mode but has no teams set up. Add teams in the quiz settings, or switch the lesson to individual.'
   : '';
@@ -736,7 +730,7 @@ function paintPulse(){
   card.appendChild(document.createElement('strong')).textContent=x[1];
   card.appendChild(document.createElement('span')).textContent=x[0];box.appendChild(card);
  });
- var advice=!state.active?'Start a live room to connect the class. Phones are optional — teacher entry works for paper and whiteboards.'
+ var advice=!state.active?''
   :q&&q.spoken?'Choose who spoke, then mark the answer. Phones listen and watch.'
   :!q?'Add your learners, then open a quiz slide to gather evidence.'
   :!q.revealed?(missing?'Give the room thinking time. '+missing+' learner'+(missing===1?' has':'s have')+' no recorded answer yet.':'All responses are in. Reveal when you are ready.')
@@ -747,7 +741,7 @@ function paintPulse(){
   advice=marked.length?right+' of '+marked.length+' marked responses correct. '+(right/marked.length<0.6?'Consider modelling another example, then recheck understanding.':'Ask learners to explain their reasoning before moving on.'):'Responses are available. Review them before deciding what to revisit.';
   if(missing)advice+=' '+missing+' without a response; understanding is not yet known.';
  }
- var n=document.createElement('p');n.className='pulse-guidance';n.textContent=advice;box.appendChild(n);
+ if(advice){var n=document.createElement('p');n.className='pulse-guidance';n.textContent=advice;box.appendChild(n);}
  $('pickName').disabled=spinning||!state.active||!eligiblePeople().some(function(p){return !pickedIds.has(p.id);});
 }
 $('rosterSearch').oninput=function(){paintClassRoster(state.players||[]);};

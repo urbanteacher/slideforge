@@ -1,0 +1,51 @@
+/* The Lesson studio's look for the pages outside it: teacher entry (manual.html), the phone page (join.html)
+   and the notes screen (prompter.html). Dark grey with orange, the tokens of lab/src/styles.css. Colours only:
+   layout stays each page's own. */
+:root {
+  --sk-bg: #0a0a0b;
+  --sk-panel: #141417;
+  --sk-field: #1a1a1e;
+  --sk-field-2: #222227;
+  --sk-line: #2a2a30;
+  --sk-text: #ececef;
+  --sk-muted: #8b8b93;
+  --sk-dim: #5e5e66;
+  --sk-accent: #ff5a36;
+  --sk-accent-2: #ff7a5c;
+  --sk-soft: rgba(255, 90, 54, 0.14);
+  --sk-right: #45d69b;
+  --sk-wrong: #ff6b6b;
+  --sk-warn: #f0b14a;
+  --sk-warn-soft: rgba(240, 177, 74, 0.16);
+  --sk-radius: 10px;
+  color-scheme: dark;
+}
+.sk body, body.sk { background: var(--sk-bg); color: var(--sk-text); font-family: Inter, system-ui, -apple-system, sans-serif; }
+
+/* Teacher entry */
+.sk .manual-panel { background: transparent; color: var(--sk-text); }
+.sk .manual-panel h1, .sk .manual-panel h2, .sk .manual-panel h3, .sk .manual-panel summary { color: var(--sk-text); }
+.sk .teacher-eyebrow { color: var(--sk-accent); letter-spacing: .08em; }
+.sk .manual-panel button { background: var(--sk-field); color: var(--sk-text); border: 1px solid var(--sk-line); border-radius: 8px; }
+.sk .manual-panel button:hover:not(:disabled) { background: var(--sk-field-2); border-color: #3a3a42; }
+.sk .manual-panel button:focus-visible, .sk .manual-panel input:focus-visible, .sk .manual-panel textarea:focus-visible, .sk .manual-panel select:focus-visible { outline: 2px solid var(--sk-accent); outline-offset: 1px; }
+.sk #close { background: transparent; border-color: transparent; color: var(--sk-muted); }
+.sk #close:hover { color: var(--sk-text); }
+.sk .own-tabs button { background: transparent; border-color: var(--sk-line); color: var(--sk-muted); }
+.sk .own-tabs button[aria-selected=true] { background: var(--sk-soft); border-color: var(--sk-accent); color: var(--sk-text); }
+.sk .live-room-gate #startLiveRoom, .sk #add, .sk #reveal, .sk .manual-panel button.primary { background: var(--sk-accent); border-color: var(--sk-accent); color: #fff; font-weight: 600; }
+.sk .live-room-gate #startLiveRoom:hover, .sk #add:hover:not(:disabled), .sk #reveal:hover { background: var(--sk-accent-2); border-color: var(--sk-accent-2); }
+.sk .manual-panel input, .sk .manual-panel textarea, .sk .manual-panel select { background: var(--sk-field); color: var(--sk-text); border: 1px solid var(--sk-line); border-radius: 8px; }
+.sk .manual-panel input::placeholder, .sk .manual-panel textarea::placeholder { color: var(--sk-dim); }
+.sk .manual-panel details, .sk .in-room-panel, .sk .live-room-gate, .sk .pulse-stat, .sk .tool-card, .sk .qo-card, .sk .grid-tile { background: var(--sk-panel); border-color: var(--sk-line); color: var(--sk-text); }
+.sk .pulse-guidance, .sk .notice { background: var(--sk-soft); color: var(--sk-text); border: 0; }
+.sk .pulse-stat strong { color: var(--sk-text); }
+.sk .pulse-stat span, .sk .teacher-private, .sk #status, .sk .in-room-empty, .sk .reveal-lead, .sk .tool-blurb { color: var(--sk-muted); }
+.sk .roster-row { border-color: var(--sk-line); }
+.sk .manual-entry.current { background: var(--sk-soft); box-shadow: inset 3px 0 0 var(--sk-accent); }
+.sk .reveal-opt { background: var(--sk-field); color: var(--sk-text); border-color: var(--sk-line); }
+.sk .reveal-opt:hover { background: var(--sk-accent); border-color: var(--sk-accent); color: #fff; }
+.sk .answer-grid th, .sk .answer-grid td { border-color: var(--sk-line); }
+.sk kbd { background: var(--sk-field); color: var(--sk-text); border-color: var(--sk-line); }
+.sk #error { color: var(--sk-wrong); }
+.sk a { color: var(--sk-accent-2); }

@@ -200,7 +200,8 @@ try {
   assert.notEqual(pin2, pin);
   const cy = await join(pin2, 'Cy');
   await page.mouse.move(900, 900); // wakes the show's bar
-  const [entry] = await Promise.all([page.context().waitForEvent('page'), lab.getByRole('button', { name: 'Teacher entry' }).click()]);
+  await lab.getByRole('button', { name: 'More controls' }).click(); // Teacher entry is in the bar's More menu
+  const [entry] = await Promise.all([page.context().waitForEvent('page'), lab.getByRole('menuitem', { name: /Teacher entry/ }).click()]);
   await entry.waitForLoadState('domcontentloaded');
   assert.match(entry.url(), /\/manual\.html#[a-f0-9]{32}$/, 'manual.html opens with the room\'s key');
   await entry.locator('#addNames summary').click();
