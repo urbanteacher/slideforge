@@ -2,7 +2,7 @@ import { createLayer, uid, type Deck, type LiveFigure, type Slide } from '../cor
 import { videoEmbed } from '../engine';
 import { CHART_DARK, CHART_LIGHT } from '../charts';
 import { EXPERIMENTS, LOOKS, SCENES, experimentPreset } from '../experiments';
-import { LAYOUTS, explainSlide, resultsSlide, spotfakeSlide, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
+import { LAYOUTS, blankSlide, explainSlide, resultsSlide, spotfakeSlide, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
 import { feedbackOf, gameSlides, fitSize, type ShowcaseGame } from '../designs';
 import { addThemeArt, themeGround, type ArtContext } from '../theme';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
@@ -383,6 +383,12 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       const [a = '', c = ''] = sub.includes('\t') ? cells(sub) : sub.split('|').map((x) => x.trim()), e = s.exploration ?? {};
       return { slide: spotfakeSlide(st, { title: t, names: [a || 'A', c || 'B'], pictures: [img(String(e.before ?? '')), img(String(e.after ?? ''))],
         real: Number((s as { correct?: number }).correct) === 1 ? 1 : 0, tells: b.filter((x) => x.trim()), clicks: !!s.progressive }), ground: g };
+    }
+    case 'blank': {
+      // Its free blocks, each in the cells the author gave it (design.regions, keyed blocks.<id>).
+      const regions = (s.design?.regions ?? {}) as Record<string, { col: number; row: number; cols: number; rows: number }>;
+      const blocks = ((s as { blocks?: { id?: string; kind?: string; text?: string }[] }).blocks ?? []).filter((x) => x?.id);
+      return { slide: blankSlide(st, blocks.map((x) => ({ kind: String(x.kind ?? 'text'), text: x.kind === 'image' ? img(String(x.text ?? '')) : String(x.text ?? ''), region: regions[`blocks.${x.id}`] }))), ground: g };
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {

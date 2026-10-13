@@ -823,3 +823,23 @@ test('spot the fake comes in as two named pictures, the verdict on each and the 
   const clicks = made.layers.filter((l) => l.anim && l.anim.trigger === 'onClick').map((l) => l.anim.step.i);
   assert.deepEqual(clicks, [0, 1, 2, 3]);
 });
+
+test('a blank slide comes in as its free blocks, each in the cells its author gave it (M13)', { skip }, async () => {
+  const { deckFromSlideForge, convertsSlide } = await converter();
+  const src = lesson('layout-bank');
+  const blank = { id: 'old-blank', type: 'blank', design: { regions: { 'blocks.b1': { col: 3, row: 2, cols: 8, rows: 2 } } },
+    blocks: [{ id: 'b1', kind: 'heading', text: 'Made by hand' }, { id: 'b2', kind: 'bullets', text: 'One\nTwo' }, { id: 'b3', kind: 'image', text: 'assets/c.jpg' }] };
+  const empty = { id: 'old-empty', type: 'blank' };
+  src.slides.splice(2, 0, blank, empty);
+  assert.ok(convertsSlide(blank) && convertsSlide(empty));
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '', frame: false });
+  const made = deck.slides.find((s) => s.sourceSlideId === blank.id);
+  const head = made.layers.find((l) => l.name === 'Heading');
+  assert.equal(head.params.text, 'Made by hand');
+  // SlideForge's lattice is the lab's grid: column 3, row 2 is where the lab's cell(3, 2) is.
+  assert.deepEqual([head.box.x, head.box.y], [78 + 2 * 151.5, 132 + 54]);
+  assert.equal(made.layers.find((l) => l.name === 'Bullet points').params.text, 'One\nTwo');
+  assert.equal(made.layers.find((l) => l.kind === 'image' && l.name === 'Picture').params.src, 'assets/c.jpg');
+  const bare = deck.slides.find((s) => s.sourceSlideId === empty.id);
+  assert.ok(bare && !bare.layers.some((l) => l.kind === 'text'), 'nothing on it but its ground');
+});

@@ -1,6 +1,6 @@
 import { createLayer, type Layer, type Slide } from '../core';
-import { CONTENT_FOOT, CONTENT_TOP, after, shape, slide, text, titleBar, titleRow } from './blocks';
-import { GRID, type LayoutStyle } from './style';
+import { CONTENT_FOOT, CONTENT_TOP, after, body, bullets, heading, panel, shape, slide, text, titleBar, titleRow } from './blocks';
+import { GRID, cell, type LayoutStyle } from './style';
 
 // ─── SlideForge's last slide types (lab-engine-plan M13) ─────────────────────────────────────────
 // The ones a lesson could still hold that the lab had no form for, which kept the lesson on SlideForge's
@@ -82,4 +82,36 @@ export function spotfakeSlide(st: LayoutStyle, o: { title: string; names: [strin
   const rows = tells.map((t, i) => [text('Tell', t, { x: GRID.left, y: top + i * each, w: W, h: each - 8, rot: 0 }, { font: st.body, weight: '400', size: 40, color: st.ink, list: 'bullets', fitGroup: 'fake-tells' })]);
   layers.push(...byClick([...verdicts, ...rows], uniq('fake'), o.clicks, 0.5));
   return slide(st, 'Spot the fake', layers);
+}
+
+/** A block an author placed on a blank slide (SlideForge's free blocks, src/render/lattice.js): its kind, its
+ *  words (for a picture, its address) and, where it was moved, its cells on SlideForge's 12 × 16 lattice. That
+ *  lattice is the lab's grid at SlideForge's size (style.ts GRID is it × 1.5), so a cell is the same cell here. */
+export interface FreeBlock { kind: string; text: string; region?: { col: number; row: number; cols: number; rows: number } }
+/** The footprint SlideForge gives a block it has not been told where to put (lattice.js FREE_KINDS). */
+const FOOTPRINT: Record<string, [number, number]> = { heading: [10, 1], text: [9, 1], note: [4, 1], bullets: [10, 8], image: [8, 11], pairs: [10, 8], quote: [8, 4], chart: [11, 11] };
+
+/** A blank slide (SlideForge's, whose layout draws nothing): its free blocks, each where the author put it,
+ *  or stacked from the top as SlideForge places a new one. A blank slide with none is its ground alone. */
+export function blankSlide(st: LayoutStyle, blocks: FreeBlock[]): Slide {
+  let next = 1;
+  const layers = blocks.flatMap((b, i): Layer[] => {
+    const [cols, rows] = FOOTPRINT[b.kind] ?? FOOTPRINT.text;
+    const r = b.region ?? { col: 1, row: next, cols, rows };
+    next = Math.max(next, r.row + r.rows);
+    const box = cell(Math.max(1, Math.min(12, r.col)), Math.max(1, r.row), Math.max(1, Math.min(12, r.cols)), Math.max(1, r.rows));
+    const delay = 0.1 + i * 0.1;
+    switch (b.kind) {
+      case 'heading': return [heading(st, b.text, box, 72)];
+      case 'bullets': return [bullets(st, b.text.split('\n').map((l) => l.trim()).filter(Boolean), box, 44)];
+      // A label and its value per line, as SlideForge writes them: label TAB value.
+      case 'pairs': return [text('Pairs', b.text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => l.split('\t').map((c) => c.trim()).filter(Boolean).join(' — ')).join('\n'), box, { font: st.body, size: 44, color: st.ink, lineHeight: 1.4 }, after(delay))];
+      case 'quote': return [text('Quote', b.text, box, { font: st.display, weight: st.displayWeight, size: 64, color: st.ink, lineHeight: 1.15 }, after(delay))];
+      case 'note': return [panel(st, box, 'Note card'), text('Note', b.text, { ...box, x: box.x + 24, y: box.y + 12, w: box.w - 48, h: box.h - 24 }, { font: st.body, size: 36, color: st.ink }, after(delay))];
+      case 'image': return [createLayer('image', { name: 'Picture', box, params: { src: b.text, fit: 'cover' }, anim: { type: 'fade', duration: 0.8, delay } })];
+      // A chart block's table comes in as its words: the lab's charts read another shape of data.
+      default: return [body(st, b.text, box, 44, {}, delay)];
+    }
+  });
+  return slide(st, 'Blank', layers);
 }
