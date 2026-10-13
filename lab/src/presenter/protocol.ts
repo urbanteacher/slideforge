@@ -44,6 +44,8 @@ export interface PresenterState {
   startedAt: number;
   screen: Screen;
   room: PresenterRoom | null;
+  /** A live figure on the wall: the step Next and Back walk (from 1), of how many, and that step's caption. */
+  figure?: { step: number; of: number; caption: string };
 }
 
 export type ToWindow =

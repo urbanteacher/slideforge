@@ -226,3 +226,23 @@ declare module '@sf/deck/content.js' {
   /** What the phones may show of a slide at a build step (`at.text`). */
   export function slideExcerpt(slide: SFActivitySlide, revealed: number): string;
 }
+
+/** A SlideForge live figure slide (src/figures/): which figure, its data, its steps and its frame. */
+interface SFFigureSlide { type: 'figure'; figure: string; figureData?: unknown; figureSteps?: unknown[]; title?: string; figureGround?: string; figureEyebrow?: string; figureCredit?: string; figureAlt?: string }
+/** What installFigures puts on its namespace (src/figures/index.js). */
+interface SFFigures {
+  active(slide: unknown): boolean;
+  /** The figure's steps (objects only, at least one), and how many. */
+  steps(slide: SFFigureSlide): Record<string, unknown>[];
+  count(slide: SFFigureSlide): number;
+  /** Draw the figure into `root` (an SVG over the whole slide), at `exploreState.figureStep`; live with `interactive`. Sets root._exploreRefresh. */
+  render(root: HTMLElement, pad: HTMLElement, slide: SFFigureSlide, opts: { interactive?: boolean; exploreState?: { figureStep?: number }; exploreCommand?: (action: string, value: unknown) => void }): void;
+  /** The figure names it draws. */
+  kinds: string[];
+  seek(ms: number | null): void;
+}
+
+declare module '@sf/figures/index.js' {
+  /** Puts SF.Figures on `SF`. Pure SVG: nothing is drawn until render. */
+  export function installFigures(SF: { Figures?: SFFigures }): void;
+}

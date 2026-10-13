@@ -29,6 +29,8 @@ export interface DeskInput {
   index: number;
   startedAt: number;
   screen: Screen;
+  /** The live figure on the wall: its step, of how many, and the step's caption (figure.ts). */
+  figure?: { step: number; of: number; caption: string } | null;
   /** The room, when the show has one: its wall, and what the bar's prompt buttons would offer. */
   room?: { wall: Wall | null; connected: boolean; pin: string | null; canClose: boolean; canShow: boolean } | null;
 }
@@ -48,7 +50,7 @@ export function presenterState(i: DeskInput): PresenterState {
       ...(w?.activity?.stage ? { stage: { name: w.activity.stage.name, wall: w.activity.stage.wall, written: w.activity.written, help: w.activity.help } } : {}),
     };
   }
-  return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room };
+  return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room, ...(i.figure ? { figure: i.figure } : {}) };
 }
 
 /** Digits typed in the show build a slide number (1 based); anything else leaves the buffer alone. Null: not a digit. */

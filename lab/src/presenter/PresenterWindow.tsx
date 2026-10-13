@@ -103,7 +103,9 @@ export function PresenterWindow() {
         {gone && <span className="pw-gone">The show has ended</span>}
       </header>
       <main className="pw-main">
-        <section className="pw-now"><SlidePane deck={deck} index={st.index} label={`Slide ${st.index + 1}: ${st.title}`} /><h2>{st.title}</h2></section>
+        <section className="pw-now"><SlidePane deck={deck} index={st.index} label={`Slide ${st.index + 1}: ${st.title}`} /><h2>{st.title}</h2>
+          {st.figure && <p className="pw-figure" role="status">Figure · step {st.figure.step} of {st.figure.of}{st.figure.caption ? ` · ${st.figure.caption}` : ''}{st.figure.step < st.figure.of ? ' · Next steps the figure' : ''}</p>}
+        </section>
         <aside className="pw-side">
           <h3>Next</h3>
           <SlidePane deck={deck} index={nextIndex} label={st.nextTitle || 'Next slide'} />

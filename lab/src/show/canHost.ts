@@ -7,12 +7,14 @@
 // Beat the clock, whose round's questions are on its round slide, `game.board`; and the boards in live/boards: Low-stakes quiz, Memory flip, Memory match, Knowledge flip, Bingo and Quiz bowl), the lesson asks at least one
 // question, audience feedback prompt (poll, word cloud, brainstorm or scale, M9) or activity, and no slide carries an
 // activity the room does not run (live/activities: M10 runs SlideForge's activities by their kind, a routine's timed
-// stages, feedback from the room, or a slide the phones follow; a game made from an activity is its game), a live figure, a stand-in for a SlideForge check, or feedback on a game slide. Those are SlideForge's
+// stages, feedback from the room, or a slide the phones follow; a game made from an activity is its game), a live figure
+// stand-in that does not carry its figure (one that does plays over the slide: figure.ts), a stand-in for a SlideForge check, or feedback on a game slide. Those are SlideForge's
 // to run until the lab's host runs them (M10 onward). Feedback that is not complete (no prompt, a poll without two
 // options, a scale without both ends) asks nothing, as in SlideForge, so the slide is only shown.
 
 import type { Deck, Slide } from '../core';
 import { activityBlocker, activityOf, boardForFormat, boardOn, feedbackOf, styleForFormat, styleNames } from '../live';
+import { figureBlocker } from './figure';
 
 export interface CanHost { ok: boolean; reason: string }
 
@@ -29,7 +31,9 @@ function blocker(s: Slide): string {
   // An activity's slide: the room runs it by its kind (live/activities); a game made from one is its game, below.
   const act = s.activity && !s.game ? activityBlocker(s) : '';
   if (act) return `"${s.name}" ${act}`;
-  if (s.figure || s.liveFigure) return `"${s.name}" has a live figure`;
+  // A live figure the show plays over the slide (figure.ts); a stand-in that does not carry its figure stays classic's.
+  const fig = figureBlocker(s);
+  if (fig) return fig;
   if (s.layers.some((l) => l.visible && STAND_INS.includes(l.kind))) return `"${s.name}" holds a SlideForge check or activity`;
   const g = s.game;
   if (!g) return '';

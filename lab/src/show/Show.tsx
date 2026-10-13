@@ -30,6 +30,8 @@ import { BoardView } from './BoardViews';
 import { boardRevealed } from '../live';
 import { nextAction, wallOf } from './wallModel';
 import { ActivityStrip } from './ActivityViews';
+import { FigureSteps, figureSlide } from './figure';
+import { FigureLayer } from './FigureLayer';
 
 const BAR_HIDE_MS = 2600;
 /** The standings rail's width, in pixels of a 1920-wide screen (classic's rail is 300 of 720 beside the slide). */
@@ -94,6 +96,14 @@ function Show() {
   const inkOnRef = useRef(false);
   inkOnRef.current = inkOn;
   const [inkV, setInkV] = useState(0);
+  // A live figure's steps (figure.ts): Next and Back walk them before the show moves on.
+  const figures = useRef(new FigureSteps()).current;
+  const [figV, setFigV] = useState(0);
+  const stepFigure = useCallback((at: number, dir: 1 | -1) => {
+    const moved = figures.move(deck.slides[at], dir);
+    if (moved) setFigV((v) => v + 1);
+    return moved;
+  }, [figures, deck]);
   const inkChanged = useCallback(() => setInkV((v) => v + 1), []);
   const [reportOpen, setReportOpen] = useState(false);
   /** Rehearse: the size of the simulated class in the room (0 none), and whether its card is up. */
@@ -161,11 +171,12 @@ function Show() {
     const p = player.current, r = roomRef.current;
     if (!p || finishedRef.current) return;
     if (screenRef.current !== 'none') { setScreen('none'); return; } // a blanked screen comes back first
-    if (!roomOn) { p.next(); return; }
+    if (!roomOn) { if (!stepFigure(p.index, 1)) p.next(); return; }
     const act = nextAction({ room: r.state, steps, at: r.at, sinceAsked: r.sinceAsked() });
     if (act === 'start') { r.begin(stepAt(steps, p.index)); return; }
     if (act === 'wait' && (r.at < 0 || r.state.phase === 'lobby')) { say('Waiting for players to join'); return; }
     if (p.settle()) return;
+    if (stepFigure(p.index, 1)) return;
     // A timed routine (live/activities): the room enters its next stage, and the slide builds it (its column, its clock).
     if ((act === 'advance' || act === 'end') && steps[r.at]?.room.act?.stages.length && r.stageNext()) { p.build(); return; }
     // A build of the slide on an open question is a step of its help (Emoji guess), which the room releases with it.
@@ -173,15 +184,16 @@ function Show() {
     if (act === 'ask' || act === 'reveal' || act === 'advance') r.next();
     else if (act === 'wait') say('Give them a moment, then press Next to show the answer');
     else if (act === 'end') exit();
-  }, [roomOn, steps, exit]);
+  }, [roomOn, steps, exit, stepFigure]);
 
   const prev = useCallback(() => {
     const p = player.current, r = roomRef.current;
     if (!p) return;
     if (screenRef.current !== 'none') { setScreen('none'); return; }
+    if (stepFigure(p.index, -1)) return;
     if (!roomOn) { p.prev(); return; }
     if (r.at > 0) r.goTo(r.at - 1);
-  }, [roomOn]);
+  }, [roomOn, stepFigure]);
 
   const nextRef = useRef(next), prevRef = useRef(prev);
   nextRef.current = next;
@@ -313,6 +325,9 @@ function Show() {
   useEffect(() => { wake(); return () => { if (hideTimer.current) clearTimeout(hideTimer.current); }; }, [wake]);
 
   const slide = deck.slides[index];
+  const figure = useMemo(() => figureSlide(slide), [slide]);
+  const figureStep = figure ? (figures.step(slide) ?? 0) : 0;
+  void figV;
   // The marks belong to the slide on the wall: leaving it clears them (as classic's ink does).
   useEffect(() => { ink.setSlide(String(index)); inkChanged(); }, [index, ink, inkChanged]);
   const embeds = slide.layers.filter((l) => l.kind === 'video' && l.visible && l.box && videoEmbed(l.params)).map((l) => ({ id: l.id, box: l.box!, src: videoEmbed(l.params), title: l.name }));
@@ -327,7 +342,7 @@ function Show() {
 
   // The Teacher Presenter window follows the show over a BroadcastChannel; with none open this does nothing.
   const desk = presenterState({
-    deck, index, startedAt, screen,
+    deck, index, startedAt, screen, figure: figures.says(slide),
     room: roomOn ? { wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown } : null,
   });
   deskRef.current = { wall, fb: fbOpen ? { hold: !!fbOpen.prompt.hold, shown: fbOpen.shown } : null };
@@ -378,6 +393,7 @@ function Show() {
     <div className={`show${railWidth ? ' has-rail' : ''}`} role="dialog" aria-label="Slideshow" onMouseMove={wake} onFocus={wake} style={{ ['--u' as string]: 'calc(100vw / 1920)', ['--rail-w' as string]: railWidth || undefined }}>
       <div className="show-stage" style={{ width: size.w, height: size.h }} onClick={() => nextRef.current()}>
         <canvas ref={canvasRef} style={{ width: size.w, height: size.h }} aria-label={slide.name} />
+        {figure && <FigureLayer key={slide.id} figure={figure} step={figureStep} />}
         <InkCanvas ink={ink} on={inkOn} w={size.w} h={size.h} version={inkV} onChange={inkChanged} />
         {embeds.map((e) => (
           <iframe key={`${index}-${e.id}`} className="show-embed" src={e.src} title={e.title}
