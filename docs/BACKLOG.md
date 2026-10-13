@@ -798,6 +798,10 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 13 October 2026 — The root `npm test` runs the lab's unit tests again
+
+- `tests/lab-unit.test.js` spawned a `node --test` per lab file and passed it the root runner's `NODE_TEST_CONTEXT`. Node took the nested run for a recursive call, skipped its files and exited 0. So all 51 `lab/tests/*.test.ts` files showed as passing from `npm test` without running. That is how a deep import (`lab/src/app/showInSlideForge.ts` → `../show/state`) failed `boundaries.test.ts` under `npm --prefix lab test` but passed at the root. The lab tests' paths were not the cause: they resolve from the working directory, which the wrapper sets to `lab/`. The wrapper now drops the variable, reads the child's TAP output and fails a file that reports no tests. Checked by putting a deep import back: both runs fail on `boundaries.test.ts`, and the other 50 files pass at the root (`25ce87f`).
+
 ### 10 October 2026 — Story designs: the plan, the quick wins and the design set
 
 - **SD-02 done:** the twelve Story designs (cover with portrait, photo hero, big-number row, number and why, comparison bars, photo mosaic, steps and a picture, logo wall, app showcase, two routes, wall of phrases, closing question) are in Slide designs, built from the deck's style and edited in the Slide panel. The Air Pollution Project deck carries the Frontiers Series style guide.
