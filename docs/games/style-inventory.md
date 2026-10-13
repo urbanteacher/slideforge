@@ -238,7 +238,7 @@ Scorecard tiers are from `docs/games-premium-audit.md:41-69`.
 - **`order`** (`order.js`). 3–8 items in the right order; the phone shuffles. Part marks through `orderPoints`.
 - **`emoji`** (`emoji.js`). `clues`, `hint`, `difficulty`; `showsQuestion: false`. The hint is a released step, timed on the relay (K27).
 - **`definition`** (`definition.js`). `passage` and a recall question; a reading phase on a clamped clock (`clampDefinitionSeconds`). Desk Ask through `definitionCommand` (`js/player.js:540`).
-- **`wordreveal`** (`wordreveal.js`). `word`, `hint`, `accept`, `difficulty` (`preReveal` fraction), `dripInterval`. In a lab lesson it plays on SlideForge's wall (`SLIDEFORGE_WALL`, `src/deck/labshow.js:29`), because the phones are scored by SlideForge's drip clock.
+- **`wordreveal`** (`wordreveal.js`). `word`, `hint`, `accept`, `difficulty` (`preReveal` fraction), `dripInterval`. In a lab lesson hosted by the classic host it plays on SlideForge's wall (`SLIDEFORGE_WALL`, `src/deck/labshow.js:29`), because the phones are scored by SlideForge's drip clock. In the studio's own room (`lab/src/live/styles/wordreveal.ts`) the host runs the drip and the wall draws the word in HTML.
 - **`fill`** (`fill.js`). Up to four `[gaps]` in `question`, plus `lures`. Compiles `fillParts`, a shuffled bank in `options`, and `gapAnswers`.
 - **`spot`** (`spot.js`). Sentence, `error` words, `fix`. Compiles words as `options` with `errorFrom` and `errorTo`; `holdResults`. Flagship.
 - **`oddone`** (`oddone.js`). Four items and the prepared odd one. Unmarked, points 0, held, never auto-revealed.
@@ -548,7 +548,7 @@ The measure is how much beyond a plain question, answer and reveal round trip a 
 | 14 | Compare & contrast | Two modes: a sort input, or a discussion with a proposal box |
 | 15 | Horse race | Deck-level mechanic, team majority, lanes per phone (`raceLanes`) |
 | 16 | Boss battle | Deck-level HP over every quiz slide, damage, reveal moments, desk Hit/Miss |
-| 17 | Word reveal | The drip runs on the host clock and scores per answer; the lab already hands it back to SlideForge's wall |
+| 17 | Word reveal | The drip runs on the host clock and scores per answer; the studio's room runs it (13 Oct 2026), the classic wall still serves lessons hosted the classic way |
 | 18 | Random challenge, Question cube | Spoken verdict with a recipient, draw order, count; the cube's own faces and spec |
 | 19 | Spin & explain | Spoken, draw, a wheel, three verdicts with half credit |
 | 20 | Heads up | Spoken, draw, round clock, the guesser, per-phone term (`spokenFanout`) |
