@@ -330,27 +330,6 @@ html:not([data-ready]) body { background: #0a0a0b; }
   </div>
 </div>
 
-<!-- ------------------------------------------------------------ live lobby -->
-<div id="lobby">
-  <div>
-    <div class="joinqr" id="lobbyQr"></div>
-    <div class="lead">Join at</div>
-    <div class="url" id="lobbyUrl">—</div>
-    <div class="lead" style="margin-top:26px">Game PIN</div>
-    <div class="pin" id="lobbyPin">----</div>
-    <div class="teams" id="lobbyTeams"></div>
-    <div class="who-list" id="lobbyPlayers"></div>
-    <div class="count" id="lobbyCount">Waiting for players…</div>
-    <div class="recording-status" id="recordingStatus" role="status"></div>
-    <div class="warn" id="lobbyWarn" style="display:none"></div>
-    <div class="actions">
-      <button class="btn" id="lobbyCancel">Cancel</button>
-      <button class="btn primary" id="lobbyStart"
-              title="Start the lesson on the wall and open the presenter desk">Start</button>
-    </div>
-  </div>
-</div>
-
 <!-- ------------------------------------------------- join card (live, mid-game) -->
 <div id="joincard">
   <div>
@@ -378,22 +357,6 @@ html:not([data-ready]) body { background: #0a0a0b; }
   </div>
 </div>
 
-<!-- Asked from the presentation itself, for a teacher with one screen. The
-     presenter desk has the same controls; this is the other door to them. -->
-<div class="modal" id="quizGenModal">
-  <div class="sheet">
-    <header><h3>Write questions</h3><button class="btn ghost" data-close aria-label="Close — Write questions">✕</button></header>
-    <div class="body" id="quizGenBody"></div>
-  </div>
-</div>
-
-<div class="modal" id="quickPollModal">
-  <div class="sheet">
-    <header><h3>Ask the room</h3><button class="btn ghost" data-close aria-label="Close — Ask the room">✕</button></header>
-    <div class="body" id="quickPollBody"></div>
-  </div>
-</div>
-
 <div class="modal" id="pickerModal">
   <div class="sheet">
     <header>
@@ -405,32 +368,6 @@ html:not([data-ready]) body { background: #0a0a0b; }
   </div>
 </div>
 
-<!-- The teacher's panel. One place, in the app, rather than a second pop-up
-     window competing with presenter view. It hosts manual.html in a frame —
-     that page is driven entirely by a BroadcastChannel, so the same file
-     works embedded here and detached in its own window, and "Open in its own
-     window" is a presentation choice rather than a second implementation. -->
-<dialog class="teach-modal" id="teachModal" aria-labelledby="teachTitle">
-  <header>
-    <h2 id="teachTitle">Teaching tools</h2>
-    <button class="btn" id="teachPop" title="Move this to its own window, for a second screen">Its own window ↗</button>
-    <button class="btn ghost" id="teachClose" aria-label="Close teaching tools">✕</button>
-  </header>
-  <div class="teach-tabs" role="tablist">
-    <button class="btn" role="tab" data-teach="entry" aria-selected="true">Classroom</button>
-    <button class="btn" role="tab" data-teach="mark" aria-selected="false">Live answers</button>
-    <button class="btn" role="tab" data-teach="questions" aria-selected="false">Question insights</button>
-    <button class="btn" role="tab" data-teach="overview" aria-selected="false">Class overview</button>
-    <button class="btn" role="tab" data-teach="tools" aria-selected="false">Toolkit</button>
-  </div>
-  <div class="teach-body">
-    <div id="teachRoster" class="teach-roster" hidden></div>
-    <iframe id="teachFrame" title="Private teaching workspace" src="about:blank"></iframe>
-    <div id="teachQuestions" hidden></div>
-    <div id="teachOverview" hidden></div>
-  </div>
-</dialog>
-
 <div id="toast"></div>
 <input type="file" id="fileInput" accept=".json,application/json,.md,text/markdown" hidden>
 <!-- .sfdeck.json / .sfgame.json / .sfbundle.json all end in .json; .md is a
@@ -440,7 +377,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
 <script src="js/model.js?v=52"></script>
 <script src="js/playbook.js?v=2"></script>
 <script src="js/ask.js?v=4"></script>
-<script src="js/share.js?v=2"></script>
+<script src="js/share.js?v=3"></script>
 <script src="js/lessons.js?v=55"></script>
 <script src="js/lab-decks.js?v=1"></script>
 <script src="js/lessons-ipdv-week4.js?v=1"></script>
@@ -462,23 +399,18 @@ SF.installExplore(SF);
 </script>
 <script src="js/render.js?v=71"></script>
 <script src="js/review.js?v=3"></script>
-<script src="js/demo.js?v=3"></script>
 <script src="js/player.js?v=18"></script>
 <script src="lab-app/stage.js?v=4"></script>
 <script src="js/lab-stage.js?v=5"></script>
-<script src="js/live.js?v=15"></script>
 <script src="js/ai.js?v=9"></script>
-<script src="js/quick-poll.js?v=1"></script>
 <script src="js/teaching.js?v=3"></script>
 <script src="js/lesson-moments.js?v=2"></script>
-<script src="js/stages.js?v=1"></script>
-<script src="js/rounds.js?v=1"></script>
 <script src="js/print.js?v=5"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=21"></script>
+<script src="js/shell.js?v=22"></script>
 <script src="js/palette.js?v=1"></script>
-<script src="js/lesson-runtime.js?v=2"></script>
-<script src="js/lab-engine.js?v=47"></script>
+<script src="js/lesson-runtime.js?v=3"></script>
+<script src="js/lab-engine.js?v=48"></script>
 <script src="js/docs.js?v=2"></script>
 <script src="js/studio.js?v=18"></script>
 <script src="js/live-activities.js?v=1"></script>

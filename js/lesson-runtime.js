@@ -143,16 +143,5 @@
        a lesson asked for on the address starts fresh instead. */
     if (asked) SF.Player.forgetRun();
     else SF.Player.restoreRun();
-    /* If this tab was hosting when it reloaded, walk back into the room the
-       server is holding rather than leaving a class of phones stranded. Quiet
-       when there is nothing held, which is almost always. */
-    if (!SF.Live || !SF.Live.resumeHeldRoom) return;
-    if (SF.Player.open) { try { SF.Live.resumeHeldRoom(SF.Player.deck); } catch (e) {} return; }
-    if (SF.Live.hasHeldRoom && !SF.Live.hasHeldRoom()) return;
-    if (SF.LabEngine && SF.LabEngine.enabled() && SF.LabEngine.heldRoomDeck) {
-      SF.LabEngine.heldRoomDeck().then(function (deck) {
-        try { SF.Live.resumeHeldRoom(deck); } catch (e) {}
-      }, function () {});
-    }
   };
 })(window);

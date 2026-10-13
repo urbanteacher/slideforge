@@ -46,7 +46,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SETS = {
   ci: [
     'campaign-chrome', 'chrome-region', 'demo-deck', 'desk-overlay', 'exports', 'fit-check', 'handout',
-    'lab-lesson', 'live-quiz', 'refresh', 'review-tool', 'share', 'slide-review', 'type-scale',
+    'lab-lesson', 'review-tool', 'share', 'slide-review', 'studio-room', 'type-scale',
   ],
   /* Everything that touches saving, reloading, exporting or sharing a deck.
      The four added to `ci` above came from here after all four turned out to
@@ -54,7 +54,7 @@ const SETS = {
      regression, and exports, share and live-quiz by a path this suite's own
      move redirected. A curated set that does not include the things most
      likely to break quietly is a curated set that hides them. */
-  deck: ['refresh', 'cold-start', 'exports', 'share', 'live-quiz'],
+  deck: ['cold-start', 'exports', 'share', 'studio-room'],
   /* The measures a slide answers to. (The classic canvas's three faces went
      with the classic studios; the lab edits slides now.) */
   canvas: ['demo-deck', 'fit-check', 'row-grid', 'type-scale'],

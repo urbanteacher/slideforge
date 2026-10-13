@@ -428,9 +428,6 @@
         ? 'In Library · ' + folder.label + ' — click to open'
         : 'Open the Library';
     }
-    /* A live lobby is chrome too, and its warning depends on which document
-       is open — see deckMismatch in js/live.js. */
-    if (SF.Live && SF.Live.syncLobby) SF.Live.syncLobby();
   }
 
   /**

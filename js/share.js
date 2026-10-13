@@ -96,7 +96,6 @@
         var url = opts.studio ? base + '/lab-app/view.html?s=' + j.id : (j.url || (base + '/view.html?s=' + j.id));
         var watched = false;
         if (typeof opts.watchOn === 'function') watched = !!opts.watchOn(j.id);
-        else if (SF.Live && SF.Live.watchOn) watched = !!SF.Live.watchOn(j.id);
         var followUrl = (choice === 'follow' && watched) ? url + '&follow=1' : '';
 
         try {

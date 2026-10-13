@@ -1179,10 +1179,6 @@
     roomRunning: function () { return !!(api && api.roomRunning && api.roomRunning()); },
     watchOn: function (id) { return !!(api && api.watchOn && api.watchOn(id)); },
     lastShowDeck: function () { return lastShowDeck; },
-    /* For the page's start (js/lesson-runtime.js): the show a held room is walked back into, as Host live ran it. */
-    heldRoomDeck: function () {
-      return new Promise(function (resolve, reject) { whenReady(function () { buildShow().then(function (s) { resolve(s.run); }, reject); }); });
-    },
     /* For Activities' Host live: the lesson's, whichever studio is on screen. */
     hostLive: function () { hostLive(); },
     /* For the live stage (js/lab-stage.js): the lab deck as it is now, and the
