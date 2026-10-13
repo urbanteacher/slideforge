@@ -8,8 +8,8 @@
   --sk-field-2: #222227;
   --sk-line: #2a2a30;
   --sk-text: #ececef;
-  --sk-muted: #8b8b93;
-  --sk-dim: #5e5e66;
+  --sk-muted: #b8b8c0; /* lighter than the studio's #8b8b93: small text on phones and the desk must read clearly */
+  --sk-dim: #9a9aa3;
   --sk-accent: #ff5a36;
   --sk-accent-2: #ff7a5c;
   --sk-soft: rgba(255, 90, 54, 0.14);

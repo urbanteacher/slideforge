@@ -10,15 +10,15 @@
      this page holds its id (?p=) and shows the notes for the slide on the wall,
      moving when the show moves. Next and Back step the show. -->
 <style>
-  :root { --bg: #0d0e11; --panel: #17191e; --ink: #f2f2f4; --dim: #9aa1ad; --line: #2a2d35; --accent: #ef6a45; --size: 30px; }
+  :root { --bg: #0a0a0b; --panel: #141417; --ink: #ececef; --dim: #8b8b93; --line: #2a2a30; --accent: #ff5a36; --size: 30px; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; }
   body { display: flex; flex-direction: column; }
   header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--dim); }
   header .pos { font: 700 18px system-ui; color: var(--ink); font-variant-numeric: tabular-nums; }
   header .clock { margin-left: auto; font-variant-numeric: tabular-nums; }
   header .dot { width: 9px; height: 9px; border-radius: 50%; background: #666; flex: none; }
-  header .dot.on { background: #3ccf7c; }
+  header .dot.on { background: #45d69b; }
   main { flex: 1; overflow-y: auto; padding: 18px 18px 8px; }
   .title { font: 700 calc(var(--size) * 0.8) / 1.2 system-ui; margin: 0 0 12px; color: var(--accent); }
   .notes { font-size: var(--size); line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -27,10 +27,10 @@
   .next b { color: var(--ink); font-weight: 600; }
   .msg { color: var(--dim); font-size: 20px; text-align: center; margin-top: 18vh; padding: 0 20px; }
   footer { display: flex; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel); }
-  footer button { background: #2a2d35; color: var(--ink); border: 0; border-radius: 10px; padding: 12px 10px; font: 600 15px system-ui; cursor: pointer; }
+  footer button { background: #1a1a1e; color: var(--ink); border: 0; border-radius: 10px; padding: 12px 10px; font: 600 15px system-ui; cursor: pointer; }
   footer .step { flex: 1; font-size: 18px; padding: 16px 10px; }
   footer .step.go { background: var(--accent); color: #fff; }
-  footer button[aria-pressed="true"] { background: #44495a; }
+  footer button[aria-pressed="true"] { background: rgba(255,90,54,.14); }
   /* Prompter: big words, centred, for a screen read from a distance. Mirror: for beam-splitter glass. */
   body.prompt main { text-align: center; padding-top: 6vh; }
   body.prompt .notes { font-size: calc(var(--size) * 1.8); line-height: 1.3; }

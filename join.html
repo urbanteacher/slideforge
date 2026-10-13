@@ -302,7 +302,7 @@
   .qavote .qup { font-size: 11px; line-height: 1; }
   .qamine { font-size: 12px; color: #45d69b; margin-top: 4px; }
 </style>
-<link rel="stylesheet" href="css/learner.css">
+<link rel="stylesheet" href="css/studio-skin.css"><link rel="stylesheet" href="css/learner.css">
 </head>
 <body>
 
@@ -311,14 +311,14 @@
     ? <span class="askn" id="askN" style="display:none"></span>
   </button>
   <button class="askbtn" id="paceBtn" type="button" title="Tell your teacher how the pace is">
-    ✋ <span class="askn" id="paceN" style="display:none"></span>
+    Pace <span class="askn" id="paceN" style="display:none"></span>
   </button>
   <div class="who"><span id="hdrName">—</span><span class="team" id="hdrTeam" style="display:none"></span></div>
-  <button class="askbtn" id="savedBtn" type="button" aria-label="Saved slides">♡ <span id="savedN">0</span></button>
+  <button class="askbtn" id="savedBtn" type="button" aria-label="Your saved slides" title="Your saved slides"><svg class="bm" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> <span id="savedN">0</span></button>
   <div class="score" id="hdrScore">0</div>
 </header>
 
-<div id="lessonPosition" hidden><span id="lessonMode">IN THE LESSON</span><span id="lessonPage"></span><button id="bookmarkCurrent" type="button" aria-label="Save current slide for later; counted anonymously for your teacher" title="Bookmarks stay on this device. Your teacher sees an anonymous count." aria-pressed="false">♡</button></div>
+<div id="lessonPosition" hidden><span id="lessonMode">IN THE LESSON</span><span id="lessonPage"></span><button id="bookmarkCurrent" type="button" aria-label="Save current slide for later; counted anonymously for your teacher" title="Bookmarks stay on this device. Your teacher sees an anonymous count." aria-pressed="false"><svg class="bm" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span id="bookmarkLabel">Save</span></button></div>
 <button id="activityNotice" hidden type="button">The lesson moved on · Return to the activity →</button>
 <main>
 
@@ -382,7 +382,7 @@
         <button id="gotItBtn" type="button">👍 <span>Got it</span></button>
         <button id="helpHereBtn" type="button" aria-pressed="false">✋ <span>Need help</span></button>
       </div>
-      <button id="saveHereBtn" class="save-slide" type="button" aria-pressed="false">♡ Save for later</button>
+      <button id="saveHereBtn" class="save-slide" type="button" aria-pressed="false">Save for later</button>
       <p id="understandingNote" class="quiet-note" role="status">Only tap if it helps. Listening is participation too.</p>
     </div>
   </section>
@@ -947,9 +947,10 @@
     $('gotItBtn').querySelector('span').textContent = context && acknowledged[context.slideId] ? 'Got it ✓' : 'Got it';
     $('helpHereBtn').setAttribute('aria-pressed', paceKind === 'lost' ? 'true' : 'false');
     var saved = !!(context && saves.some(function (s) { return s.slideId === context.slideId; }));
-    $('saveHereBtn').textContent = saved ? '♥ Saved for later' : '♡ Save for later · counted anonymously';
+    $('saveHereBtn').textContent = saved ? 'Saved for later' : 'Save for later · counted anonymously';
     $('saveHereBtn').setAttribute('aria-pressed', String(saved));
-    $('bookmarkCurrent').textContent = saved ? '♥' : '♡';
+    $('bookmarkLabel').textContent = saved ? 'Saved' : 'Save';
+    $('bookmarkCurrent').classList.toggle('on', saved);
     $('bookmarkCurrent').setAttribute('aria-pressed', String(saved));
   }
   function syncBookmark(){if(context&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'bookmark',slideId:context.slideId,saved:saves.some(function(s){return s.slideId===context.slideId;})}));}
