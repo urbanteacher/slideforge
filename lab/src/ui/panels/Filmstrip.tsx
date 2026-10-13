@@ -7,7 +7,6 @@ import { getAssetVersion } from '../../engine';
 import { inView, useStore } from '../../store';
 import type { Slide } from '../../core';
 import { focusBrowse } from './Browse';
-import { focusNodes } from './Nodes';
 
 /** Slide thumbnails are rendered by the real engine, lazily, only when a slide (or its assets) change. */
 const thumbCache = new Map<string, { ref: Slide; url: string; asset: number }>();
@@ -110,7 +109,7 @@ export function Filmstrip() {
       ); })}
       {view === 'lesson'
         ? <button className="add-slide" title="New slide" onClick={() => addSlide()}><Plus size={18} /></button>
-        : <button className="add-slide" title={view === 'quiz' ? 'A game, after the slide on screen' : 'An activity, after the slide on screen'} onClick={view === 'nodes' ? focusNodes : focusBrowse}><Plus size={18} /></button>}
+        : <button className="add-slide" title={view === 'quiz' ? 'A game, after the slide on screen' : view === 'nodes' ? 'A Nodes format, after the slide on screen' : 'An activity, after the slide on screen'} onClick={focusBrowse}><Plus size={18} /></button>}
       {menu}
     </div>
   );

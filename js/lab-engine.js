@@ -54,6 +54,8 @@
       libraryGroup: labDeck.libraryGroup || (source && source.libraryGroup) || undefined,
       /* A shipped deck's card keeps its key, so a delete in the Library is remembered. */
       sourceKey: (had && had.sourceKey) || shippedKey(labDeck.id) || undefined,
+      /* The card holds one stand-in slide; the Library shows the lesson's own count (js/lessons.js deckFacts). */
+      slideCount: (labDeck.slides || []).length,
       modified: Date.now(), slides: [s]
     });
   }
@@ -88,11 +90,14 @@
     try { dismissed = JSON.parse(localStorage.getItem('slideforge.dismissedSeeds.v1') || '[]'); } catch (e) {}
     Object.keys(SF.LAB_DECKS).forEach(function (key) {
       var e = shippedEntry(key);
-      if (!e || !e.id || !e.libraryGroup || dismissed.indexOf(key) >= 0 || SF.Store.get(e.id)) return;
+      if (!e || !e.id || !e.libraryGroup || dismissed.indexOf(key) >= 0) return;
+      /* A card filed before cards carried a count: give it the deck's own. */
+      var have = SF.Store.get(e.id);
+      if (have) { if (have.labCard && !have.slideCount && e.slides) { have.slideCount = e.slides; SF.Store.save(have, { force: true }); } return; }
       var s = SF.makeSlide('title');
       s.title = e.title || key;
       SF.Store.save(SF.normalizeDeck({ id: e.id, title: e.title || key, labCard: true, libraryGroup: e.libraryGroup,
-        sourceKey: key, modified: Date.now(), slides: [s] }), { force: true });
+        sourceKey: key, slideCount: e.slides || undefined, modified: Date.now(), slides: [s] }), { force: true });
     });
   }
 
@@ -784,7 +789,7 @@
     blank: function () { return api ? api.blank() : placeholder; },
     draw: function () { showFrame(true); whenReady(function (a) { if (a.setView) a.setView('lesson'); }); },
     describe: function (d) {
-      var n = d && d.slides ? d.slides.length : 0;
+      var n = d && d.labCard && d.slideCount ? d.slideCount : d && d.slides ? d.slides.length : 0;
       return n + (n === 1 ? ' slide' : ' slides');
     },
     onTitle: function (v) { whenReady(function (a) { a.setTitle(v); }); },

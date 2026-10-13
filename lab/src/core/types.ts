@@ -157,8 +157,9 @@ export interface Slide {
   figure?: LiveFigure;
   /** Which of SlideForge's activities this slide was made from, and which of its slides it is. */
   activity?: { key: string; page: number; settings?: ActivitySettings };
-  /** A Nodes challenge's slide (the Nodes studio): which stage it came from. */
-  nodes?: { stage: string; title: string };
+  /** A Nodes format's slide (the Nodes studio, designs/nodes/): which format, which of its slides, and
+   *  the content it was drawn from. A stage copied in before the formats has only `stage` and `title`. */
+  nodes?: { id?: string; format?: string; role?: string; content?: unknown; stage?: string; title?: string };
   /** What a slide design was built from (hotspots, pictures, facts, callouts), so the Slide panel
    *  can edit it and build the slide again in the deck's style. */
   recipe?: { kind: string; args: Record<string, unknown> };

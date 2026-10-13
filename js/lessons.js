@@ -10458,7 +10458,8 @@
   }
 
   function deckFacts(deck) {
-    var n = (deck && deck.slides || []).length;
+    /* A studio lesson's card holds one stand-in slide: its own count is slideCount. */
+    var n = deck && deck.labCard && deck.slideCount ? deck.slideCount : (deck && deck.slides || []).length;
     var checks = checkCount(deck);
     var acts = activityCount(deck);
     var parts = [n + (n === 1 ? ' slide' : ' slides')];

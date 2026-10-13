@@ -4,7 +4,7 @@ import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '
 import { isLabDeck, saveCurrent } from './embed';
 import { ShowLayer } from '../show';
 import { registerGuideFonts } from '../theme';
-import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS, NodesPanel, NodesList } from '../ui';
+import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS } from '../ui';
 import { present } from './showInSlideForge';
 import { TopBar } from './TopBar';
 
@@ -154,7 +154,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
   return (
     <div className={`app${embedded ? ' embedded' : ''}${panelHidden ? ' no-panel' : ''}`}>
       <TopBar embedded={embedded} />
-      {view === 'lesson' ? <LeftPanel /> : view === 'nodes' ? <NodesPanel /> : <BrowsePanel kind={view === 'quiz' ? 'games' : 'activities'} />}
+      {view === 'lesson' ? <LeftPanel /> : <BrowsePanel kind={view === 'quiz' ? 'games' : view === 'nodes' ? 'nodes' : 'activities'} />}
       <main className="center">
         <Stage />
         {view !== 'lesson' && !anyInView && <EmptyView view={view} />}
@@ -174,20 +174,13 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
  *  and Browse, on the left, for everything else. The added slides open ready to edit, or to write with AI
  *  in the side panel. */
 function EmptyView({ view }: { view: LabView }) {
-  if (view === 'nodes') return (
-    <div className="empty-view">
-      <b>Start a Nodes challenge</b>
-      <span>Pick a stage to add it after the slide you were on. Its slides open ready to edit.</span>
-      <NodesList compact />
-    </div>
-  );
-  const quiz = view === 'quiz';
-  const kind = quiz ? 'games' : 'activities';
+  const quiz = view === 'quiz', nodes = view === 'nodes';
+  const kind = quiz ? 'games' : nodes ? 'nodes' : 'activities';
   const [busy, setBusy] = useState('');
   const pick = (id: string) => { if (busy) return; setBusy(id); void quickAdd(kind, id).finally(() => setBusy('')); };
   return (
     <div className="empty-view">
-      <b>{quiz ? 'Start a game' : 'Start an activity'}</b>
+      <b>{quiz ? 'Start a game' : nodes ? 'Start a Nodes challenge' : 'Start an activity'}</b>
       <span>Pick one to add it after the slide you were on. Then edit it on the slide, or write it with AI in the side panel.</span>
       <div className="empty-picks">
         {QUICK_PICKS[kind].map((p) => (
@@ -196,7 +189,7 @@ function EmptyView({ view }: { view: LabView }) {
           </button>
         ))}
       </div>
-      <button className="btn-soft" onClick={focusBrowse}>{quiz ? 'All games' : 'All activities'}</button>
+      <button className="btn-soft" onClick={focusBrowse}>{quiz ? 'All games' : nodes ? 'All Nodes formats' : 'All activities'}</button>
     </div>
   );
 }
