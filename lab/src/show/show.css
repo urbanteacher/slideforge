@@ -322,3 +322,20 @@
 .chain-capture { display: flex; align-items: center; gap: calc(var(--u) * 12); color: var(--muted); font-size: calc(var(--u) * 28); }
 .chain-capture input { flex: 1; min-width: calc(var(--u) * 640); font: inherit; padding: calc(var(--u) * 6) calc(var(--u) * 14); background: var(--field-2); color: inherit; border: 1px solid var(--line-2); border-radius: calc(var(--u) * 10); }
 .spoken-notice { margin: 0; flex-basis: 100%; text-align: center; color: #ffd166; font-size: calc(var(--u) * 28); }
+
+/* Beat the clock (SpeedViews.tsx): the sprint's board over the slide, and the wall-paced round's clock at the top. */
+.speed-strip { bottom: auto; top: calc(var(--u) * 28); }
+.sprint-board { position: absolute; inset: 12% 18%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 16); padding: calc(var(--u) * 40); text-align: center; background: rgba(10,10,11,.92); border: 1px solid var(--line-2); border-radius: calc(var(--u) * 28); }
+.spb-kicker { letter-spacing: .14em; font-weight: 700; color: var(--muted); }
+.spb-clock { font-size: calc(var(--u) * 120); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; color: var(--accent-2); }
+.sprint-board.hurry .spb-clock { color: #ff6b6b; }
+.sprint-board.over .spb-clock { color: #ffd166; }
+.spb-bar { width: 70%; height: calc(var(--u) * 14); background: var(--line-2); border-radius: 999px; overflow: hidden; }
+.spb-bar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.spb-stats { font-weight: 700; font-variant-numeric: tabular-nums; }
+.spb-sub, .spb-next, .spb-notice { color: var(--muted); }
+.spb-hard-label { font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.spb-hard-q { font-size: calc(var(--u) * 34); font-weight: 700; }
+.spb-hard-a { color: #4ade80; font-weight: 700; }
+.spb-stop { font: inherit; font-weight: 700; min-height: calc(var(--u) * 56); padding: 0 calc(var(--u) * 28); color: #fff; background: var(--accent); border: 0; border-radius: calc(var(--u) * 14); cursor: pointer; }
+.spb-stop:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }

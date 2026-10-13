@@ -103,3 +103,12 @@ declare module '@sf/games/wordreveal.js' {
   /** Points for each answer by the letters shown when it came (its own `elapsedMs`), never at the host's reveal: [id, points]. */
   export function wordRevealGains(slide: SFQuizSlide, answers: { id: number; response: unknown; elapsedMs?: number }[], currentShown: number): [number, number][];
 }
+
+declare module '@sf/games/speed.js' {
+  /** Beat the clock outside a round: 10 for a right answer plus a point per 10 seconds left; wrong -5. */
+  export function speedPoints(right: boolean, remainingSec: number): number;
+  /** Beat the clock in a round: 10 for a right answer plus up to 10 for speed (a point off per second after the question appeared); wrong -5. */
+  export function roundSpeedPoints(right: boolean, elapsedSec: number): number;
+  /** How long a round question waits for the slowest phone before it closes itself (seconds). */
+  export const SPEED_PACE: number;
+}

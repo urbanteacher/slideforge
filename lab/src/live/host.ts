@@ -18,6 +18,7 @@ import { Room, type Listener, type RoomState } from './room';
 import type { RoomQuiz, RoomShow, RoomSlide } from './show';
 import { wordRevealMask } from '@sf/games/wordreveal.js';
 import { SpokenDesk } from './spokenroom';
+import { SpeedDesk } from './speedroom';
 import { styleFor, type ManualChoice } from './styles';
 
 export interface HostOptions {
@@ -77,6 +78,8 @@ export class LiveHost {
   private dripShown = 0;
   /** The spoken desk: who is speaking, a held verdict, the credit (spokenroom.ts). */
   private readonly desk: SpokenDesk;
+  /** Beat the clock: the sprint the relay marks, or the wall-paced round (speedroom.ts). */
+  private readonly speed: SpeedDesk;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
   constructor(private readonly opts: HostOptions) {
@@ -93,6 +96,13 @@ export class LiveHost {
       openPrompt: (fields) => this.openQuick(fields), closePrompt: (id) => this.closeQuick(id),
       now: () => (opts.now ?? Date.now)(), slides: () => opts.show.slides, next: () => this.next(),
       after: (fn, ms) => { if (opts.after) opts.after(fn, ms); else (setTimeout(fn, ms) as { unref?: () => void }).unref?.(); },
+    });
+    this.speed = new SpeedDesk({
+      state: () => this.state, slides: () => opts.show.slides, slide: () => this.slide, send: (m) => this.send(m),
+      now: () => (opts.now ?? Date.now)(),
+      after: (fn, ms) => { if (opts.after) opts.after(fn, ms); else (setTimeout(fn, ms) as { unref?: () => void }).unref?.(); },
+      reveal: () => this.reveal(), revealed: (id) => this.isRevealed(id), markRevealed: (ids) => this.room.markRevealed(ids),
+      goTo: (i) => this.goTo(i), next: () => this.next(), hasManual: () => this.hasManual(), publish: (patch) => this.room.setSpeed(patch),
     });
     this.resetMechanic();
     this.room.subscribe((s) => {
@@ -127,8 +137,10 @@ export class LiveHost {
   /** What the teacher's Next does: reveal an open question; ask one the room is not asking (after a relay
    *  restart, see replay); else move on. */
   next(): void {
-    // A Heads up round that has run out: Next skips the terms nobody reached.
-    const skip = this.desk.skip(this.at);
+    // Beat the clock's sprint: Next stops its clock (twice), then goes past the run.
+    if (this.begun && this.speed.next()) return;
+    // A Heads up or Beat the clock round that has run out: Next skips the terms nobody reached.
+    const skip = this.desk.skip(this.at) ?? this.speed.skip(this.at);
     if (skip != null && this.begun) { this.goTo(skip); return; }
     const q = this.slide?.quiz;
     if (q && this.begun && !this.isRevealed(q.id)) {
@@ -204,14 +216,15 @@ export class LiveHost {
     // so `correct` is -1 and the answer said is its accepted answer.
     const style = styleFor(q);
     const said = style.reveal(q);
+    const marks = q.unmarked ? [] : list.map((a) => [a.id, style.mark(q, a.response)] as [number, boolean]);
     this.send({
-      t: 'reveal', id: q.id, rev: rev ?? t?.rev ?? 0,
-      marks: q.unmarked ? [] : list.map((a) => [a.id, style.mark(q, a.response)] as [number, boolean]),
+      t: 'reveal', id: q.id, rev: rev ?? t?.rev ?? 0, marks,
       correct: said.correct, answer: said.answer, explanation: q.explanation ?? '',
       ...(style.gains ? { gains: style.gains(q, list, { dripShown: this.dripShown }) } : {}),
       ...this.desk.revealExtras(q),
     });
     this.revealSent.add(q.id);
+    this.speed.revealed(q, marks);
     this.stopDrip();
     if (style.afterReveal) this.openAfterReveal(style.afterReveal.prompt);
   }
@@ -248,6 +261,9 @@ export class LiveHost {
   useProposal(pid: number, text: string): void { this.desk.useProposal(pid, text); }
   /** "The answer is C", said by pressing C in the entry window: the verdict on a spoken question, else the reveal against that option. */
   revealWith(choice: number): void { if (!this.verdict(choice)) this.reveal(undefined, undefined, choice); }
+
+  /** Stop the sprint's clock (the wall's Stop the clock). */
+  stopClock(): void { this.speed.stop(); }
 
   manualRename(playerId: number, name: string): void { this.send({ t: 'manualRename', playerId, name }); }
   manualTeam(playerId: number, team: number): void { this.send({ t: 'manualTeam', playerId, team }); }
@@ -330,6 +346,9 @@ export class LiveHost {
       case 'markStale':
         // Only for the question still on the wall (classic: the pending slide is the one the relay names): a late one for a question the show has left is no business of this one.
         if (!this.ending && this.slide?.quiz?.id === m.id) this.reveal(m.answers, m.rev);
+        break;
+      case 'sprintProgress': case 'sprintResult':
+        this.speed.heard(m);
         break;
       case 'tally':
         this.maybeAutoReveal();
@@ -452,6 +471,10 @@ export class LiveHost {
     } else if (this.promptId) { this.promptId = null; this.send({ t: 'promptEnd' }); }
     // Concept chain is host-oracy: the phones stay idle while the chain grows, and the idea box is where they take part. The relay is never
     // asked a question, so the room holds the term as asked itself, and its reveal needs no word back from the relay.
+    // Beat the clock's sprint: the run goes to the relay, and its later slides only tell the phones to wait.
+    const sprint = this.speed.landed(s, asking && !reading);
+    if (sprint === 'sprint') return;
+    if (sprint === 'idle') { this.send({ t: 'idle', style: s.style, role: 'wait', participation: '', headPrompt: '' }); return; }
     const quiet = asking && !!styleFor(s.quiz!).spoken?.chain;
     if (asking && !reading && !quiet) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); this.desk.asked(s.quiz!); return; }
     const c = reading || quiet ? styleFor(s.quiz!).companion?.(s.quiz!, reading ? 'reading' : 'asking') : undefined;
@@ -474,7 +497,7 @@ export class LiveHost {
   private questionFields(q: RoomQuiz): QuestionFields {
     const quizzes = this.opts.show.slides.filter((x) => x.quiz);
     const style = styleFor(q);
-    const hasManual = this.state.players.some((p) => p.manual) || this.manualNames.length > 0;
+    const hasManual = this.hasManual();
     const f: QuestionFields = {
       id: q.id, n: quizzes.findIndex((x) => x.quiz!.id === q.id) + 1, total: quizzes.length, question: q.question,
       voteOnly: q.voteOnly === true, unmarked: q.unmarked === true, sourceSlideId: q.sourceSlideId || q.id,
@@ -485,9 +508,12 @@ export class LiveHost {
     };
     const head = style.companion?.(q).headPrompt || q.headPrompt;
     if (head) f.headPrompt = head;
-    Object.assign(f, style.flags?.(q), this.desk.questionExtras(q));
+    Object.assign(f, style.flags?.(q), this.desk.questionExtras(q), this.speed.questionExtras(q));
     return f;
   }
+
+  /** A teacher-entered learner is in the room (no clock on a question; Beat the clock runs wall-paced). */
+  private hasManual(): boolean { return this.state.players.some((p) => p.manual) || this.manualNames.length > 0; }
 
   /** The brainstorm the room is asked after a reveal (Odd one out's "defend a pick"): classic's quick prompt, closed when the show leaves the question. */
   private openAfterReveal(prompt: string): void {

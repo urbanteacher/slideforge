@@ -28,7 +28,9 @@ export function stepsOf(shown: DeckLike): { show: RoomShow; steps: Step[] } {
   const show = showFromDeck(shown);
   const slides = shown.slides;
   const steps = show.slides.map((room): Step => {
+    // A round's later questions (`<slide>:<n>`) stand on the round's slide.
     let slide = slides.findIndex((s) => s.id === room.id);
+    if (slide < 0) slide = slides.findIndex((s) => room.id.startsWith(`${s.id}:`));
     if (slide < 0) {
       // A game's scores step (`<game>:scores`): the game's last slide stays up under the leaderboard.
       for (let k = slides.length - 1; k >= 0; k--) if (slides[k].game?.id === room.gameId) { slide = k; break; }

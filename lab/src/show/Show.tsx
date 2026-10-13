@@ -25,6 +25,7 @@ import { SimulatedClass } from '../rehearse';
 import { MechanicViews } from './MechanicViews';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
 import { SpokenPad } from './SpokenViews';
+import { SpeedClock, SprintBoard } from './SpeedViews';
 import { nextAction, wallOf } from './wallModel';
 
 const BAR_HIDE_MS = 2600;
@@ -385,6 +386,8 @@ function Show() {
           {!finished && ['question', 'reveal'].includes(wall.view) && wall.question?.detail.kind === 'spoken' && <SpokenPad key={wall.question.text} q={wall.question} revealed={wall.view === 'reveal'} actions={{ onVerdict: room.verdict, onSpeaker: room.speaker, onVerdictRoom: room.verdictRoom, onProposal: room.proposal, onLink: room.chainLink }} />}
           {!finished && wall.view === 'question' && wall.question && wall.question.detail.kind !== 'spoken' && (wall.question.locked ? <RevealStrip q={wall.question} /> : <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />)}
           {!finished && wall.view === 'reveal' && wall.question && wall.question.detail.kind !== 'spoken' && <RevealStrip q={wall.question} />}
+          {!finished && wall.view === 'sprint' && wall.speed.sprint && <SprintBoard sprint={wall.speed.sprint} onStop={room.stopClock} />}
+          {!finished && ['question', 'reveal'].includes(wall.view) && wall.speed.round && <SpeedClock round={wall.speed.round} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}
           {!finished && ['question', 'reveal', 'leaderboard'].includes(wall.view) && <MechanicViews mech={wall.mech} scores={wall.view === 'leaderboard'} />}
           {rail && <RailView rail={rail} />}

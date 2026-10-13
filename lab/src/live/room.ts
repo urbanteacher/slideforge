@@ -4,6 +4,8 @@
 
 import type { BossView, DripView, RaceView } from './mechanics';
 import { emptySpoken, type SpokenView } from './spoken';
+import { emptySpeed, type SpeedView } from './speedroom';
+import type { BoardEntry } from './boards';
 import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
@@ -73,16 +75,20 @@ export interface RoomState {
   spoken: SpokenView;
   /** How many verdicts each spoken game has had accepted, by game id, as the relay counts them (`oralCount`). */
   oralCounts: Record<string, number>;
+  /** Beat the clock (live/speedroom.ts): the self-paced sprint the relay marks, or the wall-paced round. Set by the host. */
+  speed: SpeedView;
+  /** Each board's state, by the board step's id (live/boards): kept, frozen, while the show is elsewhere. Set by the host. */
+  boards: Record<string, BoardEntry>;
 }
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null,
   revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
-  spoken: emptySpoken(), oralCounts: {},
+  spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {},
 });
 
-export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' }) => void;
+export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' } | { t: 'speed' } | { t: 'board' }) => void;
 
 export class Room {
   private s: RoomState = emptyRoom();
@@ -130,6 +136,7 @@ export class Room {
         break;
       case 'closeAnswers': case 'showdown': s.gated = s.gated.includes(m.id) ? s.gated : [...s.gated, m.id]; break;
       case 'finish': s.phase = 'idle'; break;
+      case 'sprint': s.phase = 'sprint'; s.question = null; s.tally = null; break;
       case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; break;
       case 'promptEnd': s.feedback = null; break;
       default: return;
@@ -221,6 +228,26 @@ export class Room {
   setSpoken(patch: Partial<SpokenView>): void {
     this.s = { ...this.s, spoken: { ...this.s.spoken, ...patch } };
     this.emit({ t: 'spoken' });
+  }
+
+  /** Beat the clock's sprint or round moved (a field left out stays as it is). */
+  setSpeed(patch: Partial<SpeedView>): void {
+    this.s = { ...this.s, speed: { ...this.s.speed, ...patch } };
+    this.emit({ t: 'speed' });
+  }
+
+  /** A board's state changed (a command, its clock). */
+  setBoard(id: string, entry: BoardEntry): void {
+    this.s = { ...this.s, boards: { ...this.s.boards, [id]: entry } };
+    this.emit({ t: 'board' });
+  }
+
+  /** Questions the room is done with without a reveal of their own: a sprint's run, once the relay has closed it. */
+  markRevealed(ids: string[]): void {
+    const add = ids.filter((id) => !this.s.revealed.includes(id));
+    if (!add.length) return;
+    this.s = { ...this.s, revealed: [...this.s.revealed, ...add] };
+    this.emit({ t: 'speed' });
   }
 
   /** The host ended the room and the relay closed it. */

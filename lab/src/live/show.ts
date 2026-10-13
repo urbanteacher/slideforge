@@ -56,11 +56,15 @@ const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 /** A game's own phone skin off its questions (classic `Live.mechanic`): Multiple choice is 'points'. */
 const mechanicOf = (style: string) => String(gameStyle(style)?.mechanic ?? 'quiz');
 
-/** A lab question as the room's quiz: the game's question with the Game panel's settings over it (labshow.js quizSlide). */
-function quizOf(s: Slide): RoomQuiz {
+/** A round played in one go (Beat the clock): the questions SlideForge compiled for it, on the slide it is played on (`game.board`). */
+const roundQuizzes = (s: Slide): Record<string, unknown>[] => (s.game?.role === 'board' ? (s.game.board ?? []).filter((x) => x.type === 'quiz') : []);
+
+/** A lab question as the room's quiz: the game's question with the Game panel's settings over it (labshow.js quizSlide).
+ *  A round's question (`raw`, from `game.board`) takes its slide's settings, and an id of its own beside the slide's. */
+function quizOf(s: Slide, raw: Record<string, unknown> | undefined = s.game!.quiz, id = s.id): RoomQuiz {
   const g = s.game!, set = g.settings ?? {};
-  const q = Object.assign({ type: 'quiz', style: 'choice', input: 'choice', correct: 0, points: 1000, explanation: '', options: [], question: '' }, copy(g.quiz ?? {})) as unknown as RoomQuiz;
-  q.id = s.id;
+  const q = Object.assign({ type: 'quiz', style: 'choice', input: 'choice', correct: 0, points: 1000, explanation: '', options: [], question: '' }, copy(raw ?? {})) as unknown as RoomQuiz;
+  q.id = id;
   // The game's format is on its question, as SlideForge's compile puts it there (a style may be told by it: Time traveler).
   if (q.format == null) q.format = g.format;
   q.timeLimit = (set.seconds ?? 0) > 0 ? set.seconds! : 0;
@@ -105,8 +109,17 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
             ? { id: s.id, title: quiz.question, text: quiz.question, activity: 'question', gameId: g.id, style: quiz.style, quiz }
             : { id: s.id, title: quiz.question, text: quiz.question, activity: 'moment', gameId: g.id, style });
         }
+      } else if (roundQuizzes(s).length) {
+        // A round played in one go: each of its questions is a step, the first on the round's slide (Beat the clock's sprint asks them all at once).
+        roundQuizzes(s).forEach((raw, n) => {
+          const quiz = quizOf(s, raw, n ? `${s.id}:${n}` : s.id);
+          out.push(styleOf(quiz)
+            ? { id: quiz.id, title: quiz.question, text: quiz.question, activity: 'question', gameId: g.id, style: quiz.style, quiz }
+            : { id: quiz.id, title: quiz.question, text: quiz.question, activity: 'moment', gameId: g.id, style });
+        });
       } else if (g.role !== 'answer') {
-        const text = g.role === 'cover' ? `${new Set(qs.map((x) => x.game!.key ?? x.id)).size} questions` : '';
+        const rounds = slides.filter((x) => x.game?.id === g.id).reduce((n, x) => n + roundQuizzes(x).length, 0);
+        const text = g.role === 'cover' ? `${new Set(qs.map((x) => x.game!.key ?? x.id)).size + rounds} questions` : '';
         out.push({ id: s.id, title: g.role === 'cover' ? g.label : s.name, text, activity: 'moment', gameId: g.id, style, results: g.role === 'end' });
       }
       // A style that plays without a scores slide (Odd one out: nobody is scored) ends on its last answer, as classic's game does by default.

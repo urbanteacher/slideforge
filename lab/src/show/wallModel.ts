@@ -7,6 +7,7 @@
 import { styleFor, teamBoardOf, type Mech, type RoomState, type TeamRow, type WallDetail } from '../live';
 import { feedbackWallOf, type FeedbackWall } from './feedbackWall';
 import { railOf, type Rail } from './rail';
+import { roundWallOf, sprintWallOf, type RoundWall, type SprintWall } from './speedWall';
 import type { Step } from './steps';
 
 /** Classic's grace after a question is asked, before Next may reveal it (js/live.js GRACE_MS). */
@@ -20,7 +21,7 @@ export interface WallRow { id: number; rank: number; name: string; score: number
 export type WallMech = Mech;
 const NO_MECH: WallMech = { race: null, boss: null, drip: null };
 
-export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'feedback' | 'ended';
+export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'feedback' | 'sprint' | 'ended';
 
 export interface Wall {
   view: WallView;
@@ -54,6 +55,8 @@ export interface Wall {
   feedback: FeedbackWall | null;
   /** The track, the boss or the dripping word: with the question (a word only while it is asked), and on the scores. */
   mech: WallMech;
+  /** Beat the clock: the sprint the phones run (view `sprint`), or the wall-paced round's clock beside its questions. */
+  speed: { sprint: SprintWall | null; round: RoundWall | null };
 }
 
 export interface WallInput {
@@ -105,11 +108,15 @@ export function wallOf(i: WallInput): Wall {
   const quizId = step?.room.quiz?.id;
   const teams = teamBoardOf(room);
   const rail = railOf({ board, teams, teamBefore: i.teamBefore, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
-  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const speed = { sprint: null, round: room.speed.round && step?.room.gameId === room.speed.round.gameId ? roundWallOf(room.speed.round) : null };
+  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, speed, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };
   const quiz = step?.room.quiz;
+  // Beat the clock's sprint: the phones are the stage, and the wall shows the clock and the room's progress, then the result.
+  const sp = room.speed.sprint;
+  if (quiz && sp && sp.gameId === quiz.gameId && !i.scoresOn) return { ...base, rail: null, speed: { ...speed, sprint: sprintWallOf(sp, room.players.filter((p) => p.connected && !p.manual).length, room.speed.notice) }, view: 'sprint' };
   if (quiz && (room.question?.id === quiz.id || room.revealed.includes(quiz.id))) {
     const revealed = room.revealed.includes(quiz.id);
     const options = quiz.options.filter((o) => String(o).trim());

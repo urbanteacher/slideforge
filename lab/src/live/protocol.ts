@@ -91,10 +91,20 @@ export type HostMessage =
   /** A race's lanes after a reveal: the track's length, and each lane's key (`t<team>` or `p<player>`) and place (§ raceLanes). */
   | { t: 'raceLanes'; length: number; rows: [string, number][] }
   /** A verdict the report keeps and no phone sees: the boss's hit or miss on a reveal (`oral`). */
-  | { t: 'oral'; slideId: string; title: string; kind: string; set: number; card: number; term: string; participant: null; right: boolean; value: number }
+  | { t: 'oral'; slideId: string; title: string; kind: string; set: number; card: number; term: string; participant: string | null; right: boolean; value: number }
+  /** Beat the clock's self-paced sprint (K29, §8): the run's questions and their key, handed to the relay, which marks each phone's taps; `sprintEnd` stops its clock. */
+  | { t: 'sprint'; id: string; gameId: string; seconds: number; questions: SprintQuestion[] }
+  | { t: 'sprintEnd' }
   | ({ t: 'prompt' } & PromptFields)
   | { t: 'promptEnd' }
   | { t: 'end' };
+
+/** One question of a sprint, with its key (`correct`): the relay marks the taps against it. */
+export interface SprintQuestion { id: string; question: string; options: string[]; correct: number }
+/** The relay's count of a sprint's taps: answers and right ones in, phones finished, phones playing, questions in the run. */
+export interface SprintProgress { id: string; answers: number; right: number; finished: number; playing: number; of: number }
+/** A sprint closed (its clock ran out, or `sprintEnd`): the room's totals, and per question how many answered, how many were wrong, and the wrong answer chosen most. */
+export interface SprintResult { id: string; gameId: string; answers: number; right: number; questions: { id: string; answered: number; wrong: number; lure: string; lureN: number }[] }
 
 export interface Session { id: string; token?: string; title: string; createdAt: number }
 
@@ -112,6 +122,9 @@ export type RelayMessage =
   /** A spoken verdict the relay counted: how many the game has had accepted (§ oralCount). */
   | { t: 'oralCount'; gameId: string; slideId: string; kind: string; count: number; accepted: boolean }
   | ({ t: 'responses'; id: string; answered: number; players: number } & Digest)
+  /** The sprint as the relay marks it: the room's taps so far, and at time the result (§8). */
+  | ({ t: 'sprintProgress' } & SprintProgress)
+  | ({ t: 'sprintResult' } & SprintResult)
   | { t: 'sessionReport'; report: unknown }
   | { t: 'sessionClosed'; report: unknown }
   | Other;

@@ -3,7 +3,8 @@
 // Pure: it reads the lab deck, and nothing else.
 //
 // Yes only when the room has nothing it cannot run: every game in the lesson is of a style the room runs (the
-// registry in live/styles: Multiple choice, True or false, True / false showdown, Type answer, Slider, Time traveler, Ranking, Odd one out, Predict the outcome, Spot the error, Definition challenge, Emoji guess, Fill in the blanks, Compare & contrast's sort, Horse race, Boss battle, Word reveal and the spoken games: Random challenge, Question cube, Spin & explain, Heads up, Connection maker, Concept chain), the lesson asks at least one
+// registry in live/styles: Multiple choice, True or false, True / false showdown, Type answer, Slider, Time traveler, Ranking, Odd one out, Predict the outcome, Spot the error, Definition challenge, Emoji guess, Fill in the blanks, Compare & contrast's sort, Horse race, Boss battle, Word reveal, the spoken games: Random challenge, Question cube, Spin & explain, Heads up, Connection maker, Concept chain, and
+// Beat the clock, whose round's questions are on its round slide, `game.board`), the lesson asks at least one
 // question or audience feedback prompt (poll, word cloud, brainstorm or scale, M9), and no slide carries an
 // activity, a live figure, a stand-in for a SlideForge check, or feedback on a game slide. Those are SlideForge's
 // to run until the lab's host runs them (M10 onward). Feedback that is not complete (no prompt, a poll without two
@@ -18,6 +19,9 @@ type DeckLike = Pick<Deck, 'slides'>;
 
 const STAND_INS = ['quiz', 'activity'];
 
+/** A round's questions (Beat the clock's run), on the slide it is played on. */
+const roundOf = (s: Slide): { style?: string }[] => (s.game?.role === 'board' ? (s.game.board ?? []).filter((x) => x.type === 'quiz') : []);
+
 /** Why this slide cannot run in the studio's room, or '' when it can. */
 function blocker(s: Slide): string {
   if (s.feedback && s.game && feedbackOf(s)) return `"${s.name}" is a game slide that also asks the room for ${s.feedback.kind} feedback`;
@@ -30,6 +34,8 @@ function blocker(s: Slide): string {
   if (!style) return `"${g.label}" is ${g.format}, not ${styleNames()}`;
   const q = g.quiz as { style?: string; input?: string } | undefined;
   if (g.role === 'question' && q && ((q.style ?? g.format) !== style.key || (q.input ?? style.input) !== style.input)) return `"${g.label}" has a question that is not ${style.name}`;
+  // A round played in one go (Beat the clock): its questions are on its slide, as SlideForge compiled them.
+  if (roundOf(s).some((x) => (x.style ?? g.format) !== style.key)) return `"${g.label}" has a question that is not ${style.name}`;
   const why = g.role === 'question' && q ? style.unsupported?.(q) : '';
   if (why) return `"${g.label}" has a question that ${why}`;
   return '';
@@ -42,7 +48,7 @@ export function canHostInStudio(deck: DeckLike): CanHost {
     const why = blocker(s);
     if (why) return { ok: false, reason: why };
   }
-  const asks = slides.some((s) => (s.game?.role === 'question' && s.game.quiz) || (!s.game && feedbackOf(s)));
+  const asks = slides.some((s) => (s.game?.role === 'question' && s.game.quiz) || roundOf(s).length > 0 || (!s.game && feedbackOf(s)));
   return asks ? { ok: true, reason: '' } : { ok: false, reason: `the lesson has no ${styleNames()} question or feedback prompt to ask` };
 }
 
