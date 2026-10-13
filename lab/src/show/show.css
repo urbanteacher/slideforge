@@ -262,3 +262,27 @@
 .sort-col.right { background: rgba(60,190,110,.5); }
 .sort-bin { color: var(--muted); font-size: calc(var(--u) * 24); }
 .sort-misfiled { margin: calc(var(--u) * 10) 0 0; color: var(--muted); font-size: calc(var(--u) * 32); }
+
+/* What the lesson's mechanic draws beside the question: the race's track, the boss's health, the dripping word. */
+.wall-mech { position: absolute; top: calc(var(--u) * 28); right: calc(var(--u) * 28); width: calc(var(--u) * 620); box-sizing: border-box; padding: calc(var(--u) * 18) calc(var(--u) * 24); background: rgba(10,10,11,.9); border: 1px solid var(--line-2); border-radius: calc(var(--u) * 24); pointer-events: none; }
+.show.has-rail .wall-mech { right: calc(var(--u) * (var(--rail-w, 420) + 28)); }
+.wall-mech h3 { margin: 0 0 calc(var(--u) * 10); font-size: calc(var(--u) * 40); }
+.mech-note, .mech-attack, .mech-hint, .mech-count, .mech-more { margin: calc(var(--u) * 8) 0 0; color: var(--muted); font-size: calc(var(--u) * 32); }
+.mech-race ol { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--u) * 8); }
+.mech-race li { display: grid; grid-template-columns: calc(var(--u) * 150) 1fr calc(var(--u) * 90); align-items: center; gap: calc(var(--u) * 12); font-size: calc(var(--u) * 32); }
+.mech-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mech-track { position: relative; height: calc(var(--u) * 14); border-radius: 999px; background: rgba(255,255,255,.14); }
+.mech-runner { position: absolute; top: 50%; left: calc(var(--at) * (100% - var(--u) * 28)); width: calc(var(--u) * 28); height: calc(var(--u) * 28); margin-top: calc(var(--u) * -14); border-radius: 50%; background: var(--team, #fff); transition: left .6s ease; }
+.mech-race li.moved .mech-name, .mech-race li.won .mech-name { font-weight: 700; }
+.mech-pos { text-align: right; font-variant-numeric: tabular-nums; }
+.mech-hp { height: calc(var(--u) * 36); border-radius: 999px; background: rgba(255,255,255,.14); overflow: hidden; }
+.mech-hp span { display: block; height: 100%; background: #e8474f; transition: width .6s ease; }
+.mech-boss.hit .mech-hp { box-shadow: 0 0 0 calc(var(--u) * 3) #ffd166; }
+.mech-boss.down .mech-hp span { background: #6bdc9a; }
+.mech-hp-text { margin: calc(var(--u) * 6) 0 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.show .mech-drip, .show.has-rail .mech-drip { right: auto; }
+.mech-drip { top: calc(var(--u) * 28); left: 50%; right: auto; transform: translateX(-50%); width: auto; max-width: 90%; text-align: center; }
+.mech-word { margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--u) * 10); font-size: calc(var(--u) * 84); font-weight: 800; letter-spacing: .05em; line-height: 1.1; }
+.mech-word span { min-width: calc(var(--u) * 56); height: calc(var(--u) * 100); display: inline-flex; align-items: center; justify-content: center; border-bottom: calc(var(--u) * 6) solid rgba(255,255,255,.55); }
+.mech-word span.closed { opacity: .45; }
+.mech-word span.mech-gap { border-bottom: 0; min-width: calc(var(--u) * 28); }

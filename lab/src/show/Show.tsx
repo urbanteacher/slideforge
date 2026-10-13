@@ -22,6 +22,7 @@ import { ReportScreen } from './ReportScreen';
 import { Ink } from './ink';
 import { InkBar, InkCanvas } from './InkLayer';
 import { SimulatedClass } from '../rehearse';
+import { MechanicViews } from './MechanicViews';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
 import { nextAction, wallOf } from './wallModel';
 
@@ -383,6 +384,7 @@ function Show() {
           {!finished && wall.view === 'question' && wall.question && (wall.question.locked ? <RevealStrip q={wall.question} /> : <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />)}
           {!finished && wall.view === 'reveal' && wall.question && <RevealStrip q={wall.question} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}
+          {!finished && ['question', 'reveal', 'leaderboard'].includes(wall.view) && <MechanicViews mech={wall.mech} scores={wall.view === 'leaderboard'} />}
           {rail && <RailView rail={rail} />}
           {!finished && ['feedback', 'reveal'].includes(wall.view) && wall.feedback && <FeedbackView fb={wall.feedback} />}
           {(finished || wall.view === 'ended') && (

@@ -86,3 +86,20 @@ declare module '@sf/games/definition.js' {
   /** The reading time a Definition challenge takes: 20, 30, 45 or 60 seconds; 30 for anything else. */
   export function clampDefinitionSeconds(seconds: unknown): number;
 }
+
+declare module '@sf/games/boss.js' {
+  /** What a right answer takes off the boss: easy 1, medium 2, hard 3, boss 5 (medium for anything else). */
+  export function bossDamage(difficulty: unknown): number;
+  /** The boss's HP: the damage of every question in the list, by its `difficulty`. */
+  export function bossMaxHp(questions: { difficulty?: unknown }[]): number;
+}
+
+declare module '@sf/games/wordreveal.js' {
+  /** The share of a word's letters shown at the start: easy 0.6, medium 0.4, hard 0. */
+  export function wordRevealPreFraction(difficulty: unknown): number;
+  /** The word with its first `shown` letters open and the rest `_` (spaces stay). */
+  export function wordRevealMask(word: unknown, shown: number): string;
+  export function wordRevealLetterCount(word: unknown): number;
+  /** Points for each answer by the letters shown when it came (its own `elapsedMs`), never at the host's reveal: [id, points]. */
+  export function wordRevealGains(slide: SFQuizSlide, answers: { id: number; response: unknown; elapsedMs?: number }[], currentShown: number): [number, number][];
+}

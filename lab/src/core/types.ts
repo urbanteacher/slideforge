@@ -217,6 +217,8 @@ export interface GameSettings {
   range?: [number, number, number];
   /** A typed answer: the spellings that also count. */
   accept?: string[];
+  /** Horse race: the steps to the finish (3 to 12; 5 when absent). The first game's say for the whole room. */
+  trackLength?: number;
   /** Mind reveal: the words to remember. */
   words?: string[];
   /** How the room plays: individual, or in teams with these names (2 to 6). The first game's say for the whole room. */

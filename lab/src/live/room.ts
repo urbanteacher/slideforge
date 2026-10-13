@@ -2,6 +2,7 @@
 // the host itself sent (the relay does not echo `begin` or `question` back to the host, so those are read
 // off the host's own frames). Scores are the relay's: the host never adds them up itself.
 
+import type { BossView, DripView, RaceView } from './mechanics';
 import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
@@ -24,6 +25,9 @@ export interface OpenFeedback {
   players: number;
   digest: Digest | null;
 }
+
+/** What the lesson's mechanic puts on the wall beside the question (live/mechanics.ts): the race's track, the boss's health, the word as it drips. Set by the host; not on the wire. */
+export interface Mech { race: RaceView | null; boss: BossView | null; drip: DripView | null }
 
 export interface RoomState {
   /** The socket to the relay is up. */
@@ -62,15 +66,17 @@ export interface RoomState {
   report: unknown;
   /** The relay's last word on whether it is writing the session's journal (`recording`); null until it says. */
   recording: boolean | null;
+  /** The lesson's mechanic as the wall draws it (Horse race, Boss battle, Word reveal). */
+  mech: Mech;
 }
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null,
-  revealed: [], gated: [], manualError: null, error: null, report: null, recording: null,
+  revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
 });
 
-export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' }) => void;
+export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' }) => void;
 
 export class Room {
   private s: RoomState = emptyRoom();
@@ -183,6 +189,12 @@ export class Room {
     if (!this.s.feedback || this.s.feedback.shown) return;
     this.s = { ...this.s, feedback: { ...this.s.feedback, shown: true } };
     this.emit({ t: 'feedbackShown' });
+  }
+
+  /** The host's mechanic moved: the track, the boss's health, or the dripping word (a field left out stays as it is). */
+  setMech(patch: Partial<Mech>): void {
+    this.s = { ...this.s, mech: { ...this.s.mech, ...patch } };
+    this.emit({ t: 'mech' });
   }
 
   /** The host ended the room and the relay closed it. */

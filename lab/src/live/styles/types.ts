@@ -86,7 +86,7 @@ export interface SortModel {
 export interface Briefing { role: string; participation: string; headPrompt: string }
 
 /** An answer as a style reads it: who, what, and whether they said they were sure. */
-export type Answer = Pick<TallyAnswer, 'id' | 'response'> & { sure?: boolean | null };
+export type Answer = Pick<TallyAnswer, 'id' | 'response'> & { sure?: boolean | null; elapsedMs?: number };
 
 /** What the wall's view may need beyond the answers: whether the gate step was taken, and the Showdown's split and switches. */
 export interface WallContext { gated: boolean; split: number[] | null; switched: number }
@@ -135,7 +135,9 @@ export interface StyleEntry {
   /** After the reveal the room is asked this (a brainstorm prompt, classic's quick prompt); it closes when the show leaves the question. */
   afterReveal?: { prompt: string };
   /** Points the host hands the relay with the verdicts (`reveal.gains`), as [player, points]; undefined: the relay scores by the verdicts alone. */
-  gains?(q: RoomQuiz, answers: Answer[]): [number, number][];
+  gains?(q: RoomQuiz, answers: Answer[], ctx?: { dripShown: number }): [number, number][];
+  /** A word that drips onto the wall letter by letter while the question is open, on the host's clock (Word reveal): the word, its hint, the letters open at the start and the time between the next ones. */
+  drip?(q: RoomQuiz): { word: string; hint: string; start: number; total: number; everyMs: number };
   /** What the teacher-entry window needs to know of the question beside its options: the gaps of a Fill the gaps, the columns of a sort. */
   manualQuestion?(q: RoomQuiz): { gaps?: number; bins?: string[] };
   /** The wall's view of the question, from the answers in. */

@@ -8,6 +8,7 @@ import { fill } from './fill';
 import { oddone } from './oddone';
 import { order } from './order';
 import { predict } from './predict';
+import { race } from './race';
 import { showdown } from './showdown';
 import { spot } from './spot';
 import { slider } from './slider';
@@ -16,7 +17,7 @@ import { truefalse } from './truefalse';
 import { type } from './type';
 import type { StyleEntry } from './types';
 
-export const STYLES: StyleEntry[] = [choice, truefalse, type, slider, order, oddone, predict, showdown, timetraveler, spot, definition, emoji, fill, compare];
+export const STYLES: StyleEntry[] = [choice, truefalse, type, slider, order, oddone, predict, showdown, timetraveler, spot, definition, emoji, fill, compare, race];
 
 /** The entry for a game format of the lab (`slide.game.format`), or undefined when the room does not run it. */
 export const styleForFormat = (format: string): StyleEntry | undefined => STYLES.find((s) => s.formats.includes(format));

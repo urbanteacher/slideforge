@@ -13,8 +13,10 @@
 
 import { Connection, type Backoff, type SocketFactory } from './connection';
 import { DEFAULT_TEAMS, END_CLOSE_MS, SURE_GRACE_MS, type AtFields, type HostMessage, type QuestionFields, type RelayMessage, type TallyAnswer } from './protocol';
+import { Boss, Race, type DripView } from './mechanics';
 import { Room, type Listener, type RoomState } from './room';
 import type { RoomQuiz, RoomShow, RoomSlide } from './show';
+import { wordRevealMask } from '@sf/games/wordreveal.js';
 import { styleFor, type ManualChoice } from './styles';
 
 export interface HostOptions {
@@ -34,6 +36,8 @@ export interface HostOptions {
 }
 
 export type { ManualChoice };
+
+const maskOf = (word: string, shown: number): string => wordRevealMask(word, shown);
 
 export class LiveHost {
   readonly room = new Room();
@@ -62,6 +66,11 @@ export class LiveHost {
   private revealSent = new Set<string>();
   /** How many of a question's help steps the teacher has released (a style with `help`), by question id. */
   private helped = new Map<string, number>();
+  /** The lesson's mechanic, kept across its questions (live/mechanics.ts): the race's track, the boss's HP; and the word dripping on the wall. */
+  private race: Race | null = null;
+  private boss: Boss | null = null;
+  private dripTimer: ReturnType<typeof setInterval> | null = null;
+  private dripShown = 0;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
   constructor(private readonly opts: HostOptions) {
@@ -72,6 +81,7 @@ export class LiveHost {
       onMessage: (m) => this.heard(m),
       onDown: () => { this.room.socket(false); },
     });
+    this.resetMechanic();
     this.room.subscribe((s) => {
       this.waiters = this.waiters.filter((w) => { if (w.pred(s)) { w.resolve(s); return false; } return true; });
     });
@@ -181,9 +191,10 @@ export class LiveHost {
       t: 'reveal', id: q.id, rev: rev ?? t?.rev ?? 0,
       marks: q.unmarked ? [] : list.map((a) => [a.id, style.mark(q, a.response)] as [number, boolean]),
       correct: said.correct, answer: said.answer, explanation: q.explanation ?? '',
-      ...(style.gains ? { gains: style.gains(q, list) } : {}),
+      ...(style.gains ? { gains: style.gains(q, list, { dripShown: this.dripShown }) } : {}),
     });
     this.revealSent.add(q.id);
+    this.stopDrip();
     if (style.afterReveal) this.openAfterReveal(style.afterReveal.prompt);
   }
 
@@ -238,6 +249,7 @@ export class LiveHost {
     this.ending = true;
     this.clearSure();
     this.clearRead();
+    this.stopDrip();
     if (!this.send({ t: 'end' })) { this.conn.stop(); this.room.end(); return this.state; }
     await Promise.race([this.until((s) => !s.live), new Promise((r) => setTimeout(r, END_CLOSE_MS))]);
     this.conn.stop();
@@ -269,7 +281,7 @@ export class LiveHost {
     switch (m.t) {
       case 'hosted':
         this.held = { pin: m.pin, hostToken: m.hostToken };
-        if (!firstRoom) this.replay();
+        if (!firstRoom) { this.resetMechanic(); this.replay(); }
         break;
       case 'rehosted':
         this.held = { pin: m.pin, hostToken: m.hostToken };
@@ -291,7 +303,86 @@ export class LiveHost {
       case 'tally':
         this.maybeAutoReveal();
         break;
+      case 'teamAnswers':
+        this.moveMechanic(m.counts ?? [], m.correct);
+        break;
+      case 'players':
+        // An individual race runs on each player's right answers, which the relay sends after `teamAnswers`: the lanes catch up with them.
+        if (this.race?.stale(this.state.mode, this.state.players)) this.moveRace([], -1);
+        break;
     }
+  }
+
+  // ---- the lesson's mechanic
+
+  /** The race, the boss or neither, new: at the start, and in a new room (its players' scores start again). */
+  private resetMechanic(): void {
+    const show = this.opts.show;
+    this.race = show.mechanic === 'race' ? new Race(show.trackLength ?? 5) : null;
+    this.boss = show.mechanic === 'boss' ? new Boss(show.bossHp ?? 1) : null;
+    this.room.setMech({ race: null, boss: this.boss ? this.boss.view('') : null });
+  }
+
+  /** The relay's per-team picks after a reveal: the race's lanes move, or the boss takes a hit (classic's `teamAnswers` handler). */
+  private moveMechanic(counts: number[][], correct: number): void {
+    if (this.race) this.moveRace(counts, correct);
+    else if (this.boss) this.strikeBoss(counts, correct);
+  }
+
+  private moveRace(counts: number[][], correct: number): void {
+    const race = this.race!, st = this.state;
+    const moved = race.advance(st.mode, st.teams, st.players, counts, correct);
+    const view = race.view(st.mode, st.teams, st.players, moved);
+    this.send({ t: 'raceLanes', length: race.length, rows: view.lanes.map((l) => [l.key, l.pos] as [string, number]) });
+    this.room.setMech({ race: view });
+  }
+
+  private strikeBoss(counts: number[][], correct: number): void {
+    const q = this.slide?.quiz, boss = this.boss!;
+    if (!q) return;
+    const t = this.state.tally && this.state.tally.id === q.id ? this.state.tally : null;
+    const quizzes = this.opts.show.slides.filter((x) => x.quiz);
+    const n = quizzes.findIndex((x) => x.quiz!.id === q.id) + 1;
+    const { view, verdict } = boss.strike(q, n, this.state.mode, counts, correct, t?.answers ?? []);
+    // The damage goes in the record: a report can say who answered what, and that the room took the boss from eleven HP to nothing.
+    this.send({ t: 'oral', slideId: q.id, title: String(q.gameTitle || this.opts.show.title || 'Boss battle'), kind: 'boss', set: 1, card: n - 1, term: verdict.term, participant: null, right: verdict.right, value: verdict.value });
+    this.room.setMech({ boss: view });
+  }
+
+  /** What the scores slide sends: the race's or the boss's result, else the final scores (classic's `results` slide). */
+  private finishFrame(): HostMessage {
+    const st = this.state;
+    if (this.race) {
+      const view = this.race.result(st.mode, st.teams, st.players);
+      this.room.setMech({ race: view });
+      return { t: 'finish', kind: 'race', title: 'Race result', note: view.note };
+    }
+    if (this.boss) {
+      const note = this.boss.result();
+      this.room.setMech({ boss: this.boss.view(note) });
+      return { t: 'finish', kind: 'boss', title: 'Boss battle', note };
+    }
+    return { t: 'finish', title: 'Final scores' };
+  }
+
+  /** The word begins to drip onto the wall (classic's startWordReveal): a few letters open, then one more at each interval, on the host's clock. */
+  private startDrip(q: RoomQuiz): void {
+    this.stopDrip();
+    const d = styleFor(q).drip?.(q);
+    if (!d) { this.room.setMech({ drip: null }); return; }
+    this.dripShown = d.start;
+    const view = (): DripView => ({ id: q.id, word: d.word, mask: maskOf(d.word, this.dripShown), hint: d.hint, shown: this.dripShown, total: d.total });
+    this.room.setMech({ drip: view() });
+    this.dripTimer = setInterval(() => {
+      if (this.dripShown >= d.total) { this.stopDrip(); return; }
+      this.dripShown++;
+      this.room.setMech({ drip: view() });
+    }, d.everyMs);
+    (this.dripTimer as { unref?: () => void }).unref?.();
+  }
+
+  private stopDrip(): void {
+    if (this.dripTimer) { clearInterval(this.dripTimer); this.dripTimer = null; }
   }
 
   /** A new room for a lesson already running: what the relay lost, sent again in classic's order. A question
@@ -312,6 +403,7 @@ export class LiveHost {
     if (!s) return;
     this.stale = false;
     const revealed = !!s.quiz && this.isRevealed(s.quiz.id);
+    if (s.quiz && !revealed) this.startDrip(s.quiz); else { this.stopDrip(); this.room.setMech({ drip: null }); }
     const asking = ask && s.activity === 'question' && !!s.quiz && !revealed;
     // A style that opens in a reading phase (Definition challenge) tells the room to read, and asks when the reading is over.
     const reading = asking && !!styleFor(s.quiz!).reading && !this.readDone.has(s.quiz!.id);
@@ -330,7 +422,7 @@ export class LiveHost {
     const c = reading ? styleFor(s.quiz!).companion?.(s.quiz!, 'reading') : undefined;
     this.send({ t: 'idle', style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '' });
     if (reading) this.startRead(s.quiz!);
-    if (s.results) this.send({ t: 'finish', title: 'Final scores' });
+    if (s.results) this.send(this.finishFrame());
   }
 
   private atFields(s: RoomSlide, activity: AtFields['activity'], reading = false): AtFields {

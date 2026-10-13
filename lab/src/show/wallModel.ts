@@ -4,7 +4,7 @@
 // a press right after a question lands is swallowed for GRACE_MS, so a double press does not reveal the answer
 // the instant the question appears; then Next reveals; then Next moves on).
 
-import { styleFor, teamBoardOf, type RoomState, type TeamRow, type WallDetail } from '../live';
+import { styleFor, teamBoardOf, type Mech, type RoomState, type TeamRow, type WallDetail } from '../live';
 import { feedbackWallOf, type FeedbackWall } from './feedbackWall';
 import { railOf, type Rail } from './rail';
 import type { Step } from './steps';
@@ -15,6 +15,10 @@ export const GRACE_MS = 1500;
 export interface WallOption { index: number; label: string; count: number; correct: boolean }
 export interface WallPlayer { id: number; name: string; connected: boolean; team: number | null }
 export interface WallRow { id: number; rank: number; name: string; score: number; connected: boolean; team?: number | null }
+
+/** What the lesson's mechanic puts on the wall (live/mechanics.ts): the race's track, the boss's health, the word as it drips. */
+export type WallMech = Mech;
+const NO_MECH: WallMech = { race: null, boss: null, drip: null };
 
 export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'feedback' | 'ended';
 
@@ -48,6 +52,8 @@ export interface Wall {
   rail: Rail | null;
   /** The audience feedback the room is asked on this slide (view `feedback`): bars, spread, cloud or ideas. */
   feedback: FeedbackWall | null;
+  /** The track, the boss or the dripping word: with the question (a word only while it is asked; once revealed, it is whole), and on the scores. */
+  mech: WallMech;
 }
 
 export interface WallInput {
@@ -99,7 +105,7 @@ export function wallOf(i: WallInput): Wall {
   const quizId = step?.room.quiz?.id;
   const teams = teamBoardOf(room);
   const rail = railOf({ board, teams, teamBefore: i.teamBefore, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
-  const base = { join, players, teams, question: null, feedback: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };
@@ -120,15 +126,18 @@ export function wallOf(i: WallInput): Wall {
       answered: t?.answered ?? 0, players: t?.total ?? room.players.filter((p) => p.connected).length, timeLimit: room.question?.timeLimit ?? 0,
       answer: revealed ? style.reveal(quiz).answer : '', explanation: revealed ? quiz.explanation ?? '' : '',
     };
-    if (i.scoresOn) return { ...base, question, view: 'leaderboard' };
+    // The word drips only for the question it was dripped for; revealed, it is spelt out.
+    const d = room.mech.drip && room.mech.drip.id === quiz.id ? room.mech.drip : null;
+    const mech: WallMech = { race: room.mech.race, boss: room.mech.boss, drip: d && (revealed ? { ...d, mask: d.word, shown: d.total } : d) };
+    if (i.scoresOn) return { ...base, question, mech, view: 'leaderboard' };
     // A style that asks the room something after its reveal (Odd one out's "defend a pick") has the ideas beside it, in the standings' place.
     const after = revealed && style.afterReveal && room.feedback ? feedbackWallOf(room.feedback) : null;
-    if (after) return { ...base, question, rail: null, feedback: after, view: 'reveal' };
-    return { ...base, question, view: revealed ? 'reveal' : 'question' };
+    if (after) return { ...base, question, mech, rail: null, feedback: after, view: 'reveal' };
+    return { ...base, question, mech, view: revealed ? 'reveal' : 'question' };
   }
   const asked = step?.room.feedback, open = room.feedback;
   if (asked && open && open.prompt.id === asked.id && !i.scoresOn) return { ...base, rail: null, feedback: feedbackWallOf(open), view: 'feedback' };
-  if (step?.room.results || i.scoresOn) return { ...base, view: 'leaderboard' };
+  if (step?.room.results || i.scoresOn) return { ...base, mech: { race: room.mech.race, boss: room.mech.boss, drip: null }, view: 'leaderboard' };
   return { ...base, view: 'slide' };
 }
 

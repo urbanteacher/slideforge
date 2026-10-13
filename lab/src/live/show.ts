@@ -10,6 +10,7 @@
 import type { Deck, Slide } from '../core';
 import { gameStyle } from '@sf/games/registry.js';
 import { feedbackOf, type RoomFeedback } from './feedback';
+import { bossHpOf, trackLengthOf, type Mechanic } from './mechanics';
 import { styleForFormat, styleOf } from './styles';
 import { roomPlay } from './teams';
 
@@ -42,7 +43,14 @@ export interface RoomSlide {
 }
 
 /** The steps, and how the room plays: individual, or teams with their names (the first game's settings, as classic's buildRunDeck reads them). */
-export interface RoomShow { title: string; slides: RoomSlide[]; mode?: 'individual' | 'teams'; teams?: string[] }
+export interface RoomShow {
+  title: string; slides: RoomSlide[]; mode?: 'individual' | 'teams'; teams?: string[];
+  /** What the lesson's lead game makes of the room (classic's `run.mechanic`): a race's track, a boss's HP, a drip of letters; absent for the plain points game. */
+  mechanic?: Mechanic;
+  /** A race: the steps to the finish. A boss: its HP, from its own game's questions. */
+  trackLength?: number;
+  bossHp?: number;
+}
 
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 /** A game's own phone skin off its questions (classic `Live.mechanic`): Multiple choice is 'points'. */
@@ -58,6 +66,9 @@ function quizOf(s: Slide): RoomQuiz {
   q.timeLimit = (set.seconds ?? 0) > 0 ? set.seconds! : 0;
   if (set.points != null) q.points = set.points;
   q.gameId = g.id;
+  // The Game panel's difficulty and the damage a right answer deals are the question's own (a boss's hit, a word's pre-reveal).
+  if (set.difficulty != null) q.difficulty = set.difficulty;
+  if (set.damage != null) q.bossDamage = set.damage;
   // The style's own fields, as its compile sets them (styles/<style>.ts `prepare`).
   styleOf(q)?.prepare?.(q);
   if (s.sourceSlideId) q.sourceSlideId = s.sourceSlideId;
@@ -82,8 +93,9 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
         ? { id: s.id, title: s.name, text: feedback.prompt, activity: 'feedback', style: deckStyle, feedback }
         : { id: s.id, title: s.name, text: '', activity: 'content', style: deckStyle });
     } else {
-      const style = mechanicOf(String(g.quiz?.style ?? g.format));
       const qs = slides.filter((x) => x.game?.id === g.id && x.game.role === 'question' && x.game.quiz);
+      // The phones' skin for a step of the game: its own style, a cover's or a scores slide's the style of the game's questions (a format's name is not a style: 'horse-race' is the style 'race').
+      const style = mechanicOf(String(g.quiz?.style ?? qs[0]?.game?.quiz?.style ?? g.format));
       if (g.role === 'question' && g.quiz) {
         const key = g.key ?? s.id;
         if (!asked.has(key)) {
@@ -110,5 +122,14 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
   // Teams belong to the room, not to a question: the first game's settings say (a deck of several games shares one set of teams).
   const lead = slides.find((s) => s.game?.id && s.game.settings?.mode != null)?.game?.settings;
   const play = roomPlay(lead);
-  return { title: deck.title, slides: out, mode: play.mode, teams: play.teams };
+  const mechanic: Mechanic = deckStyle === 'race' || deckStyle === 'boss' || deckStyle === 'wordreveal' ? deckStyle : 'points';
+  const extra: Partial<RoomShow> = {};
+  if (mechanic === 'race') extra.trackLength = trackLengthOf(slides.find((s) => s.game?.quiz)?.game?.settings?.trackLength);
+  if (mechanic === 'boss') {
+    // The boss's own game's questions, not every question in the lesson: a lesson with a boss battle and a quiz beside it gave the boss the quiz's HP too.
+    const asked = out.filter((x) => x.quiz && x.gameId);
+    const bossGame = (asked.find((x) => x.quiz!.style === 'boss') ?? asked[0])?.gameId;
+    extra.bossHp = bossHpOf(asked.filter((x) => x.gameId === bossGame).map((x) => x.quiz!));
+  }
+  return { title: deck.title, slides: out, mode: play.mode, teams: play.teams, mechanic, ...extra };
 }

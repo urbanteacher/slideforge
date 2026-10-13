@@ -80,6 +80,10 @@ export type HostMessage =
   | { t: 'manualTally'; id: string; counts: number[] }
   | { t: 'report' }
   | { t: 'finish'; title: string; note?: string; kind?: string }
+  /** A race's lanes after a reveal: the track's length, and each lane's key (`t<team>` or `p<player>`) and place (§ raceLanes). */
+  | { t: 'raceLanes'; length: number; rows: [string, number][] }
+  /** A verdict the report keeps and no phone sees: the boss's hit or miss on a reveal (`oral`). */
+  | { t: 'oral'; slideId: string; title: string; kind: string; set: number; card: number; term: string; participant: null; right: boolean; value: number }
   | ({ t: 'prompt' } & PromptFields)
   | { t: 'promptEnd' }
   | { t: 'end' };
