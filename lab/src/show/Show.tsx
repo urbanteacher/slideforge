@@ -4,7 +4,7 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, PenLine, Radio, Share2, Users, StickyNote, Trophy, Vote, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, PenLine, Radio, Share2, Users, QrCode, Trophy, Vote, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { KeySheet, QuestionsList, QuickPollForm, ROOM_VIEW_SAYS, ShowSide, controlFor, keyName, nextRoomView, presenterUrl, toggleBoard, type CmdData, type RoomView, type Screen, type ShowAction } from '../presenter';
@@ -15,7 +15,8 @@ import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
 import { Boundary } from './Boundary';
 import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit, whoAnswered } from './desk';
 import { PrompterLink, prompterLinkFor } from './prompter';
-import { NotesCard, Overview, RehearseCard, ScreenCover } from './ShowTools';
+import { qrSvg } from './qr';
+import { Overview, RehearseCard, ScreenCover } from './ShowTools';
 import { JoinCard } from './JoinCard';
 import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
@@ -57,6 +58,14 @@ function giveUp(reason: string): void {
 function fsDoc(): Document {
   try { if (window.parent !== window && window.parent.document) return window.parent.document; } catch { /* another origin */ }
   return document;
+}
+
+/** A shared notes link as the Teacher Presenter shows it: the link, its QR, and who follows. */
+function notesLinkFor(l: PrompterLink | null): { url: string; svg: string; watchers: number } | null {
+  if (!l || l.closed || !l.ready) return null;
+  let svg = '';
+  try { svg = qrSvg(l.url, { quiet: 2, title: 'Notes link' }); } catch { /* too long for a QR: the link alone */ }
+  return { url: l.url, svg, watchers: l.watchers };
 }
 
 export function ShowLayer() {
@@ -114,7 +123,6 @@ function Show() {
   const jumpRef = useRef('');
   jumpRef.current = jump;
   const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [notesCard, setNotesCard] = useState(false);
   // Draw: the ink over the slide (ink.ts), whether it takes the pointer, and a count that repaints it.
   const ink = useRef(new Ink()).current;
   const [inkOn, setInkOn] = useState(false);
@@ -286,6 +294,7 @@ function Show() {
       case 'exit': case 'end': exit(); return;
       case 'presenter': openPresenter(); return;
       case 'notesElsewhere': notesElsewhere(); return;
+      case 'notesStop': link.current?.stop(); repaint((n) => n + 1); return;
       case 'help': setSheet((v) => !v); return;
       case 'steps': if (p && !p.buildAll()) say('Every step on this slide is showing'); return;
       case 'freeze': toggleFreeze(); return;
@@ -426,7 +435,7 @@ function Show() {
   // The Teacher Presenter window follows the show over a BroadcastChannel; with none open this does nothing.
   const entryHash = roomOn ? room.manualHash() : null;
   const desk = presenterState({
-    deck, index: frozen ?? index, startedAt, screen, figure: figures.says(slide), frozenAt: frozen == null ? null : index, ink: { on: inkOn, spot: ink.tool === 'spot' },
+    deck, index: frozen ?? index, startedAt, screen, figure: figures.says(slide), notesLink: notesLinkFor(link.current), frozenAt: frozen == null ? null : index, ink: { on: inkOn, spot: ink.tool === 'spot' },
     room: roomOn ? {
       wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown, quick: !!room.state.quick, canPoll: room.at >= 0 && !room.state.feedback && !finished, qa: room.state.qa, floor: room.state.floor,
       roomView, phonesBlank: room.state.phonesBlank, blankSoonAt: room.state.blankSoonAt, reactions: room.state.reactions, joinCard,
@@ -450,8 +459,9 @@ function Show() {
   // Notes on another device: the frame follows the slide; the channel ends with the show.
   useEffect(() => { link.current?.send(prompterFrame(deck, index, startedAt)); }, [deck, index, startedAt]);
   useEffect(() => () => { link.current?.stop(); link.current = null; }, []);
+  // The notes link is private: its QR goes to the Teacher Presenter (notesLink in its state), never the wall.
   const notesElsewhere = () => {
-    setNotesCard(true);
+    openPresenter();
     if (link.current && !link.current.closed) return;
     const l = new PrompterLink({
       url: relayUrl(), link: (id) => prompterLinkFor(id, prompterPage()),
@@ -524,11 +534,6 @@ function Show() {
       {notes && <aside className="show-notes" aria-label="Speaker notes"><h4>Notes · slide {index + 1}</h4>{slide.notes || <span className="dim">No notes for this slide.</span>}</aside>}
       <ScreenCover screen={screen} onResume={() => setScreen('none')} />
       {overview != null && <Overview slides={deck.slides} deck={deck} current={index} at={overview} onGo={(i) => { setOverview(null); goIndex(i); }} onClose={() => setOverview(null)} />}
-      {notesCard && (
-        <NotesCard link={link.current} onClose={() => setNotesCard(false)}
-          onStop={() => { link.current?.stop(); repaint((n) => n + 1); }}
-          onCopy={(url) => { void navigator.clipboard?.writeText(url).then(() => say('Notes link copied'), () => say('Could not copy the link')); }} />
-      )}
       {inkOn && <InkBar ink={ink} version={inkV} onChange={inkChanged} onDone={() => setInkOn(false)} onSteps={() => runCmd('steps')} />}
       {joinCard && wall?.join && !finished && <JoinCard join={wall.join} players={wall.players.length} onClose={() => setJoinCard(false)} />}
       {sheet && <KeySheet room={roomOn} onClose={() => setSheet(false)} />}
@@ -558,7 +563,7 @@ function Show() {
         <button onClick={() => prevRef.current()} aria-label="Previous"><ArrowLeft size={16} /></button>
         <button onClick={() => nextRef.current()} aria-label="Next"><ArrowRight size={16} /></button>
         <span className="show-count" aria-label={`Slide ${index + 1} of ${deck.slides.length}${frozen != null ? ', frozen' : ''}`}>{index + 1} / {deck.slides.length}{frozen != null && <span className="show-frozen" title={`Frozen (Z): you are on slide ${frozen + 1}`}> ❄ {frozen + 1}</span>}</span>
-        <button onClick={() => setNotes((v) => !v)} aria-pressed={notes} aria-label="Speaker notes (N)" title="Speaker notes (N)"><StickyNote size={16} /></button>
+        {roomOn && <button onClick={() => runCmd('join')} aria-pressed={joinCard} aria-label="Join card (J)" title="Join card (J): the PIN and QR for latecomers"><QrCode size={16} /></button>}
         <button onClick={() => setInkOn((v) => !v)} aria-pressed={inkOn} aria-label="Draw (D)" title="Draw on the slide (D or I): pen, highlighter, eraser, spotlight (L)"><PenLine size={16} /></button>
         <button onClick={() => setOverview(index)} aria-label="Slide overview (O)" title="Slide overview (O). Type a number and Enter to jump"><LayoutGrid size={16} /></button>
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}

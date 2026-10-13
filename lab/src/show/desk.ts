@@ -30,6 +30,8 @@ export interface DeskInput {
   index: number;
   startedAt: number;
   screen: Screen;
+  /** Notes on another device, while shared (the presenter shows its QR; the wall never does). */
+  notesLink?: { url: string; svg: string; watchers: number } | null;
   /** The live figure on the wall: its step, of how many, and the step's caption (figure.ts). */
   figure?: { step: number; of: number; caption: string } | null;
   /** The room, when the show has one: its wall, and what the bar's prompt buttons would offer. */
@@ -71,7 +73,7 @@ export function presenterState(i: DeskInput): PresenterState {
     };
   }
   return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room, ...(i.figure ? { figure: i.figure } : {}),
-    frozenAt: i.frozenAt ?? null, ink: i.ink ?? { on: false, spot: false } };
+    frozenAt: i.frozenAt ?? null, ink: i.ink ?? { on: false, spot: false }, notesLink: i.notesLink ?? null };
 }
 
 /** Digits typed in the show build a slide number (1 based); anything else leaves the buffer alone. Null: not a digit. */

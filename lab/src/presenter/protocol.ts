@@ -11,9 +11,9 @@ export const PRESENTER_CHANNEL = 'slideforge.lab.presenter.v1';
 /** What the window may ask of the show. `goto` carries `n`, a 1-based slide number of the shown deck; `poll` carries the quick poll to ask;
  *  `floor` with no mode takes the next one. Each is what the wall's key for it does (controls.ts). */
 export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more' | 'poll' | 'qa' | 'floor'
-  | 'steps' | 'freeze' | 'roomView' | 'scores' | 'join' | 'again' | 'reactions' | 'blankPhones' | 'blankSoon' | 'draw' | 'spot' | 'clearInk' | 'notesElsewhere';
+  | 'steps' | 'freeze' | 'roomView' | 'scores' | 'join' | 'again' | 'reactions' | 'blankPhones' | 'blankSoon' | 'draw' | 'spot' | 'clearInk' | 'notesElsewhere' | 'notesStop';
 export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more', 'poll', 'qa', 'floor',
-  'steps', 'freeze', 'roomView', 'scores', 'join', 'again', 'reactions', 'blankPhones', 'blankSoon', 'draw', 'spot', 'clearInk', 'notesElsewhere'];
+  'steps', 'freeze', 'roomView', 'scores', 'join', 'again', 'reactions', 'blankPhones', 'blankSoon', 'draw', 'spot', 'clearInk', 'notesElsewhere', 'notesStop'];
 
 /** One line of who answered what (the desk's private list): the name, the answer as the phone gave it, and how sure. */
 export interface WhoRow { name: string; answer: string; sure: boolean | null }
@@ -71,6 +71,9 @@ export interface PresenterState {
   startedAt: number;
   screen: Screen;
   room: PresenterRoom | null;
+  /** Notes on another device, while shared: its private link, the link as a QR (SVG markup), and how many screens follow.
+   *  Only here, never on the wall: anyone in the room who scanned it would read the notes. */
+  notesLink?: { url: string; svg: string; watchers: number } | null;
   /** A live figure on the wall: the step Next and Back walk (from 1), of how many, and that step's caption. */
   figure?: { step: number; of: number; caption: string };
   /** The wall is frozen on this slide (0-based) while `index` is where the teacher has moved on to. */

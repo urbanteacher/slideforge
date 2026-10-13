@@ -45,7 +45,7 @@ export const CONTROLS: readonly Control[] = [
   { action: 'white', keys: ['w', ','], mode: 'any', group: 'Screen', says: 'White screen, for writing on the board', desk: 'White' },
   { action: 'full', keys: ['f'], mode: 'any', group: 'Screen', says: 'Full screen on or off', desk: null },
   { action: 'notes', keys: ['n'], mode: 'any', group: 'Screen', says: 'Speaker notes on the wall', desk: null },
-  { action: 'notesElsewhere', keys: ['Shift+n'], mode: 'any', group: 'Screen', says: 'Notes on another device: a phone follows your notes', desk: 'Notes on a phone' },
+  { action: 'notesElsewhere', keys: ['Shift+n'], mode: 'any', group: 'Screen', says: 'Notes on another device: the Teacher Presenter shows the private link and QR, and a phone follows your notes', desk: 'Notes on a phone' },
   { action: 'presenter', keys: ['p'], mode: 'any', group: 'Screen', says: 'Open the Teacher Presenter: notes, next slide and every control', desk: null },
   { action: 'draw', keys: ['d', 'i'], mode: 'any', group: 'Draw', says: 'Draw on the slide; again (or Esc) when done', desk: 'Draw' },
   { action: 'spot', keys: ['l'], mode: 'any', group: 'Draw', says: 'Spotlight: drag over what to look at, the rest goes dark; click to put it out', desk: 'Spotlight' },

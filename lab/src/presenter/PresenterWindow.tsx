@@ -157,6 +157,19 @@ export function PresenterWindow() {
       <section className="pw-notes" ref={notesRef} aria-label="Speaker notes">{st.notes || <span className="pw-dim">No notes for this slide.</span>}</section>
       <DeskState st={st} now={now} />
       <DeskControls st={st} now={now} send={send} panel={panel} setPanel={setPanel} />
+      {st.notesLink && (
+        <section className="pw-notes-link" aria-label="Notes on another device">
+          <h3>Notes on another device</h3>
+          {st.notesLink.svg && <div className="pw-notes-qr" dangerouslySetInnerHTML={{ __html: st.notesLink.svg }} />}
+          <p>Scan it on your phone, or open the link on the prompt screen. Private: it is shown here, never on the wall.</p>
+          <input readOnly value={st.notesLink.url} aria-label="Notes link" onFocus={(e) => e.currentTarget.select()} />
+          <div className="pw-notes-row">
+            <button onClick={() => { void navigator.clipboard?.writeText(st.notesLink!.url); }}>Copy link</button>
+            <button onClick={() => send('notesStop')}>Stop sharing notes</button>
+          </div>
+          <p className="pw-dim">{st.notesLink.watchers ? `${st.notesLink.watchers} ${st.notesLink.watchers === 1 ? 'screen' : 'screens'} following` : 'Nothing following yet'}</p>
+        </section>
+      )}
       <p className="pw-foot"><button onClick={closeWindow} title="Close this window and go back">Close window</button></p>
       {panel === 'keys' && <KeySheet room={!!room} onClose={() => setPanel('')} />}
     </div>

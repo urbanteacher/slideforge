@@ -8,9 +8,7 @@ import { slideBadge } from './badge';
 import type { Screen } from '../presenter';
 import { clock } from '../presenter';
 import { gridColumns } from './desk';
-import type { PrompterLink } from './prompter';
 import { SIZES } from '../rehearse';
-import { qrSvg } from './qr';
 
 /** The screen blanked: black or white over the slide (and the wall). Any click, or the same key, brings it back. */
 export function ScreenCover({ screen, onResume }: { screen: Screen; onResume: () => void }) {
@@ -78,27 +76,6 @@ export function Overview({ slides, deck, current, at, onGo, onClose }: { slides:
         })}
       </div>
     </div>
-  );
-}
-
-/** Notes on another device: the link and QR to open on a phone or a prompt screen, how many are following, and stop. */
-export function NotesCard({ link, onStop, onClose, onCopy }: { link: PrompterLink | null; onStop: () => void; onClose: () => void; onCopy: (url: string) => void }) {
-  const url = link?.ready ? link.url : '';
-  const svg = useMemo(() => { try { return url ? qrSvg(url, { quiet: 2, title: 'Notes link' }) : ''; } catch { return ''; } }, [url]);
-  return (
-    <aside className="show-card" role="dialog" aria-label="Notes on another device">
-      <div className="card-head"><b>Notes on another device</b><button onClick={onClose} aria-label="Close">×</button></div>
-      {!link || link.closed ? <p>Notes on another device are off.</p> : !url ? <p>Connecting…</p> : (
-        <>
-          <div className="card-qr" dangerouslySetInnerHTML={{ __html: svg }} />
-          <p>Scan it on your phone, or open the link on the prompt screen. Your notes follow every move, and the phone can press Next and Back.</p>
-          <input readOnly value={url} aria-label="Notes link" onFocus={(e) => e.currentTarget.select()} />
-          <div className="card-row"><button onClick={() => onCopy(url)}>Copy link</button><button className="stop" onClick={onStop}>Stop sharing notes</button></div>
-          <p className="card-count">{link.watchers ? `${link.watchers} ${link.watchers === 1 ? 'screen' : 'screens'} following` : 'Nothing following yet'}</p>
-          <p className="card-private">Private: only this link shows your notes. Nobody in the room sees it, and it stops when the show ends.</p>
-        </>
-      )}
-    </aside>
   );
 }
 

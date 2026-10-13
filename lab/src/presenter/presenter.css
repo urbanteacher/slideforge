@@ -44,3 +44,12 @@
 .pw-foot button { height: 28px; font-size: 12px; }
 .pw-who { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 40vh; overflow: auto; }
 .pw-who li { display: grid; grid-template-columns: minmax(80px, auto) 1fr auto; gap: 8px; font-size: 13px; }
+
+/* Notes on another device: the private link's QR, here and never on the wall. */
+.pw-notes-link { margin-top: 12px; padding: 12px; border: 1px solid var(--line-2, #2a2a30); border-radius: 10px; }
+.pw-notes-link h3 { margin: 0 0 8px; font-size: 14px; }
+.pw-notes-qr { width: 180px; background: #fff; padding: 6px; border-radius: 6px; }
+.pw-notes-qr svg { display: block; width: 100%; height: auto; }
+.pw-notes-link input { width: 100%; margin: 8px 0; }
+.pw-notes-row { display: flex; gap: 8px; }
+.pw-dim { opacity: .65; font-size: 12px; }
