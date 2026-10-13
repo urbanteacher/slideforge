@@ -21,6 +21,7 @@ import { SpokenDesk } from './spokenroom';
 import { SpeedDesk } from './speedroom';
 import { BOARDS, BoardDesk, boardOfKey } from './boards';
 import { styleFor, type ManualChoice } from './styles';
+import { ActivityDesk } from './activities';
 
 export interface HostOptions {
   /** The relay's socket, e.g. `wss://<host>` (classic: the page's own host). */
@@ -83,6 +84,8 @@ export class LiveHost {
   private readonly speed: SpeedDesk;
   /** The boards (boards/): the one on the wall runs on its clock, and each keeps its state while the show is elsewhere. */
   private readonly boards: BoardDesk;
+  /** A timed routine on the wall (activities/): its stages, their clock, its idea boxes. */
+  private readonly acts: ActivityDesk;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
   constructor(private readonly opts: HostOptions) {
@@ -112,6 +115,13 @@ export class LiveHost {
       after: (fn, ms) => { if (opts.after) opts.after(fn, ms); else (setTimeout(fn, ms) as { unref?: () => void }).unref?.(); },
       publish: (id, entry) => this.room.setBoard(id, entry),
     }, BOARDS);
+    this.acts = new ActivityDesk({
+      sendAt: () => { const s = this.slide; if (s && this.begun) this.send({ t: 'at', ...this.atFields(s, s.activity === 'question' ? 'moment' : s.activity) }); },
+      now: () => (opts.now ?? Date.now)(),
+      openPrompt: (fields) => this.openQuick(fields), closePrompt: (id) => this.closeQuick(id),
+      promptOpen: () => this.promptId, feedback: () => this.state.feedback,
+      publish: (view) => this.room.setActivity(view),
+    });
     this.resetMechanic();
     this.room.subscribe((s) => {
       this.waiters = this.waiters.filter((w) => { if (w.pred(s)) { w.resolve(s); return false; } return true; });
@@ -147,6 +157,8 @@ export class LiveHost {
   next(): void {
     // Beat the clock's sprint: Next stops its clock (twice), then goes past the run.
     if (this.begun && this.speed.next()) return;
+    // A timed routine walks its stages before the show moves on.
+    if (this.begun && this.acts.next()) return;
     // A Heads up or Beat the clock round that has run out: Next skips the terms nobody reached.
     const skip = this.desk.skip(this.at) ?? this.speed.skip(this.at);
     if (skip != null && this.begun) { this.goTo(skip); return; }
@@ -273,6 +285,14 @@ export class LiveHost {
   /** A teacher's command to the board on the wall (its buttons): start, reveal, finish, … False when no board is up. */
   boardCommand(action: string, card?: number): boolean { return this.begun && this.boards.command(action, card); }
 
+  /** Next on a routine with a stage to come (the show's slide built its next stage): the stage is entered. False when there is none. */
+  stageNext(): boolean { return this.begun && this.acts.next(); }
+  /** More time for the routine's stage (classic's +30s). */
+  extendStage(seconds = 30): boolean { return this.begun && this.acts.extend(seconds); }
+  /** An idea from a stage's box in the spotlight, by its key (the relay's `seq`); and taken down (all, without a `sid`). */
+  spotlight(key: string): boolean { return this.acts.spotlight(key); }
+  unspot(sid?: string): void { this.acts.unspot(sid); }
+
   /** Stop the sprint's clock (the wall's Stop the clock). */
   stopClock(): void { this.speed.stop(); }
 
@@ -306,6 +326,7 @@ export class LiveHost {
   async end(): Promise<RoomState> {
     this.ending = true;
     this.boards.stop();
+    this.acts.teardown(false);
     this.clearSure();
     this.clearRead();
     this.stopDrip();
@@ -367,6 +388,9 @@ export class LiveHost {
         break;
       case 'teamAnswers':
         this.moveMechanic(m.counts ?? [], m.correct);
+        break;
+      case 'wrote': case 'signals':
+        this.acts.heard(m);
         break;
       case 'players':
         // An individual race runs on each player's right answers, which the relay sends after `teamAnswers`: the lanes catch up with them.
@@ -468,6 +492,7 @@ export class LiveHost {
     if (s.quiz && !revealed) this.startDrip(s.quiz); else { this.stopDrip(); this.room.setMech({ drip: null }); }
     this.desk.landed(s);
     this.boards.landed(s.id, s.board);
+    this.acts.landed(s.id, s.act);
     const asking = ask && s.activity === 'question' && !!s.quiz && !revealed;
     // A style that opens in a reading phase (Definition challenge) tells the room to read, and asks when the reading is over.
     const reading = asking && !!styleFor(s.quiz!).reading && !this.readDone.has(s.quiz!.id);
@@ -481,7 +506,7 @@ export class LiveHost {
     if (this.closedFb && this.closedFb !== fb?.id) this.closedFb = null;
     if (fb && this.closedFb !== fb.id) {
       if (this.promptId !== fb.id) { this.promptId = fb.id; this.send({ t: 'prompt', ...fb }); }
-    } else if (this.promptId) { this.promptId = null; this.send({ t: 'promptEnd' }); }
+    } else if (this.promptId && !this.acts.owns(this.promptId)) { this.promptId = null; this.send({ t: 'promptEnd' }); }
     // Concept chain is host-oracy: the phones stay idle while the chain grows, and the idea box is where they take part. The relay is never
     // asked a question, so the room holds the term as asked itself, and its reveal needs no word back from the relay.
     // A board: the wall plays it and no phone answers; the phones are told what to do (classic: an `idle` with its companion).
@@ -506,7 +531,7 @@ export class LiveHost {
 
   private atFields(s: RoomSlide, activity: AtFields['activity'], reading = false): AtFields {
     const c = s.quiz && activity === 'question' ? styleFor(s.quiz).companion?.(s.quiz, reading ? 'reading' : 'asking') : s.board ? boardOfKey(s.board.key)?.companion : undefined;
-    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: s.quiz && activity === 'question' ? this.helped.get(s.quiz.id) ?? 0 : 0, style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt || (s.quiz && activity === 'question' ? s.quiz.headPrompt ?? '' : ''), stage: null };
+    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: s.quiz && activity === 'question' ? this.helped.get(s.quiz.id) ?? 0 : this.acts.step(s.id), style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt || (s.quiz && activity === 'question' ? s.quiz.headPrompt ?? '' : ''), stage: this.acts.frameFor(s.id) };
   }
 
   private questionFields(q: RoomQuiz): QuestionFields {

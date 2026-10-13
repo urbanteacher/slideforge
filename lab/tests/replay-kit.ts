@@ -82,9 +82,14 @@ export function assertSame(lab: Record<string, unknown>[], classic: Record<strin
 /** Feed a recording to the lab host and return it, the frames it sent, and the classic frames, normalised. */
 /** `onStep`: a recorder step the kit does not know (a board's buttons), for the test to play on the host. */
 export async function replay(rec: Rec, format: string, scores = true, tweak?: (show: RoomShow) => void, onStep?: (s: Step, host: LiveHost) => void) {
-  const sock = new Recorded();
   const show = recordedShow(rec, format, scores);
   tweak?.(show);
+  return replayShow(rec, show, onStep);
+}
+
+/** Feed a recording to the lab host running `show` (a show made from a lab deck, not from the starter game). */
+export async function replayShow(rec: Rec, show: RoomShow, onStep?: (s: Step, host: LiveHost) => void) {
+  const sock = new Recorded();
   // What runs on time apart from the relay (Heads up's round and its move on after a verdict) runs on the recording's clock, so the
   // seconds left in a frame are the recorded ones: a timer set at `ms` for `d` is due at `ms + d`, and fires before the first event after that.
   const clock = { ms: 0, due: [] as { at: number; fn: () => void }[] };

@@ -205,3 +205,24 @@ declare module '@sf/games/lowstakes.js' {
   /** The whole quiz's clock: 120, 180 or 240 seconds. */
   export function clampLowstakesSeconds(seconds: unknown): number;
 }
+
+/** An activity slide as SlideForge makes it (SF.Activities.makeSlides; lab/src/assets/activities.json holds them). */
+interface SFActivitySlide { type: string; title?: string; bullets?: string[]; body?: string; progressive?: boolean; activityPresentation?: string; feedback?: unknown; timeLimit?: number; [field: string]: unknown }
+type SFStageJob = 'note' | 'talk' | 'send' | 'work' | 'down';
+type SFParseLine = (line: string) => { term: string; def: string };
+
+declare module '@sf/activities/stages.js' {
+  /** A routine's stages, read off its rows (a row's job from its words, or the one its label declares). */
+  export function activityStages(slide: SFActivitySlide, parseLine: SFParseLine): { i: number; row: number; name: string; seconds: number; text: string; job: SFStageJob; group: boolean }[];
+  /** The leading untimed row pinned through every stage, or null. */
+  export function activityBrief(slide: SFActivitySlide, parseLine: SFParseLine): { row: number; name: string; text: string } | null;
+  /** What a stage puts on the wall and the phone, and its icon. */
+  export function stageCopy(st: { job: string; group?: boolean }): { wall: string; phone: string; icon: string };
+}
+
+declare module '@sf/deck/content.js' {
+  /** "Term<TAB>definition" (or "Term — definition") as its two parts. */
+  export const parseKeywordLine: SFParseLine;
+  /** What the phones may show of a slide at a build step (`at.text`). */
+  export function slideExcerpt(slide: SFActivitySlide, revealed: number): string;
+}

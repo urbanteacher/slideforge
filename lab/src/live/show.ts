@@ -14,6 +14,7 @@ import { boardData, boardOn, type RoomBoard } from './boards';
 import { bossHpOf, trackLengthOf, type Mechanic } from './mechanics';
 import { styleForFormat, styleOf } from './styles';
 import { roomPlay } from './teams';
+import { activityOf, type RoomActivity } from './activities';
 
 /** A question as the room asks and marks it: SlideForge's quiz slide (src/games), with its game. */
 export interface RoomQuiz extends SFQuizSlide {
@@ -43,6 +44,8 @@ export interface RoomSlide {
   results?: boolean;
   /** A board (live/boards): the wall plays it, the teacher commands it, no phone answers. */
   board?: RoomBoard;
+  /** One of SlideForge's activities (live/activities): a routine's stages, or a page the room follows. */
+  act?: RoomActivity;
 }
 
 /** The steps, and how the room plays: individual, or teams with their names (the first game's settings, as classic's buildRunDeck reads them). */
@@ -96,6 +99,9 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
     const g = s.game;
     if (!g?.id) {
       const feedback = feedbackOf(s);
+      // An activity: the room is told SlideForge's slide (its title and excerpt), and a routine runs its stages (live/activities).
+      const act = s.activity ? activityOf(s) : null;
+      if (act) { out.push({ id: s.id, title: act.title, text: act.text, activity: feedback ? 'feedback' : 'content', style: deckStyle, ...(feedback ? { feedback } : {}), act }); return; }
       out.push(feedback
         ? { id: s.id, title: s.name, text: feedback.prompt, activity: 'feedback', style: deckStyle, feedback }
         : { id: s.id, title: s.name, text: '', activity: 'content', style: deckStyle });

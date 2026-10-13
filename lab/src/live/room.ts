@@ -6,6 +6,7 @@ import type { BossView, DripView, RaceView } from './mechanics';
 import { emptySpoken, type SpokenView } from './spoken';
 import { emptySpeed, type SpeedView } from './speedroom';
 import type { BoardEntry } from './boards';
+import type { ActivityView } from './activities';
 import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
@@ -79,16 +80,18 @@ export interface RoomState {
   speed: SpeedView;
   /** Each board's state, by the board step's id (live/boards): kept, frozen, while the show is elsewhere. Set by the host. */
   boards: Record<string, BoardEntry>;
+  /** The activity on the wall (live/activities): its stage, clock, written count, help and spotlights. Set by the host. */
+  activity: ActivityView | null;
 }
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null,
   revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
-  spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {},
+  spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {}, activity: null,
 });
 
-export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' } | { t: 'speed' } | { t: 'board' }) => void;
+export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' } | { t: 'speed' } | { t: 'board' } | { t: 'activity' }) => void;
 
 export class Room {
   private s: RoomState = emptyRoom();
@@ -240,6 +243,12 @@ export class Room {
   setBoard(id: string, entry: BoardEntry): void {
     this.s = { ...this.s, boards: { ...this.s.boards, [id]: entry } };
     this.emit({ t: 'board' });
+  }
+
+  /** The activity on the wall moved: a stage, its clock, a count, a spotlight (null: none on the wall). */
+  setActivity(view: ActivityView | null): void {
+    this.s = { ...this.s, activity: view };
+    this.emit({ t: 'activity' });
   }
 
   /** Questions the room is done with without a reveal of their own: a sprint's run, once the relay has closed it. */

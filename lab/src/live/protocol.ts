@@ -4,6 +4,7 @@
 // shapes they already accept and send. Section numbers are the protocol doc's.
 
 import type { Recipient } from './spoken';
+import type { StageFrame } from './activities/types';
 
 /** A player's response as the relay stores it. Choice: the option index. */
 export type Response = number | string | number[];
@@ -22,7 +23,8 @@ export interface AtFields {
   slideId: string; title: string; n: number; total: number;
   activity: 'content' | 'question' | 'feedback' | 'moment';
   text: string; step: number; style: string; role: string; participation: string; headPrompt: string;
-  stage: null;
+  /** The stage of a timed routine the room is in (activities/desk.ts), null everywhere else. */
+  stage: StageFrame | null;
 }
 
 /** The phone companion fields an `idle` carries (§10). */
@@ -128,7 +130,7 @@ export type RelayMessage =
   | { t: 'sessionReport'; report: unknown }
   | { t: 'sessionClosed'; report: unknown }
   | Other;
-export interface Other { t: 'recording' | 'bookmarks' | 'signals' | 'qa' | 'reaction'; [field: string]: unknown }
+export interface Other { t: 'recording' | 'bookmarks' | 'signals' | 'qa' | 'reaction' | 'wrote'; [field: string]: unknown }
 
 /** The room's phase (§2), as the relay keeps it and the host follows it. */
 export type Phase = 'lobby' | 'running' | 'question' | 'revealed' | 'idle' | 'sprint';
