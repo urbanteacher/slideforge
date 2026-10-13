@@ -50,6 +50,26 @@ const SPECS: Record<string, Spec> = {
     shape: '{"task":"…"}', rules: 'One exam-style task on the topic for students to attempt.',
     tokens: 300, check: (v) => str(v.task), merge: (c, v) => ({ ...c, task: v.task }),
   },
+  'ladder': {
+    shape: '{"question":"…","relation":"… → …","rungs":[{"name":"Unaided","text":"Have a go on your own first."},{"name":"Neutral prompt","text":"“…”"},{"name":"Partial hint","text":"“…”"},{"name":"Model","text":"…"},{"name":"New task","text":"“…”"}],"repair":"…","later":"“…”"}',
+    rules: 'The relation is the link the answer must make, as "a → b". The neutral prompt names no answer; the partial hint gives one piece; the model is a short correct answer; the new task is a near case. "later" is a far case for another lesson; "repair" says what an unasked correct answer looks like.',
+    tokens: 1000, check: (v) => str(v.question) && str(v.relation) && arr(v.rungs, 4) && str(v.later), merge: (c, v) => ({ ...c, ...v }),
+  },
+  'new-case': {
+    shape: '{"relation":"… → … → …","near":"…","far":"…","same":"…"}',
+    rules: 'The relation is the link, as "a → b → c". "near": the same topic, a new case. "far": another context entirely that needs the same link. "same": what stays the same, in one sentence.',
+    tokens: 500, check: (v) => str(v.relation) && str(v.near) && str(v.far), merge: (c, v) => ({ ...c, ...v }),
+  },
+  'keep-apart': {
+    shape: '{"a":{"term":"…","is":"…"},"b":{"term":"…","is":"…"},"test":"…","statements":[{"text":"…","side":"a"},{"text":"…","side":"b"},{"text":"…","side":"a"},{"text":"…","side":"b"},{"text":"…","side":"a"},{"text":"…","side":"b"}]}',
+    rules: 'Two ideas on the topic that students often treat as one. "test" is one question that tells them apart. Six short statements, three true of each.',
+    tokens: 800, check: (v) => str(v.a?.term) && str(v.b?.term) && str(v.test) && arr(v.statements, 4), merge: (c, v) => ({ ...c, ...v }),
+  },
+  'size-answer': {
+    shape: '{"questions":[{"question":"…","command":"State","marks":1,"needs":["one precise point"]},{"question":"…","command":"Describe","marks":2,"needs":["a point","its expansion"]},{"question":"…","command":"Explain","marks":2,"needs":["a point","because…"]}]}',
+    rules: 'Three exam-style questions on the topic with different command words and marks. "needs" is what the answer must contain, one part per mark, in a few words each.',
+    tokens: 700, check: (v) => arr(v.questions, 2) && v.questions.every((q: any) => str(q.question) && Number.isInteger(q.marks) && arr(q.needs)), merge: (c, v) => ({ ...c, ...v }),
+  },
   'model-marks': {
     shape: '{"question":"… [4 marks]","outOf":4,"scheme":[{"marks":"1","needs":"…","falls":"…"},{"marks":"2","needs":"…","falls":"…"},{"marks":"3–4","needs":"…","falls":"…"}],"answers":[{"label":"A","text":"…","marks":0,"why":"…"},{"label":"B","text":"…","marks":2,"why":"…"},{"label":"C","text":"…","marks":4,"why":"…"}]}',
     rules: 'A planning aid in the style of a points-based mark scheme, not any board’s own. Three model answers at different marks, each with a one-line reason.',

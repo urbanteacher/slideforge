@@ -7,6 +7,10 @@ import { labelParts } from './labelParts';
 import { sameWord } from './sameWord';
 import { beforeDuringAfter } from './beforeDuringAfter';
 import { modelMarks } from './modelMarks';
+import { ladder } from './ladder';
+import { newCase } from './newCase';
+import { keepApart } from './keepApart';
+import { sizeAnswer } from './sizeAnswer';
 import type { NodesFormat } from './types';
 import { frameworkSlides, type FrameworkRun } from './framework';
 import { GCSE_CS, TECHNICAL_ANALYSIS } from './frameworkData';
@@ -26,4 +30,4 @@ const framework: NodesFormat<FrameworkRun> = {
 };
 
 export type { NodesFormat } from './types';
-export const NODES: NodesFormat<any>[] = [framework, beforeDuringAfter, joinItUp, labelParts, sameWord, threeAnswers, modelMarks, whichStep]; // eslint-disable-line @typescript-eslint/no-explicit-any
+export const NODES: NodesFormat<any>[] = [framework, ladder, newCase, keepApart, sizeAnswer, beforeDuringAfter, joinItUp, labelParts, sameWord, threeAnswers, modelMarks, whichStep]; // eslint-disable-line @typescript-eslint/no-explicit-any

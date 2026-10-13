@@ -182,6 +182,10 @@ export const QUICK_PICKS: Record<BrowseKind, { id: string; label: string; hint: 
   ],
   nodes: [
     { id: 'n:framework', label: 'Framework', hint: 'Every stage on one topic, from recall on' },
+    { id: 'n:ladder', label: 'Missing-link ladder', hint: 'Support, then a reattempt on your own' },
+    { id: 'n:new-case', label: 'Same link, new case', hint: 'Near and far transfer, no support' },
+    { id: 'n:keep-apart', label: 'Keep them apart', hint: 'Two ideas often treated as one' },
+    { id: 'n:size-answer', label: 'Size the answer', hint: 'Read the marks, not just the word' },
     { id: 'n:join-it-up', label: 'Join it up', hint: 'Build the chain the question needs' },
     { id: 'n:label-parts', label: 'Label the parts', hint: 'Mixed up: point, explained, so, because' },
     { id: 'n:same-word', label: 'Same word, different links', hint: 'One command word, three relationships' },
