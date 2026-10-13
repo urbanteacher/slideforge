@@ -123,4 +123,5 @@ async function main() {
   if (left.length) console.log('Left to convert in the browser (the lab cannot build all of them yet): ' + left.join('; '));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error(e); process.exit(1); });
+// Run directly, not imported by the tests. Compared as paths: a folder with a space in it ("App /") is %20 in the URL.
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) main().catch((e) => { console.error(e); process.exit(1); });
