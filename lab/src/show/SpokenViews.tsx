@@ -4,7 +4,7 @@
 // spoke?"). A pass or a reject names nobody. Real buttons, a labelled picker, live regions for what changes.
 
 import { useEffect, useState } from 'react';
-import { speakerOf, type Recipient } from '../live/spoken';
+import { speakerOf, type Recipient } from '../live';
 import type { Wall } from './wallModel';
 
 export interface SpokenActions {

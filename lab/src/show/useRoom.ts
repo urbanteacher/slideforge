@@ -4,8 +4,7 @@
 // shell's reports, and a relay that does not answer is the show's cue to hand the lesson back to the classic host.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { emptyRoom, LiveHost, ManualBridge, styleFor, teamBoardOf, type RoomShow, type RoomState } from '../live';
-import type { Recipient } from '../live/spoken';
+import { emptyRoom, LiveHost, ManualBridge, styleFor, teamBoardOf, type Recipient, type RoomShow, type RoomState } from '../live';
 import type { ShowHooks } from './hooks';
 import { bindReports, keepReport } from './reports';
 import { timeUpIn } from './clock';

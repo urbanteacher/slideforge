@@ -13,6 +13,7 @@ export { ManualBridge, manualState, newKey, type ChannelLike } from './manual';
 export { showFromDeck, type RoomQuiz, type RoomShow, type RoomSlide } from './show';
 export { feedbackOf, type RoomFeedback } from './feedback';
 export { type BossView, type DripView, type Mechanic, type RaceLane, type RaceView } from './mechanics';
+export { emptySpoken, speakerOf, type ChainModel, type Credit, type Recipient, type RoundView, type SpokenView } from './spoken';
 export { typedGroups, type TypedGroup } from './typed';
 export { STYLES, styleFor, styleForFormat, styleNames, styleOf, type GapsModel, type HeatModel, type LineMark, type LineModel, type SlotsModel, type SortModel, type SplitModel, type StyleEntry, type WallDetail } from './styles';
 export { MAX_TEAMS, TEAM_COLORS, TEAM_DEFAULTS, normalizeTeams, parseRoster, roomPlay, teamBoardOf, teamColor, type Roster, type RoomPlay, type TeamRow } from './teams';

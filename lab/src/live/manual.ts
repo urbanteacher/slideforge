@@ -9,6 +9,7 @@
 
 import type { LiveHost } from './host';
 import type { RoomState } from './room';
+import { emptySpoken } from './spoken';
 import type { RoomQuiz } from './show';
 import { styleFor, STYLES, type ManualChoice, type ManualEntry } from './styles';
 
@@ -33,6 +34,7 @@ export function newKey(): string {
 /** What the window is shown: the room, and the question on the wall, answers marked only once it is revealed. */
 export function manualState(host: Pick<LiveHost, 'state' | 'slide'>): Record<string, unknown> {
   const s = host.state;
+  const sp = s.spoken ?? emptySpoken(), counts = s.oralCounts ?? {};
   const quiz: RoomQuiz | undefined = host.slide?.quiz;
   const revealed = !!quiz && s.revealed.includes(quiz.id);
   const asked = !!quiz && (s.question?.id === quiz.id || revealed);
@@ -40,8 +42,8 @@ export function manualState(host: Pick<LiveHost, 'state' | 'slide'>): Record<str
   return {
     type: 'sf-manual-state', active: !!s.pin && !s.ended, showing: !!host.slide, live: s.live, view: 'roster', report: s.report,
     players: s.players, teams: s.teams, mode: s.mode, pin: s.pin,
-    recipient: s.spoken.recipient, pendingVerdict: quiz && s.spoken.pending?.slideId === quiz.id ? { choice: s.spoken.pending.choice, label: quiz.options[s.spoken.pending.choice] ?? '' } : null,
-    recentSpeakers: s.spoken.recent, handCounts: null, proposals: proposalsOf(s), onTable: quiz && s.spoken.onTable?.slideId === quiz.id ? s.spoken.onTable.text : '', lastCredit: s.spoken.credit, oralCount: quiz ? s.oralCounts[quiz.gameId] ?? 0 : 0,
+    recipient: sp.recipient, pendingVerdict: quiz && sp.pending?.slideId === quiz.id ? { choice: sp.pending.choice, label: quiz.options[sp.pending.choice] ?? '' } : null,
+    recentSpeakers: sp.recent, handCounts: null, proposals: proposalsOf(s), onTable: quiz && sp.onTable?.slideId === quiz.id ? sp.onTable.text : '', lastCredit: sp.credit, oralCount: quiz ? counts[quiz.gameId] ?? 0 : 0,
     question: quiz && asked
       ? { id: quiz.id, question: quiz.question, input: styleFor(quiz).input, options: quiz.options, gaps: styleFor(quiz).manualQuestion?.(quiz).gaps ?? 0, bins: styleFor(quiz).manualQuestion?.(quiz).bins ?? null, spoken: !!styleFor(quiz).spoken, scoreSpoken: quiz.scoreSpoken === true, style: quiz.style, range: styleFor(quiz).range(quiz), revealed }
       : null,
@@ -52,9 +54,9 @@ export function manualState(host: Pick<LiveHost, 'state' | 'slide'>): Record<str
 
 /** The proposals the phones sent into the idea box, with their authors, for the teacher's window (at most 12; `used` is a link already on the chain). */
 function proposalsOf(s: RoomState): { pid: number; name: string; text: string; used: boolean }[] {
-  const f = s.feedback, id = s.spoken.proposalPrompt;
+  const f = s.feedback, id = s.spoken?.proposalPrompt;
   if (!id || !f || f.prompt.id !== id || f.digest?.kind !== 'brainstorm') return [];
-  const mapped = s.spoken.links.map((l) => l.link);
+  const mapped = (s.spoken?.links ?? []).map((l) => l.link);
   return f.digest.items.slice(0, 12).map((it) => ({ pid: it.pid, name: it.name, text: it.text, used: mapped.includes(String(it.text || '').slice(0, 160)) }));
 }
 
