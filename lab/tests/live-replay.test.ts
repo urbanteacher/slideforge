@@ -24,7 +24,7 @@ import { resolve } from 'node:path';
 import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMessage } from '../src/live';
 
 type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
-type Step = { ms: number; what: string; answer?: { playerId: number; choice?: number; text?: string }; names?: string[]; team?: number };
+type Step = { ms: number; what: string; answer?: { playerId: number; choice?: number; text?: string; value?: number }; names?: string[]; team?: number };
 const root = resolve(process.cwd(), '..');
 type Rec = { host: Frame[]; steps: Step[] };
 const load = (name: string) => JSON.parse(readFileSync(resolve(root, `tests/fixtures/sessions/${name}.json`), 'utf8')) as Rec;
@@ -98,7 +98,7 @@ async function replay(rec: Rec, format: string) {
     else if (s.what === 'manual:add') host.manualAdd(s.names!, s.team ?? 0);
     else if (s.what === 'begin') host.begin();
     else if (s.what === 'next') host.next();
-    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.text ?? s.answer!.choice!);
+    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!);
     else if (s.what === 'stop') ended = host.end();
   }
   await ended;
@@ -148,5 +148,19 @@ test('the lab host sends what the classic host sent for a Type answer game', asy
   assert.deepEqual(reveals.map((r) => [r.correct, r.answer]).slice(0, 2), [[-1, 'mitochondria'], [-1, 'Au']]);
   assert.ok(lab.some((f) => f.t === 'manualAnswer' && f.text === 'Paris'), "the teacher's typed entry is sent as text");
   assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
+
+// Slider (format 'slider', a numeric estimate; Time traveler is another format). The wire is a question with input
+// 'number' and the line's range (min, max, step, unit), a reveal with correct -1 and the answer said with its unit,
+// verdicts by the tolerance, and the teacher's number entry as `value`.
+test('the lab host sends what the classic host sent for a Slider game', async () => {
+  const { host, classic, lab } = await replay(load('game-slider'), 'slider');
+  assert.deepEqual(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 2);
+  for (const q of asked) { assert.deepEqual(q.options, []); assert.equal(q.style, 'slider'); assert.equal(q.input, 'number'); assert.ok(q.range); }
+  assert.ok(lab.some((f) => f.t === 'manualAnswer' && f.value === 1990), "the teacher's number entry is sent as value");
+  assert.equal(host.state.revealed.length, 2);
   assert.ok(host.state.ended);
 });
