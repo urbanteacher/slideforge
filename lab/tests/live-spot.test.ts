@@ -28,6 +28,19 @@ test('the registry takes Spot the error by format and by question; the room host
   assert.equal(q.headPrompt, 'There is one error in this sentence. Find it.');
 });
 
+test('a question already compiled (as the lab keeps it, with errorFrom and no `error`) is left as it is', () => {
+  const compiled = { type: 'quiz', style: 'spot', input: 'tap', points: 1000, question: 'Sound travels fastest through a vacuum.', options: ['Sound', 'travels', 'fastest', 'through', 'a', 'vacuum.'], correct: 2, errorFrom: 2, errorTo: 2, fix: 'not at all', answer: 'fastest → not at all', holdResults: true, headPrompt: 'There is one error in this sentence. Find it.', explanation: '' };
+  const d = { title: 'Spot', slides: [
+    slide('c', 'Cover', { id: 'g', format: 'spot-the-error', label: 'Spot the error', role: 'cover', settings: {} } as never),
+    slide('q', 'Q', { id: 'g', format: 'spot-the-error', label: 'Spot the error', role: 'question', key: '0', settings: {}, quiz: compiled } as never),
+  ] };
+  const q = showFromDeck(d).slides.find((s) => s.quiz)!.quiz!;
+  const style = styleForFormat('spot-the-error')!;
+  assert.equal(style.mark(q, 2), true);
+  assert.equal(style.mark(q, 5), false);
+  assert.deepEqual(style.reveal(q), { correct: 2, answer: 'fastest → not at all' });
+});
+
 test("marks, the reveal, the wall's heat and the teacher's word entry", () => {
   const style = styleForFormat('spot-the-error')!;
   const q = showFromDeck(deck).slides.find((s) => s.quiz)!.quiz!;
