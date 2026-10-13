@@ -4,7 +4,7 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, Radio, Smartphone, StickyNote, Trophy, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, Radio, Smartphone, Users, StickyNote, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { ShowSide, presenterUrl, type PresenterCmd, type Screen } from '../presenter';
@@ -14,11 +14,12 @@ import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
 import { Boundary } from './Boundary';
 import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit } from './desk';
 import { PrompterLink, prompterLinkFor } from './prompter';
-import { Elapsed, NotesCard, Overview, ScreenCover } from './ShowTools';
+import { Elapsed, NotesCard, Overview, RehearseCard, ScreenCover } from './ShowTools';
 import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
 import { FeedbackView } from './FeedbackViews';
 import { ReportScreen } from './ReportScreen';
+import { SimulatedClass } from '../rehearse';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
 import { nextAction, wallOf } from './wallModel';
 
@@ -46,7 +47,7 @@ export function ShowLayer() {
 
 function Show() {
   const full = useStore((s) => s.deck);
-  const { room: roomOn, slideId, hooks } = useShow.getState(); // read once: a show is opened plain or as a room, and does not change
+  const { room: roomOn, slideId, hooks, rehearse: rehearse0 } = useShow.getState(); // read once: a show is opened plain or as a room, and does not change
   const deck = useMemo(() => shownDeck(full), []); // the lesson as it was when the show opened
   const { show, steps } = useMemo(() => stepsOf(deck), [deck]);
   const start = useMemo(() => {
@@ -80,6 +81,9 @@ function Show() {
   const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [notesCard, setNotesCard] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  /** Rehearse: the size of the simulated class in the room (0 none), and whether its card is up. */
+  const [rehearsing, setRehearsing] = useState(roomOn ? rehearse0 : 0);
+  const [rehearseCard, setRehearseCard] = useState(false);
   const reportRef = useRef(false);
   reportRef.current = reportOpen;
   const [, repaint] = useState(0);
@@ -107,6 +111,14 @@ function Show() {
   const roomRef = useRef(room);
   roomRef.current = room;
   useEffect(() => { if (room.at >= 0) useShow.setState({ begun: true }); }, [room.at]);
+  // Rehearse: a simulated class joins the real room by its PIN, and leaves when the room ends, the show closes or the PIN changes (a new room).
+  const pin = room.state.pin, over = room.state.ended || finished;
+  useEffect(() => {
+    if (!roomOn || !rehearsing || !pin || over) return;
+    const c = new SimulatedClass({ url: relayUrl(), pin, show, size: rehearsing });
+    c.start();
+    return () => c.stop();
+  }, [roomOn, rehearsing, pin, over, show]);
 
   /** Leave the show: back to the editor, on the slide the show was on. */
   const close = useCallback(() => {
@@ -363,6 +375,11 @@ function Show() {
           onStop={() => { link.current?.stop(); repaint((n) => n + 1); }}
           onCopy={(url) => { void navigator.clipboard?.writeText(url).then(() => say('Notes link copied'), () => say('Could not copy the link')); }} />
       )}
+      {rehearseCard && (
+        <RehearseCard size={rehearsing} inRoom={roomOn} onClose={() => setRehearseCard(false)}
+          onPick={(n) => { setRehearseCard(false); if (roomOn) { setRehearsing(n); say(`A rehearsal class of ${n} is joining`); } else openStudioShow({ room: true, slideId: slide.id, rehearse: n }); }}
+          onStop={() => { setRehearsing(0); say('The rehearsal class has gone home'); }} />
+      )}
       {jump && <div className="show-jump" role="status" aria-label="Go to slide">Go to {jump}</div>}
       <div className="show-toast" role="status" aria-live="polite">{toast}</div>
 
@@ -379,6 +396,7 @@ function Show() {
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
         {roomOn && <button onClick={() => setScoresOn((v) => !v)} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S)"><Trophy size={16} /></button>}
+        {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
         <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F)"><Maximize size={16} /></button>
         {!roomOn && steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled() && (

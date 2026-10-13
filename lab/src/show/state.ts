@@ -15,13 +15,15 @@ interface ShowState {
   hooks: ShowHooks | null;
   /** The room has begun (someone pressed Start): past this the show does not hand the lesson to the classic host. */
   begun: boolean;
+  /** A simulated class of this size joins the room as it opens (Rehearse); 0 for none. */
+  rehearse: number;
 }
 
-export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null, hooks: null, begun: false }));
+export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null, hooks: null, begun: false, rehearse: 0 }));
 
 /** Open the studio's own slideshow on the lesson in the studio, from the slide being edited. */
-export function openStudioShow(opts: { room?: boolean; slideId?: string; hooks?: ShowHooks } = {}): void {
-  useShow.setState({ open: true, begun: false, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId, hooks: opts.hooks ?? useShow.getState().hooks });
+export function openStudioShow(opts: { room?: boolean; slideId?: string; hooks?: ShowHooks; rehearse?: number } = {}): void {
+  useShow.setState({ open: true, begun: false, rehearse: opts.rehearse ?? 0, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId, hooks: opts.hooks ?? useShow.getState().hooks });
 }
 
 export function closeStudioShow(): void {

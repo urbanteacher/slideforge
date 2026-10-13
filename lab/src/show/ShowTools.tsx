@@ -7,6 +7,7 @@ import type { Screen } from '../presenter';
 import { clock } from '../presenter';
 import { gridColumns } from './desk';
 import type { PrompterLink } from './prompter';
+import { SIZES } from '../rehearse';
 import { qrSvg } from './qr';
 
 /** The screen blanked: black or white over the slide (and the wall). Any click, or the same key, brings it back. */
@@ -57,6 +58,21 @@ export function NotesCard({ link, onStop, onClose, onCopy }: { link: PrompterLin
           <p className="card-private">Private: only this link shows your notes. Nobody in the room sees it, and it stops when the show ends.</p>
         </>
       )}
+    </aside>
+  );
+}
+
+/** Rehearse: run the lesson against a simulated class that joins the real room, so the wall fills as a class would. */
+export function RehearseCard({ size, inRoom, onPick, onStop, onClose }: { size: number; inRoom: boolean; onPick: (n: number) => void; onStop: () => void; onClose: () => void }) {
+  return (
+    <aside className="show-card" role="dialog" aria-label="Rehearse" data-testid="rehearse-card">
+      <div className="card-head"><b>Rehearse with a simulated class</b><button onClick={onClose} aria-label="Close">×</button></div>
+      <p>Sample learners join the room by its PIN and answer as a class would: most right, some wrong, some slow. {inRoom ? 'Press Start when they are in.' : 'This opens the lesson as a live room.'}</p>
+      <div className="card-row">
+        {SIZES.map((n) => <button key={n} onClick={() => onPick(n)} aria-pressed={size === n} data-testid={`rehearse-${n}`}>{n}</button>)}
+        {size > 0 && <button className="stop" onClick={onStop} data-testid="rehearse-stop">Send them home</button>}
+      </div>
+      <p className="card-private">They are marked as a simulation by their names only. Their answers are in the room's report, so end a rehearsal before teaching the real class.</p>
     </aside>
   );
 }
