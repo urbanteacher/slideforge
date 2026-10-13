@@ -67,16 +67,13 @@ test('the stylesheet paints every name the renderer will accept', () => {
     'a backdrop blob is mixing with --s-bg again, which may be a gradient');
 });
 
-test('the display sizes are named, and every one of them has a scale', () => {
+test('the display sizes have a scale, and the ramp checks that it fits', () => {
   const src = fs.readFileSync(require.resolve('../src/editor/customize.js'), 'utf8');
-  /* The control and the maths are in different places in the same file, and
-     an option with no scale behind it silently means "theme default" — which
-     is exactly what "make it huge" used to do. */
-  const offered = [...src.matchAll(/\['(small|medium|large|x\d)','[^']+'\]/g)].map((m) => m[1]);
+  /* The Look pane that offered the sizes went with the classic editor (M15
+     step 2); the maths that applies them stayed, and must keep all six. */
   const scales = src.match(/\{small:[^}]+\}/)[0];
-  assert.ok(offered.length >= 6, 'the ramp lost its display steps: ' + offered.join(','));
-  offered.forEach((name) => {
-    assert.match(scales, new RegExp('\\b' + name + ':'), name + ' is offered with no scale behind it');
+  ['small', 'medium', 'large', 'x2', 'x3', 'x5'].forEach((name) => {
+    assert.match(scales, new RegExp('\\b' + name + ':'), name + ' has no scale');
   });
   /* And it fits what it grows: five times a 76px heading is 380px, which does
      not fit a 720px slide with a subtitle under it. */

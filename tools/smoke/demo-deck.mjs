@@ -451,45 +451,19 @@ try {
   }
   assert.ok(disagreements <= 2, `the picker disagreed with its own result ${disagreements} times`);
 
-  /* --- Formatting: the app's own canvas editor, not a lab copy --- */
-  await page.click('#demo-reset');
-  await settled();
-  await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
-  assert.ok(await page.evaluate(() => !!(window.SF.Custom && window.SF.Custom.openCanvasEditor)), 'SF.Custom is not loaded');
-  const line = page.locator('#demo-deck .safe-slot li[contenteditable]').first();
-  await line.dblclick();
-  await page.waitForSelector('#demo-deck .canvas-edit-form');
-  assert.deepEqual(
-    await page.locator('#demo-deck .format-tools button').allInnerTexts(),
-    ['B', 'I', 'U', '\u25b0', 'Clear', 'Link'],
-    'the format toolbar is not the shared one'
+  /* The in-place canvas editor went with the classic editor (M15 step 2);
+     SF.Custom keeps paint, layout, apply, rebase and entry. */
+  assert.ok(
+    await page.evaluate(() => !!(window.SF.Custom && window.SF.Custom.paint && window.SF.Custom.apply)),
+    'SF.Custom is not loaded'
   );
-  const area = page.locator('#demo-deck .canvas-edit-form textarea');
-  const words = (await area.inputValue()).split(' ').slice(0, 3).join(' ');
-  await area.evaluate((el, n) => {
-    el.focus();
-    el.setSelectionRange(0, n);
-    el.dispatchEvent(new Event('select'));
-  }, words.length);
-  await page.locator('#demo-deck .format-tools button', { hasText: 'B' }).first().click();
-  await page.locator('#demo-deck .canvas-edit-form button', { hasText: /save/i }).first().click();
-  await settled();
-  /* Marks must paint through the renderer's own path, so they survive a re-render. */
-  const bold = await page.evaluate(() =>
-    [...document.querySelectorAll('#demo-deck .safe-slot li span')]
-      .filter((s) => getComputedStyle(s).fontWeight === '800')
-      .map((s) => s.textContent));
-  assert.ok(bold.length, 'nothing was painted bold');
-  assert.ok(words.startsWith(bold[0]) || bold[0].startsWith(bold[0]), 'the wrong run was bolded');
-  await page.click('#demo-reset');
-  await settled();
 
   if (errors.length) throw new Error(`page errors: ${errors.slice(0, 3).join('; ')}`);
 
   console.log(
     `ok · demo-deck ${summary.fit}/${summary.total} fit · ${summary.needSpace} need space · ` +
       `${summary.underFloor} under the 20px floor (smallest ${summary.smallest}px) · ` +
-      `rearrange budget-neutral, no column drift · picker matches the editor, predicts fit and admits when it is wrong · format toolbar paints`
+      `rearrange budget-neutral, no column drift · picker matches the editor, predicts fit and admits when it is wrong`
   );
 } finally {
   await browser.close();
