@@ -732,3 +732,36 @@ test('the Motion lab’s specimens come into the lab on its scene layer, each in
   const made = deckFromSlideForge(asData({ id: 'x', title: 'X', theme: 'studio', slides: [odd] }), 'nul', { games: '', frame: false });
   assert.ok(!made.slides[0].layers.some((l) => l.kind === 'scene'));
 });
+
+/** A lesson with quiz slides an older SlideForge deck authored directly, left where they stood. */
+function withOldQuizzes(key) {
+  const src = lesson(key);
+  const quiz = (id, question, correct) => ({ id, type: 'quiz', question, options: ['Red', 'Green', 'Blue', 'Gold'], correct, timeLimit: 20, notes: 'Say why.' });
+  src.slides.splice(2, 0, quiz('old-q1', 'Which colour is the accent?', 1));
+  src.slides.splice(4, 0, quiz('old-q2', 'Which colour is the ground?', 2));
+  return src;
+}
+
+test('a quiz slide left in a lesson comes in as a question and its answer, the lesson’s questions one game (M13)', { skip }, async () => {
+  const { deckFromSlideForge, convertsSlide } = await converter();
+  const src = withOldQuizzes('layout-bank');
+  const [q1, q2] = src.slides.filter((s) => s.type === 'quiz');
+  assert.ok(convertsSlide(q1));
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const of = (q) => deck.slides.filter((s) => s.sourceSlideId === q.id);
+  for (const q of [q1, q2]) {
+    const made = of(q);
+    assert.deepEqual(made.map((s) => s.game.role), ['question', 'answer'], `${q.question} is asked, then answered`);
+    assert.equal(made[0].game.quiz.question, q.question);
+    assert.equal(made[0].game.quiz.correct, q.correct);
+    assert.equal(made[0].game.quiz.style, 'choice');
+    assert.equal(made[0].game.look, 'buttons', 'as SlideForge showed it');
+    assert.match(made[0].notes, /Say why/);
+  }
+  assert.equal(of(q1)[0].game.id, of(q2)[0].game.id, 'one game, scored together');
+  // Where they stood: the question after the lab slide of the slide before it.
+  const at = deck.slides.indexOf(of(q1)[0]);
+  assert.equal(deck.slides[at - 1].sourceSlideId, src.slides[1].id);
+  // A question with no words asks nothing, and stays SlideForge's.
+  assert.equal(convertsSlide({ id: 'x', type: 'quiz', question: '' }), false);
+});
