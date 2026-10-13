@@ -35,6 +35,8 @@ export interface QuestionFields {
   headPrompt?: string;
   /** Predict the outcome / True or false showdown / Time traveler: the flags classic's question frame carries. */
   predict?: true; showdown?: true; timeTravel?: true; timeline?: unknown[];
+  /** Emoji guess: the clues as the phone draws them. */
+  clueMode?: 'emoji'; clues?: string;
 }
 
 /** A feedback `prompt` (§9): what the room is asked, with the fields classic sends (js/live.js syncPrompt). `ends` is a scale's two
@@ -67,6 +69,7 @@ export type HostMessage =
   | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string; gains?: [number, number][] }
   | { t: 'closeAnswers'; id: string }
   | { t: 'showdown'; id: string }
+  | { t: 'hintOut'; id: string }
   | { t: 'manualAdd'; names: string[]; team: number }
   | ({ t: 'manualAnswer' } & ManualAnswerFields)
   | { t: 'manualRename'; playerId: number; name: string }

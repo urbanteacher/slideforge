@@ -159,7 +159,9 @@ function Show() {
     const act = nextAction({ room: r.state, steps, at: r.at, sinceAsked: r.sinceAsked() });
     if (act === 'start') { r.begin(stepAt(steps, p.index)); return; }
     if (act === 'wait' && (r.at < 0 || r.state.phase === 'lobby')) { say('Waiting for players to join'); return; }
-    if (p.settle() || p.build()) return;
+    if (p.settle()) return;
+    // A build of the slide on an open question is a step of its help (Emoji guess), which the room releases with it.
+    if (p.build()) { if (act === 'wait' || act === 'reveal') r.release(); return; }
     if (act === 'ask' || act === 'reveal' || act === 'advance') r.next();
     else if (act === 'wait') say('Give them a moment, then press Next to show the answer');
     else if (act === 'end') exit();

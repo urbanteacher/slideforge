@@ -105,6 +105,8 @@ export interface StyleEntry {
   gate?: 'closeAnswers' | 'showdown';
   /** Flags the question frame carries beside the style's own (classic's `predict`, `showdown`). */
   flags?(q: RoomQuiz): Partial<QuestionFields>;
+  /** Help the teacher releases a step at a time while the question is open, before the reveal (Emoji guess: the letter pattern, then the hint, one per Next). The hint is the last one; the relay halves the points of answers given after it (`hintOut`). */
+  help?(q: RoomQuiz): ('pattern' | 'hint')[];
   /** The game's questions as one set, once they are all compiled (Time traveler: one line for the game, a timeline that grows). */
   link?(qs: RoomQuiz[]): void;
   /** The room is never revealed by itself (everyone answered): only the teacher reveals. */

@@ -376,20 +376,29 @@ function emojiWall(st: LayoutStyle, name: string, q: Q, i: number, n: number, an
   if (answer) o.layers.push(...answerRow(st, q.answer ?? '', o.top));
   else {
     const pattern = String(q.answer ?? '').split('').map((ch, k) => (ch === ' ' ? '  ' : k === 0 ? ch.toUpperCase() : '_')).join(' ');
-    const support = grid(st, [{ text: pattern }, { text: q.hint ?? '' }], o.top, { cols: 2, max: 52, min: 36, name: 'Support', lines: 2 }).layers;
-    // Each half of the support is a click of its own: the pattern, then the hint.
-    support.forEach((l) => { const half = /^Support 2/.test(l.name) ? 1 : 0; l.anim = { ...l.anim, type: 'fade', duration: 0.5, delay: 0, trigger: 'onClick', step: { set: 'support', i: half, mode: 'on' } }; });
-    o.layers.push(...support);
+    o.layers.push(...grid(st, [{ text: pattern }, { text: q.hint ?? '' }], o.top, { cols: 2, max: 52, min: 36, name: 'Support', lines: 2 }).layers);
   }
-  const s = slideOf(named(name, i, answer), o.layers, st, answer ? note(q) : `Stuck? Click for the support this difficulty allows. Answers after the hint score half. Answer: ${q.answer ?? ''}`);
+  const s = slideOf(named(name, i, answer), o.layers, st, answer ? note(q) : `Stuck? Click for the next help (the hint is last). Answers after the hint score half. Answer: ${q.answer ?? ''}`);
   emojiSupport(s, level);
   return s;
 }
-/** What support an emoji puzzle gives, by its difficulty: easy the letter pattern and the hint, medium
- *  the pattern only, hard none. The layers stay on the slide, hidden, so a change of mind brings them back. */
+/** What support an emoji puzzle gives, by its difficulty, as the room releases it (live/styles/emoji.ts): the letter pattern
+ *  is on the slide from the start when easy, a click when medium, and absent when hard; the hint is the last click, whenever
+ *  the puzzle has one. The layers stay on the slide, hidden, so a change of mind brings them back. */
 export function emojiSupport(s: Slide, difficulty = 'medium') {
-  const keep = difficulty === 'easy' ? 2 : difficulty === 'hard' ? 0 : 1;
-  for (const l of s.layers) { const m = l.name.match(/^Support (\d)/); if (m) l.visible = Number(m[1]) <= keep; }
+  const click = (l: Layer, i: number) => { l.anim = { ...l.anim, type: 'fade', duration: 0.5, delay: 0, trigger: 'onClick', step: { set: 'support', i, mode: 'on' } }; };
+  for (const l of s.layers) {
+    const m = l.name.match(/^Support (\d)/);
+    if (!m) continue;
+    if (m[1] === '1') {
+      l.visible = difficulty !== 'hard';
+      if (difficulty === 'medium') click(l, 0);
+      else { const { step: _step, ...rest } = l.anim ?? ({} as Anim); l.anim = { ...rest, type: 'fade', duration: 0.5, delay: 0, trigger: 'withSlide' }; }
+    } else {
+      l.visible = String(l.params.text ?? '').trim() !== '';
+      click(l, difficulty === 'medium' ? 1 : 0);
+    }
+  }
 }
 
 // ─── Word reveal ────────────────────────────────────────────────────────────

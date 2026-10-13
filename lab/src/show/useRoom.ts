@@ -27,6 +27,8 @@ export interface RoomApi {
   askedAt: () => number;
   begin: (step: number) => void;
   next: () => void;
+  /** The slide built a step of its help (Emoji guess): the room releases the same one. */
+  release: () => void;
   goTo: (step: number) => void;
   /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
   closeFeedback: () => void;
@@ -128,6 +130,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     askedAt: () => asked.current,
     begin: (step) => { host.current?.goTo(step); host.current?.begin(); sync(); },
     next: () => { host.current?.next(); sync(); },
+    release: () => { host.current?.release(); sync(); },
     goTo: (step) => { host.current?.goTo(step); sync(); },
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),

@@ -57,6 +57,8 @@ export class LiveHost {
   /** A style with a reading phase (Definition challenge): the questions whose reading is over (asked), and the reading clock. */
   private readDone = new Set<string>();
   private readTimer: ReturnType<typeof setTimeout> | null = null;
+  /** How many of a question's help steps the teacher has released (a style with `help`), by question id. */
+  private helped = new Map<string, number>();
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
   constructor(private readonly opts: HostOptions) {
@@ -103,10 +105,24 @@ export class LiveHost {
     if (q && this.begun && !this.state.revealed.includes(q.id)) {
       if (this.state.phase === 'question' && this.state.question?.id === q.id) {
         // A style with a step before its reveal (lock the predictions, show the split) takes it on the first Next.
-        if (!this.gate()) this.reveal();
+        if (!this.release() && !this.gate()) this.reveal();
       } else if (this.reading()) this.ask();
       else this.land();
     } else if (this.at < this.opts.show.slides.length - 1) this.goTo(this.at + 1);
+  }
+
+  /** Release the next help step of the open question (Emoji guess: the letter pattern, then the hint), as classic's builds do:
+   *  the hint is `hintOut` first (the relay halves what is answered after it), then the step on `at`. False when there is none left. */
+  release(): boolean {
+    const s = this.slide, q = s?.quiz;
+    if (!s || !q || !this.begun || this.state.phase !== 'question' || this.state.question?.id !== q.id || this.state.revealed.includes(q.id)) return false;
+    const steps = styleFor(q).help?.(q) ?? [];
+    const n = this.helped.get(q.id) ?? 0;
+    if (n >= steps.length) return false;
+    this.helped.set(q.id, n + 1);
+    if (steps[n] === 'hint') this.send({ t: 'hintOut', id: q.id });
+    this.send({ t: 'at', ...this.atFields(s, 'question', false) });
+    return true;
   }
 
   /** The question on the wall is in its reading phase (a style that has one, before it is asked). */
@@ -310,7 +326,7 @@ export class LiveHost {
 
   private atFields(s: RoomSlide, activity: AtFields['activity'], reading = false): AtFields {
     const c = s.quiz && activity === 'question' ? styleFor(s.quiz).companion?.(s.quiz, reading ? 'reading' : 'asking') : undefined;
-    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: 0, style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '', stage: null };
+    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: s.quiz && activity === 'question' ? this.helped.get(s.quiz.id) ?? 0 : 0, style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '', stage: null };
   }
 
   private questionFields(q: RoomQuiz): QuestionFields {
