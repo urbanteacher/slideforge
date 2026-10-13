@@ -8,8 +8,10 @@ import { defineStyle } from './types';
 
 export const spot = defineStyle({
   key: 'spot', name: 'Spot the error', formats: ['spot-the-error'], input: 'tap',
-  // The style's own normalize and compile (src/games/spot.js): the words as options, the error's span, the answer said, the heading.
+  // The style's own normalize and compile (src/games/spot.js): the words as options, the error's span, the answer said, the
+  // heading. A lab question is already compiled (it carries `errorFrom`, not the author's `error`): it is left as it is.
   prepare(q) {
+    if (q.errorFrom != null || !q.error) return;
     const st = gameStyle('spot');
     st.normalize?.(q);
     st.compile?.(q, {}, q);
