@@ -110,10 +110,10 @@ A challenge that runs the **whole framework** on one topic, not one stage, for e
 
 The Nodes app (`~/Desktop/Nodes`: the deck's seven findings, `src/data/research/research.json`, `answers-review.ts`, `answer-routine.ts`, `stage-ladders.ts`, `distinctions.ts`, `relationships.ts`, `research-roadmap.ts`) makes 46 findings and recommendations. The formats cover most; these are not covered yet, most central first:
 
-1. **Support is not understanding** (Study 2; the taught-linkage checklist's two "Not found" items: progressively less support, and checking independent use). Build the **Missing-link ladder**: attempt, neutral prompt, partial hint, model, then an independent reattempt with the support hidden, and a delayed "come back later" check.
-2. **Transfer:** 0 of 495 exam parts ask for strict transfer. A **Same link, new case** format: the stage's join, then a near item and a far item, unsupported.
-3. **Two ideas treated as one:** 300 of 662 named wrong ideas. Build **Keep them apart** from `distinctions.ts`: the pair, the one test that tells them apart, then sort. It covers name vs value and agency words ("a register only holds").
-4. **Read the marks, not the word:** Identify asked for more than a bare term in 35 of 54 parts, Explain in 0 of 16. Build **Size the answer**: command word plus marks gives the join's size.
+1. **Done (14 October)** · **Support is not understanding** (Study 2; the taught-linkage checklist's two "Not found" items: progressively less support, and checking independent use). Build the **Missing-link ladder**: attempt, neutral prompt, partial hint, model, then an independent reattempt with the support hidden, and a delayed "come back later" check.
+2. **Done (14 October)** · **Transfer:** 0 of 495 exam parts ask for strict transfer. A **Same link, new case** format: the stage's join, then a near item and a far item, unsupported.
+3. **Done (14 October)** · **Two ideas treated as one:** 300 of 662 named wrong ideas. Build **Keep them apart** from `distinctions.ts`: the pair, the one test that tells them apart, then sort. It covers name vs value and agency words ("a register only holds").
+4. **Done (14 October)** · **Read the marks, not the word:** Identify asked for more than a bare term in 35 of 54 parts, Explain in 0 of 16. Build **Size the answer**: command word plus marks gives the join's size.
 5. **Understanding, not memory:** comprehension 305 against recall 71. A "say it, then break it" probe (own words, then a case where it fails) in the Framework's Understand stages or Keep them apart.
 6. **Skill or knowledge:** paired A/B items (research.json `levers`). A "Two versions" format.
 7. **Lever 2 (between, inclusive, or)** and **lever 3 (endpoints and zero, fenceposts, traces run to the end):** variants of Keep them apart and Which step broke?.
@@ -121,7 +121,9 @@ The Nodes app (`~/Desktop/Nodes`: the deck's seven findings, `src/data/research/
 9. **Confidence** before and after (Before, during, after), and **Watch out for** recurring wrong ideas in Three answers' feedback.
 10. **More relationships** in Same word, different links: sequence, context, comparison and judgement as well (`relationships.ts`).
 
-Fixed the same day: Which step broke? now uses the Nodes answer routine's own steps (Decode, Retrieve, Reason, Refine, Review) and shows each step's share of the 2,191 mistakes (24, 46, 7, 8, 14%).
+Built on 14 October: Missing-link ladder (attempt, rungs, a reattempt with the support hidden, and a come-back-later check), Same link new case (near and far, unsupported), Keep them apart (from `distinctions.ts`), and Size the answer (command word and marks). Each has Write it with AI.
+
+Fixed on 13 October: Which step broke? now uses the Nodes answer routine's own steps (Decode, Retrieve, Reason, Refine, Review) and shows each step's share of the 2,191 mistakes (24, 46, 7, 8, 14%).
 
 Most counts are model-coded; none of the 2,191 findings has been checked by a teacher yet, and the ladders, distinctions and relationship tags are drafts untested with students.
 
