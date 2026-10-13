@@ -17,13 +17,18 @@ interface ShowState {
   begun: boolean;
   /** A simulated class of this size joins the room as it opens (Rehearse); 0 for none. */
   rehearse: number;
+  /** What the shell asked the show to put up first: the Teacher Presenter window ('desk') or the notes card ('notes'). */
+  first: ShowFirst | null;
 }
 
-export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null, hooks: null, begun: false, rehearse: 0 }));
+/** What a show opens with already up (the shell's Teacher Presenter and Notes on another device, M15). */
+export type ShowFirst = 'desk' | 'notes';
+
+export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null, hooks: null, begun: false, rehearse: 0, first: null }));
 
 /** Open the studio's own slideshow on the lesson in the studio, from the slide being edited. */
-export function openStudioShow(opts: { room?: boolean; slideId?: string; hooks?: ShowHooks; rehearse?: number } = {}): void {
-  useShow.setState({ open: true, begun: false, rehearse: opts.rehearse ?? 0, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId, hooks: opts.hooks ?? useShow.getState().hooks });
+export function openStudioShow(opts: { room?: boolean; slideId?: string; hooks?: ShowHooks; rehearse?: number; first?: ShowFirst } = {}): void {
+  useShow.setState({ open: true, begun: false, rehearse: opts.rehearse ?? 0, first: opts.first ?? null, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId, hooks: opts.hooks ?? useShow.getState().hooks });
 }
 
 export function closeStudioShow(): void {

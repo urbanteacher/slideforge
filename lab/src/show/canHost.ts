@@ -43,3 +43,17 @@ export function canHostInStudio(deck: DeckLike): CanHost {
   const asks = slides.some((s) => (s.game?.role === 'question' && s.game.quiz) || (!s.game && feedbackOf(s)));
   return asks ? { ok: true, reason: '' } : { ok: false, reason: `the lesson has no ${styleNames()} question or feedback prompt to ask` };
 }
+
+/** Why a plain show of this lesson (no room) must be SlideForge's own, or '' when the studio's show can run it
+ *  (lab-engine-plan M15). The same blockers as canHostInStudio, without the clause that the lesson must ask a
+ *  question: a lesson with no questions is the commonest one to present. A lesson with every slide hidden has
+ *  nothing to show. The shell's Present, Teacher Presenter and Notes ask before they open the studio's show. */
+export function whyNotPresentInStudio(deck: DeckLike): string {
+  const slides = deck.slides.filter((s) => !s.hidden);
+  if (!slides.length) return 'the lesson has no shown slide';
+  for (const s of slides) {
+    const why = blocker(s);
+    if (why) return why;
+  }
+  return '';
+}

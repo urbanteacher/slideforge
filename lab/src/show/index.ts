@@ -8,7 +8,7 @@
 //   studioShowEnabled()                 ?studioShow=1 (the TopBar's Present (studio), until the shell's Present is switched, M15)
 //   studioRoomEnabled()                 ?studioRoom=1 (on this page, or on the page around the shell's frame)
 export { ShowLayer } from './Show';
-export { closeStudioShow, openStudioShow, studioRoomEnabled, studioShowEnabled } from './state';
+export { closeStudioShow, openStudioShow, studioRoomEnabled, studioShowEnabled, type ShowFirst } from './state';
 export { hasRoomGame } from './steps';
-export { canHostInStudio, type CanHost } from './canHost';
+export { canHostInStudio, whyNotPresentInStudio, type CanHost } from './canHost';
 export type { ShowHooks, SessionRef } from './hooks';

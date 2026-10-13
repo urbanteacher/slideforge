@@ -6,8 +6,9 @@
 export interface SessionRef { id: string; token?: string; title: string; createdAt: number }
 
 export interface ShowHooks {
-  /** The show has closed: the shell takes the screen back (the frame is no longer full screen). */
-  exited?: () => void;
+  /** The show has closed: the shell takes the screen back (the frame is no longer full screen). `slideId` is the
+   *  lab slide the show ended on, when it is known (the editor is already on it; the shell may use it too). */
+  exited?: (slideId?: string) => void;
   /** The studio's room could not start (or the show broke before anyone was in it): the shell hosts the lesson
    *  the classic way instead. The show has already closed. */
   fallback?: (reason: string) => void;

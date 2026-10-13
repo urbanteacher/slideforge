@@ -135,7 +135,7 @@ function Show() {
     const id = deck.slides[player.current?.index ?? 0]?.id;
     if (id) useStore.getState().selectSlide(id);
     useShow.setState({ open: false, room: false });
-    hooks?.exited?.();
+    hooks?.exited?.(id);
   }, [deck, hooks]);
 
   // Esc, End and the end of the lesson. A room that has begun is ended first and its final standings stay up, with
@@ -348,6 +348,13 @@ function Show() {
     const w = window.open(presenterUrl(), 'slideforge-presenter', 'width=1180,height=780');
     if (!w) say('Pop-ups are blocked. Allow them to use the Teacher Presenter.'); else w.focus();
   };
+  // The shell's Teacher Presenter and Notes on another device open the show with the desk, or the notes card, already up.
+  useEffect(() => {
+    const first = useShow.getState().first;
+    if (first === 'desk') openPresenter();
+    else if (first === 'notes') notesElsewhere();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const openEntry = () => {
     const hash = room.manualHash();
     if (!hash) { say('The room is not open yet'); return; }

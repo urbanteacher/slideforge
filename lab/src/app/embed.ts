@@ -3,7 +3,7 @@ import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, c
 import { imageSettled } from '../engine';
 import { renderStill, editableSlides, exportPptx, type SlideFormat } from '../export';
 import { enterView, useStore, type LabView } from '../store';
-import { canHostInStudio, openStudioShow, type ShowHooks } from '../show';
+import { canHostInStudio, openStudioShow, whyNotPresentInStudio, type ShowFirst, type ShowHooks } from '../show';
 import { saveSlide } from '../ui';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
@@ -375,14 +375,19 @@ export const labApi = {
     return true;
   },
   /** A plain show of the lesson in the studio (M11a): no room, with the Teacher Presenter window, notes on another
-   *  device, black and white screens, the overview and the jump. The shell's Present will call this at M15; until then
-   *  it is only offered by ?studioShow=1. `hooks` is what the shell lends the show (exited, toast). */
-  presentInStudio(hooks?: ShowHooks): boolean {
+   *  device, Draw, black and white screens, the overview and the jump. The shell's Present, Teacher Presenter and
+   *  Notes on another device call this (M15) when `whyNotPresentInStudio` says nothing. `hooks` is what the shell
+   *  lends the show (exited, which carries the slide the show ended on, and toast); `first` puts the Teacher
+   *  Presenter window ('desk') or the notes card ('notes') up as the show opens. */
+  presentInStudio(hooks?: ShowHooks, first?: ShowFirst): boolean {
     const st = useStore.getState();
     if (!st.deck.slides.some((s) => !s.hidden)) return false;
-    openStudioShow({ room: false, slideId: st.slideId, hooks });
+    openStudioShow({ room: false, slideId: st.slideId, hooks, first });
     return true;
   },
+  /** Why Present would not run in the studio's show ('' when it can): a game, activity or figure the studio does not
+   *  run yet keeps the lesson on SlideForge's own show. */
+  whyNotPresentInStudio: (): string => whyNotPresentInStudio(useStore.getState().deck),
   /** Why Host live would not run in the studio's room (for the shell's note to the console and the tests). */
   whyNotInStudio: (): string => canHostInStudio(useStore.getState().deck).reason,
   /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The
