@@ -7,7 +7,7 @@ import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMess
 import { bossHpOf, type Mechanic } from '../src/live/mechanics';
 
 export type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
-export type Step = { ms: number; what: string; answer?: { id?: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; fill?: number[]; sort?: number[] }; names?: string[]; team?: number; recipient?: unknown; choice?: number; pid?: number; text?: string };
+export type Step = { ms: number; what: string; answer?: { id?: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; fill?: number[]; sort?: number[] }; names?: string[]; team?: number; recipient?: unknown; choice?: number; pid?: number; text?: string; button?: string };
 export const root = resolve(process.cwd(), '..');
 export type Rec = { host: Frame[]; steps: Step[] };
 export const load = (name: string) => JSON.parse(readFileSync(resolve(root, `tests/fixtures/sessions/${name}.json`), 'utf8')) as Rec;
@@ -80,7 +80,8 @@ export function assertSame(lab: Record<string, unknown>[], classic: Record<strin
 }
 
 /** Feed a recording to the lab host and return it, the frames it sent, and the classic frames, normalised. */
-export async function replay(rec: Rec, format: string, scores = true, tweak?: (show: RoomShow) => void) {
+/** `onStep`: a recorder step the kit does not know (a board's buttons), for the test to play on the host. */
+export async function replay(rec: Rec, format: string, scores = true, tweak?: (show: RoomShow) => void, onStep?: (s: Step, host: LiveHost) => void) {
   const sock = new Recorded();
   const show = recordedShow(rec, format, scores);
   tweak?.(show);
@@ -117,6 +118,7 @@ export async function replay(rec: Rec, format: string, scores = true, tweak?: (s
     else if (s.what === 'manual:verdictRoom') host.verdictRoom();
     else if (s.what === 'manual:revealWith') host.revealWith(s.choice!);
     else if (s.what === 'stop') ended = host.end();
+    else onStep?.(s, host);
   }
   await ended;
 
