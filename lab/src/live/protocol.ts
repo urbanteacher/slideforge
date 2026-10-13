@@ -33,6 +33,8 @@ export interface QuestionFields {
   input: 'choice' | 'text' | 'number' | 'order'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
   confidence: boolean; range: { min: number; max: number; step: number; unit: string } | null; options: string[]; timeLimit: number; points: number; style: string;
   headPrompt?: string;
+  /** Predict the outcome / True or false showdown / Time traveler: the flags classic's question frame carries. */
+  predict?: true; showdown?: true; timeTravel?: true; timeline?: unknown[];
 }
 
 /** A feedback `prompt` (§9): what the room is asked, with the fields classic sends (js/live.js syncPrompt). `ends` is a scale's two
@@ -63,6 +65,8 @@ export type HostMessage =
   | ({ t: 'idle' } & Companion)
   | ({ t: 'question' } & QuestionFields)
   | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string; gains?: [number, number][] }
+  | { t: 'closeAnswers'; id: string }
+  | { t: 'showdown'; id: string }
   | { t: 'manualAdd'; names: string[]; team: number }
   | ({ t: 'manualAnswer' } & ManualAnswerFields)
   | { t: 'manualRename'; playerId: number; name: string }

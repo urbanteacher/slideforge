@@ -98,8 +98,12 @@ export class LiveHost {
   next(): void {
     const q = this.slide?.quiz;
     if (q && this.begun && !this.state.revealed.includes(q.id)) {
-      if (this.state.phase === 'question' && this.state.question?.id === q.id) this.reveal();
-      else this.land();
+      if (this.state.phase === 'question' && this.state.question?.id === q.id) {
+        // A style with a step before its reveal (lock the predictions, show the split) takes it on the first Next.
+        const gate = styleFor(q).gate;
+        if (gate && !this.state.gated.includes(q.id)) this.send({ t: gate, id: q.id });
+        else this.reveal();
+      } else this.land();
     } else if (this.at < this.opts.show.slides.length - 1) this.goTo(this.at + 1);
   }
 
@@ -290,6 +294,7 @@ export class LiveHost {
     };
     const head = style.companion?.(q).headPrompt || q.headPrompt;
     if (head) f.headPrompt = head;
+    Object.assign(f, style.flags?.(q));
     return f;
   }
 

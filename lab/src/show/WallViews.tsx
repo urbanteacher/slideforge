@@ -122,7 +122,7 @@ export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
   const unmarked = d.kind === 'bars' && d.unmarked;
   const said = (
     <p className="tally-said" role="status" aria-live="polite" data-testid="reveal-said">
-      {unmarked ? `The prepared odd one out: ${q.answer}.` : `Answer: ${q.answer}. ${q.right} of ${q.answered} got it right.`}{q.explanation ? ` ${q.explanation}` : ''}
+      {q.locked ? `Predictions locked: ${q.answered} of ${q.players}. The answer comes next.` : unmarked ? `The prepared odd one out: ${q.answer}.` : `Answer: ${q.answer}. ${q.right} of ${q.answered} got it right.`}{q.explanation ? ` ${q.explanation}` : ''}
     </p>
   );
   if (d.kind === 'line') return <div className="wall-strip wall-tally tally-line" data-testid="tally">{d.line && <NumberLine line={d.line} />}{said}</div>;

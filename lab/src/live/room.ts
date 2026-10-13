@@ -49,6 +49,8 @@ export interface RoomState {
   feedback: OpenFeedback | null;
   /** Question ids the relay has revealed. */
   revealed: string[];
+  /** Question ids whose gate step the host has sent (`closeAnswers`: predictions locked; `showdown`: the split shown). */
+  gated: string[];
   /** The last refusal of a teacher entry. */
   manualError: { message: string; playerId?: number; id?: string } | null;
   /** The last `error` or `rehostFailed` reason. */
@@ -61,7 +63,7 @@ export interface RoomState {
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null,
-  revealed: [], manualError: null, error: null, report: null, recording: null,
+  revealed: [], gated: [], manualError: null, error: null, report: null, recording: null,
 });
 
 export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' }) => void;
@@ -104,6 +106,7 @@ export class Room {
         this.askedInput = m.input;
         break;
       case 'reveal': this.pendingReveal = m.id; this.pendingOpen = m.correct < 0 || this.askedInput !== 'choice'; break;
+      case 'closeAnswers': case 'showdown': s.gated = s.gated.includes(m.id) ? s.gated : [...s.gated, m.id]; break;
       case 'finish': s.phase = 'idle'; break;
       case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; break;
       case 'promptEnd': s.feedback = null; break;

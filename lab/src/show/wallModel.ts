@@ -29,6 +29,8 @@ export interface Wall {
     /** The question's style key. */
     style: string;
     answered: number; players: number; timeLimit: number;
+    /** A style's gate step is taken (predictions locked, the split shown) and the answer is still hidden: the bars are up, the answer is not. */
+    locked: boolean;
     /** Reveal only: how many of the answers were right. */
     right: number;
     /** Reveal only: the right answer, and why. */
@@ -113,7 +115,8 @@ export function wallOf(i: WallInput): Wall {
       n: steps.slice(0, at + 1).filter((s) => s.room.quiz).length, total: steps.filter((s) => s.room.quiz).length, text: quiz.question, style: String(quiz.style ?? 'choice'),
       options: options.map((label, index) => ({ index, label, count: counts[index], correct: revealed && index === quiz.correct })),
       right: revealed ? answers.filter((a) => style.mark(quiz, a.response)).length : 0,
-      detail: style.wall(quiz, answers, revealed),
+      detail: style.wall(quiz, answers, revealed, room.gated.includes(quiz.id)),
+      locked: !revealed && !!style.gate && room.gated.includes(quiz.id),
       answered: t?.answered ?? 0, players: t?.total ?? room.players.filter((p) => p.connected).length, timeLimit: room.question?.timeLimit ?? 0,
       answer: revealed ? style.reveal(quiz).answer : '', explanation: revealed ? quiz.explanation ?? '' : '',
     };

@@ -10,7 +10,7 @@
 // Pure: no React, no DOM, no socket.
 
 import { answerLabel, markResponse } from '@sf/games/registry.js';
-import type { Response, TallyAnswer } from '../protocol';
+import type { QuestionFields, Response, TallyAnswer } from '../protocol';
 import type { RoomQuiz } from '../show';
 import type { TypedGroup } from '../typed';
 
@@ -52,6 +52,9 @@ export type WallDetail =
 /** What the phones are told about a style beyond its question (classic's phoneCompanion): their role, what to do, a heading. */
 export interface Briefing { role: string; participation: string; headPrompt: string }
 
+/** An answer as a style reads it: who, what, and whether they said they were sure. */
+export type Answer = Pick<TallyAnswer, 'id' | 'response'> & { sure?: boolean | null };
+
 export interface Range { min: number; max: number; step: number; unit: string }
 
 export interface StyleEntry {
@@ -77,14 +80,20 @@ export interface StyleEntry {
   companion?(q: RoomQuiz): Briefing;
   /** False: the game has no scores slide after its last question (the show ends on it). */
   scoreSlide?: boolean;
+  /** Only questions this says yes to are this style's (the game's flag on the question: `predict`, `showdown`); such an entry is tried before the others of its key. */
+  match?(q: { [field: string]: unknown }): boolean;
+  /** One step the teacher takes before the reveal, a frame the host sends on the first Next (`closeAnswers`: predictions locked; `showdown`: the split shown). */
+  gate?: 'closeAnswers' | 'showdown';
+  /** Flags the question frame carries beside the style's own (classic's `predict`, `showdown`). */
+  flags?(q: RoomQuiz): Partial<QuestionFields>;
   /** The room is never revealed by itself (everyone answered): only the teacher reveals. */
   held?: boolean;
   /** After the reveal the room is asked this (a brainstorm prompt, classic's quick prompt); it closes when the show leaves the question. */
   afterReveal?: { prompt: string };
   /** Points the host hands the relay with the verdicts (`reveal.gains`), as [player, points]; undefined: the relay scores by the verdicts alone. */
-  gains?(q: RoomQuiz, answers: Pick<TallyAnswer, 'id' | 'response'>[]): [number, number][];
+  gains?(q: RoomQuiz, answers: Answer[]): [number, number][];
   /** The wall's view of the question, from the answers in. */
-  wall(q: RoomQuiz, answers: Pick<TallyAnswer, 'id' | 'response'>[], revealed: boolean): WallDetail;
+  wall(q: RoomQuiz, answers: Answer[], revealed: boolean, gated?: boolean): WallDetail;
   /** The teacher's entry by key as an answer to send, or undefined when it is not one for this style. */
   manual(a: ManualEntry): ManualChoice | undefined;
 }

@@ -377,7 +377,7 @@ function Show() {
       {wall && (
         <div className="wall-layer" data-view={view}>
           {lobby && !finished && <Lobby wall={wall} connected={room.state.connected} error={room.state.error} onStart={() => nextRef.current()} onRoster={room.state.pin ? room.addNames : undefined} />}
-          {!finished && wall.view === 'question' && wall.question && <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />}
+          {!finished && wall.view === 'question' && wall.question && (wall.question.locked ? <RevealStrip q={wall.question} /> : <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />)}
           {!finished && wall.view === 'reveal' && wall.question && <RevealStrip q={wall.question} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}
           {rail && <RailView rail={rail} />}
