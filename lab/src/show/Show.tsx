@@ -4,18 +4,19 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, StickyNote, Trophy, Vote, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, PenLine, Radio, Share2, Users, StickyNote, Trophy, Vote, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
-import { QuestionsList, QuickPollForm, ShowSide, presenterUrl, type CmdData, type PresenterCmd, type Screen } from '../presenter';
-import { reactionsSay, type QuickAsk } from '../live';
+import { KeySheet, QuestionsList, QuickPollForm, ROOM_VIEW_SAYS, ShowSide, controlFor, keyName, nextRoomView, presenterUrl, toggleBoard, type CmdData, type RoomView, type Screen, type ShowAction } from '../presenter';
+import { FLOOR_SAYS, reactionsSay, type QuickAsk } from '../live';
 import { useStore } from '../store';
 import './show.css';
 import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
 import { Boundary } from './Boundary';
-import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit } from './desk';
+import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit, whoAnswered } from './desk';
 import { PrompterLink, prompterLinkFor } from './prompter';
-import { Elapsed, NotesCard, Overview, RehearseCard, ScreenCover } from './ShowTools';
+import { NotesCard, Overview, RehearseCard, ScreenCover } from './ShowTools';
+import { JoinCard } from './JoinCard';
 import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
 import { FeedbackView } from './FeedbackViews';
@@ -81,7 +82,21 @@ function Show() {
   const [index, setIndex] = useState(start);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [notes, setNotes] = useState(false);
-  const [scoresOn, setScoresOn] = useState(false);
+  /** The room on the wall (E): hidden, the standings beside the slide, or the scores board (S). */
+  const [roomView, setRoomView] = useState<RoomView>('beside');
+  const scoresOn = roomView === 'full';
+  /** The join card (J), the shortcuts sheet (?), and the desk's panel asked for from the wall (Shift+W: who answered what). */
+  const [joinCard, setJoinCard] = useState(false);
+  const joinRef = useRef(false);
+  joinRef.current = joinCard;
+  const [sheet, setSheet] = useState(false);
+  const sheetRef = useRef(false);
+  sheetRef.current = sheet;
+  const [deskAsk, setDeskAsk] = useState(0);
+  /** Freeze (Z): the wall holds its slide while the teacher moves on; this is where the teacher is (null: not frozen). */
+  const [frozen, setFrozen] = useState<number | null>(null);
+  const frozenRef = useRef<number | null>(null);
+  frozenRef.current = frozen;
   /** The room has been ended from the show: the final standings are up, and the next exit leaves the show. */
   const [finished, setFinished] = useState(false);
   const finishedRef = useRef(false);
@@ -128,7 +143,7 @@ function Show() {
   const startedAt = useRef(Date.now()).current;
   const side = useRef<ShowSide | null>(null);
   const deskRef = useRef<{ wall: ReturnType<typeof wallOf> | null; fb: { hold: boolean; shown: boolean } | null }>({ wall: null, fb: null });
-  const runRef = useRef<(cmd: PresenterCmd, n?: number, data?: CmdData) => void>(() => {});
+  const runRef = useRef<(cmd: ShowAction, n?: number, data?: CmdData) => void>(() => {});
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -184,6 +199,8 @@ function Show() {
     const p = player.current, r = roomRef.current;
     if (!p || finishedRef.current) return;
     if (screenRef.current !== 'none') { setScreen('none'); return; } // a blanked screen comes back first
+    const fz = frozenRef.current;
+    if (fz != null) { setFrozen(Math.min(deck.slides.length - 1, fz + 1)); return; } // frozen: only the teacher moves on
     if (!roomOn) { if (!stepFigure(p.index, 1)) p.next(); return; }
     const act = nextAction({ room: r.state, steps, at: r.at, sinceAsked: r.sinceAsked() });
     if (act === 'start') { r.begin(stepAt(steps, p.index)); return; }
@@ -197,12 +214,14 @@ function Show() {
     if (act === 'ask' || act === 'reveal' || act === 'advance') r.next();
     else if (act === 'wait') say('Give them a moment, then press Next to show the answer');
     else if (act === 'end') exit();
-  }, [roomOn, steps, exit, stepFigure]);
+  }, [roomOn, steps, exit, stepFigure, deck]);
 
   const prev = useCallback(() => {
     const p = player.current, r = roomRef.current;
     if (!p) return;
     if (screenRef.current !== 'none') { setScreen('none'); return; }
+    const fz = frozenRef.current;
+    if (fz != null) { setFrozen(Math.max(0, fz - 1)); return; }
     if (stepFigure(p.index, -1)) return;
     if (!roomOn) { p.prev(); return; }
     if (r.at > 0) r.goTo(r.at - 1);
@@ -216,6 +235,7 @@ function Show() {
   const goIndex = useCallback((i: number) => {
     const p = player.current, r = roomRef.current;
     if (!p || finishedRef.current || i < 0 || i >= deck.slides.length) return;
+    if (frozenRef.current != null) { setFrozen(i); return; }
     setScreen('none');
     if (!roomOn) { p.goto(i, i > p.index ? 1 : -1, true); return; }
     if (r.at < 0) { say('Press Start before moving around the lesson'); return; }
@@ -231,22 +251,72 @@ function Show() {
     setDeskCard('');
     return '';
   }, []);
-  const runCmd = useCallback((cmd: PresenterCmd, n?: number, data?: CmdData) => {
-    const r = roomRef.current, d = deskRef.current;
-    if (cmd === 'next') nextRef.current();
-    else if (cmd === 'prev') prevRef.current();
-    else if (cmd === 'goto') { if (n != null) goIndex(n - 1); }
-    else if (cmd === 'black' || cmd === 'white') setScreen((s) => (s === cmd ? 'none' : cmd));
-    else if (cmd === 'resume') setScreen('none');
-    else if (cmd === 'reveal') { if (roomOn && d.wall?.view === 'question') r.next(); }
-    else if (cmd === 'close') { if (roomOn) r.closeFeedback(); }
-    else if (cmd === 'open') { if (roomOn) r.showFeedback(); }
-    else if (cmd === 'more') { if (roomOn) r.extendStage(30); }
-    else if (cmd === 'qa') { if (roomOn && data?.qa) r.qa(data.qa.id, data.qa.action); }
-    else if (cmd === 'floor') { if (roomOn) r.floor(data?.floor); }
-    else if (cmd === 'poll') { if (roomOn && data?.poll) { const why = askPoll(data.poll); if (why) say(why); } }
-    else if (cmd === 'end') exit();
-  }, [roomOn, goIndex, exit, askPoll]);
+  const toggleFs = useCallback(() => {
+    const fs = fsDoc();
+    if (fs.fullscreenElement) void fs.exitFullscreen();
+    else void fs.documentElement.requestFullscreen?.().catch(() => say('The browser did not allow full screen'));
+  }, []);
+
+  /** Freeze, or catch the wall up with where the teacher is. */
+  const toggleFreeze = useCallback(() => {
+    const p = player.current;
+    if (!p) return;
+    const fz = frozenRef.current;
+    if (fz == null) { setFrozen(p.index); say('Wall frozen: the room still sees this slide'); return; }
+    setFrozen(null);
+    frozenRef.current = null;
+    if (fz !== p.index) goIndex(fz);
+    say(`Wall caught up: slide ${fz + 1}`);
+  }, [goIndex]);
+  /** Every control, from its key, the bar or the Teacher Presenter (presenter/controls.ts), done one way. */
+  const runCmd = useCallback((cmd: ShowAction, n?: number, data?: CmdData) => {
+    const r = roomRef.current, d = deskRef.current, p = player.current;
+    const live = roomOn && !finishedRef.current;
+    switch (cmd) {
+      case 'next': nextRef.current(); return;
+      case 'prev': prevRef.current(); return;
+      case 'goto': if (n != null) goIndex(n - 1); return;
+      case 'first': if (!roomOn) goIndex(0); return;
+      case 'last': if (!roomOn) goIndex(deck.slides.length - 1); return;
+      case 'black': case 'white': setScreen((s) => (s === cmd ? 'none' : cmd)); return;
+      case 'resume': setScreen('none'); return;
+      case 'overview': setOverview(p?.index ?? 0); return;
+      case 'notes': setNotes((v) => !v); return;
+      case 'full': toggleFs(); return;
+      case 'exit': case 'end': exit(); return;
+      case 'presenter': openPresenter(); return;
+      case 'notesElsewhere': notesElsewhere(); return;
+      case 'help': setSheet((v) => !v); return;
+      case 'steps': if (p && !p.buildAll()) say('Every step on this slide is showing'); return;
+      case 'freeze': toggleFreeze(); return;
+      case 'draw': setInkOn((v) => !v); return;
+      case 'drawDone': setInkOn(false); return;
+      case 'spot': ink.tool = inkOnRef.current && ink.tool === 'spot' ? 'pen' : 'spot'; setInkOn(true); inkChanged(); return;
+      case 'undo': ink.undo(); inkChanged(); return;
+      case 'clearInk': ink.clear(); inkChanged(); return;
+    }
+    if (!live) { if (!roomOn) say('That needs a live room: start Host live first'); return; }
+    switch (cmd) {
+      case 'reveal': if (d.wall?.view === 'question') r.next(); return;
+      case 'close': r.closeFeedback(); return;
+      case 'open': r.showFeedback(); return;
+      case 'more': r.extendStage(30); return;
+      case 'qa': if (data?.qa) r.qa(data.qa.id, data.qa.action); return;
+      case 'floor': { const m = r.floor(data?.floor); if (m) say(FLOOR_SAYS[m]); return; }
+      case 'poll': if (data?.poll) { const why = askPoll(data.poll); if (why) say(why); } else setDeskCard((c) => (c === 'poll' ? '' : 'poll')); return;
+      case 'questions': setDeskCard((c) => (c === 'qa' ? '' : 'qa')); return;
+      case 'roomView': setRoomView((v) => { const to = nextRoomView(v); say(ROOM_VIEW_SAYS[to]); return to; }); return;
+      case 'scores': setRoomView(toggleBoard); return;
+      case 'join': if (r.state.pin) setJoinCard((v) => !v); else say('The room is not open yet'); return;
+      case 'again': say(r.again() ? 'Answers cleared: the question is asked again' : 'There is no question on the wall to ask again'); return;
+      case 'reactions': { const on = r.reactions(); if (on != null) say(reactionsSay(on)); return; }
+      case 'blankPhones': { const on = r.blankPhones(); if (on != null) say(on ? 'Phones blanked: the room is looking up' : 'Phones back: the room can answer again'); return; }
+      case 'blankSoon': { const v = r.blankSoon(); if (v) say(v === 'soon' ? 'Phones go dark in 10 seconds' : v === 'cancelled' ? 'Countdown cancelled: phones stay on' : 'Phones are already blank'); return; }
+      case 'who': openPresenter(); setDeskAsk((k) => k + 1); say('Who answered what is in the Teacher Presenter'); return;
+      case 'entry': openEntry(); return;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomOn, goIndex, exit, askPoll, deck, toggleFreeze, ink, inkChanged]);
   runRef.current = runCmd;
 
   // The slide is drawn in what the standings rail leaves of the screen (classic scales its slide the same way).
@@ -278,20 +348,17 @@ function Show() {
     p.goto(target, target > p.index ? 1 : -1, target < p.index);
   }, [target]);
 
-  const toggleFs = useCallback(() => {
-    const fs = fsDoc();
-    if (fs.fullscreenElement) void fs.exitFullscreen();
-    else void fs.documentElement.requestFullscreen?.().catch(() => say('The browser did not allow full screen'));
-  }, []);
-
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       const onControl = !!t && /^(BUTTON|A|INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
       // The show has the keyboard: a key pressed here never reaches the studio behind it.
       e.stopPropagation();
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const name = keyName(e);
+      if (name == null) return;
       const k = e.key;
+      // The shortcuts sheet has the keys while it is up: ? or Esc closes it.
+      if (sheetRef.current) { if (k === 'Escape' || k === '?') { e.preventDefault(); setSheet(false); } return; }
       // The overview has the keys while it is up: arrows move, Enter goes, Esc and O close it.
       const ov = overviewRef.current;
       if (ov != null) {
@@ -319,30 +386,19 @@ function Show() {
         return;
       }
       if (jumpRef.current && k === 'Escape') { setJump(''); return; }
-      if (k === 'd' || k === 'D') { setInkOn((v) => !v); return; }
-      if (inkOnRef.current) {
-        if (k === 'Escape') { setInkOn(false); return; }
-        if (k === 'z' || k === 'Z') { ink.undo(); inkChanged(); return; }
-        if (k === 'x' || k === 'X') { ink.clear(); inkChanged(); return; }
-      }
-      if (k === 'b' || k === 'B' || k === '.') { runRef.current('black'); return; }
-      if (k === 'w' || k === 'W' || k === ',') { runRef.current('white'); return; }
-      if (k === 'o' || k === 'O') { setOverview(player.current?.index ?? 0); return; }
-      if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(k)) { e.preventDefault(); nextRef.current(); }
-      else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); prevRef.current(); }
-      else if (k === 'Escape') { if (!fsDoc().fullscreenElement) exit(); }
-      else if (k === 'Home' && !roomOn) player.current?.goto(0, -1, true);
-      else if (k === 'End' && !roomOn) player.current?.goto(deck.slides.length - 1, 1, true);
-      else if (k === 'n' || k === 'N') setNotes((v) => !v);
-      else if (k === 'f' || k === 'F') toggleFs();
-      else if ((k === 's' || k === 'S') && roomOn) setScoresOn((v) => !v);
-      else if ((k === 'v' || k === 'V') && roomOn) setDeskCard((c) => (c === 'poll' ? '' : 'poll')); // classic's V: the quick poll
-      else if ((k === 't' || k === 'T') && roomOn) { const on = roomRef.current.reactions(); if (on != null) say(reactionsSay(on)); } // classic's T: phone reactions off or on
+      if (joinRef.current && (k === 'Escape' || name === 'j')) { setJoinCard(false); return; } // the join card closes on J or Esc
+      if (e.altKey && name !== 'Alt+f') return;
+      const c = controlFor(name, inkOnRef.current);
+      if (!c) return;
+      if (c.action === 'next' || c.action === 'prev') e.preventDefault();
+      if (c.action === 'exit' && fsDoc().fullscreenElement) return; // Esc in full screen is the browser's: it leaves full screen
+      if (c.room && !roomOn) { say('That needs a live room: start Host live first'); return; }
+      runRef.current(c.action);
     };
     (document.activeElement as HTMLElement | null)?.blur?.();
     addEventListener('keydown', on, true);
     return () => removeEventListener('keydown', on, true);
-  }, [exit, roomOn, deck, toggleFs, goIndex, ink, inkChanged]);
+  }, [roomOn, deck, goIndex]);
 
   const wake = useCallback(() => {
     setBar(true);
@@ -362,26 +418,33 @@ function Show() {
   const fbOpen = roomOn && !finished && wall?.view === 'feedback' ? room.state.feedback : null;
   const lobby = wall?.view === 'lobby' || wall?.view === 'connecting';
   const view = finished ? 'ended' : wall?.view;
-  const rail = wall && !finished && ['question', 'reveal', 'slide'].includes(wall.view) ? wall.rail : null;
+  const rail = wall && !finished && roomView !== 'hidden' && ['question', 'reveal', 'slide'].includes(wall.view) ? wall.rail : null;
   const fbRail = !finished && ['feedback', 'reveal'].includes(wall?.view ?? '') && wall?.feedback?.presentAs === 'rail';
   const railWidth = fbRail ? FEEDBACK_RAIL_U : rail ? RAIL_U : 0;
   useEffect(() => { railU.current = railWidth; fit(); }, [railWidth, fit]);
 
   // The Teacher Presenter window follows the show over a BroadcastChannel; with none open this does nothing.
+  const entryHash = roomOn ? room.manualHash() : null;
   const desk = presenterState({
-    deck, index, startedAt, screen, figure: figures.says(slide),
-    room: roomOn ? { wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown, quick: !!room.state.quick, canPoll: room.at >= 0 && !room.state.feedback && !finished, qa: room.state.qa, floor: room.state.floor } : null,
+    deck, index: frozen ?? index, startedAt, screen, figure: figures.says(slide), frozenAt: frozen == null ? null : index, ink: { on: inkOn, spot: ink.tool === 'spot' },
+    room: roomOn ? {
+      wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown, quick: !!room.state.quick, canPoll: room.at >= 0 && !room.state.feedback && !finished, qa: room.state.qa, floor: room.state.floor,
+      roomView, phonesBlank: room.state.phonesBlank, blankSoonAt: room.state.blankSoonAt, reactions: room.state.reactions, joinCard,
+      canAgain: !finished && !!step?.room.quiz && step.room.activity === 'question', answers: step?.room.quiz && room.state.tally?.id === step.room.quiz.id ? whoAnswered(room.state.tally.answers, step.room.quiz.options) : [],
+      entry: entryHash ? new URL(manualPage() + entryHash, location.href).href : null,
+    } : null,
   });
+  const deskFull = { ...desk, ask: deskAsk };
   deskRef.current = { wall, fb: fbOpen ? { hold: !!fbOpen.prompt.hold, shown: fbOpen.shown } : null };
-  const deskNow = useRef(desk);
-  deskNow.current = desk;
+  const deskNow = useRef(deskFull);
+  deskNow.current = deskFull;
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
     const sd = new ShowSide(deck, deskNow.current, (cmd, n, data) => runRef.current(cmd, n, data));
     side.current = sd;
     return () => { sd.close(); side.current = null; };
   }, [deck]);
-  const deskKey = JSON.stringify(desk);
+  const deskKey = JSON.stringify(deskFull);
   useEffect(() => { side.current?.publish(deskNow.current); }, [deskKey]);
 
   // Notes on another device: the frame follows the slide; the channel ends with the show.
@@ -398,9 +461,12 @@ function Show() {
     l.send(prompterFrame(deck, player.current?.index ?? index, startedAt));
     l.start();
   };
+  // An open Teacher Presenter is brought forward, not loaded again (its countdown and panels stay).
   const openPresenter = () => {
-    const w = window.open(presenterUrl(), 'slideforge-presenter', 'width=1180,height=780');
-    if (!w) say('Pop-ups are blocked. Allow them to use the Teacher Presenter.'); else w.focus();
+    const w = window.open('', 'slideforge-presenter', 'width=1180,height=780');
+    if (!w) { say('Pop-ups are blocked. Allow them to use the Teacher Presenter.'); return; }
+    try { if (!w.location.href || w.location.href === 'about:blank') w.location.href = presenterUrl(); } catch { w.location.href = presenterUrl(); }
+    w.focus();
   };
   // The shell's Teacher Presenter and Notes on another device open the show with the desk, or the notes card, already up.
   useEffect(() => {
@@ -463,7 +529,9 @@ function Show() {
           onStop={() => { link.current?.stop(); repaint((n) => n + 1); }}
           onCopy={(url) => { void navigator.clipboard?.writeText(url).then(() => say('Notes link copied'), () => say('Could not copy the link')); }} />
       )}
-      {inkOn && <InkBar ink={ink} version={inkV} onChange={inkChanged} onDone={() => setInkOn(false)} />}
+      {inkOn && <InkBar ink={ink} version={inkV} onChange={inkChanged} onDone={() => setInkOn(false)} onSteps={() => runCmd('steps')} />}
+      {joinCard && wall?.join && !finished && <JoinCard join={wall.join} players={wall.players.length} onClose={() => setJoinCard(false)} />}
+      {sheet && <KeySheet room={roomOn} onClose={() => setSheet(false)} />}
       {rehearseCard && (
         <RehearseCard size={rehearsing} inRoom={roomOn} onClose={() => setRehearseCard(false)}
           onPick={(n) => { setRehearseCard(false); if (roomOn) { setRehearsing(n); say(`A rehearsal class of ${n} is joining`); } else openStudioShow({ room: true, slideId: slide.id, rehearse: n }); }}
@@ -489,23 +557,19 @@ function Show() {
       <div className={`show-bar${bar ? ' on' : ''}`} role="toolbar" aria-label="Slideshow controls">
         <button onClick={() => prevRef.current()} aria-label="Previous"><ArrowLeft size={16} /></button>
         <button onClick={() => nextRef.current()} aria-label="Next"><ArrowRight size={16} /></button>
-        <span className="show-count" aria-label={`Slide ${index + 1} of ${deck.slides.length}`}>{index + 1} / {deck.slides.length}</span>
+        <span className="show-count" aria-label={`Slide ${index + 1} of ${deck.slides.length}${frozen != null ? ', frozen' : ''}`}>{index + 1} / {deck.slides.length}{frozen != null && <span className="show-frozen" title={`Frozen (Z): you are on slide ${frozen + 1}`}> ❄ {frozen + 1}</span>}</span>
         <button onClick={() => setNotes((v) => !v)} aria-pressed={notes} aria-label="Speaker notes (N)" title="Speaker notes (N)"><StickyNote size={16} /></button>
-        <button onClick={() => setInkOn((v) => !v)} aria-pressed={inkOn} aria-label="Draw (D)" title="Draw on the slide (D): pen, highlighter, eraser"><PenLine size={16} /></button>
+        <button onClick={() => setInkOn((v) => !v)} aria-pressed={inkOn} aria-label="Draw (D)" title="Draw on the slide (D or I): pen, highlighter, eraser, spotlight (L)"><PenLine size={16} /></button>
         <button onClick={() => setOverview(index)} aria-label="Slide overview (O)" title="Slide overview (O). Type a number and Enter to jump"><LayoutGrid size={16} /></button>
-        <button onClick={() => runCmd(screen === 'black' ? 'resume' : 'black')} aria-pressed={screen === 'black'} aria-label="Black screen (B)" title="Black screen (B or .). W for white"><MonitorOff size={16} /></button>
-        <button onClick={openPresenter} aria-label="Teacher Presenter" title="Teacher Presenter: notes, next slide and controls in their own window"><Monitor size={16} /></button>
-        <button onClick={notesElsewhere} aria-pressed={notesCard} aria-label="Notes on another device" title="Notes on another device: a phone or prompt screen follows your notes"><Smartphone size={16} /></button>
-        <Elapsed since={startedAt} />
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
         {roomOn && <button onClick={() => setDeskCard((c) => (c === 'poll' ? '' : 'poll'))} aria-pressed={deskCard === 'poll' || !!room.state.quick} aria-label="Quick poll (V)" title="Quick poll (V): ask the room something on the fly"><Vote size={16} /></button>}
         {roomOn && <button onClick={() => setDeskCard((c) => (c === 'qa' ? '' : 'qa'))} aria-pressed={deskCard === 'qa'} aria-label="Questions from the room" title="Questions from the room: approve, show on the wall, mark answered, hide"><MessageCircleQuestion size={16} />{room.state.qa.pending || ''}</button>}
-        {roomOn && <button onClick={() => setScoresOn((v) => !v)} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S)"><Trophy size={16} /></button>}
+        {roomOn && <button onClick={() => runCmd('scores')} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S). E: room view hidden, beside, full"><Trophy size={16} /></button>}
         {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
         {roomOn && hooks?.share && <button onClick={() => hooks.share?.()} aria-label="Share" title="Share: a link to read or practise the lesson, or a big screen that follows this room"><Share2 size={16} /></button>}
-        <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F)"><Maximize size={16} /></button>
+        <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F). ? lists every key"><Maximize size={16} /></button>
         {!roomOn && studioRoomEnabled() && (
           <button className="show-live" onClick={() => openStudioShow({ room: true, slideId: slide.id })} title="Run this lesson live with phones"><Radio size={15} />Host live</button>
         )}

@@ -464,3 +464,8 @@
   70%  { opacity: .8; }
   100% { opacity: 0;   transform: translate(calc(var(--k) * var(--drift, 0)), calc(var(--k) * -250)) scale(.9) rotate(var(--spin, 0deg)); }
 }
+
+/* The join card (J) over the slide mid-lesson, and the wall frozen (Z): only the bar's count says so. */
+.join-card { position: fixed; inset: 0; z-index: 8; display: grid; place-items: center; background: rgba(8,9,12,.82); font-size: calc(var(--u) * 36); cursor: pointer; }
+.join-card-body { display: flex; gap: calc(var(--u) * 96); align-items: center; padding: calc(var(--u) * 64) calc(var(--u) * 80); background: var(--panel, #17181c); border-radius: calc(var(--u) * 28); }
+.show-frozen { color: #8fd3ff; }

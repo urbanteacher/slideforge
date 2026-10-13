@@ -3,8 +3,8 @@
 // overview grid. No DOM and no React, so the tests run without a browser.
 
 import type { Deck, Slide } from '../core';
-import type { PresenterRoom, PresenterState, Screen } from '../presenter';
-import type { FloorMode, QaBox } from '../live';
+import type { PresenterRoom, PresenterState, RoomView, Screen, WhoRow } from '../presenter';
+import type { FloorMode, QaBox, TallyAnswer } from '../live';
 import type { Wall } from './wallModel';
 
 type DeckLike = Pick<Deck, 'title' | 'slides'>;
@@ -33,7 +33,24 @@ export interface DeskInput {
   /** The live figure on the wall: its step, of how many, and the step's caption (figure.ts). */
   figure?: { step: number; of: number; caption: string } | null;
   /** The room, when the show has one: its wall, and what the bar's prompt buttons would offer. */
-  room?: { wall: Wall | null; connected: boolean; pin: string | null; canClose: boolean; canShow: boolean; quick?: boolean; canPoll?: boolean; qa?: QaBox; floor?: FloorMode } | null;
+  room?: {
+    wall: Wall | null; connected: boolean; pin: string | null; canClose: boolean; canShow: boolean; quick?: boolean; canPoll?: boolean; qa?: QaBox; floor?: FloorMode;
+    roomView?: RoomView; phonesBlank?: boolean; blankSoonAt?: number; reactions?: boolean; joinCard?: boolean; canAgain?: boolean; answers?: WhoRow[]; entry?: string | null;
+  } | null;
+  /** The wall is frozen on this slide while `index` moves on (the desk shows where the teacher is). */
+  frozenAt?: number | null;
+  ink?: { on: boolean; spot: boolean };
+}
+
+/** Who answered what, for the desk only: each answer in the tally, by name, as the phone gave it (a choice by its letter and words). */
+export function whoAnswered(answers: readonly TallyAnswer[] | null | undefined, options: readonly string[] = []): WhoRow[] {
+  const said = (r: TallyAnswer['response']): string => {
+    if (Array.isArray(r)) return r.map((i) => options[i] ?? String(i)).join(' → ');
+    if (typeof r === 'number' && options.length && options[r] != null) return `${String.fromCharCode(65 + r)}. ${options[r]}`;
+    return String(r);
+  };
+  return (answers ?? []).map((a) => ({ name: a.name || 'Someone', answer: said(a.response), sure: a.sure }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** The Teacher Presenter window's state: this slide, the next, the notes, and the room's status. */
@@ -47,11 +64,14 @@ export function presenterState(i: DeskInput): PresenterState {
       pin: i.room.pin, connected: i.room.connected, players: w?.players.length ?? 0, view: w?.view ?? 'connecting',
       open: w?.view === 'question' || fb,
       answered: q ? q.answered : 0, total: q ? q.players : (w?.players.length ?? 0),
-      revealed: w?.view === 'reveal', canClose: i.room.canClose, canShow: i.room.canShow, quick: !!i.room.quick, canPoll: !!i.room.canPoll, ...(i.room.qa ? { qa: i.room.qa, floor: i.room.floor ?? 'auto' } : {}),
+      revealed: w?.view === 'reveal', canClose: i.room.canClose, canShow: i.room.canShow, quick: !!i.room.quick, canPoll: !!i.room.canPoll, ...(i.room.qa ? { qa: i.room.qa } : {}), floor: i.room.floor ?? 'auto',
+      roomView: i.room.roomView ?? 'beside', phonesBlank: !!i.room.phonesBlank, blankSoonAt: i.room.blankSoonAt ?? 0, reactions: i.room.reactions !== false, joinCard: !!i.room.joinCard,
+      canAgain: !!i.room.canAgain, answers: i.room.answers ?? [], entry: i.room.entry ?? null,
       ...(w?.activity?.stage ? { stage: { name: w.activity.stage.name, wall: w.activity.stage.wall, written: w.activity.written, help: w.activity.help } } : {}),
     };
   }
-  return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room, ...(i.figure ? { figure: i.figure } : {}) };
+  return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room, ...(i.figure ? { figure: i.figure } : {}),
+    frozenAt: i.frozenAt ?? null, ink: i.ink ?? { on: false, spot: false } };
 }
 
 /** Digits typed in the show build a slide number (1 based); anything else leaves the buffer alone. Null: not a digit. */
