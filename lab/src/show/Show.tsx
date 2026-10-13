@@ -4,7 +4,7 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, PenLine, Radio, Share2, Users, QrCode, Trophy, Vote, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Columns2, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, QrCode, Trophy, Vote, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { KeySheet, QuestionsList, QuickPollForm, ROOM_VIEW_SAYS, ShowSide, controlFor, keyName, nextRoomView, presenterUrl, toggleBoard, type CmdData, type RoomView, type Screen, type ShowAction } from '../presenter';
@@ -16,7 +16,7 @@ import { Boundary } from './Boundary';
 import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit, whoAnswered } from './desk';
 import { PrompterLink, prompterLinkFor } from './prompter';
 import { qrSvg } from './qr';
-import { Overview, RehearseCard, ScreenCover } from './ShowTools';
+import { Elapsed, Overview, RehearseCard, ScreenCover } from './ShowTools';
 import { JoinCard } from './JoinCard';
 import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
@@ -566,10 +566,15 @@ function Show() {
         {roomOn && <button onClick={() => runCmd('join')} aria-pressed={joinCard} aria-label="Join card (J)" title="Join card (J): the PIN and QR for latecomers"><QrCode size={16} /></button>}
         <button onClick={() => setInkOn((v) => !v)} aria-pressed={inkOn} aria-label="Draw (D)" title="Draw on the slide (D or I): pen, highlighter, eraser, spotlight (L)"><PenLine size={16} /></button>
         <button onClick={() => setOverview(index)} aria-label="Slide overview (O)" title="Slide overview (O). Type a number and Enter to jump"><LayoutGrid size={16} /></button>
+        <button onClick={() => runCmd(screen === 'black' ? 'resume' : 'black')} aria-pressed={screen === 'black'} aria-label="Black screen (B)" title="Black screen (B or .). W for white"><MonitorOff size={16} /></button>
+        <button onClick={openPresenter} aria-label="Teacher Presenter (P)" title="Teacher Presenter (P): notes, next slide and every control in their own window"><Monitor size={16} /></button>
+        <button onClick={notesElsewhere} aria-label="Notes on another device (Shift+N)" title="Notes on another device (Shift+N): the private link and QR open in the Teacher Presenter"><Smartphone size={16} /></button>
+        <Elapsed since={startedAt} />
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
         {roomOn && <button onClick={() => setDeskCard((c) => (c === 'poll' ? '' : 'poll'))} aria-pressed={deskCard === 'poll' || !!room.state.quick} aria-label="Quick poll (V)" title="Quick poll (V): ask the room something on the fly"><Vote size={16} /></button>}
         {roomOn && <button onClick={() => setDeskCard((c) => (c === 'qa' ? '' : 'qa'))} aria-pressed={deskCard === 'qa'} aria-label="Questions from the room" title="Questions from the room: approve, show on the wall, mark answered, hide"><MessageCircleQuestion size={16} />{room.state.qa.pending || ''}</button>}
+        {roomOn && <button onClick={() => runCmd('roomView')} aria-pressed={roomView !== 'hidden'} aria-label="Room view (E)" title={`Room view (E): ${ROOM_VIEW_SAYS[roomView]}. Press again for hidden, beside, full`}><Columns2 size={16} /></button>}
         {roomOn && <button onClick={() => runCmd('scores')} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S). E: room view hidden, beside, full"><Trophy size={16} /></button>}
         {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
