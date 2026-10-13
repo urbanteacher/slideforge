@@ -392,3 +392,21 @@ test('the lab host sends what the classic host sent for a Horse race game', asyn
   assert.equal(host.state.revealed.length, 5);
   assert.ok(host.state.ended);
 });
+
+// Boss battle (format 'boss-battle', style 'boss'): the same room as the race, with a boss of shared HP from its own game's questions
+// (easy 1, medium 2, hard 3, boss 5: 11 here). Each reveal carries +1 for every player who was right (`gains`); the relay's
+// `teamAnswers` then lands the hit, and the host tells the report (`oral`: Q, difficulty, HP left, the blow); the scores slide sends
+// `finish` of kind `boss`. Not here: the desk's Hit and Miss, which classic leaves off a live room (its fight is the board's).
+test('the lab host sends what the classic host sent for a Boss battle game', async () => {
+  const { host, classic, lab } = await replay(load('game-boss-battle'), 'boss-battle');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 4);
+  for (const q of asked) { assert.equal(q.style, 'boss'); assert.equal(q.confidence, false); }
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => r.gains), [[[1, 0], [2, 0], [3, 1], [4, 0]], [[1, 0], [2, 1], [3, 0]], [[1, 0], [2, 1], [3, 0]], [[1, 0], [2, 1], [3, 0]]]);
+  assert.deepEqual(lab.filter((f) => f.t === 'oral').map((o) => [o.term, o.right, o.value]), [['Q1 · easy · 10/11 HP left', true, 1], ['Q2 · medium · 8/11 HP left', true, 2], ['Q3 · hard · 5/11 HP left', true, 3], ['Q4 · boss · 0/11 HP left', true, 5]]);
+  assert.deepEqual(lab.filter((f) => f.t === 'finish'), [{ t: 'finish', kind: 'boss', title: 'Boss battle', note: 'The room brought the boss down' }]);
+  assert.equal(host.state.mech.boss?.hp, 0);
+  assert.equal(host.state.revealed.length, 4);
+  assert.ok(host.state.ended);
+});
