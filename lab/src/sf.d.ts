@@ -39,6 +39,11 @@ declare module '@sf/games/scoring.js' {
   export function claimPoints(accepted: boolean): number;
 }
 
+declare module '@sf/activities/catalogue.js' {
+  /** A catalogue activity by its key (its title is the name a teacher knows it by), or null. */
+  export function activity(key: string): { key: string; title: string; [field: string]: unknown } | null;
+}
+
 declare module '@sf/activities/fields.js' {
   /** An activity written onto a slide and read back off it, by dotted path. */
   export function createActivityFields(SF: {
