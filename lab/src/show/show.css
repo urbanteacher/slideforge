@@ -281,7 +281,7 @@
 .mech-boss.down .mech-hp span { background: #6bdc9a; }
 .mech-hp-text { margin: calc(var(--u) * 6) 0 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 .show .mech-drip, .show.has-rail .mech-drip { right: auto; }
-.mech-drip { top: calc(var(--u) * 28); left: 50%; right: auto; transform: translateX(-50%); width: auto; max-width: 90%; text-align: center; }
+.mech-drip { top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%); width: auto; max-width: 92%; padding: calc(var(--u) * 28) calc(var(--u) * 40); background: var(--bg); text-align: center; }
 .mech-word { margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--u) * 10); font-size: calc(var(--u) * 84); font-weight: 800; letter-spacing: .05em; line-height: 1.1; }
 .mech-word span { min-width: calc(var(--u) * 56); height: calc(var(--u) * 100); display: inline-flex; align-items: center; justify-content: center; border-bottom: calc(var(--u) * 6) solid rgba(255,255,255,.55); }
 .mech-word span.closed { opacity: .45; }

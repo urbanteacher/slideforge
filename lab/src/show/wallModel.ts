@@ -52,7 +52,7 @@ export interface Wall {
   rail: Rail | null;
   /** The audience feedback the room is asked on this slide (view `feedback`): bars, spread, cloud or ideas. */
   feedback: FeedbackWall | null;
-  /** The track, the boss or the dripping word: with the question (a word only while it is asked; once revealed, it is whole), and on the scores. */
+  /** The track, the boss or the dripping word: with the question (a word only while it is asked), and on the scores. */
   mech: WallMech;
 }
 
@@ -126,9 +126,8 @@ export function wallOf(i: WallInput): Wall {
       answered: t?.answered ?? 0, players: t?.total ?? room.players.filter((p) => p.connected).length, timeLimit: room.question?.timeLimit ?? 0,
       answer: revealed ? style.reveal(quiz).answer : '', explanation: revealed ? quiz.explanation ?? '' : '',
     };
-    // The word drips only for the question it was dripped for; revealed, it is spelt out.
-    const d = room.mech.drip && room.mech.drip.id === quiz.id ? room.mech.drip : null;
-    const mech: WallMech = { race: room.mech.race, boss: room.mech.boss, drip: d && (revealed ? { ...d, mask: d.word, shown: d.total } : d) };
+    // The word drips only while its question is asked; once revealed, the answer slide spells it out.
+    const mech: WallMech = { race: room.mech.race, boss: room.mech.boss, drip: !revealed && room.mech.drip?.id === quiz.id ? room.mech.drip : null };
     if (i.scoresOn) return { ...base, question, mech, view: 'leaderboard' };
     // A style that asks the room something after its reveal (Odd one out's "defend a pick") has the ideas beside it, in the standings' place.
     const after = revealed && style.afterReveal && room.feedback ? feedbackWallOf(room.feedback) : null;
