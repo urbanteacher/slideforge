@@ -2,7 +2,7 @@ import { createLayer, uid, type Deck, type LiveFigure, type Slide } from '../cor
 import { videoEmbed } from '../engine';
 import { CHART_DARK, CHART_LIGHT } from '../charts';
 import { EXPERIMENTS, LOOKS, SCENES, experimentPreset } from '../experiments';
-import { LAYOUTS, explainSlide, resultsSlide, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
+import { LAYOUTS, explainSlide, resultsSlide, spotfakeSlide, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
 import { feedbackOf, gameSlides, fitSize, type ShowcaseGame } from '../designs';
 import { addThemeArt, themeGround, type ArtContext } from '../theme';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
@@ -378,6 +378,12 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
         answer: typed ? String(q.answer ?? '') : String(q.options?.[Number(q.correct)] ?? ''), body: s.body ?? '', source: sub, clicks: !!s.progressive }), ground: g };
     }
     case 'results': return { slide: resultsSlide(st, t), ground: g };
+    case 'spotfake': {
+      // The names are the subtitle's "A | B"; the pictures the exploration's before and after; `correct` says which is real.
+      const [a = '', c = ''] = sub.includes('\t') ? cells(sub) : sub.split('|').map((x) => x.trim()), e = s.exploration ?? {};
+      return { slide: spotfakeSlide(st, { title: t, names: [a || 'A', c || 'B'], pictures: [img(String(e.before ?? '')), img(String(e.after ?? ''))],
+        real: Number((s as { correct?: number }).correct) === 1 ? 1 : 0, tells: b.filter((x) => x.trim()), clicks: !!s.progressive }), ground: g };
+    }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
       // The clip plays over its poster, which shows until the first frame decodes. It keeps the

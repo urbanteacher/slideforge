@@ -1,4 +1,4 @@
-import type { Layer, Slide } from '../core';
+import { createLayer, type Layer, type Slide } from '../core';
 import { CONTENT_FOOT, CONTENT_TOP, after, shape, slide, text, titleBar, titleRow } from './blocks';
 import { GRID, type LayoutStyle } from './style';
 
@@ -55,4 +55,31 @@ export function resultsSlide(st: LayoutStyle, title: string): Slide {
     titleRow(st, title || 'Results'), titleBar(st),
     text('Scores', 'The room’s scores show here when the lesson is hosted.', { x: GRID.left, y: CONTENT_TOP + 120, w: W, h: 160, rot: 0 }, { font: st.body, weight: '400', size: 52, color: st.muted, align: 'center' }, after(0.3)),
   ]);
+}
+
+/** Spot the fake (SlideForge's, js/render.js layoutSpotFake): two pictures side by side under their names,
+ *  then which one is real (green) and which AI-made (the accent), each on its own picture, then the tells
+ *  that give the fake away. A click each when the lesson builds it; the room argues before it is told. */
+export function spotfakeSlide(st: LayoutStyle, o: { title: string; names: [string, string]; pictures: [string, string]; real: 0 | 1; tells: string[]; clicks: boolean }): Slide {
+  const tells = o.tells.slice(0, 4), gap = 72, colW = (W - gap) / 2;
+  const picH = tells.length ? 400 : 540, nameY = CONTENT_TOP + picH + 12;
+  const layers: Layer[] = [titleRow(st, o.title), titleBar(st)];
+  const verdicts: Layer[][] = [];
+  o.pictures.forEach((src, i) => {
+    const x = GRID.left + i * (colW + gap), box = { x, y: CONTENT_TOP, w: colW, h: picH, rot: 0 };
+    layers.push(
+      createLayer('image', { name: `Picture ${o.names[i]}`, box, params: { src, fit: 'cover' }, anim: { type: 'fade', duration: 0.8, delay: 0.15 + i * 0.1 } }),
+      text('Name', o.names[i], { x, y: nameY, w: colW, h: 52, rot: 0 }, { font: st.body, weight: '700', size: 40, color: st.ink, align: 'center', fitGroup: 'fake-names' }, after(0.3)),
+    );
+    // The verdict rides on the picture, so at the back of a room the answer is a colour on it.
+    const real = i === o.real, band = { x: x + 24, y: CONTENT_TOP + picH - 104, w: colW - 48, h: 80, rot: 0 };
+    verdicts.push([
+      shape('Verdict', band, { shape: 'rect', radius: 14, fill: real ? RIGHT : st.accent }),
+      text('Verdict text', real ? 'Real' : 'AI-generated', { ...band, y: band.y + 12, h: 56 }, { font: st.body, weight: '800', size: 44, color: '#ffffff', align: 'center', uppercase: true, tracking: 0.06 }),
+    ]);
+  });
+  const top = nameY + 80, each = tells.length ? (CONTENT_FOOT - top) / tells.length : 0;
+  const rows = tells.map((t, i) => [text('Tell', t, { x: GRID.left, y: top + i * each, w: W, h: each - 8, rot: 0 }, { font: st.body, weight: '400', size: 40, color: st.ink, list: 'bullets', fitGroup: 'fake-tells' })]);
+  layers.push(...byClick([...verdicts, ...rows], uniq('fake'), o.clicks, 0.5));
+  return slide(st, 'Spot the fake', layers);
 }

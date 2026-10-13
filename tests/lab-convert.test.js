@@ -804,3 +804,22 @@ test('a results slide after the old questions is their game’s scores; with non
   const plain = deck.slides.find((s) => s.sourceSlideId === early.id);
   assert.ok(plain && !plain.game, 'no questions before it: a slide, not a step of a game');
 });
+
+test('spot the fake comes in as two named pictures, the verdict on each and the tells, a click each (M13)', { skip }, async () => {
+  const { deckFromSlideForge, convertsSlide } = await converter();
+  const src = lesson('layout-bank');
+  const fake = { id: 'old-fake', type: 'spotfake', title: 'Which one is real?', subtitle: 'Left | Right', correct: 1, progressive: true,
+    exploration: { before: 'assets/a.jpg', after: 'assets/b.jpg' }, bullets: ['The hands', 'The text on the sign', ''] };
+  src.slides.splice(2, 0, fake);
+  assert.ok(convertsSlide(fake));
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const made = deck.slides.find((s) => s.sourceSlideId === fake.id);
+  const named = (name) => made.layers.filter((l) => l.name === name);
+  assert.deepEqual(made.layers.filter((l) => l.kind === 'image' && /^Picture /.test(l.name)).map((l) => l.params.src), ['assets/a.jpg', 'assets/b.jpg']);
+  assert.deepEqual(named('Name').map((l) => l.params.text), ['Left', 'Right']);
+  assert.deepEqual(named('Verdict text').map((l) => l.params.text), ['AI-generated', 'Real'], 'the second is the real one');
+  assert.deepEqual(named('Tell').map((l) => l.params.text), ['The hands', 'The text on the sign']);
+  // Each verdict, then each tell, is a click of its own.
+  const clicks = made.layers.filter((l) => l.anim && l.anim.trigger === 'onClick').map((l) => l.anim.step.i);
+  assert.deepEqual(clicks, [0, 1, 2, 3]);
+});
