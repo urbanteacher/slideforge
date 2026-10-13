@@ -65,5 +65,5 @@ export function stepAt(steps: Step[], slide: number): number {
   return best;
 }
 
-/** Does the show have a question or a feedback prompt the room can ask? */
-export const hasRoomGame = (deck: DeckLike): boolean => showFromDeck(deck).slides.some((s) => s.activity === 'question' || s.activity === 'feedback');
+/** Does the show have a question, a feedback prompt or an activity the room can run? */
+export const hasRoomGame = (deck: DeckLike): boolean => showFromDeck(deck).slides.some((s) => s.activity === 'question' || s.activity === 'feedback' || !!s.act);

@@ -167,7 +167,7 @@ function Show() {
     if (act === 'wait' && (r.at < 0 || r.state.phase === 'lobby')) { say('Waiting for players to join'); return; }
     if (p.settle()) return;
     // A timed routine (live/activities): the room enters its next stage, and the slide builds it (its column, its clock).
-    if (act === 'advance' && steps[r.at]?.room.act?.stages.length && r.stageNext()) { p.build(); return; }
+    if ((act === 'advance' || act === 'end') && steps[r.at]?.room.act?.stages.length && r.stageNext()) { p.build(); return; }
     // A build of the slide on an open question is a step of its help (Emoji guess), which the room releases with it.
     if (p.build()) { if (act === 'wait' || act === 'reveal') r.release(); return; }
     if (act === 'ask' || act === 'reveal' || act === 'advance') r.next();
@@ -446,7 +446,7 @@ function Show() {
         {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
         <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F)"><Maximize size={16} /></button>
-        {!roomOn && steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled() && (
+        {!roomOn && steps.some((s) => s.room.quiz || s.room.feedback || s.room.act) && studioRoomEnabled() && (
           <button className="show-live" onClick={() => openStudioShow({ room: true, slideId: slide.id })} title="Run this lesson live with phones"><Radio size={15} />Host live</button>
         )}
         <button onClick={exit} aria-label={roomOn ? 'End the room and exit' : 'Exit'} title={roomOn ? 'End the room and exit (Esc)' : 'Exit (Esc)'}><X size={16} />{roomOn ? 'End' : ''}</button>
