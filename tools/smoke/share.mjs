@@ -48,8 +48,8 @@ try {
   ok(true, 'the old address opens the studio viewer');
   const pos = () => reader.locator('.sf-pos').textContent();
   ok(/^1 \/ \d+$/.test((await pos()) || ''), 'read-only opens on the first slide', await pos());
-  await reader.keyboard.press('ArrowRight');
-  await reader.waitForTimeout(800);
+  /* The first press may only finish the slide's entrance (the player settles it), so press until it moves. */
+  for (let k = 0; k < 4 && /^1 \//.test((await pos()) || ''); k++) { await reader.keyboard.press('ArrowRight'); await reader.waitForTimeout(700); }
   ok(/^2 \/ \d+$/.test((await pos()) || ''), 'read-only advances on ArrowRight', await pos());
   await reader.screenshot({ path: path.join(outDir, 'read-only.png') });
 

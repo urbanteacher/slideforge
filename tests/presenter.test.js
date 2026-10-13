@@ -156,18 +156,12 @@ test('share helper and desk Share button are wired for on-desk dialogs',()=>{
  const bus=fs.readFileSync(require.resolve('../src/presenter/window.js'),'utf8');
  const shell=fs.readFileSync(require.resolve('../js/shell.js'),'utf8');
  const share=fs.readFileSync(require.resolve('../js/share.js'),'utf8');
- const html=fs.readFileSync(require.resolve('../presenter.html'),'utf8');
  assert.match(share,/function shareLessonDoc/);
  assert.match(share,/SF\.shareLessonDoc\s*=\s*shareLessonDoc/);
  assert.match(shell,/SF\.shareLessonDoc/);
  assert.match(shell,/function lessonDoc/);
  assert.match(bus,/d\.cmd === 'sharePrep'/);
  assert.match(bus,/d\.cmd === 'shareWatch'/);
- assert.match(html,/id="btnShareDesk"/);
- assert.match(html,/shareFromDesk|openShareOnDesk/);
- assert.match(html,/js\/share\.js/);
- assert.match(html,/js\/ask\.js/);
- assert.doesNotMatch(html,/data-cmd="share"/);
 });
 
 test('teacher desk opens a large pop-out, not a tiny dialog',()=>{

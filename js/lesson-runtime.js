@@ -5,14 +5,12 @@
    studios (js/lab-engine.js). Three things they held are not authoring and
    outlive them:
 
-   - SF.createPresetGame, a game set up from a preset, which the live room's
-     activities (js/live-activities.js), the presenter's quick game and the
-     lab's game catalogue (tools/lab-games.mjs) build games with;
+   - SF.createPresetGame, a game set up from a preset, which the lab's game
+     catalogue (tools/lab-games.mjs) builds games with;
    - SF.Activities.makeSlides, an activity's slides as SlideForge draws them,
-     which the live room and the lab's activity catalogue
-     (tools/lab-activities.mjs) read;
-   - the page's start: the Library seeded, a show that was running when the
-     page reloaded put back, and a room that was being hosted walked back into. */
+     which the lab's activity catalogue (tools/lab-activities.mjs) reads;
+   - the page's start: the Library seeded. (The classic live room, and its
+     walk back into a held room after a reload, went in M14.) */
 (function (global) {
   'use strict';
   /** @type {any} */
