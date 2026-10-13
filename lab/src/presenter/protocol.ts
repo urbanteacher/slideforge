@@ -4,16 +4,16 @@
 // unit-tested without a browser. The show executes a command exactly as its own key would (show/commands.ts).
 
 import type { Deck } from '../core';
-import type { QuickAsk } from '../live';
+import { FLOOR_MODES, QA_ACTIONS, type FloorMode, type QaAction, type QaBox, type QuickAsk } from '../live';
 
 export const PRESENTER_CHANNEL = 'slideforge.lab.presenter.v1';
 
 /** What the window may ask of the show. `goto` carries `n`, a 1-based slide number of the shown deck; `poll` carries the quick poll to ask. */
-export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more' | 'poll';
-export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more', 'poll'];
+export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more' | 'poll' | 'qa' | 'floor';
+export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more', 'poll', 'qa', 'floor'];
 
-/** What a command carries besides its slide number: the quick poll to ask (`poll`). */
-export interface CmdData { poll?: QuickAsk }
+/** What a command carries besides its slide number: the quick poll to ask (`poll`), the action on a question (`qa`), the floor's mode (`floor`). */
+export interface CmdData { poll?: QuickAsk; qa?: { id: number; action: QaAction }; floor?: FloorMode }
 
 /** The room, as the desk shows it; null in a show with no room. */
 export interface PresenterRoom {
@@ -33,6 +33,9 @@ export interface PresenterRoom {
   /** The teacher's quick poll (live/quick.ts): one is up (`close` ends it), or one can be asked now. */
   quick?: boolean;
   canPoll?: boolean;
+  /** The questions box (live/questions.ts), and who may ask. */
+  qa?: QaBox;
+  floor?: FloorMode;
   /** A routine's stage on the wall (live/activities): its name and job, the note count, and how many asked for help (only the desk says it). */
   stage?: { name: string; wall: string; written: string; help: number } | null;
 }
@@ -79,7 +82,9 @@ export function parseToShow(v: unknown): ToShow | null {
   if (v.t === 'cmd' && PRESENTER_CMDS.includes(v.cmd as PresenterCmd)) {
     const n = v.n == null ? NaN : Number(v.n);
     const poll = isObj(v.poll) && typeof v.poll.prompt === 'string' && typeof v.poll.kind === 'string' ? (v.poll as unknown as QuickAsk) : undefined;
-    return { t: 'cmd', cmd: v.cmd as PresenterCmd, n: Number.isFinite(n) ? Math.trunc(n) : undefined, ...(poll ? { poll } : {}) };
+    const qa = isObj(v.qa) && Number.isFinite(Number(v.qa.id)) && QA_ACTIONS.includes(v.qa.action as QaAction) ? { id: Number(v.qa.id), action: v.qa.action as QaAction } : undefined;
+    const floor = FLOOR_MODES.includes(v.floor as FloorMode) ? (v.floor as FloorMode) : undefined;
+    return { t: 'cmd', cmd: v.cmd as PresenterCmd, n: Number.isFinite(n) ? Math.trunc(n) : undefined, ...(poll ? { poll } : {}), ...(qa ? { qa } : {}), ...(floor ? { floor } : {}) };
   }
   return null;
 }
@@ -103,7 +108,7 @@ export class ShowSide {
       const m = parseToShow(e.data);
       if (!m) return;
       if (m.t === 'hello') this.ch.postMessage({ t: 'deck', deck: this.deck, state: this.last } satisfies ToWindow);
-      else this.onCmd(m.cmd, m.n, m.poll ? { poll: m.poll } : undefined);
+      else { const { t: _t, cmd, n, ...data } = m; this.onCmd(cmd, n, Object.keys(data).length ? data : undefined); }
     };
   }
   publish(state: PresenterState): void {

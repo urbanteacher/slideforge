@@ -6,7 +6,7 @@
 //   presenterUrl()                  where the window is opened from
 export { PresenterWindow } from './PresenterWindow';
 export { PRESENTER_CHANNEL, ShowSide, WindowSide, parseToShow, parseToWindow } from './protocol';
-export { QuickPollForm } from './RoomDesk';
+export { QuestionsList, QuickPollForm } from './RoomDesk';
 export type { ChannelFactory, ChannelLike, CmdData, PresenterCmd, PresenterRoom, PresenterState, Screen, ToShow, ToWindow } from './protocol';
 export { clock, parseCountdown, remaining } from './timer';
 

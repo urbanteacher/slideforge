@@ -446,3 +446,10 @@
 .wa-spots figure { margin: 0; padding: calc(var(--u) * 18) calc(var(--u) * 24); background: rgba(14,14,16,.92); border-left: calc(var(--u) * 8) solid var(--accent); border-radius: calc(var(--u) * 12); }
 .wa-spots figcaption { color: var(--muted); font-size: calc(var(--u) * 36); }
 .wa-spots blockquote { margin: 0; font-size: calc(var(--u) * 44); }
+
+/* A question from the room on the wall (WallViews QaCard; classic's question card). */
+.wall-qa { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u) * 28); padding: calc(var(--u) * 96) calc(var(--u) * 140); background: var(--bg); pointer-events: auto; }
+.wall-qa p { margin: 0; }
+.wall-qa-label { color: var(--muted); font-size: calc(var(--u) * 40); text-transform: uppercase; letter-spacing: .08em; }
+.wall-qa-text { font-size: calc(var(--u) * 84); line-height: 1.2; }
+.wall-qa-foot { display: flex; gap: calc(var(--u) * 32); color: var(--muted); font-size: calc(var(--u) * 40); }

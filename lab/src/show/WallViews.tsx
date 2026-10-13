@@ -231,6 +231,17 @@ export function RailView({ rail }: { rail: Rail }) {
 }
 
 /** The room has ended (or is ending): the final standings, and the way to the class report (ReportScreen), and to the shell's Reports. */
+/** A question from the room, on the wall while the teacher has it there (classic's question card). */
+export function QaCard({ qa }: { qa: NonNullable<Wall['qa']> }) {
+  return (
+    <section className="wall-qa" aria-label="A question from the room" aria-live="polite" data-testid="wall-qa">
+      <p className="wall-qa-label">From the room</p>
+      <p className="wall-qa-text">{qa.text}</p>
+      <p className="wall-qa-foot">{qa.name && <span>{qa.name}</span>}{qa.votes > 1 && <span>▲ {qa.votes} also asked this</span>}</p>
+    </section>
+  );
+}
+
 export function Ended({ wall, closing, onReport, onShellReport, onClose }: { wall: Wall; closing: boolean; onReport?: () => void; onShellReport?: () => void; onClose: () => void }) {
   const rows = wall.board.slice(0, TOP);
   return (

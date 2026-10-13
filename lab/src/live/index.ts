@@ -12,6 +12,7 @@ export type { ManualChoice } from './styles';
 export { ManualBridge, manualState, newKey, type ChannelLike } from './manual';
 export { showFromDeck, type RoomQuiz, type RoomShow, type RoomSlide } from './show';
 export { feedbackOf, type RoomFeedback } from './feedback';
+export { FLOOR_MODES, FLOOR_SAYS, QA_ACTIONS, QA_SAYS, emptyQa, qaButtons, qaFrame, qaOf, type QaAction } from './questions';
 export { QUICK_PRESETS, quickFields, quickProblem, type QuickAsk, type QuickKind, type QuickPreset } from './quick';
 export { ACTIVITY_KINDS, activityBlocker, activityKeys, activityOf, cataloguePage, type ActivityKind, type ActivityView, type RoomActivity, type RoomStage, type StageFrame } from './activities';
 export { type BossView, type DripView, type Mechanic, type RaceLane, type RaceView } from './mechanics';
@@ -24,4 +25,4 @@ export { MAX_TEAMS, TEAM_COLORS, TEAM_DEFAULTS, normalizeTeams, parseRoster, roo
 export { Room, emptyRoom, type Listener, type Mech, type OpenFeedback, type OpenQuestion, type RoomState, type Tally } from './room';
 export { Connection, DEFAULT_BACKOFF, type Backoff, type ConnectionOptions, type SocketFactory, type SocketLike } from './connection';
 export type { SprintProgress, SprintQuestion, SprintResult } from './protocol';
-export type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, TallyAnswer } from './protocol';
+export type { Digest, FloorMode, HostMessage, QaBox, QaItem, QaItemState, QaPinned, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, TallyAnswer } from './protocol';

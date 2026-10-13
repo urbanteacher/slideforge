@@ -65,6 +65,15 @@ export type Digest =
 /** A teacher's answer by key (§6.4): an option, the words typed for a Type answer question, or the number for a Slider; `clear` takes it back. */
 export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; fill?: number[]; sort?: number[]; clear?: boolean }
 
+/** The questions box (§ ask, qa): one question as the host is sent it (pending ones too), and the one on the wall. */
+export type QaItemState = 'pending' | 'approved' | 'answered' | 'dismissed';
+export interface QaItem { id: number; text: string; name: string; at: number; state: QaItemState; votes: number }
+export interface QaPinned { id: number; text: string; name: string; votes: number }
+/** The relay's `qa` to the host: every question, most wanted first, the pinned one, and how many wait and are open. */
+export interface QaBox { items: QaItem[]; pinned: QaPinned | null; pending: number; open: number }
+/** Who may ask (§ floor): `auto` follows the slide (open except on a content slide), `open` any time, `shut` never. */
+export type FloorMode = 'auto' | 'open' | 'shut';
+
 /** H→R: what the host sends. */
 export type HostMessage =
   | { t: 'host'; title: string; mode: 'individual' | 'teams'; teams: { name: string }[] }
@@ -101,6 +110,10 @@ export type HostMessage =
   | { t: 'sprintEnd' }
   | ({ t: 'prompt' } & PromptFields)
   | { t: 'promptEnd' }
+  /** The questions box: the teacher's moderation (approve, hide, mark answered, back to waiting), the one on the wall, and the floor. */
+  | { t: 'qaModerate'; id: number; action: 'approve' | 'dismiss' | 'answered' | 'pending' }
+  | { t: 'qaPin'; id: number | null }
+  | { t: 'floor'; mode: FloorMode }
   | { t: 'end' };
 
 /** One question of a sprint, with its key (`correct`): the relay marks the taps against it. */
@@ -131,8 +144,9 @@ export type RelayMessage =
   | ({ t: 'sprintResult' } & SprintResult)
   | { t: 'sessionReport'; report: unknown }
   | { t: 'sessionClosed'; report: unknown }
+  | ({ t: 'qa' } & QaBox)
   | Other;
-export interface Other { t: 'recording' | 'bookmarks' | 'signals' | 'qa' | 'reaction' | 'wrote'; [field: string]: unknown }
+export interface Other { t: 'recording' | 'bookmarks' | 'signals' | 'reaction' | 'wrote'; [field: string]: unknown }
 
 /** The room's phase (§2), as the relay keeps it and the host follows it. */
 export type Phase = 'lobby' | 'running' | 'question' | 'revealed' | 'idle' | 'sprint';

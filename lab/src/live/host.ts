@@ -23,6 +23,8 @@ import { BOARDS, BoardDesk, boardOfKey } from './boards';
 import { styleFor, type ManualChoice } from './styles';
 import { ActivityDesk } from './activities';
 import { quickFields, type QuickAsk } from './quick';
+import { FLOOR_MODES, QA_ACTIONS, qaFrame, type QaAction } from './questions';
+import type { FloorMode } from './protocol';
 
 export interface HostOptions {
   /** The relay's socket, e.g. `wss://<host>` (classic: the page's own host). */
@@ -331,6 +333,20 @@ export class LiveHost {
     return id;
   }
 
+  /** The teacher's action on a question in the questions box (questions.ts): approve, hide, mark answered, back to waiting,
+   *  on or off the wall. False: not sent (an unknown action, or no room). The relay answers with `qa`. */
+  qa(id: number, action: QaAction): boolean {
+    if (!QA_ACTIONS.includes(action) || !Number.isFinite(id)) return false;
+    return this.send(qaFrame(id, action));
+  }
+
+  /** Who may ask (classic's floor): a mode, or the next of auto, open and shut. The mode set, or null when not sent. */
+  floor(mode?: FloorMode): FloorMode | null {
+    const at = FLOOR_MODES.indexOf(this.state.floor);
+    const next = mode && FLOOR_MODES.includes(mode) ? mode : FLOOR_MODES[(at + 1) % FLOOR_MODES.length];
+    return this.send({ t: 'floor', mode: next }) ? next : null;
+  }
+
   /** Ask the relay for the session's report (`sessionReport`). */
   report(): void { this.send({ t: 'report' }); }
 
@@ -491,6 +507,8 @@ export class LiveHost {
    *  back with the new PIN would only wait. Next asks it once they are in. */
   private replay(): void {
     for (const g of this.manualNames) this.send({ t: 'manualAdd', names: g.names, team: g.team });
+    // The new room's floor follows the lesson; the teacher's choice is sent again. Its questions box starts empty, as its scores do.
+    if (this.state.floor !== 'auto') this.send({ t: 'floor', mode: this.state.floor });
     if (!this.begun) return;
     this.send({ t: 'begin' });
     this.lastGame = null;

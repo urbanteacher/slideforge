@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer } from '../engine';
 import type { Deck } from '../core';
 import { WindowSide, type CmdData, type PresenterCmd, type PresenterState } from './protocol';
-import { QuickPollForm } from './RoomDesk';
+import { QuestionsList, QuickPollForm } from './RoomDesk';
 import { clock, parseCountdown, remaining } from './timer';
 import './presenter.css';
 
@@ -48,6 +48,7 @@ export function PresenterWindow() {
   const [typed, setTyped] = useState('10');
   const [jump, setJump] = useState('');
   const [pollOpen, setPollOpen] = useState(false);
+  const [qaOpen, setQaOpen] = useState(false);
 
   useEffect(() => {
     document.title = 'Teacher Presenter';
@@ -121,6 +122,12 @@ export function PresenterWindow() {
               {room.view === 'reveal' || room.revealed ? <p>Answer revealed</p> : null}
               {room.stage && <p>{room.stage.name} · {room.stage.wall}{room.stage.written ? ` · ${room.stage.written}` : ''}</p>}
               {room.stage && room.stage.help > 0 && <p className="pw-help" role="status">{room.stage.help} {room.stage.help === 1 ? 'asks' : 'ask'} for help</p>}
+              {room.qa && room.qa.pinned && <p className="pw-help" role="status">On the wall: {room.qa.pinned.text}</p>}
+              {qaOpen && room.qa && (
+                <section className="pw-desk" aria-label="Questions from the room"><h3>Questions{room.qa.pending ? ` · ${room.qa.pending} waiting` : ''}</h3>
+                  <QuestionsList qa={room.qa} floor={room.floor ?? 'auto'} onQa={(id, action) => send('qa', undefined, { qa: { id, action } })} onFloor={(m) => send('floor', undefined, { floor: m })} />
+                </section>
+              )}
               {pollOpen && (room.quick || room.canPoll) && (
                 <section className="pw-desk" aria-label="Quick poll"><h3>Quick poll</h3>
                   <QuickPollForm open={!!room.quick} onAsk={(a) => { send('poll', undefined, { poll: a }); setPollOpen(false); return ''; }} onEnd={() => send('close')} />
@@ -138,6 +145,7 @@ export function PresenterWindow() {
         {room?.canShow && <button onClick={() => send('open')}>Show results</button>}
         {room?.canClose && <button onClick={() => send('close')}>Close prompt</button>}
         {room?.stage && <button onClick={() => send('more')}>+30s</button>}
+        {room?.qa && <button onClick={() => setQaOpen((v) => !v)} aria-pressed={qaOpen} title="Questions from the room">Questions{room.qa.pending ? ` (${room.qa.pending})` : ''}</button>}
         {room && <button onClick={() => setPollOpen((v) => !v)} aria-pressed={pollOpen || !!room.quick} disabled={!room.quick && !room.canPoll} title="Ask the room something on the fly">Quick poll</button>}
         <button onClick={() => send(st.screen === 'black' ? 'resume' : 'black')} aria-pressed={st.screen === 'black'}>Black</button>
         <button onClick={() => send(st.screen === 'white' ? 'resume' : 'white')} aria-pressed={st.screen === 'white'}>White</button>

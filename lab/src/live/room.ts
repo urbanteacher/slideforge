@@ -7,7 +7,8 @@ import { emptySpoken, type SpokenView } from './spoken';
 import { emptySpeed, type SpeedView } from './speedroom';
 import type { BoardEntry } from './boards';
 import type { ActivityView } from './activities';
-import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
+import { emptyQa, qaOf } from './questions';
+import type { Digest, FloorMode, HostMessage, QaBox, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
 export interface OpenQuestion { id: string; slideId: string; options: string[]; timeLimit: number }
@@ -61,6 +62,10 @@ export interface RoomState {
   feedback: OpenFeedback | null;
   /** The open prompt's id when it is the teacher's quick poll (quick.ts), asked on the fly and not by a slide; null otherwise. Set by the host. */
   quick: string | null;
+  /** The questions box as the relay last sent it (`qa`: every question, pending ones too, and the one on the wall). */
+  qa: QaBox;
+  /** Who may ask, as the host last set it (the relay does not tell the host). */
+  floor: FloorMode;
   /** Question ids the relay has revealed. */
   revealed: string[];
   /** Question ids whose gate step the host has sent (`closeAnswers`: predictions locked; `showdown`: the split shown). */
@@ -88,7 +93,7 @@ export interface RoomState {
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
-  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null, quick: null,
+  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null, quick: null, qa: emptyQa(), floor: 'auto',
   revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
   spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {}, activity: null,
 });
@@ -144,6 +149,7 @@ export class Room {
       case 'sprint': s.phase = 'sprint'; s.question = null; s.tally = null; break;
       case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; s.quick = null; break;
       case 'promptEnd': s.feedback = null; s.quick = null; break;
+      case 'floor': s.floor = m.mode; break;
       default: return;
     }
     this.s = s;
@@ -155,7 +161,7 @@ export class Room {
     const s = { ...this.s };
     switch (m.t) {
       case 'hosted':
-        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], rows: [], scores: {}, tally: null, feedback: null, quick: null, error: null, oralCounts: {} });
+        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], rows: [], scores: {}, tally: null, feedback: null, quick: null, qa: emptyQa(), error: null, oralCounts: {} });
         break;
       case 'rehosted':
         Object.assign(s, { live: true, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, mode: m.mode, teams: m.teams, phase: m.phase, error: null });
@@ -198,6 +204,7 @@ export class Room {
         s.revealed = s.revealed.filter((id) => id !== m.id);
         if (s.tally && s.tally.id === m.id) s.tally = { ...s.tally, rev: m.rev, answers: m.answers };
         break;
+      case 'qa': s.qa = qaOf(m); break;
       case 'oralCount': s.oralCounts = { ...s.oralCounts, [m.gameId]: m.count }; break;
       case 'manualError': s.manualError = { message: m.message, playerId: m.playerId, id: m.id }; break;
       case 'recording': s.recording = m.persisted !== false; break;

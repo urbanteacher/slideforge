@@ -4,7 +4,7 @@
 // a press right after a question lands is swallowed for GRACE_MS, so a double press does not reveal the answer
 // the instant the question appears; then Next reveals; then Next moves on).
 
-import { boardWallOf, styleFor, teamBoardOf, type BoardWallBase, type Mech, type RoomState, type TeamRow, type WallDetail } from '../live';
+import { boardWallOf, styleFor, teamBoardOf, type BoardWallBase, type Mech, type QaPinned, type RoomState, type TeamRow, type WallDetail } from '../live';
 import { feedbackWallOf, type FeedbackWall } from './feedbackWall';
 import { activityWallOf, type ActivityWall } from './activityWall';
 import { railOf, type Rail } from './rail';
@@ -54,6 +54,8 @@ export interface Wall {
   rail: Rail | null;
   /** The audience feedback the room is asked on this slide (view `feedback`): bars, spread, cloud or ideas. */
   feedback: FeedbackWall | null;
+  /** The room's question the teacher put on the wall (the questions box, live/questions.ts), over whatever else is there; null when none. */
+  qa: QaPinned | null;
   /** The track, the boss or the dripping word: with the question (a word only while it is asked), and on the scores. */
   mech: WallMech;
   /** Beat the clock: the sprint the phones run (view `sprint`), or the wall-paced round's clock beside its questions. */
@@ -115,7 +117,7 @@ export function wallOf(i: WallInput): Wall {
   const rail = railOf({ board, teams, teamBefore: i.teamBefore, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
   const speed = { sprint: null, round: room.speed.round && step?.room.gameId === room.speed.round.gameId ? roundWallOf(room.speed.round) : null };
   const act = step?.room.act && room.activity?.slideId === step.room.id ? activityWallOf(room.activity, room.feedback) : null;
-  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, speed, boardWall: null, activity: act, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const base = { join, players, teams, question: null, feedback: null, qa: room.qa.pinned, mech: NO_MECH, speed, boardWall: null, activity: act, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };

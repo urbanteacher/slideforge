@@ -4,7 +4,7 @@
 // shell's reports, and a relay that does not answer is the show's cue to hand the lesson back to the classic host.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { emptyRoom, LiveHost, ManualBridge, styleFor, teamBoardOf, type QuickAsk, type Recipient, type RoomShow, type RoomState } from '../live';
+import { emptyRoom, LiveHost, ManualBridge, styleFor, teamBoardOf, type FloorMode, type QaAction, type QuickAsk, type Recipient, type RoomShow, type RoomState } from '../live';
 import type { ShowHooks } from './hooks';
 import { bindReports, keepReport } from './reports';
 import { timeUpIn } from './clock';
@@ -57,6 +57,9 @@ export interface RoomApi {
   showFeedback: () => void;
   /** The teacher's quick poll (live/quick.ts): its id, or null when it was not asked (closeFeedback ends it). */
   quickPoll: (ask: QuickAsk) => string | null;
+  /** The questions box (live/questions.ts): the teacher's action on a question, and who may ask (the next mode with none given). */
+  qa: (id: number, action: QaAction) => void;
+  floor: (mode?: FloorMode) => FloorMode | null;
   /** End the room; resolves once the relay has closed it (or after classic's 1.5 s). */
   end: () => Promise<void>;
   /** Add learners by name, to a team in a teams room (the lobby's pasted roster). */
@@ -172,6 +175,8 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),
     quickPoll: (ask) => host.current?.quickPoll(ask) ?? null,
+    qa: (id, action) => { host.current?.qa(id, action); },
+    floor: (mode) => host.current?.floor(mode) ?? null,
     end,
     addNames: (names, team = 0) => host.current?.manualAdd(names, team),
     manualHash: () => bridge.current?.hash ?? null,
