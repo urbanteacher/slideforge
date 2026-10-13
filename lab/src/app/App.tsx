@@ -4,7 +4,7 @@ import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '
 import { isLabDeck, saveCurrent } from './embed';
 import { ShowLayer } from '../show';
 import { registerGuideFonts } from '../theme';
-import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse } from '../ui';
+import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS } from '../ui';
 import { present } from './showInSlideForge';
 import { TopBar } from './TopBar';
 
@@ -170,14 +170,26 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
 }
 
 /** A studio with nothing in it yet: the Quiz studio before the lesson has a game, Activities before it
- *  has an activity. Browse, on the left, adds one after the slide the lesson was on. */
+ *  has an activity. It offers a few starters to add with one click (after the slide the lesson was on),
+ *  and Browse, on the left, for everything else. The added slides open ready to edit, or to write with AI
+ *  in the side panel. */
 function EmptyView({ view }: { view: LabView }) {
   const quiz = view === 'quiz';
+  const kind = quiz ? 'games' : 'activities';
+  const [busy, setBusy] = useState('');
+  const pick = (id: string) => { if (busy) return; setBusy(id); void quickAdd(kind, id).finally(() => setBusy('')); };
   return (
     <div className="empty-view">
-      <b>{quiz ? 'No games in this lesson yet' : 'No activities in this lesson yet'}</b>
-      <span>Pick one in Browse, on the left: it goes into this lesson after the slide you were on.</span>
-      <button className="btn-soft accent" onClick={focusBrowse}>{quiz ? 'Browse games' : 'Browse activities'}</button>
+      <b>{quiz ? 'Start a game' : 'Start an activity'}</b>
+      <span>Pick one to add it after the slide you were on. Then edit it on the slide, or write it with AI in the side panel.</span>
+      <div className="empty-picks">
+        {QUICK_PICKS[kind].map((p) => (
+          <button key={p.id} className="empty-pick" disabled={!!busy} onClick={() => pick(p.id)}>
+            <b>{busy === p.id ? 'Adding…' : p.label}</b><span>{p.hint}</span>
+          </button>
+        ))}
+      </div>
+      <button className="btn-soft" onClick={focusBrowse}>{quiz ? 'All games' : 'All activities'}</button>
     </div>
   );
 }

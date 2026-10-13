@@ -136,6 +136,42 @@ function useOpen() {
   return [open, setOpen] as const;
 }
 
+/** The starters an empty studio offers (App's EmptyView): one click adds the first, as Browse's Add does. */
+export const QUICK_PICKS: Record<'games' | 'activities', { id: string; label: string; hint: string }[]> = {
+  activities: [
+    { id: 'a:think-pair-share', label: 'Think-Pair-Share', hint: 'Think alone, talk in pairs, share' },
+    { id: 'a:do-now-bell-ringer', label: 'Do Now', hint: 'A starter as they come in' },
+    { id: 'a:exit-ticket', label: 'Exit ticket', hint: 'What did they learn?' },
+    { id: 'a:muddiest-point', label: 'Muddiest point', hint: 'What is still unclear' },
+    { id: 'a:word-splash', label: 'Word splash', hint: 'Key words to explain' },
+    { id: 'a:hook-and-predict', label: 'Hook and predict', hint: 'Predict before you learn' },
+  ],
+  games: [
+    { id: 'g:choice', label: 'Multiple choice', hint: 'Phones pick A, B, C or D' },
+    { id: 'g:truefalse', label: 'True or false', hint: 'Two big buttons' },
+    { id: 'g:beat-the-clock', label: 'Beat the clock', hint: 'Self-paced, against the timer' },
+    { id: 'g:quiz-bowl', label: 'Quiz bowl', hint: 'Teams buzz in' },
+    { id: 'g:type', label: 'Type answer', hint: 'Phones type a word' },
+    { id: 'g:memory-match', label: 'Memory match', hint: 'Pair the terms' },
+  ],
+};
+
+/** Add one of the quick picks after the slide on screen, in the lab's own design, as Browse's Add does. */
+export async function quickAdd(kind: 'games' | 'activities', id: string): Promise<void> {
+  const lib = await loadLib();
+  const deck = useStore.getState().deck;
+  await faces(deck);
+  lib.m.setFrame(framed(deck));
+  const st = themeOf(deck) ?? LAYOUT_STYLES[0];
+  const card = kind === 'games'
+    ? lib.games.filter((g) => 'g:' + g.format === id).map((g) => gameCard(lib, g, st))[0]
+    : lib.data.activities.filter((x) => 'a:' + x.key === id).map((x) => activityCard(lib, x, st))[0];
+  if (!card) { useStore.getState().showToast('That starter is not in this version'); return; }
+  const o = card.options.find((x) => x.id === 'lab') ?? card.options[0];
+  const slides = o.make();
+  place(slides, card.toast(slides.length, o.label));
+}
+
 /** The Quiz studio's and Activities' left pane: Browse, as one section that folds away. */
 export function BrowsePanel({ kind }: { kind: 'games' | 'activities' }) {
   const [shown, setShown] = useOpen();

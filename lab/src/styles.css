@@ -730,9 +730,15 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .browse-add { display: grid; gap: 6px; }
 .browse-add .btn-soft { justify-content: center; }
 .center { position: relative; }
-.empty-view { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; max-width: 360px; padding: 26px 30px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); z-index: 2; }
+.empty-view { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; width: min(560px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; padding: 24px 26px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); z-index: 2; }
 .empty-view b { font-size: 15px; }
-.empty-view span { color: var(--dim); line-height: 1.45; }
+.empty-view > span { color: var(--text); line-height: 1.45; }
+.empty-picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; width: 100%; margin-top: 6px; }
+.empty-pick { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; padding: 10px 12px; border-radius: 10px; background: var(--field); border: 1px solid var(--line-2); color: var(--text); cursor: pointer; font: inherit; }
+.empty-pick:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.empty-pick:disabled { cursor: progress; }
+.empty-pick b { font-size: 13px; }
+.empty-pick span { font-size: 12px; color: var(--text); opacity: 1; line-height: 1.35; }
 .empty-view .btn-soft { margin-top: 6px; }
 .canvas-bar .add-view { background: var(--accent); color: #fff; font-weight: 600; }
 .canvas-bar .add-view:hover { filter: brightness(1.08); }
