@@ -4,7 +4,7 @@
 // a question is asked where its first drawing stands, its answer is that question's reveal (not a step of
 // its own), and the game's scores follow its last slide.
 //
-// The room asks the questions of the styles in styles/ (Multiple choice, True or false, Type answer, Slider). Any other question is shown, not asked.
+// The room asks the questions of the styles in styles/ (the registry's list; STYLES in styles/index.ts). Any other question is shown, not asked.
 // A slide with audience feedback (poll, word cloud, brainstorm, scale) is a step that opens a prompt (feedback.ts).
 
 import type { Deck, Slide } from '../core';
@@ -53,6 +53,8 @@ function quizOf(s: Slide): RoomQuiz {
   const g = s.game!, set = g.settings ?? {};
   const q = Object.assign({ type: 'quiz', style: 'choice', input: 'choice', correct: 0, points: 1000, explanation: '', options: [], question: '' }, copy(g.quiz ?? {})) as unknown as RoomQuiz;
   q.id = s.id;
+  // The game's format is on its question, as SlideForge's compile puts it there (a style may be told by it: Time traveler).
+  if (q.format == null) q.format = g.format;
   q.timeLimit = (set.seconds ?? 0) > 0 ? set.seconds! : 0;
   if (set.points != null) q.points = set.points;
   q.gameId = g.id;
@@ -101,6 +103,10 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
       }
     }
   });
+  // A style that shapes the game's questions as a set (Time traveler's one line and growing timeline) does so now they are all here.
+  const games = new Map<string, RoomQuiz[]>();
+  for (const s of out) if (s.quiz && s.gameId) games.set(s.gameId, [...(games.get(s.gameId) ?? []), s.quiz]);
+  for (const qs of games.values()) styleOf(qs[0])?.link?.(qs);
   // Teams belong to the room, not to a question: the first game's settings say (a deck of several games shares one set of teams).
   const lead = slides.find((s) => s.game?.id && s.game.settings?.mode != null)?.game?.settings;
   const play = roomPlay(lead);

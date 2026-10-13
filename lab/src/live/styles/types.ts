@@ -30,6 +30,8 @@ export interface LineModel {
   /** "1989 ± 3 year". */
   band: string;
   marks: LineMark[];
+  /** Time traveler: the events already placed on the line, named under it. */
+  timeline?: { label: string; year: number; pct: number }[];
 }
 
 /** A ranking's reveal: the right order, and for each place how many of the room put the right item there; the pair swapped most. */
@@ -97,6 +99,8 @@ export interface StyleEntry {
   gate?: 'closeAnswers' | 'showdown';
   /** Flags the question frame carries beside the style's own (classic's `predict`, `showdown`). */
   flags?(q: RoomQuiz): Partial<QuestionFields>;
+  /** The game's questions as one set, once they are all compiled (Time traveler: one line for the game, a timeline that grows). */
+  link?(qs: RoomQuiz[]): void;
   /** The room is never revealed by itself (everyone answered): only the teacher reveals. */
   held?: boolean;
   /** After the reveal the room is asked this (a brainstorm prompt, classic's quick prompt); it closes when the show leaves the question. */

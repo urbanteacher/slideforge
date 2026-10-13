@@ -162,6 +162,11 @@ function NumberLine({ line }: { line: LineModel }) {
           <span key={m.id} className={`numline-dot${m.right ? ' right' : ''}`} style={{ left: `${m.pct}%`, bottom: `calc(var(--u) * ${14 + m.row * 22})` }} data-testid="numline-dot" title={`${m.value}`} />
         ))}
       </div>
+      {line.timeline && line.timeline.length > 0 && (
+        <ul className="numline-events" aria-label="Already on the timeline" data-testid="numline-events">
+          {line.timeline.map((e, i) => <li key={i} style={{ left: `${e.pct}%` }}><i aria-hidden="true" />{e.label} <b>{e.year}</b></li>)}
+        </ul>
+      )}
       <div className="numline-ends" aria-hidden="true"><span>{line.min}</span><b data-testid="numline-band-label">{line.band}</b><span>{line.max}</span></div>
     </figure>
   );

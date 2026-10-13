@@ -224,3 +224,8 @@
 .split-n { font-size: calc(var(--u) * 56); }
 .split-was { position: absolute; top: 0; bottom: 0; width: calc(var(--u) * 6); margin-left: calc(var(--u) * -3); background: #fff; }
 .split-note { margin: calc(var(--u) * 8) 0 0; color: var(--muted); font-size: calc(var(--u) * 32); }
+
+/* Time traveler: the events already placed, named under the line. */
+.numline-events { list-style: none; margin: calc(var(--u) * 6) 0 0; padding: 0; position: relative; height: calc(var(--u) * 70); font-size: calc(var(--u) * 28); }
+.numline-events li { position: absolute; transform: translateX(-50%); white-space: nowrap; display: flex; flex-direction: column; align-items: center; color: var(--muted); }
+.numline-events i { width: calc(var(--u) * 4); height: calc(var(--u) * 12); background: rgba(255,255,255,.6); }
