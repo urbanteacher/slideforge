@@ -26,13 +26,33 @@ So the content is already structured, but only in tool files: a teacher can't ma
 
 ## 2. The idea
 
-A **Nodes challenge** is one stage's data, held in the lesson. Three things are made from it:
+**Nodes formats, custom built like the games and activities.** We take the Nodes engine and method, not the Nodes decks' look:
+- **The engine:** the command word, the relationship the answer must make, the answer routine, the three answers, the missing-link ladder, the SOLO levels and the framework of nodes.
+- **The look:** each format is a design in our own style system, as every game and activity is. It is drawn in the lesson's own theme by the shared kit (`lab/src/designs/engage/kit.ts`), with its parts ordinary layers that are edited on the slide.
 
-1. **The slides,** designed as the Nodes decks are, but generated in the app, not offline.
-2. **The live moments,** where students do each part on their phones, not just watch it.
-3. **An editor,** to fill in by hand, or to have AI draft a stage from a topic.
+Each format has what a game or an activity has:
+- **A design** for the wall: `(style, content) => slides`, in the lesson's theme.
+- **A card in the Nodes tab's Browse,** pictured in the lesson's style, with how it runs and Add.
+- **Settings and content** in the side panel: the question, the links, the answers, the hints, and the timing.
+- **Write it with AI,** from a topic, with the guardrails in section 4.
+- **A room:** what the phones do and what the wall shows back, on the existing phone screens (section 3).
 
-It is like an activity (stages, a brief, an idea box) and like a game (answers checked and scored), but its shape comes from the Nodes method, not from a catalogue row.
+The Nodes decks themselves (the CPU lesson, Critical Text 3, Describe) stay in the Library as finished lessons, and as the examples the formats are modelled on. They are not copied in by the Nodes tab.
+
+### The formats
+
+| Format | What students do | Phone | Engine part it teaches |
+|---|---|---|---|
+| **Join it up** | Build the chain the question needs (point → because → so → in this case) | `order` or `fill` | The relationship required |
+| **Breakdown** | Label each unit of a worked answer | `sort` | What a complete answer is made of |
+| **Three answers** | Pick the strongest of A, B and C, then say why | `choice`, then `text` | Weak, stable and excellent |
+| **Which step broke?** | Tap the operation where a wrong answer failed | `choice` | The answer routine (Decode, Retrieve, Reason, Express, Check) |
+| **Missing-link ladder** | Attempt, then take the next rung only if needed: probe, hint, model, new task | `text`, the help signal | Support is not understanding |
+| **Keep them apart** | Sort statements between two confusable terms | `sort` | Two ideas treated as one |
+| **Level it** | Rate an answer's SOLO level | `choice` | The gap is a jump |
+| **Size the answer** | From the command word and marks: how many points, of what kind | `number`, `choice` | Command words |
+| **Mark it** | Peer-mark A, B and C with the mark scheme | scale | How the marks fall |
+| **Scaffold** | Work through every node of a framework on one topic, node by node, the wall showing the class on the map | per node | The framework: Technical Analysis (16 nodes) and the GCSE CS ladder (13) |
 
 ## 3. How each section plays in the room
 
@@ -84,16 +104,17 @@ A challenge that runs the **whole framework** on one topic, not one stage, for e
 
 ## 4. Where it lives in the code
 
-Following the existing patterns:
+Following the games and activities exactly:
 
-- **The data type:** `src/nodes/stage.js`, the JSON shape above, typed in `types.d.ts`. One object per challenge, stored on the challenge's slides (as an activity stores its rows).
-- **The slides:** `lab/src/nodes/`, porting `kit.js` and the deck files (ct3, cpu, describe) from the offline tool. Editing a field redraws the slides. The offline tool then calls the same code, so there is one builder.
-- **The room:** a challenge is a routine of steps. Each step names an existing game style or activity stage. It is hosted by `lab/src/live/` like any lesson, with a new `plays` entry in `rooms.js`.
-- **The editor:** a "Challenge" panel in the studio's Inspector. It has one card per section, and each card can be switched off, for example to skip the mark scheme for Year 9.
-- **AI:** an `AI_SPECS` entry in `js/ai.js`, like Quiz studio's, which writes the whole JSON from: subject, exam board, command word, topic, year group and common mistakes. Its guardrails:
-  - **Never invent sources.** Examiner quotes, mark-scheme examples and the "wrong ideas" percentages must be real, so AI leaves those fields empty and marked "add a source". It can fill the other fields.
-  - **A worked answer must actually answer the question,** the same rule as the activities' "a worked example must hold the example".
-  - **A, B and C must differ the way the method says:** A misses the point, B has points without links, C has the links.
+- **The formats:** `lab/src/designs/nodes/`, one file per format. Each exports its design `(st: LayoutStyle, content) => Slide[]`, built with the engage kit, and a starter `content`. They are listed in a `NODES` table, as `GAMES` lists the games (`designs/engage/formats.ts`).
+- **On the slide:** `slide.nodes = { format, role, settings, content }`, as a game carries `slide.game`. The Nodes tab shows the slides that have it.
+- **Browse:** the Nodes tab's left pane becomes Browse for the formats. It has cards drawn in the lesson's style, filters (by engine part, by phase), and Add, using `Browse.tsx`'s own machinery.
+- **The side panel:** each format's content and settings, like a game's (`designs/gameSettings.ts`).
+- **The room:** each format plays through `lab/src/live/`, with a `plays` declaration, using the existing phone inputs (no relay or phone-page change).
+- **AI:** `AI_SPECS` entries in `js/ai.js`, one per format, written from a topic. Where a Nodes stage matches, its real data comes from the Nodes export (section 7). Guardrails:
+  - **Never invent sources:** examiner quotes, mark-scheme examples and the "wrong ideas" percentages stay "add a source".
+  - **A worked answer must actually answer the question.**
+  - **A, B and C must differ as the method says:** A misses the point, B has points without links, C has the links.
 
 ## 5. How a teacher would use it
 
@@ -106,14 +127,14 @@ Following the existing patterns:
 
 Each step works on its own and can be pushed on its own.
 
-0. **Done (13 October):** the Nodes tab, after Activities. It shows the lesson's Nodes challenges, and when empty it offers the shipped Nodes stages to add with one click.
-1. **The data type and the slide builder in the app.** Port the offline builder into `lab/src/nodes/`, and check that the four shipped Nodes decks rebuild identically. This is the riskiest step, so it goes first.
-2. **The editor:** the Challenge panel, one card per section, editing redraws.
-3. **AI drafting,** with the source guardrail.
-4. **Live moments,** a few at a time: Join it up (order), Breakdown (sort) and Students' answers (choice then text) first, as they are the heart of the method; then the routine stages and the ladder.
-5. **The Teacher Presenter view:** stuck-by-operation, for this class.
-6. **The scaffolding challenge:** every node of a framework on one topic, AI-written from the real node definitions, with the class's progress on the framework map.
-7. **The extra activities** from the talk (section 3), as kinds of Nodes moment.
+0. **Done (13 October):** the Nodes tab, after Activities. For now it copies in the shipped Nodes decks; step 1 replaces that with the formats.
+1. **The format system and the first three formats,** in our style: Join it up, Three answers, Which step broke? This covers `slide.nodes`, the `NODES` table, Browse in the Nodes tab (cards drawn in the lesson's theme), and Add.
+2. **Their side panel:** content and settings, with editing redrawing the slides.
+3. **Write it with AI** for them.
+4. **Their room:** the phones and the wall's results.
+5. **The rest of the formats:** Breakdown, Missing-link ladder, Keep them apart, Level it, Size the answer, Mark it.
+6. **Scaffold:** every node of Technical Analysis (16) or the GCSE CS ladder (13) on one topic, AI-written from the real node definitions, with the class on the framework map.
+7. **The Teacher Presenter and Reports:** stuck-by-operation and the bottleneck node, for this class.
 
 ## 7. Decisions
 
@@ -133,4 +154,4 @@ Each step works on its own and can be pushed on its own.
 
 ## Change log
 
-- 13 October 2026: plan written. Later the same day: the Nodes tab (step 0); the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
+- 13 October 2026: plan written. Later the same day: the Nodes tab (step 0); redirected to Nodes formats custom built like games and activities, in our own styles, rather than copying the Nodes decks; the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
