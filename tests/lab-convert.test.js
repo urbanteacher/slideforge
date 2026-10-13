@@ -843,3 +843,15 @@ test('a blank slide comes in as its free blocks, each in the cells its author ga
   const bare = deck.slides.find((s) => s.sourceSlideId === empty.id);
   assert.ok(bare && !bare.layers.some((l) => l.kind === 'text'), 'nothing on it but its ground');
 });
+
+test('a game slide is the lab’s to build when its game comes compiled and makes slides (M13)', { skip }, async () => {
+  const { convertsSlide } = await converter();
+  const slide = { id: 'g1', type: 'game', gameId: 'check' };
+  const check = { format: 'choice', style: 'choice', label: 'Check', styleLabel: 'Multiple choice', aim: '', howToPlay: [], title: 'Check',
+    slides: [{ type: 'quiz', question: 'Which?', options: ['A', 'B'], correct: 0, style: 'choice', input: 'choice' }] };
+  assert.equal(convertsSlide(slide), false, 'without its game there is nothing to build');
+  assert.equal(convertsSlide(slide, { other: check }), false);
+  assert.equal(convertsSlide(slide, { check }), true);
+  // A board format handed no board makes no slides, and stays SlideForge's.
+  assert.equal(convertsSlide(slide, { check: { ...check, format: 'bingo', style: 'bingo' } }), false);
+});

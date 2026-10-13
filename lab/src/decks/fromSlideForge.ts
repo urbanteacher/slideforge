@@ -439,7 +439,7 @@ export function carryDeckLive(deck: Deck, source: SFSlide[], paletteId = 'nul', 
   if (deck.slides.some((s) => s.sourceSlideId)) {
     for (const s of deck.slides) { const src = s.sourceSlideId ? byId.get(s.sourceSlideId) : undefined; if (src) pairs.push([s, src]); }
   } else {
-    const built = source.filter(convertsSlide);
+    const built = source.filter((s) => convertsSlide(s));
     if (built.length === deck.slides.length) pairs = deck.slides.map((s, i) => [s, built[i]] as [Slide, SFSlide]);
   }
   let n = 0;
@@ -450,12 +450,18 @@ export function carryDeckLive(deck: Deck, source: SFSlide[], paletteId = 'nul', 
   return n;
 }
 
-/** Whether the lab can build this SlideForge slide. What it cannot (games, activities) stays SlideForge's. */
+/** Whether the lab can build this SlideForge slide. What it cannot (activities) stays SlideForge's. A game slide
+ *  it can build when its game came with the lesson, compiled (`games`), and makes lab slides: a game the lab
+ *  has no copy of then means its author deleted it, as for any other slide (M13). */
 let probe: ReturnType<typeof kit> | null = null;
-export function convertsSlide(s: SFSlide): boolean {
+export function convertsSlide(s: SFSlide, games?: SFDeck['games']): boolean {
   probe ??= kit('nul');
   const img = (p?: string) => p ?? '';
-  try { return s.type === 'quiz' ? leftoverQuizzes([s], probe.on('working'), img).has(s) : !!convert(s, probe.on, img, ''); } catch { return false; }
+  const g = s.type === 'game' && s.gameId ? games?.[s.gameId] : undefined;
+  try {
+    if (s.type === 'game') return !!g && buildGame(s, g, probe, img).length > 0;
+    return s.type === 'quiz' ? leftoverQuizzes([s], probe.on('working'), img).has(s) : !!convert(s, probe.on, img, '');
+  } catch { return false; }
 }
 
 /** SlideForge's video slide is a clip to watch: its sound on, once through, and playing as the slide

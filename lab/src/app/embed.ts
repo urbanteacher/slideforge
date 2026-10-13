@@ -426,8 +426,8 @@ export const labApi = {
     const shots = await stills(1920, onProgress, 0.92);
     await exportPptx(deck, shots.map((s) => ({ image: s.image, notes: s.notes, hidden: s.hidden, name: s.name })));
   },
-  /** The slides of a SlideForge lesson the lab cannot build: its games and activities. */
-  cannotBuild: (slides: SFSlide[]) => (slides ?? []).filter((s) => !convertsSlide(s)).map((s) => s.id).filter(Boolean) as string[],
+  /** The slides of a SlideForge lesson the lab cannot build: its activities, and a game it has not been handed compiled or cannot make. */
+  cannotBuild: (slides: SFSlide[], games?: Record<string, LessonGame>) => (slides ?? []).filter((s) => !convertsSlide(s, games)).map((s) => s.id).filter(Boolean) as string[],
   async flush() {
     await saveCurrent();
     useStore.setState({ saveState: 'saved' });

@@ -109,11 +109,13 @@ test('the studio’s slideshow is on by default, and the classic one is the way 
 /* M14: a slide of the lesson the lab copy was made from that the lab cannot build (a motion, quiz or blank slide,
    a game it has no copy of) is put back by SlideForge's show and room, and never seen by the studio's. Such a
    lesson stays classic's; a hidden one, one the lab built, or a game whose saved game is gone does not count. */
-function withSource(slides, labSlides, games) {
+function withSource(slides, labSlides, games, compiles) {
   const store = {};
   const localStorage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } };
   const source = { id: 'src', slides };
   const SF = { Store: { get: (id) => (id === 'src' ? source : null) }, GameStore: { get: (id) => (games || {})[id] || null } };
+  // M13: with SlideForge's game code here, the lesson's games go to cannotBuild compiled, and the lab builds those it can.
+  if (compiles) SF.compileGame = (g) => [{ type: 'quiz', question: g.id }];
   const context = { window: { SF }, console, URLSearchParams, localStorage, location: { search: '' }, navigator: { webdriver: false }, document: { getElementById: () => null }, performance: { now: () => 0 }, clearTimeout, setTimeout };
   context.globalThis = context;
   vm.createContext(context);
@@ -122,7 +124,7 @@ function withSource(slides, labSlides, games) {
   const builds = new Set(['title', 'content', 'image']);
   context.window.SF.LabEngine.ready({
     getDeck: () => deck, listSaved: () => Promise.resolve([]), subscribe: () => {},
-    cannotBuild: (ss) => ss.filter((s) => !builds.has(s.type)).map((s) => s.id)
+    cannotBuild: (ss, labGames) => ss.filter((s) => !builds.has(s.type) && !(s.type === 'game' && labGames && labGames[s.gameId] && compiles.includes(s.gameId))).map((s) => s.id)
   });
   return context.window.SF.LabEngine.classicOnly();
 }
@@ -136,4 +138,9 @@ test('a slide the lab cannot build keeps the lesson on SlideForge’s show and r
   assert.equal(withSource([{ id: 'a', type: 'title' }, { id: 'g', type: 'game', gameId: 'gone' }], lab), '', 'a game whose saved game is gone is left out by SlideForge too');
   assert.match(withSource([{ id: 'a', type: 'title' }, { id: 'g', type: 'game', gameId: 'kept', title: 'Boss' }], lab, { kept: { id: 'kept' } }), /"Boss" is a SlideForge game slide/);
   assert.equal(withSource([{ id: 'a', type: 'title' }, { id: 'g', type: 'game', gameId: 'kept' }], [...lab, { id: 'l3', sourceSlideId: 'g' }], { kept: { id: 'kept' } }), '', 'a game the lab built from its compiled copy is the lab’s');
+  // M13: a game the lab can build that its copy does not have was deleted there; one it cannot build stays classic's.
+  const kept = { kept: { id: 'kept' }, board: { id: 'board' } };
+  assert.equal(withSource([{ id: 'a', type: 'title' }, { id: 'g', type: 'game', gameId: 'kept' }], lab, kept, ['kept']), '', 'deleted in the lab, it stays deleted');
+  assert.match(withSource([{ id: 'a', type: 'title' }, { id: 'g', type: 'game', gameId: 'board', title: 'Bingo' }], lab, kept, ['kept']), /"Bingo" is a SlideForge game slide/);
+  assert.match(withSource([{ id: 'g', type: 'game', gameId: 'kept', title: 'Old' }], [{ id: 'l1' }], kept, ['kept']), /"Old" is a SlideForge game slide/, 'a copy that does not name its sources is not given the games');
 });

@@ -400,10 +400,11 @@
   }
 
   /* Why the lesson must stay SlideForge's own show and room, whatever the lab says: a shown slide of the lesson it
-     was made from that the lab cannot build (a motion, quiz, explain, results, spot-the-fake or blank slide, or a
-     game the lab has no copy of), which `ordered` below puts back among the lab's. The studio's show and room
-     never see those slides, so they would be lost there (M14). '' when there is none. A game slide whose saved
-     game is gone is not counted: SlideForge's show leaves it out too ("Missing game"). */
+     was made from that the lab cannot build (since M13, an activity slide, or a game whose compiled copy the lab
+     cannot make), which `ordered` below puts back among the lab's. The studio's show and room never see those
+     slides, so they would be lost there (M14). '' when there is none. A game slide whose saved game is gone is not
+     counted: SlideForge's show leaves it out too ("Missing game"). Nor is one the lab could build but its copy does
+     not have: its author deleted it there (a copy too old to name its slides' sources is not given the games). */
   function classicOnly() {
     var a = api;
     var labDeck = a && a.getDeck ? a.getDeck() : null;
@@ -411,7 +412,7 @@
     if (!source || !Array.isArray(source.slides) || !a.cannotBuild) return '';
     var built = {};
     (labDeck.slides || []).forEach(function (s) { if (s.sourceSlideId) built[s.sourceSlideId] = true; });
-    var keep = a.cannotBuild(source.slides).filter(function (id) { return !built[id]; });
+    var keep = a.cannotBuild(source.slides, buildable(labDeck.slides, source)).filter(function (id) { return !built[id]; });
     var games = SF.GameStore && SF.GameStore.get ? SF.GameStore.get : function () { return null; };
     var shown = source.slides.filter(function (s) {
       if (!s || s.hidden || keep.indexOf(s.id) < 0) return false;
@@ -502,12 +503,19 @@
     return Object.assign({ id: item.sourceSlideId || item.id, type: 'figure' }, item.figure, { notes: notes, hidden: item.hidden || undefined });
   }
 
+  /** The lesson's games as the lab builds them (lessonGames), for cannotBuild: only for a lab copy whose slides
+      name their sources, so a game it lacks was deleted there rather than never carried. */
+  /** @param {any[]} labSlides @param {any} source */
+  function buildable(labSlides, source) {
+    return (labSlides || []).some(function (/** @type {any} */ s) { return s && s.sourceSlideId; }) ? (lessonGames(source).labGames || undefined) : undefined;
+  }
+
   function ordered(items, make, source) {
     /* What the lab cannot build, less what it has: a lesson's game the lab
        built from its compiled copy plays as the lab's, not a second time. */
     var built = {};
     items.forEach(function (s) { if (s.sourceSlideId) built[s.sourceSlideId] = true; });
-    var keep = source ? api.cannotBuild(source.slides).filter(function (id) { return !built[id]; }) : [];
+    var keep = source ? api.cannotBuild(source.slides, buildable(items, source)).filter(function (id) { return !built[id]; }) : [];
     var after = carried(source, keep);
     /* A deck converted before slides remembered their source: match them in
        order, when the counts say nothing has been added or taken away. */
