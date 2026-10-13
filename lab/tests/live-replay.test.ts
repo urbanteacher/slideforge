@@ -24,7 +24,7 @@ import { resolve } from 'node:path';
 import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMessage } from '../src/live';
 
 type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
-type Step = { ms: number; what: string; answer?: { playerId: number; choice: number }; names?: string[]; team?: number };
+type Step = { ms: number; what: string; answer?: { playerId: number; choice?: number; text?: string }; names?: string[]; team?: number };
 const root = resolve(process.cwd(), '..');
 type Rec = { host: Frame[]; steps: Step[] };
 const load = (name: string) => JSON.parse(readFileSync(resolve(root, `tests/fixtures/sessions/${name}.json`), 'utf8')) as Rec;
@@ -98,7 +98,7 @@ async function replay(rec: Rec, format: string) {
     else if (s.what === 'manual:add') host.manualAdd(s.names!, s.team ?? 0);
     else if (s.what === 'begin') host.begin();
     else if (s.what === 'next') host.next();
-    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.choice);
+    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.text ?? s.answer!.choice!);
     else if (s.what === 'stop') ended = host.end();
   }
   await ended;
@@ -129,6 +129,24 @@ test('the lab host sends what the classic host sent for a True or false game', a
   const asked = lab.filter((f) => f.t === 'question');
   assert.equal(asked.length, 3);
   for (const q of asked) { assert.deepEqual(q.options, ['True', 'False']); assert.equal(q.style, 'truefalse'); assert.equal(q.input, 'choice'); }
+  assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
+
+// Type answer (format 'type', typed recall). The wire is a question with input 'text' and no options, a reveal
+// with correct -1 and the first accepted spelling as the answer, and the teacher's typed entry as `text`. The
+// recording's three phones typed "Paris" for each question (wrong all three), Dee was entered by key with "Paris",
+// and one entry for a phone's row was refused by the relay (a `manualError`, not a lab frame). The show is the
+// starter the recorder hosted.
+test('the lab host sends what the classic host sent for a Type answer game', async () => {
+  const { host, classic, lab } = await replay(load('game-type'), 'type');
+  assert.deepEqual(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.deepEqual(q.options, []); assert.equal(q.style, 'type'); assert.equal(q.input, 'text'); }
+  const reveals = lab.filter((f) => f.t === 'reveal');
+  assert.deepEqual(reveals.map((r) => [r.correct, r.answer]).slice(0, 2), [[-1, 'mitochondria'], [-1, 'Au']]);
+  assert.ok(lab.some((f) => f.t === 'manualAnswer' && f.text === 'Paris'), "the teacher's typed entry is sent as text");
   assert.equal(host.state.revealed.length, 3);
   assert.ok(host.state.ended);
 });
