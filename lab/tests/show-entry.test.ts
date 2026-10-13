@@ -1,5 +1,5 @@
 // M7 slice 3: what the shell's Host live needs of the studio's show, as pure logic and against the real relay.
-//  - canHostInStudio: which lessons the studio's room runs (Multiple choice games only), and why not otherwise;
+//  - canHostInStudio: which lessons the studio's room runs (plain Multiple choice and plain True or false), and why not otherwise;
 //  - the question's clock and the standings rail's gains;
 //  - the teacher-entry window's protocol (docs/games/protocol.md §15.1) served by the lab host, through the
 //    real relay: add names, answer by key, a refusal shown, the tally entry, reveal, "the answer is C".
@@ -23,6 +23,14 @@ const slide = (id: string, name: string, game?: Slide['game'], extra: Partial<Sl
 const game = (role: NonNullable<Slide['game']>['role'], extra: Partial<NonNullable<Slide['game']>> = {}) =>
   ({ id: 'gm1', format: 'choice', label: 'Air', role, settings: { seconds: 20 }, ...extra }) as NonNullable<Slide['game']>;
 const quiz = (i: number) => ({ type: 'quiz', style: 'choice', input: 'choice', points: 1000, explanation: '', question: `Q${i}?`, options: ['A', 'B', 'C'], correct: 0 });
+const tfQuiz = (i: number) => ({ type: 'quiz', style: 'truefalse', input: 'choice', points: 1000, explanation: '', question: `S${i}.`, options: ['True', 'False'], correct: i % 2 });
+
+/** intro, then a True or false game (format 'truefalse', or 'true-false' for the Showdown) of two statements. */
+function tfDeck(format = 'truefalse', extra: Slide[] = []) {
+  const slides: Slide[] = [slide('intro', 'Intro'), slide('cover', 'Cover', game('cover', { id: 'gt1', format }))];
+  for (let i = 0; i < 2; i++) slides.push(slide(`t${i}`, `Statement ${i + 1}`, game('question', { id: 'gt1', format, key: String(i), quiz: tfQuiz(i) })), slide(`ta${i}`, `Answer ${i + 1}`, game('answer', { id: 'gt1', format, key: String(i) })));
+  return { title: 'Claims', slides: [...slides, ...extra] };
+}
 
 /** intro, then a Multiple choice game of two questions. */
 function choiceDeck(extra: Slide[] = []) {
@@ -45,8 +53,23 @@ test('canHostInStudio: anything the studio room cannot run sends the lesson to t
   assert.match(no([slide('c', 'Check', undefined, { layers: [layer('quiz')] })]).reason, /SlideForge check/);
   const tf = choiceDeck();
   tf.slides[2] = slide('q0', 'Q', game('question', { key: '0', quiz: { ...quiz(0), style: 'truefalse' } }));
-  assert.match(canHostInStudio(tf).reason, /not Multiple choice/);
-  assert.match(canHostInStudio({ slides: [slide('a', 'A'), slide('b', 'B')] }).reason, /no Multiple choice question/);
+  assert.match(canHostInStudio(tf).reason, /not Multiple choice/, 'a True or false question inside a Multiple choice game is not what either runs');
+  assert.match(canHostInStudio({ slides: [slide('a', 'A'), slide('b', 'B')] }).reason, /no Multiple choice or True or false question/);
+});
+
+test('canHostInStudio: a plain True or false game is hosted in the studio; the Showdown and every other style is not', () => {
+  assert.deepEqual(canHostInStudio(tfDeck()), { ok: true, reason: '' });
+  // Multiple choice and True or false in one lesson: each is run by the room, so the lesson is.
+  const mixed = choiceDeck(tfDeck().slides.slice(1));
+  assert.deepEqual(canHostInStudio(mixed), { ok: true, reason: '' });
+  // The Showdown (format 'true-false', split and switch) is the classic host's.
+  assert.match(canHostInStudio(tfDeck('true-false')).reason, /"Air" is true-false, not Multiple choice or True or false/);
+  assert.equal(canHostInStudio(choiceDeck(tfDeck('true-false').slides.slice(1))).ok, false, 'one Showdown sends the whole lesson to classic');
+  // Each format's question must be its own style: a Multiple choice question in a True or false game is refused.
+  const odd = tfDeck();
+  odd.slides[2] = slide('t0', 'S', game('question', { id: 'gt1', format: 'truefalse', key: '0', quiz: quiz(0) }));
+  assert.match(canHostInStudio(odd).reason, /has a question that is not True or false/);
+  assert.match(canHostInStudio(tfDeck('truefalse', [slide('p', 'Poll', undefined, { feedback: { kind: 'poll' } })])).reason, /poll feedback/);
 });
 
 test('canHostInStudio: hidden slides are not in the show, so they do not count', () => {

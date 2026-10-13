@@ -26,14 +26,15 @@ import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMess
 type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
 type Step = { ms: number; what: string; answer?: { playerId: number; choice: number }; names?: string[]; team?: number };
 const root = resolve(process.cwd(), '..');
-const rec = JSON.parse(readFileSync(resolve(root, 'tests/fixtures/sessions/game-choice.json'), 'utf8')) as { host: Frame[]; steps: Step[] };
+type Rec = { host: Frame[]; steps: Step[] };
+const load = (name: string) => JSON.parse(readFileSync(resolve(root, `tests/fixtures/sessions/${name}.json`), 'utf8')) as Rec;
 const games = JSON.parse(readFileSync(resolve(process.cwd(), 'src/assets/games.json'), 'utf8')) as unknown;
 const list = (Array.isArray(games) ? games : ((games as { games?: unknown[] }).games ?? Object.values(games as object))) as { format: string; title: string; slides: Record<string, unknown>[] }[];
-const starter = list.find((g) => g.format === 'choice')!;
 
 /** The recorded deck, as the room's steps: the section, How to play, the three questions, the scores. Its
  *  slide and game ids are the recorded deck's (read off the frames), as the relay's frames quote them. */
-function recordedShow(): RoomShow {
+function recordedShow(rec: Rec, format: string): RoomShow {
+  const starter = list.find((g) => g.format === format)!;
   const sent = rec.host.filter((f) => f.dir === 'send').map((f) => f.data!);
   const ids = [...new Set(sent.filter((m) => m.t === 'at').map((m) => String(m.slideId)))];
   const gid = String(sent.find((m) => m.t === 'round')!.gameId);
@@ -77,9 +78,10 @@ function normalise(frames: Record<string, unknown>[]): Record<string, unknown>[]
   return out;
 }
 
-test('the lab host sends what the classic host sent for a Multiple choice game', async () => {
+/** Feed a recording to the lab host and return it, the frames it sent, and the classic frames, normalised. */
+async function replay(rec: Rec, format: string) {
   const sock = new Recorded();
-  const host = new LiveHost({ url: 'ws://replay', show: recordedShow(), makeSocket: () => sock });
+  const host = new LiveHost({ url: 'ws://replay', show: recordedShow(rec, format), makeSocket: () => sock });
 
   // The relay's frames and the recorder's steps, on the recording's one clock.
   type Ev = { ms: number; k: number; recv?: unknown; step?: Step };
@@ -102,10 +104,31 @@ test('the lab host sends what the classic host sent for a Multiple choice game',
   await ended;
 
   const classic = rec.host.filter((f) => f.dir === 'send').map((f) => f.data!);
-  assert.equal(normalise(classic).length, 23, 'host, manualAdd, begin, each slide (at, round, idle or question), two answers by key, three reveals, finish, end');
-  assert.deepEqual(normalise(sock.sent as unknown as Record<string, unknown>[]), normalise(classic));
+  return { host, classic: normalise(classic), lab: normalise(sock.sent as unknown as Record<string, unknown>[]) };
+}
+
+test('the lab host sends what the classic host sent for a Multiple choice game', async () => {
+  const { host, classic, lab } = await replay(load('game-choice'), 'choice');
+  assert.equal(classic.length, 23, 'host, manualAdd, begin, each slide (at, round, idle or question), two answers by key, three reveals, finish, end');
+  assert.deepEqual(lab, classic);
   // The room as the host saw it: the relay's scores, and the questions it revealed.
   assert.equal(host.state.revealed.length, 3);
   assert.equal(host.state.scores[1], 3000, 'Ada answered all three right');
+  assert.ok(host.state.ended);
+});
+
+// True or false (format 'truefalse', the plain one: its recording has no `showdown` frame, and the reveal follows the
+// question at once). Showdown is the format 'true-false' (game-true-false.json): not ported, and still the classic
+// host's, so it is not replayed here. The wire is Multiple choice's with two options and the style `truefalse`.
+test('the lab host sends what the classic host sent for a True or false game', async () => {
+  const rec = load('game-truefalse');
+  assert.ok(!rec.host.some((f) => f.dir === 'send' && f.data?.t === 'showdown'), 'the plain True or false recording has no showdown');
+  const { host, classic, lab } = await replay(rec, 'truefalse');
+  assert.equal(classic.length, 23, 'the same frames as the Multiple choice game: host, manualAdd, begin, six steps, answers, reveals, finish, end');
+  assert.deepEqual(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.deepEqual(q.options, ['True', 'False']); assert.equal(q.style, 'truefalse'); assert.equal(q.input, 'choice'); }
+  assert.equal(host.state.revealed.length, 3);
   assert.ok(host.state.ended);
 });

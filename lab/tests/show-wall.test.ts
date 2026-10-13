@@ -130,3 +130,29 @@ test('join address and link: as classic builds them (js/live.js shortHost, joinL
   assert.equal(joinLink('http://a/join.html', '042913'), 'http://a/join.html?pin=042913');
   assert.equal(joinLink('http://a/join.html?x=1', '1'), 'http://a/join.html?x=1&pin=1');
 });
+
+test('wall: a True or false statement shows two votes, the right one marked on the reveal, and steps like any question', () => {
+  const tf = shownDeck({
+    title: 'Claims', width: 1920, height: 1080,
+    slides: [
+      slide('c', 'Cover', game('cover', { id: 'gt', format: 'truefalse' })),
+      slide('s0', 'S', game('question', { id: 'gt', format: 'truefalse', key: '0', quiz: { type: 'quiz', style: 'truefalse', input: 'choice', points: 1000, explanation: 'Plants have them too.', question: 'Only animals have mitochondria.', options: ['True', 'False'], correct: 1 } })),
+      slide('sa', 'A', game('answer', { id: 'gt', format: 'truefalse', key: '0' })),
+    ],
+  });
+  const st = stepsOf(tf).steps;
+  const i = st.findIndex((s) => s.room.id === 's0');
+  assert.equal(st[i].room.style, 'truefalse', 'the phones are told the style');
+  const answers = [{ id: 1, name: 'Ana', team: null, response: 1, sure: null, elapsedMs: 900 }, { id: 2, name: 'Bo', team: null, response: 0, sure: null, elapsedMs: 1200 }, { id: 3, name: 'Cy', team: null, response: 1, sure: null, elapsedMs: 1500 }];
+  const tally = { id: 's0', rev: 3, counts: null, answered: 3, sured: 0, total: 3, allIn: true, manual: false, answers };
+  const open = wallOf({ room: room({ phase: 'question', question: { id: 's0', slideId: 's0', options: ['True', 'False'], timeLimit: 15 }, tally }), steps: st, at: i, scoresOn: false, fallbackJoin: '' });
+  assert.equal(open.view, 'question');
+  assert.equal(open.question!.style, 'truefalse');
+  assert.deepEqual(open.question!.options.map((o) => [o.label, o.correct]), [['True', false], ['False', false]], 'the right one is not marked while it is open');
+  const done = wallOf({ room: room({ phase: 'revealed', revealed: ['s0'], tally }), steps: st, at: i, scoresOn: false, fallbackJoin: '' });
+  assert.equal(done.view, 'reveal');
+  assert.deepEqual(done.question!.options.map((o) => [o.label, o.count, o.correct]), [['True', 1, false], ['False', 2, true]]);
+  assert.equal(done.question!.right, 2);
+  assert.equal(done.question!.answer, 'False');
+  assert.equal(nextAction({ room: room({ phase: 'question', question: { id: 's0', slideId: 's0', options: [], timeLimit: 15 } }), steps: st, at: i, sinceAsked: GRACE_MS + 1 }), 'reveal');
+});
