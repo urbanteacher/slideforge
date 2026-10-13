@@ -88,6 +88,7 @@ function assertSame(lab: Record<string, unknown>[], classic: Record<string, unkn
   const i = classic.findIndex((f, k) => show(f) !== show(lab[k]));
   if (i >= 0) console.log(classic.slice(Math.max(0, i - 4), i + 1).map((f) => f.t).join(','), '|', lab.slice(Math.max(0, i - 4), i + 2).map((f) => f.t).join(','));
   if (i >= 0) assert.fail(`frame ${i} differs\n classic ${show(classic[i])}\n lab     ${show(lab[i])}`);
+  if (lab.length !== classic.length) console.log('tails', classic.slice(-3).map((f) => f.t).join(','), '|', lab.slice(-4).map((f) => f.t).join(','), JSON.stringify(lab[lab.length - 1]).slice(0, 200));
   assert.equal(lab.length, classic.length, 'the lab sent frames classic did not');
 }
 
@@ -309,18 +310,20 @@ test('the lab host sends what the classic host sent for an Emoji guess game', as
 
 /** Fill the gaps, Compare & contrast's sort: classic shuffles the word bank (the statements) at random when it compiles a game, so
  *  the recording has its own draw and the starter another. The recorded draw is put on the show's questions, from the question
- *  frames the recorder saw and the answer each reveal said, as classic's compile would have left them. */
+ *  frames the recorder saw, as classic's compile would have left them: a Fill's gaps from the words each reveal said; a sort's
+ *  columns from the starter's own statement and column, re-ordered to the recorded statements (its reveal says nothing). */
 function withRecordedDraw(rec: Rec, kind: 'fill' | 'sort') {
   return (show: RoomShow) => {
     const sent = rec.host.filter((f) => f.dir === 'send').map((f) => f.data!);
     const frames = sent.filter((m) => m.t === 'question'), reveals = sent.filter((m) => m.t === 'reveal');
     show.slides.filter((s) => s.quiz).forEach((s, i) => {
       const q = s.quiz as unknown as Record<string, unknown>, options = frames[i].options as string[], said = String(reveals[i].answer);
+      const before = { options: q.options, sortAnswers: q.sortAnswers };
       q.options = options;
       if (kind === 'fill') q.gapAnswers = said.split(' · ').map((w) => options.findIndex((o) => o.toLowerCase() === w.toLowerCase()));
       else {
-        const bins = q.sortBins as string[];
-        q.sortAnswers = options.map((o) => { const hit = said.split(' · ').find((x) => x.startsWith(`${o} → `))!; return bins.indexOf(hit.slice(o.length + 3)); });
+        const was = new Map((before.options as string[]).map((o, k) => [o, (before.sortAnswers as number[])[k]]));
+        q.sortAnswers = options.map((o) => was.get(o)!);
       }
     });
   };
@@ -340,5 +343,28 @@ test('the lab host sends what the classic host sent for a Fill in the blanks gam
   assert.ok(lab.some((f) => f.t === 'manualAnswer' && Array.isArray(f.fill)), "the teacher's entry is sent as a word per gap");
   assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => r.gains), [[[1, 0], [2, 500], [3, 0], [4, 0]], [[1, 0], [2, 0], [3, 1000]], [[1, 500], [2, 0], [3, 0]]]);
   assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
+
+// Compare & contrast, the sort (format 'compare-contrast', style 'compare', input 'sort'). The `at` and the question give the
+// phones no role and the heading "Sort it"; the question frame names the columns (`bins`) and carries the statements as options;
+// the teacher's entry is a column per statement (`sort`); the reveal has no answer in words and carries `gains` of
+// round(points x the share right) (the sort's points are 0 here, so every gain is 0). No scores slide. The statements' order is
+// the recording's own draw (see withRecordedDraw). Two late markStale frames show two things in the host: one for a question the
+// show has left (the third) is not answered, and one after `end` (the fourth) is not either, as classic's are not.
+test('the lab host sends what the classic host sent for a Compare & contrast game', async () => {
+  const rec = load('game-compare-contrast');
+  const { host, classic, lab } = await replay(rec, 'compare-contrast', false, withRecordedDraw(rec, 'sort'));
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 4);
+  for (const q of asked) { assert.equal(q.input, 'sort'); assert.equal(q.style, 'compare'); assert.equal(q.headPrompt, 'Sort it'); assert.equal((q.bins as string[]).length, 3); assert.equal((q.bins as string[])[1], 'Both'); }
+  assert.deepEqual(asked[0].bins, ['Photosynthesis only', 'Both', 'Respiration only']);
+  assert.ok(lab.some((f) => f.t === 'manualAnswer' && Array.isArray(f.sort)), "the teacher's entry is sent as a column per statement");
+  assert.ok(lab.filter((f) => f.t === 'reveal').every((r) => r.answer === '' && r.correct === -1));
+  // The relay took the first two reveals and refused the last two as stale (answers came in after the marks were made, `markStale`);
+  // by then the show had moved on, and neither host sends them again. The teacher's Next still moved on from each, as classic's did.
+  assert.equal(lab.filter((f) => f.t === 'reveal').length, 4);
+  assert.equal(host.state.revealed.length, 2);
   assert.ok(host.state.ended);
 });
