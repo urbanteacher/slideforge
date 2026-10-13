@@ -106,3 +106,14 @@ Repeat steps 1 to 5 with a lesson whose only game is **Slider** (Quiz studio, Br
 3. Place one answer inside the tolerance and one outside. After the reveal the wall draws a number line with the target and its tolerance band, a dot for each answer (the right ones green), and says the accepted answer with its unit. The standings panel shows the gains.
 4. In manual.html, enter a number for a learner you added and press Record: it counts with the phones' after the reveal.
 5. Add a Ranking challenge game to the same lesson: Host live now opens the classic room.
+
+## Audience feedback: poll, word cloud, brainstorm, scale (added 13 October 2026)
+
+Repeat steps 1 to 4 with a lesson that has a few ordinary slides and, on them, **Engage, Feedback** set up with each kind (a poll with two or more options; a word cloud; a brainstorm; a scale with both ends named). Try one beside the slide ("rail") and one full screen ("focus"). A feedback slide with no prompt asks nothing, as in SlideForge.
+
+1. Host live opens the studio's show and room, not SlideForge's. A lesson whose only questions are feedback slides still does.
+2. On the feedback slide the phones get the prompt: poll buttons, a row of numbered points with the two ends named (scale), or a text box (word cloud, brainstorm; the "responses each" limit applies).
+3. Answer from two or three phones. The wall updates as each reply lands: poll bars with counts, the scale's spread across its points with both ends and the average, repeated words growing larger in the cloud, idea cards with names newest first. The count "n of m answered" is read out by a screen reader. Rail sits beside the slide (the standings step aside), focus fills the screen.
+4. Refresh a phone mid-prompt: it gets the prompt back and its reply. Press **Close** in the show bar: the phones are thanked and the wall shows the slide again. Go to the next slide and back: the prompt opens fresh.
+5. With **Hold** set on a poll or scale (feedback settings), the wall shows only "n of m answered" until you press **Show** in the show bar.
+6. Add a Ranking challenge game (or an activity) to the same lesson: Host live now opens the classic room.
