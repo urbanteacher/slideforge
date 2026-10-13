@@ -12,6 +12,8 @@ export interface Step {
   slide: number;
   /** The slide drawn once this step's question is revealed: its answer. */
   answer: number | null;
+  /** The slide drawn once this step's question is asked, when it has a drawing of its own for that (Definition challenge's recall, after its reading). */
+  ask: number | null;
 }
 
 type DeckLike = Pick<Deck, 'title' | 'slides'>;
@@ -31,24 +33,28 @@ export function stepsOf(shown: DeckLike): { show: RoomShow; steps: Step[] } {
       // A game's scores step (`<game>:scores`): the game's last slide stays up under the leaderboard.
       for (let k = slides.length - 1; k >= 0; k--) if (slides[k].game?.id === room.gameId) { slide = k; break; }
     }
-    let answer: number | null = null;
+    let answer: number | null = null, ask: number | null = null;
     const g = slides[slide]?.game;
     if (room.quiz && g?.key != null) {
       const at = slides.findIndex((x) => x.game?.id === g.id && x.game.role === 'answer' && x.game.key === g.key);
       if (at >= 0) answer = at;
+      // A second drawing of the same question, after the first (the recall slide of a reading and recall pair).
+      const second = slides.findIndex((x, k) => k > slide && x.game?.id === g.id && x.game.role === 'question' && x.game.key === g.key);
+      if (second >= 0) ask = second;
     }
-    return { room, slide: Math.max(0, slide), answer };
+    return { room, slide: Math.max(0, slide), answer, ask };
   });
   return { show, steps };
 }
 
-/** The slide the player should be on for a step: the answer once the question is revealed. */
-export const slideFor = (step: Step, revealed: boolean): number => (revealed && step.answer != null ? step.answer : step.slide);
+/** The slide the player should be on for a step: the answer once the question is revealed, its asking slide once it is asked. */
+export const slideFor = (step: Step, revealed: boolean, asked = false): number =>
+  (revealed && step.answer != null ? step.answer : asked && step.ask != null ? step.ask : step.slide);
 
 /** The step a slide of the shown deck belongs to (for starting the room on the slide being edited). */
 export function stepAt(steps: Step[], slide: number): number {
   let best = 0;
-  steps.forEach((s, i) => { if (s.slide <= slide || (s.answer != null && s.answer <= slide)) best = i; });
+  steps.forEach((s, i) => { if (s.slide <= slide || (s.answer != null && s.answer <= slide) || (s.ask != null && s.ask <= slide)) best = i; });
   return best;
 }
 

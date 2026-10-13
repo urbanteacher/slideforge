@@ -54,6 +54,9 @@ export class LiveHost {
   private closedFb: string | null = null;
   private quickAt = 0;
   private sureTimer: ReturnType<typeof setTimeout> | null = null;
+  /** A style with a reading phase (Definition challenge): the questions whose reading is over (asked), and the reading clock. */
+  private readDone = new Set<string>();
+  private readTimer: ReturnType<typeof setTimeout> | null = null;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
   constructor(private readonly opts: HostOptions) {
@@ -101,13 +104,30 @@ export class LiveHost {
       if (this.state.phase === 'question' && this.state.question?.id === q.id) {
         // A style with a step before its reveal (lock the predictions, show the split) takes it on the first Next.
         if (!this.gate()) this.reveal();
-      } else this.land();
+      } else if (this.reading()) this.ask();
+      else this.land();
     } else if (this.at < this.opts.show.slides.length - 1) this.goTo(this.at + 1);
+  }
+
+  /** The question on the wall is in its reading phase (a style that has one, before it is asked). */
+  reading(): boolean {
+    const q = this.slide?.quiz;
+    return !!q && this.begun && !!styleFor(q).reading && !this.readDone.has(q.id) && !this.state.revealed.includes(q.id);
+  }
+
+  /** End the reading: the recall question is asked (the teacher's Next, or the reading clock running out). */
+  ask(): void {
+    const q = this.slide?.quiz;
+    if (!q || !this.reading()) return;
+    this.readDone.add(q.id);
+    this.clearRead();
+    this.land();
   }
 
   goTo(i: number): void {
     if (i < 0 || i >= this.opts.show.slides.length) return;
     this.clearSure();
+    this.clearRead();
     this.at = i;
     if (this.begun) this.land();
   }
@@ -193,6 +213,7 @@ export class LiveHost {
   async end(): Promise<RoomState> {
     this.ending = true;
     this.clearSure();
+    this.clearRead();
     if (!this.send({ t: 'end' })) { this.conn.stop(); this.room.end(); return this.state; }
     await Promise.race([this.until((s) => !s.live), new Promise((r) => setTimeout(r, END_CLOSE_MS))]);
     this.conn.stop();
@@ -267,7 +288,9 @@ export class LiveHost {
     this.stale = false;
     const revealed = !!s.quiz && this.state.revealed.includes(s.quiz.id);
     const asking = ask && s.activity === 'question' && !!s.quiz && !revealed;
-    this.send({ t: 'at', ...this.atFields(s, asking ? 'question' : s.activity === 'question' ? 'moment' : s.activity) });
+    // A style that opens in a reading phase (Definition challenge) tells the room to read, and asks when the reading is over.
+    const reading = asking && !!styleFor(s.quiz!).reading && !this.readDone.has(s.quiz!.id);
+    this.send({ t: 'at', ...this.atFields(s, asking ? 'question' : s.activity === 'question' ? 'moment' : s.activity, reading) });
     if (s.gameId && s.gameId !== this.lastGame) {
       this.lastGame = s.gameId;
       this.send({ t: 'round', gameId: s.gameId });
@@ -278,13 +301,15 @@ export class LiveHost {
     if (fb && this.closedFb !== fb.id) {
       if (this.promptId !== fb.id) { this.promptId = fb.id; this.send({ t: 'prompt', ...fb }); }
     } else if (this.promptId) { this.promptId = null; this.send({ t: 'promptEnd' }); }
-    if (asking) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); return; }
-    this.send({ t: 'idle', style: s.style, role: 'wait', participation: '', headPrompt: '' });
+    if (asking && !reading) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); return; }
+    const c = reading ? styleFor(s.quiz!).companion?.(s.quiz!, 'reading') : undefined;
+    this.send({ t: 'idle', style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '' });
+    if (reading) this.startRead(s.quiz!);
     if (s.results) this.send({ t: 'finish', title: 'Final scores' });
   }
 
-  private atFields(s: RoomSlide, activity: AtFields['activity']): AtFields {
-    const c = s.quiz && activity === 'question' ? styleFor(s.quiz).companion?.(s.quiz) : undefined;
+  private atFields(s: RoomSlide, activity: AtFields['activity'], reading = false): AtFields {
+    const c = s.quiz && activity === 'question' ? styleFor(s.quiz).companion?.(s.quiz, reading ? 'reading' : 'asking') : undefined;
     return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: 0, style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '', stage: null };
   }
 
@@ -322,6 +347,17 @@ export class LiveHost {
     if (!t.allIn || t.answered === 0 || t.manual) return;
     if (t.sured >= t.answered) { this.reveal(); return; }
     if (!this.sureTimer) this.sureTimer = setTimeout(() => { this.sureTimer = null; if (this.state.phase === 'question') this.reveal(); }, SURE_GRACE_MS);
+  }
+
+  /** The reading clock: when it runs out the question is asked (classic: the player's time up in the reading phase). */
+  private startRead(q: RoomQuiz): void {
+    this.clearRead();
+    const seconds = styleFor(q).reading?.(q) ?? 0;
+    if (seconds > 0) this.readTimer = setTimeout(() => { this.readTimer = null; if (this.slide?.quiz?.id === q.id) this.ask(); }, seconds * 1000);
+  }
+
+  private clearRead(): void {
+    if (this.readTimer) { clearTimeout(this.readTimer); this.readTimer = null; }
   }
 
   private clearSure(): void {

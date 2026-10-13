@@ -94,7 +94,9 @@ export interface StyleEntry {
   /** What the reveal sends: the option that is right (-1 for an open answer) and the answer said. */
   reveal(q: RoomQuiz): { correct: number; answer: string };
   /** What the phones are told on this question (`at` and `question` carry it); undefined: they wait, with the question's own heading. */
-  companion?(q: RoomQuiz): Briefing;
+  companion?(q: RoomQuiz, phase?: 'reading' | 'asking'): Briefing;
+  /** A reading phase before the question (Definition challenge): the phones are idle while the wall shows the passage; the question is asked on Next, or when this many seconds are up (classic's reading clock). */
+  reading?(q: RoomQuiz): number;
   /** False: the game has no scores slide after its last question (the show ends on it). */
   scoreSlide?: boolean;
   /** Only questions this says yes to are this style's (the game's flag on the question: `predict`, `showdown`); such an entry is tried before the others of its key. */

@@ -71,3 +71,8 @@ declare module '@sf/games/order.js' {
   /** The share, 0 to 1, of items in their right place; 0 for anything that is not a full ordering. */
   export function orderScore(slide: SFQuizSlide, response: unknown): number;
 }
+
+declare module '@sf/games/definition.js' {
+  /** The reading time a Definition challenge takes: 20, 30, 45 or 60 seconds; 30 for anything else. */
+  export function clampDefinitionSeconds(seconds: unknown): number;
+}

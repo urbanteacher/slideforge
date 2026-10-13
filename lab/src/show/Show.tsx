@@ -223,7 +223,8 @@ function Show() {
   // The player follows the room: the question's slide, and its answer slide once it is revealed.
   const step = room.at >= 0 ? steps[room.at] : undefined;
   const revealed = !!step?.room.quiz && room.state.revealed.includes(step.room.quiz.id);
-  const target = roomOn && step ? slideFor(step, revealed) : null;
+  const asked = !!step?.room.quiz && room.state.question?.id === step.room.quiz.id;
+  const target = roomOn && step ? slideFor(step, revealed, asked) : null;
   useEffect(() => {
     const p = player.current;
     if (target == null || !p || p.index === target) return;
