@@ -94,18 +94,18 @@ Repeat steps 1 to 5 with a lesson whose only game is **Type answer** (Quiz studi
 2. Each question reaches the phones as a text box (no options). While it is open the wall shows only "n of m answered", not what was typed.
 3. Type the answer on one phone in another case, with "the" in front, and a wrong answer on another. After the reveal the wall lists what the room typed, one row per answer (the right one marked, written as the question accepts it), says the accepted answer, and the standings panel shows the gain.
 4. In manual.html, type an answer for a learner you added and press Record: it counts with the phones' after the reveal.
-5. Add a Ranking challenge game to the same lesson: Host live now opens the classic room.
+5. Add a Bingo game to the same lesson: Host live now opens the classic room. (Ranking challenge now runs in the studio, see below.)
 
 
 ## Slider (added 13 October 2026)
 
-Repeat steps 1 to 5 with a lesson whose only game is **Slider** (Quiz studio, Browse, Slider, Add to the lesson). Time traveler is a different format and still opens the classic room.
+Repeat steps 1 to 5 with a lesson whose only game is **Slider** (Quiz studio, Browse, Slider, Add to the lesson). Time traveler is its own entry, see below.
 
 1. Host live opens the studio's show and room, not SlideForge's.
 2. Each question reaches the phones as a number slider with the question's range and unit. While it is open the wall shows only "n of m answered", not the answers or the band.
 3. Place one answer inside the tolerance and one outside. After the reveal the wall draws a number line with the target and its tolerance band, a dot for each answer (the right ones green), and says the accepted answer with its unit. The standings panel shows the gains.
 4. In manual.html, enter a number for a learner you added and press Record: it counts with the phones' after the reveal.
-5. Add a Ranking challenge game to the same lesson: Host live now opens the classic room.
+5. Add a Bingo game to the same lesson: Host live now opens the classic room. (Ranking challenge now runs in the studio, see below.)
 
 ## Audience feedback: poll, word cloud, brainstorm, scale (added 13 October 2026)
 
@@ -116,7 +116,7 @@ Repeat steps 1 to 4 with a lesson that has a few ordinary slides and, on them, *
 3. Answer from two or three phones. The wall updates as each reply lands: poll bars with counts, the scale's spread across its points with both ends and the average, repeated words growing larger in the cloud, idea cards with names newest first. The count "n of m answered" is read out by a screen reader. Rail sits beside the slide (the standings step aside), focus fills the screen.
 4. Refresh a phone mid-prompt: it gets the prompt back and its reply. Press **Close** in the show bar: the phones are thanked and the wall shows the slide again. Go to the next slide and back: the prompt opens fresh.
 5. With **Hold** set on a poll or scale (feedback settings), the wall shows only "n of m answered" until you press **Show** in the show bar.
-6. Add a Ranking challenge game (or an activity) to the same lesson: Host live now opens the classic room.
+6. Add a Bingo game (or an activity) to the same lesson: Host live now opens the classic room.
 
 ## Teams, class report, Rehearse and Draw (added 13 October 2026, M11b)
 
@@ -126,3 +126,16 @@ Use a lesson with a Multiple choice game and a feedback slide, and open it in th
 2. **Rehearse.** In the show bar press the people button, choose 8, 16 or 24. The sample learners join the room by its PIN and the lobby fills. Press Start: they answer each question over the time it allows, most right and some wrong, and reply to the feedback slide. Press the button again and **Send them home**: they leave.
 3. **Class report.** End the room (End, or Esc). Press **Class report**: each question with its accuracy and who answered what, attendance and points, and a note that on the free plan the record lasts only until the next deploy or restart. Download the two CSVs and open them in a spreadsheet. A name that begins with = is written with a quote in front.
 4. **Draw.** Press D (or the pen button). Draw with the pen, switch to the highlighter and a colour, erase a mark, press Z to undo and X to clear. The marks stay put when the window is resized. Go to the next slide: the marks are gone. Press D or Esc to put the pen away; a click on the slide is Next again.
+
+## Ranking, Odd one out, Predict the outcome, True / false showdown, Time traveler (added 13 October 2026)
+
+Repeat steps 1 to 4 of the first section (host opens the studio's show and room; phones join; Next; the report) with a lesson whose game is, in turn, each of these (Quiz studio, Browse, the format, Add to the lesson). Add a phone, plus a learner you add by name in manual.html.
+
+1. **Ranking challenge.** The phones get the items to put in order. Send one right order, one reversed and one with two items swapped. After the reveal the wall lists the right order with a bar a place showing how many of the room had that item there, and "Most swapped: X and Y". Points: the right order scores 10, the reversed one 0, the one with two swapped part marks (round of 10 x the share in place). In manual.html, enter an order for the added learner: it counts.
+2. **Odd one out.** The question is a vote. The wall shows only "n of m answered" while it is open and Next does nothing by itself, however fast the room votes. Next reveals the split of the four items with the prepared odd one and its reason, and a "Defend a pick" idea box opens beside it (send two ideas from phones: they appear). Next closes the box and moves on. Nobody scores, and the game ends on its last question without a scores slide.
+3. **Predict the outcome.** The phones ask "I'm sure" or "Just a hunch" with the pick. The first Next (after a moment) locks the predictions: the phones wait, the wall shows the room's split with the answer hidden. The second Next reveals. Right and sure scores half as much again, right and unsure the points, wrong and sure loses half the points, wrong and unsure nothing; a score never goes below zero.
+4. **True / false showdown.** Vote on two phones the same way and one the other way. The first Next shows the room its split: the wall draws one bar across True and False, and every phone may switch once (try it on one). The bar follows the switch with a marker where the room stood; the wall says how many switched. The second Next reveals the final answers. With a time limit the split shows itself half-way through the clock. A plain True or false game still has no split.
+5. **Time traveler.** The phones place each event on one line that spans the whole game; the second question's line shows the first event already on it, the third two. After the reveal the wall draws the line, the band, the dots, and names the events already on it under the line.
+6. Add a Bingo game to the same lesson: Host live opens the classic room.
+
+What to look for that no test covers: how each wall looks at the back of a room (text size, the Ranking bars, the Showdown bar and its marker, the timeline names under the line), and that Next feels right on the held styles.
