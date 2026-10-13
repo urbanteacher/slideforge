@@ -2050,17 +2050,21 @@
       : '';
   }
 
-  function sendPoll(i) {
-    if (!ws || ws.readyState !== 1 || !prompt) return;
-    var pad = $('fbPad');
+  function markPoll(i) {
     /* Matched on the option each button carries, not on where it sits: a
        scale's pads are built highest-first and have its two end labels among
        them, so position stopped meaning index. */
-    Array.prototype.forEach.call(pad.querySelectorAll('.pick'), function (b) {
+    Array.prototype.forEach.call($('fbPad').querySelectorAll('.pick'), function (b) {
       var mine = Number(b.dataset.i) === i;
       b.classList.toggle('mine', mine);
       b.classList.toggle('dim', !mine);
+      b.setAttribute('aria-pressed', String(mine));
     });
+  }
+
+  function sendPoll(i) {
+    if (!ws || ws.readyState !== 1 || !prompt) return;
+    markPoll(i);
     ws.send(JSON.stringify({ t: 'reply', choice: i }));
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
   }
@@ -2084,6 +2088,9 @@
   function confirmReply(m) {
     if (!prompt) return;
     if (prompt.kind === 'poll' || prompt.kind === 'scale') {
+      /* The relay says which option it holds. After a reload or a rejoin the pads are new, so light the one
+         this phone chose; otherwise "Vote counted" shows with nothing picked. */
+      if (Number.isInteger(m.choice)) markPoll(m.choice);
       $('fbDone').textContent = 'Vote counted — change it any time';
       $('fbDone').style.display = '';
       return;
