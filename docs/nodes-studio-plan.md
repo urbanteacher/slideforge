@@ -133,8 +133,8 @@ Each step works on its own and can be pushed on its own.
 
 0. **Done (13 October):** the Nodes tab, after Activities. It first copied in the shipped Nodes decks; step 1 replaced that with the formats.
 1. **Done (13 October): the format system and the first three formats,** in our style: Join it up, Three answers, Which step broke? (`lab/src/designs/nodes/`). Each is drawn in the Nodes decks' own illustrated language (`designs/nodes/look.ts`: rounded cards, pills, chains of boxes joined by arrows, badges, element dots, answer tabs, cards with an accent bar) in the lesson's theme, the links in Nodes' colours; each has an ask slide and its reveal slides, and marks them `slide.nodes = { id, format, role, content }`. The Nodes tab's left pane is Browse for the formats (cards drawn in the lesson's theme), its empty screen offers the three, and a format added after another goes after the whole of it.
-2. **Their side panel:** content and settings, with editing redrawing the slides.
-3. **Write it with AI** for them.
+2. **Their side panel:** content and settings, with editing redrawing the slides. (Part done 13 October: the Nodes · <format> section on the Design tab.)
+3. **Done (13 October): Write it with AI.** A topic, year group, what they get wrong and the class's constraints; one request per challenge (`lab/src/designs/nodesAI.ts`, through `SF.AI.generateJson`), checked against the format's shape, then its slides drawn again in place. A Framework sends only its stages' names and questions and gets the recall and a task per stage back; the stages' own questions, outcomes and backbones stay Nodes'. Tested on the CPU key: Join it up in 3.4 s, a 16-stage Framework (19 slides) in 5.4 s.
 4. **Their room:** the phones and the wall's results.
 5. **The rest of the formats:** Breakdown, Missing-link ladder, Keep them apart, Level it, Size the answer, Mark it.
 6. **Scaffold:** every node of Technical Analysis (16) or the GCSE CS ladder (13) on one topic, AI-written from the real node definitions, with the class on the framework map.
