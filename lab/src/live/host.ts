@@ -322,6 +322,9 @@ export class LiveHost {
   /** Ask the relay for the session's report (`sessionReport`). */
   report(): void { this.send({ t: 'report' }); }
 
+  /** Let a follow link watch the room by this share id ('' stops it): the relay sends it each `context`. False: not sent. */
+  watchOn(shareId: string): boolean { return this.send({ t: 'watchOn', s: /^[a-f0-9]{32}$/.test(shareId) ? shareId : '' }); }
+
   /** End the room: `end`, then close once `sessionClosed` arrives or after classic's 1.5 s. */
   async end(): Promise<RoomState> {
     this.ending = true;

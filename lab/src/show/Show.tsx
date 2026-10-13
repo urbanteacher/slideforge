@@ -4,7 +4,7 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, PenLine, Radio, Smartphone, Users, StickyNote, Trophy, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, StickyNote, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { ShowSide, presenterUrl, type PresenterCmd, type Screen } from '../presenter';
@@ -461,6 +461,7 @@ function Show() {
         {roomOn && <button onClick={() => setScoresOn((v) => !v)} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S)"><Trophy size={16} /></button>}
         {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
+        {roomOn && hooks?.share && <button onClick={() => hooks.share?.()} aria-label="Share" title="Share: a link to read or practise the lesson, or a big screen that follows this room"><Share2 size={16} /></button>}
         <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F)"><Maximize size={16} /></button>
         {!roomOn && steps.some((s) => s.room.quiz || s.room.feedback || s.room.act) && studioRoomEnabled() && (
           <button className="show-live" onClick={() => openStudioShow({ room: true, slideId: slide.id })} title="Run this lesson live with phones"><Radio size={15} />Host live</button>

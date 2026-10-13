@@ -3,7 +3,8 @@ import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, c
 import { imageSettled } from '../engine';
 import { renderStill, editableSlides, exportPptx, type SlideFormat } from '../export';
 import { enterView, useStore, type LabView } from '../store';
-import { canHostInStudio, openStudioShow, whyNotPresentInStudio, type ShowFirst, type ShowHooks } from '../show';
+import { canHostInStudio, openStudioShow, roomRunning, roomWatchOn, whyNotPresentInStudio, type ShowFirst, type ShowHooks } from '../show';
+import { shareCopy } from '../viewer';
 import { saveSlide } from '../ui';
 import { SIZES } from '../rehearse';
 
@@ -384,6 +385,11 @@ export const labApi = {
   /** Why Present would not run in the studio's show ('' when it can): a game, activity or figure the studio does not
    *  run yet keeps the lesson on SlideForge's own show. */
   whyNotPresentInStudio: (): string => whyNotPresentInStudio(useStore.getState().deck),
+  /** The lesson as Share uploads it for the studio viewer (lab-app/view.html, M12): shown slides, no notes, pictures packed. */
+  shareDeck: () => shareCopy(useStore.getState().deck),
+  /** A studio room is open (its follow link can be offered), and lets a follow link watch it by a share id. */
+  roomRunning,
+  watchOn: (shareId: string): boolean => roomWatchOn(shareId),
   /** Why Host live would not run in the studio's room (for the shell's note to the console and the tests). */
   whyNotInStudio: (): string => canHostInStudio(useStore.getState().deck).reason,
   /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The

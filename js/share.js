@@ -14,6 +14,7 @@
    * @param {boolean} [opts.live]  room is running (enables follow-along)
    * @param {function(string): boolean} [opts.watchOn]  register share id for follow
    * @param {function(string)=} [opts.toast]  status messages
+   * @param {boolean} [opts.studio]  a lab deck, for the studio viewer (lab-app/view.html, M12)
    */
   /* An audience link never carries the speaker notes. They were in every shared
      copy, unseen on the page but in the lesson anyone with the link could fetch
@@ -58,7 +59,7 @@
       title: 'Share “' + (doc.title || 'this lesson') + '”',
       detail: 'The first three put a copy on this server, without your notes, at an address nobody can guess. They cannot ' +
         'edit it and it is not listed anywhere — but a link that escapes is a lesson that ' +
-        'escaped. Games are not carried across; the slides are. You get a key that withdraws it.',
+        'escaped. ' + (opts.studio ? 'The games come as their slides; practice lets one learner answer them. ' : 'Games are not carried across; the slides are. ') + 'You get a key that withdraws it.',
       options: [
         { value: 'practice', label: 'Practice: the games, for one learner',
           detail: 'The slides and every game that can be played alone: they answer, see the answer and why, and keep a score on their own device. Games that need a room — spoken, boards, sorts on phones — say so instead.' },
@@ -82,13 +83,17 @@
       fetch('/api/share', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         /* Practice carries the solo-playable games inside the copy. */
-        body: JSON.stringify({ doc: withoutNotes(choice === 'practice' && SF.practiceDoc
-          ? SF.practiceDoc(doc, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; })
-          : doc) })
+        /* A studio copy carries its games as slides; practice is a flag the studio viewer reads. */
+        body: JSON.stringify({ doc: withoutNotes(opts.studio
+          ? (choice === 'practice' ? Object.assign({}, doc, { practice: true }) : doc)
+          : choice === 'practice' && SF.practiceDoc
+            ? SF.practiceDoc(doc, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; })
+            : doc) })
       }).then(function (r) {
         return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
       }).then(function (j) {
-        var url = j.url || (String(j.base || location.origin).replace(/\/$/, '') + '/view.html?s=' + j.id);
+        var base = String(j.base || location.origin).replace(/\/$/, '');
+        var url = opts.studio ? base + '/lab-app/view.html?s=' + j.id : (j.url || (base + '/view.html?s=' + j.id));
         var watched = false;
         if (typeof opts.watchOn === 'function') watched = !!opts.watchOn(j.id);
         else if (SF.Live && SF.Live.watchOn) watched = !!SF.Live.watchOn(j.id);

@@ -12,3 +12,4 @@ export { closeStudioShow, openStudioShow, studioRoomEnabled, studioShowEnabled, 
 export { hasRoomGame } from './steps';
 export { canHostInStudio, whyNotPresentInStudio, type CanHost } from './canHost';
 export type { ShowHooks, SessionRef } from './hooks';
+export { roomRunning, roomWatchOn } from './useRoom';

@@ -124,6 +124,8 @@ SF.installExplore(SF);
   fetch('/api/share/' + id, { cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.error || 'Not found'); }); })
     .then(function (data) {
+      /* A copy shared from the Lesson studio is a lab deck: the studio viewer plays it (lab-engine-plan M12). */
+      if (data.doc && data.doc.studio) { location.replace('lab-app/view.html' + location.search); return; }
       /* Practice mode carries its solo-playable games inside the copy; read
          and follow links carry none. Read before normalising, which keeps
          only a deck's own fields. */

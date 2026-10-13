@@ -13,6 +13,13 @@ import { relayUrl } from './state';
 /** How long the relay has to give the room a PIN before the show gives up on it. */
 export const RELAY_WAIT_MS = 10000;
 
+/** The room open now, for the shell's Share (M12): a follow link watches it by the share's id. */
+let running: LiveHost | null = null;
+/** A studio room is open and has its PIN. */
+export function roomRunning(): boolean { return !!running && !!running.state.pin && !running.state.ended; }
+/** The open room lets a follow link watch it by this share id; false when no room is open. */
+export function roomWatchOn(shareId: string): boolean { return roomRunning() && running!.watchOn(shareId); }
+
 export interface RoomApi {
   state: RoomState;
   /** The step on the wall (an index into the room's steps); -1 before Start. */
@@ -96,6 +103,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     try { h = optsRef.current.makeHost ? optsRef.current.makeHost() : new LiveHost({ url: relayUrl(), show }); }
     catch (e) { optsRef.current.onFail?.(`The room could not open (${e instanceof Error ? e.message : String(e)})`); return; }
     host.current = h;
+    running = h;
     ended.current = null;
     const manual = new ManualBridge(h);
     bridge.current = manual;
@@ -136,6 +144,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
       if (halfway) clearTimeout(halfway);
       void end();
       host.current = null; bridge.current = null;
+      if (running === h) running = null;
     };
   }, [enabled, show, sync, end]);
 

@@ -1,11 +1,23 @@
 // The studio viewer's state, with no page in it (lab-engine-plan M12): what a share link asks for, the shared lab
 // deck as the viewer plays it, where a followed room is, and the practice questions with their marking. The page
 // (viewer/page.ts) draws it; the tests read it.
-import { unpackPictures, type Deck, type Slide } from '../core';
+import { packPictures, unpackPictures, type Deck, type Slide } from '../core';
 import { gameStyle, markResponse } from '@sf/games/registry.js';
 
-/** A shared copy made by the studio carries this mark (js/share.js puts it on), so view.html can send it here. */
-export const STUDIO_SHARE = 'studio';
+/** Every `notes` taken off, at any depth: a slide's speaker notes, and any a game's question carries. */
+const noNotes = (v: unknown): unknown => {
+  if (Array.isArray(v)) return v.map(noNotes);
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).filter(([k]) => k !== 'notes').map(([k, x]) => [k, noNotes(x)]));
+  return v;
+};
+
+/** The lesson as a share link carries it (the shell's Share, M12): its shown slides, no speaker notes anywhere,
+ *  each picture once (core/pictures.ts) to stay under the relay's 8 MB, and `studio: 1`, which sends a link to it
+ *  from view.html to this viewer. Practice is said by the shell (`practice: true`). */
+export function shareCopy(deck: Deck): Omit<Deck, 'slides'> & { slides: Omit<Slide, 'notes'>[]; studio: 1; pictures?: string[] } {
+  const d = noNotes({ ...deck, slides: deck.slides.filter((s) => !s.hidden) }) as Deck;
+  return { ...packPictures(d), studio: 1 };
+}
 
 export interface ShareLink { id: string; follow: boolean }
 

@@ -71,6 +71,8 @@ export type HostMessage =
   | { t: 'rehost'; pin: string; hostToken: string }
   | { t: 'begin' }
   | { t: 'round'; gameId: string }
+  /** The big-screen seat (M12): a share id a follow link watches the room by ('' turns it off), as classic's `watchOn`. */
+  | { t: 'watchOn'; s: string }
   | ({ t: 'at' } & AtFields)
   | ({ t: 'idle' } & Companion)
   | ({ t: 'question' } & QuestionFields)

@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Deck, Slide } from '../src/core';
 import { packPictures, unpackPictures } from '../src/core/pictures';
-import { followIndex, markPractice, practiceCount, practiceOf, PracticeScore, readLink, sharedDeck, type PracticeAsk } from '../src/viewer/state';
+import { followIndex, markPractice, practiceCount, practiceOf, PracticeScore, readLink, shareCopy, sharedDeck, type PracticeAsk } from '../src/viewer/state';
 import { root } from './replay-kit';
 
 const PIC = `data:image/png;base64,${'A'.repeat(2000)}`;
@@ -109,4 +109,29 @@ test('a shipped lesson\'s questions are all practised (the IPDV introduction\'s 
     const right = Number(p.quiz.correct);
     assert.equal(markPractice(p, right).right, true, `${s.name}: its own answer is right`);
   }
+});
+
+test('the copy Share uploads: shown slides, no notes at any depth, each picture once, marked as the studio\'s', () => {
+  const q = question('q', { style: 'choice', question: 'Q', options: ['a', 'b'], correct: 0, notes: 'a quiz note' });
+  const d = deck([slide('a', { background: PIC }), slide('h', { hidden: true, background: PIC }), q, slide('b', { background: PIC })]);
+  const copy = shareCopy(d);
+  assert.equal(copy.studio, 1);
+  assert.deepEqual(copy.slides.map((s) => s.id), ['a', 'q', 'b']);
+  const text = JSON.stringify(copy);
+  assert.equal(text.includes('say '), false, 'no speaker notes');
+  assert.equal(text.includes('a quiz note'), false, 'no notes inside a game');
+  assert.equal(copy.pictures?.length, 1);
+  assert.equal(d.slides[0].notes, 'say a', 'the lesson itself keeps its notes');
+  const back = sharedDeck(JSON.parse(text))!;
+  assert.deepEqual(back.deck.slides.map((s) => s.background), [PIC, '', PIC]);
+  assert.equal(back.practice, false);
+  assert.equal(sharedDeck({ ...JSON.parse(text), practice: true })!.practice, true, 'practice is the shell\'s flag on the copy');
+});
+
+test('a shipped lesson shared: well under the relay\'s 8 MB, and the viewer plays every shown slide', () => {
+  const shipped = unpackPictures(JSON.parse(readFileSync(resolve(root, 'assets/lab-lessons/ipdv-intro.lesson.json'), 'utf8')) as Deck & { pictures?: string[] });
+  const text = JSON.stringify(shareCopy(shipped));
+  assert.ok(text.length < 7.5 * 1024 * 1024, `${Math.round(text.length / 1024)} KB`);
+  assert.ok(text.length < JSON.stringify(shipped).length, 'smaller than the deck unpacked');
+  assert.equal(sharedDeck(JSON.parse(text))!.deck.slides.length, shipped.slides.filter((s) => !s.hidden).length);
 });

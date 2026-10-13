@@ -12,6 +12,8 @@ export interface ShowHooks {
   /** The studio's room could not start (or the show broke before anyone was in it): the shell hosts the lesson
    *  the classic way instead. The show has already closed. */
   fallback?: (reason: string) => void;
+  /** The shell's Share (M12): its dialog, over the show, offers a follow link while the room runs. */
+  share?: () => void;
   /** Words for the teacher, in the shell's own toast. */
   toast?: (text: string) => void;
   /** The shell's session reports (SF.Reports): the session to keep, the relay's journal state, the report as

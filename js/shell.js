@@ -813,9 +813,17 @@
        links all open in view.html, and a follow link matches the live room. */
     if (deckWs.lab && SF.LabEngine) {
       SF.toast('Preparing the lesson to share\u2026');
-      SF.LabEngine.shareDeck().then(function (show) {
-        SF.shareLessonDoc(show, { live: live });
-      }, function (e) {
+      var LE = SF.LabEngine;
+      /* A lesson the studio shows is shared as the lab deck, for the studio viewer (lab-app/view.html, M12),
+         unless a classic room is running it: a follow link must match the room that moves it. */
+      var studio = !live && LE.studioShareDeck ? LE.studioShareDeck() : Promise.resolve(null);
+      studio.then(function (doc) {
+        if (doc) {
+          SF.shareLessonDoc(doc, { studio: true, live: LE.roomRunning(), watchOn: LE.watchOn });
+          return;
+        }
+        return LE.shareDeck().then(function (show) { SF.shareLessonDoc(show, { live: live }); });
+      }).catch(function (e) {
         console.error(e);
         SF.toast('The lesson could not be prepared to share.');
       });

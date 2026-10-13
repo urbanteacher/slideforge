@@ -758,6 +758,8 @@
         classicHostLive();
       },
       toast: function (t) { SF.toast(t); },
+      /* The show's Share button (M12): the shell's dialog, which a <dialog> puts over the show. */
+      share: function () { if (SF.Shell && SF.Shell.shareLesson) SF.Shell.shareLesson(); },
       reports: R ? {
         track: function (s) { R.track(s); },
         recording: function (ok) { R.recording(ok); },
@@ -1213,6 +1215,28 @@
         });
       });
     },
+    /* Share for the studio viewer (lab-app/view.html, M12): the lab deck itself, its pictures packed once, when
+       the lesson is the studio's to show (whyNotPresentInStudio and classicOnly say nothing, and the classic
+       slideshow is not chosen). Resolves to null for any other lesson, or one too big for the relay: Share then
+       uploads the classic show (shareDeck) to view.html, as before. */
+    studioShareDeck: function () {
+      return new Promise(function (resolve) {
+        whenReady(function (a) {
+          if (!studioPresentOn() || !a.shareDeck || !a.whyNotPresentInStudio) { resolve(null); return; }
+          var why = a.whyNotPresentInStudio() || classicOnly();
+          if (why) { if (window.console) console.info('Share: the classic viewer, because ' + why); resolve(null); return; }
+          var doc = a.shareDeck();
+          if (JSON.stringify(doc).length > 7.5 * 1024 * 1024) {
+            if (window.console) console.info('Share: the classic viewer, because the lesson is over the relay\u2019s limit');
+            resolve(null); return;
+          }
+          resolve(doc);
+        });
+      });
+    },
+    /* A studio room is open, and the follow link it can be watched by (the relay's watchOn). */
+    roomRunning: function () { return !!(api && api.roomRunning && api.roomRunning()); },
+    watchOn: function (id) { return !!(api && api.watchOn && api.watchOn(id)); },
     lastShowDeck: function () { return lastShowDeck; },
     /* For the page's start (js/lesson-runtime.js): the show a held room is walked back into, as Host live ran it. */
     heldRoomDeck: function () {
