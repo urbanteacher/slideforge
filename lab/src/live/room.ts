@@ -82,7 +82,7 @@ export const emptyRoom = (): RoomState => ({
   spoken: emptySpoken(), oralCounts: {},
 });
 
-export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' }) => void;
+export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' }) => void;
 
 export class Room {
   private s: RoomState = emptyRoom();
@@ -94,6 +94,8 @@ export class Room {
   private pendingOpen = false;
   /** What the phones answer the question on the wall with: the relay sends `teamAnswers` for a choice question only. */
   private askedInput = 'choice';
+  /** A question the host holds as asked without asking the relay (Concept chain's term): the relay answers nothing for its reveal, so it is revealed as sent. */
+  private local: string | null = null;
 
   get state(): RoomState { return this.s; }
 
@@ -120,8 +122,12 @@ export class Room {
         s.question = { id: m.id, slideId: m.sourceSlideId, options: m.options, timeLimit: m.timeLimit };
         s.tally = null;
         this.askedInput = m.input;
+        this.local = null;
         break;
-      case 'reveal': this.pendingReveal = m.id; this.pendingOpen = m.correct < 0 || this.askedInput !== 'choice'; break;
+      case 'reveal':
+        if (this.local === m.id) { s.revealed = s.revealed.includes(m.id) ? s.revealed : [...s.revealed, m.id]; s.phase = 'revealed'; this.local = null; break; }
+        this.pendingReveal = m.id; this.pendingOpen = m.correct < 0 || this.askedInput !== 'choice';
+        break;
       case 'closeAnswers': case 'showdown': s.gated = s.gated.includes(m.id) ? s.gated : [...s.gated, m.id]; break;
       case 'finish': s.phase = 'idle'; break;
       case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; break;
@@ -202,6 +208,13 @@ export class Room {
   setMech(patch: Partial<Mech>): void {
     this.s = { ...this.s, mech: { ...this.s.mech, ...patch } };
     this.emit({ t: 'mech' });
+  }
+
+  /** The host holds a question as asked that the relay was never asked (Concept chain's term, which the phones take part in through an idea box). */
+  askLocal(q: OpenQuestion): void {
+    this.local = q.id;
+    this.s = { ...this.s, phase: 'question', question: q, tally: null };
+    this.emit({ t: 'asked' });
   }
 
   /** The spoken desk moved: the speaker, a held verdict, the credit, the proposal on the table, the chain or the round (a field left out stays as it is). */

@@ -35,6 +35,31 @@ export interface Credit { slideId: string; accepted: boolean; who: string; point
 /** A link accepted onto the chain: the term it grew from (a term that comes up twice is two rows, by its slide). */
 export interface ChainLink { slideId: string; term: string; link: string }
 
+/** The chain as the wall draws it (classic's chainMap): each term the game has reached, in order, with the links accepted from it; the term that is up is last-but-open. */
+export interface ChainModel { earlier: number; rows: { term: string; links: string[]; more: number; now: boolean }[]; pending: string }
+
+const MAP_PAST_ROWS = 3, MAP_PAST_BRANCHES = 3, MAP_NOW_BRANCHES = 6;
+
+/** The chain map for the question on the wall: earlier terms shrink, and past three only the latest show, so a ten-term game still fits; the newest links are the ones the room is talking about. */
+export function chainOf(links: ChainLink[], slideId: string, term: string, pending: string): ChainModel {
+  const rows: { key: string; term: string; links: string[]; now: boolean }[] = [];
+  for (const l of links) {
+    const key = l.slideId || `term:${l.term}`;
+    let row = rows.find((r) => r.key === key);
+    if (!row) { row = { key, term: l.term, links: [], now: key === slideId }; rows.push(row); }
+    row.links.push(l.link);
+  }
+  if (!rows.some((r) => r.key === slideId)) rows.push({ key: slideId, term, links: [], now: true });
+  const at = rows.findIndex((r) => r.now), earlier = Math.max(0, at - MAP_PAST_ROWS);
+  return {
+    earlier, pending,
+    rows: rows.slice(earlier).map((r) => {
+      const cap = r.now ? MAP_NOW_BRANCHES : MAP_PAST_BRANCHES, from = Math.max(0, r.links.length - cap);
+      return { term: r.term, links: r.links.slice(from), more: from, now: r.now };
+    }),
+  };
+}
+
 /** Heads up's round: one clock for the whole pile, and the count of terms got right. */
 export interface RoundView { gameId: string; total: number; endsAt: number; count: number; over: boolean }
 
@@ -56,9 +81,11 @@ export interface SpokenView {
   round: RoundView | null;
   /** The idea box the desk opened for proposals (the prompt's id), while the question is up. */
   proposalPrompt: string | null;
+  /** A word to the teacher about what the last press did or did not do ('' none): an Accept with no link typed, a proposal put down. */
+  notice: string;
 }
 
-export const emptySpoken = (): SpokenView => ({ recipient: ROOM, pending: null, credit: null, recent: [], onTable: null, links: [], pendingLink: '', verdicts: {}, round: null, proposalPrompt: null });
+export const emptySpoken = (): SpokenView => ({ recipient: ROOM, pending: null, credit: null, recent: [], onTable: null, links: [], pendingLink: '', verdicts: {}, round: null, proposalPrompt: null, notice: '' });
 
 /** The speaker the teacher picked, made safe against the room: a player who is in it, a team that exists (teams room only), else the room. */
 export function pickRecipient(picked: unknown, players: Pick<PlayerRow, 'id'>[], teams: string[], mode: string): Recipient {

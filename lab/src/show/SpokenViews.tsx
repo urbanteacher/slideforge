@@ -13,6 +13,8 @@ export interface SpokenActions {
   onVerdictRoom: () => void;
   /** Put a proposal from the room on the table: its author becomes the speaker (the author's name is never on the wall). */
   onProposal?: (pid: number, text: string) => void;
+  /** Concept chain: the link being weighed, typed in the wall's box. */
+  onLink?: (text: string) => void;
 }
 
 type SpokenDetail = Extract<NonNullable<Wall['question']>['detail'], { kind: 'spoken' }>;
@@ -36,6 +38,32 @@ function RoundClock({ round, guesser }: { round: Round; guesser: string }) {
   );
 }
 
+/** Concept chain's map: each term the game has reached with the links accepted from it, and a dashed branch for the one being weighed. */
+function ChainMap({ chain, open, onLink }: { chain: NonNullable<SpokenDetail['spoken']['chain']>; open: boolean; onLink?: (text: string) => void }) {
+  return (
+    <div className="chain" data-testid="chain">
+      {chain.earlier > 0 && <p className="chain-earlier">+{chain.earlier} earlier {chain.earlier === 1 ? 'term' : 'terms'}</p>}
+      <ol className="chain-map" aria-label="The chain so far">
+        {chain.rows.map((r, i) => (
+          <li key={i} className={r.now ? 'now' : 'past'} data-testid={r.now ? 'chain-now' : 'chain-past'}>
+            <b className="chain-term">{r.term}</b>
+            <ul className="chain-branches">
+              {r.more > 0 && <li className="chain-more">+{r.more} more</li>}
+              {r.links.map((l, j) => <li key={j} className={r.now && j === r.links.length - 1 ? 'fresh' : ''} data-testid="chain-link">{l}</li>)}
+              {r.now && open && <li className="ghost" data-testid="chain-ghost">{chain.pending.trim() || 'next link'}</li>}
+            </ul>
+          </li>
+        ))}
+      </ol>
+      {open && onLink && (
+        <label className="chain-capture">Proposed link
+          <input type="text" maxLength={160} value={chain.pending} onChange={(e) => onLink(e.target.value)} placeholder="Type the proposed link and justification" data-testid="chain-input" />
+        </label>
+      )}
+    </div>
+  );
+}
+
 /** The wall's spoken strip: before the reveal the pads and the speaker's picker, after it the verdict that was given. */
 export function SpokenPad({ q, actions, revealed }: { q: NonNullable<Wall['question']>; actions: SpokenActions; revealed: boolean }) {
   const s = (q.detail as SpokenDetail).spoken;
@@ -45,6 +73,7 @@ export function SpokenPad({ q, actions, revealed }: { q: NonNullable<Wall['quest
     return (
       <div className="wall-strip wall-spoken" data-testid="spoken">
         {s.round && <RoundClock round={s.round} guesser={s.guesser} />}
+        {s.chain && <ChainMap chain={s.chain} open={false} />}
         <p className="spoken-said" role="status" aria-live="polite" data-testid="spoken-said">
           {given ? `${given}${s.credit ? ` · ${s.credit}` : ''}` : `${q.answer || 'Closed without a verdict'}`}
         </p>
@@ -75,6 +104,8 @@ export function SpokenPad({ q, actions, revealed }: { q: NonNullable<Wall['quest
           {s.ideasMore > 0 && <li className="spoken-more">+{s.ideasMore} more</li>}
         </ul>
       )}
+      {s.chain && <ChainMap chain={s.chain} open onLink={actions.onLink} />}
+      {s.notice && <p className="spoken-notice" role="status" aria-live="polite" data-testid="spoken-notice">{s.notice}</p>}
       {s.held && (
         <p className="spoken-held" role="status" aria-live="polite" data-testid="spoken-held">
           {s.held}: who spoke? Choose them, or <button type="button" onClick={actions.onVerdictRoom} data-testid="verdict-room">count it for the room</button>.

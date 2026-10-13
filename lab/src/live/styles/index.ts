@@ -3,6 +3,7 @@
 import { boss } from './boss';
 import { choice } from './choice';
 import { compare } from './compare';
+import { conceptchain } from './conceptchain';
 import { connection } from './connection';
 import { definition } from './definition';
 import { emoji } from './emoji';
@@ -23,7 +24,7 @@ import { type } from './type';
 import { wordreveal } from './wordreveal';
 import type { StyleEntry } from './types';
 
-export const STYLES: StyleEntry[] = [choice, truefalse, type, slider, order, oddone, predict, showdown, timetraveler, spot, definition, emoji, fill, compare, race, boss, wordreveal, randomchallenge, spinexplain, headsup, connection];
+export const STYLES: StyleEntry[] = [choice, truefalse, type, slider, order, oddone, predict, showdown, timetraveler, spot, definition, emoji, fill, compare, race, boss, wordreveal, randomchallenge, spinexplain, headsup, connection, conceptchain];
 
 /** The entry for a game format of the lab (`slide.game.format`), or undefined when the room does not run it. */
 export const styleForFormat = (format: string): StyleEntry | undefined => STYLES.find((s) => s.formats.includes(format));

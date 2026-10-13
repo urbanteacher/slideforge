@@ -1,7 +1,7 @@
 // What the spoken styles share (live/spoken.ts): the phones are told to listen and watch, nothing is answered on them, the
 // reveal carries no gains (the relay credits the verdict by the recipient), and the wall draws the verdict pads and who spoke.
 import type { RoomQuiz } from '../show';
-import { recipientName, speakerKey, type SpokenSpec } from '../spoken';
+import { chainOf, recipientName, speakerKey, type SpokenSpec } from '../spoken';
 import { defineStyle, type Briefing, type SpokenWall, type StyleEntry, type WallContext, type WallDetail } from './types';
 
 /** The phones' card for a spoken question (classic's phoneCompanion): their role, what to do, a heading. */
@@ -27,6 +27,8 @@ export function spokenModel(q: RoomQuiz, spec: SpokenSpec, revealed: boolean, ct
     speaker: sp ? speakerKey(sp.recipient) : 'room',
     ideas: ideas.slice(0, IDEAS_SHOWN).map((i) => ({ pid: i.pid, text: i.text })), ideasMore: Math.max(0, ideas.length - IDEAS_SHOWN),
     onTable: sp?.onTable && sp.onTable.slideId === q.id ? sp.onTable.text : '',
+    chain: spec.chain && sp ? chainOf(sp.links, q.id, String(q.term || q.question || ''), sp.pendingLink) : null,
+    notice: sp?.notice ?? '',
     speakerLabel: spec.heads ? 'Guesser' : 'Who spoke',
     term: spec.heads ? String(q.term || q.question || '') : '',
     guesser: spec.heads && room && sp ? recipientName(sp.recipient, room.players, room.teams) : '',

@@ -13,7 +13,7 @@ import { answerLabel, markResponse } from '@sf/games/registry.js';
 import type { QuestionFields, Response, TallyAnswer } from '../protocol';
 import type { RoomState } from '../room';
 import type { RoomQuiz } from '../show';
-import type { SpokenSpec } from '../spoken';
+import type { ChainModel, SpokenSpec } from '../spoken';
 import type { TypedGroup } from '../typed';
 
 /** One answer the teacher enters by key: an option index, the words typed for a Type answer question, a number for
@@ -87,6 +87,10 @@ export interface SpokenWall {
   round: { endsAt: number; total: number; count: number; over: boolean } | null;
   /** Connection maker and Concept chain: the proposals the phones have sent (newest first, the last few, author left off but kept to put one on the table), how many more there are, and the one on the table ('' none). */
   ideas: { pid: number; text: string }[]; ideasMore: number; onTable: string;
+  /** Concept chain: the map of terms and the links accepted from them, with the link being weighed; null for the others. */
+  chain: ChainModel | null;
+  /** A word about what the last press did or did not do ('' none). */
+  notice: string;
 }
 
 /** Spot the error's reveal: every word of the passage with how many of the room tapped it (the heat), the error's words marked, and the answer said. */

@@ -242,6 +242,8 @@ export class LiveHost {
   verdict(choice: number): boolean { return this.desk.verdict(choice); }
   /** "Count it for the room": a held verdict lands with no points. */
   verdictRoom(): void { this.desk.verdictRoom(); }
+  /** The link the teacher is weighing for a Concept chain, typed in the wall's box. */
+  chainLink(text: string): void { this.desk.pending(text); }
   /** A proposal from the room put on the table (manual.html's `useProposal`): its author is the speaker. */
   useProposal(pid: number, text: string): void { this.desk.useProposal(pid, text); }
   /** "The answer is C", said by pressing C in the entry window: the verdict on a spoken question, else the reveal against that option. */
@@ -448,9 +450,18 @@ export class LiveHost {
     if (fb && this.closedFb !== fb.id) {
       if (this.promptId !== fb.id) { this.promptId = fb.id; this.send({ t: 'prompt', ...fb }); }
     } else if (this.promptId) { this.promptId = null; this.send({ t: 'promptEnd' }); }
-    if (asking && !reading) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); this.desk.asked(s.quiz!); return; }
-    const c = reading ? styleFor(s.quiz!).companion?.(s.quiz!, 'reading') : undefined;
+    // Concept chain is host-oracy: the phones stay idle while the chain grows, and the idea box is where they take part. The relay is never
+    // asked a question, so the room holds the term as asked itself, and its reveal needs no word back from the relay.
+    const quiet = asking && !!styleFor(s.quiz!).spoken?.chain;
+    if (asking && !reading && !quiet) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); this.desk.asked(s.quiz!); return; }
+    const c = reading || quiet ? styleFor(s.quiz!).companion?.(s.quiz!, reading ? 'reading' : 'asking') : undefined;
     this.send({ t: 'idle', style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '' });
+    if (quiet) {
+      const q = s.quiz!, hasManual = this.state.players.some((p) => p.manual) || this.manualNames.length > 0;
+      this.room.askLocal({ id: q.id, slideId: q.sourceSlideId || q.id, options: q.options, timeLimit: hasManual ? 0 : Math.max(0, Number(q.timeLimit) || 0) });
+      this.desk.asked(q);
+      return;
+    }
     if (reading) this.startRead(s.quiz!);
     if (s.results) this.send(this.finishFrame());
   }

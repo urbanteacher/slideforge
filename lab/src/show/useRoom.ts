@@ -36,6 +36,7 @@ export interface RoomApi {
   speaker: (r: Recipient) => void;
   verdictRoom: () => void;
   proposal: (pid: number, text: string) => void;
+  chainLink: (text: string) => void;
   /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
   closeFeedback: () => void;
   showFeedback: () => void;
@@ -95,7 +96,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     let timeUp: ReturnType<typeof setTimeout> | null = null;
     let halfway: ReturnType<typeof setTimeout> | null = null;
     const off = h.subscribe((s, cause) => {
-      if (cause.t === 'question' && s.question) {
+      if ((cause.t === 'question' || cause.t === 'asked') && s.question) {
         asked.current = Date.now();
         setBefore(Object.fromEntries(s.players.map((p) => [p.id, p.score])));
         setTeamBefore(Object.fromEntries((teamBoardOf(s) ?? []).map((t) => [t.index, t.score])));
@@ -142,6 +143,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     speaker: (r) => { host.current?.recipient(r); sync(); },
     verdictRoom: () => { host.current?.verdictRoom(); sync(); },
     proposal: (pid, text) => { host.current?.useProposal(pid, text); sync(); },
+    chainLink: (text) => { host.current?.chainLink(text); sync(); },
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),
     end,

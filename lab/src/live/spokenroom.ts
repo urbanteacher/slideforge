@@ -58,6 +58,8 @@ export class SpokenDesk {
     if (this.v.pending && this.v.pending.slideId !== slide.id) patch.pending = null;
     if (spec && !spec.heads && this.v.recipient.type !== 'room') patch.recipient = ROOM;
     if (this.v.proposalPrompt) patch.proposalPrompt = null; // the host closes the box itself as it leaves the slide
+    if (this.v.pendingLink) patch.pendingLink = '';
+    if (this.v.notice) patch.notice = '';
     if (this.v.onTable && this.v.onTable.slideId !== slide.id) patch.onTable = null;
     if (Object.keys(patch).length) this.set(patch);
   }
@@ -84,14 +86,22 @@ export class SpokenDesk {
   useProposal(pid: number, text: string): void {
     const q = this.env.slide()?.quiz, spec = specOf(q);
     if (!q || !spec?.proposals) return;
-    const patch: Partial<SpokenView> = { onTable: { slideId: q.id, text: String(text ?? '').slice(0, 160) } };
+    const said = String(text ?? '').slice(0, 160);
+    const patch: Partial<SpokenView> = { onTable: { slideId: q.id, text: said }, ...(spec.chain ? { pendingLink: said } : {}) };
     if (!this.env.revealed(q.id) && this.env.state().players.some((p) => p.id === pid)) patch.recipient = { type: 'player', id: pid };
     this.set(patch);
   }
 
   /** A question closing without a verdict (Next, or the clock) is not an invented Accept: it takes the last option, "Skip" or "Reject". */
   closing(q: RoomQuiz): void {
-    if (specOf(q) && this.v.verdicts[q.id] == null) q.correct = q.options.length - 1;
+    const spec = specOf(q);
+    if (!spec) return;
+    if (spec.chain) {
+      // A chain's term was credited link by link: it closes as Accept if it grew and as Reject if it did not, and the idea box closes before the reveal.
+      q.correct = this.v.links.some((l) => l.slideId === q.id) ? 0 : q.options.length - 1;
+      this.closeProposals();
+      if (this.v.pendingLink) this.set({ pendingLink: '' }); // a link still being typed is not an Accept
+    } else if (this.v.verdicts[q.id] == null) q.correct = q.options.length - 1;
   }
 
   /** The teacher says who is speaking; a held verdict is completed by it. */
@@ -119,6 +129,8 @@ export class SpokenDesk {
   verdict(choice: number): boolean {
     const q = this.env.slide()?.quiz, spec = specOf(q);
     if (!q || !spec || this.env.revealed(q.id) || !Number.isInteger(choice) || choice < 0 || choice >= q.options.length) return false;
+    // Concept chain: Accept needs a typed link, and Reject puts the proposal down; either way the press is the desk's (handled).
+    if (spec.chain && !this.tryAccept(q, choice)) return true;
     const st = this.env.state();
     if (verdictScores(spec, choice, st.mode, q.scoreSpoken === true) && this.v.recipient.type === 'room') {
       this.set({ pending: { slideId: q.id, choice } });
@@ -131,6 +143,7 @@ export class SpokenDesk {
   /** The verdict itself, once it is known where any points go. */
   private commit(q: RoomQuiz, choice: number): void {
     const spec = specOf(q)!, st = this.env.state(), r = this.v.recipient;
+    if (spec.chain) { this.chainVerdict(q, choice); return; }
     const credit = creditFor(q.id, spec, choice, { recipient: r, players: st.players, teams: st.teams, mode: st.mode, scoreSpoken: q.scoreSpoken === true });
     this.set({
       pending: null, verdicts: { ...this.v.verdicts, [q.id]: choice }, credit,
@@ -142,6 +155,32 @@ export class SpokenDesk {
     if (!spec.heads) this.set({ recipient: ROOM });
     else this.counted(q, choice);
     this.closeProposals();
+  }
+
+  // ---- Concept chain: a map, each accepted link credited as it lands, the term open for the next
+
+  /** Accept only with a typed link (put on the table, or typed in the wall's box); Reject puts the proposal down. */
+  private tryAccept(q: RoomQuiz, choice: number): boolean {
+    if (choice !== 0) { this.set({ pendingLink: '' }); return true; }
+    const link = this.v.pendingLink.trim();
+    if (!link) { this.set({ notice: 'Type the proposed link before Accept' }); return false; }
+    this.set({ notice: '', pendingLink: '', links: [...this.v.links, { slideId: q.id, term: String(q.term || q.question || '').trim(), link: link.slice(0, 160) }] });
+    return true;
+  }
+
+  /** The link the teacher is weighing, typed in the wall's box. */
+  pending(text: string): void { this.set({ pendingLink: String(text ?? '').slice(0, 160) }); }
+
+  /** An accepted link is one branch off the term, credited as it lands (the relay pays it, `oralCredit`, since the phones are on the idea box, not a question); the term stays open. Reject names nobody. */
+  private chainVerdict(q: RoomQuiz, choice: number): void {
+    const spec = specOf(q)!, st = this.env.state(), r = this.v.recipient;
+    const patch: Partial<SpokenView> = { pending: null, recipient: ROOM, onTable: null };
+    if (choice === 0) {
+      patch.credit = creditFor(q.id, spec, 0, { recipient: r, players: st.players, teams: st.teams, mode: st.mode, scoreSpoken: q.scoreSpoken === true });
+      if (r.type === 'player') patch.recent = [r.id, ...this.v.recent.filter((id) => id !== r.id)].slice(0, 5);
+      this.env.send({ t: 'oralCredit', id: q.id, gameId: q.gameId || '', style: 'conceptchain', recipient: r, scoreSpoken: q.scoreSpoken === true });
+    } else patch.notice = 'Put down. Weigh another, or Next to close the term.';
+    this.set(patch);
   }
 
   // ---- Heads up's round
