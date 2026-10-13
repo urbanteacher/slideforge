@@ -4,7 +4,7 @@
 // a press right after a question lands is swallowed for GRACE_MS, so a double press does not reveal the answer
 // the instant the question appears; then Next reveals; then Next moves on).
 
-import { styleFor, teamBoardOf, type Mech, type RoomState, type TeamRow, type WallDetail } from '../live';
+import { boardWallOf, styleFor, teamBoardOf, type BoardWallBase, type Mech, type RoomState, type TeamRow, type WallDetail } from '../live';
 import { feedbackWallOf, type FeedbackWall } from './feedbackWall';
 import { railOf, type Rail } from './rail';
 import { roundWallOf, sprintWallOf, type RoundWall, type SprintWall } from './speedWall';
@@ -21,7 +21,7 @@ export interface WallRow { id: number; rank: number; name: string; score: number
 export type WallMech = Mech;
 const NO_MECH: WallMech = { race: null, boss: null, drip: null };
 
-export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'feedback' | 'sprint' | 'ended';
+export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'feedback' | 'sprint' | 'board' | 'ended';
 
 export interface Wall {
   view: WallView;
@@ -57,6 +57,8 @@ export interface Wall {
   mech: WallMech;
   /** Beat the clock: the sprint the phones run (view `sprint`), or the wall-paced round's clock beside its questions. */
   speed: { sprint: SprintWall | null; round: RoundWall | null };
+  /** A board the wall plays (view `board`, live/boards): its kind's view of its state, with the teacher's buttons. */
+  boardWall: BoardWallBase | null;
 }
 
 export interface WallInput {
@@ -109,11 +111,14 @@ export function wallOf(i: WallInput): Wall {
   const teams = teamBoardOf(room);
   const rail = railOf({ board, teams, teamBefore: i.teamBefore, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
   const speed = { sprint: null, round: room.speed.round && step?.room.gameId === room.speed.round.gameId ? roundWallOf(room.speed.round) : null };
-  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, speed, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, speed, boardWall: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };
   const quiz = step?.room.quiz;
+  // A board: the wall plays it, the teacher's buttons on it (no phone answers, no standings beside it).
+  const rb = step?.room.board;
+  if (rb && !i.scoresOn) { const bw = boardWallOf(rb, room.boards[step!.room.id]); if (bw) return { ...base, rail: null, boardWall: bw, view: 'board' }; }
   // Beat the clock's sprint: the phones are the stage, and the wall shows the clock and the room's progress, then the result.
   const sp = room.speed.sprint;
   if (quiz && sp && sp.gameId === quiz.gameId && !i.scoresOn) return { ...base, rail: null, speed: { ...speed, sprint: sprintWallOf(sp, room.players.filter((p) => p.connected && !p.manual).length, room.speed.notice) }, view: 'sprint' };

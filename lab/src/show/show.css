@@ -339,3 +339,16 @@
 .spb-hard-a { color: #4ade80; font-weight: 700; }
 .spb-stop { font: inherit; font-weight: 700; min-height: calc(var(--u) * 56); padding: 0 calc(var(--u) * 28); color: #fff; background: var(--accent); border: 0; border-radius: calc(var(--u) * 14); cursor: pointer; }
 .spb-stop:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* The boards (BoardViews.tsx): a bar along the bottom of the slide with the board's clock, what to do now, and its buttons. */
+.paper-board { position: absolute; left: 50%; bottom: calc(var(--u) * 24); transform: translateX(-50%); display: flex; align-items: center; gap: calc(var(--u) * 28); max-width: calc(100% - var(--u) * 48); padding: calc(var(--u) * 12) calc(var(--u) * 28); background: rgba(10,10,11,.9); border: 1px solid var(--line-2); border-radius: calc(var(--u) * 20); }
+.pb-head { display: flex; flex-direction: column; gap: calc(var(--u) * 4); white-space: nowrap; }
+.pb-eyebrow { font-size: .7em; letter-spacing: .1em; color: var(--muted); }
+.pb-clock strong { font-size: 1.6em; font-variant-numeric: tabular-nums; color: var(--accent-2); }
+.paper-board.is-paused .pb-clock strong { color: #ffd166; }
+.pb-caption { margin: 0; display: flex; flex-direction: column; gap: calc(var(--u) * 4); }
+.pb-caption span { color: var(--muted); font-size: .85em; }
+.board-actions { display: flex; gap: calc(var(--u) * 12); }
+.board-actions button { font: inherit; font-weight: 700; min-height: calc(var(--u) * 52); padding: 0 calc(var(--u) * 22); color: var(--fg, #fff); background: transparent; border: 1px solid var(--line-2); border-radius: calc(var(--u) * 12); cursor: pointer; white-space: nowrap; }
+.board-actions button.primary { color: #fff; background: var(--accent); border-color: var(--accent); }
+.board-actions button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }

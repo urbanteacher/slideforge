@@ -4,7 +4,7 @@
 // So the player is moved by step: to the question's slide, and on the reveal to its answer slide.
 
 import type { Deck } from '../core';
-import { showFromDeck, type RoomShow, type RoomSlide } from '../live';
+import { boardOfKey, showFromDeck, type RoomShow, type RoomSlide } from '../live';
 
 export interface Step {
   room: RoomSlide;
@@ -43,6 +43,11 @@ export function stepsOf(shown: DeckLike): { show: RoomShow; steps: Step[] } {
       // A second drawing of the same question, after the first (the recall slide of a reading and recall pair).
       const second = slides.findIndex((x, k) => k > slide && x.game?.id === g.id && x.game.role === 'question' && x.game.key === g.key);
       if (second >= 0) ask = second;
+    }
+    // A board whose answers are the game's last slide (Low-stakes quiz): its reveal draws them.
+    if (room.board && g && boardOfKey(room.board.key)?.answersOnEnd) {
+      const end = slides.findIndex((x) => x.game?.id === g.id && x.game.role === 'end');
+      if (end >= 0) answer = end;
     }
     return { room, slide: Math.max(0, slide), answer, ask };
   });

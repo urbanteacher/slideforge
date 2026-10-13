@@ -112,3 +112,43 @@ declare module '@sf/games/speed.js' {
   /** How long a round question waits for the slowest phone before it closes itself (seconds). */
   export const SPEED_PACE: number;
 }
+
+/** A board's definition, as its game style declares it (`boardEngine` in src/boards): what the runtime and the room read. */
+interface SFBoardDef {
+  key: string; runtime: string; field: string; states: string; state: string; command: string;
+  /** What a verdict sends to the journal (`oral`), from the engine's report. */
+  reportValue?: (value: unknown) => unknown;
+  reportEvent?: string;
+  [member: string]: unknown;
+}
+
+/** A board session of the runtime (createSession): the board on the wall, its clock and its paint. */
+interface SFBoardSession { player: Record<string, unknown>; slide: Record<string, unknown> & { id: string }; node: unknown; paint(focus: boolean): void; tick(): void; start(): void; stop(): void }
+
+/** Low-stakes quiz's engine (the runtimes folder in src/boards): the state and its moves (its drawing is classic's and is not used). */
+interface SFLowStakesEngine {
+  create(board: Record<string, unknown>): Record<string, unknown> & { phase: 'ready' | 'quiz' | 'answers' | 'complete'; remaining: number; paused: boolean; elapsed: number };
+  transition<S extends Record<string, unknown>>(board: Record<string, unknown>, state: S, action: string): S;
+  formatClock(seconds: number): string;
+}
+
+declare module '@sf/boards/runtime.js' {
+  interface Clock { now(): number; every(fn: () => void, ms: number): unknown; cancel(timer: unknown): void }
+  interface SessionSpec { player: Record<string, unknown>; slide: Record<string, unknown> & { id: string }; node: unknown; create(board: Record<string, unknown>): Record<string, unknown>; render(...args: unknown[]): void; command(action: string, card?: number): void; tick(session: SFBoardSession, dt: number): boolean | void; interval?: number }
+  export type { SFBoardSession };
+  /** The boards' lifecycle (the board definitions are found among the game styles' `boardEngine`). */
+  export function createBoardRuntime(namespace: () => Record<string, unknown>, styles: Record<string, SFGameStyle>, clock?: Clock): {
+    forSlide(slide: Record<string, unknown>): SFBoardDef | null;
+    createSession(key: string, spec: SessionSpec): SFBoardSession;
+  };
+}
+
+declare module '@sf/boards/runtimes/lowstakes.js' {
+  /** Puts the Low-stakes engine on `SF.LowStakes`; nothing runs but declarations. */
+  export function installLowStakes(SF: { LowStakes?: SFLowStakesEngine }): void;
+}
+
+declare module '@sf/games/lowstakes.js' {
+  /** The whole quiz's clock: 120, 180 or 240 seconds. */
+  export function clampLowstakesSeconds(seconds: unknown): number;
+}

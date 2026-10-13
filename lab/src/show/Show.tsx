@@ -26,6 +26,8 @@ import { MechanicViews } from './MechanicViews';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
 import { SpokenPad } from './SpokenViews';
 import { SpeedClock, SprintBoard } from './SpeedViews';
+import { BoardView } from './BoardViews';
+import { boardRevealed } from '../live';
 import { nextAction, wallOf } from './wallModel';
 
 const BAR_HIDE_MS = 2600;
@@ -227,7 +229,7 @@ function Show() {
 
   // The player follows the room: the question's slide, and its answer slide once it is revealed.
   const step = room.at >= 0 ? steps[room.at] : undefined;
-  const revealed = !!step?.room.quiz && room.state.revealed.includes(step.room.quiz.id);
+  const revealed = (!!step?.room.quiz && room.state.revealed.includes(step.room.quiz.id)) || (!!step?.room.board && boardRevealed(step.room.board, room.state.boards[step.room.id]));
   const asked = !!step?.room.quiz && room.state.question?.id === step.room.quiz.id;
   const target = roomOn && step ? slideFor(step, revealed, asked) : null;
   useEffect(() => {
@@ -386,6 +388,7 @@ function Show() {
           {!finished && ['question', 'reveal'].includes(wall.view) && wall.question?.detail.kind === 'spoken' && <SpokenPad key={wall.question.text} q={wall.question} revealed={wall.view === 'reveal'} actions={{ onVerdict: room.verdict, onSpeaker: room.speaker, onVerdictRoom: room.verdictRoom, onProposal: room.proposal, onLink: room.chainLink }} />}
           {!finished && wall.view === 'question' && wall.question && wall.question.detail.kind !== 'spoken' && (wall.question.locked ? <RevealStrip q={wall.question} /> : <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />)}
           {!finished && wall.view === 'reveal' && wall.question && wall.question.detail.kind !== 'spoken' && <RevealStrip q={wall.question} />}
+          {!finished && wall.view === 'board' && wall.boardWall && <BoardView wall={wall.boardWall} onCommand={room.boardCommand} />}
           {!finished && wall.view === 'sprint' && wall.speed.sprint && <SprintBoard sprint={wall.speed.sprint} onStop={room.stopClock} />}
           {!finished && ['question', 'reveal'].includes(wall.view) && wall.speed.round && <SpeedClock round={wall.speed.round} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}

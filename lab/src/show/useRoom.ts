@@ -38,6 +38,8 @@ export interface RoomApi {
   chainLink: (text: string) => void;
   /** Stop the sprint's clock (Beat the clock). */
   stopClock: () => void;
+  /** A command to the board on the wall (its buttons). */
+  boardCommand: (action: string) => void;
   /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
   closeFeedback: () => void;
   showFeedback: () => void;
@@ -146,6 +148,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     proposal: (pid, text) => { host.current?.useProposal(pid, text); sync(); },
     chainLink: (text) => { host.current?.chainLink(text); sync(); },
     stopClock: () => { host.current?.stopClock(); sync(); },
+    boardCommand: (action) => { host.current?.boardCommand(action); sync(); },
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),
     end,

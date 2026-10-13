@@ -10,6 +10,7 @@
 import type { Deck, Slide } from '../core';
 import { gameStyle } from '@sf/games/registry.js';
 import { feedbackOf, type RoomFeedback } from './feedback';
+import { boardData, boardOn, type RoomBoard } from './boards';
 import { bossHpOf, trackLengthOf, type Mechanic } from './mechanics';
 import { styleForFormat, styleOf } from './styles';
 import { roomPlay } from './teams';
@@ -40,6 +41,8 @@ export interface RoomSlide {
   feedback?: RoomFeedback;
   /** A game's scores: the room is sent `finish` when it comes up. */
   results?: boolean;
+  /** A board (live/boards): the wall plays it, the teacher commands it, no phone answers. */
+  board?: RoomBoard;
 }
 
 /** The steps, and how the room plays: individual, or teams with their names (the first game's settings, as classic's buildRunDeck reads them). */
@@ -109,6 +112,13 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
             ? { id: s.id, title: quiz.question, text: quiz.question, activity: 'question', gameId: g.id, style: quiz.style, quiz }
             : { id: s.id, title: quiz.question, text: quiz.question, activity: 'moment', gameId: g.id, style });
         }
+      } else if (g.role === 'board' && boardOn(g.board)) {
+        // A board: one step, the slide SlideForge compiled for it, run by the room's board desk.
+        const on = boardOn(g.board)!;
+        const title = String(on.slide.title ?? g.label), text = Array.isArray(on.slide.bullets) ? (on.slide.bullets as string[]).join('\n') : '';
+        out.push({ id: s.id, title, text, activity: 'moment', gameId: g.id, style: on.kind.style, board: { key: on.kind.key, slide: { ...copy(on.slide), id: s.id } } });
+      } else if (g.role === 'end' && slides.some((x) => x.game?.id === g.id && x.game.role === 'board' && boardOn(x.game.board)?.kind.answersOnEnd)) {
+        // The board's answers (Low-stakes quiz): its reveal draws them, so they are not a step of their own.
       } else if (roundQuizzes(s).length) {
         // A round played in one go: each of its questions is a step, the first on the round's slide (Beat the clock's sprint asks them all at once).
         roundQuizzes(s).forEach((raw, n) => {
@@ -119,7 +129,9 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
         });
       } else if (g.role !== 'answer') {
         const rounds = slides.filter((x) => x.game?.id === g.id).reduce((n, x) => n + roundQuizzes(x).length, 0);
-        const text = g.role === 'cover' ? `${new Set(qs.map((x) => x.game!.key ?? x.id)).size + rounds} questions` : '';
+        const board = slides.map((x) => (x.game?.id === g.id && x.game.role === 'board' ? boardOn(x.game.board) : null)).find(Boolean);
+        const said = board?.kind.coverText?.(boardData({ key: board.kind.key, slide: { ...board.slide, id: s.id } }));
+        const text = g.role === 'cover' ? said || `${new Set(qs.map((x) => x.game!.key ?? x.id)).size + rounds} questions` : '';
         out.push({ id: s.id, title: g.role === 'cover' ? g.label : s.name, text, activity: 'moment', gameId: g.id, style, results: g.role === 'end' });
       }
       // A style that plays without a scores slide (Odd one out: nobody is scored) ends on its last answer, as classic's game does by default.
