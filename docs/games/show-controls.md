@@ -4,8 +4,8 @@ The Lesson studio's show (`lab/src/show/`) and its Teacher Presenter window (`la
 `lab/src/presenter/controls.ts`: the show's keys, the `?` sheet and the Teacher Presenter's buttons all read that table, so they never drift;
 this page was written from it. Room and Phones controls need a live room (Host live); without one the key says so.
 
-- **The wall's bar** keeps only: previous, next, the slide count (with a snowflake and the teacher's slide while frozen), speaker notes,
-  Draw, overview, full screen and exit, plus the room buttons it already had (Show results, Close prompt, Quick poll, Questions, Scores,
+- **The wall's bar** keeps only: previous, next, the slide count (with a snowflake and the teacher's slide while frozen), the join
+  card (once a room is live), Draw, overview, full screen and exit, plus the room buttons it already had (Show results, Close prompt, Quick poll, Questions, Scores,
   Rehearse, Teacher entry, Share, Host live). Everything else is a key on the wall and a button in the Teacher Presenter.
 - **The Teacher Presenter** groups its buttons Slides, Screen, Room and Phones. Each button's title names its wall key, and a button is
   pressed while its control is on. A state line above them says whether the wall is frozen, black or white, being drawn on, whether the phones
@@ -13,6 +13,8 @@ this page was written from it. Room and Phones controls need a live room (Host l
   wall's, except Esc, which closes a panel there and never ends the show.
 - **Not in the Teacher Presenter:** full screen (a browser only lets the wall's own window ask for it), first and last slide, the
   overview and the wall's speaker notes (the desk already shows every slide and the notes).
+- **Notes on another device** (Shift+N, or Notes on a phone) opens the Teacher Presenter, which shows the private link, its QR, how many
+  screens follow and Stop sharing notes. The link is never shown on the wall. N still puts the speaker notes on the wall.
 - **Who answered what** is only ever in the Teacher Presenter. Shift+W on the wall opens the window on that list; nothing reaches the wall.
 
 Changed from classic's keys: D is Draw (and I), P opens the Teacher Presenter (classic's D), E cycles the room view (classic's S) and S
@@ -55,7 +57,7 @@ Shift+C phones down in 10, Shift+N notes on a phone, H show held results, C clos
 | `W` `,` | White | White screen, for writing on the board |
 | `F` | (none) | Full screen on or off |
 | `N` | (none) | Speaker notes on the wall |
-| `Shift+N` | Notes on a phone | Notes on another device: a phone follows your notes |
+| `Shift+N` | Notes on a phone | Notes on another device: the Teacher Presenter shows the private link and QR, and a phone follows your notes |
 | `P` | (none) | Open the Teacher Presenter: notes, next slide and every control |
 | `?` | Keys | This list of keys; ? or Esc closes it |
 
