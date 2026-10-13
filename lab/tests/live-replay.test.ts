@@ -236,3 +236,18 @@ test('the lab host sends what the classic host sent for a True / false showdown 
   assert.equal(host.state.revealed.length, 3);
   assert.ok(host.state.ended);
 });
+
+// Time traveler (format 'time-traveler', the slider engine). The question frame is Slider's with `timeTravel: true` and
+// the timeline of the events already placed (it grows a round at a time), on one line for the whole game; the reveal says
+// the year. (The starter's questions are the recorded ones, with their span and timelines already compiled.)
+test('the lab host sends what the classic host sent for a Time traveler game', async () => {
+  const { host, classic, lab } = await replay(load('game-time-traveler'), 'time-traveler');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.equal(q.timeTravel, true); assert.equal(q.input, 'number'); assert.equal(q.style, 'slider'); }
+  assert.deepEqual(asked.map((q) => (q.timeline as unknown[]).length), [0, 1, 2], 'the timeline grows');
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => r.answer), ['1666', '1928', '1969']);
+  assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
