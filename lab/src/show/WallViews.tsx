@@ -7,7 +7,7 @@ import { qrSvg } from './qr';
 import { clockOf, type Clock } from './clock';
 import type { Rail } from './rail';
 import { parseRoster, type LineModel, type TeamRow } from '../live';
-import { SlotsView, SplitView } from './StyleViews';
+import { HeatView, SlotsView, SplitView } from './StyleViews';
 import type { Wall } from './wallModel';
 
 const TOP = 8;
@@ -127,6 +127,7 @@ export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
   );
   if (d.kind === 'line') return <div className="wall-strip wall-tally tally-line" data-testid="tally">{d.line && <NumberLine line={d.line} />}{said}</div>;
   if (d.kind === 'split') return <div className="wall-strip wall-tally tally-split" data-testid="tally"><SplitView model={d.split} />{said}</div>;
+  if (d.kind === 'heat') return <div className="wall-strip wall-tally tally-heat" data-testid="tally">{d.heat && <HeatView model={d.heat} />}{said}</div>;
   if (d.kind === 'slots') return <div className="wall-strip wall-tally tally-slots" data-testid="tally">{d.slots && <SlotsView model={d.slots} />}{said}</div>;
   const typed = d.kind === 'typed' ? d.groups : null;
   const pair = d.kind === 'bars' && d.pair;

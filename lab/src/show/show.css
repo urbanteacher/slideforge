@@ -229,3 +229,15 @@
 .numline-events { list-style: none; margin: calc(var(--u) * 6) 0 0; padding: 0; position: relative; height: calc(var(--u) * 70); font-size: calc(var(--u) * 28); }
 .numline-events li { position: absolute; transform: translateX(-50%); white-space: nowrap; display: flex; flex-direction: column; align-items: center; color: var(--muted); }
 .numline-events i { width: calc(var(--u) * 4); height: calc(var(--u) * 12); background: rgba(255,255,255,.6); }
+
+/* Spot the error: the passage in reading order, a bar under each word for how many tapped it, the error struck out. */
+.tally-heat { min-width: 60vw; }
+.heat-words { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: calc(var(--u) * 10) calc(var(--u) * 16); align-items: flex-end; }
+.heat-words li { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.heat-label { font-size: calc(var(--u) * 44); }
+.heat-words li.error .heat-label { color: rgb(240,100,90); }
+.heat-bar { display: block; width: 100%; min-width: calc(var(--u) * 24); height: calc(var(--u) * 90); position: relative; background: rgba(255,255,255,.1); border-radius: calc(var(--u) * 6); overflow: hidden; }
+.heat-bar::after { content: ''; position: absolute; inset: auto 0 0 0; height: var(--h); background: rgba(240,170,60,.8); }
+.heat-words li.error .heat-bar::after { background: rgba(60,190,110,.8); }
+.heat-count { font-size: calc(var(--u) * 32); color: var(--muted); }
+.heat-answer { margin: calc(var(--u) * 14) 0 0; font-size: calc(var(--u) * 48); font-weight: 700; }

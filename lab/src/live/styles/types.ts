@@ -56,8 +56,12 @@ export type WallDetail =
   | { kind: 'bars'; pair: boolean; /** Nobody is marked: the reveal says the prepared answer, not who was right. */ unmarked?: boolean }
   | { kind: 'slots'; slots: SlotsModel | null }
   | { kind: 'split'; split: SplitModel }
+  | { kind: 'heat'; heat: HeatModel | null }
   | { kind: 'typed'; groups: TypedGroup[] | null }
   | { kind: 'line'; line: LineModel | null };
+
+/** Spot the error's reveal: every word of the passage with how many of the room tapped it (the heat), the error's words marked, and the answer said. */
+export interface HeatModel { words: { index: number; label: string; count: number; error: boolean }[]; total: number; answer: string }
 
 /** What the phones are told about a style beyond its question (classic's phoneCompanion): their role, what to do, a heading. */
 export interface Briefing { role: string; participation: string; headPrompt: string }
@@ -78,7 +82,7 @@ export interface StyleEntry {
   /** The lab's game formats this entry runs. */
   formats: string[];
   /** What the phones answer with (`question.input`). */
-  input: 'choice' | 'text' | 'number' | 'order';
+  input: 'choice' | 'text' | 'number' | 'order' | 'tap' | 'fill' | 'sort';
   /** Put the style's own fields on a lab question, as SlideForge's compile does (src/games). */
   prepare?(q: RoomQuiz): void;
   /** The number slider's range, for the question frame (classic sends `range` only for a number question). */

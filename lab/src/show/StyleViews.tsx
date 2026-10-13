@@ -1,7 +1,7 @@
 // The wall's views for the styles beyond Multiple choice's bars, a number line and typed groups (WallViews.tsx):
 // each paints a view model the style's `wall` made (live/styles). Real text and ARIA, no canvas (hard rule 4).
 
-import type { SlotsModel, SplitModel } from '../live';
+import type { HeatModel, SlotsModel, SplitModel } from '../live';
 
 /** A Ranking's reveal: the right order, a heat bar a place for how many of the room had the right item there,
  *  and the pair the room swapped most often. */
@@ -44,6 +44,26 @@ export function SplitView({ model }: { model: SplitModel }) {
       <p className="split-note" data-testid="split-note">
         {was != null ? `When the split was shown: ${sides.map((s) => `${s.label} ${s.was ?? 0}`).join(', ')}. ` : ''}{switched} {switched === 1 ? 'switch' : 'switches'}
       </p>
+    </div>
+  );
+}
+
+/** Spot the error's reveal: the passage in reading order, a bar under every word for how many tapped it (the heat), the
+ *  error's words struck out, and the correction said. Real text; the bars are decoration beside the counts. */
+export function HeatView({ model }: { model: HeatModel }) {
+  const max = Math.max(1, ...model.words.map((w) => w.count));
+  return (
+    <div className="heat" data-testid="heat">
+      <ol className="heat-words" aria-label="Every word, and how many tapped it">
+        {model.words.map((w) => (
+          <li key={w.index} className={w.error ? 'error' : ''} data-testid="heat-word">
+            <span className="heat-label">{w.error ? <s>{w.label}</s> : w.label}</span>
+            <span className="heat-bar" style={{ ['--h' as string]: `${Math.round((w.count / max) * 100)}%` }} aria-hidden="true" />
+            <b className="heat-count" data-testid="heat-count">{w.count}</b>
+          </li>
+        ))}
+      </ol>
+      <p className="heat-answer" data-testid="heat-answer">{model.answer}</p>
     </div>
   );
 }

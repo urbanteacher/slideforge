@@ -30,7 +30,7 @@ export interface Companion { style: string; role: string; participation: string;
 export interface QuestionFields {
   id: string; n: number; total: number; question: string;
   voteOnly: boolean; unmarked: boolean; sourceSlideId: string;
-  input: 'choice' | 'text' | 'number' | 'order'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
+  input: 'choice' | 'text' | 'number' | 'order' | 'tap' | 'fill' | 'sort'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
   confidence: boolean; range: { min: number; max: number; step: number; unit: string } | null; options: string[]; timeLimit: number; points: number; style: string;
   headPrompt?: string;
   /** Predict the outcome / True or false showdown / Time traveler: the flags classic's question frame carries. */
