@@ -78,7 +78,8 @@ test('the desk state: this slide, the next, the notes, and the room status', () 
   assert.equal(s.notes, 'note 2');
   assert.equal(s.nextTitle, 'Slide 3 name');
   assert.equal(s.screen, 'black');
-  assert.deepEqual(s.room, { pin: '123456', connected: true, players: 2, view: 'question', open: true, answered: 1, total: 2, revealed: false, canClose: false, canShow: false, quick: false, canPoll: false });
+  assert.deepEqual(s.room, { pin: '123456', connected: true, players: 2, view: 'question', open: true, answered: 1, total: 2, revealed: false, canClose: false, canShow: false, quick: false, canPoll: false,
+    floor: 'auto', roomView: 'beside', phonesBlank: false, blankSoonAt: 0, reactions: true, joinCard: false, canAgain: false, answers: [], entry: null });
   assert.equal(presenterState({ deck: d, index: 2, startedAt: 5, screen: 'none' }).nextTitle, '');
   assert.equal(presenterState({ deck: d, index: 0, startedAt: 5, screen: 'none' }).room, null);
 });
