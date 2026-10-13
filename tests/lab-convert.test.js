@@ -787,3 +787,20 @@ test('an explanation slide comes in with its question, the right answer on green
   const t = deck.slides.find((s) => s.sourceSlideId === typed.id);
   assert.deepEqual([said(t, 'Answer key')[0], said(t, 'Answer text')[0]], ['✎', 'Ink']);
 });
+
+test('a results slide after the old questions is their game’s scores; with none before it, it is a titled slide (M13)', { skip }, async () => {
+  const { deckFromSlideForge, convertsSlide } = await converter();
+  const src = withOldQuizzes('layout-bank');
+  const early = { id: 'old-res0', type: 'results', title: 'Too soon' };
+  const res = { id: 'old-res', type: 'results', title: 'How we did' };
+  src.slides.splice(1, 0, early);
+  src.slides.splice(7, 0, res);
+  assert.ok(convertsSlide(res));
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const q = deck.slides.find((s) => s.sourceSlideId === 'old-q1');
+  const made = deck.slides.find((s) => s.sourceSlideId === res.id);
+  assert.deepEqual([made.game.role, made.game.id, made.game.format], ['end', q.game.id, 'choice'], 'the scores of the questions before it');
+  assert.equal(made.layers.find((l) => l.name === 'Heading').params.text, res.title);
+  const plain = deck.slides.find((s) => s.sourceSlideId === early.id);
+  assert.ok(plain && !plain.game, 'no questions before it: a slide, not a step of a game');
+});

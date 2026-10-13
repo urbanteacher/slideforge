@@ -60,3 +60,11 @@ export function leftoverQuizzes(source: SFSlide[], st: LayoutStyle, img: (p?: st
   return out;
 }
 
+
+/** The lab game a results slide is the scores of: the last question asked before it (of its SlideForge game, when it names one). */
+export function scoresFor(s: SFSlide, source: SFSlide[]): { id: string; format: string; label: string } | null {
+  const at = source.indexOf(s);
+  const before = source.slice(0, at < 0 ? source.length : at).filter(asked).filter((q) => !s.gameId || q.gameId === s.gameId);
+  const q = before[before.length - 1];
+  return q ? { id: quizGameId(q), format: quizFormat(q), label: String(q.gameTitle || 'Quiz') } : null;
+}

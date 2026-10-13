@@ -2,12 +2,12 @@ import { createLayer, uid, type Deck, type LiveFigure, type Slide } from '../cor
 import { videoEmbed } from '../engine';
 import { CHART_DARK, CHART_LIGHT } from '../charts';
 import { EXPERIMENTS, LOOKS, SCENES, experimentPreset } from '../experiments';
-import { LAYOUTS, explainSlide, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
+import { LAYOUTS, explainSlide, resultsSlide, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
 import { feedbackOf, gameSlides, fitSize, type ShowcaseGame } from '../designs';
 import { addThemeArt, themeGround, type ArtContext } from '../theme';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
 import { aiad27Slide, builds27 } from './aiad27';
-import { leftoverQuizzes } from './fromQuiz';
+import { leftoverQuizzes, scoresFor } from './fromQuiz';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
 // a table, chart data — and the lab has a layout for each type, on its own standard rules. This
@@ -377,6 +377,7 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       return { slide: explainSlide(st, { number: q.questionNumber, question: q.question ?? t, key: q.input === 'number' ? '↔' : typed ? '✎' : 'ABCDEF'[Number(q.correct)] ?? '?',
         answer: typed ? String(q.answer ?? '') : String(q.options?.[Number(q.correct)] ?? ''), body: s.body ?? '', source: sub, clicks: !!s.progressive }), ground: g };
     }
+    case 'results': return { slide: resultsSlide(st, t), ground: g };
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
       // The clip plays over its poster, which shows until the first frame decodes. It keeps the
@@ -565,14 +566,20 @@ function filed(s: SFSlide, slides: Slide[], img: (p?: string) => string, art?: A
   return slides;
 }
 
+/** What a slide's lab slides take from the rest of its lesson: the lab's game of its leftover questions (fromQuiz.ts). */
+interface Lesson { source: SFSlide[]; quizzes: Map<SFSlide, Slide[]> }
+
 /** One SlideForge slide as lab slides: one for most, a game's question and answer (and its cover)
  *  for a game the lesson brought compiled, none for what the lab leaves out. */
-function buildSlides(s: SFSlide, k: Kit, img: (p?: string) => string, art: ArtContext | undefined, games: SFDeck['games'], quizzes?: Map<SFSlide, Slide[]>): Slide[] {
+function buildSlides(s: SFSlide, k: Kit, img: (p?: string) => string, art: ArtContext | undefined, games: SFDeck['games'], lesson?: Lesson): Slide[] {
   const g = s.type === 'game' && s.gameId ? games?.[s.gameId] : undefined;
   if (g) return buildGame(s, g, k, img, art);
   // A quiz slide left in the lesson: its question and answer in the lesson's game of them (fromQuiz.ts).
-  if (s.type === 'quiz') return filed(s, quizzes?.get(s) ?? [], img, art);
+  if (s.type === 'quiz') return filed(s, lesson?.quizzes.get(s) ?? [], img, art);
   const one = buildSlide(s, k, img, art);
+  // A results slide is the scores of the questions before it, when the lab made a game of them.
+  const scores = one && s.type === 'results' && lesson ? scoresFor(s, lesson.source) : null;
+  if (one && scores) one.game = { ...scores, role: 'end', settings: {} };
   return one ? [one] : [];
 }
 
@@ -650,7 +657,7 @@ export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul
   const have = new Set(deck.slides.map((s) => s.sourceSlideId).filter(Boolean));
   const k = kit(paletteId, set);
   const img = (p?: string) => p ?? '';
-  const quizzes = types.has('quiz') ? leftoverQuizzes(source, k.on('working'), img) : undefined;
+  const lesson = { source, quizzes: types.has('quiz') ? leftoverQuizzes(source, k.on('working'), img) : new Map<SFSlide, Slide[]>() };
   let n = 0;
   // Where the next slide goes: after the lab slide of the last source slide the copy has, or first.
   let at = 0;
@@ -662,7 +669,7 @@ export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul
       continue;
     }
     if (!s.id || !types.has(s.type)) continue;
-    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title, total: source.length, slides: source }, games, quizzes);
+    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title, total: source.length, slides: source }, games, lesson);
     if (!made.length) continue;
     deck.slides.splice(at, 0, ...made.map((x, j) => finishSlide(x, at + j)));
     have.add(s.id);
@@ -680,9 +687,9 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { fram
   const img = (p?: string) => (p && data.images[p]) || '';
   const slides: Slide[] = [];
   let skipped = 0;
-  const quizzes = leftoverQuizzes(data.slides, k.on('working'), img);
+  const lesson = { source: data.slides, quizzes: leftoverQuizzes(data.slides, k.on('working'), img) };
   data.slides.forEach((s, index) => {
-    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title, total: data.slides.length, slides: data.slides }, data.games, quizzes);
+    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title, total: data.slides.length, slides: data.slides }, data.games, lesson);
     if (made.length) slides.push(...made); else skipped++;
   });
   const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };

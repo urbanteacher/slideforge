@@ -11,5 +11,5 @@ export { bulletsSlide, cardsSlide, chartSlide, compareSlide, journeySlide, keyfa
 export { closerSlide, codeSlide, columnsSlide, funnelSlide, introductionSlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, timelineSlide } from './rich';
 export { groundParams, itemStyle } from './blocks';
 export { icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide } from './infographics';
-export { explainSlide } from './leftovers';
+export { explainSlide, resultsSlide } from './leftovers';
 export type { LayoutStyle } from './style';

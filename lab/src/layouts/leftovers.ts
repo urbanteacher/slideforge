@@ -46,3 +46,13 @@ export function explainSlide(st: LayoutStyle, o: { number?: number; question: st
   if (o.source) layers.push(text('Source', o.source, { x: GRID.left, y: CONTENT_FOOT - 48, w: W, h: 48, rot: 0 }, { font: st.body, weight: '400', size: 34, color: st.muted }, after(0.5)));
   return slide(st, 'Explanation', layers);
 }
+
+/** A results slide (SlideForge's, src/render/quiz.js layoutResults): its title, and the space the scores
+ *  take. In a hosted lesson it is the scores step of the questions before it (decks/fromQuiz.ts), which the
+ *  room's wall draws; shown without a room, it says where the scores will be. */
+export function resultsSlide(st: LayoutStyle, title: string): Slide {
+  return slide(st, 'Results', [
+    titleRow(st, title || 'Results'), titleBar(st),
+    text('Scores', 'The room’s scores show here when the lesson is hosted.', { x: GRID.left, y: CONTENT_TOP + 120, w: W, h: 160, rot: 0 }, { font: st.body, weight: '400', size: 52, color: st.muted, align: 'center' }, after(0.3)),
+  ]);
+}
