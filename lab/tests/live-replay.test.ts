@@ -410,3 +410,21 @@ test('the lab host sends what the classic host sent for a Boss battle game', asy
   assert.equal(host.state.revealed.length, 4);
   assert.ok(host.state.ended);
 });
+
+// Word reveal (format 'word-reveal', style 'wordreveal'): a typed question (no points of its own, no confidence) while the word's letters
+// drip onto the wall on the host's clock; the reveal says the word and carries the host's `gains`: 100, 75 or 50 by the share of the word
+// showing when each answer reached the relay (its own time), 0 when wrong. The recording's room typed "Paris" for both words, so no one
+// scored. The drip itself is not on the wire (the wall draws it); live-wordreveal.test.ts runs its clock.
+test('the lab host sends what the classic host sent for a Word reveal game', async () => {
+  const { host, classic, lab } = await replay(load('game-word-reveal'), 'word-reveal');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 2);
+  for (const q of asked) { assert.equal(q.style, 'wordreveal'); assert.equal(q.input, 'text'); assert.equal(q.confidence, false); assert.equal(q.points, 0); assert.deepEqual(q.options, []); }
+  const reveals = lab.filter((f) => f.t === 'reveal');
+  assert.deepEqual(reveals.map((r) => [r.correct, r.answer]), [[-1, 'photosynthesis'], [-1, 'electron']]);
+  assert.deepEqual(reveals[0].gains, [[1, 0], [2, 0], [3, 0], [4, 0]]);
+  assert.ok(lab.some((f) => f.t === 'manualAnswer' && f.text === 'Paris'), "the teacher's typed entry is sent as text");
+  assert.equal(host.state.revealed.length, 2);
+  assert.ok(host.state.ended);
+});
