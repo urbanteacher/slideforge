@@ -287,3 +287,20 @@ test('the lab host sends what the classic host sent for a Definition challenge g
   assert.equal(host.state.revealed.length, 3);
   assert.ok(host.state.ended);
 });
+
+// Emoji guess (format 'emoji-guess', style 'emoji'). A typed question whose frame carries the clues (`clueMode`, `clues`);
+// the teacher's Nexts release the help before the reveal: each is an `at` with the next `step`, and the hint (the last) is
+// preceded by `hintOut`. The puzzles are easy (the hint is the one step), medium (the pattern, then the hint) and hard (the
+// hint). The relay halves what is answered after `hintOut`, so the reveal carries no gains.
+test('the lab host sends what the classic host sent for an Emoji guess game', async () => {
+  const { host, classic, lab } = await replay(load('game-emoji-guess'), 'emoji-guess');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.equal(q.input, 'text'); assert.equal(q.style, 'emoji'); assert.equal(q.clueMode, 'emoji'); assert.equal(q.headPrompt, 'What do these clues point to?'); }
+  assert.equal(lab.filter((f) => f.t === 'hintOut').length, 3, 'one hint a puzzle');
+  assert.deepEqual(lab.filter((f) => f.t === 'at' && f.activity === 'question').map((f) => f.step), [0, 1, 0, 1, 2, 0, 1], 'the steps released, easy: hint; medium: pattern, hint; hard: hint');
+  assert.ok(lab.filter((f) => f.t === 'reveal').every((r) => r.gains === undefined));
+  assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
