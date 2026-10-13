@@ -14,7 +14,7 @@
  *     reveal      the tally per option, the right one marked, what each phone gained on the rail
  *     scores      the leaderboard, best first
  *     end         Next past the last step ends the room: the final standings stay up, with the report; the
- *                 phones are told it is over; Open the report opens the shell's Reports; Back gives the page back
+ *                 phones are told it is over; Open in Reports opens the shell's Reports; Back gives the page back
  *   safety net: a relay that never answers closes the show within ~10 s, toasts, and runs the classic Host live
  *   room 2 (teacher entry)
  *     the show's Teacher entry opens manual.html#<key>; a learner added there joins the lobby; with the teacher
@@ -167,11 +167,11 @@ try {
   await late.close();
   step('the room ended: the final standings stay up; the phones are told; the PIN is closed');
 
-  await lab.getByRole('button', { name: 'Open the report' }).click();
+  await lab.getByRole('button', { name: 'Open in Reports' }).click();
   const reports = page.locator('dialog.reports-modal[open]');
   await reports.waitFor({ timeout: 8000 });
   await reports.getByText(/from 2 people across 1 revealed check/).waitFor({ timeout: 10000 });
-  step('Open the report: the shell\'s Reports opens on this session: 1 marked answer from 2 people');
+  step('Open in Reports: the shell\'s Reports opens on this session: 1 marked answer from 2 people');
   await page.keyboard.press('Escape');
   await reports.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
 
