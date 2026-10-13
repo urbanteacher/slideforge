@@ -29,6 +29,9 @@ declare module '@sf/games/registry.js' {
 declare module '@sf/games/marking.js' {
   /** A typed answer with case, accents, punctuation and a leading article taken off: what two spellings are compared by. */
   export function normalizeAnswer(text: unknown): string;
+  /** A number written plainly, with its unit once: "1989 year". */
+  export function formatValue(value: unknown, unit?: unknown): string;
+  export function withUnit(text: string, unit?: unknown): string;
 }
 
 declare module '@sf/games/scoring.js' {

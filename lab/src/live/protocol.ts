@@ -27,13 +27,13 @@ export interface Companion { style: string; role: string; participation: string;
 export interface QuestionFields {
   id: string; n: number; total: number; question: string;
   voteOnly: boolean; unmarked: boolean; sourceSlideId: string;
-  input: 'choice' | 'text'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
-  confidence: boolean; range: null; options: string[]; timeLimit: number; points: number; style: string;
+  input: 'choice' | 'text' | 'number'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
+  confidence: boolean; range: { min: number; max: number; step: number; unit: string } | null; options: string[]; timeLimit: number; points: number; style: string;
   headPrompt?: string;
 }
 
-/** A teacher's answer by key (§6.4): an option, or the words typed for a Type answer question; `clear` takes it back. */
-export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; clear?: boolean }
+/** A teacher's answer by key (§6.4): an option, the words typed for a Type answer question, or the number for a Slider; `clear` takes it back. */
+export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; value?: number; clear?: boolean }
 
 /** H→R: what the host sends. */
 export type HostMessage =

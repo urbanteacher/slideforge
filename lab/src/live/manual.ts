@@ -4,12 +4,12 @@
 // room with an `sf-manual-state`. manual.html and js/manual.js are not changed (hard rule 5): this is the host
 // they were written for, in the lab. The commands are turned into the room's own messages by LiveHost.
 //
-// Multiple choice, True or false and Type answer (the words typed for a learner): the commands of the spoken formats (recipient, verdicts, proposals) have no meaning in
-// this room and are ignored.
+// The styles in styles/ (Multiple choice, True or false, Type answer, Slider) say how an answer entered by key is read. The commands of
+// the spoken formats (recipient, verdicts, proposals) have no meaning in this room and are ignored.
 
 import type { LiveHost } from './host';
-import { markResponse } from '@sf/games/registry.js';
 import type { RoomQuiz } from './show';
+import { styleFor, STYLES, type ManualChoice, type ManualEntry } from './styles';
 
 export interface ChannelLike { postMessage(m: unknown): void; close(): void; onmessage: ((e: { data: unknown }) => void) | null }
 
@@ -41,10 +41,10 @@ export function manualState(host: Pick<LiveHost, 'state' | 'slide'>): Record<str
     players: s.players, teams: s.teams, mode: s.mode, pin: s.pin,
     recipient: { type: 'room' }, pendingVerdict: null, recentSpeakers: [], handCounts: null, proposals: [], onTable: '', lastCredit: null, oralCount: 0,
     question: quiz && asked
-      ? { id: quiz.id, question: quiz.question, input: quiz.input === 'text' ? 'text' : 'choice', options: quiz.options, gaps: 0, bins: null, spoken: false, scoreSpoken: false, style: quiz.style, range: null, revealed }
+      ? { id: quiz.id, question: quiz.question, input: styleFor(quiz).input, options: quiz.options, gaps: 0, bins: null, spoken: false, scoreSpoken: false, style: quiz.style, range: styleFor(quiz).range(quiz), revealed }
       : null,
     // Marked here, where the key is, and only after the reveal: the window must not give the answer away early.
-    answers: (t?.answers ?? []).map((a) => ({ id: a.id, response: a.response, sure: a.sure, right: revealed && quiz ? (quiz.input === 'text' ? markResponse(quiz, a.response) : a.response === quiz.correct) : null })),
+    answers: (t?.answers ?? []).map((a) => ({ id: a.id, response: a.response, sure: a.sure, right: revealed && quiz ? styleFor(quiz).mark(quiz, a.response) : null })),
   };
 }
 
@@ -105,10 +105,14 @@ export class ManualBridge {
       case 'kick': h.manualRemove(Number(c.playerId), 'kick'); break;
       case 'delete': h.manualRemove(Number(c.playerId), 'delete'); break;
       case 'answer': {
-        const a = (c.answer ?? {}) as { id?: string; playerId?: unknown; choice?: unknown; text?: unknown; clear?: unknown };
+        const a = (c.answer ?? {}) as ManualEntry;
         if (a.clear === true) h.manualAnswer(Number(a.playerId), null, a.id);
-        else if (Number.isInteger(a.choice)) h.manualAnswer(Number(a.playerId), a.choice as number, a.id);
-        else if (typeof a.text === 'string') h.manualAnswer(Number(a.playerId), a.text, a.id); // typed: the relay trims it and refuses an empty one
+        else {
+          // The question on the wall says how its answer is read; with none, any of the kinds (the relay refuses the wrong one).
+          const quiz = h.slide?.quiz;
+          const given: ManualChoice | undefined = quiz ? styleFor(quiz).manual(a) : STYLES.map((s) => s.manual(a)).find((v) => v !== undefined);
+          if (given !== undefined) h.manualAnswer(Number(a.playerId), given, a.id); // typed: the relay trims it and refuses an empty one
+        }
         break;
       }
       case 'tally': if (Array.isArray(c.counts)) h.manualTally((c.counts as unknown[]).map(Number)); break;

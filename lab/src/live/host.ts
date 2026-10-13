@@ -11,11 +11,11 @@
 // join the new room first. The new room has a new PIN and its scores start again: the relay holds both
 // (phones are told `over` and forget theirs), and hard rule 5 keeps the relay as it is.
 
-import { markResponse } from '@sf/games/registry.js';
 import { Connection, type Backoff, type SocketFactory } from './connection';
 import { DEFAULT_TEAMS, END_CLOSE_MS, SURE_GRACE_MS, type AtFields, type HostMessage, type QuestionFields, type RelayMessage, type TallyAnswer } from './protocol';
 import { Room, type Listener, type RoomState } from './room';
 import type { RoomQuiz, RoomShow, RoomSlide } from './show';
+import { styleFor, type ManualChoice } from './styles';
 
 export interface HostOptions {
   /** The relay's socket, e.g. `wss://<host>` (classic: the page's own host). */
@@ -33,8 +33,7 @@ export interface HostOptions {
   tap?: (dir: 'send' | 'recv', m: HostMessage | RelayMessage) => void;
 }
 
-/** One answer the teacher enters by key: an option index, the words typed for a Type answer question, or null to take it back. */
-export type ManualChoice = number | string | null;
+export type { ManualChoice };
 
 export class LiveHost {
   readonly room = new Room();
@@ -117,12 +116,14 @@ export class LiveHost {
     this.clearSure();
     const t = this.state.tally && this.state.tally.id === q.id ? this.state.tally : null;
     const list = answers ?? t?.answers ?? [];
-    // A typed question has no option to be right: `correct` is -1 and the answer said is the first accepted spelling.
-    const typed = q.input === 'text';
+    // The style says what is right and what is said: an open question (typed, a number) has no option to be right,
+    // so `correct` is -1 and the answer said is its accepted answer.
+    const style = styleFor(q);
+    const said = style.reveal(q);
     this.send({
       t: 'reveal', id: q.id, rev: rev ?? t?.rev ?? 0,
-      marks: q.unmarked ? [] : list.map((a) => [a.id, markResponse(q, a.response)] as [number, boolean]),
-      correct: typed ? -1 : q.correct, answer: typed ? q.answer ?? '' : q.options[q.correct] ?? '', explanation: q.explanation ?? '',
+      marks: q.unmarked ? [] : list.map((a) => [a.id, style.mark(q, a.response)] as [number, boolean]),
+      correct: said.correct, answer: said.answer, explanation: q.explanation ?? '',
     });
   }
 
@@ -139,7 +140,8 @@ export class LiveHost {
     if (!q && !id) return;
     const qid = id ?? q!.id;
     this.send(choice == null ? { t: 'manualAnswer', id: qid, playerId, clear: true }
-      : typeof choice === 'string' ? { t: 'manualAnswer', id: qid, playerId, text: choice } : { t: 'manualAnswer', id: qid, playerId, choice });
+      : typeof choice === 'string' ? { t: 'manualAnswer', id: qid, playerId, text: choice }
+        : typeof choice === 'object' ? { t: 'manualAnswer', id: qid, playerId, value: choice.value } : { t: 'manualAnswer', id: qid, playerId, choice });
   }
 
   manualRename(playerId: number, name: string): void { this.send({ t: 'manualRename', playerId, name }); }
@@ -249,12 +251,13 @@ export class LiveHost {
 
   private questionFields(q: RoomQuiz): QuestionFields {
     const quizzes = this.opts.show.slides.filter((x) => x.quiz);
+    const style = styleFor(q);
     const hasManual = this.state.players.some((p) => p.manual) || this.manualNames.length > 0;
     const f: QuestionFields = {
       id: q.id, n: quizzes.findIndex((x) => x.quiz!.id === q.id) + 1, total: quizzes.length, question: q.question,
       voteOnly: q.voteOnly === true, unmarked: q.unmarked === true, sourceSlideId: q.sourceSlideId || q.id,
-      input: q.input === 'text' ? 'text' : 'choice', spoken: false, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: '',
-      confidence: q.confidence !== false, range: null, options: (q.options ?? []).filter((o) => String(o).trim()),
+      input: style.input, spoken: false, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: '',
+      confidence: q.confidence !== false, range: style.range(q), options: (q.options ?? []).filter((o) => String(o).trim()),
       // SF.questionTimeLimit: no clock while the teacher enters answers by key.
       timeLimit: hasManual ? 0 : Math.max(0, Number(q.timeLimit) || 0), points: q.points, style: q.style,
     };

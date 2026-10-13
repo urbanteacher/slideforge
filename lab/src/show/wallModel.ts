@@ -4,8 +4,7 @@
 // a press right after a question lands is swallowed for GRACE_MS, so a double press does not reveal the answer
 // the instant the question appears; then Next reveals; then Next moves on).
 
-import { markResponse } from '@sf/games/registry.js';
-import { typedGroups, type RoomState, type TypedGroup } from '../live';
+import { styleFor, type RoomState, type WallDetail } from '../live';
 import { railOf, type Rail } from './rail';
 import type { Step } from './steps';
 
@@ -26,15 +25,15 @@ export interface Wall {
   /** The question on the wall (view `question` and `reveal`). */
   question: {
     n: number; total: number; text: string; options: WallOption[];
-    /** The question's style: `truefalse` draws its two votes as two big tiles. */
+    /** The question's style key. */
     style: string;
     answered: number; players: number; timeLimit: number;
     /** Reveal only: how many of the answers were right. */
     right: number;
     /** Reveal only: the right answer, and why. */
     answer: string; explanation: string;
-    /** A Type answer question, on reveal: what the room typed, one group per answer (see live/typed.ts). Null for the other styles, and while the question is open (the wall does not show typed answers then: the phones would copy them). */
-    typed: TypedGroup[] | null;
+    /** What the wall draws once the answer is up, from the question's style (live/styles): bars (`pair`: two big tiles for True or false), what the room typed (not shown while the question is open: the phones would copy it), or a number line. */
+    detail: WallDetail;
   } | null;
   /** The leaderboard: the whole room, best first; the wall shows the top of it. */
   board: WallRow[];
@@ -100,15 +99,15 @@ export function wallOf(i: WallInput): Wall {
     const options = quiz.options.filter((o) => String(o).trim());
     const counts = countsOf(room, options.length);
     const t = room.tally && room.tally.id === quiz.id ? room.tally : null;
-    const typedQ = quiz.input === 'text';
+    const style = styleFor(quiz);
     const answers = t?.answers ?? [];
     const question = {
       n: steps.slice(0, at + 1).filter((s) => s.room.quiz).length, total: steps.filter((s) => s.room.quiz).length, text: quiz.question, style: String(quiz.style ?? 'choice'),
       options: options.map((label, index) => ({ index, label, count: counts[index], correct: revealed && index === quiz.correct })),
-      right: revealed ? answers.filter((a) => (typedQ ? markResponse(quiz, a.response) : a.response === quiz.correct)).length : 0,
-      typed: typedQ && revealed ? typedGroups(quiz, answers) : null,
+      right: revealed ? answers.filter((a) => style.mark(quiz, a.response)).length : 0,
+      detail: style.wall(quiz, answers, revealed),
       answered: t?.answered ?? 0, players: t?.total ?? room.players.filter((p) => p.connected).length, timeLimit: room.question?.timeLimit ?? 0,
-      answer: revealed ? String(typedQ ? quiz.answer ?? '' : quiz.options[quiz.correct] ?? '') : '', explanation: revealed ? quiz.explanation ?? '' : '',
+      answer: revealed ? style.reveal(quiz).answer : '', explanation: revealed ? quiz.explanation ?? '' : '',
     };
     if (i.scoresOn) return { ...base, question, view: 'leaderboard' };
     return { ...base, question, view: revealed ? 'reveal' : 'question' };

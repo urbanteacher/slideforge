@@ -84,3 +84,13 @@
 .strip-timer.over { color: #ff6b6b; }
 .ended-actions { display: flex; gap: calc(var(--u) * 24); margin-top: calc(var(--u) * 40); }
 .ended-actions .wall-start { grid-area: auto; }
+
+/* A Slider's reveal: a number line with the band the target allows, the target, and each answer as a dot. */
+.tally-line { min-width: 60vw; }
+.numline { margin: 0; padding: calc(var(--u) * 8) 0 0; }
+.numline-track { position: relative; height: calc(var(--u) * (36 + var(--rows, 1) * 22)); border-bottom: calc(var(--u) * 6) solid rgba(255,255,255,.45); }
+.numline-band { position: absolute; top: 0; bottom: 0; background: rgba(60,190,110,.28); border-left: calc(var(--u) * 3) solid rgba(60,190,110,.8); border-right: calc(var(--u) * 3) solid rgba(60,190,110,.8); }
+.numline-target { position: absolute; top: 0; bottom: calc(var(--u) * -6); width: calc(var(--u) * 6); margin-left: calc(var(--u) * -3); background: #fff; }
+.numline-dot { position: absolute; width: calc(var(--u) * 18); height: calc(var(--u) * 18); margin-left: calc(var(--u) * -9); border-radius: 50%; background: #ff6b6b; border: calc(var(--u) * 2) solid rgba(0,0,0,.5); }
+.numline-dot.right { background: rgb(60,190,110); }
+.numline-ends { display: flex; justify-content: space-between; align-items: baseline; padding-top: calc(var(--u) * 8); font-variant-numeric: tabular-nums; }

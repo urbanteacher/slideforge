@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { qrSvg } from './qr';
 import { clockOf, type Clock } from './clock';
 import type { Rail } from './rail';
+import type { LineModel } from '../live';
 import type { Wall } from './wallModel';
 
 const TOP = 8;
@@ -66,15 +67,23 @@ export function QuestionStrip({ q, askedAt }: { q: NonNullable<Wall['question']>
   );
 }
 
-/** After the reveal: the votes on each option, the right one marked, and the answer said aloud to a screen reader.
- *  A Type answer question has no options: it shows what the room typed, one row per answer. */
+/** After the reveal, by the question's view (live/styles `wall`): bars of votes, what the room typed, or a number
+ *  line. The right answer is said aloud to a screen reader. */
 export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
-  const typed = q.typed;
+  const d = q.detail;
+  const said = (
+    <p className="tally-said" role="status" aria-live="polite" data-testid="reveal-said">
+      Answer: {q.answer}. {q.right} of {q.answered} got it right.{q.explanation ? ` ${q.explanation}` : ''}
+    </p>
+  );
+  if (d.kind === 'line') return <div className="wall-strip wall-tally tally-line" data-testid="tally">{d.line && <NumberLine line={d.line} />}{said}</div>;
+  const typed = d.kind === 'typed' ? d.groups : null;
+  const pair = d.kind === 'bars' && d.pair;
   const rows = typed ? typed.map((g, i) => ({ key: i, label: g.text, count: g.n, right: g.right })) : q.options.map((o) => ({ key: o.index, label: o.label, count: o.count, right: o.correct }));
   const max = Math.max(1, ...rows.map((o) => o.count));
   return (
-    <div className={`wall-strip wall-tally${q.style === 'truefalse' ? ' tally-pair' : ''}${typed ? ' tally-typed' : ''}`} data-testid="tally">
-      <ul className="tally-list" aria-label={typed ? 'What the room typed' : q.style === 'truefalse' ? 'Votes for True and False' : 'Votes for each option'}>
+    <div className={`wall-strip wall-tally${pair ? ' tally-pair' : ''}${typed ? ' tally-typed' : ''}`} data-testid="tally">
+      <ul className="tally-list" aria-label={typed ? 'What the room typed' : pair ? 'Votes for True and False' : 'Votes for each option'}>
         {rows.map((o) => (
           <li key={o.key} className={o.right ? 'right' : ''} data-testid={typed ? `typed-${o.key}` : `tally-${o.key}`}>
             <span className="tally-bar" style={{ ['--w' as string]: `${Math.round((o.count / max) * 100)}%` }} aria-hidden="true" />
@@ -84,10 +93,26 @@ export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
         ))}
         {typed && rows.length === 0 && <li className="tally-none" data-testid="typed-none">Nobody typed an answer.</li>}
       </ul>
-      <p className="tally-said" role="status" aria-live="polite" data-testid="reveal-said">
-        Answer: {q.answer}. {q.right} of {q.answered} got it right.{q.explanation ? ` ${q.explanation}` : ''}
-      </p>
+      {said}
     </div>
+  );
+}
+
+/** A Slider's reveal: the line, the band the target allows, the target, and each answer as a dot (right ones
+ *  filled green); dots on the same value stack. The accepted answer and its unit are said in words below. */
+function NumberLine({ line }: { line: LineModel }) {
+  const rows = Math.max(1, ...line.marks.map((m) => m.row + 1));
+  return (
+    <figure className="numline" data-testid="numline" aria-label={`Number line from ${line.min} to ${line.max}. Accepted: ${line.band}`} style={{ ['--rows' as string]: rows }}>
+      <div className="numline-track">
+        <span className="numline-band" style={{ left: `${line.loPct}%`, width: `${Math.max(0.5, line.hiPct - line.loPct)}%` }} data-testid="numline-band" aria-hidden="true" />
+        <span className="numline-target" style={{ left: `${line.targetPct}%` }} data-testid="numline-target" aria-hidden="true" />
+        {line.marks.map((m) => (
+          <span key={m.id} className={`numline-dot${m.right ? ' right' : ''}`} style={{ left: `${m.pct}%`, bottom: `calc(var(--u) * ${14 + m.row * 22})` }} data-testid="numline-dot" title={`${m.value}`} />
+        ))}
+      </div>
+      <div className="numline-ends" aria-hidden="true"><span>{line.min}</span><b data-testid="numline-band-label">{line.band}</b><span>{line.max}</span></div>
+    </figure>
   );
 }
 

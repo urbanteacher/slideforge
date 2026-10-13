@@ -92,12 +92,12 @@ test('wall: a typed question shows the count only while it is open, then the gro
   const input = { steps, at: i, scoresOn: false, fallbackJoin: '' };
   const open = wallOf({ ...input, room: room({ phase: 'question', question: { id: 'q0', slideId: 'q0', options: [], timeLimit: 20 }, tally }) });
   assert.equal(open.view, 'question');
-  assert.equal(open.question!.typed, null, 'what is typed is not shown while it can still be copied');
+  assert.equal((open.question!.detail as { groups: unknown }).groups, null, 'what is typed is not shown while it can still be copied');
   assert.equal(open.question!.answered, 3);
   assert.deepEqual(open.question!.options, []);
   const done = wallOf({ ...input, room: room({ phase: 'revealed', revealed: ['q0'], tally }) });
   assert.equal(done.view, 'reveal');
-  assert.deepEqual(done.question!.typed!.map((g) => [g.text, g.n, g.right]), [['Paris', 2, true], ['Lyon', 1, false]]);
+  assert.deepEqual((done.question!.detail as { groups: { text: string; n: number; right: boolean }[] }).groups.map((g) => [g.text, g.n, g.right]), [['Paris', 2, true], ['Lyon', 1, false]]);
   assert.equal(done.question!.right, 2);
   assert.equal(done.question!.answer, 'Paris');
   assert.equal(done.question!.explanation, 'On the Seine.');
