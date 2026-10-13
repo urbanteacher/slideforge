@@ -25,7 +25,7 @@ const quizGame = [g('quiz', 'choice', 'cover', null), g('quiz', 'choice', 'quest
 
 test('the boss has the HP of its own game\'s questions, not the whole lesson\'s', () => {
   assert.equal(styleForFormat('boss-battle')?.key, 'boss');
-  assert.deepEqual(canHostInStudio({ title: 'B', slides: bossGame }), { ok: true, reason: '' });
+  assert.deepEqual(canHostInStudio({ slides: bossGame }), { ok: true, reason: '' });
   assert.equal(showFromDeck({ title: 'B', slides: bossGame }).bossHp, 8, 'easy 1 + medium 2 + boss 5');
   const both = showFromDeck({ title: 'B', slides: [...bossGame, ...quizGame] });
   assert.equal(both.mechanic, 'boss');
