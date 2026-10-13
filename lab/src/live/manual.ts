@@ -8,6 +8,7 @@
 // Heads up, Connection maker, Concept chain) are given a verdict by `revealWith`, and a speaker by `recipient` (live/spoken.ts).
 
 import type { LiveHost } from './host';
+import type { RoomState } from './room';
 import type { RoomQuiz } from './show';
 import { styleFor, STYLES, type ManualChoice, type ManualEntry } from './styles';
 
@@ -40,13 +41,21 @@ export function manualState(host: Pick<LiveHost, 'state' | 'slide'>): Record<str
     type: 'sf-manual-state', active: !!s.pin && !s.ended, showing: !!host.slide, live: s.live, view: 'roster', report: s.report,
     players: s.players, teams: s.teams, mode: s.mode, pin: s.pin,
     recipient: s.spoken.recipient, pendingVerdict: quiz && s.spoken.pending?.slideId === quiz.id ? { choice: s.spoken.pending.choice, label: quiz.options[s.spoken.pending.choice] ?? '' } : null,
-    recentSpeakers: s.spoken.recent, handCounts: null, proposals: [], onTable: '', lastCredit: s.spoken.credit, oralCount: quiz ? s.oralCounts[quiz.gameId] ?? 0 : 0,
+    recentSpeakers: s.spoken.recent, handCounts: null, proposals: proposalsOf(s), onTable: quiz && s.spoken.onTable?.slideId === quiz.id ? s.spoken.onTable.text : '', lastCredit: s.spoken.credit, oralCount: quiz ? s.oralCounts[quiz.gameId] ?? 0 : 0,
     question: quiz && asked
       ? { id: quiz.id, question: quiz.question, input: styleFor(quiz).input, options: quiz.options, gaps: styleFor(quiz).manualQuestion?.(quiz).gaps ?? 0, bins: styleFor(quiz).manualQuestion?.(quiz).bins ?? null, spoken: !!styleFor(quiz).spoken, scoreSpoken: quiz.scoreSpoken === true, style: quiz.style, range: styleFor(quiz).range(quiz), revealed }
       : null,
     // Marked here, where the key is, and only after the reveal: the window must not give the answer away early.
     answers: (t?.answers ?? []).map((a) => ({ id: a.id, response: a.response, sure: a.sure, right: revealed && quiz ? styleFor(quiz).mark(quiz, a.response) : null })),
   };
+}
+
+/** The proposals the phones sent into the idea box, with their authors, for the teacher's window (at most 12; `used` is a link already on the chain). */
+function proposalsOf(s: RoomState): { pid: number; name: string; text: string; used: boolean }[] {
+  const f = s.feedback, id = s.spoken.proposalPrompt;
+  if (!id || !f || f.prompt.id !== id || f.digest?.kind !== 'brainstorm') return [];
+  const mapped = s.spoken.links.map((l) => l.link);
+  return f.digest.items.slice(0, 12).map((it) => ({ pid: it.pid, name: it.name, text: it.text, used: mapped.includes(String(it.text || '').slice(0, 160)) }));
 }
 
 export class ManualBridge {
@@ -121,6 +130,7 @@ export class ManualBridge {
       case 'revealWith': if (Number.isInteger(c.choice)) h.revealWith(c.choice as number); else h.reveal(); break;
       case 'recipient': h.recipient(c.recipient); break;
       case 'verdictRoom': h.verdictRoom(); break;
+      case 'useProposal': h.useProposal(Number(c.pid), String(c.text ?? '')); break;
       case 'report': h.report(); break;
       default: break; // verdictCancel is handled by no sender in classic either
     }

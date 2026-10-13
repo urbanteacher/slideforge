@@ -85,6 +85,8 @@ export interface SpokenWall {
   /** What the picker of the speaker is called: who spoke, or Heads up's guesser. */
   speakerLabel: string;
   round: { endsAt: number; total: number; count: number; over: boolean } | null;
+  /** Connection maker and Concept chain: the proposals the phones have sent (newest first, the last few, author left off but kept to put one on the table), how many more there are, and the one on the table ('' none). */
+  ideas: { pid: number; text: string }[]; ideasMore: number; onTable: string;
 }
 
 /** Spot the error's reveal: every word of the passage with how many of the room tapped it (the heat), the error's words marked, and the answer said. */

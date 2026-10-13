@@ -3,7 +3,7 @@
 // The host (host.ts) owns the socket and the show; the desk asks it through `DeskEnv` to reveal, and tells it what to publish
 // to the wall. The rules of what scores and what is said are spoken.ts's.
 
-import type { HostMessage } from './protocol';
+import type { HostMessage, PromptFields } from './protocol';
 import type { RoomState } from './room';
 import type { RoomQuiz, RoomSlide } from './show';
 import { creditFor, emptySpoken, pickRecipient, ROOM, verdictScores, type Recipient, type RoundView, type SpokenSpec, type SpokenView } from './spoken';
@@ -22,6 +22,9 @@ export interface DeskEnv {
   /** The host's clock (ms), and a timer on it: Heads up's round and its move on after a verdict. The tests run both on the recording's clock. */
   now(): number;
   after(fn: () => void, ms: number): void;
+  /** Open an idea box on the wall and the phones (a quick prompt); its id, or null when the room is already being asked something. */
+  openPrompt(fields: Pick<PromptFields, 'prompt' | 'max' | 'shape' | 'from' | 'quiet'> & { origin: string }): string | null;
+  closePrompt(id: string): void;
   /** The show's steps, and the teacher's Next (a verdict moves a Heads up round on). */
   slides(): RoomSlide[];
   next(): void;
@@ -54,7 +57,36 @@ export class SpokenDesk {
     else if (this.v.round && slide.gameId !== this.v.round.gameId) patch.round = null;
     if (this.v.pending && this.v.pending.slideId !== slide.id) patch.pending = null;
     if (spec && !spec.heads && this.v.recipient.type !== 'room') patch.recipient = ROOM;
+    if (this.v.proposalPrompt) patch.proposalPrompt = null; // the host closes the box itself as it leaves the slide
+    if (this.v.onTable && this.v.onTable.slideId !== slide.id) patch.onTable = null;
     if (Object.keys(patch).length) this.set(patch);
+  }
+
+  /** The question has been asked: Connection maker and Concept chain open an idea box for the phones' proposals, beside the question and without names. */
+  asked(q: RoomQuiz): void {
+    const spec = specOf(q);
+    if (!spec?.proposals || this.env.revealed(q.id)) return;
+    const from = String(q.term || q.question || ''), a = String(q.itemA || 'A'), b = String(q.itemB || 'B');
+    const id = spec.proposals === 'bridge'
+      ? this.env.openPrompt({ prompt: `How are \u201c${a}\u201d and \u201c${b}\u201d connected?`, max: 2, origin: 'proposals', shape: 'bridge', from: `${a} and ${b}`, quiet: true })
+      : this.env.openPrompt({ prompt: `Propose a link from \u201c${from || 'this'}\u201d: what does it connect to, and why?`, max: 2, origin: 'proposals', shape: 'link', from, quiet: true });
+    if (id) this.set({ proposalPrompt: id });
+  }
+
+  private closeProposals(): void {
+    const id = this.v.proposalPrompt;
+    if (!id) return;
+    this.env.closePrompt(id);
+    this.set({ proposalPrompt: null });
+  }
+
+  /** A proposal is put on the table (the entry window's "Use this", or a chip on the wall): its author becomes the speaker, and in a chain its words are the link Accept will add. */
+  useProposal(pid: number, text: string): void {
+    const q = this.env.slide()?.quiz, spec = specOf(q);
+    if (!q || !spec?.proposals) return;
+    const patch: Partial<SpokenView> = { onTable: { slideId: q.id, text: String(text ?? '').slice(0, 160) } };
+    if (!this.env.revealed(q.id) && this.env.state().players.some((p) => p.id === pid)) patch.recipient = { type: 'player', id: pid };
+    this.set(patch);
   }
 
   /** A question closing without a verdict (Next, or the clock) is not an invented Accept: it takes the last option, "Skip" or "Reject". */
@@ -109,6 +141,7 @@ export class SpokenDesk {
     // Cleared after the reveal has carried it to the relay.
     if (!spec.heads) this.set({ recipient: ROOM });
     else this.counted(q, choice);
+    this.closeProposals();
   }
 
   // ---- Heads up's round

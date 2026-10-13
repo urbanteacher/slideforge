@@ -7,9 +7,12 @@ import { defineStyle, type Briefing, type SpokenWall, type StyleEntry, type Wall
 /** The phones' card for a spoken question (classic's phoneCompanion): their role, what to do, a heading. */
 export const spokenBrief = (headPrompt: string): Briefing => ({ role: 'discuss', headPrompt, participation: 'Listen and watch. Be ready to explain aloud; the teacher records the verdict.' });
 
+const IDEAS_SHOWN = 5;
+
 /** The wall's model of a spoken question: the verdicts, the speaker, what the last verdict credited, the game's count. */
 export function spokenModel(q: RoomQuiz, spec: SpokenSpec, revealed: boolean, ctx?: WallContext): SpokenWall {
   const room = ctx?.room, sp = room?.spoken;
+  const open = room?.feedback, ideas = sp?.proposalPrompt && open?.prompt.id === sp.proposalPrompt && open.digest?.kind === 'brainstorm' ? open.digest.items : [];
   const held = sp?.pending && sp.pending.slideId === q.id ? q.options[sp.pending.choice] ?? '' : '';
   return {
     verdicts: q.options.map((label, index) => ({ index, label })),
@@ -22,6 +25,8 @@ export function spokenModel(q: RoomQuiz, spec: SpokenSpec, revealed: boolean, ct
     face: q.format === 'question-cube' ? String(q.category ?? '') : '',
     speakers: [{ key: 'room', label: 'The room' }, ...(room?.mode === 'teams' ? room.teams.map((name, i) => ({ key: `t${i}`, label: name })) : []), ...(room?.players ?? []).map((p) => ({ key: `p${p.id}`, label: p.name }))],
     speaker: sp ? speakerKey(sp.recipient) : 'room',
+    ideas: ideas.slice(0, IDEAS_SHOWN).map((i) => ({ pid: i.pid, text: i.text })), ideasMore: Math.max(0, ideas.length - IDEAS_SHOWN),
+    onTable: sp?.onTable && sp.onTable.slideId === q.id ? sp.onTable.text : '',
     speakerLabel: spec.heads ? 'Guesser' : 'Who spoke',
     term: spec.heads ? String(q.term || q.question || '') : '',
     guesser: spec.heads && room && sp ? recipientName(sp.recipient, room.players, room.teams) : '',

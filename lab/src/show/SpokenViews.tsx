@@ -11,6 +11,8 @@ export interface SpokenActions {
   onVerdict: (index: number) => void;
   onSpeaker: (r: Recipient) => void;
   onVerdictRoom: () => void;
+  /** Put a proposal from the room on the table: its author becomes the speaker (the author's name is never on the wall). */
+  onProposal?: (pid: number, text: string) => void;
 }
 
 type SpokenDetail = Extract<NonNullable<Wall['question']>['detail'], { kind: 'spoken' }>;
@@ -62,6 +64,17 @@ export function SpokenPad({ q, actions, revealed }: { q: NonNullable<Wall['quest
       <div className="spoken-pads" role="group" aria-label="Verdict">
         {s.verdicts.map((v) => <button key={v.index} type="button" onClick={() => actions.onVerdict(v.index)} data-testid={`verdict-${v.index}`}>{v.label}</button>)}
       </div>
+      {s.onTable && <p className="spoken-table" data-testid="spoken-table"><i>On the table</i> {'\u201c'}{s.onTable}{'\u201d'}</p>}
+      {s.ideas.length > 0 && (
+        <ul className="spoken-ideas" aria-label="Proposals from the room" data-testid="spoken-ideas">
+          {s.ideas.map((i, k) => (
+            <li key={`${i.pid}-${k}`}>{actions.onProposal
+              ? <button type="button" onClick={() => actions.onProposal!(i.pid, i.text)} title="Put this on the table" data-testid="spoken-idea">{i.text}</button>
+              : i.text}</li>
+          ))}
+          {s.ideasMore > 0 && <li className="spoken-more">+{s.ideasMore} more</li>}
+        </ul>
+      )}
       {s.held && (
         <p className="spoken-held" role="status" aria-live="polite" data-testid="spoken-held">
           {s.held}: who spoke? Choose them, or <button type="button" onClick={actions.onVerdictRoom} data-testid="verdict-room">count it for the room</button>.

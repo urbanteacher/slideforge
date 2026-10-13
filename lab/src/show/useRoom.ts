@@ -35,6 +35,7 @@ export interface RoomApi {
   verdict: (index: number) => void;
   speaker: (r: Recipient) => void;
   verdictRoom: () => void;
+  proposal: (pid: number, text: string) => void;
   /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
   closeFeedback: () => void;
   showFeedback: () => void;
@@ -140,6 +141,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     verdict: (index) => { host.current?.verdict(index); sync(); },
     speaker: (r) => { host.current?.recipient(r); sync(); },
     verdictRoom: () => { host.current?.verdictRoom(); sync(); },
+    proposal: (pid, text) => { host.current?.useProposal(pid, text); sync(); },
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),
     end,

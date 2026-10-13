@@ -12,7 +12,7 @@
 // (phones are told `over` and forget theirs), and hard rule 5 keeps the relay as it is.
 
 import { Connection, type Backoff, type SocketFactory } from './connection';
-import { DEFAULT_TEAMS, END_CLOSE_MS, SURE_GRACE_MS, type AtFields, type HostMessage, type QuestionFields, type RelayMessage, type TallyAnswer } from './protocol';
+import { DEFAULT_TEAMS, END_CLOSE_MS, SURE_GRACE_MS, type AtFields, type HostMessage, type PromptFields, type QuestionFields, type RelayMessage, type TallyAnswer } from './protocol';
 import { Boss, Race, type DripView } from './mechanics';
 import { Room, type Listener, type RoomState } from './room';
 import type { RoomQuiz, RoomShow, RoomSlide } from './show';
@@ -90,6 +90,7 @@ export class LiveHost {
     this.desk = new SpokenDesk({
       state: () => this.state, slide: () => this.slide, send: (m) => this.send(m),
       reveal: () => this.reveal(), revealed: (id) => this.isRevealed(id), publish: (patch) => this.room.setSpoken(patch),
+      openPrompt: (fields) => this.openQuick(fields), closePrompt: (id) => this.closeQuick(id),
       now: () => (opts.now ?? Date.now)(), slides: () => opts.show.slides, next: () => this.next(),
       after: (fn, ms) => { if (opts.after) opts.after(fn, ms); else (setTimeout(fn, ms) as { unref?: () => void }).unref?.(); },
     });
@@ -241,6 +242,8 @@ export class LiveHost {
   verdict(choice: number): boolean { return this.desk.verdict(choice); }
   /** "Count it for the room": a held verdict lands with no points. */
   verdictRoom(): void { this.desk.verdictRoom(); }
+  /** A proposal from the room put on the table (manual.html's `useProposal`): its author is the speaker. */
+  useProposal(pid: number, text: string): void { this.desk.useProposal(pid, text); }
   /** "The answer is C", said by pressing C in the entry window: the verdict on a spoken question, else the reveal against that option. */
   revealWith(choice: number): void { if (!this.verdict(choice)) this.reveal(undefined, undefined, choice); }
 
@@ -445,7 +448,7 @@ export class LiveHost {
     if (fb && this.closedFb !== fb.id) {
       if (this.promptId !== fb.id) { this.promptId = fb.id; this.send({ t: 'prompt', ...fb }); }
     } else if (this.promptId) { this.promptId = null; this.send({ t: 'promptEnd' }); }
-    if (asking && !reading) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); return; }
+    if (asking && !reading) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); this.desk.asked(s.quiz!); return; }
     const c = reading ? styleFor(s.quiz!).companion?.(s.quiz!, 'reading') : undefined;
     this.send({ t: 'idle', style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '' });
     if (reading) this.startRead(s.quiz!);
@@ -478,10 +481,23 @@ export class LiveHost {
   /** The brainstorm the room is asked after a reveal (Odd one out's "defend a pick"): classic's quick prompt, closed when the show leaves the question. */
   private openAfterReveal(prompt: string): void {
     if (this.promptId) return;
+    this.openQuick({ prompt, max: 1 });
+  }
+
+  /** Ask the room for ideas with a quick prompt (classic's startCustomPrompt): its id, or null when something else is already asking the room. */
+  private openQuick(fields: Pick<PromptFields, 'prompt' | 'max'> & Partial<PromptFields>): string | null {
+    if (this.promptId) return null;
     this.quickAt = Math.max(Date.now(), this.quickAt + 1); // never the same id twice, however fast the room is stepped
     const id = `quick:${this.quickAt}`;
     this.promptId = id;
-    this.send({ t: 'prompt', id, kind: 'brainstorm', prompt, options: [], ends: null, max: 1, presentAs: 'rail', custom: true, origin: '', stage: '', shape: '', from: '', quiet: false });
+    this.send({ t: 'prompt', kind: 'brainstorm', options: [], ends: null, presentAs: 'rail', custom: true, origin: '', stage: '', shape: '', from: '', quiet: false, ...fields, id });
+    return id;
+  }
+
+  private closeQuick(id: string): void {
+    if (this.promptId !== id) return;
+    this.promptId = null;
+    this.send({ t: 'promptEnd' });
   }
 
   /** Classic's auto-reveal (protocol §17, step 9): everyone in, nobody entered by hand; wait for confidence taps up to 5 s. */

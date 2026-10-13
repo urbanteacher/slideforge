@@ -54,9 +54,11 @@ export interface SpokenView {
   /** The verdict given, by question: a question closed without one has none. */
   verdicts: Record<string, number>;
   round: RoundView | null;
+  /** The idea box the desk opened for proposals (the prompt's id), while the question is up. */
+  proposalPrompt: string | null;
 }
 
-export const emptySpoken = (): SpokenView => ({ recipient: ROOM, pending: null, credit: null, recent: [], onTable: null, links: [], pendingLink: '', verdicts: {}, round: null });
+export const emptySpoken = (): SpokenView => ({ recipient: ROOM, pending: null, credit: null, recent: [], onTable: null, links: [], pendingLink: '', verdicts: {}, round: null, proposalPrompt: null });
 
 /** The speaker the teacher picked, made safe against the room: a player who is in it, a team that exists (teams room only), else the room. */
 export function pickRecipient(picked: unknown, players: Pick<PlayerRow, 'id'>[], teams: string[], mode: string): Recipient {

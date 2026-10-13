@@ -302,3 +302,10 @@
 .round-clock { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-2); }
 .round-clock.low { color: #ff6b6b; }
 .round-clock.over { color: #ffd166; }
+.spoken-ideas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--u) * 10); flex-basis: 100%; }
+.spoken-ideas li { padding: calc(var(--u) * 4) calc(var(--u) * 18); border-radius: 999px; background: var(--field-2); font-size: calc(var(--u) * 30); }
+.spoken-ideas button { font: inherit; color: inherit; background: transparent; border: 0; padding: 0; cursor: pointer; }
+.spoken-ideas button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.spoken-more { color: var(--muted); }
+.spoken-table { margin: 0; flex-basis: 100%; text-align: center; font-weight: 700; }
+.spoken-table i { font-style: normal; font-weight: 600; color: var(--accent-2); margin-right: calc(var(--u) * 10); }
