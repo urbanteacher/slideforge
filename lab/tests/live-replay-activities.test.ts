@@ -17,17 +17,31 @@ const replayOf = async (key: string, look: 'lab' | 'slideforge' = 'lab') => {
   return replayShow(rec, showFromDeck({ title: hosted.title, slides: activityDeck(key, look) }));
 };
 
+/** The phones are told the lab slide's words (live/activities/words.ts). Every activity's lab slide says the
+ *  catalogue's words, but Think-Pair-Share's copy is the lab's own, tuned for the wall (designs/engage/thinkPairShare.ts):
+ *  its Think stage and, on the track, its cover title. Classic's frames are compared with those words put in. */
+const LAB_COPY: Record<string, [string, string][]> = {
+  'think-pair-share': [['areas? Sketch an idea.', 'areas? On your own. Sketch an idea.']],
+  'think-pair-share/slideforge': [['areas? Sketch an idea.', 'areas? On your own. Sketch an idea.'], ['"title":"Think-Pair-Share"', '"title":"Think · Pair · Share"']],
+};
+const inLabCopy = (frames: Record<string, unknown>[], swaps: [string, string][] = []) => frames.map((f) => {
+  if (f.t !== 'at' && f.t !== 'prompt') return f;
+  let j = JSON.stringify(f);
+  for (const [from, to] of swaps) j = j.split(from).join(to);
+  return JSON.parse(j) as Record<string, unknown>;
+});
+
 for (const key of RECORDED) {
   test(`${key}: the lab host sends what classic sent, frame for frame`, async () => {
     const { lab, classic } = await replayOf(key);
-    assertSame(lab, classic);
+    assertSame(lab, inLabCopy(classic, LAB_COPY[key]));
   });
 }
 
 test('the same routine in SlideForge\'s look (the track) runs the same room', async () => {
   for (const key of ['think-pair-share', 'socratic-seminar']) {
     const { lab, classic } = await replayOf(key, 'slideforge');
-    assertSame(lab, classic);
+    assertSame(lab, inLabCopy(classic, LAB_COPY[`${key}/slideforge`]));
   }
 });
 

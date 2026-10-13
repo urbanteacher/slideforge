@@ -18,10 +18,10 @@ export interface StageFrame {
   next: string;
 }
 
-/** An activity slide as the room runs it: its kind, what `at` says of it (SlideForge's slide title and excerpt), and a routine's stages and brief. */
+/** An activity slide as the room runs it: its kind, what `at` says of it (its title and excerpt), and a routine's stages and brief. */
 export interface RoomActivity {
   key: string; page: number; kind: string;
-  /** SlideForge's slide (the catalogue's page), as the room reads it. */
+  /** The slide's title and excerpt as the room reads them: the lab slide's own words over the catalogue's page (words.ts). */
   title: string; text: string;
   stages: RoomStage[];
   /** The leading untimed row, pinned through every stage ('' with none). */

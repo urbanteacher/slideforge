@@ -113,3 +113,53 @@ test('canHostInStudio: a lesson of activities is the studio\'s; a game made from
   assert.deepEqual(canHostInStudio({ slides: [g] }), { ok: true, reason: '' });
   assert.match(canHostInStudio({ slides: [{ ...g, game: undefined } as Slide] }).reason, /a game without its game/);
 });
+
+const layer = (s: Slide, name: string) => s.layers.find((l) => l.name === name)!;
+const said = (s: Slide, text: string) => s.layers.find((l) => l.kind === 'text' && l.params.text === text)!;
+
+test('an edited activity slide: its own words are what the phones get, the catalogue\'s where it has none', async () => {
+  const slides = activityDeck('think-pair-share');
+  layer(slides[0], 'Prompt').params.text = 'Can two rectangles share a perimeter but not an area?';
+  layer(slides[0], 'Pair — task').params.text = 'Swap sketches and test each other\'s example.';
+  layer(slides[0], 'Share — task').params.text = 'Send the example you trust most.';
+  layer(slides[0], 'Connect — name').params.text = 'Link';
+  const act = activityOf(slides[0])!;
+  assert.deepEqual(act.stages.map((s) => [s.name, s.text]), [
+    ['Think', 'Can two rectangles share a perimeter but not an area? On your own. Sketch an idea.'],
+    ['Pair', 'Swap sketches and test each other\'s example.'],
+    ['Share', 'Send the example you trust most.'],
+    ['Link', 'What does this tell us about area and perimeter?'],
+  ]);
+  assert.match(act.text, /\nPair · 2 min — Swap sketches/);
+  const h = hostFor(slides);
+  await open(h);
+  h.host.next(); h.host.next(); h.host.next();
+  assert.equal(stageOf(h.sent().filter((m) => m.t === 'at').at(-1))!.name, 'Share');
+  assert.equal(h.sent().find((m) => m.t === 'prompt')!.prompt, 'Send the example you trust most.', 'the Share stage\'s box asks in the slide\'s words');
+
+  // A slide that is not a routine: its heading and a row's words.
+  const doNow = activityDeck('do-now-bell-ringer')[0];
+  const before = activityOf(doNow)!;
+  said(doNow, 'Find the perimeter of a rectangle measuring 6 cm by 4 cm.').params.text = 'Find the perimeter of a 5 cm square.';
+  const heading = doNow.layers.find((l) => l.name === 'Heading');
+  if (heading) heading.params.text = 'Starter: perimeter';
+  const after = activityOf(doNow)!;
+  assert.match(after.text, /Find the perimeter of a 5 cm square\./);
+  assert.equal(after.text.split('\n').length, before.text.split('\n').length);
+  if (heading) assert.equal(after.title, 'Starter: perimeter');
+});
+
+test('an unedited activity slide says the catalogue\'s words (Think-Pair-Share\'s own copy aside)', () => {
+  for (const a of catalogue.filter((x) => !x.game && x.key !== 'think-pair-share')) {
+    for (const look of ['lab', 'slideforge'] as const) {
+      // Some of SlideForge's looks measure text on a canvas, which is not here: those are left out.
+      let deck: Slide[] = [];
+      try { deck = activityDeck(a.key, look); } catch { continue; }
+      for (const s of deck) {
+        const act = activityOf(s)!;
+        const bare = activityOf({ activity: s.activity })!;
+        assert.deepEqual([act.title, act.text, act.brief, act.stages], [bare.title, bare.text, bare.brief, bare.stages], `${a.key} page ${s.activity?.page} (${look})`);
+      }
+    }
+  }
+});

@@ -11,13 +11,14 @@ import { collectKind } from './collect';
 import { momentKind } from './moment';
 import { stagesKind } from './stages';
 import type { ActivityKind, RoomActivity } from './types';
+import { ownPage } from './words';
 
 /** In the order they are tried: a routine first (it may also carry feedback), then feedback, then a plain slide. */
 export const ACTIVITY_KINDS: ActivityKind[] = [stagesKind, collectKind, momentKind];
 
 const kindOf = (page: SFActivitySlide) => ACTIVITY_KINDS.find((k) => k.runs(page)) ?? null;
 
-type ActivitySlide = Pick<Slide, 'activity'>;
+type ActivitySlide = Pick<Slide, 'activity'> & Partial<Pick<Slide, 'layers'>>;
 
 /** Why the studio's room cannot run this activity slide, or '' when it can (a game made from an activity is a game: its slides say so). */
 export function activityBlocker(s: ActivitySlide): string {
@@ -32,14 +33,16 @@ export function activityBlocker(s: ActivitySlide): string {
   return why ? `is the activity ${c.title}, which ${why}` : '';
 }
 
-/** The activity slide as the room runs it, or null (not an activity, or one the room does not run). */
+/** The activity slide as the room runs it, or null (not an activity, or one the room does not run). Its kind is
+ *  the catalogue page's; its words are the lab slide's own where it has them (words.ts), the catalogue's otherwise. */
 export function activityOf(s: ActivitySlide): RoomActivity | null {
   const a = s.activity;
   if (!a || activityBlocker(s)) return null;
   const c = cataloguePage(a.key, a.page)!;
   const kind = kindOf(c.page)!;
-  const r = kind.stages?.(c.page, a.settings);
-  const page = r?.page ?? c.page;
+  const own = ownPage(s, c.page, c.title);
+  const r = kind.stages?.(own, a.settings);
+  const page = r?.page ?? own;
   return { key: a.key, page: a.page, kind: kind.key, title: String(page.title || c.title), text: slideExcerpt(page, 0), stages: r?.stages ?? [], brief: r?.brief ?? '' };
 }
 
