@@ -105,6 +105,8 @@ html:not([data-ready]) body { background: #0a0a0b; }
       <button class="btn" id="btnImport">Import file</button>
       <span class="file-sep" aria-hidden="true"></span>
       <button class="btn" id="btnLectureReady" title="Wake the server, session reports, join addresses">Lecture setup…</button>
+      <span class="file-sep" aria-hidden="true"></span>
+      <button class="btn" id="btnStudioPresent" role="menuitemcheckbox" aria-checked="false" title="Trial: Present, Teacher Presenter and Notes on another device use the studio's own slideshow for lessons it can run. Other lessons keep SlideForge's show.">Use the studio's slideshow (trial) <span class="menu-check" aria-hidden="true"></span></button>
     </div></details>
     <!-- Version history sits beside File: it is the "undo further back"
          people reach for mid-edit. Keep a restore point is the first row
@@ -477,7 +479,7 @@ SF.installExplore(SF);
 <script src="js/shell.js?v=18"></script>
 <script src="js/palette.js?v=1"></script>
 <script src="js/lesson-runtime.js?v=2"></script>
-<script src="js/lab-engine.js?v=41"></script>
+<script src="js/lab-engine.js?v=42"></script>
 <script src="js/docs.js?v=2"></script>
 <script src="js/studio.js?v=18"></script>
 <script src="js/live-activities.js?v=1"></script>

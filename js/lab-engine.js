@@ -638,6 +638,75 @@
     withShow(function (show) { SF.Live.host(show.run); });
   }
 
+  /* The studio's own slideshow for Present, Teacher Presenter and Notes on another device (lab-engine-plan M15).
+     A trial, off unless asked for: the File menu's "Use the studio's slideshow (trial)" or ?studioPresent=1 (and
+     =0 to turn it off again), kept in localStorage. On, a lesson the studio's show can run (lab/src/show
+     whyNotPresentInStudio says nothing) is shown there; any other lesson, and any failure to start, is
+     SlideForge's own show, unchanged. */
+  var STUDIO_PRESENT = 'slideforge.studioPresent';
+  function studioPresentOn() {
+    try { return localStorage.getItem(STUDIO_PRESENT) === '1'; } catch (e) { return false; }
+  }
+  function syncStudioPresentItem() {
+    var item = document.getElementById('btnStudioPresent');
+    if (!item) return;
+    var on = studioPresentOn();
+    item.setAttribute('aria-checked', on ? 'true' : 'false');
+    var mark = item.querySelector('.menu-check');
+    if (mark) mark.textContent = on ? '\u2713' : '';
+  }
+  function setStudioPresent(on) {
+    try { if (on) localStorage.setItem(STUDIO_PRESENT, '1'); else localStorage.removeItem(STUDIO_PRESENT); } catch (e) {}
+    syncStudioPresentItem();
+  }
+  try {
+    var askedPresent = new URLSearchParams(location.search).get('studioPresent');
+    if (askedPresent === '1' || askedPresent === '0') setStudioPresent(askedPresent === '1');
+  } catch (e) {}
+
+  /* The studio's show over the frame for Present (first: undefined), the Teacher Presenter ('desk') or Notes on
+     another device ('notes'). False, with nothing changed, when the trial is off, the studio is not ready, or the
+     lesson holds something the studio's show does not run; the caller then takes the classic path. Full screen is
+     asked for inside the click, as classic's is. */
+  function presentInStudio(first) {
+    var a = api;
+    if (!studioPresentOn() || !a || !a.presentInStudio || !a.whyNotPresentInStudio) return false;
+    var why = a.whyNotPresentInStudio();
+    if (why) {
+      if (window.console) console.info('Present: the classic show, because ' + why);
+      return false;
+    }
+    enterStudioShow();
+    var started = false;
+    var hooks = studioHooks();
+    /* A show that breaks falls back to the classic player, not to the classic room. */
+    hooks.fallback = function (reason) {
+      leaveStudioShow();
+      SF.toast(reason + '. Showing with the classic player instead.');
+      classicPlay();
+    };
+    /* The show ended on a slide: the editor is already on it (the show selects it); say it again to be sure. */
+    hooks.exited = function (slideId) {
+      leaveStudioShow();
+      if (slideId && a.showSlide) a.showSlide(slideId);
+    };
+    try { started = a.presentInStudio(hooks, first); }
+    catch (e) { console.error(e); }
+    if (started) {
+      if (frame) { try { frame.focus(); frame.contentWindow.focus(); } catch (e) {} }
+      return true;
+    }
+    leaveStudioShow();
+    return false;
+  }
+
+  /* Present the classic way: SlideForge's show with its HUD, the lab drawing each slide live inside it. */
+  function classicPlay() {
+    var d = document.documentElement;
+    if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function () {});
+    withShow(function (show) { SF.Player.start(show.run, show.index, { fullscreen: false }); });
+  }
+
   /* The studio's own show over the lab's frame (lab/src/show, M7 slice 3). While it is up the frame fills the
      viewport (css/studio.css html.lab-show) and the page is full screen; both are given back when it closes. */
   function enterStudioShow() {
@@ -714,6 +783,7 @@
   }
 
   function teacherPresenter() {
+    if (presentInStudio('desk')) return;
     /* The pop-out opens now, inside the click, or the browser blocks it; the
        show it follows starts once the slides are drawn. */
     var desk = SF.Player.openPresenter();
@@ -749,9 +819,8 @@
        slide live inside it (js/lab-stage.js). Full screen is asked for now,
        inside the click; the show starts once its slides are ready. */
     play: function () {
-      var d = document.documentElement;
-      if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function () {});
-      withShow(function (show) { SF.Player.start(show.run, show.index, { fullscreen: false }); });
+      if (presentInStudio()) return;
+      classicPlay();
     },
     settings: function () {
       SF.toast('Theme, colours, header and footer are in the lab’s left panel.');
@@ -853,7 +922,7 @@
         open(m.deck);
         var tries = 0;
         (function startWhenOpen() {
-          if (api && api.getDeck() && api.getDeck().id === m.deck.id) { ws.play(); return; }
+          if (api && api.getDeck() && api.getDeck().id === m.deck.id) { classicPlay(); return; }
           if (++tries < 150) setTimeout(startWhenOpen, 100);
           else SF.toast('The lesson could not be opened for the show.');
         })();
@@ -883,6 +952,24 @@
     /* Teacher Presenter and Rehearse, from Present ▾: the bridge above. */
     var btnPresenter = document.getElementById('btnPresenter');
     if (btnPresenter) btnPresenter.onclick = teacherPresenter;
+    /* Notes on another device is made by js/player.js: with the trial on, a lesson the studio's show runs opens the
+       studio's show with the notes card up; otherwise the button does what it did. */
+    var btnNotes = document.getElementById('btnNotesElsewhere');
+    if (btnNotes) {
+      var notesWas = btnNotes.onclick;
+      btnNotes.onclick = function (ev) {
+        if (presentInStudio('notes')) return;
+        if (notesWas) notesWas.call(btnNotes, ev);
+      };
+    }
+    var btnStudioPresent = document.getElementById('btnStudioPresent');
+    if (btnStudioPresent) {
+      btnStudioPresent.onclick = function () {
+        setStudioPresent(!studioPresentOn());
+        SF.toast(studioPresentOn() ? 'Present will use the studio\u2019s slideshow when it can run the lesson (trial).' : 'Present uses SlideForge\u2019s own show again.');
+      };
+      syncStudioPresentItem();
+    }
     var btnRehearse = document.getElementById('btnRehearse');
     if (btnRehearse) btnRehearse.onclick = function () { rehearse(0); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-rehearse-size]'), function (b) {
@@ -972,6 +1059,8 @@
 
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
+    /* The trial switch for the studio's slideshow (M15). */
+    studioPresent: studioPresentOn, setStudioPresent: setStudioPresent,
     /* The lab added a game or activity in the lesson: its studio's tab, where it is edited. */
     showStudio: function (view) {
       var key = { lesson: 'deck', quiz: 'game', activities: 'plan' }[view];

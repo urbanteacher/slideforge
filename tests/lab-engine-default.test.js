@@ -75,3 +75,32 @@ test('a ?lesson= link reopens the Library’s copy rather than building another,
   fresh.LabEngine.install();
   assert.deepEqual(fresh.saves, ['built-week-3'], 'a first follow builds it');
 });
+
+/* M15: the studio's slideshow for Present is a trial, off unless the owner asks, by the File menu's switch or
+   ?studioPresent=1 (and =0 to turn it off). Off, Present is SlideForge's show as it was. */
+function trialFlag(search, stored) {
+  const store = stored ? { 'slideforge.studioPresent': stored } : {};
+  const localStorage = {
+    getItem: (k) => (k in store ? store[k] : null),
+    setItem: (k, v) => { store[k] = String(v); },
+    removeItem: (k) => { delete store[k]; }
+  };
+  const context = { window: {}, console, URLSearchParams, localStorage, location: { search }, navigator: { webdriver: false }, document: { getElementById: () => null } };
+  context.globalThis = context;
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/lab-engine.js'), 'utf8'), context);
+  return { LabEngine: context.window.SF.LabEngine, store };
+}
+
+test('the studio’s slideshow is off by default, and only the owner turns it on', () => {
+  assert.equal(trialFlag('').LabEngine.studioPresent(), false, 'off by default');
+  assert.equal(trialFlag('?studioPresent=1').LabEngine.studioPresent(), true, '?studioPresent=1 turns it on');
+  assert.equal(trialFlag('?studioPresent=0', '1').LabEngine.studioPresent(), false, '?studioPresent=0 turns it off');
+  assert.equal(trialFlag('?studioPresent=yes').LabEngine.studioPresent(), false, 'only 1 and 0 are read');
+  assert.equal(trialFlag('', '1').LabEngine.studioPresent(), true, 'the stored choice stays');
+  const t = trialFlag('');
+  t.LabEngine.setStudioPresent(true);
+  assert.equal(t.store['slideforge.studioPresent'], '1');
+  t.LabEngine.setStudioPresent(false);
+  assert.equal('slideforge.studioPresent' in t.store, false, 'off removes the key');
+});
