@@ -67,6 +67,18 @@ Nothing. Section 3 has the reasons. These deletions could happen next, in this o
 4. With 1 to 3 done, classic Present, Teacher Presenter, Rehearse and Host live serve only the safety net. Retire the safety net by owner decision, then remove `classicHostLive`, `classicPlay`, `classicRehearse`, `teacherPresenter`'s classic half, `js/lab-stage.js`, `js/live-activities.js`, `presenter.html` and its scripts, and the `index.html` script tags for `js/live.js` and `js/demo.js`.
 5. `js/player.js`, `js/live.js`, `js/demo.js`, `js/teaching.js`, `js/rounds.js`, `js/stages.js`, `js/quick-poll.js` and the quiz and live renderers then stay only for `view.html`, and go with M12 (a lab viewer for Share).
 
+## 4a. What M12 unblocks (13 Oct 2026)
+
+M12 gave the studio its own viewer (`lab-app/view.html`), Share and student PDF. A lesson the studio shows is now shared as the lab deck and printed by the studio: it reaches none of `view.html`, `js/player.js`, `js/print.js`, the bridge's `shareDeck` or `printDeck`. What is still reached, and why:
+
+| Still reached | By | Goes when |
+|---|---|---|
+| `view.html` and everything it loads (`js/player.js`, `js/live.js`, `js/demo.js`, `js/teaching.js`, `js/rounds.js`, `js/stages.js`, `js/quick-poll.js`, `js/print.js`, the quiz and live renderers) | old classic share links (copies on the relay until `SHARE_MAX` turns them over or a deploy without a disk drops them), classic lessons, lab lessons that fail the guard, and a lab lesson a classic room runs | steps 1 to 4 close the guard's reasons; then old links are a decision (keep `view.html` for them, or let them lapse) |
+| `shareDeck` and `printDeck` in `js/lab-engine.js` (the bridge's picture decks for Share and the handout) | lab lessons that fail the guard, or are over 7.5 MB packed | the same steps |
+| `js/share.js` | every Share: it is the dialog, for both kinds of copy | stays (shell) |
+
+So once steps 1 to 4 are done, step 5 no longer waits on a lab viewer: `view.html` is needed only for links made before, and the bridge's share and print halves can go with the rest of the bridge.
+
 ## 5. Final state (end of M14 in this pass)
 
 - **Commits:** `52490d2` classicOnly; `91f0820` the default flip and Rehearse in the studio; `704b8d1` the closed fallbacks; `2bef3d9` lab-app; `f277d58` smokes; `532009f` the shell takes no keys under the studio's show (m15-discovery blocker 9).
@@ -74,5 +86,7 @@ Nothing. Section 3 has the reasons. These deletions could happen next, in this o
 - **Tests changed, none deleted.** `lab/tests/show-present-guard.test.ts` and `lab/tests/show-entry.test.ts` now cover the new show/room split. `tests/lab-engine-default.test.js` covers the default and `classicOnly`. `tools/smoke/lab-lesson.mjs` opts into the classic slideshow for its bridge checks and checks that the studio's show is the default. `studio-room-truefalse`, `studio-room-type` and `handout` had been failing since the Showdown and Ranking ports and the handout's second toolbar button; they now check the current behaviour.
 
 ## Change log
+
+- **13 Oct 2026, M12.** Section 4a added: Share, the student view and the student PDF run in the studio for lessons it shows (`2d17857`, `37b6cea`, `97de4e3`), so step 5 no longer waits on a lab viewer. Nothing deleted: `view.html`, `js/print.js` and the bridge's `shareDeck` and `printDeck` still serve old links and the lessons the guard keeps classic.
 
 - **13 Oct 2026.** Written for M14 steps 1 to 5. The studio's show is the default, `classicOnly` was added, the plain show's fallbacks were closed, and the shell takes no keys under the studio's show. No file was deleted (section 3).
