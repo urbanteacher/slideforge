@@ -4,19 +4,20 @@
 //
 // Yes only when the room has nothing it cannot run: every game in the lesson is of a style the room runs (the
 // registry in live/styles: Multiple choice, True or false, True / false showdown, Type answer, Slider, Time traveler, Ranking, Odd one out, Predict the outcome, Spot the error, Definition challenge, Emoji guess, Fill in the blanks, Compare & contrast's sort, Horse race, Boss battle, Word reveal, the spoken games: Random challenge, Question cube, Spin & explain, Heads up, Connection maker, Concept chain, and
-// Beat the clock, whose round's questions are on its round slide, `game.board`; and the boards in live/boards: Low-stakes quiz, Memory flip, Memory match, Knowledge flip, Bingo and Quiz bowl), the lesson asks at least one
-// question, audience feedback prompt (poll, word cloud, brainstorm or scale, M9) or activity, and no slide carries an
+// Beat the clock, whose round's questions are on its round slide, `game.board`; and the boards in live/boards: Low-stakes quiz, Memory flip, Memory match, Knowledge flip, Bingo and Quiz bowl), the lesson shows
+// at least one slide, and no slide carries an
 // activity the room does not run (live/activities: M10 runs SlideForge's activities by their kind, a routine's timed
 // stages, feedback from the room, or a slide the phones follow; a game made from an activity is its game), a live figure
 // stand-in that does not carry its figure (one that does plays over the slide: figure.ts), or feedback on a game slide. Those are SlideForge's
-// to run until the lab's host runs them (M10 onward). A lesson that asks nothing keeps SlideForge's room, for its quick poll and
-// questions box, which the studio's room does not have (M14). The plain show (whyNotPresentInStudio) has no phones, so only
+// to run until the lab's host runs them (M10 onward). A lesson that asks nothing (plain slides) is hosted in the studio's room too:
+// the teacher asks with the quick poll (live/quick.ts) and the room with the questions box (live/questions.ts), which were the
+// classic room's reasons to keep it (M14). The plain show (whyNotPresentInStudio) has no phones, so only
 // the uncarried figure keeps a lesson off it. What the shell itself must add (js/lab-engine.js classicOnly): SlideForge slides
 // the lab cannot build, which the classic show and room put back among the lab's (docs/games/m14-deletions.md). Feedback that is not complete (no prompt, a poll without two
 // options, a scale without both ends) asks nothing, as in SlideForge, so the slide is only shown.
 
 import type { Deck, Slide } from '../core';
-import { activityBlocker, activityOf, boardForFormat, boardOn, feedbackOf, styleForFormat, styleNames } from '../live';
+import { activityBlocker, boardForFormat, feedbackOf, styleForFormat, styleNames } from '../live';
 import { figureBlocker } from './figure';
 
 export interface CanHost { ok: boolean; reason: string }
@@ -64,8 +65,8 @@ export function canHostInStudio(deck: DeckLike): CanHost {
     const why = blocker(s, 'room');
     if (why) return { ok: false, reason: why };
   }
-  const asks = slides.some((s) => (s.game?.role === 'question' && s.game.quiz) || roundOf(s).length > 0 || (s.game?.role === 'board' && !!boardOn(s.game.board)) || (!s.game && feedbackOf(s)) || (!s.game && !!activityOf(s)));
-  return asks ? { ok: true, reason: '' } : { ok: false, reason: `the lesson has no ${styleNames()} question or feedback prompt to ask, or activity to run` };
+  // A lesson that asks nothing is hosted too: the quick poll and the questions box are the room's own (M14).
+  return slides.length ? { ok: true, reason: '' } : { ok: false, reason: 'the lesson has no shown slide' };
 }
 
 /** Why a plain show of this lesson (no room) must be SlideForge's own, or '' when the studio's show can run it

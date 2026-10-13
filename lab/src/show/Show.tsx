@@ -492,7 +492,7 @@ function Show() {
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
         {roomOn && hooks?.share && <button onClick={() => hooks.share?.()} aria-label="Share" title="Share: a link to read or practise the lesson, or a big screen that follows this room"><Share2 size={16} /></button>}
         <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F)"><Maximize size={16} /></button>
-        {!roomOn && steps.some((s) => s.room.quiz || s.room.feedback || s.room.act) && studioRoomEnabled() && (
+        {!roomOn && studioRoomEnabled() && (
           <button className="show-live" onClick={() => openStudioShow({ room: true, slideId: slide.id })} title="Run this lesson live with phones"><Radio size={15} />Host live</button>
         )}
         <button onClick={exit} aria-label={roomOn ? 'End the room and exit' : 'Exit'} title={roomOn ? 'End the room and exit (Esc)' : 'Exit (Esc)'}><X size={16} />{roomOn ? 'End' : ''}</button>

@@ -57,7 +57,8 @@ test('canHostInStudio: anything the studio room cannot run sends the lesson to t
   const tf = choiceDeck();
   tf.slides[2] = slide('q0', 'Q', game('question', { key: '0', quiz: { ...quiz(0), style: 'truefalse' } }));
   assert.match(canHostInStudio(tf).reason, /not Multiple choice/, 'a True or false question inside a Multiple choice game is not what either runs');
-  assert.match(canHostInStudio({ slides: [slide('a', 'A'), slide('b', 'B')] }).reason, /no Multiple choice, True or false, Type answer, Slider(,| or) .* question/);
+  // Plain slides: hosted in the studio, for the quick poll and the questions box (M14).
+  assert.deepEqual(canHostInStudio({ slides: [slide('a', 'A'), slide('b', 'B')] }), { ok: true, reason: '' });
 });
 
 test('canHostInStudio: a plain True or false game is hosted in the studio; a style the room does not run is not', () => {
@@ -80,7 +81,7 @@ test('canHostInStudio: a plain True or false game is hosted in the studio; a sty
 test('canHostInStudio: hidden slides are not in the show, so they do not count', () => {
   assert.equal(canHostInStudio(choiceDeck([slide('h', 'Hidden poll', undefined, { feedback: { kind: 'poll' }, hidden: true })])).ok, true);
   const onlyHiddenQuestion = { slides: [slide('q', 'Q', game('question', { key: '0', quiz: quiz(0) }), { hidden: true })] };
-  assert.equal(canHostInStudio(onlyHiddenQuestion).ok, false);
+  assert.deepEqual(canHostInStudio(onlyHiddenQuestion), { ok: false, reason: 'the lesson has no shown slide' });
 });
 
 test('the clock counts down from when the question was asked, turns urgent at five seconds, and runs out', () => {

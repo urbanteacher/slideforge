@@ -149,9 +149,10 @@ test('a slide with feedback is a step that asks it, with the fields classic send
   assert.deepEqual(slides[2].feedback, { id: 's:fb', kind: 'scale', prompt: 'How confident are you?', options: ['1', '2', '3', '4', '5'], ends: { low: 'Not at all', high: 'Completely' }, max: 1, presentAs: 'focus', hold: false });
 });
 
-test('canHostInStudio: a lesson of feedback slides is hosted in the studio; a game slide that also asks, and nothing to ask, are not', () => {
+test('canHostInStudio: a lesson of feedback slides is hosted in the studio, and so is one that asks nothing; a game slide that also asks is not', () => {
   assert.deepEqual(canHostInStudio({ slides: [slide('a', 'A'), slide('p', 'Poll', { feedback: poll } as never)] }), { ok: true, reason: '' });
-  assert.match(canHostInStudio({ slides: [slide('a', 'A'), slide('e', 'Empty', { feedback: { kind: 'poll' } } as never)] }).reason, /no .* question or feedback prompt/);
+  // An incomplete poll asks nothing: the lesson is plain slides, hosted for the quick poll and the questions box (M14).
+  assert.deepEqual(canHostInStudio({ slides: [slide('a', 'A'), slide('e', 'Empty', { feedback: { kind: 'poll' } } as never)] }), { ok: true, reason: '' });
   const g = slide('g', 'G', { game: { id: 'g1', format: 'choice', label: 'Air', role: 'cover', settings: {} }, feedback: poll } as never);
   assert.match(canHostInStudio({ slides: [slide('p', 'Poll', { feedback: poll } as never), g] }).reason, /game slide that also asks the room for poll feedback/);
   assert.equal(canHostInStudio({ slides: [slide('p', 'Poll', { feedback: poll, hidden: true } as never)] }).ok, false, 'a hidden slide is not in the show');
