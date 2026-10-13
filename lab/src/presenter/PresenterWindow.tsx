@@ -1,11 +1,15 @@
 // The Teacher Presenter window: the lab-app opened with ?presenter=1 (main.tsx), showing only this. It asks the
 // show for its deck over the channel (protocol.ts), draws the current slide and the next with DeckPlayers, and shows
-// the notes, the clocks, the room's status, and the controls. The show does what a command asks as its own keys would.
+// the notes, the clocks, the room's status, and every control (DeskControls.tsx). The show does what a command asks as
+// its own keys would; this window's keys are the wall's (controls.ts), so a teacher at the desk presses the same ones.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer } from '../engine';
 import type { Deck } from '../core';
-import { WindowSide, type CmdData, type PresenterCmd, type PresenterState } from './protocol';
+import { PRESENTER_CMDS, WindowSide, type CmdData, type PresenterCmd, type PresenterState } from './protocol';
+import { controlFor, keyName } from './controls';
+import { DeskControls, DeskState, WhoList, type DeskPanel } from './DeskControls';
+import { KeySheet } from './KeySheet';
 import { QuestionsList, QuickPollForm } from './RoomDesk';
 import { clock, parseCountdown, remaining } from './timer';
 import './presenter.css';
@@ -46,9 +50,9 @@ export function PresenterWindow() {
   const [now, setNow] = useState(Date.now());
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [typed, setTyped] = useState('10');
-  const [jump, setJump] = useState('');
-  const [pollOpen, setPollOpen] = useState(false);
-  const [qaOpen, setQaOpen] = useState(false);
+  const [panel, setPanel] = useState<DeskPanel>('');
+  const panelRef = useRef<DeskPanel>('');
+  panelRef.current = panel;
 
   useEffect(() => {
     document.title = 'Teacher Presenter';
@@ -67,11 +71,18 @@ export function PresenterWindow() {
     const on = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); send('next'); }
-      else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); send('prev'); }
-      else if (e.key === 'b' || e.key === 'B' || e.key === '.') send('black');
-      else if (e.key === 'w' || e.key === 'W') send('white');
+      if (t && t.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
+      const name = keyName(e);
+      if (name == null) return;
+      if (e.key === 'Escape' && panelRef.current) { setPanel(''); return; }
+      const c = controlFor(name, false);
+      if (!c) return;
+      if (c.action === 'help') { setPanel((p) => (p === 'keys' ? '' : 'keys')); return; }
+      if (c.action === 'who' || c.action === 'questions' || c.action === 'poll') { const p: DeskPanel = c.action === 'who' ? 'who' : c.action === 'questions' ? 'qa' : 'poll'; setPanel((x) => (x === p ? '' : p)); return; }
+      // Esc here is not the end of the show, and the typed jump is the form's.
+      if (c.action === 'exit' || c.action === 'goto' || !PRESENTER_CMDS.includes(c.action as PresenterCmd)) return;
+      if (c.action === 'next' || c.action === 'prev') e.preventDefault();
+      send(c.action as PresenterCmd);
     };
     addEventListener('keydown', on);
     return () => removeEventListener('keydown', on);
@@ -81,6 +92,9 @@ export function PresenterWindow() {
   const notesKey = st ? `${st.index}` : '';
   const notesRef = useRef<HTMLDivElement>(null);
   useEffect(() => { notesRef.current?.scrollTo({ top: 0 }); }, [notesKey]);
+  // The wall's Shift+W: who answered what opens here.
+  const ask = st?.ask ?? 0;
+  useEffect(() => { if (ask) setPanel('who'); }, [ask]);
 
   if (!deck || !st) {
     return <div className="pw pw-wait"><h1>Teacher Presenter</h1><p>{gone ? 'The show has ended.' : 'Waiting for a show. Press Present in the studio, then open this window from its bar.'}</p><p><button onClick={closeWindow}>Close window</button></p></div>;
@@ -123,14 +137,17 @@ export function PresenterWindow() {
               {room.stage && <p>{room.stage.name} · {room.stage.wall}{room.stage.written ? ` · ${room.stage.written}` : ''}</p>}
               {room.stage && room.stage.help > 0 && <p className="pw-help" role="status">{room.stage.help} {room.stage.help === 1 ? 'asks' : 'ask'} for help</p>}
               {room.qa && room.qa.pinned && <p className="pw-help" role="status">On the wall: {room.qa.pinned.text}</p>}
-              {qaOpen && room.qa && (
+              {panel === 'who' && (
+                <section className="pw-desk" aria-label="Who answered what"><h3>Who answered what · {room.answers?.length ?? 0}</h3><WhoList rows={room.answers ?? []} /></section>
+              )}
+              {panel === 'qa' && room.qa && (
                 <section className="pw-desk" aria-label="Questions from the room"><h3>Questions{room.qa.pending ? ` · ${room.qa.pending} waiting` : ''}</h3>
                   <QuestionsList qa={room.qa} floor={room.floor ?? 'auto'} onQa={(id, action) => send('qa', undefined, { qa: { id, action } })} onFloor={(m) => send('floor', undefined, { floor: m })} />
                 </section>
               )}
-              {pollOpen && (room.quick || room.canPoll) && (
+              {panel === 'poll' && (room.quick || room.canPoll) && (
                 <section className="pw-desk" aria-label="Quick poll"><h3>Quick poll</h3>
-                  <QuickPollForm open={!!room.quick} onAsk={(a) => { send('poll', undefined, { poll: a }); setPollOpen(false); return ''; }} onEnd={() => send('close')} />
+                  <QuickPollForm open={!!room.quick} onAsk={(a) => { send('poll', undefined, { poll: a }); setPanel(''); return ''; }} onEnd={() => send('close')} />
                 </section>
               )}
             </div>
@@ -138,24 +155,10 @@ export function PresenterWindow() {
         </aside>
       </main>
       <section className="pw-notes" ref={notesRef} aria-label="Speaker notes">{st.notes || <span className="pw-dim">No notes for this slide.</span>}</section>
-      <footer className="pw-controls" role="toolbar" aria-label="Show controls">
-        <button onClick={() => send('prev')}>Back</button>
-        <button className="pw-primary" onClick={() => send('next')}>Next</button>
-        {room && <button onClick={() => send('reveal')} disabled={!room.open}>Reveal</button>}
-        {room?.canShow && <button onClick={() => send('open')}>Show results</button>}
-        {room?.canClose && <button onClick={() => send('close')}>Close prompt</button>}
-        {room?.stage && <button onClick={() => send('more')}>+30s</button>}
-        {room?.qa && <button onClick={() => setQaOpen((v) => !v)} aria-pressed={qaOpen} title="Questions from the room">Questions{room.qa.pending ? ` (${room.qa.pending})` : ''}</button>}
-        {room && <button onClick={() => setPollOpen((v) => !v)} aria-pressed={pollOpen || !!room.quick} disabled={!room.quick && !room.canPoll} title="Ask the room something on the fly">Quick poll</button>}
-        <button onClick={() => send(st.screen === 'black' ? 'resume' : 'black')} aria-pressed={st.screen === 'black'}>Black</button>
-        <button onClick={() => send(st.screen === 'white' ? 'resume' : 'white')} aria-pressed={st.screen === 'white'}>White</button>
-        <form onSubmit={(e) => { e.preventDefault(); const n = Number(jump); if (n >= 1) send('goto', n); setJump(''); }}>
-          <input aria-label="Jump to slide number" inputMode="numeric" placeholder="Slide #" value={jump} onChange={(e) => setJump(e.target.value.replace(/\D/g, ''))} />
-          <button type="submit">Go</button>
-        </form>
-        <button className="pw-end-btn" onClick={() => send('end')}>End show</button>
-        <button onClick={closeWindow} title="Close this window and go back">Close window</button>
-      </footer>
+      <DeskState st={st} now={now} />
+      <DeskControls st={st} now={now} send={send} panel={panel} setPanel={setPanel} />
+      <p className="pw-foot"><button onClick={closeWindow} title="Close this window and go back">Close window</button></p>
+      {panel === 'keys' && <KeySheet room={!!room} onClose={() => setPanel('')} />}
     </div>
   );
 }
