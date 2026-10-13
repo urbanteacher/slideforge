@@ -1,5 +1,7 @@
 # M14 deletions: what goes, what stays, and why
 
+**Done 13 Oct 2026: section 6 is the final state.** Sections 1 to 4b describe the fallbacks and inventory as they were before the deletion.
+
 Written for M14 (`docs/lab-engine-plan.md`), following `docs/games/m15-discovery.md`. It covers the classic room, player and presenter code, and the bridge in `js/lab-engine.js`. The test for each row: is the file still reachable from `view.html`, Share, print, the handout or the PDF exports (M12 was skipped, so those stay classic), or from a fallback that M14 step 2 could not close? If it is, the file stays.
 
 ## 1. Where the shell now sends each entry point
@@ -85,8 +87,42 @@ So once steps 1 to 4 are done, step 5 no longer waits on a lab viewer: `view.htm
 - **Deleted:** no files and no shell branches. `git diff --shortstat origin/deploy-render -- ':!lab-app' ':!js/model.js'`: 12 files, +211 / -72 (guards, tests, smokes and this doc).
 - **Tests changed, none deleted.** `lab/tests/show-present-guard.test.ts` and `lab/tests/show-entry.test.ts` now cover the new show/room split. `tests/lab-engine-default.test.js` covers the default and `classicOnly`. `tools/smoke/lab-lesson.mjs` opts into the classic slideshow for its bridge checks and checks that the studio's show is the default. `studio-room-truefalse`, `studio-room-type` and `handout` had been failing since the Showdown and Ranking ports and the handout's second toolbar button; they now check the current behaviour.
 
+## 6. Final state: the deletion (13 Oct 2026)
+
+The owner retired the safety net, so nothing routes to classic. Commits on the worktree branch: `aca6388` reactions, `6b4ebec` no fallbacks, `ec38032` the live room, `588ab7a` presenter.html, `8635022` lab-stage, `aa8981c` the bridge's show half, `df21930` the player, `6956daf` fixture pages (lab-app rebuilt in `6bbece8`, `d1e8d08`). `git diff --shortstat origin/deploy-render -- ':!lab-app' ':!js/model.js' ':!assets'`: 85 files, +468 / -17,915.
+
+**Before deleting, reactions were ported** (`lab/src/live/reactions.ts`, `lab/src/show/Reactions.tsx`): the wall draws them as classic did, and T switches them.
+
+**What the fallbacks became.** Each guard reason in section 2 is now a refusal: a toast that names what cannot start and why ("Host live cannot start: …"). A relay that never answers, or a show that throws, closes the show and says so; nothing else starts. Share refuses a lesson the studio cannot show, or one over the relay's 7.5 MB. Old share links: `view.html` forwards to the studio viewer, which says the link is from an older version and asks for the lesson to be shared again.
+
+| Deleted | Why it could go |
+|---|---|
+| `js/live.js`, `js/rounds.js`, `js/stages.js`, `js/quick-poll.js`, `js/demo.js` | the classic room and rehearsal; Host live and Rehearse are the studio's |
+| `js/live-activities.js`, `js/lesson-moments.js` | the classic room's spontaneous activities and the classic show's activity clock |
+| `presenter.html`, `js/presenter-live.js`, `js/presenter-activities.js`, `src/presenter/window.js` | the classic desk; the Teacher Presenter is `lab-app/index.html?presenter=1` |
+| `js/lab-stage.js`, `lab-app/stage.js`, `lab/src/app/stage-entry.ts`, `lab/vite.stage.config.ts` | drew lab slides inside the classic show |
+| `js/player.js`, `js/teaching.js`, the player, HUD, lobby, join-card and teaching-tools markup | the classic show; `SF.toast` moved to `js/shell.js` |
+| Bridge: `buildShow`, `withShow`, `followShow`, `classicPlay`, `classicRehearse`, `classicHostLive`, `teacherPresenter`'s classic half, `showDeck`, `shareDeck`, `stageDeck`, `frameDocument`, `lastShowDeck`, `heldRoomDeck`; the shell's `lessonDoc` | ran or fed only the classic show, room, desk and Share |
+| The opt-out (`slideforge.studioPresent`, `?studioPresent`, the File menu item), `?labPresent=1` | nothing classic to opt into |
+
+| Kept | Who needs it |
+|---|---|
+| `src/render/quiz.js`, `src/render/live.js` | `js/render.js` draws classic slides with them (the quiz, game, results, join and explain layouts): the figure stills a classic lesson is converted with, the review tool (`js/review.js`), `tools/lab-import.mjs`, and print |
+| `js/print.js`, and the bridge's print half (`printDeck`, `buildPrintDeck`, `printsAsPages`, `buildShowDeck`, `drawShowDeck`, `pictureSlide`) | `tools/export-teaching-pdf.mjs`: the only route to the experiment teaching sheets, which the studio's handout does not print; the `handout`, `exports` and `theme-manifest` smokes check it |
+| `lessonFrom`, `ordered`, `carried`, `buildable`, `figureSlide`, `wordsSlide`, `wordsDeck` | the practice notes (Export → .md) |
+| the stills warm-up (`warmShow`) | readies the studio's student PDF, which draws every slide at 1600 |
+| `classicOnly` | a guard reason: SlideForge slides the lab cannot build are refused, not dropped |
+| `js/lesson-runtime.js` | `SF.createPresetGame`, `SF.Activities.makeSlides` (the lab's catalogues), the Library seed |
+| `js/share.js`, `js/manual.js`, `server/server.js`, `join.html`, `manual.html`, `prompter.html` | the shell's Share dialog; the studio's room (hard rule 5) |
+| `js/render.js`'s guarded `SF.Player` reads (`jumpToSlide`, `deckOf`), the classic CSS | harmless without the player; left for a later tidy |
+
+**Tests and smokes deleted with the code** (each only exercised deleted code): `tests/live-activities.test.js`, `tests/lesson-moments.test.js`, `tests/presenter.test.js`, `tests/presenter-keys.test.js`, the js/live.js prompt test in `tests/quick-poll.test.js`, the morph test and js/teaching.js assertions in `tests/motion-teaching.test.js`, the presenter.html and lessonDoc assertions, `tests/presenter-fixture.html` and the five `tests/*-fixture.html` pages; the smokes `live-quiz`, `quick-poll`, `rehearse`, `refresh`, `room-output`, `boss`, `fake-demo`, `presenter-activities`, `presenter-controls`, `desk-ink`, `desk-overlay`, `desk-poll`, `chart-callouts`, `exploration`, `knowledge-flip`, `lowstakes`; `tools/record-sessions` (the fixtures it recorded stay) and `tools/capture-phone.mjs`. **Changed:** the opt-out test became one that nothing falls back (`tests/lab-engine-default.test.js`); `menu-wiring` checks the studio handout branch; `share` was rewritten for the studio viewer and old links; `lab-lesson` checks the studio show for Present, Rehearse and the Quiz studio; `studio-room` checks reactions and that a missing relay starts nothing; `cover-motion` and `theme-manifest` dropped their classic-player checks.
+
+**Risks.** A lesson a guard refuses cannot be presented or hosted at all now (all 32 shipped lab copies pass both guards). A teacher's page reload no longer resumes a held room. Old classic share links show a message instead of the lesson.
+
 ## Change log
 
+- **13 Oct 2026, the deletion.** Section 6 added: reactions ported, the fallbacks became refusals, and the classic room, player, desk, lab stage and the bridge's show half were deleted. The quiz and live renderers, `js/print.js` and the bridge's print and words halves stay (section 6 says who needs them).
 - **13 Oct 2026, M12.** Section 4a added: Share, the student view and the student PDF run in the studio for lessons it shows (`2d17857`, `37b6cea`, `97de4e3`), so step 5 no longer waits on a lab viewer. Nothing deleted: `view.html`, `js/print.js` and the bridge's `shareDeck` and `printDeck` still serve old links and the lessons the guard keeps classic.
 
 - **13 Oct 2026.** Written for M14 steps 1 to 5. The studio's show is the default, `classicOnly` was added, the plain show's fallbacks were closed, and the shell takes no keys under the studio's show. No file was deleted (section 3).

@@ -24,7 +24,7 @@ For any AI agent (Claude, Cursor, Codex) and for people.
 
 - **More than one agent works in this tree.** Commit only the paths you changed: `git commit --only <paths>`. Never `git add -A`, and leave files you didn't create alone.
 - Keep code and docs in separate commits.
-- **`--only` commits whole files.** If another agent has uncommitted edits in a file you also changed (often `js/live.js`, `join.html` or `server/server.js`), committing it takes their hunks too. Run `git diff <file>` first. If it has hunks that are not yours, test yours alone in a clean worktree at HEAD and stage that file. Check `git log -1` just before, because HEAD may have moved.
+- **`--only` commits whole files.** If another agent has uncommitted edits in a file you also changed (often `join.html` or `server/server.js`), committing it takes their hunks too. Run `git diff <file>` first. If it has hunks that are not yours, test yours alone in a clean worktree at HEAD and stage that file. Check `git log -1` just before, because HEAD may have moved.
 - **Check a test file exists before writing it.** `cat > tests/x.test.js` over an existing file silently deletes its tests. Append, or edit.
 - `deploy-render` is the deployed branch. Push only when asked, and only as a fast-forward.
 
@@ -53,7 +53,7 @@ A style is one file in `src/games/`. It is registered in these places:
 8. `tests/game-style-contract.test.js`;
 9. `js/playbook.js`, including the override block after the entries (`Object.assign(BOOK[...])`). Overrides win over the entries, so a stale one hides a rebuilt game's description;
 10. `js/ai.js` `AI_SPECS`, so Quiz studio can write it. Keyed by style, or by format for a format with its own shape (Question Cube). `toQuestion` must set every field the style's starter (`make()`) fills, or the starter's content comes along with the AI's;
-11. `js/demo.js`, so a rehearsal class answers it the way a real room would.
+11. the studio's rehearsal (`lab/src/rehearse/`), so a simulated class answers it the way a real room would.
 
 Reuse the shared kit in the games audit (section 3, K1–K29) before writing anything new.
 
@@ -80,11 +80,11 @@ The 54 activities are in `src/activities/`.
    - `lockedMessage`;
    - `manualAnswer`;
    - the journal records;
-3. the host (`js/live.js`): what `sendOpenQuestion` sends, the gains, and the reveal painter;
+3. the host (`lab/src/live/`): what the room's question frame sends, the gains, and the wall's reveal;
 4. the phone (`join.html`): an `askQuestion` branch, which must `return` or the generic pads draw too, and the `locked` case;
 5. teacher entry (`js/manual.js`): a way to record it by key;
 6. the wall (`src/render/quiz.js`): a branch placed before the generic options and before any format's early `return`;
-7. the rehearsal (`js/demo.js`): answers and a reveal;
+7. the rehearsal (`lab/src/rehearse/`): answers and a reveal;
 8. a relay test through `tests/harness.js`.
 
 ## Working beside another agent

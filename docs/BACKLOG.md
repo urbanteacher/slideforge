@@ -55,7 +55,7 @@ order.
 | UX-72 | Keyboard-only pass through every modal and panel | M | Partly done · a hands-on pass needs a person |
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
-| ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: what M5 still owes, then the lesson features the feature map still marks Missing (feedback settings and the phone preview first). Games and activities, from M0, come after | L · months | In progress · M5 done early; live stage, converter's feedback and timers, and the three studios' frame done (25 Sep) · games and activities last |
+| ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: what M5 still owes, then the lesson features the feature map still marks Missing (feedback settings and the phone preview first). Games and activities, from M0, come after | L · months | In progress · M14 deletion done 13 Oct: the classic room, player, desk and bridge are gone ([m14-deletions.md](games/m14-deletions.md) section 6); M15 (the classic Lesson studio) has its own plan |
 | SD-01 | [Story designs, quick wins](story-designs-plan.md): Frontiers palette, Fade for text on pictures, Angle help done; one gradient convention (needs a migration) and header-and-footer in the worked example open | S | In progress · 10 Oct 2026 |
 | SD-02 | [The Story design set](story-designs-plan.md): twelve editorial designs from the Air Pollution deck, theme-aware and rebuilt from `slide.recipe`. All twelve done | M–L | Done · 10 Oct 2026 |
 | SD-03 | [Media library, featured decks and Publish](story-designs-plan.md) | L | To do · needs a hosting decision |
@@ -794,13 +794,16 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 | ID | Item | Status |
 |---|---|---|
-| ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026; the lesson side next |
+| ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M14 deletion done 13 Oct 2026 ([m14-deletions.md](games/m14-deletions.md) section 6) |
 
 ## Change log
 
 ### 13 October 2026 — The root `npm test` runs the lab's unit tests again
 
 - `tests/lab-unit.test.js` spawned a `node --test` per lab file and passed it the root runner's `NODE_TEST_CONTEXT`. Node took the nested run for a recursive call, skipped its files and exited 0. So all 51 `lab/tests/*.test.ts` files showed as passing from `npm test` without running. That is how a deep import (`lab/src/app/showInSlideForge.ts` → `../show/state`) failed `boundaries.test.ts` under `npm --prefix lab test` but passed at the root. The lab tests' paths were not the cause: they resolve from the working directory, which the wrapper sets to `lab/`. The wrapper now drops the variable, reads the child's TAP output and fails a file that reports no tests. Checked by putting a deep import back: both runs fail on `boundaries.test.ts`, and the other 50 files pass at the root (`25ce87f`).
+### 13 October 2026 — ENG-01, M14: the classic room and player deleted
+
+- **ENG-01, M14 deletion:** phone reactions ported to the studio's wall; every fallback to the classic show, room, viewer and handout became a toast saying what cannot start and why; then the classic room (`js/live.js` and its helpers, `js/demo.js`), `presenter.html` and the classic desk, `js/lab-stage.js`, the bridge's show half and `js/player.js` were deleted (about 17,900 lines). Kept: the quiz and live renderers (classic slides still drawn for figure stills, review and print), `js/print.js` and the bridge's print half for `tools/export-teaching-pdf.mjs`. Old classic share links ask for the lesson to be shared again. [m14-deletions.md](games/m14-deletions.md) section 6 lists what went, what stayed and why.
 
 ### 10 October 2026 — Story designs: the plan, the quick wins and the design set
 
