@@ -6,7 +6,7 @@
 import type { HostMessage } from './protocol';
 import type { RoomState } from './room';
 import type { RoomQuiz, RoomSlide } from './show';
-import { creditFor, emptySpoken, pickRecipient, ROOM, verdictScores, type Recipient, type SpokenSpec, type SpokenView } from './spoken';
+import { creditFor, emptySpoken, pickRecipient, ROOM, verdictScores, type Recipient, type RoundView, type SpokenSpec, type SpokenView } from './spoken';
 import { styleFor } from './styles';
 
 export interface DeskEnv {
@@ -19,7 +19,16 @@ export interface DeskEnv {
   revealed(id: string): boolean;
   /** Tell the wall and the teacher's window what changed. */
   publish(patch: Partial<SpokenView>): void;
+  /** The host's clock (ms), and a timer on it: Heads up's round and its move on after a verdict. The tests run both on the recording's clock. */
+  now(): number;
+  after(fn: () => void, ms: number): void;
+  /** The show's steps, and the teacher's Next (a verdict moves a Heads up round on). */
+  slides(): RoomSlide[];
+  next(): void;
 }
+
+/** How long a Heads up verdict stays on the wall before the next term: long enough to see the tick, short enough to keep the pace (js/rounds.js NEXT_AFTER). */
+export const MOVE_ON_MS = 650;
 
 /** What a question's style says about its verdicts, or undefined when the question is not a spoken one. */
 export const specOf = (q: RoomQuiz | undefined | null): SpokenSpec | undefined => (q ? styleFor(q).spoken : undefined);
@@ -40,6 +49,9 @@ export class SpokenDesk {
   landed(slide: RoomSlide): void {
     const q = slide.quiz, spec = specOf(q);
     const patch: Partial<SpokenView> = {};
+    // Heads up's round is one clock for the whole pile, started when its first term lands and ended when the show leaves the game (js/rounds.js).
+    if (q && spec?.heads && Number(q.roundSeconds) > 0) this.startRound(q);
+    else if (this.v.round && slide.gameId !== this.v.round.gameId) patch.round = null;
     if (this.v.pending && this.v.pending.slideId !== slide.id) patch.pending = null;
     if (spec && !spec.heads && this.v.recipient.type !== 'room') patch.recipient = ROOM;
     if (Object.keys(patch).length) this.set(patch);
@@ -57,6 +69,8 @@ export class SpokenDesk {
     this.set({ recipient: r });
     const spec = specOf(q);
     if (!q || !spec || this.env.revealed(q.id)) return;
+    // Heads up: the guesser is the speaker, and their phone must lose the term.
+    if (spec.heads) this.env.send({ t: 'guesser', id: r.type === 'player' ? r.id : null });
     const held = this.v.pending;
     if (held && held.slideId === q.id && r.type !== 'room') this.commit(q, held.choice);
   }
@@ -94,6 +108,59 @@ export class SpokenDesk {
     this.env.reveal();
     // Cleared after the reveal has carried it to the relay.
     if (!spec.heads) this.set({ recipient: ROOM });
+    else this.counted(q, choice);
+  }
+
+  // ---- Heads up's round
+
+  private startRound(q: RoomQuiz): void {
+    const r = this.v.round;
+    if (r && r.gameId === q.gameId) return;
+    const total = Number(q.roundSeconds);
+    const round: RoundView = { gameId: q.gameId, total, endsAt: this.env.now() + total * 1000, count: 0, over: false };
+    this.set({ round });
+    this.env.after(() => this.expire(round), total * 1000);
+  }
+
+  /** The clock ran out: the round is over, and the term that was up closes as it would on its own clock (no verdict). */
+  private expire(round: RoundView): void {
+    const cur = this.v.round;
+    if (!cur || cur.over || cur.gameId !== round.gameId || cur.endsAt !== round.endsAt) return;
+    this.set({ round: { ...cur, over: true } });
+    const q = this.env.slide()?.quiz;
+    if (q && specOf(q)?.heads && q.gameId === round.gameId && !this.env.revealed(q.id)) this.env.reveal();
+  }
+
+  /** A verdict in the round: a Correct is counted, and the next term comes up after a beat. */
+  private counted(q: RoomQuiz, choice: number): void {
+    const r = this.v.round;
+    if (!r || r.over || r.gameId !== q.gameId) return;
+    this.set({ round: { ...r, count: r.count + (choice === 0 ? 1 : 0) } });
+    this.env.after(() => {
+      const now = this.v.round;
+      if (now && !now.over && this.env.slide()?.quiz?.id === q.id) this.env.next();
+    }, MOVE_ON_MS);
+  }
+
+  /** The round is over: Next skips the terms nobody reached, to whatever comes after the pile (js/rounds.js step). The step to go to, or null. */
+  skip(at: number): number | null {
+    const r = this.v.round, slides = this.env.slides(), cur = slides[at]?.quiz;
+    if (!r || !r.over || !cur || !specOf(cur)?.heads || cur.gameId !== r.gameId) return null;
+    let i = at + 1;
+    while (i < slides.length && slides[i].gameId === r.gameId && slides[i].quiz && slides[i].quiz!.style === cur.style) i++;
+    return i >= slides.length || i === at + 1 ? null : i;
+  }
+
+  /** What the question frame adds for Heads up: the term (every phone but the guesser's shows it), the guesser, and the seconds left of the round. */
+  questionExtras(q: RoomQuiz): { term?: string; guesser?: number; roundLeft?: number } {
+    if (!specOf(q)?.heads) return {};
+    const r = this.v.round, rec = this.v.recipient;
+    const left = r && !r.over ? Math.max(0, Math.round((r.endsAt - this.env.now()) / 1000)) : 0;
+    return {
+      term: String(q.term || q.question || ''),
+      ...(rec.type === 'player' ? { guesser: rec.id } : {}),
+      ...(Number(q.roundSeconds) > 0 ? { roundLeft: left || Number(q.roundSeconds) } : {}),
+    };
   }
 
   /** What the reveal adds for a spoken question: who spoke (the relay resolves the named recipient against its own roster and teams). */

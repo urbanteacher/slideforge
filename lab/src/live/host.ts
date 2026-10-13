@@ -34,6 +34,9 @@ export interface HostOptions {
   openTimeoutMs?: number;
   /** Every frame, both ways (the replay test listens here). */
   tap?: (dir: 'send' | 'recv', m: HostMessage | RelayMessage) => void;
+  /** The host's clock and timer for what runs on time apart from the relay (Heads up's round and its move on): the real ones by default; the replay runs them on the recording's. */
+  now?: () => number;
+  after?: (fn: () => void, ms: number) => void;
 }
 
 export type { ManualChoice };
@@ -87,6 +90,8 @@ export class LiveHost {
     this.desk = new SpokenDesk({
       state: () => this.state, slide: () => this.slide, send: (m) => this.send(m),
       reveal: () => this.reveal(), revealed: (id) => this.isRevealed(id), publish: (patch) => this.room.setSpoken(patch),
+      now: () => (opts.now ?? Date.now)(), slides: () => opts.show.slides, next: () => this.next(),
+      after: (fn, ms) => { if (opts.after) opts.after(fn, ms); else (setTimeout(fn, ms) as { unref?: () => void }).unref?.(); },
     });
     this.resetMechanic();
     this.room.subscribe((s) => {
@@ -121,6 +126,9 @@ export class LiveHost {
   /** What the teacher's Next does: reveal an open question; ask one the room is not asking (after a relay
    *  restart, see replay); else move on. */
   next(): void {
+    // A Heads up round that has run out: Next skips the terms nobody reached.
+    const skip = this.desk.skip(this.at);
+    if (skip != null && this.begun) { this.goTo(skip); return; }
     const q = this.slide?.quiz;
     if (q && this.begun && !this.isRevealed(q.id)) {
       if (this.state.phase === 'question' && this.state.question?.id === q.id) {
@@ -463,7 +471,7 @@ export class LiveHost {
     };
     const head = style.companion?.(q).headPrompt || q.headPrompt;
     if (head) f.headPrompt = head;
-    Object.assign(f, style.flags?.(q));
+    Object.assign(f, style.flags?.(q), this.desk.questionExtras(q));
     return f;
   }
 

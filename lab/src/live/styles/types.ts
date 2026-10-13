@@ -80,6 +80,11 @@ export interface SpokenWall {
   /** Who may be named as the speaker: the room, then the teams (a teams room) and the players; `speaker` is the key of the one picked (`room`, `t<team>`, `p<player>`). */
   speakers: { key: string; label: string }[];
   speaker: string;
+  /** Heads up: the term, who is guessing ('' when nobody was picked), and the round's clock (its end, in ms) and count; null for the others. */
+  term: string; guesser: string;
+  /** What the picker of the speaker is called: who spoke, or Heads up's guesser. */
+  speakerLabel: string;
+  round: { endsAt: number; total: number; count: number; over: boolean } | null;
 }
 
 /** Spot the error's reveal: every word of the passage with how many of the room tapped it (the heat), the error's words marked, and the answer said. */

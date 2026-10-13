@@ -299,3 +299,6 @@
 .spoken-said { margin: 0; font-weight: 700; }
 .spoken-face { padding: calc(var(--u) * 4) calc(var(--u) * 20); border-radius: 999px; background: var(--field-2); font-weight: 700; text-transform: capitalize; }
 .spoken-count { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent-2); }
+.round-clock { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-2); }
+.round-clock.low { color: #ff6b6b; }
+.round-clock.over { color: #ffd166; }
