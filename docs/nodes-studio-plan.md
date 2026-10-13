@@ -67,8 +67,8 @@ Following the existing patterns:
 
 ## 5. How a teacher would use it
 
-1. Activities → **Challenges** → New, or "Make a challenge" on any slide.
-2. Pick the framework and stage, for example GCSE CS, Describe, or type a question.
+1. The **Challenges** studio → New, or "Make a challenge" on any slide.
+2. Type keywords, a topic or a course overview. The studio finds the matching Nodes stage, for example GCSE CS, Describe.
 3. Press **Write it with AI**, or fill the cards. The slides appear as the cards fill.
 4. Present. Host live turns every section into a phone moment, and a section with nothing to do on phones stays a slide.
 
@@ -83,13 +83,22 @@ Each step works on its own and can be pushed on its own.
 5. **The Teacher Presenter view:** stuck-by-operation, for this class.
 6. **Challenges in Browse,** next to games and activities, starting with the existing Nodes stages.
 
-## 7. Open questions
+## 7. Decisions
 
-1. **Its own tab, or a family in Activities?** The proposal is a "Challenges" family inside Activities, to keep one place for things students do.
-2. **Can AI read the-teaching-model site** for a stage's data (recall, routine, sources) instead of writing it? That would make the cited fields real without the teacher adding them.
-3. **Which frameworks first?** GCSE Computer Science and Critical Text exist. Others need their stage data.
-4. **Student copies:** keep the teacher and student versions (like the CPU lesson's two copies) as one challenge with a switch?
+1. **Its own studio,** a fourth tab beside Lesson studio, Quiz studio and Activities (decided 13 October). That gives it creative freedom in presentation and UX: its own panels and its own wall and phone designs. It still reuses the room, the phone inputs and the activity stages underneath (section 3).
+2. **Real stage data from Nodes, AI for the rest** (decided 13 October). The teacher types keywords, a topic or a course overview of what students should learn:
+   - **Match:** the studio matches it to a Nodes framework stage (the six on the-teaching-model site: gcse-cs, critical-text, china-it, sg-computing, technical-analysis, growth-model).
+   - **Real data:** it takes that stage's data as Nodes holds it, including recall, routine, join, Students A, B and C, ladder, marks, readings and sources.
+   - **AI:** only adapts it to the topic and writes what has no source, never the cited fields.
+   - **The way in already exists:** the Nodes app's `tools/export-stage-lesson.ts` exports one stage as exactly this JSON.
+   - **What's needed:** to serve that export from the site, a small JSON route in the Nodes app such as `/api/stage/<framework>/<n>`. The site has no API route for it today. That change is in the Nodes repository, not SlideForge.
+
+## 8. Open questions
+
+1. **When nothing matches:** when the keywords match no Nodes stage, does AI draft the whole stage, with the cited fields left as "add a source", or does the studio say there's no stage yet?
+2. **Which frameworks first?** GCSE Computer Science and Critical Text have decks already.
+3. **Student copies:** keep the teacher and student versions (like the CPU lesson's two copies) as one challenge with a switch?
 
 ## Change log
 
-- 13 October 2026: plan written.
+- 13 October 2026: plan written. Later the same day: decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
