@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vite build --config vite.test.config.ts --logLevel warn && node --test '.test-build/*.test.mjs'",
-    "build:app": "npm run build:player && tsc --noEmit && vite build --config vite.app.config.ts && vite build --config vite.stage.config.ts"
+    "build:app": "npm run build:player && tsc --noEmit && vite build --config vite.app.config.ts"
   },
   "dependencies": {
     "immer": "^11.1.18",

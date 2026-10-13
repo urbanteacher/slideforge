@@ -1181,14 +1181,8 @@
     lastShowDeck: function () { return lastShowDeck; },
     /* For Activities' Host live: the lesson's, whichever studio is on screen. */
     hostLive: function () { hostLive(); },
-    /* For the live stage (js/lab-stage.js): the lab deck as it is now, and the
-       lab's page, for its fonts. */
-    /** The lab deck to draw a show from: the one it was built from, when `id` is that show's. */
-    stageDeck: function (id) {
-      if (id && shownLabDeck && shownLabDeck.id === id) return JSON.parse(JSON.stringify(shownLabDeck));
-      return api ? JSON.parse(JSON.stringify(api.getDeck())) : null;
-    },
-    frameDocument: function () { return frame && frame.contentDocument; },
+    /** The lab deck as it is now (a copy), or null before the lab is ready (tools/export-teaching-pdf.mjs). */
+    labDeck: function () { return api ? JSON.parse(JSON.stringify(api.getDeck())) : null; },
     /* The lab's tools row carries the shell's second row (Library, the demo,
        Host live, Present and its menu) so the two sit on one line; each of its
        buttons presses the shell's own, hidden, so what they do is unchanged. */

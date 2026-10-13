@@ -21,7 +21,7 @@ try{
  const popupEvent=context.waitForEvent('page');
  await page.evaluate(key=>{if(!SF.LESSONS.some(l=>l.key===key))throw Error('Unknown lesson: '+key);if(!SF.LabEngine.openKey(key))throw Error('The lab could not open '+key);},lesson);
  // The lab has the lesson once its deck is this lesson's and its slides are there.
- await page.waitForFunction(key=>{const l=SF.LESSONS.find(x=>x.key===key),d=SF.LabEngine.stageDeck&&SF.LabEngine.stageDeck();return !!(d&&d.slides&&d.slides.length&&d.title===l.title);},lesson,{timeout:60000});
+ await page.waitForFunction(key=>{const l=SF.LESSONS.find(x=>x.key===key),d=SF.LabEngine.labDeck&&SF.LabEngine.labDeck();return !!(d&&d.slides&&d.slides.length&&d.title===l.title);},lesson,{timeout:60000});
  await page.evaluate(()=>SF.Print.open(SF.LabEngine.printDeck(),{answers:true}));
  const preview=await popupEvent;
  await preview.waitForFunction(()=>document.documentElement.dataset.pdfReady,{},{timeout:30000});
