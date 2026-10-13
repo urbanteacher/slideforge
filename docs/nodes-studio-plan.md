@@ -127,8 +127,8 @@ Following the games and activities exactly:
 
 Each step works on its own and can be pushed on its own.
 
-0. **Done (13 October):** the Nodes tab, after Activities. For now it copies in the shipped Nodes decks; step 1 replaces that with the formats.
-1. **The format system and the first three formats,** in our style: Join it up, Three answers, Which step broke? This covers `slide.nodes`, the `NODES` table, Browse in the Nodes tab (cards drawn in the lesson's theme), and Add.
+0. **Done (13 October):** the Nodes tab, after Activities. It first copied in the shipped Nodes decks; step 1 replaced that with the formats.
+1. **Done (13 October): the format system and the first three formats,** in our style: Join it up, Three answers, Which step broke? (`lab/src/designs/nodes/`). Each draws an ask slide and a reveal slide in the lesson's theme, and marks them `slide.nodes = { id, format, role, content }`. The Nodes tab's left pane is Browse for the formats (cards drawn in the lesson's theme), its empty screen offers the three, and a format added after another goes after the whole of it.
 2. **Their side panel:** content and settings, with editing redrawing the slides.
 3. **Write it with AI** for them.
 4. **Their room:** the phones and the wall's results.
@@ -154,4 +154,4 @@ Each step works on its own and can be pushed on its own.
 
 ## Change log
 
-- 13 October 2026: plan written. Later the same day: the Nodes tab (step 0); redirected to Nodes formats custom built like games and activities, in our own styles, rather than copying the Nodes decks; the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
+- 13 October 2026: plan written. Later the same day: the Nodes tab (step 0); redirected to Nodes formats custom built like games and activities, in our own styles, rather than copying the Nodes decks; step 1 built (the first three formats); the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
