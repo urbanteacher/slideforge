@@ -54,8 +54,11 @@ export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { 
 export class Room {
   private s: RoomState = emptyRoom();
   private listeners = new Set<Listener>();
-  /** A reveal sent and not yet answered: the relay's `teamAnswers` confirms it, a `markStale` refuses it. */
+  /** A reveal sent and not yet answered: the relay's `teamAnswers` confirms it, a `markStale` refuses it. A typed
+   *  question's reveal (`correct` -1: no option is right) gets no `teamAnswers` (the relay sends it for a choice
+   *  only); the `players` that follow every reveal confirm it instead (`pendingOpen`). */
   private pendingReveal: string | null = null;
+  private pendingOpen = false;
 
   get state(): RoomState { return this.s; }
 
@@ -82,7 +85,7 @@ export class Room {
         s.question = { id: m.id, slideId: m.sourceSlideId, options: m.options, timeLimit: m.timeLimit };
         s.tally = null;
         break;
-      case 'reveal': this.pendingReveal = m.id; break;
+      case 'reveal': this.pendingReveal = m.id; this.pendingOpen = m.correct < 0; break;
       case 'finish': s.phase = 'idle'; break;
       default: return;
     }
@@ -107,6 +110,11 @@ export class Room {
         s.players = m.list;
         s.joinOpen = m.joinOpen;
         s.scores = Object.fromEntries(m.list.map((p) => [p.id, p.score]));
+        if (this.pendingReveal && this.pendingOpen) {
+          s.revealed = s.revealed.includes(this.pendingReveal) ? s.revealed : [...s.revealed, this.pendingReveal];
+          s.phase = 'revealed';
+          this.pendingReveal = null;
+        }
         break;
       case 'teamAnswers':
         // A choice reveal the relay took: it answers with `teamAnswers`, then `players` with the new scores.
@@ -120,7 +128,9 @@ export class Room {
         if (!s.question || m.id === s.question.id) s.tally = { id: m.id, rev: m.rev, counts: m.counts, answered: m.answered, sured: m.sured, total: m.total, allIn: m.allIn, manual: m.manual, answers: m.answers };
         break;
       case 'markStale':
+        // The relay refused the reveal: the marks were from a short snapshot, and the host sends them again.
         this.pendingReveal = null;
+        s.revealed = s.revealed.filter((id) => id !== m.id);
         if (s.tally && s.tally.id === m.id) s.tally = { ...s.tally, rev: m.rev, answers: m.answers };
         break;
       case 'manualError': s.manualError = { message: m.message, playerId: m.playerId, id: m.id }; break;
