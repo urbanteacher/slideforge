@@ -42,7 +42,7 @@ What the 31 shipped lab lessons hold (1,224 slides):
 | Slides with audience feedback | 40 | Ported (M9) |
 | Timer layers | 26 | The converter turns `slide.timeLimit` into a timer layer (`lab/src/decks/fromSlideForge.ts:387`) |
 
-Lessons with something the studio cannot run: `ipdv-ia-w5`, `ipdv-ia-w5-student`, `ipdv-maps-w7`, `ipdv-maps-w7-student` (figures) and `layout-bank` (21 unported game slides). The other 26 run whole in the studio.
+Lessons with something the studio cannot run: `ipdv-ia-w5`, `ipdv-ia-w5-student`, `ipdv-maps-w7`, `ipdv-maps-w7-student` (figures) and `layout-bank` (21 unported game slides). The other 26 run whole in the studio. *Since 13 Oct 2026 the studio's show plays the live figures (`lab/src/show/figure.ts`), so Weeks 5 and 7 run whole in it too.*
 
 ## 1. Feature map: what a teacher uses for a lesson
 
@@ -130,7 +130,7 @@ About 1,900 of the 3,218 lines are (b) and the rest (c). Nothing is (a) only. Af
 | `js/stages.js`, `js/rounds.js`, `js/quick-poll.js`, `js/lesson-moments.js` | 233, 199, 133, 74 | b | Activity stages, rounds, the teacher's quick poll |
 | `js/render.js` | 2,736 | c | Layouts 255-1063, charts 1064-1593, infographic 1594-2085, code colouring 2086-2376, `renderSlide` entry 2377-2681, "a question, shown" 2682-2736. A bridge show uses only image, quiz, game, figure and activity slides, so the layouts, charts, infographic and code parts (about 2,100 lines) are used only by the handout (see below), `view.html` for old classic links, the review tool and the tests. |
 | `src/render/quiz.js`, `src/render/live.js` | 1,322, 1,273 | b | The room's wall |
-| `src/render/figures/` | 1,513 | c | The 36 live figures in Weeks 5 and 7 |
+| `src/figures/` (was `src/render/figures/`) | 1,513 | c | The 36 live figures in Weeks 5 and 7. Moved out of `src/render/` on 13 Oct 2026; the studio's show imports them (hard rule 1), so they stay after the classic renderers go |
 | other `src/render/*` (charts 1,485, lattice 961, words 346, layout-slots 322, experiments 278, explore 273, fit-check 270, compositions 181, motion-lab 174, art 128, and the region files) | about 3,060 | a (gated) | Drawn only for classic content slides. The handout prints SlideForge originals for experiments and games through them (`js/lab-engine.js:580-588`), so they wait for a native PDF. |
 | `src/games/`, `src/activities/`, `src/boards/` | 3,630, 1,547, 1,088 | b | The lab imports a few files in place (above). The 22 unported styles' logic is here. |
 | `src/model.js` / `js/model.js` | 1,939 / 23,523 | c | The converter's input, `SF.compileGame`, `SF.buildRunDeck` (`src/model.js:1433`), the store, the room. Bundles everything above. |
@@ -206,7 +206,7 @@ The smallest classic that keeps the 22 unported styles, the 54 activities and th
 | `presenter.html`, `js/presenter-live.js`, `js/presenter-activities.js`, `src/presenter/window.js` | 1,743 + 315 + 245 + 748 | The desk for the room and the activities |
 | `join.html`, `manual.html`, `js/manual.js` | 2,811 + n/a + 858 | Phones and teacher entry; the studio's room uses them too (hard rule 5) |
 | `src/render/quiz.js`, `src/render/live.js` | 1,322 + 1,273 | The wall's game drawing |
-| `src/render/figures/` | 1,513 | The 36 live figures (Weeks 5 and 7) |
+| `src/figures/` | 1,513 | The 36 live figures (Weeks 5 and 7); also the studio show's, since 13 Oct 2026 |
 | `src/games`, `src/activities`, `src/boards` | 3,630 + 1,547 + 1,088 | The logic for the 22 styles and 54 activities. The lab imports from it in place. |
 | `js/stages.js`, `js/rounds.js`, `js/quick-poll.js`, `js/lesson-moments.js`, `js/teaching.js`, `js/demo.js` | 233 + 199 + 133 + 74 + 255 + 575 | Stages, rounds, quick poll, Draw and Rehearse, until the studio has them |
 | `js/lab-engine.js`, `js/lab-stage.js` | 1,111 + 452 | The bridge |
