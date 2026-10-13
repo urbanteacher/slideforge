@@ -47,7 +47,7 @@ test('canHostInStudio: a lesson of Multiple choice games is hosted in the studio
 test('canHostInStudio: anything the studio room cannot run sends the lesson to the classic host', () => {
   const no = (extra: Slide[]) => canHostInStudio(choiceDeck(extra));
   assert.match(no([slide('t', 'Tricky', game('question', { id: 'gm2', format: 'ranking', label: 'Order', key: '0' }))]).reason, /"Order" is ranking/);
-  assert.match(no([slide('p', 'Poll', undefined, { feedback: { kind: 'poll' } })]).reason, /poll feedback/);
+  assert.match(no([slide('p', 'Poll', game('cover'), { feedback: { kind: 'poll', prompt: 'Ready?', options: ['Yes', 'No'] } })]).reason, /game slide that also asks the room for poll feedback/);
   assert.match(no([slide('a', 'Brainstorm', undefined, { activity: { key: 'think-pair-share', page: 0 } })]).reason, /is an activity/);
   assert.match(no([slide('f', 'Figure', undefined, { liveFigure: true })]).reason, /live figure/);
   assert.match(no([slide('c', 'Check', undefined, { layers: [layer('quiz')] })]).reason, /SlideForge check/);
@@ -69,7 +69,9 @@ test('canHostInStudio: a plain True or false game is hosted in the studio; the S
   const odd = tfDeck();
   odd.slides[2] = slide('t0', 'S', game('question', { id: 'gt1', format: 'truefalse', key: '0', quiz: quiz(0) }));
   assert.match(canHostInStudio(odd).reason, /has a question that is not True or false/);
-  assert.match(canHostInStudio(tfDeck('truefalse', [slide('p', 'Poll', undefined, { feedback: { kind: 'poll' } })])).reason, /poll feedback/);
+  // A poll (M9) is run by the room too; one that is not complete asks nothing and is only shown.
+  assert.equal(canHostInStudio(tfDeck('truefalse', [slide('p', 'Poll', undefined, { feedback: { kind: 'poll', prompt: 'Ready?', options: ['Yes', 'No'] } })])).ok, true);
+  assert.equal(canHostInStudio(tfDeck('truefalse', [slide('p', 'Poll', undefined, { feedback: { kind: 'poll' } })])).ok, true);
 });
 
 test('canHostInStudio: hidden slides are not in the show, so they do not count', () => {

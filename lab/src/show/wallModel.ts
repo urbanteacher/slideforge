@@ -5,6 +5,7 @@
 // the instant the question appears; then Next reveals; then Next moves on).
 
 import { styleFor, type RoomState, type WallDetail } from '../live';
+import { feedbackWallOf, type FeedbackWall } from './feedbackWall';
 import { railOf, type Rail } from './rail';
 import type { Step } from './steps';
 
@@ -15,7 +16,7 @@ export interface WallOption { index: number; label: string; count: number; corre
 export interface WallPlayer { id: number; name: string; connected: boolean }
 export interface WallRow { id: number; rank: number; name: string; score: number; connected: boolean }
 
-export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'ended';
+export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'feedback' | 'ended';
 
 export interface Wall {
   view: WallView;
@@ -39,8 +40,10 @@ export interface Wall {
   board: WallRow[];
   /** A scores step with no question after it: its leaderboard is the final one. */
   final: boolean;
-  /** The standings beside the slide (classic's rail); null when it stays off. */
+  /** The standings beside the slide (classic's rail); null when it stays off, and on a feedback slide (its prompt takes the place). */
   rail: Rail | null;
+  /** The audience feedback the room is asked on this slide (view `feedback`): bars, spread, cloud or ideas. */
+  feedback: FeedbackWall | null;
 }
 
 export interface WallInput {
@@ -89,7 +92,7 @@ export function wallOf(i: WallInput): Wall {
   const board = boardOf(room);
   const quizId = step?.room.quiz?.id;
   const rail = railOf({ board, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
-  const base = { join, players, question: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const base = { join, players, question: null, feedback: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };
@@ -112,6 +115,8 @@ export function wallOf(i: WallInput): Wall {
     if (i.scoresOn) return { ...base, question, view: 'leaderboard' };
     return { ...base, question, view: revealed ? 'reveal' : 'question' };
   }
+  const asked = step?.room.feedback, open = room.feedback;
+  if (asked && open && open.prompt.id === asked.id && !i.scoresOn) return { ...base, rail: null, feedback: feedbackWallOf(open), view: 'feedback' };
   if (step?.room.results || i.scoresOn) return { ...base, view: 'leaderboard' };
   return { ...base, view: 'slide' };
 }

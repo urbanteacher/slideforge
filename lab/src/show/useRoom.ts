@@ -26,6 +26,9 @@ export interface RoomApi {
   begin: (step: number) => void;
   next: () => void;
   goTo: (step: number) => void;
+  /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
+  closeFeedback: () => void;
+  showFeedback: () => void;
   /** End the room; resolves once the relay has closed it (or after classic's 1.5 s). */
   end: () => Promise<void>;
   /** The address (hash) the teacher-entry window opens at, or null before the room exists. */
@@ -113,6 +116,8 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     begin: (step) => { host.current?.goTo(step); host.current?.begin(); sync(); },
     next: () => { host.current?.next(); sync(); },
     goTo: (step) => { host.current?.goTo(step); sync(); },
+    closeFeedback: () => host.current?.closeFeedback(),
+    showFeedback: () => host.current?.showFeedback(),
     end,
     manualHash: () => bridge.current?.hash ?? null,
   };

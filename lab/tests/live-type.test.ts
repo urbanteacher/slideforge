@@ -56,7 +56,7 @@ test('canHostInStudio: a Type answer game is hosted in the studio, with the othe
   const odd = typeDeck();
   odd.slides[1] = slide('q0', 'Q', game('question', { key: '0', quiz: { type: 'quiz', style: 'type', input: 'choice', question: 'Q?', options: ['A', 'B'], correct: 0 } }));
   assert.match(canHostInStudio(odd).reason, /has a question that is not Type answer/);
-  assert.match(canHostInStudio(typeDeck([slide('p', 'Poll', undefined, { feedback: { kind: 'poll' } })])).reason, /poll feedback/);
+  assert.match(canHostInStudio(typeDeck([slide('p', 'Poll', game('cover'), { feedback: { kind: 'poll', prompt: 'Ready?', options: ['Yes', 'No'] } })])).reason, /poll feedback/);
 });
 
 test('the show asks a Type answer question as a typed question: the accepted spellings, no options, no option to be right', () => {

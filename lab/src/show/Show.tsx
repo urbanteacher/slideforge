@@ -4,7 +4,7 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, Keyboard, Maximize, Radio, StickyNote, Trophy, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, Maximize, Radio, StickyNote, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { useStore } from '../store';
@@ -13,12 +13,15 @@ import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
 import { Boundary } from './Boundary';
 import { joinFallback, manualPage, openStudioShow, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
+import { FeedbackView } from './FeedbackViews';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
 import { nextAction, wallOf } from './wallModel';
 
 const BAR_HIDE_MS = 2600;
 /** The standings rail's width, in pixels of a 1920-wide screen (classic's rail is 300 of 720 beside the slide). */
 const RAIL_U = 420;
+/** A feedback prompt's rail is wider: poll labels and ideas need the room at wall size. */
+const FEEDBACK_RAIL_U = 560;
 
 /** The show broke, or its room could not start. Before anyone has joined the lesson goes back to the shell to be
  *  hosted the classic way; once the room has begun it is only ended, with a word to the teacher. */
@@ -126,9 +129,9 @@ function Show() {
   prevRef.current = prev;
 
   // The slide is drawn in what the standings rail leaves of the screen (classic scales its slide the same way).
-  const railOn = useRef(false);
+  const railU = useRef(0);
   const fit = useCallback(() => {
-    const room = railOn.current ? innerWidth * RAIL_U / 1920 : 0;
+    const room = innerWidth * railU.current / 1920;
     const k = Math.min((innerWidth - room) / deck.width, innerHeight / deck.height);
     setSize({ w: Math.floor(deck.width * k), h: Math.floor(deck.height * k) });
   }, [deck]);
@@ -191,10 +194,13 @@ function Show() {
   const slide = deck.slides[index];
   const embeds = slide.layers.filter((l) => l.kind === 'video' && l.visible && l.box && videoEmbed(l.params)).map((l) => ({ id: l.id, box: l.box!, src: videoEmbed(l.params), title: l.name }));
   const wall = roomOn ? wallOf({ room: room.state, steps, at: room.at, before: room.before, scoresOn, fallbackJoin: joinFallback() }) : null;
+  const fbOpen = roomOn && !finished && wall?.view === 'feedback' ? room.state.feedback : null;
   const lobby = wall?.view === 'lobby' || wall?.view === 'connecting';
   const view = finished ? 'ended' : wall?.view;
   const rail = wall && !finished && ['question', 'reveal', 'slide'].includes(wall.view) ? wall.rail : null;
-  useEffect(() => { railOn.current = !!rail; fit(); }, [rail, fit]);
+  const fbRail = !finished && wall?.view === 'feedback' && wall.feedback?.presentAs === 'rail';
+  const railWidth = fbRail ? FEEDBACK_RAIL_U : rail ? RAIL_U : 0;
+  useEffect(() => { railU.current = railWidth; fit(); }, [railWidth, fit]);
   const openEntry = () => {
     const hash = room.manualHash();
     if (!hash) { say('The room is not open yet'); return; }
@@ -203,7 +209,7 @@ function Show() {
   };
 
   return (
-    <div className={`show${rail ? ' has-rail' : ''}`} role="dialog" aria-label="Slideshow" onMouseMove={wake} onFocus={wake} style={{ ['--u' as string]: 'calc(100vw / 1920)' }}>
+    <div className={`show${railWidth ? ' has-rail' : ''}`} role="dialog" aria-label="Slideshow" onMouseMove={wake} onFocus={wake} style={{ ['--u' as string]: 'calc(100vw / 1920)', ['--rail-w' as string]: railWidth || undefined }}>
       <div className="show-stage" style={{ width: size.w, height: size.h }} onClick={() => nextRef.current()}>
         <canvas ref={canvasRef} style={{ width: size.w, height: size.h }} aria-label={slide.name} />
         {embeds.map((e) => (
@@ -220,6 +226,7 @@ function Show() {
           {!finished && wall.view === 'reveal' && wall.question && <RevealStrip q={wall.question} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}
           {rail && <RailView rail={rail} />}
+          {!finished && wall.view === 'feedback' && wall.feedback && <FeedbackView fb={wall.feedback} />}
           {(finished || wall.view === 'ended') && (
             <Ended wall={wall} closing={!room.state.ended} onClose={close}
               onReport={hooks?.reports && room.state.session ? () => hooks.reports!.open() : undefined} />
@@ -236,10 +243,12 @@ function Show() {
         <button onClick={() => nextRef.current()} aria-label="Next"><ArrowRight size={16} /></button>
         <span className="show-count" aria-label={`Slide ${index + 1} of ${deck.slides.length}`}>{index + 1} / {deck.slides.length}</span>
         <button onClick={() => setNotes((v) => !v)} aria-pressed={notes} aria-label="Speaker notes (N)" title="Speaker notes (N)"><StickyNote size={16} /></button>
+        {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
+        {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
         {roomOn && <button onClick={() => setScoresOn((v) => !v)} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S)"><Trophy size={16} /></button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
         <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F)"><Maximize size={16} /></button>
-        {!roomOn && steps.some((s) => s.room.quiz) && studioRoomEnabled() && (
+        {!roomOn && steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled() && (
           <button className="show-live" onClick={() => openStudioShow({ room: true, slideId: slide.id })} title="Run this lesson live with phones"><Radio size={15} />Host live</button>
         )}
         <button onClick={exit} aria-label={roomOn ? 'End the room and exit' : 'Exit'} title={roomOn ? 'End the room and exit (Esc)' : 'Exit (Esc)'}><X size={16} />{roomOn ? 'End' : ''}</button>
