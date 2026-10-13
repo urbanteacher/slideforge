@@ -27,7 +27,7 @@ import { resolve } from 'node:path';
 import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMessage } from '../src/live';
 
 type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
-type Step = { ms: number; what: string; answer?: { id?: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[] }; names?: string[]; team?: number };
+type Step = { ms: number; what: string; answer?: { id?: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; fill?: number[]; sort?: number[] }; names?: string[]; team?: number };
 const root = resolve(process.cwd(), '..');
 type Rec = { host: Frame[]; steps: Step[] };
 const load = (name: string) => JSON.parse(readFileSync(resolve(root, `tests/fixtures/sessions/${name}.json`), 'utf8')) as Rec;
@@ -92,9 +92,11 @@ function assertSame(lab: Record<string, unknown>[], classic: Record<string, unkn
 }
 
 /** Feed a recording to the lab host and return it, the frames it sent, and the classic frames, normalised. */
-async function replay(rec: Rec, format: string, scores = true) {
+async function replay(rec: Rec, format: string, scores = true, tweak?: (show: RoomShow) => void) {
   const sock = new Recorded();
-  const host = new LiveHost({ url: 'ws://replay', show: recordedShow(rec, format, scores), makeSocket: () => sock });
+  const show = recordedShow(rec, format, scores);
+  tweak?.(show);
+  const host = new LiveHost({ url: 'ws://replay', show, makeSocket: () => sock });
 
   // The relay's frames and the recorder's steps, on the recording's one clock.
   type Ev = { ms: number; k: number; recv?: unknown; step?: Step };
@@ -111,7 +113,7 @@ async function replay(rec: Rec, format: string, scores = true) {
     else if (s.what === 'manual:add') host.manualAdd(s.names!, s.team ?? 0);
     else if (s.what === 'begin') host.begin();
     else if (s.what === 'next') host.next();
-    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.order ? { order: s.answer!.order } : s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!, s.answer!.id);
+    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.order ? { order: s.answer!.order } : s.answer!.fill ? { fill: s.answer!.fill } : s.answer!.sort ? { sort: s.answer!.sort } : s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!, s.answer!.id);
     else if (s.what === 'stop') ended = host.end();
   }
   await ended;
@@ -301,6 +303,42 @@ test('the lab host sends what the classic host sent for an Emoji guess game', as
   assert.equal(lab.filter((f) => f.t === 'hintOut').length, 3, 'one hint a puzzle');
   assert.deepEqual(lab.filter((f) => f.t === 'at' && f.activity === 'question').map((f) => f.step), [0, 1, 0, 1, 2, 0, 1], 'the steps released, easy: hint; medium: pattern, hint; hard: hint');
   assert.ok(lab.filter((f) => f.t === 'reveal').every((r) => r.gains === undefined));
+  assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
+
+/** Fill the gaps, Compare & contrast's sort: classic shuffles the word bank (the statements) at random when it compiles a game, so
+ *  the recording has its own draw and the starter another. The recorded draw is put on the show's questions, from the question
+ *  frames the recorder saw and the answer each reveal said, as classic's compile would have left them. */
+function withRecordedDraw(rec: Rec, kind: 'fill' | 'sort') {
+  return (show: RoomShow) => {
+    const sent = rec.host.filter((f) => f.dir === 'send').map((f) => f.data!);
+    const frames = sent.filter((m) => m.t === 'question'), reveals = sent.filter((m) => m.t === 'reveal');
+    show.slides.filter((s) => s.quiz).forEach((s, i) => {
+      const q = s.quiz as unknown as Record<string, unknown>, options = frames[i].options as string[], said = String(reveals[i].answer);
+      q.options = options;
+      if (kind === 'fill') q.gapAnswers = said.split(' · ').map((w) => options.findIndex((o) => o.toLowerCase() === w.toLowerCase()));
+      else {
+        const bins = q.sortBins as string[];
+        q.sortAnswers = options.map((o) => { const hit = said.split(' · ').find((x) => x.startsWith(`${o} → `))!; return bins.indexOf(hit.slice(o.length + 3)); });
+      }
+    });
+  };
+}
+
+// Fill in the blanks (format 'fill-in-the-blanks', style 'fill'). The question frame is input 'fill' with the word bank in
+// `options` and the text around the gaps in `fillParts`; the reveal says the right words (`answer`, `correct` -1) with the
+// host's part marks: `gains` of round(points x the share of gaps right) per answer, beside the verdicts (right only when every
+// gap is). The teacher's entry is a word per gap (`fill`). The recording's word bank is its own draw (see withRecordedDraw).
+test('the lab host sends what the classic host sent for a Fill in the blanks game', async () => {
+  const rec = load('game-fill-in-the-blanks');
+  const { host, classic, lab } = await replay(rec, 'fill-in-the-blanks', true, withRecordedDraw(rec, 'fill'));
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.equal(q.input, 'fill'); assert.equal(q.style, 'fill'); assert.ok(Array.isArray(q.fillParts)); assert.equal((q.options as string[]).length, 5); }
+  assert.ok(lab.some((f) => f.t === 'manualAnswer' && Array.isArray(f.fill)), "the teacher's entry is sent as a word per gap");
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => r.gains), [[[1, 0], [2, 500], [3, 0], [4, 0]], [[1, 0], [2, 0], [3, 1000]], [[1, 500], [2, 0], [3, 0]]]);
   assert.equal(host.state.revealed.length, 3);
   assert.ok(host.state.ended);
 });
