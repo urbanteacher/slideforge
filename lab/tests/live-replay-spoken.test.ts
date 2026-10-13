@@ -77,6 +77,29 @@ test('the lab host sends what the classic host sent for a Heads up game', async 
   assert.ok(host.state.ended);
 });
 
+// Connection maker (format 'connection-maker', style 'connection'). The question is spoken, and an idea box opens beside it (a `prompt`
+// frame right after the question: a brainstorm of up to two proposals a phone, `shape: 'bridge'`, `from` the two concepts, `quiet`) and
+// closes with the verdict (`promptEnd` right after the reveal). The teacher names Ada and says Accept; the reveal carries no gains.
+// Not here (a known open classic item): the drawn approved-bridge lines.
+test('the lab host sends what the classic host sent for a Connection maker game', async () => {
+  const rec = load('game-connection-maker');
+  const { host, classic, lab } = await replay(rec, 'connection-maker', true, recordedDraw(rec, 'judge'));
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 2);
+  for (const q of asked) { assert.equal(q.spoken, true); assert.equal(q.style, 'connection'); assert.deepEqual(q.options, ['Accept', 'Reject']); assert.equal(q.headPrompt, 'Connection maker'); }
+  const boxes = lab.filter((f) => f.t === 'prompt');
+  assert.deepEqual(boxes.map((p) => [p.prompt, p.shape, p.from, p.quiet, p.max, p.origin]), [
+    ['How are “Photosynthesis” and “Respiration” connected?', 'bridge', 'Photosynthesis and Respiration', true, 2, 'proposals'],
+    ['How are “CPU” and “RAM” connected?', 'bridge', 'CPU and RAM', true, 2, 'proposals']]);
+  const seq = lab.map((f) => String(f.t)).filter((t) => ['question', 'prompt', 'reveal', 'promptEnd'].includes(t));
+  assert.deepEqual(seq, ['question', 'prompt', 'reveal', 'promptEnd', 'question', 'prompt', 'reveal', 'promptEnd'], 'the box is open exactly while the question is');
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => [r.correct, r.gains, r.spoken]), Array.from({ length: 2 }, () => [0, [], { recipient: { type: 'player', id: 1 } }]));
+  assert.equal(host.state.feedback, null, 'nothing is left open');
+  assert.equal(host.state.revealed.length, 2);
+  assert.ok(host.state.ended);
+});
+
 // Spin and explain (format 'spin-explain', style 'spinexplain'): the concept drawn is the question, the verdicts Clear, With hint and
 // Reject, the points the game's own (2, which the relay does not use for a verdict). Same frames as the other spoken games; the
 // scores slide follows the last concept, and `finish` is the final scores. The recorded room is individual and does not score
