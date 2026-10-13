@@ -2,28 +2,8 @@
 // A board is played on the wall: its clock and its buttons are the teacher's, as classic's board runtime draws them. A new board
 // adds its view here (or in a file beside it), keyed by its kind.
 
-import type { BoardAction, BoardWallBase, LowStakesWall, MemoryWall } from '../live';
-
-export type OnCommand = (action: string, card?: number) => void;
-
-/** The board's buttons: real buttons, the primary one first in the row. */
-export function Actions({ actions, onCommand }: { actions: BoardAction[]; onCommand: OnCommand }) {
-  return (
-    <div className="board-actions">
-      {actions.map((a) => <button key={a.action + a.label} type="button" className={a.primary ? 'primary' : ''} onClick={() => onCommand(a.action)}>{a.label}</button>)}
-    </div>
-  );
-}
-
-/** A full board's head: what it is, its title, and its clock. */
-export function BoardHead({ eyebrow, title, clockLabel, clock }: { eyebrow: string; title: string; clockLabel: string; clock: string }) {
-  return (
-    <header className="gb-head">
-      <div><div className="gb-eyebrow">{eyebrow}</div><h2>{title}</h2></div>
-      <div className="gb-clock" role="timer" aria-live="off"><span>{clockLabel}</span> <strong>{clock}</strong></div>
-    </header>
-  );
-}
+import type { BoardWallBase, LowStakesWall, MemoryWall } from '../live';
+import { Actions, BingoBoard, BoardHead, BowlBoard, isBingo, isBowl, type OnCommand } from './BoardGrids';
 
 /** Low-stakes quiz: the whole-quiz clock, what to do now, and the buttons. The questions are on the slide, and the reveal puts the
  *  game's answers slide up (Show.tsx), so the bar does not repeat them. */
@@ -76,5 +56,7 @@ function MemoryBoard({ wall, onCommand }: { wall: MemoryWall; onCommand: OnComma
 export function BoardView({ wall, onCommand }: { wall: BoardWallBase; onCommand: OnCommand }) {
   if (wall.key === 'lowstakes') return <LowStakesBoard wall={wall as LowStakesWall} onCommand={onCommand} />;
   if (wall.key === 'memory') return <MemoryBoard wall={wall as MemoryWall} onCommand={onCommand} />;
+  if (isBingo(wall)) return <BingoBoard wall={wall} onCommand={onCommand} />;
+  if (isBowl(wall)) return <BowlBoard wall={wall} onCommand={onCommand} />;
   return <div className="paper-board"><Actions actions={wall.actions} onCommand={onCommand} /></div>;
 }

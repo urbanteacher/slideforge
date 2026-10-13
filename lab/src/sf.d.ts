@@ -150,6 +150,41 @@ declare module '@sf/boards/runtimes/memory.js' {
   export function installMemory(SF: { Memory?: SFMemoryEngine }): void;
 }
 
+/** Bingo's engine: the deal and the calls (at random), a team's square for the call and why it cannot answer, the tally and the winner. */
+interface SFBingoEngine {
+  create(board: Record<string, unknown>): Record<string, unknown>;
+  transition<S extends Record<string, unknown>>(board: Record<string, unknown>, state: S, action: string, team?: number): S;
+  square(state: Record<string, unknown>, board: Record<string, unknown>, team: number): number;
+  blocked(state: Record<string, unknown>, board: Record<string, unknown>, team: number): string | null;
+  scores(board: Record<string, unknown>, state: Record<string, unknown>): { name: string; score: number; won: boolean }[];
+  winner(board: Record<string, unknown>, state: Record<string, unknown>): string;
+}
+
+declare module '@sf/games/bingo.js' {
+  /** A row, column or diagonal of marked squares on a size × size card. */
+  export function bingoHasLine(marked: boolean[], size: number): boolean;
+}
+
+declare module '@sf/boards/runtimes/bingo.js' {
+  /** Puts the bingo engine on `SF.Bingo` (it reads `SF.bingoHasLine`); nothing runs but declarations. */
+  export function installBingo(SF: { Bingo?: SFBingoEngine; bingoHasLine: (marked: boolean[], size: number) => boolean }): void;
+}
+
+/** Quiz bowl's engine: the state and its moves, a cell's next question, the scores, the leaders and the winner. */
+interface SFBowlEngine {
+  create(board: Record<string, unknown>): Record<string, unknown>;
+  transition<S extends Record<string, unknown>>(board: Record<string, unknown>, state: S, action: string, team?: number): S;
+  pending(board: Record<string, unknown>, state: Record<string, unknown>, cell: number): Record<string, unknown> | null;
+  scores(board: Record<string, unknown>, state: Record<string, unknown>): { name: string; score: number }[];
+  leaders(board: Record<string, unknown>, state: Record<string, unknown>): number[];
+  winner(board: Record<string, unknown>, state: Record<string, unknown>): string;
+}
+
+declare module '@sf/boards/runtimes/bowl.js' {
+  /** Puts the Quiz bowl engine on `SF.Bowl`; nothing runs but declarations. */
+  export function installBowl(SF: { Bowl?: SFBowlEngine }): void;
+}
+
 declare module '@sf/boards/runtime.js' {
   interface Clock { now(): number; every(fn: () => void, ms: number): unknown; cancel(timer: unknown): void }
   interface SessionSpec { player: Record<string, unknown>; slide: Record<string, unknown> & { id: string }; node: unknown; create(board: Record<string, unknown>): Record<string, unknown>; render(...args: unknown[]): void; command(action: string, card?: number): void; tick(session: SFBoardSession, dt: number): boolean | void; interval?: number }

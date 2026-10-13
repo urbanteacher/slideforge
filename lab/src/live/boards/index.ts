@@ -3,11 +3,13 @@
 // Low-stakes quiz, the memory boards, Bingo and Quiz bowl.
 import { GAME_STYLES } from '@sf/games/registry.js';
 import type { RoomBoard } from './desk';
+import { bingo } from './bingo';
+import { bowl } from './bowl';
 import { lowstakes } from './lowstakes';
 import { memory } from './memory';
 import type { BoardEntry, BoardKind, BoardWallBase } from './types';
 
-export const BOARDS: BoardKind[] = [lowstakes, memory].map((b) => b as unknown as BoardKind);
+export const BOARDS: BoardKind[] = [lowstakes, memory, bingo, bowl].map((b) => b as unknown as BoardKind);
 
 /** The board kind for a lab game format, or undefined when the room runs no board for it. */
 export const boardForFormat = (format: string): BoardKind | undefined => BOARDS.find((b) => b.formats.includes(format));
@@ -42,6 +44,8 @@ export function boardWallOf(rb: RoomBoard, entry: BoardEntry | undefined): Board
 export const boardRevealed = (rb: RoomBoard, entry: BoardEntry | undefined): boolean => !!entry && !!boardOfKey(rb.key)?.revealed?.(entry.state);
 
 export { BoardDesk, type BoardEnv, type RoomBoard } from './desk';
+export type { BingoCard, BingoWall } from './bingo';
+export type { BowlWall } from './bowl';
 export type { LowStakesWall } from './lowstakes';
 export type { MemoryCard, MemoryWall } from './memory';
 export type { BoardAction, BoardCtx, BoardEntry, BoardKind, BoardState, BoardVerdict, BoardWallBase } from './types';

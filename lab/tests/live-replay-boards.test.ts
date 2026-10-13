@@ -3,40 +3,17 @@
 // the board's companion for the phones) and, for each verdict, an `oral` record for the journal. The teacher's presses on the
 // board's buttons are the recorder's `board: click` steps, played here as the board's commands.
 //
-// Differences kept visible, none removed: (1) the steps around the board carry the game's skin ('count'), as SlideForge's show
-// gives them and recordedShow does not know to. (2) recordedShow builds every content slide as a plain step; the board's step is
+// Differences kept visible, none removed: (1) the steps around the board carry the board's skin ('count', 'claim'), as both shows
+// give them and recordedShow does not know to. (2) recordedShow builds every content slide as a plain step; the board's step is
 // set here from the starter's compiled board slide, as the lab's show builds it from `game.board` (live-boards.test.ts checks that).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { RoomShow } from '../src/live';
-import { assertSame, list, load, replay, type Step } from './replay-kit';
+import { assertSame, boardOn, click, load, replay, type Press } from './replay-kit';
 
 /** The board's buttons, by the label the recorder clicked (src/boards/runtimes/lowstakes.js render). */
 const LOWSTAKES: Record<string, string> = {
   'Start the quiz →': 'start', 'Reveal answers now': 'reveal', 'Pause': 'pause', 'Resume': 'pause', 'Reveal answers →': 'reveal',
   'Finish': 'finish', 'Play again': 'restart', 'Play this quiz again': 'restart',
-};
-
-/** `style`: the board step's skin (classic phoneStyle: the board's key, or a memory board's own kind). */
-function boardOn(format: string, field: string, key: string, skin: string, style = key) {
-  return (show: RoomShow) => {
-    const starter = list.find((g) => g.format === format)!;
-    const compiled = starter.slides.find((s) => s[field])!;
-    for (const s of show.slides) {
-      if (s.text === (compiled.bullets as string[]).join('\n') && s.title === compiled.title) { s.board = { key, slide: { ...compiled, id: s.id } }; s.style = style; }
-      else if (!s.quiz) s.style = skin;
-    }
-  };
-}
-
-/** A pressed button as the board's command: by its label, or (`card`) a card or cell read off the label. */
-type Press = { action: string; card?: number };
-const click = (labels: Record<string, string>, card?: (label: string, cls: string) => Press | null) => (s: Step, host: { boardCommand(action: string, card?: number): boolean }) => {
-  if (s.what !== 'board: click') return;
-  const [cls, label] = String(s.button ?? '').split(' | ');
-  const press = labels[label] ? { action: labels[label] } : card?.(label, cls) ?? null;
-  assert.ok(press, `a button the board has: ${label}`);
-  assert.equal(host.boardCommand(press.action, press.card), true);
 };
 
 /** The memory boards' buttons (src/boards/runtimes/memory.js render); a card's label starts with its number. */

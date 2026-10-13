@@ -126,3 +126,26 @@ export async function replay(rec: Rec, format: string, scores = true, tweak?: (s
   return { host, classic: normalise(classic), lab: normalise(sock.sent as unknown as Record<string, unknown>[]) };
 }
 
+
+// The boards (live-replay-boards*.test.ts): the board step set from the starter's compiled board slide, and the recorder's presses.
+/** `style`: the board step's skin (classic phoneStyle: the board's key, or a memory board's own kind). */
+export function boardOn(format: string, field: string, key: string, skin: string, style = key) {
+  return (show: RoomShow) => {
+    const starter = list.find((g) => g.format === format)!;
+    const compiled = starter.slides.find((s) => s[field])!;
+    for (const s of show.slides) {
+      if (s.text === (compiled.bullets as string[]).join('\n') && s.title === compiled.title) { s.board = { key, slide: { ...compiled, id: s.id } }; s.style = style; }
+      else if (!s.quiz) s.style = skin;
+    }
+  };
+}
+
+/** A pressed button as the board's command: by its label, or (`card`) a card or cell read off the label. */
+export type Press = { action: string; card?: number };
+export const click = (labels: Record<string, string>, card?: (label: string, cls: string, host: LiveHost) => Press | null) => (s: Step, host: LiveHost) => {
+  if (s.what !== 'board: click') return;
+  const [cls, label] = String(s.button ?? '').split(' | ');
+  const press = labels[label] ? { action: labels[label] } : card?.(label, cls, host) ?? null;
+  assert.ok(press, `a button the board has: ${label}`);
+  assert.equal(host.boardCommand(press.action, press.card), true);
+};
