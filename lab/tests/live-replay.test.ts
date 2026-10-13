@@ -251,3 +251,18 @@ test('the lab host sends what the classic host sent for a Time traveler game', a
   assert.equal(host.state.revealed.length, 3);
   assert.ok(host.state.ended);
 });
+
+// Spot the error (format 'spot-the-error', style 'spot', tap input). The question's options are the passage's words and
+// its input is 'tap'; the `at` and the question carry the heading; the reveal says the correction (`answer`) with `correct`
+// the word the error starts on, and marks a tap anywhere in the error's words. The phones' taps are held off the wall until
+// then (a wall matter, not a frame). The game has no scores slide, so the show ends on its last answer.
+test('the lab host sends what the classic host sent for a Spot the error game', async () => {
+  const { host, classic, lab } = await replay(load('game-spot-the-error'), 'spot-the-error', false);
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 4);
+  for (const q of asked) { assert.equal(q.input, 'tap'); assert.equal(q.style, 'spot'); assert.equal(q.headPrompt, 'There is one error in this sentence. Find it.'); }
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => r.answer), ['mitochondria → chloroplasts', 'fastest → not at all', '6 → 3', 'Scotland → England']);
+  assert.equal(host.state.revealed.length, 4);
+  assert.ok(host.state.ended);
+});
