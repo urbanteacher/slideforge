@@ -710,3 +710,25 @@ test('a live figure comes into the lab with the figure itself, and a copy made b
   assert.equal(carryDeckFigures(deck, src.slides), figures.length);
   assert.equal(carryDeckFigures(deck, src.slides), 0, 'a second time changes nothing');
 });
+
+test('the Motion lab’s specimens come into the lab on its scene layer, each in its behaviour and look (M13)', { skip }, async () => {
+  const { deckFromSlideForge, convertsSlide } = await converter();
+  const src = lesson('motion-lab');
+  const motions = src.slides.filter((s) => s.type === 'motion');
+  assert.ok(motions.length >= 10, 'the lesson still has its specimens');
+  assert.ok(motions.every(convertsSlide), 'the lab builds every one');
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  motions.forEach((s) => {
+    const made = deck.slides.find((x) => x.sourceSlideId === s.id);
+    const scene = made.layers.find((l) => l.kind === 'scene');
+    assert.ok(scene, `${s.title} has its scene`);
+    assert.equal(scene.params.mode, s.motionScene);
+    assert.equal(scene.params.look, s.design.motionLook);
+    assert.equal(scene.params.items, s.bullets.filter((b) => b.trim()).slice(0, 4).join('\n'));
+    assert.equal(made.layers.find((l) => l.name === 'Heading').params.text, s.title);
+  });
+  // A scene SlideForge does not know is drawn as its points, as SlideForge's own fallback is.
+  const odd = { id: 'm1', type: 'motion', title: 'Odd', motionScene: 'nope', bullets: ['One', 'Two'] };
+  const made = deckFromSlideForge(asData({ id: 'x', title: 'X', theme: 'studio', slides: [odd] }), 'nul', { games: '', frame: false });
+  assert.ok(!made.slides[0].layers.some((l) => l.kind === 'scene'));
+});

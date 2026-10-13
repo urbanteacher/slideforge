@@ -1,8 +1,8 @@
 import { createLayer, uid, type Deck, type LiveFigure, type Slide } from '../core';
 import { videoEmbed } from '../engine';
 import { CHART_DARK, CHART_LIGHT } from '../charts';
-import { EXPERIMENTS, experimentPreset } from '../experiments';
-import { LAYOUTS, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
+import { EXPERIMENTS, LOOKS, SCENES, experimentPreset } from '../experiments';
+import { LAYOUTS, sceneSlide, beforeAfterSlide, icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide, gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide, railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, gameClock, syncHeaderFooter, type LayoutStyle } from '../layouts';
 import { feedbackOf, gameSlides, fitSize, type ShowcaseGame } from '../designs';
 import { addThemeArt, themeGround, type ArtContext } from '../theme';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
@@ -51,6 +51,8 @@ export interface SFSlide {
   language?: string;
   typewrite?: boolean;
   videoPoster?: string;
+  /** A motion specimen's behaviour (mask, draw, cards…: src/render/motion-lab.js); its look is design.motionLook. */
+  motionScene?: string;
 }
 /** A lesson's game, compiled by SlideForge (js/lab-engine.js, SF.compileGame) as the lab's own games
  *  are (tools/lab-games.mjs), and whether it opens with a cover (its intro or How to play). */
@@ -356,6 +358,16 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       const e = s.experiment ?? {}, resolved = experimentPreset({ preset: e.preset ?? '', data: s.body ?? '', prompt: e.prompt ?? '' });
       const preset = EXPERIMENTS[resolved] ? resolved : 'polling';
       return { slide: experimentSlide(st, t, e.prompt || EXPERIMENTS[preset].prompt, { preset, data: s.body || EXPERIMENTS[preset].data, states: e.states?.length ? JSON.stringify(e.states) : '', duration: e.duration, layout: s.design?.experimentLayout === 'focus' ? 'focus' : undefined }, s.chartSource ?? ''), ground: g };
+    }
+    case 'motion': {
+      // SlideForge's motion specimen is the lab's scene layer: the same ten behaviours in the same five
+      // looks, stepped by Next and, in the show, dragged or pressed (src/render/motion-lab.js). A scene
+      // SlideForge does not know draws as its points, as SlideForge's own fallback does.
+      const mode = String(s.motionScene || s.design?.motionScene || '');
+      if (!SCENES[mode]) return { slide: bulletsSlide(st, t, b), ground: g };
+      const look = String(s.design?.motionLook ?? '');
+      const factor = String(s.body ?? '').trim() && Number.isFinite(Number(s.body)) ? Math.max(-10, Math.min(10, Number(s.body))) : 2;
+      return { slide: sceneSlide({ mode, look: LOOKS[look] ? look : 'editorial', title: t, subtitle: sub, items: b.filter((x) => x.trim()).slice(0, 4), image: img(s.image), factor }, LOOKS, SCENES), ground: g };
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
