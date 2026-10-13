@@ -1,4 +1,4 @@
-import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, type Deck, type Slide } from '../core';
+import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, unpackPictures, type Deck, type Slide } from '../core';
 import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
 import { renderStill, editableSlides, exportPptx, type SlideFormat } from '../export';
@@ -110,21 +110,6 @@ function repairAddresses(d: Deck): number {
     }
   }
   return n;
-}
-
-/** A shipped lesson keeps each picture once (tools/build-lab-lessons.mjs packPictures): each
- *  '@picture:<n>' is that picture again, as a deck made here would carry it. */
-function unpackPictures(d: Deck & { pictures?: string[] }) {
-  const pics = d.pictures;
-  if (!Array.isArray(pics)) return;
-  delete d.pictures;
-  const walk = (v: unknown): unknown => {
-    if (typeof v === 'string') { const m = /^@picture:(\d+)$/.exec(v); return m && pics[+m[1]] !== undefined ? pics[+m[1]] : v; }
-    if (Array.isArray(v)) { for (let i = 0; i < v.length; i++) v[i] = walk(v[i]); return v; }
-    if (v && typeof v === 'object') { for (const k of Object.keys(v)) (v as Record<string, unknown>)[k] = walk((v as Record<string, unknown>)[k]); return v; }
-    return v;
-  };
-  walk(d);
 }
 
 export function convertClassic(c: ClassicDeck): Deck {

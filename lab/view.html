@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A shared lesson — SlideForge</title>
+    <!-- The studio viewer (lab-engine-plan M12): a lesson shared from the Lesson studio, played by the lab's own
+         player. Nothing here authors, stores or hosts; a classic shared copy goes to /view.html. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link id="sf-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300..900;1,300..900&family=Instrument+Serif:ital@0;1&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&family=DM+Serif+Display:ital@0;1&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Bebas+Neue&family=JetBrains+Mono:wght@300..800&family=Syne:wght@400..800&family=Unbounded:wght@300..900&family=Poppins:wght@400;500;600;700;800&family=Archivo:wdth,wght@62..125,100..900&display=swap" />
+    <style>
+      @font-face { font-family: 'Uncut Sans'; src: url('/fonts/uncut-sans/UncutSans-Regular.woff2') format('woff2'); font-weight: 300 500; font-display: swap; }
+      @font-face { font-family: 'Uncut Sans'; src: url('/fonts/uncut-sans/UncutSans-Semibold.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+      @font-face { font-family: 'Uncut Sans'; src: url('/fonts/uncut-sans/UncutSans-Bold.woff2') format('woff2'); font-weight: 700 900; font-display: swap; }
+      @font-face { font-family: 'Alpha Lyrae'; src: url('/fonts/alpha-lyrae/AlphaLyrae-Medium.woff2') format('woff2'); font-weight: 400 600; font-display: swap; }
+      html, body { margin: 0; height: 100%; background: #0c0d10; color: #e7eaf0; overflow: hidden; font: 14px/1.4 Inter, system-ui, sans-serif; }
+      #sf-stage { position: fixed; inset: 0 0 40px 0; display: grid; place-items: center; }
+      #sf-canvas { display: block; touch-action: pan-y; }
+      #sf-msg { position: fixed; inset: 0; display: grid; place-content: center; gap: 10px; text-align: center; padding: 2rem; }
+      #sf-msg[hidden] { display: none; }
+      #sf-msg h1 { font-size: 1.3rem; margin: 0; }
+      #sf-msg p { margin: 0; opacity: .75; max-width: 30rem; }
+      #sf-bar { position: fixed; left: 0; right: 0; bottom: 0; height: 40px; box-sizing: border-box; display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 12px; color: #aab3c2; background: #00000066; }
+      #sf-bar b { color: #e7eaf0; font-weight: 600; }
+      #sf-bar button { background: #ffffff14; color: #e7eaf0; border: 0; border-radius: 6px; padding: 5px 10px; font: inherit; cursor: pointer; }
+      #sf-bar button:hover { background: #ffffff26; }
+      .sf-nav { display: inline-flex; gap: 6px; align-items: center; }
+      .sf-pos { min-width: 4.5em; text-align: center; }
+      #sf-list { position: fixed; right: 12px; bottom: 48px; max-height: 70vh; width: min(320px, calc(100vw - 24px)); overflow: auto; background: #16181d; border-radius: 10px; padding: 6px; display: grid; gap: 2px; box-shadow: 0 10px 30px #0008; }
+      #sf-list[hidden] { display: none; }
+      #sf-list button { text-align: left; background: none; color: #e7eaf0; border: 0; padding: 7px 10px; border-radius: 6px; font: inherit; cursor: pointer; }
+      #sf-list button:hover, #sf-list button.now { background: #ffffff1a; }
+      #sf-practice { position: fixed; left: 50%; bottom: 52px; transform: translateX(-50%); width: min(640px, calc(100vw - 24px)); box-sizing: border-box; background: #16181df2; border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 30px #0008; }
+      #sf-practice[hidden] { display: none; }
+      #sf-practice p { margin: 0 0 8px; }
+      .sf-q { font-weight: 600; }
+      .sf-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px; margin-bottom: 8px; }
+      .sf-options button { text-align: left; padding: 9px 12px; border-radius: 8px; border: 1px solid #ffffff26; background: #ffffff0d; color: #e7eaf0; font: inherit; cursor: pointer; }
+      .sf-options button.right { background: #1f7a4a; border-color: #2fae6b; }
+      .sf-options button.wrong { background: #7a2a1f; border-color: #c2533f; }
+      .sf-options button:disabled { cursor: default; }
+      .sf-room { opacity: .8; }
+      @media (max-width: 640px) { .sf-hint, .sf-score { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div id="sf-stage"><canvas id="sf-canvas"></canvas></div>
+    <div id="sf-practice" hidden></div>
+    <div id="sf-list" hidden role="list" aria-label="Slides"></div>
+    <div id="sf-bar" role="toolbar" aria-label="Shared lesson"></div>
+    <div id="sf-msg"><h1>Opening the lesson…</h1><p>Fetching a read-only copy.</p></div>
+    <script type="module" src="/src/view.ts"></script>
+  </body>
+</html>
