@@ -127,6 +127,7 @@ export class LiveHost {
       t: 'reveal', id: q.id, rev: rev ?? t?.rev ?? 0,
       marks: q.unmarked ? [] : list.map((a) => [a.id, style.mark(q, a.response)] as [number, boolean]),
       correct: said.correct, answer: said.answer, explanation: q.explanation ?? '',
+      ...(style.gains ? { gains: style.gains(q, list) } : {}),
     });
   }
 
@@ -144,7 +145,8 @@ export class LiveHost {
     const qid = id ?? q!.id;
     this.send(choice == null ? { t: 'manualAnswer', id: qid, playerId, clear: true }
       : typeof choice === 'string' ? { t: 'manualAnswer', id: qid, playerId, text: choice }
-        : typeof choice === 'object' ? { t: 'manualAnswer', id: qid, playerId, value: choice.value } : { t: 'manualAnswer', id: qid, playerId, choice });
+        : typeof choice === 'object' ? ('order' in choice ? { t: 'manualAnswer', id: qid, playerId, order: choice.order } : { t: 'manualAnswer', id: qid, playerId, value: choice.value })
+          : { t: 'manualAnswer', id: qid, playerId, choice });
   }
 
   manualRename(playerId: number, name: string): void { this.send({ t: 'manualRename', playerId, name }); }

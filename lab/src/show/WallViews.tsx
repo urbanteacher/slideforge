@@ -7,6 +7,7 @@ import { qrSvg } from './qr';
 import { clockOf, type Clock } from './clock';
 import type { Rail } from './rail';
 import { parseRoster, type LineModel, type TeamRow } from '../live';
+import { SlotsView } from './StyleViews';
 import type { Wall } from './wallModel';
 
 const TOP = 8;
@@ -124,6 +125,7 @@ export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
     </p>
   );
   if (d.kind === 'line') return <div className="wall-strip wall-tally tally-line" data-testid="tally">{d.line && <NumberLine line={d.line} />}{said}</div>;
+  if (d.kind === 'slots') return <div className="wall-strip wall-tally tally-slots" data-testid="tally">{d.slots && <SlotsView model={d.slots} />}{said}</div>;
   const typed = d.kind === 'typed' ? d.groups : null;
   const pair = d.kind === 'bars' && d.pair;
   const rows = typed ? typed.map((g, i) => ({ key: i, label: g.text, count: g.n, right: g.right })) : q.options.map((o) => ({ key: o.index, label: o.label, count: o.count, right: o.correct }));

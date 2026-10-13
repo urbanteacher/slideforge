@@ -30,7 +30,7 @@ export interface Companion { style: string; role: string; participation: string;
 export interface QuestionFields {
   id: string; n: number; total: number; question: string;
   voteOnly: boolean; unmarked: boolean; sourceSlideId: string;
-  input: 'choice' | 'text' | 'number'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
+  input: 'choice' | 'text' | 'number' | 'order'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
   confidence: boolean; range: { min: number; max: number; step: number; unit: string } | null; options: string[]; timeLimit: number; points: number; style: string;
   headPrompt?: string;
 }
@@ -49,7 +49,7 @@ export type Digest =
   | { kind: 'brainstorm'; items: { name: string; pid: number; text: string; seq: number }[]; total: number };
 
 /** A teacher's answer by key (§6.4): an option, the words typed for a Type answer question, or the number for a Slider; `clear` takes it back. */
-export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; value?: number; clear?: boolean }
+export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; clear?: boolean }
 
 /** H→R: what the host sends. */
 export type HostMessage =
@@ -60,7 +60,7 @@ export type HostMessage =
   | ({ t: 'at' } & AtFields)
   | ({ t: 'idle' } & Companion)
   | ({ t: 'question' } & QuestionFields)
-  | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string }
+  | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string; gains?: [number, number][] }
   | { t: 'manualAdd'; names: string[]; team: number }
   | ({ t: 'manualAnswer' } & ManualAnswerFields)
   | { t: 'manualRename'; playerId: number; name: string }

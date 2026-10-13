@@ -64,3 +64,10 @@ declare module '@sf/deck/feedback.js' {
   /** A scale's point labels: "1" to "n". */
   export function scaleLabels(f: { points?: number }): string[];
 }
+
+declare module '@sf/games/order.js' {
+  /** Ranking: round(10 x the share of items in their right place) for an ordering (indices into the options, in the learner's order). */
+  export function orderPoints(slide: SFQuizSlide, response: unknown): number;
+  /** The share, 0 to 1, of items in their right place; 0 for anything that is not a full ordering. */
+  export function orderScore(slide: SFQuizSlide, response: unknown): number;
+}

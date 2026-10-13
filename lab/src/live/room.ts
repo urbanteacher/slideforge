@@ -74,6 +74,8 @@ export class Room {
    *  only); the `players` that follow every reveal confirm it instead (`pendingOpen`). */
   private pendingReveal: string | null = null;
   private pendingOpen = false;
+  /** What the phones answer the question on the wall with: the relay sends `teamAnswers` for a choice question only. */
+  private askedInput = 'choice';
 
   get state(): RoomState { return this.s; }
 
@@ -99,8 +101,9 @@ export class Room {
         s.phase = 'question';
         s.question = { id: m.id, slideId: m.sourceSlideId, options: m.options, timeLimit: m.timeLimit };
         s.tally = null;
+        this.askedInput = m.input;
         break;
-      case 'reveal': this.pendingReveal = m.id; this.pendingOpen = m.correct < 0; break;
+      case 'reveal': this.pendingReveal = m.id; this.pendingOpen = m.correct < 0 || this.askedInput !== 'choice'; break;
       case 'finish': s.phase = 'idle'; break;
       case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; break;
       case 'promptEnd': s.feedback = null; break;

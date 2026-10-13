@@ -1,12 +1,13 @@
 // The registry of the game styles the studio's room runs. A new style is one file in this folder and one line in
 // STYLES (plus, when its wall needs a view the wall does not have yet, that view in show/WallViews.tsx).
 import { choice } from './choice';
+import { order } from './order';
 import { slider } from './slider';
 import { truefalse } from './truefalse';
 import { type } from './type';
 import type { StyleEntry } from './types';
 
-export const STYLES: StyleEntry[] = [choice, truefalse, type, slider];
+export const STYLES: StyleEntry[] = [choice, truefalse, type, slider, order];
 
 /** The entry for a game format of the lab (`slide.game.format`), or undefined when the room does not run it. */
 export const styleForFormat = (format: string): StyleEntry | undefined => STYLES.find((s) => s.formats.includes(format));
@@ -26,4 +27,4 @@ export function styleNames(): string {
   return n.length > 1 ? `${n.slice(0, -1).join(', ')} or ${n[n.length - 1]}` : n[0] ?? '';
 }
 
-export type { LineMark, LineModel, ManualChoice, ManualEntry, Range, StyleEntry, WallDetail } from './types';
+export type { LineMark, LineModel, SlotsModel, ManualChoice, ManualEntry, Range, StyleEntry, WallDetail } from './types';

@@ -45,7 +45,7 @@ export function profiles(n: number, rng: Rng = Math.random): Profile[] {
 }
 
 /** What a phone sends to answer (join.html: `answer` with a choice, text or value). */
-export type Answer = { t: 'answer'; choice: number } | { t: 'answer'; text: string } | { t: 'answer'; value: number };
+export type Answer = { t: 'answer'; choice: number } | { t: 'answer'; text: string } | { t: 'answer'; value: number } | { t: 'answer'; order: number[] };
 
 /** What the relay sends a phone for a question: the part the simulated phone reads. */
 export interface QuestionFrame { id: string; input?: string; options?: string[]; range?: { min: number; max: number; step: number } | null; timeLimit?: number; confidence?: boolean }
@@ -79,6 +79,12 @@ export function answerFor(quiz: RoomQuiz, frame: QuestionFrame, p: Profile, rng:
   }
   const n = (frame.options ?? quiz.options ?? []).filter((o) => String(o).trim()).length;
   if (n === 0) return null;
+  if (input === 'order') {
+    // The items are authored in the right order: a right answer is that order; a wrong one swaps two neighbours.
+    const order = Array.from({ length: n }, (_, i) => i);
+    if (!right && n > 1) { const i = Math.floor(rng() * (n - 1)); [order[i], order[i + 1]] = [order[i + 1], order[i]]; }
+    return { t: 'answer', order };
+  }
   if (right) return { t: 'answer', choice: Math.min(n - 1, Math.max(0, quiz.correct)) };
   const wrong = Array.from({ length: n }, (_, i) => i).filter((i) => i !== quiz.correct);
   if (wrong.length === 0) return { t: 'answer', choice: 0 };

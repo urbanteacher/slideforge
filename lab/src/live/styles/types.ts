@@ -16,10 +16,10 @@ import type { TypedGroup } from '../typed';
 
 /** One answer the teacher enters by key: an option index, the words typed for a Type answer question, a number for
  *  a Slider (`{ value }`), or null to take it back. */
-export type ManualChoice = number | string | { value: number } | null;
+export type ManualChoice = number | string | { value: number } | { order: number[] } | null;
 
 /** What the manual window sends for one answer (docs/games/protocol.md §15.1). */
-export interface ManualEntry { id?: string; playerId?: unknown; choice?: unknown; text?: unknown; value?: unknown; clear?: unknown }
+export interface ManualEntry { id?: string; playerId?: unknown; choice?: unknown; text?: unknown; value?: unknown; order?: unknown; clear?: unknown }
 
 /** One answer on a number line: where it stands (0-100) and the row it takes when others share its place. */
 export interface LineMark { id: number; value: number; pct: number; row: number; right: boolean }
@@ -32,10 +32,20 @@ export interface LineModel {
   marks: LineMark[];
 }
 
+/** A ranking's reveal: the right order, and for each place how many of the room put the right item there; the pair swapped most. */
+export interface SlotsModel {
+  slots: { place: number; label: string; here: number }[];
+  /** The answers that were a full ordering (the bars' whole). */
+  total: number;
+  /** The places two items were swapped between most often (zero-based), and by how many; null when none were. */
+  swap: { pair: [number, number]; labels: [string, string]; n: number } | null;
+}
+
 /** What the wall draws under the question. `bars`: a vote per option (`pair`: two big tiles); `typed`: what the
  *  room typed, grouped (null while the question is open); `line`: a number line (null while the question is open). */
 export type WallDetail =
   | { kind: 'bars'; pair: boolean }
+  | { kind: 'slots'; slots: SlotsModel | null }
   | { kind: 'typed'; groups: TypedGroup[] | null }
   | { kind: 'line'; line: LineModel | null };
 
@@ -49,7 +59,7 @@ export interface StyleEntry {
   /** The lab's game formats this entry runs. */
   formats: string[];
   /** What the phones answer with (`question.input`). */
-  input: 'choice' | 'text' | 'number';
+  input: 'choice' | 'text' | 'number' | 'order';
   /** Put the style's own fields on a lab question, as SlideForge's compile does (src/games). */
   prepare?(q: RoomQuiz): void;
   /** The number slider's range, for the question frame (classic sends `range` only for a number question). */
@@ -60,6 +70,8 @@ export interface StyleEntry {
   label(q: RoomQuiz, response: Response): string;
   /** What the reveal sends: the option that is right (-1 for an open answer) and the answer said. */
   reveal(q: RoomQuiz): { correct: number; answer: string };
+  /** Points the host hands the relay with the verdicts (`reveal.gains`), as [player, points]; undefined: the relay scores by the verdicts alone. */
+  gains?(q: RoomQuiz, answers: Pick<TallyAnswer, 'id' | 'response'>[]): [number, number][];
   /** The wall's view of the question, from the answers in. */
   wall(q: RoomQuiz, answers: Pick<TallyAnswer, 'id' | 'response'>[], revealed: boolean): WallDetail;
   /** The teacher's entry by key as an answer to send, or undefined when it is not one for this style. */
@@ -72,7 +84,7 @@ type Given = Pick<StyleEntry, 'key' | 'name' | 'formats' | 'input'> & Partial<St
  *  option (a choice) or the accepted answer (an open question), a bar per option on the wall, and the entry
  *  that goes with the input. */
 export function defineStyle(g: Given): StyleEntry {
-  const open = g.input !== 'choice';
+  const open = g.input === 'text' || g.input === 'number';
   return {
     range: () => null,
     mark: (q, r) => markResponse(q, r),
@@ -81,7 +93,8 @@ export function defineStyle(g: Given): StyleEntry {
     wall: () => ({ kind: 'bars', pair: false }),
     manual: g.input === 'text' ? (a) => (typeof a.text === 'string' ? a.text : undefined)
       : g.input === 'number' ? (a) => (typeof a.value === 'number' && Number.isFinite(a.value) ? { value: a.value } : undefined)
-        : (a) => (Number.isInteger(a.choice) ? (a.choice as number) : undefined),
+        : g.input === 'order' ? (a) => (Array.isArray(a.order) && a.order.every((v) => Number.isInteger(v)) ? { order: a.order as number[] } : undefined)
+          : (a) => (Number.isInteger(a.choice) ? (a.choice as number) : undefined),
     ...g,
   };
 }
