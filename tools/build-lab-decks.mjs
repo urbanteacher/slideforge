@@ -21,6 +21,10 @@ const DECKS = [
   { key: 'nodes-describe-three-systems', file: 'lessons/nodes/describe-three-systems.lesson.json', inline: false },
   { key: 'nodes-talk', file: 'lessons/nodes/Nodes-Talk.lesson.json', inline: false },
   { key: 'nodes-cpu-lesson', file: 'lessons/nodes/cpu-lesson.lesson.json', inline: false },
+  // The earlier versions, exported from the classic editor on 12 October and converted by the lab (convertForBuild).
+  { key: 'nodes-cpu-lesson-earlier', file: 'lessons/nodes/cpu-lesson-earlier.lesson.json', inline: false },
+  { key: 'nodes-cpu-lesson-earlier-student', file: 'lessons/nodes/cpu-lesson-earlier-student.lesson.json', inline: false },
+  { key: 'nodes-critical-text-3-earlier', file: 'lessons/nodes/critical-text-3-earlier.lesson.json', inline: false },
 ];
 
 const entries = {};
