@@ -51,7 +51,9 @@ test('canHostInStudio: anything the studio room cannot run sends the lesson to t
   assert.match(no([slide('a', 'Brainstorm', undefined, { activity: { key: 'no-such-activity', page: 0 } })]).reason, /is an activity \(no-such-activity\)/);
   assert.deepEqual(no([slide('a', 'Think', undefined, { activity: { key: 'think-pair-share', page: 0 } })]), { ok: true, reason: '' }, 'an activity the room runs (M10)');
   assert.match(no([slide('f', 'Figure', undefined, { liveFigure: true })]).reason, /live figure/);
-  assert.match(no([slide('c', 'Check', undefined, { layers: [layer('quiz')] })]).reason, /SlideForge check/);
+  // The quiz and activity cards are placeholders, a picture in SlideForge's room too: they keep nothing on classic (M14).
+  assert.deepEqual(no([slide('c', 'Check', undefined, { layers: [layer('quiz')] })]), { ok: true, reason: '' });
+  assert.deepEqual(no([slide('c', 'Steps', undefined, { layers: [layer('activity')] })]), { ok: true, reason: '' });
   const tf = choiceDeck();
   tf.slides[2] = slide('q0', 'Q', game('question', { key: '0', quiz: { ...quiz(0), style: 'truefalse' } }));
   assert.match(canHostInStudio(tf).reason, /not Multiple choice/, 'a True or false question inside a Multiple choice game is not what either runs');

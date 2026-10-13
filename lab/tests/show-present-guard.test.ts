@@ -28,13 +28,20 @@ test('a registry-style game is presented in the studio, and a hidden blocker doe
   assert.equal(whyNotPresentInStudio(deckOf(slide('a', 'Intro'), boss)), '');
 });
 
-test('an unported game, an activity, a live figure and a SlideForge check keep the lesson on classic', () => {
-  assert.match(whyNotPresentInStudio(deckOf(slide('a', 'Intro'), slide('r', 'Order', game('mind-reveal', 'question')))), /"Air" is mind-reveal, not/);
-  // An activity the room runs (M10) is the studio's to show; one it does not (a game's activity without its game, an unknown one) is not.
+test('a plain show has no phones: a game, an activity or feedback the room does not run is the studio\'s to show (M14)', () => {
+  assert.equal(whyNotPresentInStudio(deckOf(slide('a', 'Intro'), slide('r', 'Order', game('mind-reveal', 'question')))), '');
   assert.equal(whyNotPresentInStudio(deckOf(slide('x', 'Think', undefined, { activity: { key: 'think-pair-share', page: 0 } }))), '');
-  assert.match(whyNotPresentInStudio(deckOf(slide('x', 'Quiz', undefined, { activity: { key: 'multiple-choice-quiz', page: 0 } }))), /"Quiz" is the activity .*, a game without its game/);
-  assert.match(whyNotPresentInStudio(deckOf(slide('x', 'Odd', undefined, { activity: { key: 'no-such-activity', page: 0 } }))), /"Odd" is an activity \(no-such-activity\) SlideForge's catalogue does not have/);
-  assert.match(whyNotPresentInStudio(deckOf(slide('f', 'Graph', undefined, { liveFigure: true }))), /"Graph" has a live figure/);
+  assert.equal(whyNotPresentInStudio(deckOf(slide('x', 'Quiz', undefined, { activity: { key: 'multiple-choice-quiz', page: 0 } }))), '');
+  assert.equal(whyNotPresentInStudio(deckOf(slide('x', 'Odd', undefined, { activity: { key: 'no-such-activity', page: 0 } }))), '');
+  const poll = { kind: 'poll', prompt: 'Ready?', options: ['Yes', 'No'] } as never;
+  assert.equal(whyNotPresentInStudio(deckOf(slide('p', 'Poll', game('choice', 'cover'), { feedback: poll }))), '');
+  const discuss = { type: 'quiz', style: 'compare-contrast', input: 'sort', compareDiscuss: true, question: 'Q?' };
+  assert.equal(whyNotPresentInStudio(deckOf(slide('c', 'Compare', game('compare-contrast', 'question', { quiz: discuss })))), '');
+  // The quiz and activity cards are placeholders, drawn as the picture they are by SlideForge's show too.
   const layer = { id: 'l', kind: 'quiz', visible: true } as never;
-  assert.match(whyNotPresentInStudio(deckOf(slide('c', 'Check', undefined, { layers: [layer] }))), /"Check" holds a SlideForge check/);
+  assert.equal(whyNotPresentInStudio(deckOf(slide('c', 'Check', undefined, { layers: [layer] }))), '');
+});
+
+test('a live figure the lesson does not carry keeps the plain show on classic, which plays it from the lesson it came from', () => {
+  assert.match(whyNotPresentInStudio(deckOf(slide('f', 'Graph', undefined, { liveFigure: true }))), /"Graph" has a live figure/);
 });
