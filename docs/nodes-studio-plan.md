@@ -52,6 +52,36 @@ Every phone screen below already exists (the seven input kinds and the activity 
 
 The teacher sees who is stuck at which operation in the Teacher Presenter. That gives the same "share of wrong answers at each operation" as the `routine` data, but for this class.
 
+### More things students can do, from the Nodes talk and decks
+
+Section 3 covers each stage section. The talk's findings suggest more, all on existing phone screens:
+
+| Activity | From | On the phone | Reuses |
+|---|---|---|---|
+| **Which step broke?** A wrong answer on the wall; students tap the operation that failed (Decode, Retrieve, Reason, Express, Check) | The answer routine; Finding 1 (most mistakes are not wrong ideas) | Tap one of five | `choice`, held results |
+| **Keep them apart:** two confusable terms (registers and the control unit, RAM and main memory); sort statements to the right one | Finding 3 (two ideas treated as one) | Sort into two columns | `sort` |
+| **Level it:** rate an answer's SOLO level (one point, several points, linked) | Finding 4 (the gap is a jump); the Analysis tab | Pick a level | `choice` or scale |
+| **Refused or credited?** Short answers that an examiner refuses or credits, and why | Refused without it | True or false, then why | `truefalse`, `text` |
+| **Write the examiner's why:** students write the feedback examiners rarely give, for answer B | Finding 7 (examiners almost never say why) | Typed feedback; the best ones spotlighted | `text`, spotlight |
+| **Size the answer:** from the command word and the marks, how many points, and what kind | Finding 5 (command words promise less) | A number, then a choice | `number`, `choice` |
+| **How sure are you?** Confidence before the reveal, compared with the result after | How sure can we be? | Sure or not sure | the phone's sure row |
+| **Mark it:** peer-mark answers A, B and C with the mark scheme | Mark scheme | 0 to 3 for each | scale |
+| **One topic, three systems:** the same question as the UK, Singapore and China ask it; spot what each wants | One topic, three systems | Match the question to the system | `sort` |
+| **Repair later:** the same relationship, asked again lessons later without the ladder | The ladder's repair | Typed answer | `text`, Reports |
+
+### The scaffolding challenge: every node, on one topic
+
+A challenge that runs the **whole framework** on one topic, not one stage, for example all 16 nodes of Technical Analysis on "the CPU":
+
+> Term → Features → Process → Context → Data → Trace → Design → Represent → Build → Test → Pros and cons → Compare → Impacts → Judge → Transfer → Review
+
+(or the GCSE CS ladder's 13, Define to Refine).
+
+- **On the wall:** the framework's own map (the serpentine 4×4, or the SOLO ladder) with the class's progress on each node: how many have passed it, and where they are stuck. Seeing the bottleneck node is the point.
+- **On the phone:** one node at a time, with that node's task. A node unlocks when the one before is done (self-paced, like Beat the Clock's sprint), or when the teacher moves the class on. Each node offers its ladder's hint after a wrong try.
+- **AI generates it:** the teacher types a topic, a keyword or a course overview. The node definitions, their command words and what each asks for come from Nodes (real data). AI writes the 16 topic-specific tasks, model answers and hints, which the teacher checks before presenting.
+- **In the Teacher Presenter and Reports:** each student's furthest node and the node where most of the class stopped, which is the next lesson's starting point.
+
 ## 4. Where it lives in the code
 
 Following the existing patterns:
@@ -76,12 +106,14 @@ Following the existing patterns:
 
 Each step works on its own and can be pushed on its own.
 
+0. **Done (13 October):** the Nodes tab, after Activities. It shows the lesson's Nodes challenges, and when empty it offers the shipped Nodes stages to add with one click.
 1. **The data type and the slide builder in the app.** Port the offline builder into `lab/src/nodes/`, and check that the four shipped Nodes decks rebuild identically. This is the riskiest step, so it goes first.
 2. **The editor:** the Challenge panel, one card per section, editing redraws.
 3. **AI drafting,** with the source guardrail.
 4. **Live moments,** a few at a time: Join it up (order), Breakdown (sort) and Students' answers (choice then text) first, as they are the heart of the method; then the routine stages and the ladder.
 5. **The Teacher Presenter view:** stuck-by-operation, for this class.
-6. **Challenges in Browse,** next to games and activities, starting with the existing Nodes stages.
+6. **The scaffolding challenge:** every node of a framework on one topic, AI-written from the real node definitions, with the class's progress on the framework map.
+7. **The extra activities** from the talk (section 3), as kinds of Nodes moment.
 
 ## 7. Decisions
 
@@ -101,4 +133,4 @@ Each step works on its own and can be pushed on its own.
 
 ## Change log
 
-- 13 October 2026: plan written. Later the same day: decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
+- 13 October 2026: plan written. Later the same day: the Nodes tab (step 0); the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
