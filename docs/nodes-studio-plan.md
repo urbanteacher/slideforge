@@ -128,7 +128,7 @@ Following the games and activities exactly:
 Each step works on its own and can be pushed on its own.
 
 0. **Done (13 October):** the Nodes tab, after Activities. It first copied in the shipped Nodes decks; step 1 replaced that with the formats.
-1. **Done (13 October): the format system and the first three formats,** in our style: Join it up, Three answers, Which step broke? (`lab/src/designs/nodes/`). Each draws an ask slide and a reveal slide in the lesson's theme, and marks them `slide.nodes = { id, format, role, content }`. The Nodes tab's left pane is Browse for the formats (cards drawn in the lesson's theme), its empty screen offers the three, and a format added after another goes after the whole of it.
+1. **Done (13 October): the format system and the first three formats,** in our style: Join it up, Three answers, Which step broke? (`lab/src/designs/nodes/`). Each is drawn in the Nodes decks' own illustrated language (`designs/nodes/look.ts`: rounded cards, pills, chains of boxes joined by arrows, badges, element dots, answer tabs, cards with an accent bar) in the lesson's theme, the links in Nodes' colours; each has an ask slide and its reveal slides, and marks them `slide.nodes = { id, format, role, content }`. The Nodes tab's left pane is Browse for the formats (cards drawn in the lesson's theme), its empty screen offers the three, and a format added after another goes after the whole of it.
 2. **Their side panel:** content and settings, with editing redrawing the slides.
 3. **Write it with AI** for them.
 4. **Their room:** the phones and the wall's results.
