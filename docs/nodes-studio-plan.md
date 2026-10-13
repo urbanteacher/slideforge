@@ -52,7 +52,11 @@ The Nodes decks themselves (the CPU lesson, Critical Text 3, Describe) stay in t
 | **Level it** | Rate an answer's SOLO level | `choice` | The gap is a jump |
 | **Size the answer** | From the command word and marks: how many points, of what kind | `number`, `choice` | Command words |
 | **Mark it** | Peer-mark A, B and C with the mark scheme | scale | How the marks fall |
-| **Scaffold** | Work through every node of a framework on one topic, node by node, the wall showing the class on the map | per node | The framework: Technical Analysis (16 nodes) and the GCSE CS ladder (13) |
+| **Label the parts** | A worked answer's parts mixed up; sort each into Point, Explained, So or Because; then the breakdown in order | `sort` | What a complete answer is made of |
+| **Same word, different links** | One command word in three questions, each needing a different relationship; match each to its link | `sort` | Linkage matched to the task |
+| **Before, during, after** | The three questions of an attempt: what to bring together, how it forms an answer, what is missing | private note per point | Answer construction, made visible |
+| **Model marks** | Rank model answers and mark each against the scheme table; then mark their own | `order`, scale | How the marks fall |
+| **Framework** (built) | The map of every stage, recall, then each stage with a scaffold for its backbone, then the map again: Technical Analysis (16) or the GCSE CS ladder (13) | per stage | The framework: Technical Analysis (16 nodes) and the GCSE CS ladder (13) |
 
 ## 3. How each section plays in the room
 
@@ -154,4 +158,4 @@ Each step works on its own and can be pushed on its own.
 
 ## Change log
 
-- 13 October 2026: plan written. Later the same day: the Nodes tab (step 0); redirected to Nodes formats custom built like games and activities, in our own styles, rather than copying the Nodes decks; step 1 built (the first three formats); the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
+- 13 October 2026: plan written. Later the same day: the Framework, Label the parts, Same word different links, Before during after, and Model marks formats built; the Nodes tab (step 0); redirected to Nodes formats custom built like games and activities, in our own styles, rather than copying the Nodes decks; step 1 built (the first three formats); the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
