@@ -374,6 +374,15 @@ export const labApi = {
     openStudioShow({ room: true, slideId: st.slideId, hooks });
     return true;
   },
+  /** A plain show of the lesson in the studio (M11a): no room, with the Teacher Presenter window, notes on another
+   *  device, black and white screens, the overview and the jump. The shell's Present will call this at M15; until then
+   *  it is only offered by ?studioShow=1. `hooks` is what the shell lends the show (exited, toast). */
+  presentInStudio(hooks?: ShowHooks): boolean {
+    const st = useStore.getState();
+    if (!st.deck.slides.some((s) => !s.hidden)) return false;
+    openStudioShow({ room: false, slideId: st.slideId, hooks });
+    return true;
+  },
   /** Why Host live would not run in the studio's room (for the shell's note to the console and the tests). */
   whyNotInStudio: (): string => canHostInStudio(useStore.getState().deck).reason,
   /** Which studio the lab is (js/lab-engine.js: the shell's Lesson studio, Quiz studio, Activities). The

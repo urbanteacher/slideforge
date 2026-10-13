@@ -28,8 +28,8 @@ export function closeStudioShow(): void {
   useShow.setState({ open: false, room: false });
 }
 
-function readFlag(): boolean {
-  const flag = (search: string) => new URLSearchParams(search).get('studioRoom') === '1';
+function readFlag(name = 'studioRoom'): boolean {
+  const flag = (search: string) => new URLSearchParams(search).get(name) === '1';
   try { if (flag(location.search)) return true; } catch { /* no location */ }
   try { return window.parent !== window && flag(window.parent.location.search); } catch { return false; }
 }
@@ -38,10 +38,21 @@ function readFlag(): boolean {
 // (js/lab-engine.js, frozen), which can be before this frame has loaded: use ?studioRoom=1 on its own, and open
 // the lesson from the Library.
 const FLAG = readFlag();
+const SHOW_FLAG = readFlag('studioShow');
 
 /** ?studioRoom=1 turns the studio's own room on. Read from this page, and from the page around it when the
  *  lab is the shell's frame (lab-app/index.html?embed=1 has no query of its own). */
 export function studioRoomEnabled(): boolean { return FLAG; }
+
+/** ?studioShow=1 offers the studio's own show for a lesson with no room (the TopBar's Present (studio)), until the shell's
+ *  Present is switched to it (M15). Read the same way as the room's flag. */
+export function studioShowEnabled(): boolean { return SHOW_FLAG; }
+
+/** Where prompter.html is (the notes screen), beside manual.html. */
+export function prompterPage(): string {
+  if (location.protocol === 'file:' || import.meta.env.DEV) return 'http://localhost:8787/prompter.html';
+  return new URL('../prompter.html', location.href).href;
+}
 
 /** The relay's socket: this page's own host, as classic does. The development server has no relay, so it is
  *  SlideForge's local one. */

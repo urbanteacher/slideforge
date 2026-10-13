@@ -4,14 +4,18 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, Maximize, Radio, StickyNote, Trophy, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, Radio, Smartphone, StickyNote, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
+import { ShowSide, presenterUrl, type PresenterCmd, type Screen } from '../presenter';
 import { useStore } from '../store';
 import './show.css';
 import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
 import { Boundary } from './Boundary';
-import { joinFallback, manualPage, openStudioShow, studioRoomEnabled, useShow } from './state';
+import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit } from './desk';
+import { PrompterLink, prompterLinkFor } from './prompter';
+import { Elapsed, NotesCard, Overview, ScreenCover } from './ShowTools';
+import { joinFallback, manualPage, openStudioShow, prompterPage, relayUrl, studioRoomEnabled, useShow } from './state';
 import { useRoom } from './useRoom';
 import { FeedbackView } from './FeedbackViews';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
@@ -62,6 +66,24 @@ function Show() {
   const failed = useRef(false);
   const [bar, setBar] = useState(true);
   const [toast, setToast] = useState('');
+  // M11a: the screen blanked, the overview, a slide number being typed, the notes card, and when the show began.
+  const [screen, setScreen] = useState<Screen>('none');
+  const screenRef = useRef<Screen>('none');
+  screenRef.current = screen;
+  const [overview, setOverview] = useState<number | null>(null);
+  const overviewRef = useRef<number | null>(null);
+  overviewRef.current = overview;
+  const [jump, setJump] = useState('');
+  const jumpRef = useRef('');
+  jumpRef.current = jump;
+  const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [notesCard, setNotesCard] = useState(false);
+  const [, repaint] = useState(0);
+  const link = useRef<PrompterLink | null>(null);
+  const startedAt = useRef(Date.now()).current;
+  const side = useRef<ShowSide | null>(null);
+  const deskRef = useRef<{ wall: ReturnType<typeof wallOf> | null; fb: { hold: boolean; shown: boolean } | null }>({ wall: null, fb: null });
+  const runRef = useRef<(cmd: PresenterCmd, n?: number) => void>(() => {});
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -107,6 +129,7 @@ function Show() {
   const next = useCallback(() => {
     const p = player.current, r = roomRef.current;
     if (!p || finishedRef.current) return;
+    if (screenRef.current !== 'none') { setScreen('none'); return; } // a blanked screen comes back first
     if (!roomOn) { p.next(); return; }
     const act = nextAction({ room: r.state, steps, at: r.at, sinceAsked: r.sinceAsked() });
     if (act === 'start') { r.begin(stepAt(steps, p.index)); return; }
@@ -120,6 +143,7 @@ function Show() {
   const prev = useCallback(() => {
     const p = player.current, r = roomRef.current;
     if (!p) return;
+    if (screenRef.current !== 'none') { setScreen('none'); return; }
     if (!roomOn) { p.prev(); return; }
     if (r.at > 0) r.goTo(r.at - 1);
   }, [roomOn]);
@@ -127,6 +151,31 @@ function Show() {
   const nextRef = useRef(next), prevRef = useRef(prev);
   nextRef.current = next;
   prevRef.current = prev;
+
+  /** Go to a slide of the shown deck (0 based). In a room that has begun, the room moves to that slide's step. */
+  const goIndex = useCallback((i: number) => {
+    const p = player.current, r = roomRef.current;
+    if (!p || finishedRef.current || i < 0 || i >= deck.slides.length) return;
+    setScreen('none');
+    if (!roomOn) { p.goto(i, i > p.index ? 1 : -1, true); return; }
+    if (r.at < 0) { say('Press Start before moving around the lesson'); return; }
+    r.goTo(stepAt(steps, i));
+  }, [roomOn, steps, deck]);
+
+  /** What the Teacher Presenter window asks, done as the show's own keys and bar would. */
+  const runCmd = useCallback((cmd: PresenterCmd, n?: number) => {
+    const r = roomRef.current, d = deskRef.current;
+    if (cmd === 'next') nextRef.current();
+    else if (cmd === 'prev') prevRef.current();
+    else if (cmd === 'goto') { if (n != null) goIndex(n - 1); }
+    else if (cmd === 'black' || cmd === 'white') setScreen((s) => (s === cmd ? 'none' : cmd));
+    else if (cmd === 'resume') setScreen('none');
+    else if (cmd === 'reveal') { if (roomOn && d.wall?.view === 'question') r.next(); }
+    else if (cmd === 'close') { if (roomOn) r.closeFeedback(); }
+    else if (cmd === 'open') { if (roomOn) r.showFeedback(); }
+    else if (cmd === 'end') exit();
+  }, [roomOn, goIndex, exit]);
+  runRef.current = runCmd;
 
   // The slide is drawn in what the standings rail leaves of the screen (classic scales its slide the same way).
   const railU = useRef(0);
@@ -169,7 +218,34 @@ function Show() {
       e.stopPropagation();
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key;
+      // The overview has the keys while it is up: arrows move, Enter goes, Esc and O close it.
+      const ov = overviewRef.current;
+      if (ov != null) {
+        if (['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(k)) { e.preventDefault(); setOverview(gridMove(ov, k, deck.slides.length)); }
+        else if (k === 'Escape' || k === 'o' || k === 'O') { e.preventDefault(); setOverview(null); }
+        else if (k === 'Enter' && !onControl) { e.preventDefault(); setOverview(null); goIndex(ov); }
+        return;
+      }
       if ((k === ' ' || k === 'Enter') && onControl) return; // a focused button is pressed, not Next
+      // A slide number typed (digits, then Enter): the jump. Esc clears it.
+      const digits = pushDigit(jumpRef.current, k);
+      if (digits != null) {
+        setJump(digits);
+        if (jumpTimer.current) clearTimeout(jumpTimer.current);
+        jumpTimer.current = setTimeout(() => setJump(''), 2500);
+        return;
+      }
+      if (jumpRef.current && k === 'Enter') {
+        e.preventDefault();
+        const to = jumpTarget(jumpRef.current, deck.slides.length);
+        setJump('');
+        if (to == null) say(`There is no slide ${jumpRef.current}`); else goIndex(to);
+        return;
+      }
+      if (jumpRef.current && k === 'Escape') { setJump(''); return; }
+      if (k === 'b' || k === 'B' || k === '.') { runRef.current('black'); return; }
+      if (k === 'w' || k === 'W' || k === ',') { runRef.current('white'); return; }
+      if (k === 'o' || k === 'O') { setOverview(player.current?.index ?? 0); return; }
       if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(k)) { e.preventDefault(); nextRef.current(); }
       else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); prevRef.current(); }
       else if (k === 'Escape') { if (!document.fullscreenElement) exit(); }
@@ -182,7 +258,7 @@ function Show() {
     (document.activeElement as HTMLElement | null)?.blur?.();
     addEventListener('keydown', on, true);
     return () => removeEventListener('keydown', on, true);
-  }, [exit, roomOn, deck, toggleFs]);
+  }, [exit, roomOn, deck, toggleFs, goIndex]);
 
   const wake = useCallback(() => {
     setBar(true);
@@ -201,6 +277,42 @@ function Show() {
   const fbRail = !finished && wall?.view === 'feedback' && wall.feedback?.presentAs === 'rail';
   const railWidth = fbRail ? FEEDBACK_RAIL_U : rail ? RAIL_U : 0;
   useEffect(() => { railU.current = railWidth; fit(); }, [railWidth, fit]);
+
+  // The Teacher Presenter window follows the show over a BroadcastChannel; with none open this does nothing.
+  const desk = presenterState({
+    deck, index, startedAt, screen,
+    room: roomOn ? { wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold && !fbOpen.shown } : null,
+  });
+  deskRef.current = { wall, fb: fbOpen ? { hold: !!fbOpen.prompt.hold, shown: fbOpen.shown } : null };
+  const deskNow = useRef(desk);
+  deskNow.current = desk;
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const sd = new ShowSide(deck, deskNow.current, (cmd, n) => runRef.current(cmd, n));
+    side.current = sd;
+    return () => { sd.close(); side.current = null; };
+  }, [deck]);
+  const deskKey = JSON.stringify(desk);
+  useEffect(() => { side.current?.publish(deskNow.current); }, [deskKey]);
+
+  // Notes on another device: the frame follows the slide; the channel ends with the show.
+  useEffect(() => { link.current?.send(prompterFrame(deck, index, startedAt)); }, [deck, index, startedAt]);
+  useEffect(() => () => { link.current?.stop(); link.current = null; }, []);
+  const notesElsewhere = () => {
+    setNotesCard(true);
+    if (link.current && !link.current.closed) return;
+    const l = new PrompterLink({
+      url: relayUrl(), link: (id) => prompterLinkFor(id, prompterPage()),
+      onCmd: (c) => (c === 'next' ? nextRef.current() : prevRef.current()), onChange: () => repaint((n) => n + 1),
+    });
+    link.current = l;
+    l.send(prompterFrame(deck, player.current?.index ?? index, startedAt));
+    l.start();
+  };
+  const openPresenter = () => {
+    const w = window.open(presenterUrl(), 'slideforge-presenter', 'width=1180,height=780');
+    if (!w) say('Pop-ups are blocked. Allow them to use the Teacher Presenter.'); else w.focus();
+  };
   const openEntry = () => {
     const hash = room.manualHash();
     if (!hash) { say('The room is not open yet'); return; }
@@ -236,6 +348,14 @@ function Show() {
       )}
 
       {notes && <aside className="show-notes" aria-label="Speaker notes"><h4>Notes · slide {index + 1}</h4>{slide.notes || <span className="dim">No notes for this slide.</span>}</aside>}
+      <ScreenCover screen={screen} onResume={() => setScreen('none')} />
+      {overview != null && <Overview slides={deck.slides} current={index} at={overview} onGo={(i) => { setOverview(null); goIndex(i); }} onClose={() => setOverview(null)} />}
+      {notesCard && (
+        <NotesCard link={link.current} onClose={() => setNotesCard(false)}
+          onStop={() => { link.current?.stop(); repaint((n) => n + 1); }}
+          onCopy={(url) => { void navigator.clipboard?.writeText(url).then(() => say('Notes link copied'), () => say('Could not copy the link')); }} />
+      )}
+      {jump && <div className="show-jump" role="status" aria-label="Go to slide">Go to {jump}</div>}
       <div className="show-toast" role="status" aria-live="polite">{toast}</div>
 
       <div className={`show-bar${bar ? ' on' : ''}`} role="toolbar" aria-label="Slideshow controls">
@@ -243,6 +363,11 @@ function Show() {
         <button onClick={() => nextRef.current()} aria-label="Next"><ArrowRight size={16} /></button>
         <span className="show-count" aria-label={`Slide ${index + 1} of ${deck.slides.length}`}>{index + 1} / {deck.slides.length}</span>
         <button onClick={() => setNotes((v) => !v)} aria-pressed={notes} aria-label="Speaker notes (N)" title="Speaker notes (N)"><StickyNote size={16} /></button>
+        <button onClick={() => setOverview(index)} aria-label="Slide overview (O)" title="Slide overview (O). Type a number and Enter to jump"><LayoutGrid size={16} /></button>
+        <button onClick={() => runCmd(screen === 'black' ? 'resume' : 'black')} aria-pressed={screen === 'black'} aria-label="Black screen (B)" title="Black screen (B or .). W for white"><MonitorOff size={16} /></button>
+        <button onClick={openPresenter} aria-label="Teacher Presenter" title="Teacher Presenter: notes, next slide and controls in their own window"><Monitor size={16} /></button>
+        <button onClick={notesElsewhere} aria-pressed={notesCard} aria-label="Notes on another device" title="Notes on another device: a phone or prompt screen follows your notes"><Smartphone size={16} /></button>
+        <Elapsed since={startedAt} />
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
         {roomOn && <button onClick={() => setScoresOn((v) => !v)} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S)"><Trophy size={16} /></button>}
