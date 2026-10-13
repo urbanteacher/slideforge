@@ -3175,10 +3175,13 @@ html[data-ws="game"] #btnSorter { display: none; }
 html[data-ws="deck"] [data-ws]:not([data-ws~="deck"]),
 html[data-ws="game"] [data-ws]:not([data-ws~="game"]),
 html[data-ws="plan"] [data-ws]:not([data-ws~="plan"]),
+/* The Nodes studio shows what Activities shows (Present, Host live): a Nodes challenge is presented as a lesson's activities are. */
+html[data-ws="nodes"] [data-ws]:not([data-ws~="plan"]):not([data-ws~="nodes"]),
 html:not([data-ws]) [data-ws],
 body.ws-deck [data-ws]:not([data-ws~="deck"]),
 body.ws-game [data-ws]:not([data-ws~="game"]),
-body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
+body.ws-plan [data-ws]:not([data-ws~="plan"]),
+body.ws-nodes [data-ws]:not([data-ws~="plan"]):not([data-ws~="nodes"]) { display: none !important; }
 
 .rail-count {
   font-size: 10px; color: var(--ui-dim); flex: none;

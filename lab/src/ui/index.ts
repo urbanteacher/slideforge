@@ -3,6 +3,7 @@ export { FormatBar } from './controls/FormatBar';
 export { Menu } from './controls/Menu';
 export { saveSlide, slideClipboard } from './controls/SlideMenu';
 export { BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS } from './panels/Browse';
+export { NodesPanel, NodesList, focusNodes } from './panels/Nodes';
 export { Filmstrip } from './panels/Filmstrip';
 export { Gallery } from './panels/Gallery';
 export { Inspector } from './panels/Inspector';

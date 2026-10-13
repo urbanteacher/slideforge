@@ -863,6 +863,8 @@
     quiz.openGame = openGame;
     SF.Shell.register(quiz);
     SF.Shell.register(studioView('plan', 'activities', 'Activities'));
+    /* The Nodes studio: the lesson's Nodes challenges (docs/nodes-studio-plan.md). */
+    SF.Shell.register(studioView('nodes', 'nodes', 'Nodes'));
     document.documentElement.classList.add('lab-engine');
     seedShipped();
     /* The lesson the address asked for. A lab deck the app ships as a file
@@ -968,7 +970,7 @@
     classicOnly: classicOnly,
     /* The lab added a game or activity in the lesson: its studio's tab, where it is edited. */
     showStudio: function (view) {
-      var key = { lesson: 'deck', quiz: 'game', activities: 'plan' }[view];
+      var key = { lesson: 'deck', quiz: 'game', activities: 'plan', nodes: 'nodes' }[view];
       if (key && SF.Shell && SF.Shell.activate) SF.Shell.activate(key, { toast: false });
     },
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */

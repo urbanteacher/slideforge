@@ -6,7 +6,7 @@
    and forwards each action to whichever engine is active.
 
    An engine registers itself with SF.Shell.register(ws) and implements:
-     key            'deck' | 'game' | 'plan'
+     key            'deck' | 'game' | 'plan' | 'nodes'
      railLabel      heading above the rail
      notesLabel     label under the stage
      settingsLabel  label on the document-wide settings button
@@ -397,6 +397,7 @@
     document.body.classList.toggle('ws-deck', key === 'deck');
     document.body.classList.toggle('ws-game', key === 'game');
     document.body.classList.toggle('ws-plan', key === 'plan');
+    document.body.classList.toggle('ws-nodes', key === 'nodes');
     /* The key itself, not a deck/game coin flip: a third studio forced to
        'deck' shows the lesson toolbar over the top of its own. */
     document.documentElement.setAttribute('data-ws', key);
@@ -416,7 +417,7 @@
     syncChrome();
     ws.draw();
     if (!opts || opts.toast !== false) {
-      SF.toast(key === 'deck' ? 'Presentation' : key === 'plan' ? 'Lesson plan' : 'Game');
+      SF.toast(key === 'deck' ? 'Presentation' : key === 'plan' ? 'Lesson plan' : key === 'nodes' ? 'Nodes' : 'Game');
     }
   }
 
@@ -1756,13 +1757,14 @@
 
     var want = null;
     try { want = localStorage.getItem(LAST_WS); } catch (e) {}
-    active = workspaces[want === 'game' || want === 'plan' ? want : 'deck'] || workspaces.deck;
+    active = workspaces[want === 'game' || want === 'plan' || want === 'nodes' ? want : 'deck'] || workspaces.deck;
     /* Toggled, not added: the inline script has already guessed from the same
        key, and add() alone would leave both classes on the body if the shell
        landed somewhere else. Keep html[data-ws] in lockstep — CSS prefers it. */
     document.body.classList.toggle('ws-deck', active.key === 'deck');
     document.body.classList.toggle('ws-game', active.key === 'game');
     document.body.classList.toggle('ws-plan', active.key === 'plan');
+    document.body.classList.toggle('ws-nodes', active.key === 'nodes');
     document.documentElement.setAttribute('data-ws', active.key);
     var wsSwitchEl = $('wsSwitch');
     if (wsSwitchEl) {

@@ -51,7 +51,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
    labels that are hard-coded for Lesson studio in the HTML. */
 (function () {
   var attr = document.documentElement.getAttribute('data-ws');
-  var ws = attr === 'game' || attr === 'plan' ? attr : 'deck';
+  var ws = attr === 'game' || attr === 'plan' || attr === 'nodes' ? attr : 'deck';
   document.body.className = 'ws-' + ws;
   function ready() {
     var sw = document.getElementById('wsSwitch');
@@ -59,7 +59,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
       b.classList.toggle('on', b.getAttribute('data-go') === ws);
     });
     var rail = document.getElementById('railLabel');
-    if (rail) rail.textContent = ws === 'game' ? 'Questions' : ws === 'plan' ? 'Plan' : 'Slides';
+    if (rail) rail.textContent = ws === 'game' ? 'Questions' : ws === 'plan' ? 'Plan' : ws === 'nodes' ? 'Nodes' : 'Slides';
   }
   if (document.getElementById('wsSwitch')) ready();
   else document.addEventListener('DOMContentLoaded', ready);
@@ -77,6 +77,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
       <button data-go="deck">▤ Lesson studio</button>
       <button data-go="game">◈ Quiz studio</button>
       <button data-go="plan">◇ Activities</button>
+      <button data-go="nodes">◎ Nodes</button>
     </div>
 
     <div class="header-name" role="group" aria-label="Lesson name">

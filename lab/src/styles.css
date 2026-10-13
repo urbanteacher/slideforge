@@ -748,3 +748,9 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* The Nodes studio: its stage list, in the left pane and the empty studio. */
+.nodes-panel { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.nodes-blurb { margin: 0; color: var(--text); line-height: 1.45; font-size: 12px; }
+.nodes-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.nodes-list.compact { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: 6px; }
