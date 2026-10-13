@@ -4,9 +4,10 @@ The Lesson studio's show (`lab/src/show/`) and its Teacher Presenter window (`la
 `lab/src/presenter/controls.ts`: the show's keys, the `?` sheet and the Teacher Presenter's buttons all read that table, so they never drift;
 this page was written from it. Room and Phones controls need a live room (Host live); without one the key says so.
 
-- **The wall's bar** keeps only: previous, next, the slide count (with a snowflake and the teacher's slide while frozen), the join
-  card (once a room is live), Draw, overview, full screen and exit, plus the room buttons it already had (Show results, Close prompt, Quick poll, Questions, Scores,
-  Rehearse, Teacher entry, Share, Host live). Everything else is a key on the wall and a button in the Teacher Presenter.
+- **The wall's bar** has previous, next, the slide count (with a snowflake and the teacher's slide while frozen), Draw, overview, black
+  screen, the Teacher Presenter, notes on another device, the elapsed clock, full screen and exit. Once a room is live it adds the join
+  card, the room view (E), Scores, Show results, Close prompt, Quick poll, Questions, Rehearse, Teacher entry and Share. Speaker notes
+  are not on the bar (N still shows them on the wall); everything else is a key on the wall and a button in the Teacher Presenter.
 - **The Teacher Presenter** groups its buttons Slides, Screen, Room and Phones. Each button's title names its wall key, and a button is
   pressed while its control is on. A state line above them says whether the wall is frozen, black or white, being drawn on, whether the phones
   are blanked (or going dark, with the seconds left), the floor, the room view, the join card and reactions. The window's keys are the
