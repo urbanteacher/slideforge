@@ -117,3 +117,12 @@ Repeat steps 1 to 4 with a lesson that has a few ordinary slides and, on them, *
 4. Refresh a phone mid-prompt: it gets the prompt back and its reply. Press **Close** in the show bar: the phones are thanked and the wall shows the slide again. Go to the next slide and back: the prompt opens fresh.
 5. With **Hold** set on a poll or scale (feedback settings), the wall shows only "n of m answered" until you press **Show** in the show bar.
 6. Add a Ranking challenge game (or an activity) to the same lesson: Host live now opens the classic room.
+
+## Teams, class report, Rehearse and Draw (added 13 October 2026, M11b)
+
+Use a lesson with a Multiple choice game and a feedback slide, and open it in the studio's show and room.
+
+1. **Teams.** In the Slide panel, Game section, set **Room** to Teams and type two to six team names (Owls, Foxes, Herons). Host live: the lobby lists each team with a colour and its players. Join from two phones (each picks a team). Press **Add a class list**, paste three names, choose a team and press Add names: they appear under that team. After a question the standings panel shows **Team points** with each team's gain; Scores (S) and the final board list the teams first.
+2. **Rehearse.** In the show bar press the people button, choose 8, 16 or 24. The sample learners join the room by its PIN and the lobby fills. Press Start: they answer each question over the time it allows, most right and some wrong, and reply to the feedback slide. Press the button again and **Send them home**: they leave.
+3. **Class report.** End the room (End, or Esc). Press **Class report**: each question with its accuracy and who answered what, attendance and points, and a note that on the free plan the record lasts only until the next deploy or restart. Download the two CSVs and open them in a spreadsheet. A name that begins with = is written with a quote in front.
+4. **Draw.** Press D (or the pen button). Draw with the pen, switch to the highlighter and a colour, erase a mark, press Z to undo and X to clear. The marks stay put when the window is resized. Go to the next slide: the marks are gone. Press D or Esc to put the pen away; a click on the slide is Next again.
