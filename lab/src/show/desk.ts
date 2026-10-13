@@ -45,7 +45,7 @@ export function presenterState(i: DeskInput): PresenterState {
       open: w?.view === 'question' || fb,
       answered: q ? q.answered : 0, total: q ? q.players : (w?.players.length ?? 0),
       revealed: w?.view === 'reveal', canClose: i.room.canClose, canShow: i.room.canShow,
-      stage: w?.activity?.stage ? { name: w.activity.stage.name, wall: w.activity.stage.wall, written: w.activity.written, help: w.activity.help } : null,
+      ...(w?.activity?.stage ? { stage: { name: w.activity.stage.name, wall: w.activity.stage.wall, written: w.activity.written, help: w.activity.help } } : {}),
     };
   }
   return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room };
