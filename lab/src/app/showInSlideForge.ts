@@ -1,4 +1,4 @@
-import { openStudioShow } from '../show/state';
+import { openStudioShow } from '../show';
 import { useStore } from '../store';
 import { act, hasShell } from './ShellRow';
 
