@@ -145,7 +145,7 @@ test('manual.html\'s window protocol is served by the lab host: names, answers b
   // The window's end of the channel: what the host posts is collected, and a command is delivered by `send`.
   const posted: Record<string, any>[] = [];
   const hostEnd: ChannelLike = { onmessage: null, postMessage: (m) => { posted.push(m as Record<string, any>); }, close: () => {} };
-  const bridge = new ManualBridge(host, { makeChannel: (name) => { assert.equal(name, `sf-manual-${bridge.key}`); return hostEnd; } });
+  const bridge: ManualBridge = new ManualBridge(host, { makeChannel: (name): ChannelLike => { assert.equal(name, `sf-manual-${bridge.key}`); return hostEnd; } });
   assert.match(bridge.key, /^[a-f0-9]{32}$/, 'the key manual.html accepts');
   let seq = 0;
   const send = (action: string, extra: Record<string, unknown> = {}, id = `m${++seq}-1`) => hostEnd.onmessage!({ data: { type: 'sf-manual-command', action, id, ...extra } });
