@@ -206,3 +206,19 @@ test('the lab host sends what the classic host sent for an Odd one out game', as
   assert.equal(host.state.revealed.length, 4);
   assert.ok(host.state.ended);
 });
+
+// Predict the outcome (format 'predict-outcome', the choice engine with `predict`). The question frame carries
+// `predict: true`; the first Next locks the predictions (`closeAnswers`), the second reveals; the reveal carries the
+// host's bet gains (right and sure x1.5, right x1, wrong and sure -x0.5, wrong and unsure 0).
+test('the lab host sends what the classic host sent for a Predict the outcome game', async () => {
+  const { host, classic, lab } = await replay(load('game-predict-outcome'), 'predict-outcome');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 2);
+  for (const q of asked) { assert.equal(q.predict, true); assert.equal(q.confidence, true); }
+  const t = lab.map((f) => f.t);
+  assert.deepEqual(t.filter((x) => x === 'closeAnswers' || x === 'reveal'), ['closeAnswers', 'reveal', 'closeAnswers', 'reveal'], 'lock, then reveal, for each question');
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal')[0].gains, [[1, 1500], [2, 0], [3, -500], [4, 0]]);
+  assert.equal(host.state.revealed.length, 2);
+  assert.ok(host.state.ended);
+});
