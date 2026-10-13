@@ -399,6 +399,30 @@
     return labDeck && labDeck.sourceId && SF.Store && SF.Store.get ? SF.Store.get(labDeck.sourceId) : null;
   }
 
+  /* Why the lesson must stay SlideForge's own show and room, whatever the lab says: a shown slide of the lesson it
+     was made from that the lab cannot build (a motion, quiz, explain, results, spot-the-fake or blank slide, or a
+     game the lab has no copy of), which `ordered` below puts back among the lab's. The studio's show and room
+     never see those slides, so they would be lost there (M14). '' when there is none. A game slide whose saved
+     game is gone is not counted: SlideForge's show leaves it out too ("Missing game"). */
+  function classicOnly() {
+    var a = api;
+    var labDeck = a && a.getDeck ? a.getDeck() : null;
+    var source = sourceLesson(labDeck);
+    if (!source || !Array.isArray(source.slides) || !a.cannotBuild) return '';
+    var built = {};
+    (labDeck.slides || []).forEach(function (s) { if (s.sourceSlideId) built[s.sourceSlideId] = true; });
+    var keep = a.cannotBuild(source.slides).filter(function (id) { return !built[id]; });
+    var games = SF.GameStore && SF.GameStore.get ? SF.GameStore.get : function () { return null; };
+    var shown = source.slides.filter(function (s) {
+      if (!s || s.hidden || keep.indexOf(s.id) < 0) return false;
+      return s.type !== 'game' || !!(s.gameId && (games(s.gameId) || (source.games && source.games[s.gameId])));
+    });
+    if (!shown.length) return '';
+    var first = shown[0];
+    return '"' + (first.title || first.type) + '" is a SlideForge ' + first.type + ' slide the studio does not build' +
+      (shown.length > 1 ? ' (and ' + (shown.length - 1) + ' more)' : '');
+  }
+
   function pictureSlide(still) {
     var s = SF.makeSlide('image');
     s.id = still.id;
@@ -671,7 +695,7 @@
   function presentInStudio(first) {
     var a = api;
     if (!studioPresentOn() || !a || !a.presentInStudio || !a.whyNotPresentInStudio) return false;
-    var why = a.whyNotPresentInStudio();
+    var why = a.whyNotPresentInStudio() || classicOnly();
     if (why) {
       if (window.console) console.info('Present: the classic show, because ' + why);
       return false;
@@ -749,7 +773,7 @@
   function hostLive() {
     var a = api;
     if (a && a.hostInStudio && a.whyNotInStudio) {
-      var why = a.whyNotInStudio();
+      var why = a.whyNotInStudio() || classicOnly();
       if (!why) {
         /* Full screen is asked for now, inside the click. */
         enterStudioShow();
@@ -1061,6 +1085,7 @@
     enabled: enabled, install: install, ready: ready, failed: failed,
     /* The trial switch for the studio's slideshow (M15). */
     studioPresent: studioPresentOn, setStudioPresent: setStudioPresent,
+    classicOnly: classicOnly,
     /* The lab added a game or activity in the lesson: its studio's tab, where it is edited. */
     showStudio: function (view) {
       var key = { lesson: 'deck', quiz: 'game', activities: 'plan' }[view];
