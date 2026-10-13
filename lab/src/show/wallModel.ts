@@ -6,6 +6,7 @@
 
 import { boardWallOf, styleFor, teamBoardOf, type BoardWallBase, type Mech, type RoomState, type TeamRow, type WallDetail } from '../live';
 import { feedbackWallOf, type FeedbackWall } from './feedbackWall';
+import { activityWallOf, type ActivityWall } from './activityWall';
 import { railOf, type Rail } from './rail';
 import { roundWallOf, sprintWallOf, type RoundWall, type SprintWall } from './speedWall';
 import type { Step } from './steps';
@@ -59,6 +60,8 @@ export interface Wall {
   speed: { sprint: SprintWall | null; round: RoundWall | null };
   /** A board the wall plays (view `board`, live/boards): its kind's view of its state, with the teacher's buttons. */
   boardWall: BoardWallBase | null;
+  /** An activity on the wall (live/activities): a routine's track, stage, clock and brief, its note count, idea box and spotlights. */
+  activity: ActivityWall | null;
 }
 
 export interface WallInput {
@@ -111,7 +114,8 @@ export function wallOf(i: WallInput): Wall {
   const teams = teamBoardOf(room);
   const rail = railOf({ board, teams, teamBefore: i.teamBefore, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
   const speed = { sprint: null, round: room.speed.round && step?.room.gameId === room.speed.round.gameId ? roundWallOf(room.speed.round) : null };
-  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, speed, boardWall: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const act = step?.room.act && room.activity?.slideId === step.room.id ? activityWallOf(room.activity, room.feedback) : null;
+  const base = { join, players, teams, question: null, feedback: null, mech: NO_MECH, speed, boardWall: null, activity: act, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };
@@ -149,6 +153,8 @@ export function wallOf(i: WallInput): Wall {
   const asked = step?.room.feedback, open = room.feedback;
   if (asked && open && open.prompt.id === asked.id && !i.scoresOn) return { ...base, rail: null, feedback: feedbackWallOf(open), view: 'feedback' };
   if (step?.room.results || i.scoresOn) return { ...base, mech: { race: room.mech.race, boss: room.mech.boss, drip: null }, view: 'leaderboard' };
+  // A routine's stage with its idea box open: the box takes the standings' place.
+  if (act?.ideas) return { ...base, rail: null, view: 'slide' };
   return { ...base, view: 'slide' };
 }
 

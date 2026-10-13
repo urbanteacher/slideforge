@@ -422,3 +422,25 @@
 .bowl-team { display: flex; align-items: center; gap: calc(var(--u) * 12); padding: calc(var(--u) * 8) calc(var(--u) * 16); background: var(--field-2); border-radius: calc(var(--u) * 12); font-size: calc(var(--u) * 26); }
 .bowl-team.won { outline: 2px solid #4ade80; }
 .bowl-score { font-variant-numeric: tabular-nums; color: var(--accent-2); font-weight: 800; }
+
+/* An activity on the wall (ActivityViews.tsx): the stage strip along the foot, the idea box in the rail, the spotlights. */
+.wall-activity { position: absolute; left: calc(var(--u) * 48); right: calc(var(--u) * 48); bottom: calc(var(--u) * 40); display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--u) * 12) calc(var(--u) * 28); padding: calc(var(--u) * 18) calc(var(--u) * 28); background: rgba(14,14,16,.92); border-radius: calc(var(--u) * 18); pointer-events: auto; }
+.wa-track { display: flex; gap: calc(var(--u) * 10); list-style: none; margin: 0; padding: 0; }
+.wa-track li { padding: calc(var(--u) * 6) calc(var(--u) * 16); border-radius: 999px; background: rgba(255,255,255,.08); color: var(--muted); }
+.wa-track li span { margin-left: calc(var(--u) * 10); opacity: .7; }
+.wa-track li.on { background: var(--accent); color: var(--bg); }
+.wa-track li.done { opacity: .55; }
+.wa-stage, .wa-brief { margin: 0; }
+.wa-brief { flex-basis: 100%; color: var(--muted); }
+.wa-count { color: var(--accent-2); }
+.wa-clock { margin-left: auto; display: flex; align-items: center; gap: calc(var(--u) * 14); font-variant-numeric: tabular-nums; }
+.wa-clock strong { font-size: calc(var(--u) * 56); }
+.wa-clock.hurry strong { color: var(--accent-2); }
+.wa-clock.done strong { color: rgb(230,90,80); }
+.wa-ideas { pointer-events: auto; }
+.wa-ideas ul { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--u) * 12); }
+.wa-ideas li { display: flex; gap: calc(var(--u) * 12); align-items: start; justify-content: space-between; }
+.wa-spots { position: absolute; top: calc(var(--u) * 40); left: calc(var(--u) * 48); display: flex; gap: calc(var(--u) * 20); max-width: 70vw; pointer-events: auto; }
+.wa-spots figure { margin: 0; padding: calc(var(--u) * 18) calc(var(--u) * 24); background: rgba(14,14,16,.92); border-left: calc(var(--u) * 8) solid var(--accent); border-radius: calc(var(--u) * 12); }
+.wa-spots figcaption { color: var(--muted); font-size: calc(var(--u) * 36); }
+.wa-spots blockquote { margin: 0; font-size: calc(var(--u) * 44); }

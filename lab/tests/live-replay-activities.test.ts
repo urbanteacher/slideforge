@@ -5,18 +5,8 @@
 // in live-replay.test.ts (ids by first use, `report` dropped, a repeated `at` or `question` folded).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { showFromDeck } from '../src/live';
-import { optionsFor, type ActivityEntry } from '../src/designs/engage';
-import { LAYOUT_STYLES } from '../src/layouts';
-import { assertSame, load, replayShow } from './replay-kit';
-
-const catalogue = (JSON.parse(readFileSync(resolve(process.cwd(), 'src/assets/activities.json'), 'utf8')) as { activities: ActivityEntry[] }).activities;
-export const activityDeck = (key: string, look: 'lab' | 'slideforge' = 'lab') => {
-  const entry = catalogue.find((a) => a.key === key)!;
-  return optionsFor(entry).find((o) => o.id === look)!.make(LAYOUT_STYLES[0]);
-};
+import { activityDeck, assertSame, load, replayShow } from './replay-kit';
 
 const RECORDED = ['do-now-bell-ringer', 'exit-ticket', 'flipped-instruction', 'hook-and-predict', 'jigsaw-expert-groups', 'muddiest-point',
   'reflection-ladder', 'socratic-seminar', 'structured-reflection-protocol', 'think-pair-share', 'think-pair-square-share', 'word-splash'];

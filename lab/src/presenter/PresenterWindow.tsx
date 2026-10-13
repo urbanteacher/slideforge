@@ -115,6 +115,8 @@ export function PresenterWindow() {
               <p>{room.players} {room.players === 1 ? 'player' : 'players'} · {room.view}</p>
               {room.open && <p>{room.answered} of {room.total} answered</p>}
               {room.view === 'reveal' || room.revealed ? <p>Answer revealed</p> : null}
+              {room.stage && <p>{room.stage.name} · {room.stage.wall}{room.stage.written ? ` · ${room.stage.written}` : ''}</p>}
+              {room.stage && room.stage.help > 0 && <p className="pw-help" role="status">{room.stage.help} {room.stage.help === 1 ? 'asks' : 'ask'} for help</p>}
             </div>
           )}
         </aside>
@@ -126,6 +128,7 @@ export function PresenterWindow() {
         {room && <button onClick={() => send('reveal')} disabled={!room.open}>Reveal</button>}
         {room?.canShow && <button onClick={() => send('open')}>Show results</button>}
         {room?.canClose && <button onClick={() => send('close')}>Close prompt</button>}
+        {room?.stage && <button onClick={() => send('more')}>+30s</button>}
         <button onClick={() => send(st.screen === 'black' ? 'resume' : 'black')} aria-pressed={st.screen === 'black'}>Black</button>
         <button onClick={() => send(st.screen === 'white' ? 'resume' : 'white')} aria-pressed={st.screen === 'white'}>White</button>
         <form onSubmit={(e) => { e.preventDefault(); const n = Number(jump); if (n >= 1) send('goto', n); setJump(''); }}>

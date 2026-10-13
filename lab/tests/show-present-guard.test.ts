@@ -30,7 +30,10 @@ test('a registry-style game is presented in the studio, and a hidden blocker doe
 
 test('an unported game, an activity, a live figure and a SlideForge check keep the lesson on classic', () => {
   assert.match(whyNotPresentInStudio(deckOf(slide('a', 'Intro'), slide('r', 'Order', game('mind-reveal', 'question')))), /"Air" is mind-reveal, not/);
-  assert.match(whyNotPresentInStudio(deckOf(slide('x', 'Think', undefined, { activity: { key: 'think-pair-share', page: 0 } }))), /"Think" is an activity/);
+  // An activity the room runs (M10) is the studio's to show; one it does not (a game's activity without its game, an unknown one) is not.
+  assert.equal(whyNotPresentInStudio(deckOf(slide('x', 'Think', undefined, { activity: { key: 'think-pair-share', page: 0 } }))), '');
+  assert.match(whyNotPresentInStudio(deckOf(slide('x', 'Quiz', undefined, { activity: { key: 'multiple-choice-quiz', page: 0 } }))), /"Quiz" is the activity .*, a game without its game/);
+  assert.match(whyNotPresentInStudio(deckOf(slide('x', 'Odd', undefined, { activity: { key: 'no-such-activity', page: 0 } }))), /"Odd" is an activity \(no-such-activity\) SlideForge's catalogue does not have/);
   assert.match(whyNotPresentInStudio(deckOf(slide('f', 'Graph', undefined, { liveFigure: true }))), /"Graph" has a live figure/);
   const layer = { id: 'l', kind: 'quiz', visible: true } as never;
   assert.match(whyNotPresentInStudio(deckOf(slide('c', 'Check', undefined, { layers: [layer] }))), /"Check" holds a SlideForge check/);

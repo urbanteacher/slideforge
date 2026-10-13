@@ -40,6 +40,11 @@ export interface RoomApi {
   stopClock: () => void;
   /** A command to the board on the wall (its buttons). */
   boardCommand: (action: string, card?: number) => void;
+  /** A timed routine (live/activities): the slide built its next stage, so the room enters it (false: no stage to come); more time; an idea in the spotlight. */
+  stageNext: () => boolean;
+  extendStage: (seconds?: number) => void;
+  spotlight: (key: string) => void;
+  unspot: (sid?: string) => void;
   /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
   closeFeedback: () => void;
   showFeedback: () => void;
@@ -149,6 +154,10 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     chainLink: (text) => { host.current?.chainLink(text); sync(); },
     stopClock: () => { host.current?.stopClock(); sync(); },
     boardCommand: (action, card) => { host.current?.boardCommand(action, card); sync(); },
+    stageNext: () => { const ok = host.current?.stageNext() ?? false; sync(); return ok; },
+    extendStage: (seconds) => { host.current?.extendStage(seconds); sync(); },
+    spotlight: (key) => { host.current?.spotlight(key); sync(); },
+    unspot: (sid) => { host.current?.unspot(sid); sync(); },
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),
     end,

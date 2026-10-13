@@ -29,6 +29,7 @@ import { SpeedClock, SprintBoard } from './SpeedViews';
 import { BoardView } from './BoardViews';
 import { boardRevealed } from '../live';
 import { nextAction, wallOf } from './wallModel';
+import { ActivityStrip } from './ActivityViews';
 
 const BAR_HIDE_MS = 2600;
 /** The standings rail's width, in pixels of a 1920-wide screen (classic's rail is 300 of 720 beside the slide). */
@@ -165,6 +166,8 @@ function Show() {
     if (act === 'start') { r.begin(stepAt(steps, p.index)); return; }
     if (act === 'wait' && (r.at < 0 || r.state.phase === 'lobby')) { say('Waiting for players to join'); return; }
     if (p.settle()) return;
+    // A timed routine (live/activities): the room enters its next stage, and the slide builds it (its column, its clock).
+    if (act === 'advance' && steps[r.at]?.room.act?.stages.length && r.stageNext()) { p.build(); return; }
     // A build of the slide on an open question is a step of its help (Emoji guess), which the room releases with it.
     if (p.build()) { if (act === 'wait' || act === 'reveal') r.release(); return; }
     if (act === 'ask' || act === 'reveal' || act === 'advance') r.next();
@@ -205,6 +208,7 @@ function Show() {
     else if (cmd === 'reveal') { if (roomOn && d.wall?.view === 'question') r.next(); }
     else if (cmd === 'close') { if (roomOn) r.closeFeedback(); }
     else if (cmd === 'open') { if (roomOn) r.showFeedback(); }
+    else if (cmd === 'more') { if (roomOn) r.extendStage(30); }
     else if (cmd === 'end') exit();
   }, [roomOn, goIndex, exit]);
   runRef.current = runCmd;
@@ -395,6 +399,7 @@ function Show() {
           {!finished && ['question', 'reveal', 'leaderboard'].includes(wall.view) && <MechanicViews mech={wall.mech} scores={wall.view === 'leaderboard'} />}
           {rail && <RailView rail={rail} />}
           {!finished && ['feedback', 'reveal'].includes(wall.view) && wall.feedback && <FeedbackView fb={wall.feedback} />}
+          {!finished && ['slide', 'feedback'].includes(wall.view) && wall.activity && <ActivityStrip a={wall.activity} onSpot={room.spotlight} onUnspot={room.unspot} onMore={() => room.extendStage(30)} />}
           {(finished || wall.view === 'ended') && (
             <Ended wall={wall} closing={!room.state.ended} onClose={close}
               onReport={room.state.session ? () => setReportOpen(true) : undefined}

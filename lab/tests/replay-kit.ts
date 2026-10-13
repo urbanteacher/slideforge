@@ -5,6 +5,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMessage } from '../src/live';
 import { bossHpOf, type Mechanic } from '../src/live/mechanics';
+import { optionsFor, type ActivityEntry } from '../src/designs/engage';
+import { LAYOUT_STYLES } from '../src/layouts';
 
 export type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
 export type Step = { ms: number; what: string; answer?: { id?: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; fill?: number[]; sort?: number[] }; names?: string[]; team?: number; recipient?: unknown; choice?: number; pid?: number; text?: string; button?: string };
@@ -154,3 +156,11 @@ export const click = (labels: Record<string, string>, card?: (label: string, cls
   assert.ok(press, `a button the board has: ${label}`);
   assert.equal(host.boardCommand(press.action, press.card), true);
 };
+
+
+// The activities (live-replay-activities.test.ts, live-activities.test.ts): an activity added to a lab deck as the lab adds it, in either look.
+export const activityCatalogue = (JSON.parse(readFileSync(resolve(process.cwd(), 'src/assets/activities.json'), 'utf8')) as { activities: ActivityEntry[] }).activities;
+export function activityDeck(key: string, look: 'lab' | 'slideforge' = 'lab') {
+  const entry = activityCatalogue.find((a) => a.key === key)!;
+  return optionsFor(entry).find((o) => o.id === look)!.make(LAYOUT_STYLES[0]);
+}

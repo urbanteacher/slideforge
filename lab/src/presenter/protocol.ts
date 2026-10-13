@@ -8,8 +8,8 @@ import type { Deck } from '../core';
 export const PRESENTER_CHANNEL = 'slideforge.lab.presenter.v1';
 
 /** What the window may ask of the show. `goto` carries `n`, a 1-based slide number of the shown deck. */
-export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume';
-export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume'];
+export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more';
+export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more'];
 
 /** The room, as the desk shows it; null in a show with no room. */
 export interface PresenterRoom {
@@ -26,6 +26,8 @@ export interface PresenterRoom {
   /** A feedback prompt that can be closed, and a held one that can be shown. */
   canClose: boolean;
   canShow: boolean;
+  /** A routine's stage on the wall (live/activities): its name and job, the note count, and how many asked for help (only the desk says it). */
+  stage?: { name: string; wall: string; written: string; help: number } | null;
 }
 
 export type Screen = 'none' | 'black' | 'white';

@@ -48,7 +48,8 @@ test('canHostInStudio: anything the studio room cannot run sends the lesson to t
   const no = (extra: Slide[]) => canHostInStudio(choiceDeck(extra));
   assert.match(no([slide('t', 'Tricky', game('question', { id: 'gm2', format: 'mind-reveal', label: 'Order', key: '0' }))]).reason, /"Order" is mind-reveal/);
   assert.match(no([slide('p', 'Poll', game('cover'), { feedback: { kind: 'poll', prompt: 'Ready?', options: ['Yes', 'No'] } })]).reason, /game slide that also asks the room for poll feedback/);
-  assert.match(no([slide('a', 'Brainstorm', undefined, { activity: { key: 'think-pair-share', page: 0 } })]).reason, /is an activity/);
+  assert.match(no([slide('a', 'Brainstorm', undefined, { activity: { key: 'no-such-activity', page: 0 } })]).reason, /is an activity \(no-such-activity\)/);
+  assert.deepEqual(no([slide('a', 'Think', undefined, { activity: { key: 'think-pair-share', page: 0 } })]), { ok: true, reason: '' }, 'an activity the room runs (M10)');
   assert.match(no([slide('f', 'Figure', undefined, { liveFigure: true })]).reason, /live figure/);
   assert.match(no([slide('c', 'Check', undefined, { layers: [layer('quiz')] })]).reason, /SlideForge check/);
   const tf = choiceDeck();
