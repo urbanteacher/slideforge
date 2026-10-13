@@ -50,8 +50,8 @@ test('canHostInStudio: a Type answer game is hosted in the studio, with the othe
   assert.deepEqual(canHostInStudio(typeDeck()), { ok: true, reason: '' });
   const mc = slide('mq', 'MQ', { id: 'gmc', format: 'choice', label: 'Air', role: 'question', key: '0', settings: {}, quiz: { type: 'quiz', style: 'choice', input: 'choice', question: 'Q?', options: ['A', 'B'], correct: 0 } } as never);
   assert.equal(canHostInStudio(typeDeck([mc])).ok, true, 'Multiple choice and Type answer in one lesson');
-  const ranking = slide('rk', 'Order', { id: 'grk', format: 'ranking', label: 'Order', role: 'question', key: '0', settings: {} } as never);
-  assert.match(canHostInStudio(typeDeck([ranking])).reason, /"Order" is ranking, not Multiple choice, True or false, Type answer or Slider/);
+  const ranking = slide('rk', 'Order', { id: 'grk', format: 'bingo', label: 'Order', role: 'question', key: '0', settings: {} } as never);
+  assert.match(canHostInStudio(typeDeck([ranking])).reason, /"Order" is bingo, not Multiple choice, True or false/);
   // A Type answer game whose question is not typed (or a choice game whose question is) is not what the room runs.
   const odd = typeDeck();
   odd.slides[1] = slide('q0', 'Q', game('question', { key: '0', quiz: { type: 'quiz', style: 'type', input: 'choice', question: 'Q?', options: ['A', 'B'], correct: 0 } }));

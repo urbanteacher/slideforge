@@ -24,7 +24,7 @@ import { resolve } from 'node:path';
 import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMessage } from '../src/live';
 
 type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
-type Step = { ms: number; what: string; answer?: { playerId: number; choice?: number; text?: string; value?: number }; names?: string[]; team?: number };
+type Step = { ms: number; what: string; answer?: { playerId: number; choice?: number; text?: string; value?: number; order?: number[] }; names?: string[]; team?: number };
 const root = resolve(process.cwd(), '..');
 type Rec = { host: Frame[]; steps: Step[] };
 const load = (name: string) => JSON.parse(readFileSync(resolve(root, `tests/fixtures/sessions/${name}.json`), 'utf8')) as Rec;
@@ -78,6 +78,15 @@ function normalise(frames: Record<string, unknown>[]): Record<string, unknown>[]
   return out;
 }
 
+/** The frames are the same, in order; on a difference the first differing frame is the message (not the whole list). */
+function assertSame(lab: Record<string, unknown>[], classic: Record<string, unknown>[]) {
+  const show = (f: unknown) => JSON.stringify(f, (_k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b))) : v));
+  const i = classic.findIndex((f, k) => show(f) !== show(lab[k]));
+  if (i >= 0) console.log(classic.slice(Math.max(0, i - 4), i + 1).map((f) => f.t).join(','), '|', lab.slice(Math.max(0, i - 4), i + 2).map((f) => f.t).join(','));
+  if (i >= 0) assert.fail(`frame ${i} differs\n classic ${show(classic[i])}\n lab     ${show(lab[i])}`);
+  assert.equal(lab.length, classic.length, 'the lab sent frames classic did not');
+}
+
 /** Feed a recording to the lab host and return it, the frames it sent, and the classic frames, normalised. */
 async function replay(rec: Rec, format: string) {
   const sock = new Recorded();
@@ -98,7 +107,7 @@ async function replay(rec: Rec, format: string) {
     else if (s.what === 'manual:add') host.manualAdd(s.names!, s.team ?? 0);
     else if (s.what === 'begin') host.begin();
     else if (s.what === 'next') host.next();
-    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!);
+    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.order ? { order: s.answer!.order } : s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!);
     else if (s.what === 'stop') ended = host.end();
   }
   await ended;
@@ -110,7 +119,7 @@ async function replay(rec: Rec, format: string) {
 test('the lab host sends what the classic host sent for a Multiple choice game', async () => {
   const { host, classic, lab } = await replay(load('game-choice'), 'choice');
   assert.equal(classic.length, 23, 'host, manualAdd, begin, each slide (at, round, idle or question), two answers by key, three reveals, finish, end');
-  assert.deepEqual(lab, classic);
+  assertSame(lab, classic);
   // The room as the host saw it: the relay's scores, and the questions it revealed.
   assert.equal(host.state.revealed.length, 3);
   assert.equal(host.state.scores[1], 3000, 'Ada answered all three right');
@@ -125,7 +134,7 @@ test('the lab host sends what the classic host sent for a True or false game', a
   assert.ok(!rec.host.some((f) => f.dir === 'send' && f.data?.t === 'showdown'), 'the plain True or false recording has no showdown');
   const { host, classic, lab } = await replay(rec, 'truefalse');
   assert.equal(classic.length, 23, 'the same frames as the Multiple choice game: host, manualAdd, begin, six steps, answers, reveals, finish, end');
-  assert.deepEqual(lab, classic);
+  assertSame(lab, classic);
   const asked = lab.filter((f) => f.t === 'question');
   assert.equal(asked.length, 3);
   for (const q of asked) { assert.deepEqual(q.options, ['True', 'False']); assert.equal(q.style, 'truefalse'); assert.equal(q.input, 'choice'); }
@@ -140,7 +149,7 @@ test('the lab host sends what the classic host sent for a True or false game', a
 // starter the recorder hosted.
 test('the lab host sends what the classic host sent for a Type answer game', async () => {
   const { host, classic, lab } = await replay(load('game-type'), 'type');
-  assert.deepEqual(lab, classic);
+  assertSame(lab, classic);
   const asked = lab.filter((f) => f.t === 'question');
   assert.equal(asked.length, 3);
   for (const q of asked) { assert.deepEqual(q.options, []); assert.equal(q.style, 'type'); assert.equal(q.input, 'text'); }
@@ -156,11 +165,28 @@ test('the lab host sends what the classic host sent for a Type answer game', asy
 // verdicts by the tolerance, and the teacher's number entry as `value`.
 test('the lab host sends what the classic host sent for a Slider game', async () => {
   const { host, classic, lab } = await replay(load('game-slider'), 'slider');
-  assert.deepEqual(lab, classic);
+  assertSame(lab, classic);
   const asked = lab.filter((f) => f.t === 'question');
   assert.equal(asked.length, 2);
   for (const q of asked) { assert.deepEqual(q.options, []); assert.equal(q.style, 'slider'); assert.equal(q.input, 'number'); assert.ok(q.range); }
   assert.ok(lab.some((f) => f.t === 'manualAnswer' && f.value === 1990), "the teacher's number entry is sent as value");
+  assert.equal(host.state.revealed.length, 2);
+  assert.ok(host.state.ended);
+});
+
+// Ranking (format 'ranking', style 'order'). The wire is a question with input 'order' (the items in their right order),
+// the teacher's entry as `order`, and a reveal that carries the host's part marks: `gains` of round(10 x the share in
+// place) per answer, beside the verdicts (right only when every item is in place). Two phones answered the right
+// order, one the reverse, and Dee was entered by key with the reverse.
+test('the lab host sends what the classic host sent for a Ranking game', async () => {
+  const { host, classic, lab } = await replay(load('game-ranking'), 'ranking');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 2);
+  for (const q of asked) { assert.equal(q.style, 'order'); assert.equal(q.input, 'order'); assert.equal((q.options as string[]).length, 4); }
+  assert.ok(lab.some((f) => f.t === 'manualAnswer' && Array.isArray(f.order)), "the teacher's entry is sent as an order");
+  const reveals = lab.filter((f) => f.t === 'reveal');
+  assert.deepEqual(reveals[0].gains, [[1, 10], [2, 0], [3, 10], [4, 0]]);
   assert.equal(host.state.revealed.length, 2);
   assert.ok(host.state.ended);
 });

@@ -28,12 +28,12 @@ const sliderDeck = (extra: Slide[] = [], quiz: Record<string, unknown> = quizOf(
 });
 
 test('the registry: four styles, found by format and by question; a question no style takes is not asked', () => {
-  assert.deepEqual(STYLES.map((s) => s.key), ['choice', 'truefalse', 'type', 'slider']);
+  assert.deepEqual(STYLES.map((s) => s.key).slice(0, 4), ['choice', 'truefalse', 'type', 'slider']);
   assert.equal(styleForFormat('slider')?.key, 'slider');
   assert.equal(styleForFormat('time-traveler'), undefined, 'Time traveler is another format on the same engine');
   assert.equal(styleOf({ style: 'slider', input: 'number' })?.key, 'slider');
   assert.equal(styleOf({ style: 'truefalse', input: 'choice' })?.key, 'truefalse');
-  assert.equal(styleOf({ style: 'ranking', input: 'order' }), undefined);
+  assert.equal(styleOf({ style: 'zzz', input: 'zzz' }), undefined);
   for (const s of STYLES) assert.ok(s.name && s.formats.length && typeof s.mark === 'function' && typeof s.wall === 'function', s.key);
 });
 
@@ -42,7 +42,7 @@ test('canHostInStudio: a Slider game is hosted, with the other styles; Time trav
   const mc = slide('mq', 'MQ', { id: 'gmc', format: 'choice', label: 'Air', role: 'question', key: '0', settings: {}, quiz: { type: 'quiz', style: 'choice', input: 'choice', question: 'Q?', options: ['A', 'B'], correct: 0 } } as never);
   assert.equal(canHostInStudio(sliderDeck([mc])).ok, true);
   const tt = slide('tt', 'TT', { id: 'gtt', format: 'time-traveler', label: 'Timeline', role: 'question', key: '0', settings: {} } as never);
-  assert.match(canHostInStudio(sliderDeck([tt])).reason, /"Timeline" is time-traveler, not Multiple choice, True or false, Type answer or Slider/);
+  assert.match(canHostInStudio(sliderDeck([tt])).reason, /"Timeline" is time-traveler, not Multiple choice, True or false/);
   assert.match(canHostInStudio(sliderDeck([], quizOf({ input: 'choice' }))).reason, /has a question that is not Slider/);
 });
 

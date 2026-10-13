@@ -46,7 +46,7 @@ test('canHostInStudio: a lesson of Multiple choice games is hosted in the studio
 
 test('canHostInStudio: anything the studio room cannot run sends the lesson to the classic host', () => {
   const no = (extra: Slide[]) => canHostInStudio(choiceDeck(extra));
-  assert.match(no([slide('t', 'Tricky', game('question', { id: 'gm2', format: 'ranking', label: 'Order', key: '0' }))]).reason, /"Order" is ranking/);
+  assert.match(no([slide('t', 'Tricky', game('question', { id: 'gm2', format: 'bingo', label: 'Order', key: '0' }))]).reason, /"Order" is bingo/);
   assert.match(no([slide('p', 'Poll', game('cover'), { feedback: { kind: 'poll', prompt: 'Ready?', options: ['Yes', 'No'] } })]).reason, /game slide that also asks the room for poll feedback/);
   assert.match(no([slide('a', 'Brainstorm', undefined, { activity: { key: 'think-pair-share', page: 0 } })]).reason, /is an activity/);
   assert.match(no([slide('f', 'Figure', undefined, { liveFigure: true })]).reason, /live figure/);
@@ -54,7 +54,7 @@ test('canHostInStudio: anything the studio room cannot run sends the lesson to t
   const tf = choiceDeck();
   tf.slides[2] = slide('q0', 'Q', game('question', { key: '0', quiz: { ...quiz(0), style: 'truefalse' } }));
   assert.match(canHostInStudio(tf).reason, /not Multiple choice/, 'a True or false question inside a Multiple choice game is not what either runs');
-  assert.match(canHostInStudio({ slides: [slide('a', 'A'), slide('b', 'B')] }).reason, /no Multiple choice, True or false, Type answer or Slider question/);
+  assert.match(canHostInStudio({ slides: [slide('a', 'A'), slide('b', 'B')] }).reason, /no Multiple choice, True or false, Type answer, Slider(,| or) .* question/);
 });
 
 test('canHostInStudio: a plain True or false game is hosted in the studio; the Showdown and every other style is not', () => {
@@ -63,7 +63,7 @@ test('canHostInStudio: a plain True or false game is hosted in the studio; the S
   const mixed = choiceDeck(tfDeck().slides.slice(1));
   assert.deepEqual(canHostInStudio(mixed), { ok: true, reason: '' });
   // The Showdown (format 'true-false', split and switch) is the classic host's.
-  assert.match(canHostInStudio(tfDeck('true-false')).reason, /"Air" is true-false, not Multiple choice, True or false, Type answer or Slider/);
+  assert.match(canHostInStudio(tfDeck('true-false')).reason, /"Air" is true-false, not Multiple choice, True or false/);
   assert.equal(canHostInStudio(choiceDeck(tfDeck('true-false').slides.slice(1))).ok, false, 'one Showdown sends the whole lesson to classic');
   // Each format's question must be its own style: a Multiple choice question in a True or false game is refused.
   const odd = tfDeck();
