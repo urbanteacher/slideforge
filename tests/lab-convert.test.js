@@ -855,3 +855,18 @@ test('a game slide is the lab’s to build when its game comes compiled and make
   // A board format handed no board makes no slides, and stays SlideForge's.
   assert.equal(convertsSlide(slide, { check: { ...check, format: 'bingo', style: 'bingo' } }), false);
 });
+
+test('a lab copy made before M13 gets the Motion lab’s specimens and its old questions back in place (CARRIED 16)', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckMissing, CARRIED } = await converter();
+  assert.equal(CARRIED, 16);
+  const src = withOldQuizzes('motion-lab');
+  const fresh = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const type = (s) => src.slides.find((x) => x.id === s.sourceSlideId).type;
+  const old = JSON.parse(JSON.stringify(fresh));
+  old.slides = old.slides.filter((s) => !['motion', 'quiz'].includes(type(s)));
+  old.carried = 15;
+  const before = old.slides.length;
+  assert.equal(carryDeckMissing(old, src.slides, 'nul', 15), fresh.slides.length - before, 'each missing slide came in');
+  assert.deepEqual(old.slides.map((s) => s.sourceSlideId), fresh.slides.map((s) => s.sourceSlideId), 'every one back, in the lesson’s order');
+  assert.equal(carryDeckMissing(old, src.slides, 'nul', CARRIED), 0, 'nothing more to take');
+});

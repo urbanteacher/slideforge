@@ -500,8 +500,10 @@ export function carryDeckVideo(deck: Deck, source: SFSlide[]): number {
  *  video slide's clip keeps its sound and plays as the slide arrives; with no caption, nothing covers it.
  *  13: a live figure gets a stand-in, a picture of its last step; the show still plays the figure.
  *  14: the infographics that take a claim apart are built: claim & source, then / now / next, the
- *  iceberg and the spectrum. 15: a live figure's stand-in carries the figure itself (slide.figure). */
-export const CARRIED = 15;
+ *  iceberg and the spectrum. 15: a live figure's stand-in carries the figure itself (slide.figure).
+ *  16 (M13): SlideForge's last slide types are built: motion specimens, quiz slides left in a lesson,
+ *  explanations, results, spot the fake and blank slides. */
+export const CARRIED = 16;
 
 /** Upgrade saved layer names and the Week 3 preset without changing authored data or states. */
 export function carryDeckExperimentPresets(deck: Deck): number {
@@ -542,7 +544,7 @@ export function carryDeckFigures(deck: Deck, source: SFSlide[]): number {
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
  *  missing from a copy because its author deleted it, and it stays deleted. */
-const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'], 13: ['figure'], 14: ['sourcecheck', 'shift', 'iceberg', 'spectrum'] };
+const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'], 13: ['figure'], 14: ['sourcecheck', 'shift', 'iceberg', 'spectrum'], 16: ['motion', 'quiz', 'explain', 'results', 'spotfake', 'blank'] };
 
 type Kit = ReturnType<typeof kit>;
 
