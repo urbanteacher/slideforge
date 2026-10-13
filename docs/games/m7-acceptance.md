@@ -76,3 +76,13 @@ other IPDV lectures (polls), and the Layout bank (Boss battle, Ranking).
 - **A relay restart** mid-lesson opens a new room with a new PIN (the phones are told, and rejoin). Scores restart.
 - **Hand tallies** from the window are sent to the relay and counted, but the wall's bars show only the phones' votes.
 - **Rooms of more than 60 people** have no standings rail (as classic), only the full leaderboard (S).
+
+## True or false (added 13 October 2026)
+
+Repeat steps 1 to 5 with a lesson whose only game is **plain True or false** (Quiz studio, Browse, True or false, Add to the lesson; not the "True / false showdown").
+
+1. Host live opens the studio's show and room, not SlideForge's.
+2. Each statement reaches the phones as two buttons, True and False.
+3. After the reveal, the wall shows two tiles with the right one marked, and the standings panel shows the gains.
+4. Add a Showdown game to the same lesson: Host live now opens the classic room.
+
