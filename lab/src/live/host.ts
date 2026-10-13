@@ -49,6 +49,9 @@ export class LiveHost {
   /** Something was not sent while the socket was down: land on the slide again once it is back. */
   private stale = false;
   private ending = false;
+  /** The feedback prompt the relay holds open, and the one the teacher closed (it stays closed until the show leaves its slide). */
+  private promptId: string | null = null;
+  private closedFb: string | null = null;
   private sureTimer: ReturnType<typeof setTimeout> | null = null;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
@@ -155,6 +158,18 @@ export class LiveHost {
     if (q && q.options.length > 0 && !this.state.revealed.includes(q.id)) this.send({ t: 'manualTally', id: q.id, counts });
   }
 
+  /** Close the feedback prompt on the wall (classic's desk `close`): the phones are thanked and the digest stays with the report. */
+  closeFeedback(): void {
+    const f = this.state.feedback;
+    if (!f) return;
+    this.closedFb = f.prompt.id;
+    this.promptId = null;
+    this.send({ t: 'promptEnd' });
+  }
+
+  /** Show a held prompt's split (classic's desk `show`). */
+  showFeedback(): void { this.room.showFeedback(); }
+
   /** Ask the relay for the session's report (`sessionReport`). */
   report(): void { this.send({ t: 'report' }); }
 
@@ -225,6 +240,7 @@ export class LiveHost {
     if (!this.begun) return;
     this.send({ t: 'begin' });
     this.lastGame = null;
+    this.promptId = null;
     this.land(false);
   }
 
@@ -240,6 +256,12 @@ export class LiveHost {
       this.lastGame = s.gameId;
       this.send({ t: 'round', gameId: s.gameId });
     }
+    // Audience feedback: the slide's prompt opens when the show lands on it, and closes when the show leaves it.
+    const fb = s.feedback;
+    if (this.closedFb && this.closedFb !== fb?.id) this.closedFb = null;
+    if (fb && this.closedFb !== fb.id) {
+      if (this.promptId !== fb.id) { this.promptId = fb.id; this.send({ t: 'prompt', ...fb }); }
+    } else if (this.promptId) { this.promptId = null; this.send({ t: 'promptEnd' }); }
     if (asking) { this.send({ t: 'question', ...this.questionFields(s.quiz!) }); return; }
     this.send({ t: 'idle', style: s.style, role: 'wait', participation: '', headPrompt: '' });
     if (s.results) this.send({ t: 'finish', title: 'Final scores' });

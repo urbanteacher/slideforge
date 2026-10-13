@@ -5,9 +5,11 @@
 // its own), and the game's scores follow its last slide.
 //
 // The room asks the questions of the styles in styles/ (Multiple choice, True or false, Type answer, Slider). Any other question is shown, not asked.
+// A slide with audience feedback (poll, word cloud, brainstorm, scale) is a step that opens a prompt (feedback.ts).
 
 import type { Deck, Slide } from '../core';
 import { gameStyle } from '@sf/games/registry.js';
+import { feedbackOf, type RoomFeedback } from './feedback';
 import { styleOf } from './styles';
 
 /** A question as the room asks and marks it: SlideForge's quiz slide (src/games), with its game. */
@@ -26,12 +28,14 @@ export interface RoomSlide {
   title: string;
   /** What the phones may show of it (`at.text`). */
   text: string;
-  activity: 'content' | 'moment' | 'question';
+  activity: 'content' | 'moment' | 'question' | 'feedback';
   /** The game this slide belongs to: landing on a new one opens a round. */
   gameId?: string;
   /** The phone's skin for this slide (`at.style`). */
   style: string;
   quiz?: RoomQuiz;
+  /** Audience feedback: the prompt the room is asked while this step is on the wall (feedback.ts). */
+  feedback?: RoomFeedback;
   /** A game's scores: the room is sent `finish` when it comes up. */
   results?: boolean;
 }
@@ -69,7 +73,10 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
   slides.forEach((s, k) => {
     const g = s.game;
     if (!g?.id) {
-      out.push({ id: s.id, title: s.name, text: '', activity: 'content', style: deckStyle });
+      const feedback = feedbackOf(s);
+      out.push(feedback
+        ? { id: s.id, title: s.name, text: feedback.prompt, activity: 'feedback', style: deckStyle, feedback }
+        : { id: s.id, title: s.name, text: '', activity: 'content', style: deckStyle });
     } else {
       const style = mechanicOf(String(g.quiz?.style ?? g.format));
       const qs = slides.filter((x) => x.game?.id === g.id && x.game.role === 'question' && x.game.quiz);

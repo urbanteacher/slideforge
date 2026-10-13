@@ -32,6 +32,19 @@ export interface QuestionFields {
   headPrompt?: string;
 }
 
+/** A feedback `prompt` (§9): what the room is asked, with the fields classic sends (js/live.js syncPrompt). `ends` is a scale's two
+ *  labels, null for the others. */
+export interface PromptFields {
+  id: string; kind: 'poll' | 'wordcloud' | 'brainstorm' | 'scale'; prompt: string; options: string[];
+  ends: { low: string; high: string } | null; max: number; presentAs: 'rail' | 'focus'; hold: boolean;
+}
+
+/** The digest in `responses` (§9): the room's replies as the relay sums them. */
+export type Digest =
+  | { kind: 'poll' | 'scale'; counts: number[]; total: number }
+  | { kind: 'wordcloud'; words: { text: string; n: number }[]; total: number; unique: number }
+  | { kind: 'brainstorm'; items: { name: string; pid: number; text: string; seq: number }[]; total: number };
+
 /** A teacher's answer by key (§6.4): an option, the words typed for a Type answer question, or the number for a Slider; `clear` takes it back. */
 export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; value?: number; clear?: boolean }
 
@@ -53,6 +66,8 @@ export type HostMessage =
   | { t: 'manualTally'; id: string; counts: number[] }
   | { t: 'report' }
   | { t: 'finish'; title: string; note?: string; kind?: string }
+  | ({ t: 'prompt' } & PromptFields)
+  | { t: 'promptEnd' }
   | { t: 'end' };
 
 export interface Session { id: string; token?: string; title: string; createdAt: number }
@@ -68,6 +83,7 @@ export type RelayMessage =
   | { t: 'markStale'; id: string; rev: number; answers: TallyAnswer[] }
   | { t: 'manualError'; message: string; playerId?: number; id?: string }
   | { t: 'teamAnswers'; correct: number; counts: number[][] }
+  | ({ t: 'responses'; id: string; answered: number; players: number } & Digest)
   | { t: 'sessionReport'; report: unknown }
   | { t: 'sessionClosed'; report: unknown }
   | Other;

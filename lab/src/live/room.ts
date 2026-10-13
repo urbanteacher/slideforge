@@ -2,13 +2,24 @@
 // the host itself sent (the relay does not echo `begin` or `question` back to the host, so those are read
 // off the host's own frames). Scores are the relay's: the host never adds them up itself.
 
-import type { HostMessage, Phase, PlayerRow, RelayMessage, Session, TallyAnswer } from './protocol';
+import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
 export interface OpenQuestion { id: string; slideId: string; options: string[]; timeLimit: number }
 
 /** The latest `tally` for the open question. */
 export interface Tally { id: string; rev: number; counts: number[] | null; answered: number; sured: number; total: number; allIn: boolean; manual: boolean; answers: TallyAnswer[] }
+
+/** The feedback prompt that is open: what was asked, and the latest digest of the room's replies (the relay's `responses`). */
+export interface OpenFeedback {
+  prompt: PromptFields;
+  /** A held prompt (`prompt.hold`) the teacher has shown: the split is on the wall only after this. */
+  shown: boolean;
+  /** Phones that have replied, and the people in the room, as the relay counts them. */
+  answered: number;
+  players: number;
+  digest: Digest | null;
+}
 
 export interface RoomState {
   /** The socket to the relay is up. */
@@ -32,6 +43,8 @@ export interface RoomState {
   scores: Record<number, number>;
   question: OpenQuestion | null;
   tally: Tally | null;
+  /** The audience feedback prompt that is open, or null. */
+  feedback: OpenFeedback | null;
   /** Question ids the relay has revealed. */
   revealed: string[];
   /** The last refusal of a teacher entry. */
@@ -45,11 +58,11 @@ export interface RoomState {
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
-  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], scores: {}, question: null, tally: null,
+  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], scores: {}, question: null, tally: null, feedback: null,
   revealed: [], manualError: null, error: null, report: null, recording: null,
 });
 
-export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean }) => void;
+export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' }) => void;
 
 export class Room {
   private s: RoomState = emptyRoom();
@@ -87,6 +100,8 @@ export class Room {
         break;
       case 'reveal': this.pendingReveal = m.id; this.pendingOpen = m.correct < 0; break;
       case 'finish': s.phase = 'idle'; break;
+      case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; break;
+      case 'promptEnd': s.feedback = null; break;
       default: return;
     }
     this.s = s;
@@ -98,7 +113,7 @@ export class Room {
     const s = { ...this.s };
     switch (m.t) {
       case 'hosted':
-        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], scores: {}, tally: null, error: null });
+        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], scores: {}, tally: null, feedback: null, error: null });
         break;
       case 'rehosted':
         Object.assign(s, { live: true, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, mode: m.mode, teams: m.teams, phase: m.phase, error: null });
@@ -127,6 +142,12 @@ export class Room {
       case 'tally':
         if (!s.question || m.id === s.question.id) s.tally = { id: m.id, rev: m.rev, counts: m.counts, answered: m.answered, sured: m.sured, total: m.total, allIn: m.allIn, manual: m.manual, answers: m.answers };
         break;
+      case 'responses':
+        if (s.feedback && s.feedback.prompt.id === m.id) {
+          const { t: _t, id: _id, answered, players, ...digest } = m;
+          s.feedback = { ...s.feedback, answered, players, digest: { ...digest } as Digest };
+        }
+        break;
       case 'markStale':
         // The relay refused the reveal: the marks were from a short snapshot, and the host sends them again.
         this.pendingReveal = null;
@@ -141,6 +162,13 @@ export class Room {
     }
     this.s = s;
     this.emit(m);
+  }
+
+  /** The teacher shows a held prompt's split. */
+  showFeedback(): void {
+    if (!this.s.feedback || this.s.feedback.shown) return;
+    this.s = { ...this.s, feedback: { ...this.s.feedback, shown: true } };
+    this.emit({ t: 'feedbackShown' });
   }
 
   /** The host ended the room and the relay closed it. */
