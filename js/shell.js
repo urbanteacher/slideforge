@@ -1809,7 +1809,8 @@
     });
 
     document.addEventListener('keydown', function (e) {
-      if (SF.Player.open || document.querySelector('dialog[open], .modal.on')) return;
+      /* The studio's show (html.lab-show) is over everything too: the editor behind it takes no keys (M14). */
+      if (SF.Player.open || document.documentElement.classList.contains('lab-show') || document.querySelector('dialog[open], .modal.on')) return;
       /* The sheet is over everything: Escape or ? takes it away, and nothing
          else reaches the deck behind it. */
       if (shortcutsOpen()) {
