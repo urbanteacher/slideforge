@@ -70,8 +70,8 @@ export function QuestionStrip({ q, askedAt }: { q: NonNullable<Wall['question']>
 export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
   const max = Math.max(1, ...q.options.map((o) => o.count));
   return (
-    <div className="wall-strip wall-tally" data-testid="tally">
-      <ul className="tally-list" aria-label="Votes for each option">
+    <div className={`wall-strip wall-tally${q.style === 'truefalse' ? ' tally-pair' : ''}`} data-testid="tally">
+      <ul className="tally-list" aria-label={q.style === 'truefalse' ? 'Votes for True and False' : 'Votes for each option'}>
         {q.options.map((o) => (
           <li key={o.index} className={o.correct ? 'right' : ''} data-testid={`tally-${o.index}`}>
             <span className="tally-bar" style={{ ['--w' as string]: `${Math.round((o.count / max) * 100)}%` }} aria-hidden="true" />

@@ -25,6 +25,8 @@ export interface Wall {
   /** The question on the wall (view `question` and `reveal`). */
   question: {
     n: number; total: number; text: string; options: WallOption[];
+    /** The question's style: `truefalse` draws its two votes as two big tiles. */
+    style: string;
     answered: number; players: number; timeLimit: number;
     /** Reveal only: how many of the answers were right. */
     right: number;
@@ -96,7 +98,7 @@ export function wallOf(i: WallInput): Wall {
     const counts = countsOf(room, options.length);
     const t = room.tally && room.tally.id === quiz.id ? room.tally : null;
     const question = {
-      n: steps.slice(0, at + 1).filter((s) => s.room.quiz).length, total: steps.filter((s) => s.room.quiz).length, text: quiz.question,
+      n: steps.slice(0, at + 1).filter((s) => s.room.quiz).length, total: steps.filter((s) => s.room.quiz).length, text: quiz.question, style: String(quiz.style ?? 'choice'),
       options: options.map((label, index) => ({ index, label, count: counts[index], correct: revealed && index === quiz.correct })),
       right: revealed ? (t?.answers ?? []).filter((a) => a.response === quiz.correct).length : 0,
       answered: t?.answered ?? 0, players: t?.total ?? room.players.filter((p) => p.connected).length, timeLimit: room.question?.timeLimit ?? 0,

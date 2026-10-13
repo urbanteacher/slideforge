@@ -7,7 +7,7 @@ import type { ShowHooks } from './hooks';
 
 interface ShowState {
   open: boolean;
-  /** Host a live room over the show (Multiple choice questions). */
+  /** Host a live room over the show (Multiple choice and True or false questions). */
   room: boolean;
   /** The slide the show starts on (the one being edited). */
   slideId: string | null;
