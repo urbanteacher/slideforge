@@ -34,8 +34,8 @@ export async function startViewer(): Promise<void> {
   }
   const shared = sharedDeck(doc);
   if (!shared) {
-    // A classic copy: SlideForge's own viewer plays it.
-    location.replace(`/view.html${location.search}`);
+    // A copy shared from the classic slideshow, which SlideForge no longer has (M14): it cannot be played here.
+    message('This link is from an older version of SlideForge', 'It was shared before SlideForge moved to the Lesson studio, and it cannot be opened any more. Ask your teacher to share the lesson again.');
     return;
   }
   document.getElementById('sf-msg')!.hidden = true;
@@ -113,6 +113,8 @@ function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string) {
     if (before !== undefined) show(before);
   };
 
+  // Before the player: its constructor reports the first slide (onChange) at once.
+  let drawn = -1;
   const player = new DeckPlayer(canvas, deck, {
     onChange: (i) => {
       pos.textContent = `${i + 1} / ${deck.slides.length}`;
@@ -120,7 +122,6 @@ function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string) {
       if (drawn !== i) { drawn = i; drawPractice(i); }
     },
   });
-  let drawn = -1;
   drawPractice(player.index);
   drawScore();
 

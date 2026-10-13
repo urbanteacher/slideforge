@@ -141,7 +141,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
       setState(s);
       sync();
     });
-    // A relay that does not answer is not a room: say so, and let the shell host the lesson the classic way.
+    // A relay that does not answer is not a room: say so, and the shell tells the teacher.
     const wait = setTimeout(() => { if (!h.state.pin && !h.state.ended) optsRef.current.onFail?.('The room server did not answer'); }, RELAY_WAIT_MS);
     try { void h.start().catch((e) => optsRef.current.onFail?.(`The room could not open (${String(e)})`)); }
     catch (e) { optsRef.current.onFail?.(`The room could not open (${e instanceof Error ? e.message : String(e)})`); }

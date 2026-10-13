@@ -89,7 +89,7 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
         {/* Embedded, the shell's Present is the one. On its own, Present opens SlideForge's show. */}
         {studioRoomEnabled() && <button className="btn-outline" title="The studio's own room: phones join, and the wall is drawn here (?studioRoom=1)" disabled={!hasRoomGame(deck)} onClick={() => openStudioShow({ room: true })}>Host live (studio)</button>}
         {studioShowEnabled() && <button className="btn-outline" title="The studio's own show, with the Teacher Presenter and notes on another device (?studioShow=1)" onClick={() => openStudioShow()}>Present (studio)</button>}
-        {!embedded && <button className="btn-accent" title="Present in SlideForge, with its full controls (⌘↵)" onClick={present}><Play size={14} />Present</button>}
+        {!embedded && <button className="btn-accent" title="Present the lesson (⌘↵)" onClick={present}><Play size={14} />Present</button>}
         {embedded && hasShell() && <ShellRight />}
       </div>
       </div>

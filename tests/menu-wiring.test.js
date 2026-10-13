@@ -87,7 +87,7 @@ test('Export still offers the student handout and the durable copies', () => {
   /* The handout is the copy read a week later, and it was dropped once
      already while restoring this handler. */
   assert.match(shell, /id: 'pdf'[\s\S]{0,200}Student PDF handout/, 'Export lost the student PDF handout');
-  assert.match(shell, /it\.id === 'pdf'[\s\S]{0,200}SF\.Print\.open/, 'the handout option has no branch behind it');
+  assert.match(shell, /it\.id === 'pdf'[\s\S]{0,200}SF\.LabEngine\.studioHandout\(\)/, 'the handout option has no branch behind it (the studio’s handout, M12)');
   ['one', 'md', 'bundle'].forEach((id) => {
     assert.ok(shell.includes("id: '" + id + "'"), 'Export lost the "' + id + '" option');
   });

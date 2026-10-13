@@ -665,58 +665,43 @@
     });
   }
 
-  /* Host live, the classic way: the lesson as a SlideForge show, into SF.Live.host (the bridge). */
-  function classicHostLive() {
-    withShow(function (show) { SF.Live.host(show.run); });
+  /* What the studio cannot run is said to the teacher, with the reason: since M14 there is no classic show or
+     room to hand the lesson to. `what` is the thing that cannot start ("Present", "Host live"). */
+  function refuse(what, why) {
+    SF.toast(what + ' cannot start: ' + why + '.');
   }
 
-  /* The studio's own slideshow for Present, Teacher Presenter, Notes on another device and Rehearse (lab-engine-plan
-     M15, the default since M14). The way back is the File menu's "Use the classic slideshow", or ?studioPresent=0
-     (and =1 to turn the studio's back on), kept in localStorage as '0'. On, a lesson the studio's show can run
-     (lab/src/show whyNotPresentInStudio and classicOnly say nothing) is shown there; any other lesson, and any
-     failure to start, is SlideForge's own show, unchanged. */
-  var STUDIO_PRESENT = 'slideforge.studioPresent';
-  function studioPresentOn() {
-    try { return localStorage.getItem(STUDIO_PRESENT) !== '0'; } catch (e) { return true; }
+  /* The Lesson studio is not ready yet (its frame is still loading, or it failed to load). */
+  function notReady(a, what) {
+    if (a) return false;
+    SF.toast(what + ' needs the Lesson studio, which is still opening. Try again in a moment.');
+    return true;
   }
-  /* The File menu's item is the way back: ticked when SlideForge's own show is chosen. */
-  function syncStudioPresentItem() {
-    var item = document.getElementById('btnStudioPresent');
-    if (!item) return;
-    var classic = !studioPresentOn();
-    item.setAttribute('aria-checked', classic ? 'true' : 'false');
-    var mark = item.querySelector('.menu-check');
-    if (mark) mark.textContent = classic ? '\u2713' : '';
+
+  /* Why the studio cannot show this lesson (lab/src/show whyNotPresentInStudio, and classicOnly above), or ''. */
+  function whyNotShown(a) {
+    return (a.whyNotPresentInStudio ? a.whyNotPresentInStudio() : '') || classicOnly();
   }
-  function setStudioPresent(on) {
-    try { if (on) localStorage.removeItem(STUDIO_PRESENT); else localStorage.setItem(STUDIO_PRESENT, '0'); } catch (e) {}
-    syncStudioPresentItem();
+  /* Why the studio's room cannot host it (canHostInStudio, and classicOnly), or ''. */
+  function whyNotHosted(a) {
+    return (a.whyNotInStudio ? a.whyNotInStudio() : '') || classicOnly();
   }
-  try {
-    var askedPresent = new URLSearchParams(location.search).get('studioPresent');
-    if (askedPresent === '1' || askedPresent === '0') setStudioPresent(askedPresent === '1');
-  } catch (e) {}
 
   /* The studio's show over the frame for Present (first: undefined), the Teacher Presenter ('desk') or Notes on
-     another device ('notes'). False, with nothing changed, when the classic slideshow is chosen, the studio is not ready, or the
-     lesson holds something the studio's show does not run; the caller then takes the classic path. Full screen is
-     asked for inside the click, as classic's is. */
+     another device ('notes') (lab-engine-plan M15, the only show since M14). A lesson it cannot show is refused
+     with the reason. Full screen is asked for inside the click. */
   function presentInStudio(first) {
     var a = api;
-    if (!studioPresentOn() || !a || !a.presentInStudio || !a.whyNotPresentInStudio) return false;
-    var why = a.whyNotPresentInStudio() || classicOnly();
-    if (why) {
-      if (window.console) console.info('Present: the classic show, because ' + why);
-      return false;
-    }
+    var what = first === 'desk' ? 'Teacher Presenter' : first === 'notes' ? 'Notes on another device' : 'Present';
+    if (notReady(a, what)) return;
+    var why = whyNotShown(a);
+    if (why) { refuse(what, why); return; }
     enterStudioShow();
     var started = false;
     var hooks = studioHooks();
-    /* A show that breaks falls back to the classic player, not to the classic room. */
     hooks.fallback = function (reason) {
       leaveStudioShow();
-      SF.toast(reason + '. Showing with the classic player instead.');
-      classicPlay();
+      SF.toast(reason + '. The show has closed.');
     };
     /* The show ended on a slide: the editor is already on it (the show selects it); say it again to be sure. */
     hooks.exited = function (slideId) {
@@ -727,17 +712,10 @@
     catch (e) { console.error(e); }
     if (started) {
       if (frame) { try { frame.focus(); frame.contentWindow.focus(); } catch (e) {} }
-      return true;
+      return;
     }
     leaveStudioShow();
-    return false;
-  }
-
-  /* Present the classic way: SlideForge's show with its HUD, the lab drawing each slide live inside it. */
-  function classicPlay() {
-    var d = document.documentElement;
-    if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function () {});
-    withShow(function (show) { SF.Player.start(show.run, show.index, { fullscreen: false }); });
+    SF.toast('The studio\u2019s show could not start.');
   }
 
   /* The studio's own show over the lab's frame (lab/src/show, M7 slice 3). While it is up the frame fills the
@@ -754,16 +732,15 @@
     if (frame && frame.contentWindow) { try { frame.contentWindow.blur(); } catch (e) {} }
   }
 
-  /* What the show is lent (lab/src/show/hooks.ts): the way out, the way back to the classic room, the toast, and
-     the session reports, which the shell keeps. */
+  /* What the show is lent (lab/src/show/hooks.ts): the way out, what to say when the room could not open, the
+     toast, and the session reports, which the shell keeps. */
   function studioHooks() {
     var R = SF.Reports;
     return {
       exited: leaveStudioShow,
       fallback: function (reason) {
         leaveStudioShow();
-        SF.toast(reason + '. Hosting with the classic room instead.');
-        classicHostLive();
+        SF.toast(reason + ', so the room could not open. Check the room server, then press Host live again.');
       },
       toast: function (t) { SF.toast(t); },
       /* The show's Share button (M12): the shell's dialog, which a <dialog> puts over the show. */
@@ -778,90 +755,55 @@
     };
   }
 
-  /* Host live. A lesson whose games are all plain Multiple choice, and nothing else the studio's room cannot run,
-     is hosted by the lab's own host and show (lab/src/show canHostInStudio). Anything else, and any failure to
-     start, is the classic room, unchanged. */
+  /* Host live: the studio's own host and show (lab/src/show canHostInStudio). A lesson its room cannot run is
+     refused with the reason, as is a room that cannot start. */
   function hostLive() {
     var a = api;
-    if (a && a.hostInStudio && a.whyNotInStudio) {
-      var why = a.whyNotInStudio() || classicOnly();
-      if (!why) {
-        /* Full screen is asked for now, inside the click. */
-        enterStudioShow();
-        var started = false;
-        try { started = a.hostInStudio(studioHooks()); }
-        catch (e) { console.error(e); }
-        if (started) {
-          if (frame) { try { frame.focus(); frame.contentWindow.focus(); } catch (e) {} }
-          return;
-        }
-        leaveStudioShow();
-        SF.toast('The studio\u2019s room could not start. Hosting with the classic room instead.');
-      } else if (window.console) {
-        console.info('Host live: the classic room, because ' + why);
-      }
+    if (notReady(a, 'Host live')) return;
+    var why = whyNotHosted(a);
+    if (why) { refuse('Host live', why); return; }
+    /* Full screen is asked for now, inside the click. */
+    enterStudioShow();
+    var started = false;
+    try { started = a.hostInStudio(studioHooks()); }
+    catch (e) { console.error(e); }
+    if (started) {
+      if (frame) { try { frame.focus(); frame.contentWindow.focus(); } catch (e) {} }
+      return;
     }
-    classicHostLive();
+    leaveStudioShow();
+    SF.toast('The studio\u2019s room could not start.');
   }
 
+  /* Rehearse in the studio's room (M14): a simulated class joins the real room, so it needs a lesson the room runs. */
   function rehearse(size) {
     size = Number(size) || 0;
     try {
       if (size) localStorage.setItem('slideforge.rehearseSize', String(size));
       else size = Number(localStorage.getItem('slideforge.rehearseSize')) || 0;
     } catch (e) {}
-    if (rehearseInStudio(size)) return;
-    classicRehearse(size);
-  }
-
-  /* Rehearse in the studio's room (M14): a lesson the studio's room runs (canHostInStudio and classicOnly say
-     nothing), unless the classic slideshow is chosen. The simulated class joins the real room, so a room that
-     cannot start rehearses the classic way instead. */
-  function rehearseInStudio(size) {
     var a = api;
-    if (!studioPresentOn() || !a || !a.rehearseInStudio || !a.whyNotInStudio) return false;
-    var why = a.whyNotInStudio() || classicOnly();
-    if (why) {
-      if (window.console) console.info('Rehearse: the classic rehearsal, because ' + why);
-      return false;
-    }
+    if (notReady(a, 'Rehearse')) return;
+    var why = whyNotHosted(a);
+    if (why) { refuse('Rehearse', why); return; }
     enterStudioShow();
     var hooks = studioHooks();
     hooks.fallback = function (reason) {
       leaveStudioShow();
-      SF.toast(reason + '. Rehearsing with the classic player instead.');
-      classicRehearse(size);
+      SF.toast(reason + ', so the rehearsal could not start. Check the room server, then try again.');
     };
     var started = false;
     try { started = a.rehearseInStudio(hooks, size || 8); }
     catch (e) { console.error(e); }
     if (started) {
       if (frame) { try { frame.focus(); frame.contentWindow.focus(); } catch (e) {} }
-      return true;
+      return;
     }
     leaveStudioShow();
-    return false;
+    SF.toast('The rehearsal could not start.');
   }
 
-  function classicRehearse(size) {
-    withShow(function (show) {
-      if (!show.run.slides.length) { SF.toast('Add a slide before rehearsing.'); return; }
-      if (!SF.Demo) { SF.Player.start(show.run, show.index, { fullscreen: false }); return; }
-      SF.Demo.start(show.run, { fullscreen: false, startIndex: show.index, auto: true, size: size });
-    });
-  }
-
-  function teacherPresenter() {
-    if (presentInStudio('desk')) return;
-    /* The pop-out opens now, inside the click, or the browser blocks it; the
-       show it follows starts once the slides are drawn. */
-    var desk = SF.Player.openPresenter();
-    if (!desk) return;
-    withShow(function (show) {
-      if (!SF.Player.open) SF.Player.start(show.run, show.index, { fullscreen: false });
-      if (SF.Player.syncPresenter) SF.Player.syncPresenter();
-    });
-  }
+  function teacherPresenter() { presentInStudio('desk'); }
 
   var ws = {
     key: 'deck',
@@ -884,13 +826,8 @@
     },
     onTitle: function (v) { whenReady(function (a) { a.setTitle(v); }); },
     onTheme: function () {},
-    /* Present is SlideForge's show, with its HUD, and the lab drawing each
-       slide live inside it (js/lab-stage.js). Full screen is asked for now,
-       inside the click; the show starts once its slides are ready. */
-    play: function () {
-      if (presentInStudio()) return;
-      classicPlay();
-    },
+    /* Present is the studio's show (lab/src/show). Full screen is asked for now, inside the click. */
+    play: function () { presentInStudio(); },
     settings: function () {
       SF.toast('Theme, colours, header and footer are in the lab’s left panel.');
     },
@@ -976,30 +913,6 @@
         if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || ''));
       } catch (e) {}
     }
-    /* A lab window on its own asks for SlideForge's show (lab/src/app/showInSlideForge.ts): it opens
-       this page with ?labPresent=1 and, once told the page is ready, sends its lesson. The lesson is
-       opened as a lab deck, then presented here, with this player's own bar. Only the window that
-       opened this one is listened to, and only from this app or a local development server. */
-    var labPresent = false;
-    try { labPresent = new URLSearchParams(location.search).get('labPresent') === '1'; } catch (e) {}
-    if (labPresent && global.opener) {
-      var trusted = function (o) { return o === location.origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o); };
-      var onShow = function (ev) {
-        var m = ev.data;
-        if (ev.source !== global.opener || !trusted(ev.origin) || !m || m.type !== 'sf-lab-present' || !m.deck || !Array.isArray(m.deck.slides)) return;
-        global.removeEventListener('message', onShow);
-        open(m.deck);
-        var tries = 0;
-        (function startWhenOpen() {
-          if (api && api.getDeck() && api.getDeck().id === m.deck.id) { classicPlay(); return; }
-          if (++tries < 150) setTimeout(startWhenOpen, 100);
-          else SF.toast('The lesson could not be opened for the show.');
-        })();
-      };
-      global.addEventListener('message', onShow);
-      try { global.opener.postMessage({ type: 'sf-lab-ready' }, '*'); } catch (e) {}
-      try { if (history.replaceState) history.replaceState(null, '', location.pathname + (location.hash || '')); } catch (e) {}
-    }
     var asked = shipped ? null : askedLesson(askedKey);
     if (asked) {
       open(JSON.parse(JSON.stringify(asked)));
@@ -1021,24 +934,9 @@
     /* Teacher Presenter and Rehearse, from Present ▾: the bridge above. */
     var btnPresenter = document.getElementById('btnPresenter');
     if (btnPresenter) btnPresenter.onclick = teacherPresenter;
-    /* Notes on another device is made by js/player.js: unless the classic slideshow is chosen, a lesson the studio's show runs opens the
-       studio's show with the notes card up; otherwise the button does what it did. */
+    /* Notes on another device: the studio's show, with the notes card up. */
     var btnNotes = document.getElementById('btnNotesElsewhere');
-    if (btnNotes) {
-      var notesWas = btnNotes.onclick;
-      btnNotes.onclick = function (ev) {
-        if (presentInStudio('notes')) return;
-        if (notesWas) notesWas.call(btnNotes, ev);
-      };
-    }
-    var btnStudioPresent = document.getElementById('btnStudioPresent');
-    if (btnStudioPresent) {
-      btnStudioPresent.onclick = function () {
-        setStudioPresent(!studioPresentOn());
-        SF.toast(studioPresentOn() ? 'Present uses the studio\u2019s slideshow again for lessons it can run.' : 'Present, Teacher Presenter and Rehearse use the classic slideshow.');
-      };
-      syncStudioPresentItem();
-    }
+    if (btnNotes) btnNotes.onclick = function () { presentInStudio('notes'); };
     var btnRehearse = document.getElementById('btnRehearse');
     if (btnRehearse) btnRehearse.onclick = function () { rehearse(0); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-rehearse-size]'), function (b) {
@@ -1128,8 +1026,6 @@
 
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
-    /* The switch for the studio's slideshow (M15; on by default since M14, the File menu's way back turns it off). */
-    studioPresent: studioPresentOn, setStudioPresent: setStudioPresent,
     classicOnly: classicOnly,
     /* The lab added a game or activity in the lesson: its studio's tab, where it is edited. */
     showStudio: function (view) {
@@ -1223,34 +1119,33 @@
         });
       });
     },
-    /* Share for the studio viewer (lab-app/view.html, M12): the lab deck itself, its pictures packed once, when
-       the lesson is the studio's to show (whyNotPresentInStudio and classicOnly say nothing, and the classic
-       slideshow is not chosen). Resolves to null for any other lesson, or one too big for the relay: Share then
-       uploads the classic show (shareDeck) to view.html, as before. */
+    /* Share for the studio viewer (lab-app/view.html, M12): the lab deck itself, its pictures packed once. Resolves
+       to { doc } to share, or { why } when the lesson cannot be shared: one the studio cannot show, or one too
+       big for the relay. */
     studioShareDeck: function () {
       return new Promise(function (resolve) {
         whenReady(function (a) {
-          if (!studioPresentOn() || !a.shareDeck || !a.whyNotPresentInStudio) { resolve(null); return; }
-          var why = a.whyNotPresentInStudio() || classicOnly();
-          if (why) { if (window.console) console.info('Share: the classic viewer, because ' + why); resolve(null); return; }
+          var why = whyNotShown(a);
+          if (why) { resolve({ why: why }); return; }
           var doc = a.shareDeck();
-          if (JSON.stringify(doc).length > 7.5 * 1024 * 1024) {
-            if (window.console) console.info('Share: the classic viewer, because the lesson is over the relay\u2019s limit');
-            resolve(null); return;
+          var size = JSON.stringify(doc).length, limit = 7.5 * 1024 * 1024;
+          if (size > limit) {
+            resolve({ why: 'the lesson is ' + (size / 1048576).toFixed(1) + ' MB with its pictures, over the room server\u2019s 7.5 MB. Make its pictures and videos smaller, or split the lesson' });
+            return;
           }
-          resolve(doc);
+          resolve({ doc: doc });
         });
       });
     },
-    /* The student PDF from the studio (M12), for a lesson the studio shows: its own print document of every
-       slide as the lab draws it (lab/src/export/handout.ts), a student copy or a teacher copy with the answers
-       and notes. False, with nothing opened, for any other lesson: the shell prints SlideForge's handout. The
-       window is opened here, inside the click, so a pop-up blocker lets it through. */
+    /* The student PDF from the studio (M12): its own print document of every slide as the lab draws it
+       (lab/src/export/handout.ts), a student copy or a teacher copy with the answers and notes. A lesson the
+       studio cannot show is refused with the reason. The window is opened here, inside the click, so a pop-up
+       blocker lets it through. */
     studioHandout: function () {
       var a = api;
-      if (!a || !a.handout || !a.whyNotPresentInStudio || !studioPresentOn()) return false;
-      var why = a.whyNotPresentInStudio() || classicOnly();
-      if (why) { if (window.console) console.info('Handout: SlideForge\u2019s, because ' + why); return false; }
+      if (notReady(a, 'The PDF handout')) return;
+      var why = whyNotShown(a);
+      if (why) { refuse('The PDF handout', why); return; }
       var win = window.open('', '_blank');
       if (!win) { SF.toast('Allow pop-ups to open the PDF handout preview.'); return true; }
       var draw = function (/** @type {boolean} */ teacher) {

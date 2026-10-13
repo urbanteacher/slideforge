@@ -79,73 +79,33 @@ try {
   await page.waitForFunction((id) => SF.Shell.current().doc().id !== id && String(SF.Shell.current().doc().id).startsWith('lab-'), before, { timeout: 60000 });
   const lesson = await page.evaluate(() => SF.Shell.current().doc().slides.length);
 
-  // The bridge: Rehearse runs SlideForge's player on the lab's slides as pictures, games back in place. The
-  // studio's show is the default (M14); the bridge is what "Use the classic slideshow" and every fallback run.
-  await page.evaluate(() => SF.LabEngine.setStudioPresent(false));
-  await page.evaluate(() => document.getElementById('btnRehearse').click());
-  await page.waitForFunction(() => window.SF.Player.open, null, { timeout: 90000 });
-  const show = await page.evaluate(() => {
-    const run = SF.Player.deck.slides;
-    return { pictures: run.filter((s) => s.type === 'image' && String(s.image).startsWith('data:image/jpeg')).length, games: run.filter((s) => s.type === 'quiz').length, sameId: SF.Player.deck.id === SF.Shell.current().doc().id };
-  });
-  assert.ok(show.pictures > 0 && show.pictures <= lesson, `the lab's slides are in the show as pictures (${show.pictures} of ${lesson})`);
-  assert.ok(show.games > 0, 'the lesson’s games are back in the show');
-  assert.ok(show.sameId, 'the show carries the lesson’s id, so the lobby knows it is this lesson');
+  // Every show is the studio's (M14): Present, the Quiz studio's Present and Rehearse open its show over the frame;
+  // SlideForge's classic player is gone.
+  const studioShow = async (open, what) => {
+    await open();
+    await lab.locator('.show').waitFor({ timeout: 30000 });
+    assert.deepEqual(await page.evaluate(() => ({ shown: document.documentElement.classList.contains('lab-show'), classic: !!(window.SF.Player && SF.Player.open) })), { shown: true, classic: false }, what + ' opens the studio’s show');
+    await lab.locator('body').press('Escape');
+    if (await lab.locator('.show').count()) await lab.locator('body').press('Escape');
+    await lab.locator('.show').waitFor({ state: 'detached', timeout: 8000 });
+    await page.waitForFunction(() => !document.documentElement.classList.contains('lab-show'), null, { timeout: 5000 });
+  };
+  await studioShow(() => lab.getByRole('button', { name: 'Present', exact: true }).click(), 'Present');
+  await studioShow(() => page.evaluate(() => document.getElementById('btnRehearse').click()), 'Rehearse');
 
-  // The live stage: the lab draws its slides inside SlideForge's show, and makes room for the rail.
-  const live = await page.evaluate(async () => {
-    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    await wait(1500);
-    const p = SF.LabStage.player();
-    // The room eases across over about half a second of the show's clock.
-    for (let k = 0; k < 40 && p && Math.abs(p.renderer.inset - p.insetTarget) > 0.01; k++) await wait(100);
-    const vp = document.querySelector('#player .deck-viewport');
-    const first = { onWall: SF.LabStage.active(), canvas: !!SF.Player._current.querySelector('canvas.lab-live'), railed: vp.classList.contains('railed'), inset: p && p.renderer.inset, target: p && p.insetTarget, railW: getComputedStyle(vp).getPropertyValue('--rail-w') };
-    // Find a slide with builds, and walk them with Next.
-    const run = SF.Player.deck.slides;
-    let walked = null;
-    for (let i = 0, seen = 0; i < run.length && !walked && seen < 20; i++) {
-      if (!(run[i].design && run[i].design.labStill)) continue;
-      seen++;
-      SF.Player.goTo(i, 1); await wait(250);
-      const s = p.state();
-      // Arrived first: a Next while the slide is still coming in finishes it rather than building (player.ts settle).
-      if (s.steps > 0) { if (p.settle) p.settle(); SF.Player.next(); await wait(150); walked = { wall: SF.Player.idx, wallBefore: i, step: p.state().step, steps: s.steps }; }
-    }
-    return { first, walked };
-  });
-  assert.ok(live.first.onWall && live.first.canvas, 'the lab draws the slide on the wall live');
-  assert.ok(!live.first.railed || live.first.inset > 0.1, 'with the rail open, the lab keeps room beside it: ' + JSON.stringify(live.first));
-  if (live.walked) assert.ok(live.walked.wall === live.walked.wallBefore && live.walked.step === 1, 'Next shows the lab slide’s first build before the show moves on');
-  await page.evaluate(() => { if (SF.Demo && SF.Demo.stop) SF.Demo.stop(); if (SF.Player.open && SF.Player.close) SF.Player.close(); });
-
-  // Share fits the server's limit.
-  const shareMB = await page.evaluate(async () => JSON.stringify(await SF.LabEngine.shareDeck()).length / 1048576);
-  assert.ok(shareMB < 8, `a shared copy fits in 8 MB (${shareMB.toFixed(1)} MB)`);
+  // Share is the lab deck for the studio viewer, and fits the server's limit.
+  const share = await page.evaluate(async () => { const got = await SF.LabEngine.studioShareDeck(); return { mb: got.doc ? JSON.stringify(got.doc).length / 1048576 : -1, why: got.why || '' }; });
+  assert.ok(share.mb > 0 && share.mb < 8, `a shared copy is the lab deck and fits in 8 MB (${share.mb.toFixed(1)} MB${share.why ? ', ' + share.why : ''})`);
+  const shareMB = share.mb;
 
   // The Quiz studio is the same lesson, and its Present is the lesson's show.
   await page.evaluate(() => SF.Shell.activate('game'));
   await page.waitForFunction(() => SF.Shell.current().key === 'game' && SF.Shell.current().lab);
-  await page.evaluate(() => document.getElementById('btnPlay').click());
-  await page.waitForFunction(() => window.SF.Player.open && SF.Player.deck.id === SF.Shell.current().doc().id, null, { timeout: 90000 });
-  await page.evaluate(() => { SF.Player.close(); SF.Shell.activate('deck'); });
-
-  // Present is SlideForge's show, with its HUD, and the lab drawing the slide live inside it.
-  await lab.getByRole('button', { name: 'Present', exact: true }).click();
-  await page.waitForFunction(() => window.SF.Player.open && SF.LabStage.active(), null, { timeout: 90000 });
-  await page.evaluate(() => SF.Player.close());
-
-  // The default (M14): Present opens the studio's own show over the frame, not SlideForge's player.
-  await page.evaluate(() => SF.LabEngine.setStudioPresent(true));
-  await lab.getByRole('button', { name: 'Present', exact: true }).click();
-  await lab.locator('.show').waitFor({ timeout: 30000 });
-  assert.deepEqual(await page.evaluate(() => ({ shown: document.documentElement.classList.contains('lab-show'), classic: !!SF.Player.open })), { shown: true, classic: false }, 'Present is the studio’s show by default');
-  await lab.locator('body').press('Escape');
-  await lab.locator('.show').waitFor({ state: 'detached', timeout: 8000 });
-  await page.waitForFunction(() => !document.documentElement.classList.contains('lab-show'), null, { timeout: 5000 });
+  await studioShow(() => page.evaluate(() => document.getElementById('btnPlay').click()), 'The Quiz studio’s Present');
+  await page.evaluate(() => SF.Shell.activate('deck'));
 
   assert.equal(errors.join('\n'), '');
-  console.log(`PASS lab lesson: lab in the workspace, name synced, demo converted to ${demo.labSlides} slides, Library card, Rehearse with ${show.pictures} lab slides live and ${show.games} game slides, builds walked ${live.walked ? 'yes' : 'none found'}, share ${shareMB.toFixed(1)} MB, Present runs SlideForge's show with the lab live, and the studio's show by default`);
+  console.log(`PASS lab lesson: lab in the workspace, name synced, demo converted to ${demo.labSlides} slides, Library card, a ${lesson}-slide lesson presented and rehearsed in the studio's show (and from the Quiz studio), share ${shareMB.toFixed(1)} MB as the lab deck`);
 } finally {
   await browser.close();
   relay.kill();

@@ -352,9 +352,9 @@ export const labApi = {
     useStore.getState().mutate((d) => { if (group) d.libraryGroup = group; else delete d.libraryGroup; });
   },
   currentSlideId: () => useStore.getState().slideId,
-  /** The shell's Host live (lab-engine-plan M7 slice 3): when every game in the lesson is plain Multiple choice
-   *  and nothing else needs the classic room, open the studio's own show with its own room, over this frame, and
-   *  say true. False: the shell hosts the lesson the classic way. `hooks` is what the shell lends the show. */
+  /** The shell's Host live (lab-engine-plan M7 slice 3): when the studio's room runs everything in the lesson
+   *  (canHostInStudio), open the studio's own show with its own room, over this frame, and say true. False: the
+   *  shell says why it cannot (M14). `hooks` is what the shell lends the show. */
   hostInStudio(hooks: ShowHooks): boolean {
     const st = useStore.getState();
     if (!canHostInStudio(st.deck).ok) return false;
@@ -374,7 +374,7 @@ export const labApi = {
   },
   /** The shell's Rehearse (M14): when the studio's room can run the lesson, open its show with its room and a
    *  simulated class of `size` joining it (rehearse/, sized as the show's own Rehearse card offers: 8, 16 or
-   *  24), and say true. False: the shell rehearses the classic way. */
+   *  24), and say true. False: the shell says why it cannot. */
   rehearseInStudio(hooks: ShowHooks, size: number): boolean {
     const st = useStore.getState();
     if (!canHostInStudio(st.deck).ok) return false;
@@ -382,8 +382,8 @@ export const labApi = {
     openStudioShow({ room: true, slideId: st.slideId, hooks, rehearse: n });
     return true;
   },
-  /** Why Present would not run in the studio's show ('' when it can): a game, activity or figure the studio does not
-   *  run yet keeps the lesson on SlideForge's own show. */
+  /** Why Present cannot run in the studio's show ('' when it can): a live figure the studio does not play, or a
+   *  lesson with no shown slide. The shell says it to the teacher (M14). */
   whyNotPresentInStudio: (): string => whyNotPresentInStudio(useStore.getState().deck),
   /** The student PDF (M12): the print document of every shown slide fully built, one to a page; the teacher copy
    *  keeps the answer slides and each slide's notes. The shell opens the window and prints it. */

@@ -76,34 +76,45 @@ test('a ?lesson= link reopens the Library’s copy rather than building another,
   assert.deepEqual(fresh.saves, ['built-week-3'], 'a first follow builds it');
 });
 
-/* M15, M14: the studio's slideshow for Present, Teacher Presenter, Notes and Rehearse is the default. The way back is
-   the File menu's "Use the classic slideshow", or ?studioPresent=0 (and =1 to turn the studio's back on). */
-function trialFlag(search, stored) {
-  const store = stored ? { 'slideforge.studioPresent': stored } : {};
-  const localStorage = {
-    getItem: (k) => (k in store ? store[k] : null),
-    setItem: (k, v) => { store[k] = String(v); },
-    removeItem: (k) => { delete store[k]; }
-  };
-  const context = { window: {}, console, URLSearchParams, localStorage, location: { search }, navigator: { webdriver: false }, document: { getElementById: () => null } };
+/* M14: the studio's show and room are the only ones. What they cannot run (a guard's reason, or classicOnly) is
+   refused with a toast that says what and why, and nothing else starts: there is no classic show, room, viewer or
+   handout to hand the lesson to. */
+function noFallback(why) {
+  const toasts = [], opened = [];
+  const SF = { toast: (t) => toasts.push(t), Store: { get: () => null }, GameStore: { get: () => null } };
+  const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  const context = { window: { SF }, console, URLSearchParams, localStorage, location: { search: '' }, navigator: { webdriver: false }, document: { getElementById: () => null, documentElement: { classList: { add: () => {}, remove: () => {} } } }, performance: { now: () => 0 }, clearTimeout, setTimeout };
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/lab-engine.js'), 'utf8'), context);
-  return { LabEngine: context.window.SF.LabEngine, store };
+  const LE = context.window.SF.LabEngine;
+  LE.ready({
+    getDeck: () => ({ id: 'lab', slides: [{ id: 'a' }] }), listSaved: () => Promise.resolve([]), subscribe: () => {},
+    whyNotInStudio: () => why.room || '', whyNotPresentInStudio: () => why.show || '',
+    hostInStudio: () => { opened.push('room'); return true; }, presentInStudio: () => { opened.push('show'); return true; },
+    rehearseInStudio: () => { opened.push('rehearse'); return true; },
+    shareDeck: () => ({ id: 'lab', studio: 1, slides: [], pad: why.big ? 'x'.repeat(8 * 1024 * 1024) : '' }),
+    handout: () => Promise.resolve('')
+  });
+  return { LE, toasts, opened };
 }
 
-test('the studio’s slideshow is on by default, and the classic one is the way back', () => {
-  assert.equal(trialFlag('').LabEngine.studioPresent(), true, 'on by default');
-  assert.equal(trialFlag('?studioPresent=0').LabEngine.studioPresent(), false, '?studioPresent=0 chooses the classic slideshow');
-  assert.equal(trialFlag('?studioPresent=1', '0').LabEngine.studioPresent(), true, '?studioPresent=1 turns the studio’s back on');
-  assert.equal(trialFlag('?studioPresent=no', '0').LabEngine.studioPresent(), false, 'only 1 and 0 are read');
-  assert.equal(trialFlag('', '0').LabEngine.studioPresent(), false, 'the stored choice stays');
-  assert.equal(trialFlag('', '1').LabEngine.studioPresent(), true, 'a choice stored in the trial stays on');
-  const t = trialFlag('');
-  t.LabEngine.setStudioPresent(false);
-  assert.equal(t.store['slideforge.studioPresent'], '0');
-  t.LabEngine.setStudioPresent(true);
-  assert.equal('slideforge.studioPresent' in t.store, false, 'on removes the key');
+test('what the studio cannot run is refused with the reason; nothing falls back to classic (M14)', async () => {
+  assert.equal('studioPresent' in noFallback({}).LE, false, 'the File menu’s "Use the classic slideshow" is gone');
+  const room = noFallback({ room: '"Mind" is Mind reveal, which the room does not run' });
+  room.LE.hostLive();
+  assert.deepEqual(room.toasts, ['Host live cannot start: "Mind" is Mind reveal, which the room does not run.']);
+  assert.deepEqual(room.opened, [], 'no room opened');
+  const show = noFallback({ show: '"Fig" has a live figure the lesson does not carry' });
+  assert.deepEqual({ ...(await show.LE.studioShareDeck()) }, { why: '"Fig" has a live figure the lesson does not carry' });
+  show.LE.studioHandout();
+  assert.deepEqual(show.toasts, ['The PDF handout cannot start: "Fig" has a live figure the lesson does not carry.']);
+  const big = noFallback({ big: true });
+  assert.match((await big.LE.studioShareDeck()).why, /^the lesson is 8\.0 MB with its pictures, over the room server’s 7\.5 MB/);
+  const fine = noFallback({});
+  fine.LE.hostLive();
+  assert.deepEqual(fine.opened, ['room'], 'a lesson the studio runs is hosted there');
+  assert.ok((await fine.LE.studioShareDeck()).doc, 'and shared as the lab deck');
 });
 
 /* M14: a slide of the lesson the lab copy was made from that the lab cannot build (a motion, quiz or blank slide,
@@ -129,7 +140,7 @@ function withSource(slides, labSlides, games, compiles) {
   return context.window.SF.LabEngine.classicOnly();
 }
 
-test('a slide the lab cannot build keeps the lesson on SlideForge’s show and room (M14)', () => {
+test('a slide the lab cannot build is a reason the studio refuses the lesson (M14)', () => {
   const lab = [{ id: 'l1', sourceSlideId: 'a' }, { id: 'l2', sourceSlideId: 'b' }];
   assert.equal(withSource([{ id: 'a', type: 'title' }, { id: 'b', type: 'content' }], lab), '', 'everything built');
   assert.match(withSource([{ id: 'a', type: 'title' }, { id: 'm', type: 'motion', title: 'Spin' }, { id: 'b', type: 'content' }], lab), /"Spin" is a SlideForge motion slide the studio does not build/);

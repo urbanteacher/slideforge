@@ -15,7 +15,7 @@
  *     scores      the leaderboard, best first
  *     end         Next past the last step ends the room: the final standings stay up, with the report; the
  *                 phones are told it is over; Open in Reports opens the shell's Reports; Back gives the page back
- *   safety net: a relay that never answers closes the show within ~10 s, toasts, and runs the classic Host live
+ *   no relay: a relay that never answers closes the show within ~10 s and says why; nothing else starts (M14)
  *   room 2 (teacher entry)
  *     the show's Teacher entry opens manual.html#<key>; a learner added there joins the lobby; with the teacher
  *     entering answers there is no clock; "Live answers" and the C key record the learner's answer
@@ -245,9 +245,9 @@ try {
   await page.waitForFunction(() => !document.documentElement.classList.contains('lab-show'), null, { timeout: 20000 });
   assert.equal(await lab.locator('.show').count(), 0, 'the studio\'s show closed');
   const toasts = await page.evaluate(() => window.__toasts);
-  assert.ok(toasts.some((t) => /did not answer.*classic room/.test(t)), `the toast says why (${JSON.stringify(toasts)})`);
-  assert.ok(toasts.some((t) => /Preparing the show/.test(t)), 'and the classic Host live starts');
-  step('the safety net: a relay that never answers closes the show, says why, and hands over to the classic Host live');
+  assert.ok(toasts.some((t) => /did not answer, so the room could not open/.test(t)), `the toast says why (${JSON.stringify(toasts)})`);
+  assert.equal(await page.evaluate(() => !!(window.SF.Live && SF.Live.active) || !!(window.SF.Player && SF.Player.open)), false, 'no classic room or player starts');
+  step('no relay: a relay that never answers closes the show and says why; nothing else starts');
 
   assert.deepEqual(errors, [], 'no page errors');
   console.log('studio-room: ok');

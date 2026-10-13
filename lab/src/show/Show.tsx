@@ -41,8 +41,8 @@ const RAIL_U = 420;
 /** A feedback prompt's rail is wider: poll labels and ideas need the room at wall size. */
 const FEEDBACK_RAIL_U = 560;
 
-/** The show broke, or its room could not start. Before anyone has joined the lesson goes back to the shell to be
- *  hosted the classic way; once the room has begun it is only ended, with a word to the teacher. */
+/** The show broke, or its room could not start. Before anyone has joined the shell is told, and says why; once
+ *  the room has begun it is only ended, with a word to the teacher. */
 function giveUp(reason: string): void {
   const { hooks, begun } = useShow.getState();
   useShow.setState({ open: false, room: false });
@@ -130,7 +130,7 @@ function Show() {
     toastTimer.current = setTimeout(() => setToast(''), 2200);
   };
 
-  // The relay did not answer: the shell hosts the lesson the classic way, with a word about why (giveUp).
+  // The relay did not answer: the show closes and the shell says why (giveUp).
   const fail = useCallback((reason: string) => {
     if (failed.current) return;
     failed.current = true;

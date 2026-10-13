@@ -807,29 +807,18 @@
       SF.toast('Share is not available in this build.');
       return;
     }
-    var live = !!(SF.Live && SF.Live.active);
-    /* A lab lesson is shared as the show SlideForge's player runs — its slides
-       as pictures, its games in place — so the read, practice and follow-along
-       links all open in view.html, and a follow link matches the live room. */
-    if (deckWs.lab && SF.LabEngine) {
-      SF.toast('Preparing the lesson to share\u2026');
-      var LE = SF.LabEngine;
-      /* A lesson the studio shows is shared as the lab deck, for the studio viewer (lab-app/view.html, M12),
-         unless a classic room is running it: a follow link must match the room that moves it. */
-      var studio = !live && LE.studioShareDeck ? LE.studioShareDeck() : Promise.resolve(null);
-      studio.then(function (doc) {
-        if (doc) {
-          SF.shareLessonDoc(doc, { studio: true, live: LE.roomRunning(), watchOn: LE.watchOn });
-          return;
-        }
-        return LE.shareDeck().then(function (show) { SF.shareLessonDoc(show, { live: live }); });
-      }).catch(function (e) {
-        console.error(e);
-        SF.toast('The lesson could not be prepared to share.');
-      });
-      return;
-    }
-    SF.shareLessonDoc(deckWs.doc(), { live: live });
+    /* The lesson is shared as the lab deck, for the studio viewer (lab-app/view.html, M12). One the studio
+       cannot show, or one too big for the relay, is refused with the reason. */
+    if (!deckWs.lab || !SF.LabEngine) { SF.toast('No lesson to share.'); return; }
+    SF.toast('Preparing the lesson to share\u2026');
+    var LE = SF.LabEngine;
+    LE.studioShareDeck().then(function (got) {
+      if (got && got.doc) { SF.shareLessonDoc(got.doc, { studio: true, live: LE.roomRunning(), watchOn: LE.watchOn }); return; }
+      SF.toast('Share cannot make a link: ' + (got && got.why || 'the lesson could not be prepared') + '.');
+    }).catch(function (e) {
+      console.error(e);
+      SF.toast('The lesson could not be prepared to share.');
+    });
   }
 
   /** Authored lesson currently in the deck studio — for Presenter share prep. */
@@ -1263,12 +1252,8 @@
             /* The handler flushes before opening the picker now, so this no
                longer needs its own flush the way it did when it was the only
                path that wrote from the live document. */
-            /* A lab lesson prints as the show SlideForge's player runs: every
-               slide fully built, as a picture, with its games in place. */
-            /* A lesson the studio shows prints from the studio itself (M12). */
-            if (it.id === 'pdf' && active.lab && SF.LabEngine && SF.LabEngine.studioHandout && SF.LabEngine.studioHandout()) return;
-            if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.printDeck ? SF.LabEngine.printDeck() : SF.LabEngine.showDeck());
-            if (it.id === 'pdf') return SF.Print.open(active.doc());
+            /* The student PDF is the studio's (M12). */
+            if (it.id === 'pdf') { if (SF.LabEngine) SF.LabEngine.studioHandout(); return; }
             if (it.id === 'slide') {
               return picker({
                 title: 'Save this slide',

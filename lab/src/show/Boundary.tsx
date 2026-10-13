@@ -1,5 +1,5 @@
-// The show's safety net: if drawing the show or running its room throws, the shell is told (so it can host the
-// lesson the classic way) instead of leaving a dead black screen over the editor.
+// The show's safety net: if drawing the show or running its room throws, the shell is told (so it can say why)
+// instead of leaving a dead black screen over the editor.
 
 import { Component, type ReactNode } from 'react';
 
