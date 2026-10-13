@@ -4,10 +4,13 @@
 //   <PresenterWindow />             the window's whole page (main.tsx renders it for ?presenter=1)
 //   ShowSide                        the show's end of the BroadcastChannel (show/usePresenter.ts)
 //   presenterUrl()                  where the window is opened from
+//   CONTROLS, controlFor(key)       every show control: its key, group and desk button (controls.ts); <KeySheet /> lists them
 export { PresenterWindow } from './PresenterWindow';
-export { PRESENTER_CHANNEL, ShowSide, WindowSide, parseToShow, parseToWindow } from './protocol';
+export { PRESENTER_CHANNEL, PRESENTER_CMDS, ShowSide, WindowSide, parseToShow, parseToWindow } from './protocol';
 export { QuestionsList, QuickPollForm } from './RoomDesk';
-export type { ChannelFactory, ChannelLike, CmdData, PresenterCmd, PresenterRoom, PresenterState, Screen, ToShow, ToWindow } from './protocol';
+export type { ChannelFactory, ChannelLike, CmdData, PresenterCmd, PresenterRoom, PresenterState, Screen, ToShow, ToWindow, WhoRow } from './protocol';
+export { CONTROLS, CONTROL_GROUPS, KEY_NOTES, ROOM_VIEWS, ROOM_VIEW_SAYS, controlFor, keyLabel, keyName, keyOf, nextRoomView, toggleBoard, type Control, type ControlGroup, type KeyMode, type RoomView, type ShowAction } from './controls';
+export { KeySheet } from './KeySheet';
 export { clock, parseCountdown, remaining } from './timer';
 
 /** The address of the presenter window: this same app, with ?presenter=1. */

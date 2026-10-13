@@ -1,0 +1,11 @@
+/* The keyboard shortcuts sheet (?), over the wall or the Teacher Presenter. */
+.key-sheet { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(0,0,0,.6); padding: 16px; }
+.key-sheet-card { width: min(1100px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: #17181c; color: #e8e9ee; border-radius: 14px; padding: 16px 20px; font: 14px/1.4 Inter, system-ui, sans-serif; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.key-sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 16px; }
+.key-sheet-head button { background: none; border: 0; color: inherit; font-size: 22px; cursor: pointer; height: auto; padding: 0 6px; }
+.key-sheet-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px 24px; }
+.key-sheet h4 { margin: 8px 0 4px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #9a9db0; }
+.key-sheet table { border-collapse: collapse; width: 100%; }
+.key-sheet td { padding: 3px 0; vertical-align: top; }
+.key-sheet td:first-child { white-space: nowrap; padding-right: 12px; }
+.key-sheet kbd { display: inline-block; min-width: 1.4em; padding: 1px 6px; border-radius: 5px; background: #2a2c33; border: 1px solid #3a3d46; font: 12px/1.5 ui-monospace, monospace; text-align: center; }

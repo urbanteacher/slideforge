@@ -8,9 +8,15 @@ import { FLOOR_MODES, QA_ACTIONS, type FloorMode, type QaAction, type QaBox, typ
 
 export const PRESENTER_CHANNEL = 'slideforge.lab.presenter.v1';
 
-/** What the window may ask of the show. `goto` carries `n`, a 1-based slide number of the shown deck; `poll` carries the quick poll to ask. */
-export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more' | 'poll' | 'qa' | 'floor';
-export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more', 'poll', 'qa', 'floor'];
+/** What the window may ask of the show. `goto` carries `n`, a 1-based slide number of the shown deck; `poll` carries the quick poll to ask;
+ *  `floor` with no mode takes the next one. Each is what the wall's key for it does (controls.ts). */
+export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more' | 'poll' | 'qa' | 'floor'
+  | 'steps' | 'freeze' | 'roomView' | 'scores' | 'join' | 'again' | 'reactions' | 'blankPhones' | 'blankSoon' | 'draw' | 'spot' | 'clearInk' | 'notesElsewhere';
+export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more', 'poll', 'qa', 'floor',
+  'steps', 'freeze', 'roomView', 'scores', 'join', 'again', 'reactions', 'blankPhones', 'blankSoon', 'draw', 'spot', 'clearInk', 'notesElsewhere'];
+
+/** One line of who answered what (the desk's private list): the name, the answer as the phone gave it, and how sure. */
+export interface WhoRow { name: string; answer: string; sure: boolean | null }
 
 /** What a command carries besides its slide number: the quick poll to ask (`poll`), the action on a question (`qa`), the floor's mode (`floor`). */
 export interface CmdData { poll?: QuickAsk; qa?: { id: number; action: QaAction }; floor?: FloorMode }
@@ -36,6 +42,17 @@ export interface PresenterRoom {
   /** The questions box (live/questions.ts), and who may ask. */
   qa?: QaBox;
   floor?: FloorMode;
+  /** The room on the wall (E), the phones blanked and the warning's end (ms; 0 none), reactions on, the join card up. */
+  roomView?: 'hidden' | 'beside' | 'full';
+  phonesBlank?: boolean;
+  blankSoonAt?: number;
+  reactions?: boolean;
+  joinCard?: boolean;
+  /** The question on the wall can be asked again (R), and who has answered it so far, by name: this window only, never the wall. */
+  canAgain?: boolean;
+  answers?: WhoRow[];
+  /** The teacher-entry window's address, so this window opens it itself. */
+  entry?: string | null;
   /** A routine's stage on the wall (live/activities): its name and job, the note count, and how many asked for help (only the desk says it). */
   stage?: { name: string; wall: string; written: string; help: number } | null;
 }
@@ -56,6 +73,12 @@ export interface PresenterState {
   room: PresenterRoom | null;
   /** A live figure on the wall: the step Next and Back walk (from 1), of how many, and that step's caption. */
   figure?: { step: number; of: number; caption: string };
+  /** The wall is frozen on this slide (0-based) while `index` is where the teacher has moved on to. */
+  frozenAt?: number | null;
+  /** Draw is on on the wall, and its tool is the spotlight. */
+  ink?: { on: boolean; spot: boolean };
+  /** Counts up each time the wall asks this window to open who answered what (Shift+W). */
+  ask?: number;
 }
 
 export type ToWindow =
