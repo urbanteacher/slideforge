@@ -22,6 +22,22 @@ function recordedDraw(rec: Rec, skin: string) {
   };
 }
 
+// Question cube (format 'question-cube', on Random challenge's engine, style 'randomchallenge'): six faces drawn one a roll, the verdicts
+// Answered and Pass, and the same frames as Random challenge (the phones' heading is still "Random challenge"). The relay pays this
+// engine 0 in every mode, so the verdicts only count, though the cube's playbook says it credits the team (style-inventory.md).
+test('the lab host sends what the classic host sent for a Question cube game', async () => {
+  const rec = load('game-question-cube');
+  const { host, classic, lab } = await replay(rec, 'question-cube', false, recordedDraw(rec, 'count'));
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 6);
+  for (const q of asked) { assert.equal(q.spoken, true); assert.equal(q.style, 'randomchallenge'); assert.deepEqual(q.options, ['Answered', 'Pass']); assert.equal(q.points, 0); assert.equal(q.headPrompt, 'Random challenge'); }
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => [r.correct, r.answer, r.gains]), Array.from({ length: 6 }, () => [0, 'Answered', []]));
+  assert.equal(host.state.revealed.length, 6);
+  assert.deepEqual(Object.values(host.state.oralCounts), [6], 'the relay counted every roll');
+  assert.ok(host.state.ended);
+});
+
 // Random challenge (format 'random-challenge', style 'randomchallenge'). The question frame is `spoken: true` with the verdicts
 // Complete and Skip, no points, no confidence, and the phones' brief (role `discuss`, "Listen and watch..."); the teacher names
 // Ada (`recipient`) and says Complete (`revealWith`); the reveal carries correct 0, `gains: []` and who spoke. The relay counts it
