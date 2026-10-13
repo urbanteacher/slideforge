@@ -41,6 +41,8 @@ export interface BoardKind<W extends BoardWallBase = BoardWallBase> {
   formats: string[];
   /** The phones' skin and what they are told while the board is up (classic phoneCompanion). */
   style: string;
+  /** The board step's skin when it depends on the board (the memory boards: the board's own kind, classic phoneStyle). */
+  styleOf?(board: Record<string, unknown>): string;
   companion: Briefing;
   /** How often the board's clock ticks (ms; the runtime's session interval). */
   interval: number;
@@ -53,6 +55,8 @@ export interface BoardKind<W extends BoardWallBase = BoardWallBase> {
   revealed?(state: BoardState): boolean;
   /** The game's last slide is its answers, which the board's reveal draws, not a step of its own. */
   answersOnEnd?: boolean;
+  /** The board plays the whole game (memory, bingo, quiz bowl): the game's other slides after its cover are not steps, and it has no scores step. */
+  wholeGame?: boolean;
   /** What the cover tells the phones ("5 questions · write on paper · 180s then reveal"). */
   coverText?(board: Record<string, unknown>): string;
   wall(slide: BoardCtx['slide'], board: Record<string, unknown>, state: BoardState): W;

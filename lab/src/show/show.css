@@ -359,3 +359,34 @@
 .board-actions button { font: inherit; font-weight: 700; min-height: calc(var(--u) * 52); padding: 0 calc(var(--u) * 22); color: var(--fg, #fff); background: transparent; border: 1px solid var(--line-2); border-radius: calc(var(--u) * 12); cursor: pointer; white-space: nowrap; }
 .board-actions button.primary { color: #fff; background: var(--accent); border-color: var(--accent); }
 .board-actions button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* The full boards (memory, bingo, quiz bowl): the board's state is the game, so it covers the slide, as classic's board slide does. */
+.full-board { position: absolute; inset: 0; display: flex; flex-direction: column; gap: calc(var(--u) * 18); padding: calc(var(--u) * 40) calc(var(--u) * 56); background: var(--bg, #0d0d10); overflow: hidden; }
+.gb-head { display: flex; justify-content: space-between; align-items: flex-start; gap: calc(var(--u) * 24); }
+.gb-head h2 { margin: calc(var(--u) * 4) 0 0; font-size: calc(var(--u) * 56); line-height: 1.1; }
+.gb-eyebrow { font-size: calc(var(--u) * 22); letter-spacing: .12em; color: var(--muted); }
+.gb-clock { text-align: right; white-space: nowrap; }
+.gb-clock span { display: block; font-size: calc(var(--u) * 22); letter-spacing: .12em; color: var(--muted); }
+.gb-clock strong { font-size: calc(var(--u) * 64); font-variant-numeric: tabular-nums; color: var(--accent-2); }
+.full-board.is-paused .gb-clock strong { color: #ffd166; }
+.gb-progress { display: flex; gap: calc(var(--u) * 18); align-items: center; font-size: calc(var(--u) * 24); color: var(--muted); }
+.gb-progress .on { color: var(--fg, #fff); }
+.gb-progress strong { margin-left: auto; color: var(--fg, #fff); }
+.mem-cards { flex: 1; min-height: 0; display: grid; gap: calc(var(--u) * 16); }
+.mem-card { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: calc(var(--u) * 8); padding: calc(var(--u) * 16); font: inherit; color: var(--fg, #fff); background: var(--field-2); border: 2px solid var(--line-2); border-radius: calc(var(--u) * 18); cursor: pointer; text-align: center; }
+.mem-card:disabled { cursor: default; }
+.mem-card.down { background: var(--field); }
+.mem-card.selected { border-color: var(--accent); }
+.mem-card.collected { border-color: #4ade80; opacity: .8; }
+.mem-card strong { font-size: calc(var(--u) * 40); }
+.mc-n { position: absolute; left: calc(var(--u) * 14); top: calc(var(--u) * 10); font-size: calc(var(--u) * 20); color: var(--muted); }
+.mc-sym { font-size: calc(var(--u) * 56); color: var(--accent-2); }
+.mc-def, .mc-prompt { font-size: calc(var(--u) * 24); color: var(--muted); }
+.mc-owner { font-size: calc(var(--u) * 24); color: #4ade80; }
+.gb-check { padding: calc(var(--u) * 16) calc(var(--u) * 24); background: var(--field-2); border: 1px solid var(--accent); border-radius: calc(var(--u) * 16); }
+.gb-check h3 { margin: calc(var(--u) * 4) 0; font-size: calc(var(--u) * 40); }
+.gb-check p { margin: 0 0 calc(var(--u) * 12); font-size: calc(var(--u) * 28); }
+.gb-foot { display: flex; align-items: center; gap: calc(var(--u) * 24); }
+.gb-foot p { margin: 0; flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 4); font-size: calc(var(--u) * 28); }
+.gb-foot p span { color: var(--muted); font-size: .8em; }
+.gb-tally { display: flex; gap: calc(var(--u) * 14); font-size: calc(var(--u) * 24); }

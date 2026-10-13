@@ -137,6 +137,19 @@ interface SFLowStakesEngine {
   formatClock(seconds: number): string;
 }
 
+/** The memory boards' engine (memory flip, memory match, knowledge flip): the state and its moves, the tally and the winner. */
+interface SFMemoryEngine {
+  create(board: Record<string, unknown>): Record<string, unknown>;
+  transition<S extends Record<string, unknown>>(board: Record<string, unknown>, state: S, action: string, card?: number): S;
+  scores(board: Record<string, unknown>, state: Record<string, unknown>): { name: string; score: number }[];
+  winner(board: Record<string, unknown>, state: Record<string, unknown>): string;
+}
+
+declare module '@sf/boards/runtimes/memory.js' {
+  /** Puts the memory engine on `SF.Memory`; nothing runs but declarations. */
+  export function installMemory(SF: { Memory?: SFMemoryEngine }): void;
+}
+
 declare module '@sf/boards/runtime.js' {
   interface Clock { now(): number; every(fn: () => void, ms: number): unknown; cancel(timer: unknown): void }
   interface SessionSpec { player: Record<string, unknown>; slide: Record<string, unknown> & { id: string }; node: unknown; create(board: Record<string, unknown>): Record<string, unknown>; render(...args: unknown[]): void; command(action: string, card?: number): void; tick(session: SFBoardSession, dt: number): boolean | void; interval?: number }

@@ -102,7 +102,10 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
     } else {
       const qs = slides.filter((x) => x.game?.id === g.id && x.game.role === 'question' && x.game.quiz);
       // The phones' skin for a step of the game: its own style, a cover's or a scores slide's the style of the game's questions (a format's name is not a style: 'horse-race' is the style 'race').
-      const style = mechanicOf(String(g.quiz?.style ?? qs[0]?.game?.quiz?.style ?? g.format));
+      // A game played on a board (live/boards) has the board's skin around it: its style's mechanic ('count', 'claim', 'bingo', 'bowl').
+      const onBoard = slides.map((x) => (x.game?.id === g.id && x.game.role === 'board' ? boardOn(x.game.board) : null)).find(Boolean);
+      const boardStyle = onBoard ? onBoard.kind.styleOf?.(boardData({ key: onBoard.kind.key, slide: { ...onBoard.slide, id: s.id } })) ?? onBoard.kind.style : '';
+      const style = boardStyle ? mechanicOf(boardStyle) : mechanicOf(String(g.quiz?.style ?? qs[0]?.game?.quiz?.style ?? g.format));
       if (g.role === 'question' && g.quiz) {
         const key = g.key ?? s.id;
         if (!asked.has(key)) {
@@ -116,7 +119,9 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
         // A board: one step, the slide SlideForge compiled for it, run by the room's board desk.
         const on = boardOn(g.board)!;
         const title = String(on.slide.title ?? g.label), text = Array.isArray(on.slide.bullets) ? (on.slide.bullets as string[]).join('\n') : '';
-        out.push({ id: s.id, title, text, activity: 'moment', gameId: g.id, style: on.kind.style, board: { key: on.kind.key, slide: { ...copy(on.slide), id: s.id } } });
+        out.push({ id: s.id, title, text, activity: 'moment', gameId: g.id, style: boardStyle, board: { key: on.kind.key, slide: { ...copy(on.slide), id: s.id } } });
+      } else if (g.role !== 'cover' && onBoard?.kind.wholeGame) {
+        // A board that plays the whole game (memory, bingo, quiz bowl): its other slides (a study, its cards, its set) are not steps of their own, as in classic.
       } else if (g.role === 'end' && slides.some((x) => x.game?.id === g.id && x.game.role === 'board' && boardOn(x.game.board)?.kind.answersOnEnd)) {
         // The board's answers (Low-stakes quiz): its reveal draws them, so they are not a step of their own.
       } else if (roundQuizzes(s).length) {
@@ -129,13 +134,12 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
         });
       } else if (g.role !== 'answer') {
         const rounds = slides.filter((x) => x.game?.id === g.id).reduce((n, x) => n + roundQuizzes(x).length, 0);
-        const board = slides.map((x) => (x.game?.id === g.id && x.game.role === 'board' ? boardOn(x.game.board) : null)).find(Boolean);
-        const said = board?.kind.coverText?.(boardData({ key: board.kind.key, slide: { ...board.slide, id: s.id } }));
+        const said = onBoard?.kind.coverText?.(boardData({ key: onBoard.kind.key, slide: { ...onBoard.slide, id: s.id } }));
         const text = g.role === 'cover' ? said || `${new Set(qs.map((x) => x.game!.key ?? x.id)).size + rounds} questions` : '';
         out.push({ id: s.id, title: g.role === 'cover' ? g.label : s.name, text, activity: 'moment', gameId: g.id, style, results: g.role === 'end' });
       }
       // A style that plays without a scores slide (Odd one out: nobody is scored) ends on its last answer, as classic's game does by default.
-      if (lastOf.get(g.id) === k && styleForFormat(g.format)?.scoreSlide !== false && !slides.some((x) => x.game?.id === g.id && x.game.role === 'end')) {
+      if (lastOf.get(g.id) === k && !onBoard && styleForFormat(g.format)?.scoreSlide !== false && !slides.some((x) => x.game?.id === g.id && x.game.role === 'end')) {
         out.push({ id: `${g.id}:scores`, title: `${g.label} — scores`, text: '', activity: 'moment', gameId: g.id, style, results: true });
       }
     }
