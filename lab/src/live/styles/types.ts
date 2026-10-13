@@ -11,7 +11,9 @@
 
 import { answerLabel, markResponse } from '@sf/games/registry.js';
 import type { QuestionFields, Response, TallyAnswer } from '../protocol';
+import type { RoomState } from '../room';
 import type { RoomQuiz } from '../show';
+import type { SpokenSpec } from '../spoken';
 import type { TypedGroup } from '../typed';
 
 /** One answer the teacher enters by key: an option index, the words typed for a Type answer question, a number for
@@ -60,7 +62,25 @@ export type WallDetail =
   | { kind: 'gaps'; gaps: GapsModel | null }
   | { kind: 'sort'; sort: SortModel | null }
   | { kind: 'typed'; groups: TypedGroup[] | null }
-  | { kind: 'line'; line: LineModel | null };
+  | { kind: 'line'; line: LineModel | null }
+  | { kind: 'spoken'; spoken: SpokenWall };
+
+/** A spoken game's wall (live/spoken.ts): the verdict pads, who is speaking, what the last verdict did, how many the game has had accepted. */
+export interface SpokenWall {
+  /** The verdicts the teacher may give, in the question's order. */
+  verdicts: { index: number; label: string }[];
+  /** After the reveal: the verdict given, or null when the question closed without one. */
+  given: number | null;
+  /** The speaker the teacher picked ('' for the room), the credit line of the last verdict, and a verdict held until the teacher says who spoke ('' none). */
+  who: string; credit: string; held: string;
+  /** How many verdicts the game has had accepted, and what the wall calls them. */
+  count: number; counts: string;
+  /** The question cube's face that came up ('' for the others). */
+  face: string;
+  /** Who may be named as the speaker: the room, then the teams (a teams room) and the players; `speaker` is the key of the one picked (`room`, `t<team>`, `p<player>`). */
+  speakers: { key: string; label: string }[];
+  speaker: string;
+}
 
 /** Spot the error's reveal: every word of the passage with how many of the room tapped it (the heat), the error's words marked, and the answer said. */
 export interface HeatModel { words: { index: number; label: string; count: number; error: boolean }[]; total: number; answer: string }
@@ -89,7 +109,7 @@ export interface Briefing { role: string; participation: string; headPrompt: str
 export type Answer = Pick<TallyAnswer, 'id' | 'response'> & { sure?: boolean | null; elapsedMs?: number };
 
 /** What the wall's view may need beyond the answers: whether the gate step was taken, and the Showdown's split and switches. */
-export interface WallContext { gated: boolean; split: number[] | null; switched: number }
+export interface WallContext { gated: boolean; split: number[] | null; switched: number; room?: RoomState }
 
 export interface Range { min: number; max: number; step: number; unit: string }
 
@@ -140,6 +160,8 @@ export interface StyleEntry {
   drip?(q: RoomQuiz): { word: string; hint: string; start: number; total: number; everyMs: number };
   /** What the teacher-entry window needs to know of the question beside its options: the gaps of a Fill the gaps, the columns of a sort. */
   manualQuestion?(q: RoomQuiz): { gaps?: number; bins?: string[] };
+  /** A spoken game (live/spoken.ts): the phones answer nothing, the teacher gives a verdict by voice and names who spoke. */
+  spoken?: SpokenSpec;
   /** The wall's view of the question, from the answers in. */
   wall(q: RoomQuiz, answers: Answer[], revealed: boolean, ctx?: WallContext): WallDetail;
   /** The teacher's entry by key as an answer to send, or undefined when it is not one for this style. */

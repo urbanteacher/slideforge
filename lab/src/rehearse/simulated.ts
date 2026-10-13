@@ -97,6 +97,7 @@ class Phone {
   }
 
   private onQuestion(q: QuestionFrame): void {
+    if (q.spoken) return; // a spoken game: the phones listen and watch, the teacher gives the verdict
     if (this.answered.has(q.id)) return; // the relay says it again after a reconnect; the answer is already in
     this.answered.add(q.id);
     this.lastAsked = q;

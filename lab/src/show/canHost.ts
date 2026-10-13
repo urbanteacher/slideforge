@@ -3,7 +3,7 @@
 // Pure: it reads the lab deck, and nothing else.
 //
 // Yes only when the room has nothing it cannot run: every game in the lesson is of a style the room runs (the
-// registry in live/styles: Multiple choice, True or false, True / false showdown, Type answer, Slider, Time traveler, Ranking, Odd one out, Predict the outcome, Spot the error, Definition challenge, Emoji guess, Fill in the blanks, Compare & contrast's sort, Horse race, Boss battle, Word reveal), the lesson asks at least one
+// registry in live/styles: Multiple choice, True or false, True / false showdown, Type answer, Slider, Time traveler, Ranking, Odd one out, Predict the outcome, Spot the error, Definition challenge, Emoji guess, Fill in the blanks, Compare & contrast's sort, Horse race, Boss battle, Word reveal, and the spoken games: Random challenge, Question cube), the lesson asks at least one
 // question or audience feedback prompt (poll, word cloud, brainstorm or scale, M9), and no slide carries an
 // activity, a live figure, a stand-in for a SlideForge check, or feedback on a game slide. Those are SlideForge's
 // to run until the lab's host runs them (M10 onward). Feedback that is not complete (no prompt, a poll without two

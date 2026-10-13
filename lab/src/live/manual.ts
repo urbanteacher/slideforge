@@ -4,8 +4,8 @@
 // room with an `sf-manual-state`. manual.html and js/manual.js are not changed (hard rule 5): this is the host
 // they were written for, in the lab. The commands are turned into the room's own messages by LiveHost.
 //
-// The styles in styles/ (Multiple choice, True or false, Type answer, Slider) say how an answer entered by key is read. The commands of
-// the spoken formats (recipient, verdicts, proposals) have no meaning in this room and are ignored.
+// The styles in styles/ say how an answer entered by key is read. The spoken formats (Random challenge, Question cube, Spin & explain,
+// Heads up, Connection maker, Concept chain) are given a verdict by `revealWith`, and a speaker by `recipient` (live/spoken.ts).
 
 import type { LiveHost } from './host';
 import type { RoomQuiz } from './show';
@@ -39,9 +39,10 @@ export function manualState(host: Pick<LiveHost, 'state' | 'slide'>): Record<str
   return {
     type: 'sf-manual-state', active: !!s.pin && !s.ended, showing: !!host.slide, live: s.live, view: 'roster', report: s.report,
     players: s.players, teams: s.teams, mode: s.mode, pin: s.pin,
-    recipient: { type: 'room' }, pendingVerdict: null, recentSpeakers: [], handCounts: null, proposals: [], onTable: '', lastCredit: null, oralCount: 0,
+    recipient: s.spoken.recipient, pendingVerdict: quiz && s.spoken.pending?.slideId === quiz.id ? { choice: s.spoken.pending.choice, label: quiz.options[s.spoken.pending.choice] ?? '' } : null,
+    recentSpeakers: s.spoken.recent, handCounts: null, proposals: [], onTable: '', lastCredit: s.spoken.credit, oralCount: quiz ? s.oralCounts[quiz.gameId] ?? 0 : 0,
     question: quiz && asked
-      ? { id: quiz.id, question: quiz.question, input: styleFor(quiz).input, options: quiz.options, gaps: styleFor(quiz).manualQuestion?.(quiz).gaps ?? 0, bins: styleFor(quiz).manualQuestion?.(quiz).bins ?? null, spoken: false, scoreSpoken: false, style: quiz.style, range: styleFor(quiz).range(quiz), revealed }
+      ? { id: quiz.id, question: quiz.question, input: styleFor(quiz).input, options: quiz.options, gaps: styleFor(quiz).manualQuestion?.(quiz).gaps ?? 0, bins: styleFor(quiz).manualQuestion?.(quiz).bins ?? null, spoken: !!styleFor(quiz).spoken, scoreSpoken: quiz.scoreSpoken === true, style: quiz.style, range: styleFor(quiz).range(quiz), revealed }
       : null,
     // Marked here, where the key is, and only after the reveal: the window must not give the answer away early.
     answers: (t?.answers ?? []).map((a) => ({ id: a.id, response: a.response, sure: a.sure, right: revealed && quiz ? styleFor(quiz).mark(quiz, a.response) : null })),
@@ -117,9 +118,11 @@ export class ManualBridge {
       }
       case 'tally': if (Array.isArray(c.counts)) h.manualTally((c.counts as unknown[]).map(Number)); break;
       case 'reveal': h.reveal(); break;
-      case 'revealWith': h.reveal(undefined, undefined, Number.isInteger(c.choice) ? (c.choice as number) : undefined); break;
+      case 'revealWith': if (Number.isInteger(c.choice)) h.revealWith(c.choice as number); else h.reveal(); break;
+      case 'recipient': h.recipient(c.recipient); break;
+      case 'verdictRoom': h.verdictRoom(); break;
       case 'report': h.report(); break;
-      default: break; // recipient, verdictRoom, verdictCancel, useProposal: spoken formats, not in this room
+      default: break; // verdictCancel is handled by no sender in classic either
     }
     this.push();
   }

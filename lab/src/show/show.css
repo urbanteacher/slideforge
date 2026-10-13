@@ -286,3 +286,16 @@
 .mech-word span { min-width: calc(var(--u) * 56); height: calc(var(--u) * 100); display: inline-flex; align-items: center; justify-content: center; border-bottom: calc(var(--u) * 6) solid rgba(255,255,255,.55); }
 .mech-word span.closed { opacity: .45; }
 .mech-word span.mech-gap { border-bottom: 0; min-width: calc(var(--u) * 28); }
+
+/* The spoken games' wall (SpokenViews.tsx): verdict pads, who spoke, the game's count. */
+.wall-spoken { pointer-events: auto; flex-wrap: wrap; justify-content: center; gap: calc(var(--u) * 24); max-width: 90vw; white-space: normal; }
+.spoken-who { display: flex; align-items: center; gap: calc(var(--u) * 12); color: var(--muted); font-size: calc(var(--u) * 30); }
+.spoken-who select { font: inherit; padding: calc(var(--u) * 4) calc(var(--u) * 12); background: var(--field-2); color: inherit; border: 1px solid var(--line-2); border-radius: calc(var(--u) * 10); }
+.spoken-pads { display: flex; gap: calc(var(--u) * 14); }
+.spoken-pads button, .spoken-held button { font: inherit; font-weight: 700; min-height: calc(var(--u) * 64); padding: 0 calc(var(--u) * 32); color: #fff; background: var(--accent); border: 0; border-radius: calc(var(--u) * 14); cursor: pointer; }
+.spoken-held button { min-height: 0; padding: 0 calc(var(--u) * 12); background: transparent; color: var(--accent-2); text-decoration: underline; }
+.spoken-pads button:focus-visible, .spoken-held button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.spoken-held { margin: 0; flex-basis: 100%; text-align: center; color: var(--accent-2); font-size: calc(var(--u) * 30); }
+.spoken-said { margin: 0; font-weight: 700; }
+.spoken-face { padding: calc(var(--u) * 4) calc(var(--u) * 20); border-radius: 999px; background: var(--field-2); font-weight: 700; text-transform: capitalize; }
+.spoken-count { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent-2); }

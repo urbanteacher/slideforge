@@ -17,6 +17,7 @@ import { Boss, Race, type DripView } from './mechanics';
 import { Room, type Listener, type RoomState } from './room';
 import type { RoomQuiz, RoomShow, RoomSlide } from './show';
 import { wordRevealMask } from '@sf/games/wordreveal.js';
+import { SpokenDesk } from './spokenroom';
 import { styleFor, type ManualChoice } from './styles';
 
 export interface HostOptions {
@@ -71,6 +72,8 @@ export class LiveHost {
   private boss: Boss | null = null;
   private dripTimer: ReturnType<typeof setInterval> | null = null;
   private dripShown = 0;
+  /** The spoken desk: who is speaking, a held verdict, the credit (spokenroom.ts). */
+  private readonly desk: SpokenDesk;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
   constructor(private readonly opts: HostOptions) {
@@ -80,6 +83,10 @@ export class LiveHost {
       onOpen: () => this.opened(),
       onMessage: (m) => this.heard(m),
       onDown: () => { this.room.socket(false); },
+    });
+    this.desk = new SpokenDesk({
+      state: () => this.state, slide: () => this.slide, send: (m) => this.send(m),
+      reveal: () => this.reveal(), revealed: (id) => this.isRevealed(id), publish: (patch) => this.room.setSpoken(patch),
     });
     this.resetMechanic();
     this.room.subscribe((s) => {
@@ -181,6 +188,7 @@ export class LiveHost {
     // against that option, the key notwithstanding. Set on the question itself, as classic sets it on the slide.
     if (correct != null && Number.isInteger(correct) && correct >= 0 && correct < q.options.length) q.correct = correct;
     this.clearSure();
+    this.desk.closing(q);
     const t = this.state.tally && this.state.tally.id === q.id ? this.state.tally : null;
     const list = answers ?? t?.answers ?? [];
     // The style says what is right and what is said: an open question (typed, a number) has no option to be right,
@@ -192,6 +200,7 @@ export class LiveHost {
       marks: q.unmarked ? [] : list.map((a) => [a.id, style.mark(q, a.response)] as [number, boolean]),
       correct: said.correct, answer: said.answer, explanation: q.explanation ?? '',
       ...(style.gains ? { gains: style.gains(q, list, { dripShown: this.dripShown }) } : {}),
+      ...this.desk.revealExtras(q),
     });
     this.revealSent.add(q.id);
     this.stopDrip();
@@ -217,6 +226,15 @@ export class LiveHost {
             : 'sort' in choice ? { t: 'manualAnswer', id: qid, playerId, sort: choice.sort } : { t: 'manualAnswer', id: qid, playerId, value: choice.value })
           : { t: 'manualAnswer', id: qid, playerId, choice });
   }
+
+  /** The teacher says who is speaking (manual.html's `recipient`): a held verdict is completed by it. */
+  recipient(picked: unknown): void { this.desk.recipient(picked); }
+  /** A spoken question's verdict (the wall's pads, or `revealWith` in the entry window). False when the question on the wall is not one it can be given to. */
+  verdict(choice: number): boolean { return this.desk.verdict(choice); }
+  /** "Count it for the room": a held verdict lands with no points. */
+  verdictRoom(): void { this.desk.verdictRoom(); }
+  /** "The answer is C", said by pressing C in the entry window: the verdict on a spoken question, else the reveal against that option. */
+  revealWith(choice: number): void { if (!this.verdict(choice)) this.reveal(undefined, undefined, choice); }
 
   manualRename(playerId: number, name: string): void { this.send({ t: 'manualRename', playerId, name }); }
   manualTeam(playerId: number, team: number): void { this.send({ t: 'manualTeam', playerId, team }); }
@@ -404,6 +422,7 @@ export class LiveHost {
     this.stale = false;
     const revealed = !!s.quiz && this.isRevealed(s.quiz.id);
     if (s.quiz && !revealed) this.startDrip(s.quiz); else { this.stopDrip(); this.room.setMech({ drip: null }); }
+    this.desk.landed(s);
     const asking = ask && s.activity === 'question' && !!s.quiz && !revealed;
     // A style that opens in a reading phase (Definition challenge) tells the room to read, and asks when the reading is over.
     const reading = asking && !!styleFor(s.quiz!).reading && !this.readDone.has(s.quiz!.id);
@@ -437,7 +456,7 @@ export class LiveHost {
     const f: QuestionFields = {
       id: q.id, n: quizzes.findIndex((x) => x.quiz!.id === q.id) + 1, total: quizzes.length, question: q.question,
       voteOnly: q.voteOnly === true, unmarked: q.unmarked === true, sourceSlideId: q.sourceSlideId || q.id,
-      input: style.input, spoken: false, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: style.companion?.(q).participation ?? '',
+      input: style.input, spoken: !!style.spoken, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: style.companion?.(q).participation ?? '',
       confidence: q.confidence !== false, range: style.range(q), options: (q.options ?? []).filter((o) => String(o).trim()),
       // SF.questionTimeLimit: no clock while the teacher enters answers by key.
       timeLimit: hasManual ? 0 : Math.max(0, Number(q.timeLimit) || 0), points: q.points, style: q.style,

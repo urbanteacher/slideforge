@@ -3,6 +3,7 @@
 // off the host's own frames). Scores are the relay's: the host never adds them up itself.
 
 import type { BossView, DripView, RaceView } from './mechanics';
+import { emptySpoken, type SpokenView } from './spoken';
 import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
@@ -68,15 +69,20 @@ export interface RoomState {
   recording: boolean | null;
   /** The lesson's mechanic as the wall draws it (Horse race, Boss battle, Word reveal). */
   mech: Mech;
+  /** The spoken desk (live/spoken.ts): who is speaking, the held verdict, the credit, the proposal on the table, the chain, the round. Set by the host. */
+  spoken: SpokenView;
+  /** How many verdicts each spoken game has had accepted, by game id, as the relay counts them (`oralCount`). */
+  oralCounts: Record<string, number>;
 }
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null,
   revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
+  spoken: emptySpoken(), oralCounts: {},
 });
 
-export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' }) => void;
+export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' }) => void;
 
 export class Room {
   private s: RoomState = emptyRoom();
@@ -131,7 +137,7 @@ export class Room {
     const s = { ...this.s };
     switch (m.t) {
       case 'hosted':
-        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], rows: [], scores: {}, tally: null, feedback: null, error: null });
+        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], rows: [], scores: {}, tally: null, feedback: null, error: null, oralCounts: {} });
         break;
       case 'rehosted':
         Object.assign(s, { live: true, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, mode: m.mode, teams: m.teams, phase: m.phase, error: null });
@@ -174,6 +180,7 @@ export class Room {
         s.revealed = s.revealed.filter((id) => id !== m.id);
         if (s.tally && s.tally.id === m.id) s.tally = { ...s.tally, rev: m.rev, answers: m.answers };
         break;
+      case 'oralCount': s.oralCounts = { ...s.oralCounts, [m.gameId]: m.count }; break;
       case 'manualError': s.manualError = { message: m.message, playerId: m.playerId, id: m.id }; break;
       case 'recording': s.recording = m.persisted !== false; break;
       case 'sessionReport': s.report = m.report; break;
@@ -195,6 +202,12 @@ export class Room {
   setMech(patch: Partial<Mech>): void {
     this.s = { ...this.s, mech: { ...this.s.mech, ...patch } };
     this.emit({ t: 'mech' });
+  }
+
+  /** The spoken desk moved: the speaker, a held verdict, the credit, the proposal on the table, the chain or the round (a field left out stays as it is). */
+  setSpoken(patch: Partial<SpokenView>): void {
+    this.s = { ...this.s, spoken: { ...this.s.spoken, ...patch } };
+    this.emit({ t: 'spoken' });
   }
 
   /** The host ended the room and the relay closed it. */

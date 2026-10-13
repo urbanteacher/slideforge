@@ -48,7 +48,7 @@ export function profiles(n: number, rng: Rng = Math.random): Profile[] {
 export type Answer = { t: 'answer'; choice: number } | { t: 'answer'; text: string } | { t: 'answer'; value: number } | { t: 'answer'; order: number[] } | { t: 'answer'; fill: number[] } | { t: 'answer'; sort: number[] };
 
 /** What the relay sends a phone for a question: the part the simulated phone reads. */
-export interface QuestionFrame { id: string; input?: string; options?: string[]; range?: { min: number; max: number; step: number } | null; timeLimit?: number; confidence?: boolean }
+export interface QuestionFrame { id: string; input?: string; options?: string[]; range?: { min: number; max: number; step: number } | null; timeLimit?: number; confidence?: boolean; spoken?: boolean }
 
 /** How long after the question is asked this learner answers: 0.7 s at the quickest, up to most of the question's time (no limit: up to 9 s). */
 export function answerDelay(p: Profile, q: Pick<QuestionFrame, 'timeLimit'>, rng: Rng = Math.random): number {

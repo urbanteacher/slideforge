@@ -121,7 +121,7 @@ export function wallOf(i: WallInput): Wall {
       n: steps.slice(0, at + 1).filter((s) => s.room.quiz).length, total: steps.filter((s) => s.room.quiz).length, text: quiz.question, style: String(quiz.style ?? 'choice'),
       options: options.map((label, index) => ({ index, label, count: counts[index], correct: revealed && index === quiz.correct })),
       right: revealed ? answers.filter((a) => style.mark(quiz, a.response)).length : 0,
-      detail: style.wall(quiz, answers, revealed, { gated: room.gated.includes(quiz.id), split: t?.split ?? null, switched: t?.switched ?? 0 }),
+      detail: style.wall(quiz, answers, revealed, { gated: room.gated.includes(quiz.id), split: t?.split ?? null, switched: t?.switched ?? 0, room }),
       locked: !revealed && !!style.gate && room.gated.includes(quiz.id),
       answered: t?.answered ?? 0, players: t?.total ?? room.players.filter((p) => p.connected).length, timeLimit: room.question?.timeLimit ?? 0,
       answer: revealed ? style.reveal(quiz).answer : '', explanation: revealed ? quiz.explanation ?? '' : '',

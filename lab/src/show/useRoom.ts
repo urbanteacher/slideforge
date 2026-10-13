@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { emptyRoom, LiveHost, ManualBridge, styleFor, teamBoardOf, type RoomShow, type RoomState } from '../live';
+import type { Recipient } from '../live/spoken';
 import type { ShowHooks } from './hooks';
 import { bindReports, keepReport } from './reports';
 import { timeUpIn } from './clock';
@@ -30,6 +31,10 @@ export interface RoomApi {
   /** The slide built a step of its help (Emoji guess): the room releases the same one. */
   release: () => void;
   goTo: (step: number) => void;
+  /** A spoken game (live/spoken.ts): the teacher's verdict, who spoke, and "count it for the room" (the wall's pads). */
+  verdict: (index: number) => void;
+  speaker: (r: Recipient) => void;
+  verdictRoom: () => void;
   /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
   closeFeedback: () => void;
   showFeedback: () => void;
@@ -132,6 +137,9 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     next: () => { host.current?.next(); sync(); },
     release: () => { host.current?.release(); sync(); },
     goTo: (step) => { host.current?.goTo(step); sync(); },
+    verdict: (index) => { host.current?.verdict(index); sync(); },
+    speaker: (r) => { host.current?.recipient(r); sync(); },
+    verdictRoom: () => { host.current?.verdictRoom(); sync(); },
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),
     end,

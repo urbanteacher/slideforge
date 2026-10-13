@@ -24,6 +24,7 @@ import { InkBar, InkCanvas } from './InkLayer';
 import { SimulatedClass } from '../rehearse';
 import { MechanicViews } from './MechanicViews';
 import { Ended, Leaderboard, Lobby, QuestionStrip, RailView, RevealStrip } from './WallViews';
+import { SpokenPad } from './SpokenViews';
 import { nextAction, wallOf } from './wallModel';
 
 const BAR_HIDE_MS = 2600;
@@ -381,8 +382,9 @@ function Show() {
       {wall && (
         <div className="wall-layer" data-view={view}>
           {lobby && !finished && <Lobby wall={wall} connected={room.state.connected} error={room.state.error} onStart={() => nextRef.current()} onRoster={room.state.pin ? room.addNames : undefined} />}
-          {!finished && wall.view === 'question' && wall.question && (wall.question.locked ? <RevealStrip q={wall.question} /> : <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />)}
-          {!finished && wall.view === 'reveal' && wall.question && <RevealStrip q={wall.question} />}
+          {!finished && ['question', 'reveal'].includes(wall.view) && wall.question?.detail.kind === 'spoken' && <SpokenPad key={wall.question.text} q={wall.question} revealed={wall.view === 'reveal'} actions={{ onVerdict: room.verdict, onSpeaker: room.speaker, onVerdictRoom: room.verdictRoom }} />}
+          {!finished && wall.view === 'question' && wall.question && wall.question.detail.kind !== 'spoken' && (wall.question.locked ? <RevealStrip q={wall.question} /> : <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />)}
+          {!finished && wall.view === 'reveal' && wall.question && wall.question.detail.kind !== 'spoken' && <RevealStrip q={wall.question} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}
           {!finished && ['question', 'reveal', 'leaderboard'].includes(wall.view) && <MechanicViews mech={wall.mech} scores={wall.view === 'leaderboard'} />}
           {rail && <RailView rail={rail} />}

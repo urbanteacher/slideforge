@@ -3,6 +3,8 @@
 // (join.html) and the teacher-entry window (manual.html) do not change (hard rule 5): these are the
 // shapes they already accept and send. Section numbers are the protocol doc's.
 
+import type { Recipient } from './spoken';
+
 /** A player's response as the relay stores it. Choice: the option index. */
 export type Response = number | string | number[];
 
@@ -30,7 +32,7 @@ export interface Companion { style: string; role: string; participation: string;
 export interface QuestionFields {
   id: string; n: number; total: number; question: string;
   voteOnly: boolean; unmarked: boolean; sourceSlideId: string;
-  input: 'choice' | 'text' | 'number' | 'order' | 'tap' | 'fill' | 'sort'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
+  input: 'choice' | 'text' | 'number' | 'order' | 'tap' | 'fill' | 'sort'; spoken: boolean; gameId: string; scoreSpoken: boolean; participation: string;
   confidence: boolean; range: { min: number; max: number; step: number; unit: string } | null; options: string[]; timeLimit: number; points: number; style: string;
   headPrompt?: string;
   /** Predict the outcome / True or false showdown / Time traveler: the flags classic's question frame carries. */
@@ -39,6 +41,8 @@ export interface QuestionFields {
   clueMode?: 'emoji'; clues?: string;
   /** Fill the gaps: the text around the gaps. Compare & contrast's sort: the three columns. */
   fillParts?: string[]; bins?: string[];
+  /** Heads up: the term (every phone but the guesser's shows it), the guesser, and the seconds left of the round. */
+  term?: string; guesser?: number; roundLeft?: number;
 }
 
 /** A feedback `prompt` (§9): what the room is asked, with the fields classic sends (js/live.js syncPrompt). `ends` is a scale's two
@@ -68,7 +72,11 @@ export type HostMessage =
   | ({ t: 'at' } & AtFields)
   | ({ t: 'idle' } & Companion)
   | ({ t: 'question' } & QuestionFields)
-  | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string; gains?: [number, number][] }
+  | { t: 'reveal'; id: string; rev: number; marks: [number, boolean][]; correct: number; answer: string; explanation: string; gains?: [number, number][]; spoken?: { recipient: Recipient } }
+  /** A spoken question's verdict names who spoke; Heads up's guesser is picked before the verdict (§6.5). */
+  | { t: 'guesser'; id: number | null }
+  /** Concept chain: an accepted link, credited while the term is still open (§ oralCredit). */
+  | { t: 'oralCredit'; id: string; gameId: string; style: 'conceptchain'; recipient: Recipient; scoreSpoken: boolean }
   | { t: 'closeAnswers'; id: string }
   | { t: 'showdown'; id: string }
   | { t: 'hintOut'; id: string }
@@ -101,11 +109,13 @@ export type RelayMessage =
   | { t: 'markStale'; id: string; rev: number; answers: TallyAnswer[] }
   | { t: 'manualError'; message: string; playerId?: number; id?: string }
   | { t: 'teamAnswers'; correct: number; counts: number[][] }
+  /** A spoken verdict the relay counted: how many the game has had accepted (§ oralCount). */
+  | { t: 'oralCount'; gameId: string; slideId: string; kind: string; count: number; accepted: boolean }
   | ({ t: 'responses'; id: string; answered: number; players: number } & Digest)
   | { t: 'sessionReport'; report: unknown }
   | { t: 'sessionClosed'; report: unknown }
   | Other;
-export interface Other { t: 'recording' | 'bookmarks' | 'signals' | 'qa' | 'reaction' | 'oralCount'; [field: string]: unknown }
+export interface Other { t: 'recording' | 'bookmarks' | 'signals' | 'qa' | 'reaction'; [field: string]: unknown }
 
 /** The room's phase (§2), as the relay keeps it and the host follows it. */
 export type Phase = 'lobby' | 'running' | 'question' | 'revealed' | 'idle' | 'sprint';
