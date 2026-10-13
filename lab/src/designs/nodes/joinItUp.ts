@@ -1,78 +1,75 @@
-import type { LayoutStyle } from '../../layouts';
-import type { Layer } from '../../core';
-import { BASE, FOOT, HY, LEFT, LIFT, PAD, W, box, eyebrow, ground, hero, part, phonesCue, rect, slideOf, tint, txt } from '../engage/kit';
+import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
+import { LINK, LINKS, T, barCard, chain, heading, label, onClick, after, pill } from './look';
 import { marked, type NodesFormat } from './types';
 
-// Join it up: the chain a question needs, link by link. Nodes' finding is that answers lose marks for
-// the relationship they leave out, not the facts. The wall shows the empty chain under the question;
-// the phones put the links in order; the reveal fills the chain a link per click.
+// Join it up: the join a question needs, then the link to build, as the Nodes decks draw it — a size
+// pill, the join as a chain of boxes, and the link to build as a chain filled a link per click. Answers
+// lose marks for the link they leave out, not the facts.
 
 export interface JoinItUp {
   question: string;
   /** The command word, for the eyebrow. */
   command: string;
+  /** How much the answer needs, in a pill ("Explain: a point, why, and so what"). */
+  size: string;
   /** The chain's links in order, each with its name ("Because") and the words that fill it. */
   links: { name: string; text: string }[];
-  /** What an answer without the chain gets refused for, for the notes. */
+  /** What an answer without the chain gets refused for. */
   refused?: string;
 }
 
 const STARTER: JoinItUp = {
   command: 'Explain',
   question: 'Explain why a higher clock speed can improve a CPU’s performance.',
+  size: 'Explain: a point, the reason, and what follows from it',
   links: [
     { name: 'Point', text: 'A higher clock speed' },
     { name: 'Because', text: 'means more clock cycles each second' },
     { name: 'So', text: 'the CPU can fetch, decode and execute more instructions each second' },
     { name: 'In this case', text: 'so programs run faster' },
   ],
-  refused: 'Naming the clock speed without the because and so: a point with no relationship to performance.',
+  refused: 'naming the clock speed without the because and the so: a point with nothing joining it to performance',
 };
-
-/** The chain as columns under the question, each link's name at the top; filled when `filled`. */
-function chain(st: LayoutStyle, o: JoinItUp, top: number, filled: boolean): Layer[] {
-  const links = o.links.slice(0, 5);
-  const n = Math.max(1, links.length), colW = W / n;
-  const out: Layer[] = [];
-  links.forEach((l, i) => {
-    const x0 = Math.round(i * colW), x1 = Math.round((i + 1) * colW);
-    const col = box(x0, top, x1 - x0, BASE - top);
-    const pad = i === 0 ? LEFT : PAD;
-    const inner = (dy: number, h: number) => box(col.x + pad, col.y + dy, col.w - pad - PAD, h);
-    out.push(
-      rect(`${l.name} — column`, col, tint(st, i), { type: 'fade', duration: 0.6 }),
-      rect(`${l.name} — bar`, box(col.x, col.y, col.w, 12), st.accent, { type: 'wipeRight', duration: 0.6 }),
-      txt(`${l.name} — name`, l.name, inner(44, 90), { font: st.display, weight: st.displayWeight, size: n >= 5 ? 64 : 76, color: st.accent, lineHeight: 1, fitGroup: 'link-name' }, { type: 'fade', duration: 0.6 }),
-    );
-    if (i) out.push(txt(`${l.name} — arrow`, '→', box(col.x - 34, col.y + 50, 68, 76), { font: st.body, weight: '700', size: 60, color: st.accent, align: 'center' }));
-    if (filled) {
-      const p = part('links', i, 'on', 0);
-      out.push(txt(`${l.name} — link`, l.text, inner(160, FOOT - col.y - 160), { font: st.body, weight: '600', size: n >= 5 ? 44 : 52, color: st.ink, lineHeight: 1.25, fitGroup: 'link-text' }, p.lead('rise')));
-    } else {
-      out.push(txt(`${l.name} — blank`, '…', inner(160, 90), { font: st.body, weight: '400', size: 64, color: st.muted }));
-    }
-  });
-  return out;
-}
 
 export const joinItUp: NodesFormat<JoinItUp> = {
   id: 'join-it-up', label: 'Join it up', part: 'The relationship required',
-  aim: 'Build the chain the question needs, link by link: answers lose marks for the link they leave out, not the facts.',
-  howTo: ['Read the question: what must the answer connect?', 'On phones, put the links in order.', 'Each click fills the next link on the wall.'],
+  aim: 'Build the join the question needs, link by link: answers lose marks for the link they leave out, not the facts.',
+  howTo: ['Read the question and the join it needs.', 'On phones, put the links in order.', 'Each click builds the next link of the answer.'],
   phones: 'Put the links in order',
   starter: STARTER,
   slides: (st, o) => {
-    const top = 520 - LIFT;
+    const links = o.links.slice(0, 5);
+    const top = (extra: ReturnType<typeof label>[] = []) => [
+      ground(st), label(st, `Join it up · ${o.command}`, LEFT, EY, 1100, st.accent, 30), ...extra,
+      heading(st, o.question, HY, 60, W - LEFT * 2, 150),
+      ...pill(st, 'Size', o.size, LEFT, HY + 168, { fill: rgba(LINK.A, 0.16), size: 28 }),
+      T(st, 'The join', 'The join this question needs:', LEFT, HY + 262, 1200, 50, { weight: '800', size: 38 }),
+      ...chain(st, links.map((l) => l.name), LEFT, HY + 326, { h: 92, size: 38, gap: 80, strokes: LINKS, build: 'still', name: 'Join' }),
+      T(st, 'The link', 'Here, the link to build:', LEFT, HY + 478, 1200, 50, { weight: '800', size: 38 }),
+    ];
+    const n = links.length, gap = 64, room = W - LEFT * 2;
+    const widths = links.map(() => Math.floor((room - gap * (n - 1)) / n));
+    const y2 = HY + 542, h2 = Math.min(220, FOOT - y2);
     const ask = slideOf('Join it up', [
-      ground(st), eyebrow(st, `Join it up · ${o.command}`), phonesCue(st, 'put the links in order'),
-      hero(st, 'Question', o.question, box(LEFT, HY, W - LEFT * 2, top - HY - 36), 104),
-      ...chain(st, o, top, false),
-    ], st, `Join it up. ${o.question}\nThe chain: ${o.links.map((l) => `${l.name}: ${l.text}`).join(' → ')}`);
-    const reveal = slideOf('Join it up · the chain', [
-      ground(st), eyebrow(st, `Join it up · the chain`),
-      hero(st, 'Question', o.question, box(LEFT, HY, W - LEFT * 2, top - HY - 36), 84),
-      ...chain(st, o, top, true),
-    ], st, [`Each click fills the next link.`, o.links.map((l) => `${l.name}: ${l.text}`).join('\n'), o.refused ? `Refused without it: ${o.refused}` : ''].filter(Boolean).join('\n\n'));
-    return marked('join-it-up', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o);
+      ...top([phonesCue(st, 'put the links in order')]),
+      ...chain(st, links.map(() => '…'), LEFT, y2, { h: h2, size: 40, gap, widths, strokes: LINKS, build: 'still', weight: '400', name: 'Link' }),
+    ], st, `Join it up. ${o.question}\nThe join it needs: ${links.map((l) => l.name).join(' → ')}.`);
+    const reveal = slideOf('Join it up · the link', [
+      ...top(),
+      ...chain(st, links.map((l) => l.text), LEFT, y2, { h: h2, size: 34, gap, widths, strokes: LINKS, firstOnClick: true, name: 'Link' }),
+    ], st, `Each click builds the next link.\n${links.map((l) => `${l.name}: ${l.text}`).join('\n')}`);
+    const slides = [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }];
+    if (o.refused) {
+      const r = o.refused.charAt(0).toUpperCase() + o.refused.slice(1);
+      slides.push({ slide: slideOf('Join it up · refused without it', [
+        ground(st), label(st, 'Join it up', LEFT, EY, 1100, st.accent, 30),
+        heading(st, 'Refused without it', HY, 64, W - LEFT * 2, 90),
+        T(st, 'Refused', `${r}.`, LEFT, HY + 130, W - LEFT * 2, 200, { weight: '600', size: 46 }),
+        ...barCard(st, 'The chain', LEFT, HY + 370, W - LEFT * 2, Math.min(300, FOOT - HY - 370), LINK.A, rgba(LINK.A, 0.12), onClick()),
+        T(st, 'The chain — label', 'WITH THE CHAIN', LEFT + 50, HY + 400, 1200, 40, { weight: '800', size: 26, color: LINK.A, tracking: 0.08 }, after()),
+        T(st, 'The chain — words', links.map((l) => l.text).join(' → '), LEFT + 50, HY + 450, W - LEFT * 2 - 100, Math.min(220, FOOT - HY - 470), { weight: '600', size: 40 }, after()),
+      ], st, `Refused without it: ${o.refused}.`), role: 'refused' });
+    }
+    return marked('join-it-up', slides, o);
   },
 };
