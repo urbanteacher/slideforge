@@ -14,6 +14,7 @@ export { showFromDeck, type RoomQuiz, type RoomShow, type RoomSlide } from './sh
 export { feedbackOf, type RoomFeedback } from './feedback';
 export { typedGroups, type TypedGroup } from './typed';
 export { STYLES, styleFor, styleForFormat, styleNames, styleOf, type LineMark, type LineModel, type StyleEntry, type WallDetail } from './styles';
+export { MAX_TEAMS, TEAM_COLORS, TEAM_DEFAULTS, normalizeTeams, parseRoster, roomPlay, teamBoardOf, teamColor, type Roster, type RoomPlay, type TeamRow } from './teams';
 export { Room, emptyRoom, type Listener, type OpenFeedback, type OpenQuestion, type RoomState, type Tally } from './room';
 export { Connection, DEFAULT_BACKOFF, type Backoff, type ConnectionOptions, type SocketFactory, type SocketLike } from './connection';
-export type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, TallyAnswer } from './protocol';
+export type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, TallyAnswer } from './protocol';

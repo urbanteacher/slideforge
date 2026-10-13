@@ -11,6 +11,7 @@ import type { Deck, Slide } from '../core';
 import { gameStyle } from '@sf/games/registry.js';
 import { feedbackOf, type RoomFeedback } from './feedback';
 import { styleOf } from './styles';
+import { roomPlay } from './teams';
 
 /** A question as the room asks and marks it: SlideForge's quiz slide (src/games), with its game. */
 export interface RoomQuiz extends SFQuizSlide {
@@ -40,7 +41,8 @@ export interface RoomSlide {
   results?: boolean;
 }
 
-export interface RoomShow { title: string; slides: RoomSlide[] }
+/** The steps, and how the room plays: individual, or teams with their names (the first game's settings, as classic's buildRunDeck reads them). */
+export interface RoomShow { title: string; slides: RoomSlide[]; mode?: 'individual' | 'teams'; teams?: string[] }
 
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 /** A game's own phone skin off its questions (classic `Live.mechanic`): Multiple choice is 'points'. */
@@ -98,5 +100,8 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
       }
     }
   });
-  return { title: deck.title, slides: out };
+  // Teams belong to the room, not to a question: the first game's settings say (a deck of several games shares one set of teams).
+  const lead = slides.find((s) => s.game?.id && s.game.settings?.mode != null)?.game?.settings;
+  const play = roomPlay(lead);
+  return { title: deck.title, slides: out, mode: play.mode, teams: play.teams };
 }

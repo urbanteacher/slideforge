@@ -4,7 +4,7 @@
 // shell's reports, and a relay that does not answer is the show's cue to hand the lesson back to the classic host.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { emptyRoom, LiveHost, ManualBridge, type RoomShow, type RoomState } from '../live';
+import { emptyRoom, LiveHost, ManualBridge, teamBoardOf, type RoomShow, type RoomState } from '../live';
 import type { ShowHooks } from './hooks';
 import { bindReports, keepReport } from './reports';
 import { timeUpIn } from './clock';
@@ -19,6 +19,8 @@ export interface RoomApi {
   at: number;
   /** Everyone's points when the question on the wall was asked, by player id. */
   before: Record<number, number>;
+  /** Each team's points when it was asked, by team index (a teams room). */
+  teamBefore: Record<number, number>;
   /** Milliseconds since the question on the wall was asked. */
   sinceAsked: () => number;
   /** When it was asked (ms since the epoch); 0 before the first question. */
@@ -31,6 +33,8 @@ export interface RoomApi {
   showFeedback: () => void;
   /** End the room; resolves once the relay has closed it (or after classic's 1.5 s). */
   end: () => Promise<void>;
+  /** Add learners by name, to a team in a teams room (the lobby's pasted roster). */
+  addNames: (names: string[], team?: number) => void;
   /** The address (hash) the teacher-entry window opens at, or null before the room exists. */
   manualHash: () => string | null;
 }
@@ -53,6 +57,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
   const [state, setState] = useState<RoomState>(emptyRoom);
   const [at, setAt] = useState(-1);
   const [before, setBefore] = useState<Record<number, number>>({});
+  const [teamBefore, setTeamBefore] = useState<Record<number, number>>({});
 
   const sync = useCallback(() => {
     const h = host.current;
@@ -84,6 +89,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
       if (cause.t === 'question' && s.question) {
         asked.current = Date.now();
         setBefore(Object.fromEntries(s.players.map((p) => [p.id, p.score])));
+        setTeamBefore(Object.fromEntries((teamBoardOf(s) ?? []).map((t) => [t.index, t.score])));
         // The clock runs out into the reveal, as classic's does (js/live.js on the player's `timeup`). With a
         // teacher entering answers by key the host sent no limit, and there is no clock.
         if (timeUp) clearTimeout(timeUp);
@@ -110,7 +116,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
   }, [enabled, show, sync, end]);
 
   return {
-    state, at, before,
+    state, at, before, teamBefore,
     sinceAsked: () => Date.now() - asked.current,
     askedAt: () => asked.current,
     begin: (step) => { host.current?.goTo(step); host.current?.begin(); sync(); },
@@ -119,6 +125,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     closeFeedback: () => host.current?.closeFeedback(),
     showFeedback: () => host.current?.showFeedback(),
     end,
+    addNames: (names, team = 0) => host.current?.manualAdd(names, team),
     manualHash: () => bridge.current?.hash ?? null,
   };
 }

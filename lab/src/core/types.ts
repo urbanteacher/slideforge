@@ -219,6 +219,9 @@ export interface GameSettings {
   accept?: string[];
   /** Mind reveal: the words to remember. */
   words?: string[];
+  /** How the room plays: individual, or in teams with these names (2 to 6). The first game's say for the whole room. */
+  mode?: 'individual' | 'teams';
+  teams?: string[];
 }
 
 /** SlideForge's six chrome slots. What goes in each is set in the side panel; its words are typed on the slide. */

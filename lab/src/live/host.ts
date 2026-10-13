@@ -193,7 +193,7 @@ export class LiveHost {
   }
 
   private hostMessage(): HostMessage {
-    return { t: 'host', title: this.opts.show.title, mode: this.opts.mode ?? 'individual', teams: (this.opts.teams ?? DEFAULT_TEAMS).map((name) => ({ name })) };
+    return { t: 'host', title: this.opts.show.title, mode: this.opts.mode ?? this.opts.show.mode ?? 'individual', teams: (this.opts.teams ?? this.opts.show.teams ?? DEFAULT_TEAMS).map((name) => ({ name })) };
   }
 
   private opened(): void {

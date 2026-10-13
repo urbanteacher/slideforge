@@ -226,6 +226,7 @@ function Show() {
         else if (k === 'Enter' && !onControl) { e.preventDefault(); setOverview(null); goIndex(ov); }
         return;
       }
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) { if (k === 'Escape') t.blur(); return; } // typing (the class list) is not a show key
       if ((k === ' ' || k === 'Enter') && onControl) return; // a focused button is pressed, not Next
       // A slide number typed (digits, then Enter): the jump. Esc clears it.
       const digits = pushDigit(jumpRef.current, k);
@@ -269,7 +270,7 @@ function Show() {
 
   const slide = deck.slides[index];
   const embeds = slide.layers.filter((l) => l.kind === 'video' && l.visible && l.box && videoEmbed(l.params)).map((l) => ({ id: l.id, box: l.box!, src: videoEmbed(l.params), title: l.name }));
-  const wall = roomOn ? wallOf({ room: room.state, steps, at: room.at, before: room.before, scoresOn, fallbackJoin: joinFallback() }) : null;
+  const wall = roomOn ? wallOf({ room: room.state, steps, at: room.at, before: room.before, teamBefore: room.teamBefore, scoresOn, fallbackJoin: joinFallback() }) : null;
   const fbOpen = roomOn && !finished && wall?.view === 'feedback' ? room.state.feedback : null;
   const lobby = wall?.view === 'lobby' || wall?.view === 'connecting';
   const view = finished ? 'ended' : wall?.view;
@@ -333,7 +334,7 @@ function Show() {
 
       {wall && (
         <div className="wall-layer" data-view={view}>
-          {lobby && !finished && <Lobby wall={wall} connected={room.state.connected} error={room.state.error} onStart={() => nextRef.current()} />}
+          {lobby && !finished && <Lobby wall={wall} connected={room.state.connected} error={room.state.error} onStart={() => nextRef.current()} onRoster={room.state.pin ? room.addNames : undefined} />}
           {!finished && wall.view === 'question' && wall.question && <QuestionStrip key={wall.question.text} q={wall.question} askedAt={room.askedAt()} />}
           {!finished && wall.view === 'reveal' && wall.question && <RevealStrip q={wall.question} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}

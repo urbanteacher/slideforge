@@ -5,6 +5,7 @@ import { Row, Scrub, Section, Select } from '../controls/controls';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Area, Chips, Input } from '../controls/fields';
+import { normalizeTeams, TEAM_DEFAULTS } from '../../live';
 
 // ─── A game's settings ──────────────────────────────────────────────────────
 const ROLE_NAMES = { cover: 'its cover', question: 'a question', answer: 'an answer', board: 'its board', end: 'its end' } as const;
@@ -20,6 +21,8 @@ export function GamePanel() {
   const deck = useStore((s) => s.deck);
   const g = slide.game;
   const [accept, setAccept] = useState('');
+  const [teamText, setTeamText] = useState('');
+  useEffect(() => { setTeamText((g?.settings.teams ?? []).join(', ')); }, [slide.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setAccept((g?.settings.accept ?? []).join('\n')); }, [slide.id, g?.settings.accept]);
   if (!g) return null;
   const s = g.settings;
@@ -76,6 +79,20 @@ export function GamePanel() {
       )}
       {s.points != null && g.format !== 'quiz-bowl' && (
         <Row label="Points"><Scrub value={s.points} min={0} max={5000} step={10} decimals={0} onChange={(v, m) => apply({ points: v }, false, m)} /></Row>
+      )}
+      {(g.role === 'question' || g.role === 'answer') && (
+        <>
+          <Row label="Room" info="Play individually, or in teams. A team's score is its members' average, so a big team is no better off. The first game in the lesson sets the teams for the whole room.">
+            <Chips value={s.mode ?? 'individual'} options={[{ value: 'individual', label: 'Individual' }, { value: 'teams', label: 'Teams' }]}
+              onChange={(v) => { const teams = s.teams?.length && s.teams.length >= 2 ? s.teams : TEAM_DEFAULTS; setTeamText(teams.join(', ')); apply(v === 'teams' ? { mode: 'teams', teams } : { mode: 'individual' }, true); }} />
+          </Row>
+          {s.mode === 'teams' && (
+            <>
+              <div className="desc">Team names, separated by commas: two to six.</div>
+              <Input value={teamText} onChange={(v) => { setTeamText(v); const t = normalizeTeams(v); if (t.length >= 2) apply({ teams: t }, true, 'teams'); }} placeholder="Red, Blue, Green, Yellow" />
+            </>
+          )}
+        </>
       )}
       {s.tolerance != null && (
         <Row label="Counts within" info="How close an answer must be to score. The green band on the answer shows it."><Scrub value={s.tolerance} min={0} max={Math.max(1, s.range ? s.range[1] - s.range[0] : 100)} step={1} decimals={0} onChange={(v, m) => apply({ tolerance: v }, false, m)} /></Row>

@@ -2,7 +2,7 @@
 // the host itself sent (the relay does not echo `begin` or `question` back to the host, so those are read
 // off the host's own frames). Scores are the relay's: the host never adds them up itself.
 
-import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, Session, TallyAnswer } from './protocol';
+import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
 export interface OpenQuestion { id: string; slideId: string; options: string[]; timeLimit: number }
@@ -39,6 +39,8 @@ export interface RoomState {
   phase: Phase | null;
   joinOpen: boolean;
   players: PlayerRow[];
+  /** The relay's scoreboard rows: players', or teams' in a teams room. */
+  rows: ScoreRow[];
   /** Points per player id, as the relay last reported them. */
   scores: Record<number, number>;
   question: OpenQuestion | null;
@@ -58,7 +60,7 @@ export interface RoomState {
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
-  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], scores: {}, question: null, tally: null, feedback: null,
+  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null,
   revealed: [], manualError: null, error: null, report: null, recording: null,
 });
 
@@ -113,7 +115,7 @@ export class Room {
     const s = { ...this.s };
     switch (m.t) {
       case 'hosted':
-        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], scores: {}, tally: null, feedback: null, error: null });
+        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], rows: [], scores: {}, tally: null, feedback: null, error: null });
         break;
       case 'rehosted':
         Object.assign(s, { live: true, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, mode: m.mode, teams: m.teams, phase: m.phase, error: null });
@@ -123,6 +125,8 @@ export class Room {
       case 'error': s.error = m.message; break;
       case 'players':
         s.players = m.list;
+        s.rows = Array.isArray(m.rows) ? m.rows : [];
+        s.mode = m.mode || s.mode;
         s.joinOpen = m.joinOpen;
         s.scores = Object.fromEntries(m.list.map((p) => [p.id, p.score]));
         if (this.pendingReveal && this.pendingOpen) {

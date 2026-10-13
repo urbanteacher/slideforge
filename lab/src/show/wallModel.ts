@@ -4,7 +4,7 @@
 // a press right after a question lands is swallowed for GRACE_MS, so a double press does not reveal the answer
 // the instant the question appears; then Next reveals; then Next moves on).
 
-import { styleFor, type RoomState, type WallDetail } from '../live';
+import { styleFor, teamBoardOf, type RoomState, type TeamRow, type WallDetail } from '../live';
 import { feedbackWallOf, type FeedbackWall } from './feedbackWall';
 import { railOf, type Rail } from './rail';
 import type { Step } from './steps';
@@ -13,8 +13,8 @@ import type { Step } from './steps';
 export const GRACE_MS = 1500;
 
 export interface WallOption { index: number; label: string; count: number; correct: boolean }
-export interface WallPlayer { id: number; name: string; connected: boolean }
-export interface WallRow { id: number; rank: number; name: string; score: number; connected: boolean }
+export interface WallPlayer { id: number; name: string; connected: boolean; team: number | null }
+export interface WallRow { id: number; rank: number; name: string; score: number; connected: boolean; team?: number | null }
 
 export type WallView = 'connecting' | 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'slide' | 'feedback' | 'ended';
 
@@ -36,6 +36,8 @@ export interface Wall {
     /** What the wall draws once the answer is up, from the question's style (live/styles): bars (`pair`: two big tiles for True or false), what the room typed (not shown while the question is open: the phones would copy it), or a number line. */
     detail: WallDetail;
   } | null;
+  /** The teams, best first, in a teams room; null in an individual one. */
+  teams: TeamRow[] | null;
   /** The leaderboard: the whole room, best first; the wall shows the top of it. */
   board: WallRow[];
   /** A scores step with no question after it: its leaderboard is the final one. */
@@ -53,6 +55,8 @@ export interface WallInput {
   at: number;
   /** Everyone's points when the question on the wall was asked, by player id (what the rail's gains are measured from). */
   before?: Record<number, number>;
+  /** Each team's points when the question was asked, by team index (the team rail's gains). */
+  teamBefore?: Record<number, number>;
   /** The teacher asked for the scores (the S key), over any step. */
   scoresOn: boolean;
   /** Fallback join address when the relay's own is missing (classic: this page's origin + /join.html). */
@@ -79,7 +83,7 @@ export function countsOf(room: RoomState, optionCount: number): number[] {
 export function boardOf(room: RoomState): WallRow[] {
   return [...room.players]
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
-    .map((p, i, all) => ({ id: p.id, rank: i > 0 && all[i - 1].score === p.score ? 0 : i + 1, name: p.name, score: p.score, connected: p.connected }))
+    .map((p, i, all) => ({ id: p.id, rank: i > 0 && all[i - 1].score === p.score ? 0 : i + 1, name: p.name, score: p.score, connected: p.connected, team: p.team }))
     .map((r, i, rows) => ({ ...r, rank: r.rank || rows[i - 1].rank }));
 }
 
@@ -88,11 +92,12 @@ export function wallOf(i: WallInput): Wall {
   const step = steps[at] ?? null;
   const joinUrl = room.joinUrl || i.fallbackJoin;
   const join = room.pin ? { address: shortAddress(joinUrl), pin: room.pin, link: joinLink(joinUrl, room.pin) } : null;
-  const players = room.players.map((p) => ({ id: p.id, name: p.name, connected: p.connected }));
+  const players = room.players.map((p) => ({ id: p.id, name: p.name, connected: p.connected, team: p.team }));
   const board = boardOf(room);
   const quizId = step?.room.quiz?.id;
-  const rail = railOf({ board, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
-  const base = { join, players, question: null, feedback: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
+  const teams = teamBoardOf(room);
+  const rail = railOf({ board, teams, teamBefore: i.teamBefore, before: i.before ?? {}, revealed: !!quizId && room.revealed.includes(quizId), join: join && { address: join.address, pin: join.pin } });
+  const base = { join, players, teams, question: null, feedback: null, board, rail, final: !!step?.room.results && !steps.slice(at + 1).some((x) => x.room.quiz) };
   if (room.ended) return { ...base, view: 'ended' };
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };

@@ -6,12 +6,55 @@ import { useEffect, useMemo, useState } from 'react';
 import { qrSvg } from './qr';
 import { clockOf, type Clock } from './clock';
 import type { Rail } from './rail';
-import type { LineModel } from '../live';
+import { parseRoster, type LineModel, type TeamRow } from '../live';
 import type { Wall } from './wallModel';
 
 const TOP = 8;
 
-export function Lobby({ wall, connected, error, onStart }: { wall: Wall; connected: boolean; error: string | null; onStart: () => void }) {
+/** The teams as the lobby and the boards list them: a colour, a name, who is in it. */
+function TeamChips({ teams, names }: { teams: TeamRow[]; names?: boolean }) {
+  return (
+    <ul className="team-chips" aria-label="Teams" data-testid="teams">
+      {[...teams].sort((a, b) => a.index - b.index).map((t) => (
+        <li key={t.index} style={{ ['--team' as string]: t.color }} data-testid="team-chip">
+          <span className="team-swatch" aria-hidden="true" /><b>{t.name}</b><i>{t.members} {t.members === 1 ? 'player' : 'players'}</i>
+          {names && t.names.length > 0 && <span className="team-names">{t.names.join(', ')}</span>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The teacher's class list: names pasted a line each, added to the room (to a team, in a teams room). Not for the wall's audience, so it is small. */
+function RosterPaste({ teams, have, onAdd }: { teams: TeamRow[] | null; have: string[]; onAdd: (names: string[], team: number) => void }) {
+  const [text, setText] = useState('');
+  const [team, setTeam] = useState(0);
+  const [said, setSaid] = useState('');
+  const add = () => {
+    const r = parseRoster(text, have);
+    if (r.names.length === 0) { setSaid(r.skipped ? 'Those names are already in the room' : 'Paste some names first'); return; }
+    onAdd(r.names, team);
+    setText('');
+    setSaid(`Added ${r.names.length}${r.skipped ? `, ${r.skipped} already in` : ''}`);
+  };
+  return (
+    <details className="roster-paste" data-testid="roster">
+      <summary>Add a class list</summary>
+      <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder={'One name a line, or paste a column from a spreadsheet'} aria-label="Class list" data-testid="roster-text" />
+      <div className="roster-row">
+        {teams && (
+          <label>Team <select value={team} onChange={(e) => setTeam(Number(e.target.value))} aria-label="Team for these names">
+            {teams.map((t) => <option key={t.index} value={t.index}>{t.name}</option>)}
+          </select></label>
+        )}
+        <button type="button" onClick={add} data-testid="roster-add">Add names</button>
+        <span role="status" aria-live="polite" data-testid="roster-said">{said}</span>
+      </div>
+    </details>
+  );
+}
+
+export function Lobby({ wall, connected, error, onStart, onRoster }: { wall: Wall; connected: boolean; error: string | null; onStart: () => void; onRoster?: (names: string[], team: number) => void }) {
   const j = wall.join;
   const qr = useMemo(() => {
     if (!j) return '';
@@ -31,9 +74,13 @@ export function Lobby({ wall, connected, error, onStart }: { wall: Wall; connect
           {qr && <div className="lobby-qr" data-testid="qr" dangerouslySetInnerHTML={{ __html: qr }} />}
           <div className="lobby-players">
             <p className="lobby-count" role="status" aria-live="polite" data-testid="player-count">{n === 0 ? 'Waiting for players…' : `${n} ${n === 1 ? 'player' : 'players'} in`}</p>
-            <ul className="lobby-list" aria-label="Players who have joined">
-              {wall.players.map((p) => <li key={p.id} className={p.connected ? '' : 'away'}>{p.name}</li>)}
-            </ul>
+            {wall.teams && <TeamChips teams={wall.teams} names />}
+            {!wall.teams && (
+              <ul className="lobby-list" aria-label="Players who have joined">
+                {wall.players.map((p) => <li key={p.id} className={p.connected ? '' : 'away'}>{p.name}</li>)}
+              </ul>
+            )}
+            {onRoster && <RosterPaste teams={wall.teams} have={wall.players.map((p) => p.name)} onAdd={onRoster} />}
           </div>
           <button className="wall-start" onClick={onStart} disabled={n === 0}>Start</button>
         </>
@@ -116,11 +163,25 @@ function NumberLine({ line }: { line: LineModel }) {
   );
 }
 
+/** Team standings: a row a team, best first, with the team's colour. */
+function TeamBoard({ teams, label = 'Team scores' }: { teams: TeamRow[]; label?: string }) {
+  return (
+    <ol role="list" className="team-board" aria-label={label} aria-live="polite">
+      {teams.map((t) => (
+        <li key={t.index} style={{ ['--team' as string]: t.color }} data-testid="team-row">
+          <span className="board-rank">{t.rank}</span><span className="board-name"><span className="team-swatch" aria-hidden="true" />{t.name} <i>{t.members}</i></span><b className="board-score">{t.score}</b>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export function Leaderboard({ wall }: { wall: Wall }) {
   const rows = wall.board.slice(0, TOP);
   return (
     <section className="wall wall-board" aria-label={wall.final ? 'Final scores' : 'Leaderboard'} data-testid="board">
       <h2>{wall.final ? 'Final scores' : 'Leaderboard'}</h2>
+      {wall.teams && <TeamBoard teams={wall.teams} />}
       {rows.length === 0 ? <p className="wall-status">No players yet.</p> : (
         <ol role="list" aria-live="polite">
           {rows.map((r) => (
@@ -144,8 +205,8 @@ export function RailView({ rail }: { rail: Rail }) {
       {rail.rows.length === 0 ? <p className="rail-sub">Waiting for players</p> : (
         <ol role="list" aria-live="polite">
           {rail.rows.map((r) => (
-            <li key={r.id} className={r.connected ? '' : 'away'} data-testid="rail-row">
-              <span className="board-rank">{r.rank}</span><span className="board-name">{r.name}</span>
+            <li key={r.id} className={r.connected ? '' : 'away'} style={r.color ? { ['--team' as string]: r.color } : undefined} data-testid="rail-row">
+              <span className="board-rank">{r.rank}</span><span className="board-name">{r.color && <span className="team-swatch" aria-hidden="true" />}{r.name}</span>
               <b className="board-score">{r.score}</b>{r.gained > 0 && <i className="rail-gain" data-testid="rail-gain">+{r.gained}</i>}
             </li>
           ))}
@@ -164,6 +225,7 @@ export function Ended({ wall, closing, onReport, onClose }: { wall: Wall; closin
   return (
     <section className="wall wall-board wall-ended" aria-label="The room has ended" data-testid="ended">
       <h2>{closing ? 'Ending the room…' : 'The room has ended'}</h2>
+      {wall.teams && <TeamBoard teams={wall.teams} label="Final team scores" />}
       {rows.length > 0 && (
         <ol role="list" aria-label="Final scores">
           {rows.map((r) => (

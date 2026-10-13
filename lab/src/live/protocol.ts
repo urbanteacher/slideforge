@@ -12,6 +12,9 @@ export interface TallyAnswer { id: number; name: string; team: number | null; re
 /** One row of the roster in `players` (§4.2). */
 export interface PlayerRow { id: number; name: string; score: number; connected: boolean; away: boolean; manual: boolean; team: number | null; correct?: number }
 
+/** One row of `players.rows` (§4.2): a player's, or in teams mode a team's (`ci` is the team's index). */
+export interface ScoreRow { key: string; name: string; score: number; ci?: number; members?: number; accuracy?: number; answered?: number; asked?: number; gained?: number }
+
 /** What a `at` says about the slide on the wall (§5). */
 export interface AtFields {
   slideId: string; title: string; n: number; total: number;
@@ -78,7 +81,7 @@ export type RelayMessage =
   | { t: 'rehosted'; phase: Phase; pin: string; hostToken: string; joinUrl: string; mode: string; teams: string[]; title?: string; session: Session; question?: { id: string; revealed: boolean; closed: boolean; split: boolean } | null }
   | { t: 'rehostFailed'; reason: string }
   | { t: 'error'; message: string }
-  | { t: 'players'; pin: string; joinUrl: string; joinOpen: boolean; waiting: number; round: number; list: PlayerRow[]; mode: string; rows: unknown[]; counts: number[] | null }
+  | { t: 'players'; pin: string; joinUrl: string; joinOpen: boolean; waiting: number; round: number; list: PlayerRow[]; mode: string; rows: ScoreRow[]; counts: number[] | null }
   | { t: 'tally'; id: string; counts: number[] | null; answered: number; sured: number; total: number; split: unknown; switched: number; waiting: number; allIn: boolean; manual: boolean; rev: number; answers: TallyAnswer[] }
   | { t: 'markStale'; id: string; rev: number; answers: TallyAnswer[] }
   | { t: 'manualError'; message: string; playerId?: number; id?: string }
