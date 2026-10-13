@@ -86,3 +86,13 @@ Repeat steps 1 to 5 with a lesson whose only game is **plain True or false** (Qu
 3. After the reveal, the wall shows two tiles with the right one marked, and the standings panel shows the gains.
 4. Add a Showdown game to the same lesson: Host live now opens the classic room.
 
+## Type answer (added 13 October 2026)
+
+Repeat steps 1 to 5 with a lesson whose only game is **Type answer** (Quiz studio, Browse, Type answer, Add to the lesson).
+
+1. Host live opens the studio's show and room, not SlideForge's.
+2. Each question reaches the phones as a text box (no options). While it is open the wall shows only "n of m answered", not what was typed.
+3. Type the answer on one phone in another case, with "the" in front, and a wrong answer on another. After the reveal the wall lists what the room typed, one row per answer (the right one marked, written as the question accepts it), says the accepted answer, and the standings panel shows the gain.
+4. In manual.html, type an answer for a learner you added and press Record: it counts with the phones' after the reveal.
+5. Add a Ranking challenge game to the same lesson: Host live now opens the classic room.
+
