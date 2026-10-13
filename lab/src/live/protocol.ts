@@ -116,6 +116,9 @@ export type HostMessage =
   | { t: 'floor'; mode: FloorMode }
   /** Phone reactions on or off for the room (the relay's default is on). */
   | { t: 'reactions'; on: boolean }
+  /** Every phone dark (or back), separate from the wall's black screen; and the warning before it ("phones down in N", 0 takes it back). */
+  | { t: 'blankPhones'; on: boolean }
+  | { t: 'blankSoon'; seconds: number }
   | { t: 'end' };
 
 /** One question of a sprint, with its key (`correct`): the relay marks the taps against it. */

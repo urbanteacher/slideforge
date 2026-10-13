@@ -94,13 +94,16 @@ export interface RoomState {
   reaction: Reaction | null;
   /** Reactions are on (the relay's default); the teacher's T switches them. Set by the host. */
   reactions: boolean;
+  /** Every phone is blanked (Shift+B), and when a "phones down" warning blanks them (ms since the epoch; 0 none). Set by the host: the relay does not tell it. */
+  phonesBlank: boolean;
+  blankSoonAt: number;
 }
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null, quick: null, qa: emptyQa(), floor: 'auto',
   revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
-  spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {}, activity: null, reaction: null, reactions: true,
+  spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {}, activity: null, reaction: null, reactions: true, phonesBlank: false, blankSoonAt: 0,
 });
 
 export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'quick' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' } | { t: 'speed' } | { t: 'board' } | { t: 'activity' }) => void;
@@ -156,6 +159,8 @@ export class Room {
       case 'promptEnd': s.feedback = null; s.quick = null; break;
       case 'floor': s.floor = m.mode; break;
       case 'reactions': s.reactions = m.on; if (!m.on) s.reaction = null; break;
+      case 'blankPhones': s.phonesBlank = m.on; s.blankSoonAt = 0; break;
+      case 'blankSoon': s.blankSoonAt = m.seconds > 0 ? Date.now() + m.seconds * 1000 : 0; break;
       default: return;
     }
     this.s = s;
@@ -279,6 +284,12 @@ export class Room {
     const add = ids.filter((id) => !this.s.revealed.includes(id));
     if (!add.length) return;
     this.s = { ...this.s, revealed: [...this.s.revealed, ...add] };
+    this.emit({ t: 'speed' });
+  }
+
+  /** A question is to be asked again (the teacher's R): it is neither revealed nor gated, and its answers are gone. */
+  forget(id: string): void {
+    this.s = { ...this.s, revealed: this.s.revealed.filter((x) => x !== id), gated: this.s.gated.filter((x) => x !== id), tally: this.s.tally?.id === id ? null : this.s.tally };
     this.emit({ t: 'speed' });
   }
 

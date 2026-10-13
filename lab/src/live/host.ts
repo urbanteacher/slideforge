@@ -89,6 +89,8 @@ export class LiveHost {
   private readonly boards: BoardDesk;
   /** A timed routine on the wall (activities/): its stages, their clock, its idea boxes. */
   private readonly acts: ActivityDesk;
+  /** The "phones down" warning's clock: the phones go dark when it ends. */
+  private blankTimer: ReturnType<typeof setTimeout> | null = null;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
   constructor(private readonly opts: HostOptions) {
@@ -353,6 +355,46 @@ export class LiveHost {
     return this.send({ t: 'reactions', on: next }) ? next : null;
   }
 
+  /** Every phone dark, or back (classic's Shift+B): the opposite of now when `on` is left out. A warning in flight is overtaken
+   *  (the phones' own countdown is dropped by the blank). The setting sent, or null when not sent. */
+  blankPhones(on?: boolean): boolean | null {
+    this.dropBlankSoon(false);
+    const next = on ?? !this.state.phonesBlank;
+    return this.send({ t: 'blankPhones', on: next }) ? next : null;
+  }
+
+  /** "Phones down in N" (classic's blankPhonesSoon): the phones are warned, and blanked when it ends. Pressed again, it is
+   *  taken back. 'soon' when the warning went out, 'cancelled', 'blank' when the phones are already dark, null with no room. */
+  blankSoon(seconds = 10): 'soon' | 'cancelled' | 'blank' | null {
+    if (this.blankTimer) { this.dropBlankSoon(true); return 'cancelled'; }
+    if (this.state.phonesBlank) return 'blank';
+    const secs = Math.max(3, Math.min(60, Math.round(Number(seconds) || 10)));
+    if (!this.send({ t: 'blankSoon', seconds: secs })) return null;
+    this.blankTimer = setTimeout(() => { this.blankTimer = null; if (!this.ending && !this.state.phonesBlank) this.blankPhones(true); }, secs * 1000);
+    (this.blankTimer as { unref?: () => void }).unref?.();
+    return 'soon';
+  }
+
+  private dropBlankSoon(tellPhones: boolean): void {
+    if (!this.blankTimer) return;
+    clearTimeout(this.blankTimer);
+    this.blankTimer = null;
+    if (tellPhones) this.send({ t: 'blankSoon', seconds: 0 });
+  }
+
+  /** Clear the answers and score again (classic's R): the question on the wall, open or revealed, is asked afresh. The relay
+   *  takes a question again only once it has left it, so the room is first told the slide is a moment, then asked. False: no question here. */
+  again(): boolean {
+    const s = this.slide, q = s?.quiz;
+    if (!s || !q || !this.begun || s.activity !== 'question') return false;
+    this.revealSent.delete(q.id);
+    this.helped.delete(q.id);
+    this.room.forget(q.id);
+    this.send({ t: 'at', ...this.atFields(s, 'moment') });
+    this.land();
+    return true;
+  }
+
   /** Ask the relay for the session's report (`sessionReport`). */
   report(): void { this.send({ t: 'report' }); }
 
@@ -362,6 +404,7 @@ export class LiveHost {
   /** End the room: `end`, then close once `sessionClosed` arrives or after classic's 1.5 s. */
   async end(): Promise<RoomState> {
     this.ending = true;
+    this.dropBlankSoon(false);
     this.boards.stop();
     this.acts.teardown(false);
     this.clearSure();
@@ -516,6 +559,7 @@ export class LiveHost {
     // The new room's floor follows the lesson; the teacher's choice is sent again. Its questions box starts empty, as its scores do.
     if (this.state.floor !== 'auto') this.send({ t: 'floor', mode: this.state.floor });
     if (!this.state.reactions) this.send({ t: 'reactions', on: false });
+    if (this.state.phonesBlank) this.send({ t: 'blankPhones', on: true });
     if (!this.begun) return;
     this.send({ t: 'begin' });
     this.lastGame = null;

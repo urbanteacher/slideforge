@@ -62,6 +62,11 @@ export interface RoomApi {
   /** The questions box (live/questions.ts): the teacher's action on a question, and who may ask (the next mode with none given). */
   qa: (id: number, action: QaAction) => void;
   floor: (mode?: FloorMode) => FloorMode | null;
+  /** Every phone dark or back (Shift+B), and the "phones down in 10" warning (pressed again, taken back). */
+  blankPhones: () => boolean | null;
+  blankSoon: () => 'soon' | 'cancelled' | 'blank' | null;
+  /** Clear the answers and score again (R): the question on the wall is asked afresh. False: none to ask. */
+  again: () => boolean;
   /** End the room; resolves once the relay has closed it (or after classic's 1.5 s). */
   end: () => Promise<void>;
   /** Add learners by name, to a team in a teams room (the lobby's pasted roster). */
@@ -180,6 +185,9 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     quickPoll: (ask) => host.current?.quickPoll(ask) ?? null,
     qa: (id, action) => { host.current?.qa(id, action); },
     floor: (mode) => host.current?.floor(mode) ?? null,
+    blankPhones: () => host.current?.blankPhones() ?? null,
+    blankSoon: () => host.current?.blankSoon() ?? null,
+    again: () => { const ok = host.current?.again() ?? false; sync(); return ok; },
     end,
     addNames: (names, team = 0) => host.current?.manualAdd(names, team),
     manualHash: () => bridge.current?.hash ?? null,
