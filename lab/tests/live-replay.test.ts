@@ -17,6 +17,9 @@
 //    second identical to the first; the relay takes the repeat as a no-op apart from re-broadcasting
 //    `context`. The lab sends it once, so an `at` identical to the previous `at` is dropped from the
 //    recording, and only then. The lab's `round` therefore follows the one `at`, as classic's first did.
+//  - classic's Definition challenge sends every recall `question` twice (once as the slide asks it, once from its
+//    `definitionAsk` event), the second identical to the first; the lab sends it once. A `question` identical to the one
+//    sent just before it, with no other frame between, is dropped from the recording on the same grounds.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -24,7 +27,7 @@ import { resolve } from 'node:path';
 import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMessage } from '../src/live';
 
 type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
-type Step = { ms: number; what: string; answer?: { playerId: number; choice?: number; text?: string; value?: number; order?: number[] }; names?: string[]; team?: number };
+type Step = { ms: number; what: string; answer?: { id?: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[] }; names?: string[]; team?: number };
 const root = resolve(process.cwd(), '..');
 type Rec = { host: Frame[]; steps: Step[] };
 const load = (name: string) => JSON.parse(readFileSync(resolve(root, `tests/fixtures/sessions/${name}.json`), 'utf8')) as Rec;
@@ -66,11 +69,12 @@ const ID_KEYS = ['slideId', 'id', 'sourceSlideId', 'gameId'];
 function normalise(frames: Record<string, unknown>[]): Record<string, unknown>[] {
   const ids = new Map<string, string>();
   const name = (v: string) => { if (!ids.has(v)) ids.set(v, `#${ids.size + 1}`); return ids.get(v)!; };
-  let lastAt = '';
+  let lastAt = '', lastQuestion = '';
   const out: Record<string, unknown>[] = [];
   for (const f of frames) {
     if (f.t === 'report') continue;
     if (f.t === 'at') { const k = JSON.stringify(f); if (k === lastAt) continue; lastAt = k; }
+    if (f.t === 'question') { const k = JSON.stringify(f); if (k === lastQuestion) continue; lastQuestion = k; } else lastQuestion = '';
     const g: Record<string, unknown> = { ...f };
     for (const k of ID_KEYS) if (typeof g[k] === 'string' && g[k] !== '') g[k] = name(g[k] as string);
     out.push(g);
@@ -107,7 +111,7 @@ async function replay(rec: Rec, format: string, scores = true) {
     else if (s.what === 'manual:add') host.manualAdd(s.names!, s.team ?? 0);
     else if (s.what === 'begin') host.begin();
     else if (s.what === 'next') host.next();
-    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.order ? { order: s.answer!.order } : s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!);
+    else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.order ? { order: s.answer!.order } : s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!, s.answer!.id);
     else if (s.what === 'stop') ended = host.end();
   }
   await ended;
@@ -264,5 +268,22 @@ test('the lab host sends what the classic host sent for a Spot the error game', 
   for (const q of asked) { assert.equal(q.input, 'tap'); assert.equal(q.style, 'spot'); assert.equal(q.headPrompt, 'There is one error in this sentence. Find it.'); }
   assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => r.answer), ['mitochondria → chloroplasts', 'fastest → not at all', '6 → 3', 'Scotland → England']);
   assert.equal(host.state.revealed.length, 4);
+  assert.ok(host.state.ended);
+});
+
+// Definition challenge (format 'definition-challenge', style 'definition'): a reading phase, then the recall question. On
+// landing the room is told to watch (`at` with role `watch`, then `idle` with the same words) and nothing is asked; the
+// teacher's Next asks it (`at` with the heading "Recall from memory", then `question`), the next reveals by the typed answer.
+// The recording's two teacher entries came during the reading, before the question: the relay refuses them (not a lab frame).
+test('the lab host sends what the classic host sent for a Definition challenge game', async () => {
+  const { host, classic, lab } = await replay(load('game-definition-challenge'), 'definition-challenge');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.equal(q.input, 'text'); assert.equal(q.style, 'definition'); assert.equal(q.headPrompt, 'Recall from memory'); assert.deepEqual(q.options, []); }
+  const idles = lab.filter((f) => f.t === 'idle' && f.role === 'watch');
+  assert.equal(idles.length, 3, 'one reading phase a question, the phones idle');
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => [r.correct, r.answer]), [[-1, 'the catalyst'], [-1, 'water'], [-1, 'it is lost']]);
+  assert.equal(host.state.revealed.length, 3);
   assert.ok(host.state.ended);
 });
