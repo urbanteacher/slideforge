@@ -61,7 +61,7 @@ export function cloudOf(words: { text: string; n: number }[]): FbWord[] {
 
 export function feedbackWallOf(open: OpenFeedback): FeedbackWall {
   const p = open.prompt, d: Digest | null = open.digest;
-  const held = p.hold && !open.shown && (p.kind === 'poll' || p.kind === 'scale');
+  const held = p.hold === true && !open.shown && (p.kind === 'poll' || p.kind === 'scale');
   const counts = d && (d.kind === 'poll' || d.kind === 'scale') ? d.counts : [];
   const total = d?.total ?? 0;
   const bars = p.kind === 'poll' && !held ? barsOf(p.options, counts) : [];

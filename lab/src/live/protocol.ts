@@ -39,7 +39,9 @@ export interface QuestionFields {
  *  labels, null for the others. */
 export interface PromptFields {
   id: string; kind: 'poll' | 'wordcloud' | 'brainstorm' | 'scale'; prompt: string; options: string[];
-  ends: { low: string; high: string } | null; max: number; presentAs: 'rail' | 'focus'; hold: boolean;
+  ends: { low: string; high: string } | null; max: number; presentAs: 'rail' | 'focus'; hold?: boolean;
+  /** A prompt the teacher's room opens itself (not a slide's): classic's quick prompt, with the fields it carries. */
+  custom?: true; origin?: string; stage?: string; shape?: string; from?: string; quiet?: boolean;
 }
 
 /** The digest in `responses` (§9): the room's replies as the relay sums them. */

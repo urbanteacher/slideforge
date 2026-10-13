@@ -118,6 +118,9 @@ export function wallOf(i: WallInput): Wall {
       answer: revealed ? style.reveal(quiz).answer : '', explanation: revealed ? quiz.explanation ?? '' : '',
     };
     if (i.scoresOn) return { ...base, question, view: 'leaderboard' };
+    // A style that asks the room something after its reveal (Odd one out's "defend a pick") has the ideas beside it, in the standings' place.
+    const after = revealed && style.afterReveal && room.feedback ? feedbackWallOf(room.feedback) : null;
+    if (after) return { ...base, question, rail: null, feedback: after, view: 'reveal' };
     return { ...base, question, view: revealed ? 'reveal' : 'question' };
   }
   const asked = step?.room.feedback, open = room.feedback;

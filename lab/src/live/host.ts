@@ -52,6 +52,7 @@ export class LiveHost {
   /** The feedback prompt the relay holds open, and the one the teacher closed (it stays closed until the show leaves its slide). */
   private promptId: string | null = null;
   private closedFb: string | null = null;
+  private quickAt = 0;
   private sureTimer: ReturnType<typeof setTimeout> | null = null;
   private waiters: { pred: (s: RoomState) => boolean; resolve: (s: RoomState) => void }[] = [];
 
@@ -129,6 +130,7 @@ export class LiveHost {
       correct: said.correct, answer: said.answer, explanation: q.explanation ?? '',
       ...(style.gains ? { gains: style.gains(q, list) } : {}),
     });
+    if (style.afterReveal) this.openAfterReveal(style.afterReveal.prompt);
   }
 
   /** Add learners the teacher enters by name (manual.html's `add`). */
@@ -270,7 +272,8 @@ export class LiveHost {
   }
 
   private atFields(s: RoomSlide, activity: AtFields['activity']): AtFields {
-    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: 0, style: s.style, role: 'wait', participation: '', headPrompt: '', stage: null };
+    const c = s.quiz && activity === 'question' ? styleFor(s.quiz).companion?.(s.quiz) : undefined;
+    return { slideId: s.id, title: s.title, n: this.at + 1, total: this.opts.show.slides.length, activity, text: s.text, step: 0, style: s.style, role: c?.role ?? 'wait', participation: c?.participation ?? '', headPrompt: c?.headPrompt ?? '', stage: null };
   }
 
   private questionFields(q: RoomQuiz): QuestionFields {
@@ -280,19 +283,29 @@ export class LiveHost {
     const f: QuestionFields = {
       id: q.id, n: quizzes.findIndex((x) => x.quiz!.id === q.id) + 1, total: quizzes.length, question: q.question,
       voteOnly: q.voteOnly === true, unmarked: q.unmarked === true, sourceSlideId: q.sourceSlideId || q.id,
-      input: style.input, spoken: false, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: '',
+      input: style.input, spoken: false, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: style.companion?.(q).participation ?? '',
       confidence: q.confidence !== false, range: style.range(q), options: (q.options ?? []).filter((o) => String(o).trim()),
       // SF.questionTimeLimit: no clock while the teacher enters answers by key.
       timeLimit: hasManual ? 0 : Math.max(0, Number(q.timeLimit) || 0), points: q.points, style: q.style,
     };
-    if (q.headPrompt) f.headPrompt = q.headPrompt;
+    const head = style.companion?.(q).headPrompt || q.headPrompt;
+    if (head) f.headPrompt = head;
     return f;
+  }
+
+  /** The brainstorm the room is asked after a reveal (Odd one out's "defend a pick"): classic's quick prompt, closed when the show leaves the question. */
+  private openAfterReveal(prompt: string): void {
+    if (this.promptId) return;
+    this.quickAt = Math.max(Date.now(), this.quickAt + 1); // never the same id twice, however fast the room is stepped
+    const id = `quick:${this.quickAt}`;
+    this.promptId = id;
+    this.send({ t: 'prompt', id, kind: 'brainstorm', prompt, options: [], ends: null, max: 1, presentAs: 'rail', custom: true, origin: '', stage: '', shape: '', from: '', quiet: false });
   }
 
   /** Classic's auto-reveal (protocol §17, step 9): everyone in, nobody entered by hand; wait for confidence taps up to 5 s. */
   private maybeAutoReveal(): void {
     const t = this.state.tally, q = this.slide?.quiz;
-    if (this.opts.autoReveal === false || !t || !q || t.id !== q.id || this.state.phase !== 'question') return;
+    if (this.opts.autoReveal === false || !t || !q || t.id !== q.id || this.state.phase !== 'question' || styleFor(q).held) return;
     if (!t.allIn || t.answered === 0 || t.manual) return;
     if (t.sured >= t.answered) { this.reveal(); return; }
     if (!this.sureTimer) this.sureTimer = setTimeout(() => { this.sureTimer = null; if (this.state.phase === 'question') this.reveal(); }, SURE_GRACE_MS);

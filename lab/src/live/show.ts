@@ -10,7 +10,7 @@
 import type { Deck, Slide } from '../core';
 import { gameStyle } from '@sf/games/registry.js';
 import { feedbackOf, type RoomFeedback } from './feedback';
-import { styleOf } from './styles';
+import { styleForFormat, styleOf } from './styles';
 import { roomPlay } from './teams';
 
 /** A question as the room asks and marks it: SlideForge's quiz slide (src/games), with its game. */
@@ -95,7 +95,8 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
         const text = g.role === 'cover' ? `${new Set(qs.map((x) => x.game!.key ?? x.id)).size} questions` : '';
         out.push({ id: s.id, title: g.role === 'cover' ? g.label : s.name, text, activity: 'moment', gameId: g.id, style, results: g.role === 'end' });
       }
-      if (lastOf.get(g.id) === k && !slides.some((x) => x.game?.id === g.id && x.game.role === 'end')) {
+      // A style that plays without a scores slide (Odd one out: nobody is scored) ends on its last answer, as classic's game does by default.
+      if (lastOf.get(g.id) === k && styleForFormat(g.format)?.scoreSlide !== false && !slides.some((x) => x.game?.id === g.id && x.game.role === 'end')) {
         out.push({ id: `${g.id}:scores`, title: `${g.label} — scores`, text: '', activity: 'moment', gameId: g.id, style, results: true });
       }
     }

@@ -44,10 +44,13 @@ export interface SlotsModel {
 /** What the wall draws under the question. `bars`: a vote per option (`pair`: two big tiles); `typed`: what the
  *  room typed, grouped (null while the question is open); `line`: a number line (null while the question is open). */
 export type WallDetail =
-  | { kind: 'bars'; pair: boolean }
+  | { kind: 'bars'; pair: boolean; /** Nobody is marked: the reveal says the prepared answer, not who was right. */ unmarked?: boolean }
   | { kind: 'slots'; slots: SlotsModel | null }
   | { kind: 'typed'; groups: TypedGroup[] | null }
   | { kind: 'line'; line: LineModel | null };
+
+/** What the phones are told about a style beyond its question (classic's phoneCompanion): their role, what to do, a heading. */
+export interface Briefing { role: string; participation: string; headPrompt: string }
 
 export interface Range { min: number; max: number; step: number; unit: string }
 
@@ -70,6 +73,14 @@ export interface StyleEntry {
   label(q: RoomQuiz, response: Response): string;
   /** What the reveal sends: the option that is right (-1 for an open answer) and the answer said. */
   reveal(q: RoomQuiz): { correct: number; answer: string };
+  /** What the phones are told on this question (`at` and `question` carry it); undefined: they wait, with the question's own heading. */
+  companion?(q: RoomQuiz): Briefing;
+  /** False: the game has no scores slide after its last question (the show ends on it). */
+  scoreSlide?: boolean;
+  /** The room is never revealed by itself (everyone answered): only the teacher reveals. */
+  held?: boolean;
+  /** After the reveal the room is asked this (a brainstorm prompt, classic's quick prompt); it closes when the show leaves the question. */
+  afterReveal?: { prompt: string };
   /** Points the host hands the relay with the verdicts (`reveal.gains`), as [player, points]; undefined: the relay scores by the verdicts alone. */
   gains?(q: RoomQuiz, answers: Pick<TallyAnswer, 'id' | 'response'>[]): [number, number][];
   /** The wall's view of the question, from the answers in. */

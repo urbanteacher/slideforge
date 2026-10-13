@@ -309,14 +309,14 @@ function Show() {
   const lobby = wall?.view === 'lobby' || wall?.view === 'connecting';
   const view = finished ? 'ended' : wall?.view;
   const rail = wall && !finished && ['question', 'reveal', 'slide'].includes(wall.view) ? wall.rail : null;
-  const fbRail = !finished && wall?.view === 'feedback' && wall.feedback?.presentAs === 'rail';
+  const fbRail = !finished && ['feedback', 'reveal'].includes(wall?.view ?? '') && wall?.feedback?.presentAs === 'rail';
   const railWidth = fbRail ? FEEDBACK_RAIL_U : rail ? RAIL_U : 0;
   useEffect(() => { railU.current = railWidth; fit(); }, [railWidth, fit]);
 
   // The Teacher Presenter window follows the show over a BroadcastChannel; with none open this does nothing.
   const desk = presenterState({
     deck, index, startedAt, screen,
-    room: roomOn ? { wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold && !fbOpen.shown } : null,
+    room: roomOn ? { wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown } : null,
   });
   deskRef.current = { wall, fb: fbOpen ? { hold: !!fbOpen.prompt.hold, shown: fbOpen.shown } : null };
   const deskNow = useRef(desk);
@@ -381,7 +381,7 @@ function Show() {
           {!finished && wall.view === 'reveal' && wall.question && <RevealStrip q={wall.question} />}
           {!finished && wall.view === 'leaderboard' && <Leaderboard wall={wall} />}
           {rail && <RailView rail={rail} />}
-          {!finished && wall.view === 'feedback' && wall.feedback && <FeedbackView fb={wall.feedback} />}
+          {!finished && ['feedback', 'reveal'].includes(wall.view) && wall.feedback && <FeedbackView fb={wall.feedback} />}
           {(finished || wall.view === 'ended') && (
             <Ended wall={wall} closing={!room.state.ended} onClose={close}
               onReport={room.state.session ? () => setReportOpen(true) : undefined}
