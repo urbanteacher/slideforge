@@ -222,3 +222,17 @@ test('the lab host sends what the classic host sent for a Predict the outcome ga
   assert.equal(host.state.revealed.length, 2);
   assert.ok(host.state.ended);
 });
+
+// True / false showdown (format 'true-false'; style 'truefalse' with `showdown`). The question frame carries
+// `showdown: true`; the first Next shows the room its split (`showdown`), the phones may switch once, the next Next
+// reveals the final answers. (The relay's `tally` carries `split` and `switched`, which the host does not send back.)
+test('the lab host sends what the classic host sent for a True / false showdown game', async () => {
+  const { host, classic, lab } = await replay(load('game-true-false'), 'true-false');
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.equal(q.showdown, true); assert.equal(q.style, 'truefalse'); assert.deepEqual(q.options, ['True', 'False']); }
+  assert.deepEqual(lab.map((f) => f.t).filter((x) => x === 'showdown' || x === 'reveal'), ['showdown', 'reveal', 'showdown', 'reveal', 'showdown', 'reveal']);
+  assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
