@@ -31,6 +31,12 @@ function SlidePane({ deck, index, label }: { deck: Deck; index: number | null; l
   );
 }
 
+/** Close this window; one a script did not open cannot be closed, so it goes back to the studio instead. */
+function closeWindow() {
+  window.close();
+  setTimeout(() => { if (!window.closed) location.href = location.pathname.replace(/lab-app\/.*$/, ''); }, 150);
+}
+
 export function PresenterWindow() {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [st, setSt] = useState<PresenterState | null>(null);
@@ -74,7 +80,7 @@ export function PresenterWindow() {
   useEffect(() => { notesRef.current?.scrollTo({ top: 0 }); }, [notesKey]);
 
   if (!deck || !st) {
-    return <div className="pw pw-wait"><h1>Teacher Presenter</h1><p>{gone ? 'The show has ended.' : 'Waiting for a show. Press Present in the studio, then open this window from its bar.'}</p></div>;
+    return <div className="pw pw-wait"><h1>Teacher Presenter</h1><p>{gone ? 'The show has ended.' : 'Waiting for a show. Press Present in the studio, then open this window from its bar.'}</p><p><button onClick={closeWindow}>Close window</button></p></div>;
   }
   const room = st.room;
   const nextIndex = st.index + 1 < st.total ? st.index + 1 : null;
@@ -127,6 +133,7 @@ export function PresenterWindow() {
           <button type="submit">Go</button>
         </form>
         <button className="pw-end-btn" onClick={() => send('end')}>End show</button>
+        <button onClick={closeWindow} title="Close this window and go back">Close window</button>
       </footer>
     </div>
   );

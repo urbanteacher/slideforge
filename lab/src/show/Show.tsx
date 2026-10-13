@@ -409,6 +409,8 @@ function Show() {
       {jump && <div className="show-jump" role="status" aria-label="Go to slide">Go to {jump}</div>}
       <div className="show-toast" role="status" aria-live="polite">{toast}</div>
 
+      {/* The bar hides itself, so the way out never does: a small button in the corner, always there. */}
+      <button className="show-exit" onClick={exit} aria-label={roomOn ? 'End the room and exit' : 'Exit the slideshow'} title={roomOn ? 'End the room and exit (Esc)' : 'Exit (Esc)'}><X size={16} />{roomOn ? 'End room' : 'Exit'}</button>
       <div className={`show-bar${bar ? ' on' : ''}`} role="toolbar" aria-label="Slideshow controls">
         <button onClick={() => prevRef.current()} aria-label="Previous"><ArrowLeft size={16} /></button>
         <button onClick={() => nextRef.current()} aria-label="Next"><ArrowRight size={16} /></button>
