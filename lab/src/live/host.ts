@@ -347,6 +347,12 @@ export class LiveHost {
     return this.send({ t: 'floor', mode: next }) ? next : null;
   }
 
+  /** Phone reactions on or off (classic's T): the opposite of now when `on` is left out. The setting sent, or null when not sent. */
+  reactions(on?: boolean): boolean | null {
+    const next = on ?? !this.state.reactions;
+    return this.send({ t: 'reactions', on: next }) ? next : null;
+  }
+
   /** Ask the relay for the session's report (`sessionReport`). */
   report(): void { this.send({ t: 'report' }); }
 
@@ -509,6 +515,7 @@ export class LiveHost {
     for (const g of this.manualNames) this.send({ t: 'manualAdd', names: g.names, team: g.team });
     // The new room's floor follows the lesson; the teacher's choice is sent again. Its questions box starts empty, as its scores do.
     if (this.state.floor !== 'auto') this.send({ t: 'floor', mode: this.state.floor });
+    if (!this.state.reactions) this.send({ t: 'reactions', on: false });
     if (!this.begun) return;
     this.send({ t: 'begin' });
     this.lastGame = null;

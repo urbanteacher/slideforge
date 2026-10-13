@@ -453,3 +453,14 @@
 .wall-qa-label { color: var(--muted); font-size: calc(var(--u) * 40); text-transform: uppercase; letter-spacing: .08em; }
 .wall-qa-text { font-size: calc(var(--u) * 84); line-height: 1.2; }
 .wall-qa-foot { display: flex; gap: calc(var(--u) * 32); color: var(--muted); font-size: calc(var(--u) * 40); }
+
+/* The room's reactions (Reactions.tsx), as classic's .reactbay: a strip along the foot of the slide, in slide
+   coordinates (--k is one pixel of a 1080-high slide), each glyph rising through it and gone. */
+.show-reactbay { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--k) * 300); pointer-events: none; overflow: hidden; z-index: 2; }
+.show-reaction { position: absolute; bottom: 0; font-size: calc(var(--k) * 52); line-height: 1; opacity: 0; animation: show-react 2.6s cubic-bezier(.25,.6,.3,1) forwards; }
+@keyframes show-react {
+  0%   { opacity: 0;   transform: translate(0, 0) scale(.6) rotate(0deg); }
+  14%  { opacity: .95; transform: translate(0, calc(var(--k) * -46)) scale(1) rotate(0deg); }
+  70%  { opacity: .8; }
+  100% { opacity: 0;   transform: translate(calc(var(--k) * var(--drift, 0)), calc(var(--k) * -250)) scale(.9) rotate(var(--spin, 0deg)); }
+}

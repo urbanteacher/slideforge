@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize,
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
 import { QuestionsList, QuickPollForm, ShowSide, presenterUrl, type CmdData, type PresenterCmd, type Screen } from '../presenter';
-import type { QuickAsk } from '../live';
+import { reactionsSay, type QuickAsk } from '../live';
 import { useStore } from '../store';
 import './show.css';
 import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
@@ -33,6 +33,7 @@ import { nextAction, wallOf } from './wallModel';
 import { ActivityStrip } from './ActivityViews';
 import { FigureSteps, figureSlide } from './figure';
 import { FigureLayer } from './FigureLayer';
+import { ReactionBay } from './Reactions';
 
 const BAR_HIDE_MS = 2600;
 /** The standings rail's width, in pixels of a 1920-wide screen (classic's rail is 300 of 720 beside the slide). */
@@ -326,6 +327,7 @@ function Show() {
       else if (k === 'f' || k === 'F') toggleFs();
       else if ((k === 's' || k === 'S') && roomOn) setScoresOn((v) => !v);
       else if ((k === 'v' || k === 'V') && roomOn) setDeskCard((c) => (c === 'poll' ? '' : 'poll')); // classic's V: the quick poll
+      else if ((k === 't' || k === 'T') && roomOn) { const on = roomRef.current.reactions(); if (on != null) say(reactionsSay(on)); } // classic's T: phone reactions off or on
     };
     (document.activeElement as HTMLElement | null)?.blur?.();
     addEventListener('keydown', on, true);
@@ -409,6 +411,7 @@ function Show() {
       <div className="show-stage" style={{ width: size.w, height: size.h }} onClick={() => nextRef.current()}>
         <canvas ref={canvasRef} style={{ width: size.w, height: size.h }} aria-label={slide.name} />
         {figure && <FigureLayer key={slide.id} figure={figure} step={figureStep} />}
+        {wall && !finished && !['question', 'reveal', 'sprint', 'lobby', 'connecting', 'ended'].includes(wall.view) && <ReactionBay key={slide.id} reaction={room.state.reaction} height={size.h} />}
         <InkCanvas ink={ink} on={inkOn} w={size.w} h={size.h} version={inkV} onChange={inkChanged} />
         {embeds.map((e) => (
           <iframe key={`${index}-${e.id}`} className="show-embed" src={e.src} title={e.title}

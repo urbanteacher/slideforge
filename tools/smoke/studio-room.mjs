@@ -155,6 +155,15 @@ try {
   assert.deepEqual(rows[1], ['2', 'Bo', '0']);
   step(`leaderboard: Ana ${rows[0][2]}, Bo 0`);
 
+  // ---- reactions (classic's): on a plain slide after the game, a phone's clap rises over the foot of the slide, and is gone
+  for (let i = 0; i < 40 && (await view()) !== 'slide'; i++) { await next(); await page.waitForTimeout(250); }
+  assert.equal(await view(), 'slide', 'the lesson goes on to a plain slide after its game');
+  await page.waitForTimeout(300);
+  bo.send({ t: 'react', kind: 'clap' });
+  await lab.locator('.show-reactbay .show-reaction').filter({ hasText: '👏' }).waitFor({ timeout: 5000 });
+  await lab.locator('.show-reaction').waitFor({ state: 'detached', timeout: 6000 });
+  step('reactions: a phone\'s clap rises over the foot of the slide on the wall, and is gone');
+
   // ---- the end: Next past the last step ends the room; the final standings stay up
   for (let i = 0; i < 120 && (await lab.locator('[data-testid=ended]').count()) === 0; i++) { await next(); await page.waitForTimeout(250); }
   await lab.locator('[data-testid=ended] h2').filter({ hasText: 'The room has ended' }).waitFor({ timeout: 8000 });

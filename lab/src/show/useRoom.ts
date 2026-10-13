@@ -54,6 +54,8 @@ export interface RoomApi {
   unspot: (sid?: string) => void;
   /** Close the open feedback prompt, or show a held one's split (the show bar's Close and Show). */
   closeFeedback: () => void;
+  /** Phone reactions off or on (classic's T): the setting sent, or null when no room. */
+  reactions: () => boolean | null;
   showFeedback: () => void;
   /** The teacher's quick poll (live/quick.ts): its id, or null when it was not asked (closeFeedback ends it). */
   quickPoll: (ask: QuickAsk) => string | null;
@@ -173,6 +175,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     spotlight: (key) => { host.current?.spotlight(key); sync(); },
     unspot: (sid) => { host.current?.unspot(sid); sync(); },
     closeFeedback: () => host.current?.closeFeedback(),
+    reactions: () => { const on = host.current?.reactions() ?? null; sync(); return on; },
     showFeedback: () => host.current?.showFeedback(),
     quickPoll: (ask) => host.current?.quickPoll(ask) ?? null,
     qa: (id, action) => { host.current?.qa(id, action); },

@@ -8,6 +8,7 @@ import { emptySpeed, type SpeedView } from './speedroom';
 import type { BoardEntry } from './boards';
 import type { ActivityView } from './activities';
 import { emptyQa, qaOf } from './questions';
+import { nextReaction, type Reaction } from './reactions';
 import type { Digest, FloorMode, HostMessage, QaBox, Phase, PromptFields, PlayerRow, RelayMessage, ScoreRow, Session, TallyAnswer } from './protocol';
 
 /** The open (or last) question, as the host asked it. */
@@ -89,13 +90,17 @@ export interface RoomState {
   boards: Record<string, BoardEntry>;
   /** The activity on the wall (live/activities): its stage, clock, written count, help and spotlights. Set by the host. */
   activity: ActivityView | null;
+  /** The last phone reaction the wall draws (live/reactions.ts), or null. Nothing else of them is kept. */
+  reaction: Reaction | null;
+  /** Reactions are on (the relay's default); the teacher's T switches them. Set by the host. */
+  reactions: boolean;
 }
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
   mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null, quick: null, qa: emptyQa(), floor: 'auto',
   revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
-  spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {}, activity: null,
+  spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {}, activity: null, reaction: null, reactions: true,
 });
 
 export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'quick' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' } | { t: 'speed' } | { t: 'board' } | { t: 'activity' }) => void;
@@ -150,6 +155,7 @@ export class Room {
       case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; s.quick = null; break;
       case 'promptEnd': s.feedback = null; s.quick = null; break;
       case 'floor': s.floor = m.mode; break;
+      case 'reactions': s.reactions = m.on; if (!m.on) s.reaction = null; break;
       default: return;
     }
     this.s = s;
@@ -205,6 +211,7 @@ export class Room {
         if (s.tally && s.tally.id === m.id) s.tally = { ...s.tally, rev: m.rev, answers: m.answers };
         break;
       case 'qa': s.qa = qaOf(m); break;
+      case 'reaction': { const r = nextReaction(s.reaction, m.kind, s.reactions, s.phase); if (r === s.reaction) return; s.reaction = r; break; }
       case 'oralCount': s.oralCounts = { ...s.oralCounts, [m.gameId]: m.count }; break;
       case 'manualError': s.manualError = { message: m.message, playerId: m.playerId, id: m.id }; break;
       case 'recording': s.recording = m.persisted !== false; break;

@@ -114,6 +114,8 @@ export type HostMessage =
   | { t: 'qaModerate'; id: number; action: 'approve' | 'dismiss' | 'answered' | 'pending' }
   | { t: 'qaPin'; id: number | null }
   | { t: 'floor'; mode: FloorMode }
+  /** Phone reactions on or off for the room (the relay's default is on). */
+  | { t: 'reactions'; on: boolean }
   | { t: 'end' };
 
 /** One question of a sprint, with its key (`correct`): the relay marks the taps against it. */
