@@ -438,8 +438,7 @@
     /* The picture already carries the lab's header and footer; the theme's own
        logo and page number would sit on top of it a second time. */
     s.headerFooter = { enabled: false, slots: {} };
-    /* The lab draws this slide live over the picture (js/lab-stage.js) and runs
-       its own transitions, so SlideForge's player cuts rather than fading. */
+    /* A picture of the lab's slide, built: nothing to fade between. */
     s.transition = 'none';
     /* The slide's audience feedback with its settings (a converted lesson brings
        them; the lab's Engage tab sets the kind). What is not set takes
@@ -470,17 +469,8 @@
     return after;
   }
 
-  /** @type {any} */ var lastShowDeck = null;
-  /* The lab deck the last show was built from, as it was then. The wall draws
-     each slide live from it (js/lab-stage.js), and it has to be this one, not
-     whatever the editor has open by the time a slide comes up: the editor can
-     move on (another lesson, a blank one after a delete) while the show runs,
-     and a slide the live drawing does not have falls back to its still, so
-     every clip on it stands still. */
-  /** @type {any} */ var shownLabDeck = null;
-
-  /* The show as a SlideForge lesson: what Host live, Rehearse, Teacher
-     Presenter and Share all run, so a follow-along link matches the room. */
+  /* The lesson in SlideForge's form, which the practice notes (wordsDeck) and the classic handout (printDeck,
+     js/print.js: tools/export-teaching-pdf.mjs) read. Since M14 nothing shows or hosts it. */
   /* A slide's words as a SlideForge content slide: what the practice notes read. */
   function wordsSlide(o) {
     var s = SF.makeSlide('content');
@@ -559,13 +549,11 @@
     }));
   }
 
-  /* Drawing every slide as a picture is what keeps Present, Teacher Presenter
-     and Host live waiting (most of a minute for a long lesson on a slow
-     machine), and the desk shows "Linking…" all that time. So once a lesson is
-     open, its pictures are drawn quietly ahead of time. The lab keeps each
-     picture until its slide changes (embed.ts stills), so a show started later
-     only draws what was edited since. A show asked for meanwhile waits for the
-     warm-up rather than drawing the same slides a second time beside it. */
+  /* Drawing every slide as a picture is what keeps the student PDF waiting (the studio's handout, embed.ts
+     handout, draws them at 1600: most of a minute for a long lesson on a slow machine). So once a lesson is
+     open, its pictures are drawn quietly ahead of time. The lab keeps each picture until its slide changes
+     (embed.ts stills), so a PDF asked for later only draws what was edited since. A print deck asked for
+     meanwhile waits for the warm-up rather than drawing the same slides a second time beside it. */
   /** @type {Promise<any>|null} */ var warming = null;
   function warmShow() {
     if (!api || warming) return;
@@ -581,21 +569,16 @@
 
   function drawShowDeck(width, quality) {
     var total = api.getDeck().slides.length, shown = 0;
-    var snapshot = JSON.parse(JSON.stringify(api.getDeck()));
     return api.stills(width || 1600, function (done) {
       if (total > 12 && done - shown >= 10) {
         shown = done;
-        var say = 'Preparing the show \u2014 ' + done + ' of ' + total + ' slides';
-        SF.toast(say);
-        if (SF.Player.tellPresenter) SF.Player.tellPresenter(say);
+        SF.toast('Preparing the lesson \u2014 ' + done + ' of ' + total + ' slides');
       }
     }, quality || 0.9).then(function (stills) {
       /* The lab's games play as SlideForge's own: its quiz slides under the lab's drawing, its
          boards where the room's state is kept (src/deck/labshow.js). The rest are pictures. */
       var items = SF.labShowSlides ? SF.labShowSlides(stills) : stills;
-      var deck = lessonFrom(items, function (/** @type {any} */ it) { return it.sf || pictureSlide(it); });
-      if (!width || width === 1600) { lastShowDeck = deck; shownLabDeck = snapshot; }
-      return deck;
+      return lessonFrom(items, function (/** @type {any} */ it) { return it.sf || pictureSlide(it); });
     });
   }
 
@@ -644,26 +627,6 @@
 
   /* The lesson as words, for the practice notes. */
   function wordsDeck() { return lessonFrom(api.outline(), wordsSlide); }
-
-  function buildShow() {
-    return buildShowDeck().then(function (deck) {
-      var a = api;
-      var run = SF.buildRunDeck(deck, function (id) { return SF.GameStore.get(id); });
-      if (run.missingGames && run.missingGames.length) SF.toast('Missing game: ' + run.missingGames.join(', '));
-      var at = a.currentSlideId();
-      var idx = Math.max(0, run.slides.findIndex(function (s) { return s.id === at; }));
-      return { run: run, index: idx };
-    });
-  }
-
-  function withShow(start) {
-    whenReady(function () {
-      buildShow().then(start, function (e) {
-        console.error(e);
-        SF.toast('The show could not be prepared: ' + (e && e.message || e));
-      });
-    });
-  }
 
   /* What the studio cannot run is said to the teacher, with the reason: since M14 there is no classic show or
      room to hand the lesson to. `what` is the thing that cannot start ("Present", "Host live"). */
@@ -926,7 +889,6 @@
       var b = document.getElementById(id);
       if (b) b.onclick = function () { ws.play(); };
     });
-    followShow();
     /* File → Open saved lesson: the lab's decks, through the shell's own Open list. */
     var btnOpenLesson = document.getElementById('btnOpenLesson');
     var btnOpen = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnOpen'));
@@ -976,29 +938,6 @@
     var run = waiting; waiting = [];
     run.forEach(function (fn) { fn(a); });
     if (SF.Shell && SF.Shell.syncChrome && SF.Shell.current && isLabStudio(SF.Shell.current())) SF.Shell.syncChrome();
-  }
-
-  /* The editor follows the show: out of a show, the lab is on the slide the
-     show ended on, so Present again goes on from there, as it would in
-     Keynote or PowerPoint, rather than from wherever editing had left it. A
-     SlideForge slide the lab has not got (a game it did not build) leaves the
-     lab on the lab slide before it. */
-  var lastShown = null;
-  function followShow() {
-    if (!SF.Player || !SF.Player.on) return;
-    SF.Player.on('slide', function (e) {
-      var d = SF.Player.deck;
-      if (!api || !d || d.id !== api.getDeck().id) { lastShown = null; return; }
-      var ids = api.getDeck().slides.map(function (s) { return s.id; });
-      for (var i = e && e.index != null ? e.index : SF.Player.idx; i >= 0; i--) {
-        var s = d.slides[i];
-        if (s && ids.indexOf(s.id) >= 0) { lastShown = s.id; return; }
-      }
-    });
-    SF.Player.on('close', function () {
-      if (lastShown && api && api.showSlide) api.showSlide(lastShown);
-      lastShown = null;
-    });
   }
 
   /** The shell's studios the lab is: the Lesson studio and its views. */
@@ -1095,29 +1034,10 @@
     },
     /* For the tests: which slides print from their SlideForge original, the picture a lab slide becomes, and a lesson's games as the lab gets them. */
     printsAsPages: printsAsPages, pictureSlide: pictureSlide, lessonGames: lessonGames,
-    /* For Share (js/shell.js): the lesson as SlideForge's player shows it. */
-    showDeck: function () {
-      return new Promise(function (resolve, reject) { whenReady(function () { buildShowDeck().then(resolve, reject); }); });
-    },
-    /* The handout's lesson: the show, with the slides SlideForge prints as pages from their originals. */
+    /* The classic handout's lesson (js/print.js, for tools/export-teaching-pdf.mjs): every slide as a picture,
+       with the slides SlideForge prints as pages from their originals. */
     printDeck: function () {
       return new Promise(function (resolve, reject) { whenReady(function () { buildPrintDeck().then(resolve, reject); }); });
-    },
-    /* A shared copy has to fit the server's limit (8 MB, MAX_DOC in
-       server/server.js), so its pictures step down until it does. */
-    shareDeck: function () {
-      var sizes = [[1600, 0.85], [1280, 0.8], [1024, 0.72], [800, 0.62]];
-      var LIMIT = 7.5 * 1024 * 1024;
-      return new Promise(function (resolve, reject) {
-        whenReady(function () {
-          (function next(i) {
-            buildShowDeck(sizes[i][0], sizes[i][1]).then(function (deck) {
-              if (JSON.stringify(deck).length <= LIMIT || i === sizes.length - 1) resolve(deck);
-              else next(i + 1);
-            }, reject);
-          })(0);
-        });
-      });
     },
     /* Share for the studio viewer (lab-app/view.html, M12): the lab deck itself, its pictures packed once. Resolves
        to { doc } to share, or { why } when the lesson cannot be shared: one the studio cannot show, or one too
@@ -1178,7 +1098,6 @@
     /* A studio room is open, and the follow link it can be watched by (the relay's watchOn). */
     roomRunning: function () { return !!(api && api.roomRunning && api.roomRunning()); },
     watchOn: function (id) { return !!(api && api.watchOn && api.watchOn(id)); },
-    lastShowDeck: function () { return lastShowDeck; },
     /* For Activities' Host live: the lesson's, whichever studio is on screen. */
     hostLive: function () { hostLive(); },
     /** The lab deck as it is now (a copy), or null before the lab is ready (tools/export-teaching-pdf.mjs). */

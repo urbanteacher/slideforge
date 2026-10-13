@@ -159,7 +159,6 @@ test('share helper and desk Share button are wired for on-desk dialogs',()=>{
  assert.match(share,/function shareLessonDoc/);
  assert.match(share,/SF\.shareLessonDoc\s*=\s*shareLessonDoc/);
  assert.match(shell,/SF\.shareLessonDoc/);
- assert.match(shell,/function lessonDoc/);
  assert.match(bus,/d\.cmd === 'sharePrep'/);
  assert.match(bus,/d\.cmd === 'shareWatch'/);
 });

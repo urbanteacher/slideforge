@@ -818,16 +818,6 @@
     });
   }
 
-  /** Authored lesson currently in the deck studio — for Presenter share prep. */
-  function lessonDoc() {
-    var deckWs = workspaces.deck;
-    if (!deckWs || !deckWs.doc) return null;
-    if (deckWs.flush) deckWs.flush();
-    /* The desk shares while a room runs, and the room runs the lab's show. */
-    if (deckWs.lab && SF.LabEngine) return SF.LabEngine.lastShowDeck() || null;
-    return deckWs.doc();
-  }
-
   function download(name, obj) {
     var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
@@ -1865,7 +1855,6 @@
     themePicker: themePicker,
     openModal: openModal,
     shareLesson: shareLesson,
-    lessonDoc: lessonDoc,
     current: function () { return active; },
     openPalette: openPalette,
     UI: UI
