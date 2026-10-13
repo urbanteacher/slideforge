@@ -1234,6 +1234,44 @@
         });
       });
     },
+    /* The student PDF from the studio (M12), for a lesson the studio shows: its own print document of every
+       slide as the lab draws it (lab/src/export/handout.ts), a student copy or a teacher copy with the answers
+       and notes. False, with nothing opened, for any other lesson: the shell prints SlideForge's handout. The
+       window is opened here, inside the click, so a pop-up blocker lets it through. */
+    studioHandout: function () {
+      var a = api;
+      if (!a || !a.handout || !a.whyNotPresentInStudio || !studioPresentOn()) return false;
+      var why = a.whyNotPresentInStudio() || classicOnly();
+      if (why) { if (window.console) console.info('Handout: SlideForge\u2019s, because ' + why); return false; }
+      var win = window.open('', '_blank');
+      if (!win) { SF.toast('Allow pop-ups to open the PDF handout preview.'); return true; }
+      var draw = function (/** @type {boolean} */ teacher) {
+        var doc = win.document;
+        doc.open();
+        doc.write('<!doctype html><html><head><title>Handout</title></head><body style="font:16px system-ui;padding:24px">Preparing the handout\u2026</body></html>');
+        doc.close();
+        a.handout(teacher).then(function (/** @type {string} */ html) {
+          doc.open(); doc.write(html); doc.close();
+          var print = /** @type {HTMLButtonElement|null} */ (doc.getElementById('sf-print'));
+          var pick = doc.getElementById('sf-copy');
+          if (pick) pick.onclick = function () { draw(!teacher); };
+          var imgs = Array.prototype.slice.call(doc.images);
+          Promise.all(imgs.map(function (/** @type {HTMLImageElement} */ img) {
+            return img.complete ? null : new Promise(function (r) { img.onload = img.onerror = r; });
+          })).then(function () {
+            if (!print) return;
+            print.disabled = false;
+            print.textContent = 'Print / Save as PDF';
+            print.onclick = function () { win.focus(); win.print(); };
+          });
+        }, function (/** @type {unknown} */ e) {
+          console.error(e);
+          doc.body.textContent = 'The handout could not be prepared.';
+        });
+      };
+      draw(false);
+      return true;
+    },
     /* A studio room is open, and the follow link it can be watched by (the relay's watchOn). */
     roomRunning: function () { return !!(api && api.roomRunning && api.roomRunning()); },
     watchOn: function (id) { return !!(api && api.watchOn && api.watchOn(id)); },

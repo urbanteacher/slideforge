@@ -1,7 +1,7 @@
 import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, unpackPictures, type Deck, type Slide } from '../core';
 import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
-import { renderStill, editableSlides, exportPptx, type SlideFormat } from '../export';
+import { renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
 import { enterView, useStore, type LabView } from '../store';
 import { canHostInStudio, openStudioShow, roomRunning, roomWatchOn, whyNotPresentInStudio, type ShowFirst, type ShowHooks } from '../show';
 import { shareCopy } from '../viewer';
@@ -385,6 +385,15 @@ export const labApi = {
   /** Why Present would not run in the studio's show ('' when it can): a game, activity or figure the studio does not
    *  run yet keeps the lesson on SlideForge's own show. */
   whyNotPresentInStudio: (): string => whyNotPresentInStudio(useStore.getState().deck),
+  /** The student PDF (M12): the print document of every shown slide fully built, one to a page; the teacher copy
+   *  keeps the answer slides and each slide's notes. The shell opens the window and prints it. */
+  async handout(teacher = false): Promise<string> {
+    const deck = useStore.getState().deck;
+    const pages = handoutPages(deck, teacher);
+    const shots = await stills(1600);
+    const images = Object.fromEntries(shots.map((s) => [s.id, s.image]));
+    return handoutHtml(deck.title, pages, images, teacher, deck.width / deck.height);
+  },
   /** The lesson as Share uploads it for the studio viewer (lab-app/view.html, M12): shown slides, no notes, pictures packed. */
   shareDeck: () => shareCopy(useStore.getState().deck),
   /** A studio room is open (its follow link can be offered), and lets a follow link watch it by a share id. */

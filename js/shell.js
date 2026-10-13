@@ -1265,6 +1265,8 @@
                path that wrote from the live document. */
             /* A lab lesson prints as the show SlideForge's player runs: every
                slide fully built, as a picture, with its games in place. */
+            /* A lesson the studio shows prints from the studio itself (M12). */
+            if (it.id === 'pdf' && active.lab && SF.LabEngine && SF.LabEngine.studioHandout && SF.LabEngine.studioHandout()) return;
             if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.printDeck ? SF.LabEngine.printDeck() : SF.LabEngine.showDeck());
             if (it.id === 'pdf') return SF.Print.open(active.doc());
             if (it.id === 'slide') {
