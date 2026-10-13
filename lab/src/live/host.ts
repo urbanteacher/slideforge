@@ -100,9 +100,7 @@ export class LiveHost {
     if (q && this.begun && !this.state.revealed.includes(q.id)) {
       if (this.state.phase === 'question' && this.state.question?.id === q.id) {
         // A style with a step before its reveal (lock the predictions, show the split) takes it on the first Next.
-        const gate = styleFor(q).gate;
-        if (gate && !this.state.gated.includes(q.id)) this.send({ t: gate, id: q.id });
-        else this.reveal();
+        if (!this.gate()) this.reveal();
       } else this.land();
     } else if (this.at < this.opts.show.slides.length - 1) this.goTo(this.at + 1);
   }
@@ -112,6 +110,16 @@ export class LiveHost {
     this.clearSure();
     this.at = i;
     if (this.begun) this.land();
+  }
+
+  /** The step before the reveal the style takes (lock the predictions, show the split), once; false when there is none or it is taken. */
+  gate(): boolean {
+    const q = this.slide?.quiz;
+    if (!q || !this.begun || this.state.phase !== 'question' || this.state.question?.id !== q.id) return false;
+    const gate = styleFor(q).gate;
+    if (!gate || this.state.gated.includes(q.id)) return false;
+    this.send({ t: gate, id: q.id });
+    return true;
   }
 
   /** Mark every answer in the latest tally and send the verdicts (classic sendReveal for a choice question). */

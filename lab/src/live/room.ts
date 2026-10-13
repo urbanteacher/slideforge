@@ -8,7 +8,11 @@ import type { Digest, HostMessage, Phase, PromptFields, PlayerRow, RelayMessage,
 export interface OpenQuestion { id: string; slideId: string; options: string[]; timeLimit: number }
 
 /** The latest `tally` for the open question. */
-export interface Tally { id: string; rev: number; counts: number[] | null; answered: number; sured: number; total: number; allIn: boolean; manual: boolean; answers: TallyAnswer[] }
+export interface Tally {
+  id: string; rev: number; counts: number[] | null; answered: number; sured: number; total: number; allIn: boolean; manual: boolean; answers: TallyAnswer[];
+  /** The Showdown: the votes when the split was shown (null before), and how many phones have switched since. */
+  split?: number[] | null; switched?: number;
+}
 
 /** The feedback prompt that is open: what was asked, and the latest digest of the room's replies (the relay's `responses`). */
 export interface OpenFeedback {
@@ -150,7 +154,7 @@ export class Room {
         }
         break;
       case 'tally':
-        if (!s.question || m.id === s.question.id) s.tally = { id: m.id, rev: m.rev, counts: m.counts, answered: m.answered, sured: m.sured, total: m.total, allIn: m.allIn, manual: m.manual, answers: m.answers };
+        if (!s.question || m.id === s.question.id) s.tally = { id: m.id, rev: m.rev, counts: m.counts, answered: m.answered, sured: m.sured, total: m.total, allIn: m.allIn, manual: m.manual, answers: m.answers, split: Array.isArray(m.split) ? (m.split as number[]) : null, switched: Number(m.switched) || 0 };
         break;
       case 'responses':
         if (s.feedback && s.feedback.prompt.id === m.id) {

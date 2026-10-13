@@ -214,3 +214,13 @@
 .slot-place, .slot-label, .slot-count { position: relative; }
 .slot-label { flex: 1; }
 .slots-swap { margin: calc(var(--u) * 8) 0 0; color: var(--muted); font-size: calc(var(--u) * 36); }
+
+/* The Showdown: one bar across the two answers, a marker where the room stood when the split was shown. */
+.tally-split { min-width: 60vw; }
+.split-bar { position: relative; display: flex; height: calc(var(--u) * 120); border-radius: calc(var(--u) * 16); overflow: hidden; }
+.split-seg { flex: 0 0 var(--w); display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,.16); font-weight: 700; font-size: calc(var(--u) * 48); min-width: 0; }
+.split-1 { background: rgba(255,255,255,.28); }
+.split-seg.right { background: rgba(60,190,110,.6); }
+.split-n { font-size: calc(var(--u) * 56); }
+.split-was { position: absolute; top: 0; bottom: 0; width: calc(var(--u) * 6); margin-left: calc(var(--u) * -3); background: #fff; }
+.split-note { margin: calc(var(--u) * 8) 0 0; color: var(--muted); font-size: calc(var(--u) * 32); }

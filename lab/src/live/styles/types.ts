@@ -41,11 +41,19 @@ export interface SlotsModel {
   swap: { pair: [number, number]; labels: [string, string]; n: number } | null;
 }
 
+/** The Showdown's bar: the room's votes across the two answers now, where the room stood when the split was shown (null before), and who switched. */
+export interface SplitModel {
+  sides: { label: string; now: number; was: number | null; right: boolean }[];
+  total: number;
+  switched: number;
+}
+
 /** What the wall draws under the question. `bars`: a vote per option (`pair`: two big tiles); `typed`: what the
  *  room typed, grouped (null while the question is open); `line`: a number line (null while the question is open). */
 export type WallDetail =
   | { kind: 'bars'; pair: boolean; /** Nobody is marked: the reveal says the prepared answer, not who was right. */ unmarked?: boolean }
   | { kind: 'slots'; slots: SlotsModel | null }
+  | { kind: 'split'; split: SplitModel }
   | { kind: 'typed'; groups: TypedGroup[] | null }
   | { kind: 'line'; line: LineModel | null };
 
@@ -54,6 +62,9 @@ export interface Briefing { role: string; participation: string; headPrompt: str
 
 /** An answer as a style reads it: who, what, and whether they said they were sure. */
 export type Answer = Pick<TallyAnswer, 'id' | 'response'> & { sure?: boolean | null };
+
+/** What the wall's view may need beyond the answers: whether the gate step was taken, and the Showdown's split and switches. */
+export interface WallContext { gated: boolean; split: number[] | null; switched: number }
 
 export interface Range { min: number; max: number; step: number; unit: string }
 
@@ -93,7 +104,7 @@ export interface StyleEntry {
   /** Points the host hands the relay with the verdicts (`reveal.gains`), as [player, points]; undefined: the relay scores by the verdicts alone. */
   gains?(q: RoomQuiz, answers: Answer[]): [number, number][];
   /** The wall's view of the question, from the answers in. */
-  wall(q: RoomQuiz, answers: Answer[], revealed: boolean, gated?: boolean): WallDetail;
+  wall(q: RoomQuiz, answers: Answer[], revealed: boolean, ctx?: WallContext): WallDetail;
   /** The teacher's entry by key as an answer to send, or undefined when it is not one for this style. */
   manual(a: ManualEntry): ManualChoice | undefined;
 }

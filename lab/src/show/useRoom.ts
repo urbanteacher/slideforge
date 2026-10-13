@@ -4,7 +4,7 @@
 // shell's reports, and a relay that does not answer is the show's cue to hand the lesson back to the classic host.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { emptyRoom, LiveHost, ManualBridge, teamBoardOf, type RoomShow, type RoomState } from '../live';
+import { emptyRoom, LiveHost, ManualBridge, styleFor, teamBoardOf, type RoomShow, type RoomState } from '../live';
 import type { ShowHooks } from './hooks';
 import { bindReports, keepReport } from './reports';
 import { timeUpIn } from './clock';
@@ -85,6 +85,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     manual.start();
     const unbind = bindReports(h, optsRef.current.hooks?.reports);
     let timeUp: ReturnType<typeof setTimeout> | null = null;
+    let halfway: ReturnType<typeof setTimeout> | null = null;
     const off = h.subscribe((s, cause) => {
       if (cause.t === 'question' && s.question) {
         asked.current = Date.now();
@@ -93,12 +94,17 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
         // The clock runs out into the reveal, as classic's does (js/live.js on the player's `timeup`). With a
         // teacher entering answers by key the host sent no limit, and there is no clock.
         if (timeUp) clearTimeout(timeUp);
+        if (halfway) clearTimeout(halfway);
+        halfway = null;
         const id = s.question.id, ms = timeUpIn(s.question.timeLimit, 0);
         timeUp = ms == null ? null : setTimeout(() => {
           timeUp = null;
           const now = h.state;
           if (now.phase === 'question' && now.question?.id === id && h.slide?.quiz?.id === id) h.reveal();
         }, ms);
+        // A timed Showdown shows its split half-way through the clock (classic: js/live.js sendOpenQuestion).
+        const limit = s.question.timeLimit;
+        if (limit > 0 && h.slide?.quiz && styleFor(h.slide.quiz).gate === 'showdown') halfway = setTimeout(() => { halfway = null; if (h.slide?.quiz?.id === id) h.gate(); }, limit * 500);
       }
       setState(s);
       sync();
@@ -110,6 +116,7 @@ export function useRoom(show: RoomShow, enabled: boolean, opts: RoomOptions = {}
     return () => {
       off(); unbind(); manual.stop(); clearTimeout(wait);
       if (timeUp) clearTimeout(timeUp);
+      if (halfway) clearTimeout(halfway);
       void end();
       host.current = null; bridge.current = null;
     };

@@ -7,7 +7,7 @@ import { qrSvg } from './qr';
 import { clockOf, type Clock } from './clock';
 import type { Rail } from './rail';
 import { parseRoster, type LineModel, type TeamRow } from '../live';
-import { SlotsView } from './StyleViews';
+import { SlotsView, SplitView } from './StyleViews';
 import type { Wall } from './wallModel';
 
 const TOP = 8;
@@ -122,10 +122,11 @@ export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
   const unmarked = d.kind === 'bars' && d.unmarked;
   const said = (
     <p className="tally-said" role="status" aria-live="polite" data-testid="reveal-said">
-      {q.locked ? `Predictions locked: ${q.answered} of ${q.players}. The answer comes next.` : unmarked ? `The prepared odd one out: ${q.answer}.` : `Answer: ${q.answer}. ${q.right} of ${q.answered} got it right.`}{q.explanation ? ` ${q.explanation}` : ''}
+      {q.locked ? (d.kind === 'split' ? 'The split is up. Every phone may switch once; the answer comes next.' : `Predictions locked: ${q.answered} of ${q.players}. The answer comes next.`) : unmarked ? `The prepared odd one out: ${q.answer}.` : `Answer: ${q.answer}. ${q.right} of ${q.answered} got it right.`}{q.explanation ? ` ${q.explanation}` : ''}
     </p>
   );
   if (d.kind === 'line') return <div className="wall-strip wall-tally tally-line" data-testid="tally">{d.line && <NumberLine line={d.line} />}{said}</div>;
+  if (d.kind === 'split') return <div className="wall-strip wall-tally tally-split" data-testid="tally"><SplitView model={d.split} />{said}</div>;
   if (d.kind === 'slots') return <div className="wall-strip wall-tally tally-slots" data-testid="tally">{d.slots && <SlotsView model={d.slots} />}{said}</div>;
   const typed = d.kind === 'typed' ? d.groups : null;
   const pair = d.kind === 'bars' && d.pair;
