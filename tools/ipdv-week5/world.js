@@ -1,5 +1,5 @@
 'use strict';
-/* The world the map figures draw (src/render/figures/worldmap.js), made once
+/* The world the map figures draw (src/figures/worldmap.js), made once
  * at build time so the browser needs no map library.
  *
  * world-110m (Natural Earth, public domain, via vega-datasets) is projected

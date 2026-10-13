@@ -190,7 +190,7 @@
     };
   }
 
-  /* A live figure (src/render/figures/) is SlideForge's to play: the lab cannot draw one. So the
+  /* A live figure (src/figures/) is SlideForge's to play: the lab cannot draw one. So the
      lab is handed a picture of its last step, as SVG (a figure's still is plain SVG, never
      foreignObject, for exactly this), and keeps it as a stand-in slide. The stand-in is what
      the lab's slide list shows; the show and the handout put the live figure back (ordered). */

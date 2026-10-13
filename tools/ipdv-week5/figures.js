@@ -1,5 +1,5 @@
 'use strict';
-/* The data each of Week 5's live figures is given (src/render/figures/),
+/* The data each of Week 5's live figures is given (src/figures/),
  * made from vega-datasets so every number can be reproduced in the lab. */
 const DATA = require('./data.js');
 const WORLD = require('./world.js');

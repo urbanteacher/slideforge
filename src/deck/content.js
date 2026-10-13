@@ -604,7 +604,7 @@ var SLIDE_TYPES = {
                  ] },
   explore:     { label: 'Explore an image', icon: '◎', deck: true, group: 'show',
                  starters: [{ title: 'Explore an image', blurb: 'One picture the room examines, with details you reveal.' }] },
-  /* A purpose-built live stage (src/render/figures/): hover, drag and motion
+  /* A purpose-built live stage (src/figures/): hover, drag and motion
      drawn for one teaching moment. Made by lesson builders, not from a blank
      starter, so it offers no starter of its own. */
   figure:      { label: 'Live figure', icon: '✦', deck: true, group: 'show', starters: [] },

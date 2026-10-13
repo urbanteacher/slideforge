@@ -1,6 +1,6 @@
 'use strict';
 /* Week 5 · Charts that answer back: every slide, in teaching order.
- * The plan is docs/ipdv-week5-plan.md; the figures are src/render/figures/.
+ * The plan is docs/ipdv-week5-plan.md; the figures are src/figures/.
  * Every technique runs See it → Name the mechanics → Build it, and every
  * Build it points to the same pattern in the student's guide. */
 const F = require('./figures.js');

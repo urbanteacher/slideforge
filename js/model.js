@@ -4279,7 +4279,7 @@
     SF.Experiments = { config, render: render2, inspector, presets, staticState };
   }
 
-  // src/render/figures/kit.js
+  // src/figures/kit.js
   var NS = "http://www.w3.org/2000/svg";
   var W = 1280;
   var H = 720;
@@ -4493,7 +4493,7 @@
     };
   }
 
-  // src/render/figures/plots.js
+  // src/figures/plots.js
   var GREY = "#8796a8";
   function tooltipRows(row, spec, columns) {
     if (!spec) return [];
@@ -4671,7 +4671,7 @@
     return tooltipCard(layer, rows2, mark.x, mark.y, { avoid: (mark.r || 8) + 10 });
   }
 
-  // src/render/figures/bubbles.js
+  // src/figures/bubbles.js
   var PLOT = { x0: 130, x1: W - 90, y0: 160, y1: H - 140 };
   function pointer(parent) {
     return el("path", { d: "M0 0 L0 30 L8 23 L13 35 L18 33 L13 21 L23 21 Z", fill: NU.paper, stroke: NU.ink, "stroke-width": 1.5, opacity: 0, "pointer-events": "none" }, parent);
@@ -4787,7 +4787,7 @@
     }
   };
 
-  // src/render/figures/codechart.js
+  // src/figures/codechart.js
   var CODE = { x: 56, y: 150, size: 15, lh: 22.5 };
   var CHART = { x0: SPLIT.x + 96, x1: W - 50, y0: 170, y1: SPLIT.y - 92 };
   var BOXES = [
@@ -4948,7 +4948,7 @@
     }
   };
 
-  // src/render/figures/worldmap.js
+  // src/figures/worldmap.js
   var cache = {};
   function load(url) {
     if (!cache[url]) cache[url] = fetch(url).then(function(r) {
@@ -5237,7 +5237,7 @@
     }
   };
 
-  // src/render/figures/motion.js
+  // src/figures/motion.js
   function axes(parent, d, rect, st, fs, labels) {
     var sx = scale(d.x.domain, [rect.x0, rect.x1], d.x.log), sy = scale(d.y.domain, [rect.y1, rect.y0], d.y.log);
     var g = el("g", { "font-family": NU.sans, "font-size": fs, fill: st.soft }, parent);
@@ -5462,7 +5462,7 @@
     }
   };
 
-  // src/render/figures/linked.js
+  // src/figures/linked.js
   var PLOT2 = { x0: 120, x1: 760, y0: 170, y1: H - 150 };
   var BARS = { x0: 1010, x1: W - 60, y0: 372, y1: H - 150 };
   var CHIP = { x: 828, y: 132, w: W - 60 - 828, h: 196 };
@@ -5679,7 +5679,7 @@
     }
   };
 
-  // src/render/figures/rowtable.js
+  // src/figures/rowtable.js
   var PLOT3 = { x0: 110, x1: 600, y0: 170, y1: H - 160 };
   var TABLE = { x: 680, y: 150, w: W - 740, rows: 15, lh: 27 };
   var rowtable = {
@@ -5776,7 +5776,7 @@
     }
   };
 
-  // src/render/figures/index.js
+  // src/figures/index.js
   var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable };
   var CSS = ".figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}.figure-slide .pad{visibility:hidden}.figure-slide .fig-svg text{font-kerning:normal}";
   function installFigures(SF) {
@@ -11989,7 +11989,7 @@
     /* A game slide is a single card the engine draws: nothing sits beside it,
        and there is nowhere for a free item to go. */
     game: { slots: { gamecard: region(1, 1, 12, 16) } },
-    /* A live figure (src/render/figures/) draws the whole slide itself, full
+    /* A live figure (src/figures/) draws the whole slide itself, full
        bleed, the way a game's card does: nowhere for a free item to go. */
     figure: { slots: { "fig-svg": region(1, 1, 12, 16) } },
     beforeafter: { slots: {
@@ -15503,7 +15503,7 @@
       group: "show",
       starters: [{ title: "Explore an image", blurb: "One picture the room examines, with details you reveal." }]
     },
-    /* A purpose-built live stage (src/render/figures/): hover, drag and motion
+    /* A purpose-built live stage (src/figures/): hover, drag and motion
        drawn for one teaching moment. Made by lesson builders, not from a blank
        starter, so it offers no starter of its own. */
     figure: { label: "Live figure", icon: "✦", deck: true, group: "show", starters: [] },

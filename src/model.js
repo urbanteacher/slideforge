@@ -9,7 +9,7 @@ import { createCompositionRenderer } from './render/compositions.js';
 import { createChartRenderer } from './render/charts.js';
 import { installExplore } from './render/explore.js';
 import { installExperiments } from './render/experiments.js';
-import { installFigures } from './render/figures/index.js';
+import { installFigures } from './figures/index.js';
 import { createWordRenderer } from './render/words.js';
 import { createLiveRenderer } from './render/live.js';
 import { createQuizRenderer } from './render/quiz.js';

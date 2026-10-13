@@ -15,7 +15,7 @@
  *    strip (input → parameter → predicate → visual response), then the
  *    Altair, with a footer pointing to the same pattern in the student's
  *    guide (Guides for info vis/alt_Interaction_Animation_guide.ipynb).
- *  - The key moments are live figures (src/render/figures/), not pictures:
+ *  - The key moments are live figures (src/figures/), not pictures:
  *    the room hovers, drags and watches the chart move.
  * Everything the deck draws is Northeastern navy, red and warm white, so any
  * other colour on screen is data. */

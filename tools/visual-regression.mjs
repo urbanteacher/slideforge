@@ -70,7 +70,7 @@ const LAYOUT_CASES = [
 const LAYOUT_THEMES = ['northeastern', 'studio', 'midnight'];
 
 /* Live figures caught mid-move, added 2026-10-11. A figure's tweens run on
-   its kit's clock (src/render/figures/kit.js), and SF.Figures.seek(ms) holds
+   its kit's clock (src/figures/kit.js), and SF.Figures.seek(ms) holds
    every one at ms after it began, so the same moment is the same picture.
    Each case steps the bubbles figure from its overview to a zoom with the
    pointer gliding in, and holds it: at the start, mid-glide, and arrived

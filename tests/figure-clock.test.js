@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-/* The figures' clock (src/render/figures/kit.js): a tween held by seek(ms) is
+/* The figures' clock (src/figures/kit.js): a tween held by seek(ms) is
    drawn at ms after it began, whatever the wall clock says, so a baseline can
    capture a figure mid-move and get the same picture every run. */
 test('seek holds tweens at a time, then lets them run on from it', async()=>{
@@ -8,7 +8,7 @@ test('seek holds tweens at a time, then lets them run on from it', async()=>{
   globalThis.requestAnimationFrame=f=>{frames.push(f);return frames.length;};
   globalThis.cancelAnimationFrame=id=>{frames[id-1]=null;};
   const step=ms=>{now+=ms;const due=frames.splice(0);due.forEach(f=>f&&f(now));};
-  const kit=await import('../src/render/figures/kit.js');
+  const kit=await import('../src/figures/kit.js');
   const seen=[];
   const linear=k=>k;
   kit.tween(1000,k=>seen.push(k),linear);
@@ -40,7 +40,7 @@ test('seek holds tweens at a time, then lets them run on from it', async()=>{
 });
 test('a cancelled tween is not redrawn by seek',async()=>{
   globalThis.requestAnimationFrame=()=>1;globalThis.cancelAnimationFrame=()=>{};
-  const kit=await import('../src/render/figures/kit.js');
+  const kit=await import('../src/figures/kit.js');
   const seen=[];
   const cancel=kit.tween(1000,k=>seen.push(k),k=>k);
   cancel();kit.seek(500);kit.seek(null);
