@@ -12,19 +12,21 @@ export interface WhichStep {
   /** The wrong answer students diagnose. */
   answer: string;
   /** The routine's operations, each with what it asks. */
-  steps: { name: string; asks: string }[];
+  steps: { name: string; asks: string; share?: number }[];
   /** Which operation broke (an index into steps). */
   broke: number;
   why: string;
   fix: string;
 }
 
+// The Nodes answer routine (Nodes src/data/answer-routine.ts): each step's card, and the share of the 2,191
+// coded examiner-report mistake findings it guards against.
 export const ROUTINE = [
-  { name: 'Decode', asks: 'What is the question asking for?' },
-  { name: 'Retrieve', asks: 'What do I need to know?' },
-  { name: 'Reason', asks: 'How do the ideas connect?' },
-  { name: 'Express', asks: 'Is it said precisely?' },
-  { name: 'Check', asks: 'Does it answer the question?' },
+  { name: 'Decode', asks: 'Command word. Marks. Scenario. How far must I go?', share: 24 },
+  { name: 'Retrieve', asks: 'Key terms first. Which two ideas must I keep apart?', share: 46 },
+  { name: 'Reason', asks: 'Point → because → so → in this case. Or finish the pair.', share: 7 },
+  { name: 'Refine', asks: 'Technical terms where accuracy depends on them.', share: 8 },
+  { name: 'Review', asks: 'Endpoints and zero. Units. Does it answer everything?', share: 14 },
 ];
 
 const STARTER: WhichStep = {
@@ -64,6 +66,8 @@ export const whichStep: NodesFormat<WhichStep> = {
         T(st, `${s.name} — asks`, s.asks, x + 28, y0 + 96, cw - 56, broke ? 90 : 170, { size: 30, lineHeight: 1.25, fitGroup: 'asks' }, broke ? after() : still),
       ];
       if (broke) out.push(T(st, `${s.name} — breaks`, 'Where this answer breaks down', x + 28, y0 + ch - 92, cw - 56, 70, { weight: '800', size: 24, color: LINK.X, lineHeight: 1.2 }, after()));
+      // Revealed, each step's share of the mistakes examiners found: where answers break most.
+      if (revealed && !broke && s.share) out.push(T(st, `${s.name} — share`, `${s.share}% of mistakes`, x + 28, y0 + ch - 60, cw - 56, 40, { weight: '700', size: 24, color: st.muted }, still));
       if (i) out.push(T(st, 'Between', '⇄', x - gap, y0 + ch / 2 - 30, gap, 60, { weight: '700', size: 40, align: 'center', color: st.muted }, still));
       return out;
     });

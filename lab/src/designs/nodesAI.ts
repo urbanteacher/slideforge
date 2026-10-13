@@ -33,7 +33,7 @@ const SPECS: Record<string, Spec> = {
   },
   'which-step': {
     shape: '{"question":"…","answer":"…","broke":1,"why":"…","fix":"…"}',
-    rules: 'A realistic wrong answer to the question. "broke" is where it broke: 0 Decode (misread the question), 1 Retrieve (wrong or missing knowledge), 2 Reason (ideas not connected), 3 Express (not precise), 4 Check (does not answer the question). "fix" is what to write instead.',
+    rules: 'A realistic wrong answer to the question. "broke" is where it broke: 0 Decode (misread the command word, marks or scenario), 1 Retrieve (wrong or confused knowledge), 2 Reason (ideas not joined), 3 Refine (not precise: no technical term where accuracy depends on it), 4 Review (endpoints, units, or does not answer everything). "fix" is what to write instead.',
     tokens: 600, check: (v) => str(v.question) && str(v.answer) && Number.isInteger(v.broke) && v.broke >= 0 && v.broke <= 4, merge: (c, v) => ({ ...c, ...v, steps: c.steps }),
   },
   'label-parts': {
