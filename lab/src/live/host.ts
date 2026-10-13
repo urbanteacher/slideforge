@@ -33,8 +33,8 @@ export interface HostOptions {
   tap?: (dir: 'send' | 'recv', m: HostMessage | RelayMessage) => void;
 }
 
-/** One answer the teacher enters by key: an option index, or null to take it back. */
-export type ManualChoice = number | null;
+/** One answer the teacher enters by key: an option index, the words typed for a Type answer question, or null to take it back. */
+export type ManualChoice = number | string | null;
 
 export class LiveHost {
   readonly room = new Room();
@@ -117,10 +117,12 @@ export class LiveHost {
     this.clearSure();
     const t = this.state.tally && this.state.tally.id === q.id ? this.state.tally : null;
     const list = answers ?? t?.answers ?? [];
+    // A typed question has no option to be right: `correct` is -1 and the answer said is the first accepted spelling.
+    const typed = q.input === 'text';
     this.send({
       t: 'reveal', id: q.id, rev: rev ?? t?.rev ?? 0,
       marks: q.unmarked ? [] : list.map((a) => [a.id, markResponse(q, a.response)] as [number, boolean]),
-      correct: q.correct, answer: q.options[q.correct] ?? '', explanation: q.explanation ?? '',
+      correct: typed ? -1 : q.correct, answer: typed ? q.answer ?? '' : q.options[q.correct] ?? '', explanation: q.explanation ?? '',
     });
   }
 
@@ -136,7 +138,8 @@ export class LiveHost {
     const q = this.state.question;
     if (!q && !id) return;
     const qid = id ?? q!.id;
-    this.send(choice == null ? { t: 'manualAnswer', id: qid, playerId, clear: true } : { t: 'manualAnswer', id: qid, playerId, choice });
+    this.send(choice == null ? { t: 'manualAnswer', id: qid, playerId, clear: true }
+      : typeof choice === 'string' ? { t: 'manualAnswer', id: qid, playerId, text: choice } : { t: 'manualAnswer', id: qid, playerId, choice });
   }
 
   manualRename(playerId: number, name: string): void { this.send({ t: 'manualRename', playerId, name }); }
@@ -146,7 +149,8 @@ export class LiveHost {
   /** Counts per option for a room answering on paper (manual.html's `tally`): added to the tally, never scored. */
   manualTally(counts: number[]): void {
     const q = this.state.question;
-    if (q && !this.state.revealed.includes(q.id)) this.send({ t: 'manualTally', id: q.id, counts });
+    // Hands up counts options: a typed question has none to count.
+    if (q && q.options.length > 0 && !this.state.revealed.includes(q.id)) this.send({ t: 'manualTally', id: q.id, counts });
   }
 
   /** Ask the relay for the session's report (`sessionReport`). */
@@ -249,8 +253,8 @@ export class LiveHost {
     const f: QuestionFields = {
       id: q.id, n: quizzes.findIndex((x) => x.quiz!.id === q.id) + 1, total: quizzes.length, question: q.question,
       voteOnly: q.voteOnly === true, unmarked: q.unmarked === true, sourceSlideId: q.sourceSlideId || q.id,
-      input: 'choice', spoken: false, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: '',
-      confidence: q.confidence !== false, range: null, options: q.options.filter((o) => String(o).trim()),
+      input: q.input === 'text' ? 'text' : 'choice', spoken: false, gameId: q.gameId || '', scoreSpoken: q.scoreSpoken === true, participation: '',
+      confidence: q.confidence !== false, range: null, options: (q.options ?? []).filter((o) => String(o).trim()),
       // SF.questionTimeLimit: no clock while the teacher enters answers by key.
       timeLimit: hasManual ? 0 : Math.max(0, Number(q.timeLimit) || 0), points: q.points, style: q.style,
     };

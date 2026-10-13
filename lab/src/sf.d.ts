@@ -26,6 +26,11 @@ declare module '@sf/games/registry.js' {
   export const GAME_STYLES: Record<string, SFGameStyle>;
 }
 
+declare module '@sf/games/marking.js' {
+  /** A typed answer with case, accents, punctuation and a leading article taken off: what two spellings are compared by. */
+  export function normalizeAnswer(text: unknown): string;
+}
+
 declare module '@sf/games/scoring.js' {
   /** Claim and Heads Up: a point when the teacher accepts. */
   export function claimPoints(accepted: boolean): number;

@@ -66,19 +66,23 @@ export function QuestionStrip({ q, askedAt }: { q: NonNullable<Wall['question']>
   );
 }
 
-/** After the reveal: the votes on each option, the right one marked, and the answer said aloud to a screen reader. */
+/** After the reveal: the votes on each option, the right one marked, and the answer said aloud to a screen reader.
+ *  A Type answer question has no options: it shows what the room typed, one row per answer. */
 export function RevealStrip({ q }: { q: NonNullable<Wall['question']> }) {
-  const max = Math.max(1, ...q.options.map((o) => o.count));
+  const typed = q.typed;
+  const rows = typed ? typed.map((g, i) => ({ key: i, label: g.text, count: g.n, right: g.right })) : q.options.map((o) => ({ key: o.index, label: o.label, count: o.count, right: o.correct }));
+  const max = Math.max(1, ...rows.map((o) => o.count));
   return (
-    <div className={`wall-strip wall-tally${q.style === 'truefalse' ? ' tally-pair' : ''}`} data-testid="tally">
-      <ul className="tally-list" aria-label={q.style === 'truefalse' ? 'Votes for True and False' : 'Votes for each option'}>
-        {q.options.map((o) => (
-          <li key={o.index} className={o.correct ? 'right' : ''} data-testid={`tally-${o.index}`}>
+    <div className={`wall-strip wall-tally${q.style === 'truefalse' ? ' tally-pair' : ''}${typed ? ' tally-typed' : ''}`} data-testid="tally">
+      <ul className="tally-list" aria-label={typed ? 'What the room typed' : q.style === 'truefalse' ? 'Votes for True and False' : 'Votes for each option'}>
+        {rows.map((o) => (
+          <li key={o.key} className={o.right ? 'right' : ''} data-testid={typed ? `typed-${o.key}` : `tally-${o.key}`}>
             <span className="tally-bar" style={{ ['--w' as string]: `${Math.round((o.count / max) * 100)}%` }} aria-hidden="true" />
-            <span className="tally-label">{o.correct ? '✓ ' : ''}{o.label}</span>
+            <span className="tally-label">{o.right ? '✓ ' : ''}{o.label}</span>
             <b className="tally-count">{o.count}</b>
           </li>
         ))}
+        {typed && rows.length === 0 && <li className="tally-none" data-testid="typed-none">Nobody typed an answer.</li>}
       </ul>
       <p className="tally-said" role="status" aria-live="polite" data-testid="reveal-said">
         Answer: {q.answer}. {q.right} of {q.answered} got it right.{q.explanation ? ` ${q.explanation}` : ''}

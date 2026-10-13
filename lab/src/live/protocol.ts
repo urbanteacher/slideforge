@@ -1,5 +1,5 @@
 // The live room's wire protocol, as the lab host speaks it (docs/games/protocol.md, M0.2). Only what a
-// Multiple choice session needs, plus rehost and reconnect. The relay (server/server.js), the phones
+// Multiple choice or Type answer session needs, plus rehost and reconnect. The relay (server/server.js), the phones
 // (join.html) and the teacher-entry window (manual.html) do not change (hard rule 5): these are the
 // shapes they already accept and send. Section numbers are the protocol doc's.
 
@@ -23,17 +23,17 @@ export interface AtFields {
 /** The phone companion fields an `idle` carries (§10). */
 export interface Companion { style: string; role: string; participation: string; headPrompt: string }
 
-/** A multiple-choice `question` (§6.1), with the fields and the values classic sends (`js/live.js` sendOpenQuestion). */
+/** A `question` (§6.1), multiple choice or typed, with the fields and the values classic sends (`js/live.js` sendOpenQuestion). */
 export interface QuestionFields {
   id: string; n: number; total: number; question: string;
   voteOnly: boolean; unmarked: boolean; sourceSlideId: string;
-  input: 'choice'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
+  input: 'choice' | 'text'; spoken: false; gameId: string; scoreSpoken: boolean; participation: string;
   confidence: boolean; range: null; options: string[]; timeLimit: number; points: number; style: string;
   headPrompt?: string;
 }
 
-/** A teacher's answer by key (§6.4). Choice only here; `clear` takes the answer back. */
-export interface ManualAnswerFields { id: string; playerId: number; choice?: number; clear?: boolean }
+/** A teacher's answer by key (§6.4): an option, or the words typed for a Type answer question; `clear` takes it back. */
+export interface ManualAnswerFields { id: string; playerId: number; choice?: number; text?: string; clear?: boolean }
 
 /** H→R: what the host sends. */
 export type HostMessage =

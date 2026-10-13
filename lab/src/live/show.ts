@@ -4,7 +4,7 @@
 // a question is asked where its first drawing stands, its answer is that question's reveal (not a step of
 // its own), and the game's scores follow its last slide.
 //
-// Slice 1 (M7) asks multiple-choice questions only. Any other question is shown, not asked.
+// The room asks Multiple choice (and True or false) and Type answer questions. Any other question is shown, not asked.
 
 import type { Deck, Slide } from '../core';
 import { gameStyle } from '@sf/games/registry.js';
@@ -13,6 +13,7 @@ import { gameStyle } from '@sf/games/registry.js';
 export interface RoomQuiz extends SFQuizSlide {
   id: string; question: string; options: string[]; correct: number; explanation: string;
   timeLimit: number; points: number; style: string; input: string; gameId: string;
+  accept?: string[]; answer?: string; allowTypos?: boolean;
   confidence?: boolean; voteOnly?: boolean; unmarked?: boolean; scoreSpoken?: boolean; sourceSlideId?: string; headPrompt?: string;
 }
 
@@ -46,6 +47,14 @@ function quizOf(s: Slide): RoomQuiz {
   q.timeLimit = (set.seconds ?? 0) > 0 ? set.seconds! : 0;
   if (set.points != null) q.points = set.points;
   q.gameId = g.id;
+  if (q.input === 'text') {
+    // Type answer, as the style compiles it (src/games/type.js compile): the accepted spellings without the blanks,
+    // the first of them the one the room reads, and no options and no key to an option.
+    q.accept = (Array.isArray(q.accept) ? q.accept : []).filter((a: unknown) => String(a ?? '').trim());
+    q.answer = q.accept[0] ?? '';
+    q.options = [];
+    q.correct = -1;
+  }
   if (s.sourceSlideId) q.sourceSlideId = s.sourceSlideId;
   return q;
 }
@@ -72,7 +81,7 @@ export function showFromDeck(deck: Pick<Deck, 'title' | 'slides'>): RoomShow {
         if (!asked.has(key)) {
           asked.add(key);
           const quiz = quizOf(s);
-          out.push(quiz.input === 'choice'
+          out.push(quiz.input === 'choice' || quiz.input === 'text'
             ? { id: s.id, title: quiz.question, text: quiz.question, activity: 'question', gameId: g.id, style: quiz.style, quiz }
             : { id: s.id, title: quiz.question, text: quiz.question, activity: 'moment', gameId: g.id, style });
         }
