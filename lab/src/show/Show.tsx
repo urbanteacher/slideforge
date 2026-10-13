@@ -407,7 +407,7 @@ function Show() {
       {reportOpen && room.state.session && <ReportScreen relay={relayUrl()} session={room.state.session} points={room.state.scores} onClose={() => setReportOpen(false)} />}
       {notes && <aside className="show-notes" aria-label="Speaker notes"><h4>Notes · slide {index + 1}</h4>{slide.notes || <span className="dim">No notes for this slide.</span>}</aside>}
       <ScreenCover screen={screen} onResume={() => setScreen('none')} />
-      {overview != null && <Overview slides={deck.slides} current={index} at={overview} onGo={(i) => { setOverview(null); goIndex(i); }} onClose={() => setOverview(null)} />}
+      {overview != null && <Overview slides={deck.slides} deck={deck} current={index} at={overview} onGo={(i) => { setOverview(null); goIndex(i); }} onClose={() => setOverview(null)} />}
       {notesCard && (
         <NotesCard link={link.current} onClose={() => setNotesCard(false)}
           onStop={() => { link.current?.stop(); repaint((n) => n + 1); }}
