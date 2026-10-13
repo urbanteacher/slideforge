@@ -78,6 +78,8 @@ export function ShowLayer() {
 function Show() {
   const full = useStore((s) => s.deck);
   const { room: roomOn, slideId, hooks, rehearse: rehearse0 } = useShow.getState(); // read once: a show is opened plain or as a room, and does not change
+  // A room can start from this show: inside SlideForge (it hands the show its hooks, and serves the relay), or ?studioRoom=1.
+  const canLive = !!hooks || studioRoomEnabled();
   const deck = useMemo(() => shownDeck(full), []); // the lesson as it was when the show opened
   const { show, steps } = useMemo(() => stepsOf(deck), [deck]);
   const start = useMemo(() => {
@@ -571,15 +573,15 @@ function Show() {
         <button onClick={notesElsewhere} aria-label="Notes on another device (Shift+N)" title="Notes on another device (Shift+N): the private link and QR open in the Teacher Presenter"><Smartphone size={16} /></button>
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
-        {(roomOn || studioRoomEnabled()) && <button onClick={() => (roomOn ? setDeskCard((c) => (c === 'poll' ? '' : 'poll')) : openStudioShow({ room: true, slideId: slide.id }))} aria-pressed={roomOn && (deskCard === 'poll' || !!room.state.quick)} aria-label="Quick poll (V)" title={roomOn ? 'Quick poll (V): ask the room something on the fly' : 'Quick poll (V): starts Host live, then ask the room something on the fly'}><Vote size={16} /></button>}
+        {(roomOn || canLive) && <button onClick={() => (roomOn ? setDeskCard((c) => (c === 'poll' ? '' : 'poll')) : openStudioShow({ room: true, slideId: slide.id }))} aria-pressed={roomOn && (deskCard === 'poll' || !!room.state.quick)} aria-label="Quick poll (V)" title={roomOn ? 'Quick poll (V): ask the room something on the fly' : 'Quick poll (V): starts Host live, then ask the room something on the fly'}><Vote size={16} /></button>}
         {roomOn && <button onClick={() => setDeskCard((c) => (c === 'qa' ? '' : 'qa'))} aria-pressed={deskCard === 'qa'} aria-label="Questions from the room" title="Questions from the room: approve, show on the wall, mark answered, hide"><MessageCircleQuestion size={16} />{room.state.qa.pending || ''}</button>}
-        {(roomOn || studioRoomEnabled()) && <button onClick={() => (roomOn ? runCmd('roomView') : openStudioShow({ room: true, slideId: slide.id }))} aria-pressed={roomOn && roomView !== 'hidden'} aria-label="Room view (E)" title={roomOn ? `Room view (E): ${ROOM_VIEW_SAYS[roomView]}. Press again for hidden, beside, full` : 'Room view (E): starts Host live, then the standings beside the slide or the full board'}><Columns2 size={16} /></button>}
+        {(roomOn || canLive) && <button onClick={() => (roomOn ? runCmd('roomView') : openStudioShow({ room: true, slideId: slide.id }))} aria-pressed={roomOn && roomView !== 'hidden'} aria-label="Room view (E)" title={roomOn ? `Room view (E): ${ROOM_VIEW_SAYS[roomView]}. Press again for hidden, beside, full` : 'Room view (E): starts Host live, then the standings beside the slide or the full board'}><Columns2 size={16} /></button>}
         {roomOn && <button onClick={() => runCmd('scores')} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S). E: room view hidden, beside, full"><Trophy size={16} /></button>}
-        {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
+        {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && canLive)) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
         {roomOn && hooks?.share && <button onClick={() => hooks.share?.()} aria-label="Share" title="Share: a link to read or practise the lesson, or a big screen that follows this room"><Share2 size={16} /></button>}
         <button onClick={toggleFs} aria-label="Full screen (F)" title="Full screen (F). ? lists every key"><Maximize size={16} /></button>
-        {!roomOn && studioRoomEnabled() && (
+        {!roomOn && canLive && (
           <button className="show-live" onClick={() => openStudioShow({ room: true, slideId: slide.id })} title="Run this lesson live with phones"><Radio size={15} />Host live</button>
         )}
         <button onClick={exit} aria-label={roomOn ? 'End the room and exit' : 'Exit'} title={roomOn ? 'End the room and exit (Esc)' : 'Exit (Esc)'}><X size={16} />{roomOn ? 'End' : ''}</button>
