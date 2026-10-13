@@ -10,157 +10,162 @@
  "aiad26-creative": {
   "file": "assets/lab-lessons/aiad26-creative.lesson.json",
   "hash": "98dda4278fce5bf8",
-  "carried": 15
+  "carried": 16
  },
  "aiad26-future": {
   "file": "assets/lab-lessons/aiad26-future.lesson.json",
   "hash": "0da75a4cbcae97cf",
-  "carried": 15
+  "carried": 16
  },
  "aiad26-responsible": {
   "file": "assets/lab-lessons/aiad26-responsible.lesson.json",
   "hash": "b3dd2a17137bc50d",
-  "carried": 15
+  "carried": 16
  },
  "aiad26-safe": {
   "file": "assets/lab-lessons/aiad26-safe.lesson.json",
   "hash": "5aec37f553621f18",
-  "carried": 15
+  "carried": 16
  },
  "aiad26-smart": {
   "file": "assets/lab-lessons/aiad26-smart.lesson.json",
   "hash": "941c06dfd86faa8c",
-  "carried": 15
+  "carried": 16
  },
  "aiad27-creative": {
   "file": "assets/lab-lessons/aiad27-creative.lesson.json",
   "hash": "174764ef620f3747",
-  "carried": 15
+  "carried": 16
  },
  "aiad27-future": {
   "file": "assets/lab-lessons/aiad27-future.lesson.json",
   "hash": "c56c17c7f9e9a5a6",
-  "carried": 15
+  "carried": 16
  },
  "aiad27-responsible": {
   "file": "assets/lab-lessons/aiad27-responsible.lesson.json",
   "hash": "efd4838e27ac6fa6",
-  "carried": 15
+  "carried": 16
  },
  "aiad27-safe": {
   "file": "assets/lab-lessons/aiad27-safe.lesson.json",
   "hash": "01b10a2ff4c28dc3",
-  "carried": 15
+  "carried": 16
  },
  "aiad27-smart": {
   "file": "assets/lab-lessons/aiad27-smart.lesson.json",
   "hash": "fa280ab74fd2fab3",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-col-w4": {
   "file": "assets/lab-lessons/ipdv-col-w4.lesson.json",
   "hash": "35f48f1150f6c08e",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-col-w4-student": {
   "file": "assets/lab-lessons/ipdv-col-w4-student.lesson.json",
   "hash": "c491fa42d7bd85d1",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-da": {
   "file": "assets/lab-lessons/ipdv-da.lesson.json",
   "hash": "d2906cfeafde16bd",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-ia-w5": {
   "file": "assets/lab-lessons/ipdv-ia-w5.lesson.json",
   "hash": "0be061a55ae316b3",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-ia-w5-student": {
   "file": "assets/lab-lessons/ipdv-ia-w5-student.lesson.json",
   "hash": "2a129502602e574a",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-intro": {
   "file": "assets/lab-lessons/ipdv-intro.lesson.json",
   "hash": "7f01276c8dc0f197",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-lab1": {
   "file": "assets/lab-lessons/ipdv-lab1.lesson.json",
   "hash": "8d5266ad415f591d",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-maps-w7": {
   "file": "assets/lab-lessons/ipdv-maps-w7.lesson.json",
   "hash": "f85af6295f7a6f31",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-maps-w7-student": {
   "file": "assets/lab-lessons/ipdv-maps-w7-student.lesson.json",
   "hash": "d1cd41a8ffd6da1f",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-vc": {
   "file": "assets/lab-lessons/ipdv-vc.lesson.json",
   "hash": "b191d78759766f55",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-vc-classic": {
   "file": "assets/lab-lessons/ipdv-vc-classic.lesson.json",
   "hash": "bcf665670abcaa69",
-  "carried": 15
+  "carried": 16
  },
  "ipdv-vc-hybrid": {
   "file": "assets/lab-lessons/ipdv-vc-hybrid.lesson.json",
   "hash": "93bb66df09509a0c",
-  "carried": 15
+  "carried": 16
  },
  "layout-bank": {
   "file": "assets/lab-lessons/layout-bank.lesson.json",
   "hash": "6ad3f76693853802",
-  "carried": 15
+  "carried": 16
+ },
+ "motion-lab": {
+  "file": "assets/lab-lessons/motion-lab.lesson.json",
+  "hash": "70c65bb10b95fe77",
+  "carried": 16
  },
  "nul-lab1": {
   "file": "assets/lab-lessons/nul-lab1.lesson.json",
   "hash": "3414b7204e428bf1",
-  "carried": 15
+  "carried": 16
  },
  "pace-nul": {
   "file": "assets/lab-lessons/pace-nul.lesson.json",
   "hash": "07d5683836671a1a",
-  "carried": 15
+  "carried": 16
  },
  "ukbt-campaigns": {
   "file": "assets/lab-lessons/ukbt-campaigns.lesson.json",
   "hash": "055a230947d3d2a5",
-  "carried": 15
+  "carried": 16
  },
  "ukbt-institute-partnership": {
   "file": "assets/lab-lessons/ukbt-institute-partnership.lesson.json",
   "hash": "52d0004d3c2ae6ec",
-  "carried": 15
+  "carried": 16
  },
  "ukbt-institute-template": {
   "file": "assets/lab-lessons/ukbt-institute-template.lesson.json",
   "hash": "550b4ad173012476",
-  "carried": 15
+  "carried": 16
  },
  "ukbt-institute-townhouse": {
   "file": "assets/lab-lessons/ukbt-institute-townhouse.lesson.json",
   "hash": "46a8522813c2938b",
-  "carried": 15
+  "carried": 16
  },
  "ukbt-sponsorship": {
   "file": "assets/lab-lessons/ukbt-sponsorship.lesson.json",
   "hash": "cd0d5cb911c31917",
-  "carried": 15
+  "carried": 16
  },
  "ukbt-template": {
   "file": "assets/lab-lessons/ukbt-template.lesson.json",
   "hash": "8c034ac87056a61a",
-  "carried": 15
+  "carried": 16
  }
 };
 })(typeof window !== 'undefined' ? window : globalThis);
