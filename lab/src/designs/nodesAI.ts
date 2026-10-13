@@ -71,14 +71,27 @@ function frameworkSpec(cur: any): Spec {
 
 const who = (a: Audience) => [a.yearGroup ? `For ${a.yearGroup}.` : '', a.misconceptions ? `They often get wrong: ${a.misconceptions}.` : '', a.constraints?.length ? `Constraints: ${a.constraints.join(', ')}.` : ''].filter(Boolean).join(' ');
 
-/** The format's content written on a topic, or why not. */
-export async function writeNodes(format: string, current: any, topic: string, aud: Audience): Promise<{ content?: any; error?: string }> {
+/** What the teacher gives the writer: the subject, the topic, its technical terms and the course overview. */
+export interface NodesBrief { subject?: string; topic: string; terms?: string; overview?: string }
+
+/** The brief as the request's words, kept inside the request's size (the relay takes 1,800 characters). */
+function briefText(b: NodesBrief): string {
+  return [
+    b.subject?.trim() ? `Subject: ${b.subject.trim().slice(0, 80)}.` : '',
+    `Topic: ${b.topic.trim().slice(0, 160)}.`,
+    b.terms?.trim() ? `Technical terms to use, accurately (and as the recall terms where there are any): ${b.terms.trim().slice(0, 300)}.` : '',
+    b.overview?.trim() ? `Course overview, what students should learn: ${b.overview.trim().slice(0, 900)}` : '',
+  ].filter(Boolean).join('\n');
+}
+
+/** The format's content written from the brief, or why not. */
+export async function writeNodes(format: string, current: any, brief: NodesBrief, aud: Audience): Promise<{ content?: any; error?: string }> {
   const h = host();
   if (!h) return { error: 'Writing with AI works when the studio is open inside SlideForge, which holds the AI key.' };
   const spec = format === 'framework' ? frameworkSpec(current) : SPECS[format];
   if (!spec) return { error: 'This format cannot be written with AI yet.' };
   const system = `${BASE}\nShape: ${spec.shape}\nRules: ${spec.rules}`;
-  const user = `Topic: ${topic.trim()}. ${who(aud)}`.trim();
+  const user = `${briefText(brief)}\n${who(aud)}`.trim();
   try {
     const v = await h.AI.generateJson(system, user, spec.tokens);
     if (!v || typeof v !== 'object' || !spec.check(v)) return { error: 'The AI’s answer was not in the right shape. Try again.' };
