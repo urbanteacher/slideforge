@@ -325,6 +325,7 @@ function Show() {
       else if (k === 'n' || k === 'N') setNotes((v) => !v);
       else if (k === 'f' || k === 'F') toggleFs();
       else if ((k === 's' || k === 'S') && roomOn) setScoresOn((v) => !v);
+      else if ((k === 'v' || k === 'V') && roomOn) setDeskCard((c) => (c === 'poll' ? '' : 'poll')); // classic's V: the quick poll
     };
     (document.activeElement as HTMLElement | null)?.blur?.();
     addEventListener('keydown', on, true);
@@ -485,7 +486,7 @@ function Show() {
         <Elapsed since={startedAt} />
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
-        {roomOn && <button onClick={() => setDeskCard((c) => (c === 'poll' ? '' : 'poll'))} aria-pressed={deskCard === 'poll' || !!room.state.quick} aria-label="Quick poll" title="Quick poll: ask the room something on the fly"><Vote size={16} /></button>}
+        {roomOn && <button onClick={() => setDeskCard((c) => (c === 'poll' ? '' : 'poll'))} aria-pressed={deskCard === 'poll' || !!room.state.quick} aria-label="Quick poll (V)" title="Quick poll (V): ask the room something on the fly"><Vote size={16} /></button>}
         {roomOn && <button onClick={() => setDeskCard((c) => (c === 'qa' ? '' : 'qa'))} aria-pressed={deskCard === 'qa'} aria-label="Questions from the room" title="Questions from the room: approve, show on the wall, mark answered, hide"><MessageCircleQuestion size={16} />{room.state.qa.pending || ''}</button>}
         {roomOn && <button onClick={() => setScoresOn((v) => !v)} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S)"><Trophy size={16} /></button>}
         {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
