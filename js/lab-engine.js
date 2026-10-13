@@ -662,25 +662,26 @@
     withShow(function (show) { SF.Live.host(show.run); });
   }
 
-  /* The studio's own slideshow for Present, Teacher Presenter and Notes on another device (lab-engine-plan M15).
-     A trial, off unless asked for: the File menu's "Use the studio's slideshow (trial)" or ?studioPresent=1 (and
-     =0 to turn it off again), kept in localStorage. On, a lesson the studio's show can run (lab/src/show
-     whyNotPresentInStudio says nothing) is shown there; any other lesson, and any failure to start, is
-     SlideForge's own show, unchanged. */
+  /* The studio's own slideshow for Present, Teacher Presenter, Notes on another device and Rehearse (lab-engine-plan
+     M15, the default since M14). The way back is the File menu's "Use the classic slideshow", or ?studioPresent=0
+     (and =1 to turn the studio's back on), kept in localStorage as '0'. On, a lesson the studio's show can run
+     (lab/src/show whyNotPresentInStudio and classicOnly say nothing) is shown there; any other lesson, and any
+     failure to start, is SlideForge's own show, unchanged. */
   var STUDIO_PRESENT = 'slideforge.studioPresent';
   function studioPresentOn() {
-    try { return localStorage.getItem(STUDIO_PRESENT) === '1'; } catch (e) { return false; }
+    try { return localStorage.getItem(STUDIO_PRESENT) !== '0'; } catch (e) { return true; }
   }
+  /* The File menu's item is the way back: ticked when SlideForge's own show is chosen. */
   function syncStudioPresentItem() {
     var item = document.getElementById('btnStudioPresent');
     if (!item) return;
-    var on = studioPresentOn();
-    item.setAttribute('aria-checked', on ? 'true' : 'false');
+    var classic = !studioPresentOn();
+    item.setAttribute('aria-checked', classic ? 'true' : 'false');
     var mark = item.querySelector('.menu-check');
-    if (mark) mark.textContent = on ? '\u2713' : '';
+    if (mark) mark.textContent = classic ? '\u2713' : '';
   }
   function setStudioPresent(on) {
-    try { if (on) localStorage.setItem(STUDIO_PRESENT, '1'); else localStorage.removeItem(STUDIO_PRESENT); } catch (e) {}
+    try { if (on) localStorage.removeItem(STUDIO_PRESENT); else localStorage.setItem(STUDIO_PRESENT, '0'); } catch (e) {}
     syncStudioPresentItem();
   }
   try {
@@ -689,7 +690,7 @@
   } catch (e) {}
 
   /* The studio's show over the frame for Present (first: undefined), the Teacher Presenter ('desk') or Notes on
-     another device ('notes'). False, with nothing changed, when the trial is off, the studio is not ready, or the
+     another device ('notes'). False, with nothing changed, when the classic slideshow is chosen, the studio is not ready, or the
      lesson holds something the studio's show does not run; the caller then takes the classic path. Full screen is
      asked for inside the click, as classic's is. */
   function presentInStudio(first) {
@@ -799,6 +800,40 @@
       if (size) localStorage.setItem('slideforge.rehearseSize', String(size));
       else size = Number(localStorage.getItem('slideforge.rehearseSize')) || 0;
     } catch (e) {}
+    if (rehearseInStudio(size)) return;
+    classicRehearse(size);
+  }
+
+  /* Rehearse in the studio's room (M14): a lesson the studio's room runs (canHostInStudio and classicOnly say
+     nothing), unless the classic slideshow is chosen. The simulated class joins the real room, so a room that
+     cannot start rehearses the classic way instead. */
+  function rehearseInStudio(size) {
+    var a = api;
+    if (!studioPresentOn() || !a || !a.rehearseInStudio || !a.whyNotInStudio) return false;
+    var why = a.whyNotInStudio() || classicOnly();
+    if (why) {
+      if (window.console) console.info('Rehearse: the classic rehearsal, because ' + why);
+      return false;
+    }
+    enterStudioShow();
+    var hooks = studioHooks();
+    hooks.fallback = function (reason) {
+      leaveStudioShow();
+      SF.toast(reason + '. Rehearsing with the classic player instead.');
+      classicRehearse(size);
+    };
+    var started = false;
+    try { started = a.rehearseInStudio(hooks, size || 8); }
+    catch (e) { console.error(e); }
+    if (started) {
+      if (frame) { try { frame.focus(); frame.contentWindow.focus(); } catch (e) {} }
+      return true;
+    }
+    leaveStudioShow();
+    return false;
+  }
+
+  function classicRehearse(size) {
     withShow(function (show) {
       if (!show.run.slides.length) { SF.toast('Add a slide before rehearsing.'); return; }
       if (!SF.Demo) { SF.Player.start(show.run, show.index, { fullscreen: false }); return; }
@@ -976,7 +1011,7 @@
     /* Teacher Presenter and Rehearse, from Present ▾: the bridge above. */
     var btnPresenter = document.getElementById('btnPresenter');
     if (btnPresenter) btnPresenter.onclick = teacherPresenter;
-    /* Notes on another device is made by js/player.js: with the trial on, a lesson the studio's show runs opens the
+    /* Notes on another device is made by js/player.js: unless the classic slideshow is chosen, a lesson the studio's show runs opens the
        studio's show with the notes card up; otherwise the button does what it did. */
     var btnNotes = document.getElementById('btnNotesElsewhere');
     if (btnNotes) {
@@ -990,7 +1025,7 @@
     if (btnStudioPresent) {
       btnStudioPresent.onclick = function () {
         setStudioPresent(!studioPresentOn());
-        SF.toast(studioPresentOn() ? 'Present will use the studio\u2019s slideshow when it can run the lesson (trial).' : 'Present uses SlideForge\u2019s own show again.');
+        SF.toast(studioPresentOn() ? 'Present uses the studio\u2019s slideshow again for lessons it can run.' : 'Present, Teacher Presenter and Rehearse use the classic slideshow.');
       };
       syncStudioPresentItem();
     }
@@ -1083,7 +1118,7 @@
 
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
-    /* The trial switch for the studio's slideshow (M15). */
+    /* The switch for the studio's slideshow (M15; on by default since M14, the File menu's way back turns it off). */
     studioPresent: studioPresentOn, setStudioPresent: setStudioPresent,
     classicOnly: classicOnly,
     /* The lab added a game or activity in the lesson: its studio's tab, where it is edited. */

@@ -5,6 +5,7 @@ import { renderStill, editableSlides, exportPptx, type SlideFormat } from '../ex
 import { enterView, useStore, type LabView } from '../store';
 import { canHostInStudio, openStudioShow, whyNotPresentInStudio, type ShowFirst, type ShowHooks } from '../show';
 import { saveSlide } from '../ui';
+import { SIZES } from '../rehearse';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
 // over its workspace and drives it through this: the shell keeps the title, File, Library, Save and
@@ -383,6 +384,16 @@ export const labApi = {
     const st = useStore.getState();
     if (!st.deck.slides.some((s) => !s.hidden)) return false;
     openStudioShow({ room: false, slideId: st.slideId, hooks, first });
+    return true;
+  },
+  /** The shell's Rehearse (M14): when the studio's room can run the lesson, open its show with its room and a
+   *  simulated class of `size` joining it (rehearse/, sized as the show's own Rehearse card offers: 8, 16 or
+   *  24), and say true. False: the shell rehearses the classic way. */
+  rehearseInStudio(hooks: ShowHooks, size: number): boolean {
+    const st = useStore.getState();
+    if (!canHostInStudio(st.deck).ok) return false;
+    const n = SIZES.reduce((best, s) => (Math.abs(s - size) < Math.abs(best - size) ? s : best), SIZES[0] as number);
+    openStudioShow({ room: true, slideId: st.slideId, hooks, rehearse: n });
     return true;
   },
   /** Why Present would not run in the studio's show ('' when it can): a game, activity or figure the studio does not

@@ -76,8 +76,8 @@ test('a ?lesson= link reopens the Library’s copy rather than building another,
   assert.deepEqual(fresh.saves, ['built-week-3'], 'a first follow builds it');
 });
 
-/* M15: the studio's slideshow for Present is a trial, off unless the owner asks, by the File menu's switch or
-   ?studioPresent=1 (and =0 to turn it off). Off, Present is SlideForge's show as it was. */
+/* M15, M14: the studio's slideshow for Present, Teacher Presenter, Notes and Rehearse is the default. The way back is
+   the File menu's "Use the classic slideshow", or ?studioPresent=0 (and =1 to turn the studio's back on). */
 function trialFlag(search, stored) {
   const store = stored ? { 'slideforge.studioPresent': stored } : {};
   const localStorage = {
@@ -92,17 +92,18 @@ function trialFlag(search, stored) {
   return { LabEngine: context.window.SF.LabEngine, store };
 }
 
-test('the studio’s slideshow is off by default, and only the owner turns it on', () => {
-  assert.equal(trialFlag('').LabEngine.studioPresent(), false, 'off by default');
-  assert.equal(trialFlag('?studioPresent=1').LabEngine.studioPresent(), true, '?studioPresent=1 turns it on');
-  assert.equal(trialFlag('?studioPresent=0', '1').LabEngine.studioPresent(), false, '?studioPresent=0 turns it off');
-  assert.equal(trialFlag('?studioPresent=yes').LabEngine.studioPresent(), false, 'only 1 and 0 are read');
-  assert.equal(trialFlag('', '1').LabEngine.studioPresent(), true, 'the stored choice stays');
+test('the studio’s slideshow is on by default, and the classic one is the way back', () => {
+  assert.equal(trialFlag('').LabEngine.studioPresent(), true, 'on by default');
+  assert.equal(trialFlag('?studioPresent=0').LabEngine.studioPresent(), false, '?studioPresent=0 chooses the classic slideshow');
+  assert.equal(trialFlag('?studioPresent=1', '0').LabEngine.studioPresent(), true, '?studioPresent=1 turns the studio’s back on');
+  assert.equal(trialFlag('?studioPresent=no', '0').LabEngine.studioPresent(), false, 'only 1 and 0 are read');
+  assert.equal(trialFlag('', '0').LabEngine.studioPresent(), false, 'the stored choice stays');
+  assert.equal(trialFlag('', '1').LabEngine.studioPresent(), true, 'a choice stored in the trial stays on');
   const t = trialFlag('');
-  t.LabEngine.setStudioPresent(true);
-  assert.equal(t.store['slideforge.studioPresent'], '1');
   t.LabEngine.setStudioPresent(false);
-  assert.equal('slideforge.studioPresent' in t.store, false, 'off removes the key');
+  assert.equal(t.store['slideforge.studioPresent'], '0');
+  t.LabEngine.setStudioPresent(true);
+  assert.equal('slideforge.studioPresent' in t.store, false, 'on removes the key');
 });
 
 /* M14: a slide of the lesson the lab copy was made from that the lab cannot build (a motion, quiz or blank slide,
