@@ -144,11 +144,15 @@ function activitySlides(a: ActivityEntry, st: LayoutStyle, which: 'lab' | 'slide
   return out;
 }
 
+/** The stages a routine runs, as SlideForge reads them (src/activities/stages.js: eight at most). The
+ *  designs draw five; a sixth to eighth stage still has its time and job here, and the room runs them. */
+export const MAX_STAGES = 8;
+
 /** How an activity slide runs, recorded as it is built: its look, and each stage's time and phone
  *  job (a routine) or its one time (any other shape). The Activity panel edits these. */
 function settingsOf(a: ActivityEntry, s: SFSlide, which: 'lab' | 'slideforge'): ActivitySettings {
   const out: ActivitySettings = { look: which };
-  if (shapeOf(s) === 'stages') out.stages = routineOf(a, s).stages.slice(0, 5).map((x) => ({ name: x.name, minutes: x.minutes, ...(x.jobKey ? { job: x.jobKey } : {}) }));
+  if (shapeOf(s) === 'stages') out.stages = routineOf(a, s).stages.slice(0, MAX_STAGES).map((x) => ({ name: x.name, minutes: x.minutes, ...(x.jobKey ? { job: x.jobKey } : {}) }));
   else if (Number(s.timeLimit) > 0) out.seconds = Number(s.timeLimit);
   return out;
 }

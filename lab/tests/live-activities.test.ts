@@ -4,7 +4,9 @@
 // the wall's model, and canHostInStudio.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LiveHost, activityOf, showFromDeck, type HostMessage } from '../src/live';
+import { ACTIVITY_KINDS, LiveHost, activityOf, showFromDeck, type HostMessage } from '../src/live';
+import { optionsFor } from '../src/designs/engage';
+import { LAYOUT_STYLES } from '../src/layouts';
 import { canHostInStudio } from '../src/show/canHost';
 import { activityWallOf, stageClock } from '../src/show/activityWall';
 import type { Slide } from '../src/core';
@@ -162,4 +164,19 @@ test('an unedited activity slide says the catalogue\'s words (Think-Pair-Share\'
       }
     }
   }
+});
+
+test('a routine of eight stages: the Activity panel keeps all eight, and stages six to eight run on its times and jobs', () => {
+  const stagesKind = ACTIVITY_KINDS.find((k) => k.key === 'stages')!;
+  const base = catalogue.find((a) => a.key === 'think-pair-square-share')!;
+  const names = ['Think', 'Pair', 'Square', 'Share', 'Connect', 'Draft', 'Swap', 'Reflect'];
+  const page = { ...base.slides![0], bullets: names.map((n, i) => `${n} · ${i + 1} min\tStep ${i + 1}.`) };
+  const entry = { ...base, written: true, slides: [page] };
+  const slide = optionsFor(entry)[0].make(LAYOUT_STYLES[0])[0];
+  assert.deepEqual(slide.activity!.settings!.stages!.map((x) => x.name), names, 'the panel lists every stage');
+  const set = structuredClone(slide.activity!.settings!);
+  set.stages![5] = { name: 'Draft', minutes: 10, job: 'work' };
+  set.stages![7] = { name: 'Reflect', minutes: 0.5, job: 'note' };
+  const ran = stagesKind.stages!(page as SFActivitySlide, set);
+  assert.deepEqual(ran.stages.slice(5).map((s) => `${s.name}:${s.job}:${s.seconds}`), ['Draft:work:600', 'Swap:down:420', 'Reflect:note:30']);
 });
