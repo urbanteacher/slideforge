@@ -232,53 +232,6 @@ html:not([data-ready]) body { background: #0a0a0b; }
   <div class="inspector" id="inspector"></div>
 </div>
 
-<!-- ------------------------------------------------------------ player -->
-<div id="player">
-  <div class="deck-viewport"></div>
-</div>
-
-<div class="hud" id="hud" role="toolbar" aria-label="Presentation controls">
-  <button data-act="prev" title="Previous point or slide (←)" aria-label="Previous point or slide">‹</button>
-  <span class="pos" aria-live="polite">1 / 1</span>
-  <button data-act="next" title="Next point or slide (→ or space)" aria-label="Next point or slide">›</button>
-  <span class="sep"></span>
-  <div class="hud-group hud-main-tools" id="hudDefaultTools">
-    <button data-act="rail" title="Room view: hidden → beside the slide → full screen (S)" aria-label="Room view (S)">◧</button>
-    <button data-act="poll" title="Ask the room a quick question (V)" aria-label="Ask the room a quick question (V)">📊</button>
-    <button data-act="freeze" title="Freeze screen for digression (Z or Alt+F)" aria-label="Freeze screen (Z or Alt+F)">❄️</button>
-    <button data-act="ink" title="Draw and spotlight (I)" aria-label="Draw and spotlight (I)">✎</button>
-    <button data-act="blank" title="Blank the screen (B)" aria-label="Blank the screen (B)">◼</button>
-    <button data-act="more" title="More presentation controls" aria-label="More presentation controls" aria-expanded="false" aria-controls="hudMore">•••</button>
-    <button data-act="exit" title="Exit presentation (Esc)" aria-label="Exit presentation (Esc)">✕</button>
-  </div>
-  <div class="hud-group hud-ink-tools" id="hudInkTools" hidden>
-    <button data-mode="draw" title="Draw on the slide" aria-label="Draw on the slide">✎</button>
-    <button data-mode="spot" title="Spotlight part of the slide" aria-label="Spotlight part of the slide">◎</button>
-    <button data-ink-act="undo" title="Undo the last mark (Z)" aria-label="Undo the last mark (Z)">↶</button>
-    <button data-ink-act="clear" title="Clear all marks (X)" aria-label="Clear all marks (X)">🗑</button>
-    <button data-ink-act="steps" title="Show every step on this slide" aria-label="Show every step on this slide">⋯</button>
-    <span class="sep"></span>
-    <button data-ink-act="close" class="hud-ink-done" title="Done drawing (I or Esc)" aria-label="Done drawing">✓ Done</button>
-  </div>
-  <div id="hudMore" class="hud-more" hidden>
-    <button data-act="rail" title="Cycle room view (S)">Room view</button>
-    <button data-act="join" title="Show join QR and PIN (J)">Join QR</button>
-    <button data-act="poll" title="Ask the room a quick question (V)">Quick poll</button>
-    <button data-act="focus" title="Show leaderboard (E)">Show leaderboard</button>
-    <button data-act="freeze" title="Freeze screen for digression (Z or Alt+F)">Freeze screen</button>
-    <button data-act="reactions" title="Turn audience reactions on or off (T)">Reactions: On</button>
-      <button data-act="blankPhones" title="Blank every learner phone (Shift+B) — separate from blanking the projector">Blank phones</button>
-      <button data-act="blankPhonesSoon" title="Tell the phones they go dark in 10 seconds, then blank them — press again to cancel">Blank phones in 10s</button>
-      <button data-act="floor" title="Who may speak (Shift+H): follows the lesson, always open, or closed">Floor: follows the lesson</button>
-    <button data-act="reset" title="Clear answers and score again (R)">Reset scores</button>
-    <button data-act="who" title="Who answered what, in presenter view only (W)">Named answers ↗</button>
-    <button data-act="teacher" title="Open private teacher entry in another window">Teaching desk ↗</button>
-    <button data-act="presenter" title="Open private notes and next slide (D)">Presenter view ↗</button>
-    <button data-act="full" title="Toggle full screen (F)">Full screen</button>
-    <button data-act="help" title="Keyboard shortcuts (?)">Keyboard shortcuts</button>
-  </div>
-</div>
-
 <!-- ------------------------------------------------------------ shortcuts -->
 <div id="cheats">
   <div class="card">
@@ -304,44 +257,22 @@ html:not([data-ready]) body { background: #0a0a0b; }
     </table>
     </div>
     <h3>Slideshow keys</h3>
+    <!-- The studio's show (lab/src/show/Show.tsx). -->
     <table>
-      <tr><td><kbd>→</kbd> <kbd>space</kbd> <kbd>PgDn</kbd></td><td>Next slide</td></tr>
-      <tr><td><kbd>←</kbd> <kbd>PgUp</kbd></td><td>Previous slide</td></tr>
-      <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First / last slide</td></tr>
+      <tr><td><kbd>→</kbd> <kbd>space</kbd> <kbd>PgDn</kbd> <kbd>Enter</kbd></td><td>Next: the slide's next build, then the next slide (in a room, the room's next step)</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>PgUp</kbd></td><td>Back</td></tr>
+      <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First / last slide (not in a room)</td></tr>
       <tr><td><kbd>1</kbd><kbd>2</kbd>… then <kbd>Enter</kbd></td><td>Go to that slide</td></tr>
       <tr><td><kbd>O</kbd></td><td>Every slide at once — click one to go there</td></tr>
-      <tr><td><kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd></td><td>Answer in solo presentation mode; live learners answer on their devices or through teacher entry</td></tr>
-      <tr><td><kbd>R</kbd></td><td>Clear answers and score again</td></tr>
-      <tr><td><kbd>I</kbd></td><td>Draw on the slide · <kbd>Z</kbd> undoes · <kbd>X</kbd> clears it</td></tr>
-      <tr><td><kbd>Z</kbd> or <kbd>Alt</kbd>+<kbd>F</kbd></td><td>Freeze audience screen for digression (undoes mark when drawing)</td></tr>
-      <tr><td><kbd>W</kbd></td><td>Who answered what</td></tr>
-      <tr><td><kbd>B</kbd></td><td>Blank the screen</td></tr>
-      <tr><td><kbd>,</kbd></td><td>White screen, for writing on the board</td></tr>
+      <tr><td><kbd>D</kbd></td><td>Draw on the slide · <kbd>Z</kbd> undoes · <kbd>X</kbd> clears it</td></tr>
+      <tr><td><kbd>B</kbd> or <kbd>.</kbd> · <kbd>W</kbd> or <kbd>,</kbd></td><td>Black screen · white screen, for writing on the board</td></tr>
+      <tr><td><kbd>N</kbd></td><td>Speaker notes</td></tr>
       <tr><td><kbd>F</kbd></td><td>Toggle full screen</td></tr>
-      <tr><td><kbd>S</kbd></td><td>Room view: hidden &rarr; beside the slide &rarr; full screen</td></tr>
-      <tr><td><kbd>E</kbd></td><td>Show leaderboard (or expand responses / race) to full screen</td></tr>
-      <tr><td><kbd>J</kbd></td><td>Show the join QR and PIN full screen (Host live)</td></tr>
-      <tr><td><kbd>T</kbd></td><td>Turn the room&rsquo;s reactions on or off (live games)</td></tr>
-      <tr><td><kbd>V</kbd></td><td>Ask the room a quick poll / vote</td></tr>
-      <tr><td><kbd>D</kbd></td><td>Teacher Presenter (notes + live answers)</td></tr>
-      <tr><td><kbd>?</kbd></td><td>Show this list</td></tr>
+      <tr><td><kbd>S</kbd></td><td>Show or hide the scores (Host live)</td></tr>
+      <tr><td><kbd>V</kbd></td><td>Ask the room a quick poll (Host live)</td></tr>
+      <tr><td><kbd>T</kbd></td><td>Turn the room&rsquo;s reactions on or off (Host live)</td></tr>
       <tr><td><kbd>Esc</kbd></td><td>Exit the show</td></tr>
     </table>
-  </div>
-</div>
-
-<!-- ------------------------------------------------- join card (live, mid-game) -->
-<div id="joincard">
-  <div>
-    <div class="joinqr" id="jcQr"></div>
-    <div class="lead">Join at</div>
-    <div class="url" id="jcUrl">—</div>
-    <div class="lead" style="margin-top:26px">Game PIN</div>
-    <div class="pin" id="jcPin">----</div>
-    <div class="teams" id="jcTeams"></div>
-    <div class="state" id="jcState"></div>
-    <div class="count" id="jcCount"></div>
-    <div class="dismiss">Press J or Esc to carry on</div>
   </div>
 </div>
 
@@ -377,7 +308,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
 <script src="js/model.js?v=52"></script>
 <script src="js/playbook.js?v=2"></script>
 <script src="js/ask.js?v=4"></script>
-<script src="js/share.js?v=3"></script>
+<script src="js/share.js?v=4"></script>
 <script src="js/lessons.js?v=55"></script>
 <script src="js/lab-decks.js?v=1"></script>
 <script src="js/lessons-ipdv-week4.js?v=1"></script>
@@ -399,14 +330,12 @@ SF.installExplore(SF);
 </script>
 <script src="js/render.js?v=71"></script>
 <script src="js/review.js?v=3"></script>
-<script src="js/player.js?v=18"></script>
 <script src="js/ai.js?v=9"></script>
-<script src="js/teaching.js?v=3"></script>
 <script src="js/print.js?v=5"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=23"></script>
+<script src="js/shell.js?v=24"></script>
 <script src="js/palette.js?v=1"></script>
-<script src="js/lesson-runtime.js?v=4"></script>
+<script src="js/lesson-runtime.js?v=5"></script>
 <script src="js/lab-engine.js?v=50"></script>
 <script src="js/docs.js?v=2"></script>
 <script src="js/studio.js?v=18"></script>

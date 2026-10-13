@@ -15,7 +15,6 @@ import { createLiveRenderer } from './render/live.js';
 import { createQuizRenderer } from './render/quiz.js';
 import { installArtRenderer } from './render/art.js';
 import { installLatticeRenderer } from './render/lattice.js';
-import { createPresenterWindow } from './presenter/window.js';
 import { createDeckSettings } from './editor/deck-settings.js';
 import { installCustom } from './editor/customize.js';
 import { installBingo } from './boards/runtimes/bingo.js';
@@ -1764,7 +1763,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   slideHeight: slideHeight,
   THEMES: THEMES,
   DEFAULT_THEME, resolveTheme,
-  createActivityFields, createCompositionRenderer, createChartRenderer, createWordRenderer, createLiveRenderer, createQuizRenderer, installArtRenderer, installLatticeRenderer, createPresenterWindow, createDeckSettings, installCustom, installExplore, installExperiments, installFigures, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
+  createActivityFields, createCompositionRenderer, createChartRenderer, createWordRenderer, createLiveRenderer, createQuizRenderer, installArtRenderer, installLatticeRenderer, createDeckSettings, installCustom, installExplore, installExperiments, installFigures, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
   hasLayoutTemplate, layoutRegionsFor, insertionRegionFor, LAYOUT_SLOT_TEMPLATES,
   measureSlideFit, probeLayoutFit, boxSpill, svgScale, FIT_TOLERANCE, LEGIBLE_FLOOR,
   CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,

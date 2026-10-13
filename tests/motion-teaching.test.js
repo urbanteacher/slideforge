@@ -91,11 +91,6 @@ test('a build can hide, dim, or spotlight — and nothing else', () => {
   assert.equal(build('spotlight'), 'hide', 'an unknown mode is the safe one, not a broken one');
   assert.equal(build(undefined), 'hide');
 
-  /* The live step needs a class of its own — three states were computed and
-     only two were styleable. */
-  const teaching = fs.readFileSync(require.resolve('../js/teaching.js'), 'utf8');
-  assert.match(teaching, /step-live/, 'the live step is unnamed again');
-  assert.match(teaching, /buildMode==='spot'/, 'spotlight does not reach the slide');
   const css = fs.readFileSync(require.resolve('../css/app.css'), 'utf8');
   assert.match(css, /build-spot .step\.step-past/, 'the past steps are not held back');
   assert.match(css, /build-spot:has\(\.step-live\)::after/,
@@ -104,18 +99,3 @@ test('a build can hide, dim, or spotlight — and nothing else', () => {
     'a handout is read, not presented — it should not be vignetted');
 });
 
-test('morph is a transition, and it says what it needs', () => {
-  assert.ok(SF.TRANSITIONS.includes('morph'));
-  const player = fs.readFileSync(require.resolve('../js/player.js'), 'utf8');
-  /* Pairs, in order of how strongly they mean "the same thing". */
-  ['sf-morph-media', 'sf-morph-chart', 'sf-morph-head'].forEach((name) => {
-    assert.ok(player.includes(name), 'no morph pairing for ' + name);
-  });
-  assert.match(player, /startViewTransition/, 'morph no longer uses view transitions');
-  assert.match(player, /matchMedia\('\(prefers-reduced-motion: reduce\)'\)/,
-    'morph must not run when less motion was asked for');
-  /* A name left on two elements at once makes the browser ignore both. */
-  assert.match(player, /function clearMorph/, 'the transition name is never cleared');
-  /* And it falls back rather than dropping the slide. */
-  assert.match(player, /tr = morphing \? 'none' : 'fade'/, 'morph has no fallback');
-});

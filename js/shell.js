@@ -35,6 +35,17 @@
   var el = SF.el;
   var $ = function (id) { return document.getElementById(id); };
 
+  /* Words for the teacher, along the foot of the page (#toast). The classic player defined it, and went in M14. */
+  SF.toast = function (msg) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(/** @type {any} */ (t)._h);
+    var shown = t;
+    /** @type {any} */ (t)._h = setTimeout(function () { shown.classList.remove('on'); }, 2200);
+  };
+
   var workspaces = {};
   var active = null;
   var LAST_WS = 'slideforge.workspace';
@@ -1792,7 +1803,7 @@
 
     document.addEventListener('keydown', function (e) {
       /* The studio's show (html.lab-show) is over everything too: the editor behind it takes no keys (M14). */
-      if (SF.Player.open || document.documentElement.classList.contains('lab-show') || document.querySelector('dialog[open], .modal.on')) return;
+      if (document.documentElement.classList.contains('lab-show') || document.querySelector('dialog[open], .modal.on')) return;
       /* The sheet is over everything: Escape or ? takes it away, and nothing
          else reaches the deck behind it. */
       if (shortcutsOpen()) {

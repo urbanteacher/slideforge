@@ -135,11 +135,5 @@
   SF.startLessons = function () {
     /* The Library's packs, before anything asks whether this is a first visit. */
     if (SF.seedLibrary) SF.seedLibrary();
-    var asked = false;
-    try { asked = new URLSearchParams(location.search).has('lesson'); } catch (e) {}
-    /* A show that was running when the page reloaded comes back where it was;
-       a lesson asked for on the address starts fresh instead. */
-    if (asked) SF.Player.forgetRun();
-    else SF.Player.restoreRun();
   };
 })(window);

@@ -31,17 +31,11 @@
     return copy;
   }
 
-  /* Share is offered by the editor and by Teacher Presenter's desk; the show is in the editor's window. */
+  /* Notes on another device: the studio's show with its notes card (js/lab-engine.js, the Present menu's item). */
   function notesElsewhere() {
-    var P = SF.Player;
-    if (P && P.open && P.notesElsewhere) { P.notesElsewhere(); return; }
     var start = document.getElementById('btnNotesElsewhere');
     if (start) { start.click(); return; }
-    try {
-      var wall = global.opener && global.opener.SF && global.opener.SF.Player;
-      if (wall && wall.notesElsewhere) { wall.notesElsewhere(); global.opener.focus(); return; }
-    } catch (e) {}
-    (SF.toast || function () {})('Start the show first, then choose this again.');
+    (SF.toast || function () {})('Open the lesson in SlideForge, then choose this again.');
   }
 
   function shareLessonDoc(doc, opts) {
