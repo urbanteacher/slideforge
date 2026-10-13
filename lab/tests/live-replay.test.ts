@@ -25,6 +25,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { LiveHost, type RoomShow, type RoomSlide, type SocketLike, type HostMessage } from '../src/live';
+import { bossHpOf, type Mechanic } from '../src/live/mechanics';
 
 type Frame = { ms: number; seq: number; dir: string; data?: Record<string, unknown> };
 type Step = { ms: number; what: string; answer?: { id?: string; playerId: number; choice?: number; text?: string; value?: number; order?: number[]; fill?: number[]; sort?: number[] }; names?: string[]; team?: number };
@@ -42,14 +43,21 @@ function recordedShow(rec: Rec, format: string, scores = true): RoomShow {
   const ids = [...new Set(sent.filter((m) => m.t === 'at').map((m) => String(m.slideId)))];
   const gid = String(sent.find((m) => m.t === 'round')!.gameId);
   let k = 0;
+  // What the lesson's lead game makes of the room (the first question's style): the phones' skin on every step that is not a question.
+  const first = String(starter.slides.find((x) => x.type === 'quiz')?.style ?? '');
+  const mechanic: Mechanic = first === 'race' || first === 'boss' || first === 'wordreveal' ? first : 'points';
   const slides: RoomSlide[] = starter.slides.map((s): RoomSlide => {
     const id = ids[k++];
-    if (s.type === 'section') return { id, title: String(s.title), text: String(s.subtitle ?? ''), activity: 'moment', gameId: gid, style: 'points' };
-    if (s.type === 'content') return { id, title: String(s.title), text: (s.bullets as string[]).join('\n'), activity: 'moment', gameId: gid, style: 'points' };
+    if (s.type === 'section') return { id, title: String(s.title), text: String(s.subtitle ?? ''), activity: 'moment', gameId: gid, style: mechanic };
+    if (s.type === 'content') return { id, title: String(s.title), text: (s.bullets as string[]).join('\n'), activity: 'moment', gameId: gid, style: mechanic };
     return { id, title: String(s.question), text: String(s.question), activity: 'question', gameId: gid, style: String(s.style), quiz: { ...(s as object), id, gameId: gid } as RoomSlide['quiz'] };
   });
-  if (scores) slides.push({ id: ids[k], title: `${starter.title} — scores`, text: '', activity: 'moment', gameId: gid, style: 'points', results: true });
-  return { title: starter.title, slides };
+  if (scores) slides.push({ id: ids[k], title: `${starter.title} — scores`, text: '', activity: 'moment', gameId: gid, style: mechanic, results: true });
+  // A race's track, a boss's HP from its own game's questions.
+  const asked = slides.filter((x) => x.quiz).map((x) => x.quiz!);
+  // How the room plays, as the recorded `host` frame says (a teams room has its team names).
+  const hosted = sent.find((m) => m.t === 'host') as { mode: 'individual' | 'teams'; teams: { name: string }[] };
+  return { title: starter.title, slides, mode: hosted.mode, teams: hosted.teams.map((t) => t.name), mechanic, ...(mechanic === 'race' ? { trackLength: 5 } : {}), ...(mechanic === 'boss' ? { bossHp: bossHpOf(asked) } : {}) };
 }
 
 /** A socket that is open at once, records what it is sent, and hands over whatever the test feeds it. */
@@ -366,5 +374,21 @@ test('the lab host sends what the classic host sent for a Compare & contrast gam
   // by then the show had moved on, and neither host sends them again. The teacher's Next still moved on from each, as classic's did.
   assert.equal(lab.filter((f) => f.t === 'reveal').length, 4);
   assert.equal(host.state.revealed.length, 2);
+  assert.ok(host.state.ended);
+});
+
+// Horse race (format 'horse-race', style 'race'): Multiple choice with a mechanic of the lesson. After each reveal the relay's
+// `teamAnswers` moves the lanes (a team whose members mostly picked the right answer, a tie does not) and the host sends
+// `raceLanes`, leaders first; the scores slide sends `finish` of kind `race` with who is furthest along. The recording is a
+// teams room of four: Blue moves on the first three questions (its member was right), Green and Red on the last two.
+test('the lab host sends what the classic host sent for a Horse race game', async () => {
+  const { host, classic, lab } = await replay(load('game-horse-race'), 'horse-race');
+  assertSame(lab, classic);
+  const lanes = lab.filter((f) => f.t === 'raceLanes');
+  assert.equal(lanes.length, 5, 'one track after each reveal');
+  assert.deepEqual(lanes[4].rows, [['t1', 3], ['t0', 1], ['t2', 1], ['t3', 0]]);
+  assert.deepEqual(lab.filter((f) => f.t === 'finish'), [{ t: 'finish', kind: 'race', title: 'Race result', note: 'Blue finishes furthest along' }]);
+  assert.equal(host.state.mech.race?.title, 'Result');
+  assert.equal(host.state.revealed.length, 5);
   assert.ok(host.state.ended);
 });
