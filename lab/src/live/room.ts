@@ -59,6 +59,8 @@ export interface RoomState {
   tally: Tally | null;
   /** The audience feedback prompt that is open, or null. */
   feedback: OpenFeedback | null;
+  /** The open prompt's id when it is the teacher's quick poll (quick.ts), asked on the fly and not by a slide; null otherwise. Set by the host. */
+  quick: string | null;
   /** Question ids the relay has revealed. */
   revealed: string[];
   /** Question ids whose gate step the host has sent (`closeAnswers`: predictions locked; `showdown`: the split shown). */
@@ -86,12 +88,12 @@ export interface RoomState {
 
 export const emptyRoom = (): RoomState => ({
   connected: false, live: false, ended: false, pin: null, hostToken: null, joinUrl: null, session: null, rooms: 0,
-  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null,
+  mode: 'individual', teams: [], phase: null, joinOpen: true, players: [], rows: [], scores: {}, question: null, tally: null, feedback: null, quick: null,
   revealed: [], gated: [], manualError: null, error: null, report: null, recording: null, mech: { race: null, boss: null, drip: null },
   spoken: emptySpoken(), oralCounts: {}, speed: emptySpeed(), boards: {}, activity: null,
 });
 
-export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' } | { t: 'speed' } | { t: 'board' } | { t: 'activity' }) => void;
+export type Listener = (state: RoomState, cause: HostMessage | RelayMessage | { t: 'socket'; up: boolean } | { t: 'feedbackShown' } | { t: 'quick' } | { t: 'mech' } | { t: 'spoken' } | { t: 'asked' } | { t: 'speed' } | { t: 'board' } | { t: 'activity' }) => void;
 
 export class Room {
   private s: RoomState = emptyRoom();
@@ -140,8 +142,8 @@ export class Room {
       case 'closeAnswers': case 'showdown': s.gated = s.gated.includes(m.id) ? s.gated : [...s.gated, m.id]; break;
       case 'finish': s.phase = 'idle'; break;
       case 'sprint': s.phase = 'sprint'; s.question = null; s.tally = null; break;
-      case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; break;
-      case 'promptEnd': s.feedback = null; break;
+      case 'prompt': s.feedback = { prompt: m, shown: false, answered: 0, players: s.players.filter((p) => p.connected).length, digest: null }; s.quick = null; break;
+      case 'promptEnd': s.feedback = null; s.quick = null; break;
       default: return;
     }
     this.s = s;
@@ -153,7 +155,7 @@ export class Room {
     const s = { ...this.s };
     switch (m.t) {
       case 'hosted':
-        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], rows: [], scores: {}, tally: null, feedback: null, error: null, oralCounts: {} });
+        Object.assign(s, { live: true, ended: false, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, session: m.session, mode: m.mode, teams: m.teams, phase: 'lobby', rooms: s.rooms + 1, players: [], rows: [], scores: {}, tally: null, feedback: null, quick: null, error: null, oralCounts: {} });
         break;
       case 'rehosted':
         Object.assign(s, { live: true, pin: m.pin, hostToken: m.hostToken, joinUrl: m.joinUrl, mode: m.mode, teams: m.teams, phase: m.phase, error: null });
@@ -212,6 +214,13 @@ export class Room {
     if (!this.s.feedback || this.s.feedback.shown) return;
     this.s = { ...this.s, feedback: { ...this.s.feedback, shown: true } };
     this.emit({ t: 'feedbackShown' });
+  }
+
+  /** The prompt just sent is the teacher's quick poll. */
+  setQuick(id: string): void {
+    if (this.s.feedback?.prompt.id !== id) return;
+    this.s = { ...this.s, quick: id };
+    this.emit({ t: 'quick' });
   }
 
   /** The host's mechanic moved: the track, the boss's health, or the dripping word (a field left out stays as it is). */

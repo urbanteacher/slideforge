@@ -32,7 +32,7 @@ export interface DeskInput {
   /** The live figure on the wall: its step, of how many, and the step's caption (figure.ts). */
   figure?: { step: number; of: number; caption: string } | null;
   /** The room, when the show has one: its wall, and what the bar's prompt buttons would offer. */
-  room?: { wall: Wall | null; connected: boolean; pin: string | null; canClose: boolean; canShow: boolean } | null;
+  room?: { wall: Wall | null; connected: boolean; pin: string | null; canClose: boolean; canShow: boolean; quick?: boolean; canPoll?: boolean } | null;
 }
 
 /** The Teacher Presenter window's state: this slide, the next, the notes, and the room's status. */
@@ -46,7 +46,7 @@ export function presenterState(i: DeskInput): PresenterState {
       pin: i.room.pin, connected: i.room.connected, players: w?.players.length ?? 0, view: w?.view ?? 'connecting',
       open: w?.view === 'question' || fb,
       answered: q ? q.answered : 0, total: q ? q.players : (w?.players.length ?? 0),
-      revealed: w?.view === 'reveal', canClose: i.room.canClose, canShow: i.room.canShow,
+      revealed: w?.view === 'reveal', canClose: i.room.canClose, canShow: i.room.canShow, quick: !!i.room.quick, canPoll: !!i.room.canPoll,
       ...(w?.activity?.stage ? { stage: { name: w.activity.stage.name, wall: w.activity.stage.wall, written: w.activity.written, help: w.activity.help } } : {}),
     };
   }

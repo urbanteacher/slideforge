@@ -120,6 +120,8 @@ export function wallOf(i: WallInput): Wall {
   if (!room.live && !room.pin) return { ...base, view: 'connecting' };
   if (at < 0 || room.phase === 'lobby') return { ...base, view: 'lobby' };
   const quiz = step?.room.quiz;
+  // The teacher's quick poll (live/quick.ts): asked over whatever is on the wall, so it takes the wall until it is closed.
+  if (room.quick && room.feedback?.prompt.id === room.quick && !i.scoresOn) return { ...base, rail: null, feedback: feedbackWallOf(room.feedback), view: 'feedback' };
   // A board: the wall plays it, the teacher's buttons on it (no phone answers, no standings beside it).
   const rb = step?.room.board;
   if (rb && !i.scoresOn) { const bw = boardWallOf(rb, room.boards[step!.room.id]); if (bw) return { ...base, rail: null, boardWall: bw, view: 'board' }; }

@@ -22,6 +22,7 @@ import { SpeedDesk } from './speedroom';
 import { BOARDS, BoardDesk, boardOfKey } from './boards';
 import { styleFor, type ManualChoice } from './styles';
 import { ActivityDesk } from './activities';
+import { quickFields, type QuickAsk } from './quick';
 
 export interface HostOptions {
   /** The relay's socket, e.g. `wss://<host>` (classic: the page's own host). */
@@ -318,6 +319,17 @@ export class LiveHost {
 
   /** Show a held prompt's split (classic's desk `show`). */
   showFeedback(): void { this.room.showFeedback(); }
+
+  /** The teacher's quick poll (quick.ts; classic's startCustomPrompt): asked on the fly, closed with closeFeedback or when
+   *  the show leaves the slide (the relay closes a prompt then too). Its id, or null: it cannot be asked, the room has not
+   *  begun, or something else is asking the room (a slide's prompt, an idea box). */
+  quickPoll(ask: QuickAsk): string | null {
+    const fields = quickFields(ask);
+    if (!fields || !this.begun) return null;
+    const id = this.openQuick(fields);
+    if (id) this.room.setQuick(id);
+    return id;
+  }
 
   /** Ask the relay for the session's report (`sessionReport`). */
   report(): void { this.send({ t: 'report' }); }

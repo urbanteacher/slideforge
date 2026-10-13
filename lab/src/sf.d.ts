@@ -64,6 +64,8 @@ declare module '@sf/deck/feedback.js' {
   interface Normalized { kind: Kind; prompt: string; options: string[]; max: number; presentAs: 'rail' | 'focus'; points?: number; lowLabel?: string; highLabel?: string; hold?: boolean }
   /** Audience feedback from a saved slide, made safe (options cut to six, scale ends, one vote each); null when it names no kind. */
   export function normalizeFeedback(raw: unknown): Normalized | null;
+  /** A blank feedback block of a kind (a poll's three starter options, a scale's five points and named ends). */
+  export function makeFeedback(kind?: string): Normalized;
   /** The feedback a slide really collects: null without a prompt, a poll without two options, a scale without both ends. */
   export function slideFeedback(slide: { feedback?: unknown } | null | undefined): Normalized | null;
   /** A scale's point labels: "1" to "n". */

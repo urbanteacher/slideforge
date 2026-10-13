@@ -62,6 +62,9 @@ test('messages are checked: unknown commands and shapes are dropped, a goto numb
   assert.equal(parseToShow('x'), null);
   assert.deepEqual(parseToShow({ t: 'cmd', cmd: 'goto', n: '4.7' }), { t: 'cmd', cmd: 'goto', n: 4 });
   assert.deepEqual(parseToShow({ t: 'cmd', cmd: 'next' }), { t: 'cmd', cmd: 'next', n: undefined });
+  // The quick poll carries what to ask; a poll without a question and a kind is dropped to a bare command.
+  assert.deepEqual(parseToShow({ t: 'cmd', cmd: 'poll', poll: { kind: 'poll', prompt: 'Q', options: ['A', 'B'] } }), { t: 'cmd', cmd: 'poll', n: undefined, poll: { kind: 'poll', prompt: 'Q', options: ['A', 'B'] } });
+  assert.deepEqual(parseToShow({ t: 'cmd', cmd: 'poll', poll: 'x' }), { t: 'cmd', cmd: 'poll', n: undefined });
   assert.equal(parseToWindow({ t: 'state' }), null);
   assert.equal(parseToWindow({ t: 'bye' })?.t, 'bye');
   assert.equal(PRESENTER_CHANNEL, 'slideforge.lab.presenter.v1');
@@ -75,7 +78,7 @@ test('the desk state: this slide, the next, the notes, and the room status', () 
   assert.equal(s.notes, 'note 2');
   assert.equal(s.nextTitle, 'Slide 3 name');
   assert.equal(s.screen, 'black');
-  assert.deepEqual(s.room, { pin: '123456', connected: true, players: 2, view: 'question', open: true, answered: 1, total: 2, revealed: false, canClose: false, canShow: false });
+  assert.deepEqual(s.room, { pin: '123456', connected: true, players: 2, view: 'question', open: true, answered: 1, total: 2, revealed: false, canClose: false, canShow: false, quick: false, canPoll: false });
   assert.equal(presenterState({ deck: d, index: 2, startedAt: 5, screen: 'none' }).nextTitle, '');
   assert.equal(presenterState({ deck: d, index: 0, startedAt: 5, screen: 'none' }).room, null);
 });

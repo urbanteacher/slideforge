@@ -1,0 +1,19 @@
+/* The desk tools the show's cards and the Teacher Presenter share (RoomDesk.tsx). Both sit on a dark ground. */
+.rd-poll, .rd-qa { display: grid; gap: 8px; font-size: 14px; line-height: 1.4; color: inherit; }
+.rd-poll p, .rd-qa p { margin: 0; }
+.rd-poll label { display: grid; gap: 4px; }
+.rd-poll textarea, .rd-poll select { width: 100%; box-sizing: border-box; background: #0e0f12; color: #cfd2da; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 13px; }
+.rd-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.rd-pills button, .rd-acts button, .rd-floor button { background: #24262c; color: #e8e8ea; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.rd-pills button[aria-pressed="true"], .rd-floor button[aria-pressed="true"] { background: #3b4a7a; border-color: #6c82c8; }
+.rd-go { height: 34px; background: #3b5bdb; color: #fff; border: 0; border-radius: 8px; cursor: pointer; font: inherit; }
+.rd-dim { color: #8b8e96; font-size: 12px; }
+.rd-guard { min-height: 1em; color: #ffb4b4; font-size: 13px; }
+.rd-floor { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 50vh; overflow: auto; }
+.rd-list li { border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 8px; display: grid; gap: 6px; }
+.rd-list li.pinned { border-color: #6c82c8; }
+.rd-list li.pending { border-style: dashed; }
+.rd-meta { display: flex; flex-wrap: wrap; gap: 8px; color: #8b8e96; font-size: 12px; }
+.rd-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.rd-acts .no { color: #ffb4b4; }

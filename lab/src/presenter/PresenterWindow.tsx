@@ -5,7 +5,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer } from '../engine';
 import type { Deck } from '../core';
-import { WindowSide, type PresenterCmd, type PresenterState } from './protocol';
+import { WindowSide, type CmdData, type PresenterCmd, type PresenterState } from './protocol';
+import { QuickPollForm } from './RoomDesk';
 import { clock, parseCountdown, remaining } from './timer';
 import './presenter.css';
 
@@ -46,6 +47,7 @@ export function PresenterWindow() {
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [typed, setTyped] = useState('10');
   const [jump, setJump] = useState('');
+  const [pollOpen, setPollOpen] = useState(false);
 
   useEffect(() => {
     document.title = 'Teacher Presenter';
@@ -59,7 +61,7 @@ export function PresenterWindow() {
   deckRef.current = deck;
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t); }, []);
 
-  const send = (cmd: PresenterCmd, n?: number) => side.current?.send(cmd, n);
+  const send = (cmd: PresenterCmd, n?: number, data?: CmdData) => side.current?.send(cmd, n, data);
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
@@ -119,6 +121,11 @@ export function PresenterWindow() {
               {room.view === 'reveal' || room.revealed ? <p>Answer revealed</p> : null}
               {room.stage && <p>{room.stage.name} · {room.stage.wall}{room.stage.written ? ` · ${room.stage.written}` : ''}</p>}
               {room.stage && room.stage.help > 0 && <p className="pw-help" role="status">{room.stage.help} {room.stage.help === 1 ? 'asks' : 'ask'} for help</p>}
+              {pollOpen && (room.quick || room.canPoll) && (
+                <section className="pw-desk" aria-label="Quick poll"><h3>Quick poll</h3>
+                  <QuickPollForm open={!!room.quick} onAsk={(a) => { send('poll', undefined, { poll: a }); setPollOpen(false); return ''; }} onEnd={() => send('close')} />
+                </section>
+              )}
             </div>
           )}
         </aside>
@@ -131,6 +138,7 @@ export function PresenterWindow() {
         {room?.canShow && <button onClick={() => send('open')}>Show results</button>}
         {room?.canClose && <button onClick={() => send('close')}>Close prompt</button>}
         {room?.stage && <button onClick={() => send('more')}>+30s</button>}
+        {room && <button onClick={() => setPollOpen((v) => !v)} aria-pressed={pollOpen || !!room.quick} disabled={!room.quick && !room.canPoll} title="Ask the room something on the fly">Quick poll</button>}
         <button onClick={() => send(st.screen === 'black' ? 'resume' : 'black')} aria-pressed={st.screen === 'black'}>Black</button>
         <button onClick={() => send(st.screen === 'white' ? 'resume' : 'white')} aria-pressed={st.screen === 'white'}>White</button>
         <form onSubmit={(e) => { e.preventDefault(); const n = Number(jump); if (n >= 1) send('goto', n); setJump(''); }}>

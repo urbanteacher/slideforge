@@ -12,6 +12,7 @@ export type { ManualChoice } from './styles';
 export { ManualBridge, manualState, newKey, type ChannelLike } from './manual';
 export { showFromDeck, type RoomQuiz, type RoomShow, type RoomSlide } from './show';
 export { feedbackOf, type RoomFeedback } from './feedback';
+export { QUICK_PRESETS, quickFields, quickProblem, type QuickAsk, type QuickKind, type QuickPreset } from './quick';
 export { ACTIVITY_KINDS, activityBlocker, activityKeys, activityOf, cataloguePage, type ActivityKind, type ActivityView, type RoomActivity, type RoomStage, type StageFrame } from './activities';
 export { type BossView, type DripView, type Mechanic, type RaceLane, type RaceView } from './mechanics';
 export { emptySpoken, speakerOf, type ChainModel, type Credit, type Recipient, type RoundView, type SpokenView } from './spoken';

@@ -4,12 +4,16 @@
 // unit-tested without a browser. The show executes a command exactly as its own key would (show/commands.ts).
 
 import type { Deck } from '../core';
+import type { QuickAsk } from '../live';
 
 export const PRESENTER_CHANNEL = 'slideforge.lab.presenter.v1';
 
-/** What the window may ask of the show. `goto` carries `n`, a 1-based slide number of the shown deck. */
-export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more';
-export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more'];
+/** What the window may ask of the show. `goto` carries `n`, a 1-based slide number of the shown deck; `poll` carries the quick poll to ask. */
+export type PresenterCmd = 'next' | 'prev' | 'reveal' | 'close' | 'open' | 'goto' | 'end' | 'black' | 'white' | 'resume' | 'more' | 'poll';
+export const PRESENTER_CMDS: readonly PresenterCmd[] = ['next', 'prev', 'reveal', 'close', 'open', 'goto', 'end', 'black', 'white', 'resume', 'more', 'poll'];
+
+/** What a command carries besides its slide number: the quick poll to ask (`poll`). */
+export interface CmdData { poll?: QuickAsk }
 
 /** The room, as the desk shows it; null in a show with no room. */
 export interface PresenterRoom {
@@ -26,6 +30,9 @@ export interface PresenterRoom {
   /** A feedback prompt that can be closed, and a held one that can be shown. */
   canClose: boolean;
   canShow: boolean;
+  /** The teacher's quick poll (live/quick.ts): one is up (`close` ends it), or one can be asked now. */
+  quick?: boolean;
+  canPoll?: boolean;
   /** A routine's stage on the wall (live/activities): its name and job, the note count, and how many asked for help (only the desk says it). */
   stage?: { name: string; wall: string; written: string; help: number } | null;
 }
@@ -54,7 +61,7 @@ export type ToWindow =
   | { t: 'bye' };
 export type ToShow =
   | { t: 'hello' }
-  | { t: 'cmd'; cmd: PresenterCmd; n?: number };
+  | ({ t: 'cmd'; cmd: PresenterCmd; n?: number } & CmdData);
 
 export interface ChannelLike {
   postMessage(m: unknown): void;
@@ -71,7 +78,8 @@ export function parseToShow(v: unknown): ToShow | null {
   if (v.t === 'hello') return { t: 'hello' };
   if (v.t === 'cmd' && PRESENTER_CMDS.includes(v.cmd as PresenterCmd)) {
     const n = v.n == null ? NaN : Number(v.n);
-    return { t: 'cmd', cmd: v.cmd as PresenterCmd, n: Number.isFinite(n) ? Math.trunc(n) : undefined };
+    const poll = isObj(v.poll) && typeof v.poll.prompt === 'string' && typeof v.poll.kind === 'string' ? (v.poll as unknown as QuickAsk) : undefined;
+    return { t: 'cmd', cmd: v.cmd as PresenterCmd, n: Number.isFinite(n) ? Math.trunc(n) : undefined, ...(poll ? { poll } : {}) };
   }
   return null;
 }
@@ -88,14 +96,14 @@ export function parseToWindow(v: unknown): ToWindow | null {
 export class ShowSide {
   private ch: ChannelLike;
   private last: PresenterState;
-  constructor(private deck: Deck, initial: PresenterState, private onCmd: (cmd: PresenterCmd, n?: number) => void, make: ChannelFactory = defaultChannel) {
+  constructor(private deck: Deck, initial: PresenterState, private onCmd: (cmd: PresenterCmd, n?: number, data?: CmdData) => void, make: ChannelFactory = defaultChannel) {
     this.last = initial;
     this.ch = make(PRESENTER_CHANNEL);
     this.ch.onmessage = (e) => {
       const m = parseToShow(e.data);
       if (!m) return;
       if (m.t === 'hello') this.ch.postMessage({ t: 'deck', deck: this.deck, state: this.last } satisfies ToWindow);
-      else this.onCmd(m.cmd, m.n);
+      else this.onCmd(m.cmd, m.n, m.poll ? { poll: m.poll } : undefined);
     };
   }
   publish(state: PresenterState): void {
@@ -124,6 +132,6 @@ export class WindowSide {
     this.hello();
   }
   hello(): void { this.ch.postMessage({ t: 'hello' } satisfies ToShow); }
-  send(cmd: PresenterCmd, n?: number): void { this.ch.postMessage(n == null ? { t: 'cmd', cmd } : { t: 'cmd', cmd, n }); }
+  send(cmd: PresenterCmd, n?: number, data?: CmdData): void { this.ch.postMessage({ t: 'cmd', cmd, ...(n == null ? {} : { n }), ...data } satisfies ToShow); }
   close(): void { this.ch.onmessage = null; this.ch.close(); }
 }

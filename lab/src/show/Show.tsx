@@ -4,10 +4,11 @@
 // classic's live gate does (wallModel.ts nextAction), and the player follows the room's step: a question's
 // slide, then its answer slide once it is revealed.
 
-import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, StickyNote, Trophy, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CircleStop, Eye, Keyboard, LayoutGrid, Maximize, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, StickyNote, Trophy, Vote, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer, videoEmbed } from '../engine';
-import { ShowSide, presenterUrl, type PresenterCmd, type Screen } from '../presenter';
+import { QuickPollForm, ShowSide, presenterUrl, type CmdData, type PresenterCmd, type Screen } from '../presenter';
+import type { QuickAsk } from '../live';
 import { useStore } from '../store';
 import './show.css';
 import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
@@ -109,6 +110,8 @@ function Show() {
   /** Rehearse: the size of the simulated class in the room (0 none), and whether its card is up. */
   const [rehearsing, setRehearsing] = useState(roomOn ? rehearse0 : 0);
   const [rehearseCard, setRehearseCard] = useState(false);
+  /** The room's desk card from the bar: the quick poll. */
+  const [deskCard, setDeskCard] = useState<'' | 'poll'>('');
   const reportRef = useRef(false);
   reportRef.current = reportOpen;
   const [, repaint] = useState(0);
@@ -116,7 +119,7 @@ function Show() {
   const startedAt = useRef(Date.now()).current;
   const side = useRef<ShowSide | null>(null);
   const deskRef = useRef<{ wall: ReturnType<typeof wallOf> | null; fb: { hold: boolean; shown: boolean } | null }>({ wall: null, fb: null });
-  const runRef = useRef<(cmd: PresenterCmd, n?: number) => void>(() => {});
+  const runRef = useRef<(cmd: PresenterCmd, n?: number, data?: CmdData) => void>(() => {});
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -210,7 +213,15 @@ function Show() {
   }, [roomOn, steps, deck]);
 
   /** What the Teacher Presenter window asks, done as the show's own keys and bar would. */
-  const runCmd = useCallback((cmd: PresenterCmd, n?: number) => {
+  /** The teacher's quick poll (live/quick.ts), from the bar's card or the Teacher Presenter: '' when it went up, or why not. */
+  const askPoll = useCallback((a: QuickAsk): string => {
+    const r = roomRef.current;
+    if (r.at < 0) return 'Press Start before asking the room.';
+    if (!r.quickPoll(a)) return 'Something is already asking the room. Close it first.';
+    setDeskCard('');
+    return '';
+  }, []);
+  const runCmd = useCallback((cmd: PresenterCmd, n?: number, data?: CmdData) => {
     const r = roomRef.current, d = deskRef.current;
     if (cmd === 'next') nextRef.current();
     else if (cmd === 'prev') prevRef.current();
@@ -221,8 +232,9 @@ function Show() {
     else if (cmd === 'close') { if (roomOn) r.closeFeedback(); }
     else if (cmd === 'open') { if (roomOn) r.showFeedback(); }
     else if (cmd === 'more') { if (roomOn) r.extendStage(30); }
+    else if (cmd === 'poll') { if (roomOn && data?.poll) { const why = askPoll(data.poll); if (why) say(why); } }
     else if (cmd === 'end') exit();
-  }, [roomOn, goIndex, exit]);
+  }, [roomOn, goIndex, exit, askPoll]);
   runRef.current = runCmd;
 
   // The slide is drawn in what the standings rail leaves of the screen (classic scales its slide the same way).
@@ -343,14 +355,14 @@ function Show() {
   // The Teacher Presenter window follows the show over a BroadcastChannel; with none open this does nothing.
   const desk = presenterState({
     deck, index, startedAt, screen, figure: figures.says(slide),
-    room: roomOn ? { wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown } : null,
+    room: roomOn ? { wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown, quick: !!room.state.quick, canPoll: room.at >= 0 && !room.state.feedback && !finished } : null,
   });
   deskRef.current = { wall, fb: fbOpen ? { hold: !!fbOpen.prompt.hold, shown: fbOpen.shown } : null };
   const deskNow = useRef(desk);
   deskNow.current = desk;
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
-    const sd = new ShowSide(deck, deskNow.current, (cmd, n) => runRef.current(cmd, n));
+    const sd = new ShowSide(deck, deskNow.current, (cmd, n, data) => runRef.current(cmd, n, data));
     side.current = sd;
     return () => { sd.close(); side.current = null; };
   }, [deck]);
@@ -440,6 +452,12 @@ function Show() {
           onPick={(n) => { setRehearseCard(false); if (roomOn) { setRehearsing(n); say(`A rehearsal class of ${n} is joining`); } else openStudioShow({ room: true, slideId: slide.id, rehearse: n }); }}
           onStop={() => { setRehearsing(0); say('The rehearsal class has gone home'); }} />
       )}
+      {deskCard === 'poll' && roomOn && !finished && (
+        <aside className="show-card" role="dialog" aria-label="Quick poll" data-testid="quick-card">
+          <div className="card-head"><b>Quick poll</b><button onClick={() => setDeskCard('')} aria-label="Close">×</button></div>
+          <QuickPollForm open={!!room.state.quick} onAsk={askPoll} onEnd={() => roomRef.current.closeFeedback()} />
+        </aside>
+      )}
       {jump && <div className="show-jump" role="status" aria-label="Go to slide">Go to {jump}</div>}
       <div className="show-toast" role="status" aria-live="polite">{toast}</div>
 
@@ -458,6 +476,7 @@ function Show() {
         <Elapsed since={startedAt} />
         {fbOpen && fbOpen.prompt.hold && !fbOpen.shown && <button onClick={() => roomRef.current.showFeedback()} aria-label="Show the results" title="Show the held results"><Eye size={16} />Show</button>}
         {fbOpen && <button onClick={() => roomRef.current.closeFeedback()} aria-label="Close the prompt" title="Close the prompt: the phones are thanked"><CircleStop size={16} />Close</button>}
+        {roomOn && <button onClick={() => setDeskCard((c) => (c === 'poll' ? '' : 'poll'))} aria-pressed={deskCard === 'poll' || !!room.state.quick} aria-label="Quick poll" title="Quick poll: ask the room something on the fly"><Vote size={16} /></button>}
         {roomOn && <button onClick={() => setScoresOn((v) => !v)} aria-pressed={scoresOn} aria-label="Scores (S)" title="Scores (S)"><Trophy size={16} /></button>}
         {(roomOn || (steps.some((s) => s.room.quiz || s.room.feedback) && studioRoomEnabled())) && <button onClick={() => setRehearseCard((v) => !v)} aria-pressed={rehearsing > 0 || rehearseCard} aria-label="Rehearse" title="Rehearse with a simulated class"><Users size={16} />{rehearsing > 0 ? rehearsing : ''}</button>}
         {roomOn && <button onClick={openEntry} aria-label="Teacher entry" title="Teacher entry: add names, enter answers by key"><Keyboard size={16} /></button>}
