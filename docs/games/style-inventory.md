@@ -549,11 +549,11 @@ The measure is how much beyond a plain question, answer and reveal round trip a 
 | 15 | Horse race | Deck-level mechanic, team majority, lanes per phone (`raceLanes`) |
 | 16 | Boss battle | Deck-level HP over every quiz slide, damage, reveal moments, desk Hit/Miss |
 | 17 | Word reveal | The drip runs on the host clock and scores per answer; the studio's room runs it (13 Oct 2026), the classic wall still serves lessons hosted the classic way |
-| 18 | Random challenge, Question cube | Spoken verdict with a recipient, draw order, count; the cube's own faces and spec |
-| 19 | Spin & explain | Spoken, draw, a wheel, three verdicts with half credit |
-| 20 | Heads up | Spoken, draw, round clock, the guesser, per-phone term (`spokenFanout`) |
-| 21 | Connection maker | Spoken plus the proposal queue; GA-19's lines still open |
-| 22 | Concept chain | Proposals, `oralCredit` while the term is open, redraw in place (K26) |
+| 18 | Random challenge, Question cube | Spoken verdict with a recipient, draw order, count; the cube's own faces and spec; the studio's room runs both (13 Oct 2026; the room asks in the lesson's order, no random draw) |
+| 19 | Spin & explain | Spoken, draw, a wheel, three verdicts with half credit; the studio's room runs it (13 Oct 2026) |
+| 20 | Heads up | Spoken, draw, round clock, the guesser, per-phone term (`spokenFanout`); the studio's room runs it (13 Oct 2026) |
+| 21 | Connection maker | Spoken plus the proposal queue; GA-19's lines still open; the studio's room runs it without the lines (13 Oct 2026) |
+| 22 | Concept chain | Proposals, `oralCredit` while the term is open, redraw in place (K26); the studio's room runs it (13 Oct 2026; classic never asks the relay a question for a term, and neither does the room) |
 | 23 | Beat the clock | The sprint: relay-marked (K29), its own message set (`sprint`, `sprintQ`, `sprintA`, `sprintMark`, `sprintResult`), a progress wall, and a wall-paced fallback through `js/rounds.js` |
 | 24 | Low-stakes quiz | A board with a whole-game clock and a paper reveal; the smallest board |
 | 25 | Memory flip, Memory match, Knowledge flip | One board engine, three presets: study clock, claims, team rotation |
