@@ -42,8 +42,8 @@ test('canHostInStudio: a Slider game is hosted, with the other styles; one the r
   assert.deepEqual(canHostInStudio(sliderDeck()), { ok: true, reason: '' });
   const mc = slide('mq', 'MQ', { id: 'gmc', format: 'choice', label: 'Air', role: 'question', key: '0', settings: {}, quiz: { type: 'quiz', style: 'choice', input: 'choice', question: 'Q?', options: ['A', 'B'], correct: 0 } } as never);
   assert.equal(canHostInStudio(sliderDeck([mc])).ok, true);
-  const tt = slide('tt', 'TT', { id: 'gtt', format: 'bingo', label: 'Timeline', role: 'question', key: '0', settings: {} } as never);
-  assert.match(canHostInStudio(sliderDeck([tt])).reason, /"Timeline" is bingo, not Multiple choice, True or false/);
+  const tt = slide('tt', 'TT', { id: 'gtt', format: 'mind-reveal', label: 'Timeline', role: 'question', key: '0', settings: {} } as never);
+  assert.match(canHostInStudio(sliderDeck([tt])).reason, /"Timeline" is mind-reveal, not Multiple choice, True or false/);
   assert.match(canHostInStudio(sliderDeck([], quizOf({ input: 'choice' }))).reason, /has a question that is not Slider/);
 });
 

@@ -46,7 +46,7 @@ test('canHostInStudio: a lesson of Multiple choice games is hosted in the studio
 
 test('canHostInStudio: anything the studio room cannot run sends the lesson to the classic host', () => {
   const no = (extra: Slide[]) => canHostInStudio(choiceDeck(extra));
-  assert.match(no([slide('t', 'Tricky', game('question', { id: 'gm2', format: 'bingo', label: 'Order', key: '0' }))]).reason, /"Order" is bingo/);
+  assert.match(no([slide('t', 'Tricky', game('question', { id: 'gm2', format: 'mind-reveal', label: 'Order', key: '0' }))]).reason, /"Order" is mind-reveal/);
   assert.match(no([slide('p', 'Poll', game('cover'), { feedback: { kind: 'poll', prompt: 'Ready?', options: ['Yes', 'No'] } })]).reason, /game slide that also asks the room for poll feedback/);
   assert.match(no([slide('a', 'Brainstorm', undefined, { activity: { key: 'think-pair-share', page: 0 } })]).reason, /is an activity/);
   assert.match(no([slide('f', 'Figure', undefined, { liveFigure: true })]).reason, /live figure/);
@@ -63,8 +63,8 @@ test('canHostInStudio: a plain True or false game is hosted in the studio; a sty
   const mixed = choiceDeck(tfDeck().slides.slice(1));
   assert.deepEqual(canHostInStudio(mixed), { ok: true, reason: '' });
   // A format the room does not run (here Bingo) sends the whole lesson to classic.
-  assert.match(canHostInStudio(tfDeck('bingo')).reason, /"Air" is bingo, not Multiple choice, True or false/);
-  assert.equal(canHostInStudio(choiceDeck(tfDeck('bingo').slides.slice(1))).ok, false, 'one game the room does not run sends the whole lesson to classic');
+  assert.match(canHostInStudio(tfDeck('mind-reveal')).reason, /"Air" is mind-reveal, not Multiple choice, True or false/);
+  assert.equal(canHostInStudio(choiceDeck(tfDeck('mind-reveal').slides.slice(1))).ok, false, 'one game the room does not run sends the whole lesson to classic');
   // Each format's question must be its own style: a Multiple choice question in a True or false game is refused.
   const odd = tfDeck();
   odd.slides[2] = slide('t0', 'S', game('question', { id: 'gt1', format: 'truefalse', key: '0', quiz: quiz(0) }));

@@ -29,7 +29,7 @@ test('a registry-style game is presented in the studio, and a hidden blocker doe
 });
 
 test('an unported game, an activity, a live figure and a SlideForge check keep the lesson on classic', () => {
-  assert.match(whyNotPresentInStudio(deckOf(slide('a', 'Intro'), slide('r', 'Order', game('bingo', 'question')))), /"Air" is bingo, not/);
+  assert.match(whyNotPresentInStudio(deckOf(slide('a', 'Intro'), slide('r', 'Order', game('mind-reveal', 'question')))), /"Air" is mind-reveal, not/);
   assert.match(whyNotPresentInStudio(deckOf(slide('x', 'Think', undefined, { activity: { key: 'think-pair-share', page: 0 } }))), /"Think" is an activity/);
   assert.match(whyNotPresentInStudio(deckOf(slide('f', 'Graph', undefined, { liveFigure: true }))), /"Graph" has a live figure/);
   const layer = { id: 'l', kind: 'quiz', visible: true } as never;
