@@ -5,7 +5,7 @@ The Lesson studio's show (`lab/src/show/`) and its Teacher Presenter window (`la
 this page was written from it. Room and Phones controls need a live room (Host live); without one the key says so.
 
 - **The wall's bar** has previous, next, the slide count (with a snowflake and the teacher's slide while frozen), Draw, overview, black
-  screen, the Teacher Presenter, notes on another device, the elapsed clock, full screen and exit. Once a room is live it adds the join
+  screen, the Teacher Presenter, notes on another device, full screen and exit (the clock is in the Teacher Presenter). Once a room is live it adds the join
   card, the room view (E), Scores, Show results, Close prompt, Quick poll, Questions, Rehearse, Teacher entry and Share. Speaker notes
   are not on the bar (N still shows them on the wall); everything else is a key on the wall and a button in the Teacher Presenter.
 - **The Teacher Presenter** groups its buttons Slides, Screen, Room and Phones. Each button's title names its wall key, and a button is
