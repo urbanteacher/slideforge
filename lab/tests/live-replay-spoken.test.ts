@@ -16,7 +16,9 @@ function recordedDraw(rec: Rec, skin: string) {
   return (show: RoomShow) => {
     const frames = rec.host.filter((f) => f.dir === 'send' && f.data?.t === 'question').map((f) => f.data!);
     const slots = show.slides.flatMap((s, i) => (s.quiz ? [i] : []));
-    const ordered = frames.map((f) => show.slides.find((s) => s.quiz && s.quiz.question === f.question)!);
+    // Each question once, as the recording drew it (a game whose questions all read alike, Concept chain's, keeps its order).
+    const pool = show.slides.filter((s) => s.quiz);
+    const ordered = frames.map((f) => pool.splice(pool.findIndex((s) => s.quiz!.question === f.question), 1)[0]);
     slots.forEach((at, k) => { show.slides[at] = ordered[k]; });
     for (const s of show.slides) if (!s.quiz) s.style = skin;
   };
@@ -97,6 +99,29 @@ test('the lab host sends what the classic host sent for a Connection maker game'
   assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => [r.correct, r.gains, r.spoken]), Array.from({ length: 2 }, () => [0, [], { recipient: { type: 'player', id: 1 } }]));
   assert.equal(host.state.feedback, null, 'nothing is left open');
   assert.equal(host.state.revealed.length, 2);
+  assert.ok(host.state.ended);
+});
+
+// Concept chain (format 'concept-chain', style 'conceptchain'). Host-oracy: classic never sends the relay a `question` for a term (the phones
+// stay `idle` with the discuss brief while the chain grows), so the term is held as asked by the room itself, and the reveal needs no word
+// back. The idea box opens beside the term (`shape: 'link'`, `from` the term) and closes BEFORE the reveal (a chain's term is closed by
+// Next, which closes the box first). The recorded teacher named Ada and pressed Accept with no link typed, which does nothing (the verdict
+// needs a link, so no frame is sent); Next then closed each term as Reject, since the chain had not grown from it, with Ada still the
+// named speaker. No `oralCredit` is on the wire: an accepted link is in live-spoken-proposals.test.ts. The game has a scores slide.
+test('the lab host sends what the classic host sent for a Concept chain game', async () => {
+  const rec = load('game-concept-chain');
+  const { host, classic, lab } = await replay(rec, 'concept-chain', true, (show) => { for (const s of show.slides) if (!s.quiz) s.style = 'judge'; });
+  assertSame(lab, classic);
+  assert.equal(lab.filter((f) => f.t === 'question').length, 0, 'the relay is never asked a question');
+  const idles = lab.filter((f) => f.t === 'idle' && f.style === 'conceptchain');
+  assert.equal(idles.length, 4);
+  for (const i of idles) { assert.equal(i.role, 'discuss'); assert.equal(i.headPrompt, 'Concept chain'); }
+  assert.deepEqual(lab.filter((f) => f.t === 'prompt').map((p) => [p.shape, p.from, p.quiet]), ['Cell', 'Tissue', 'Organ', 'System'].map((t) => ['link', t, true]));
+  const seq = lab.map((f) => String(f.t)).filter((t) => ['prompt', 'reveal', 'promptEnd', 'oralCredit'].includes(t));
+  assert.deepEqual(seq, Array.from({ length: 4 }, () => ['prompt', 'promptEnd', 'reveal']).flat(), 'the box closes, then the term closes');
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => [r.correct, r.answer, r.gains, r.spoken]), Array.from({ length: 4 }, () => [1, 'Reject', [], { recipient: { type: 'player', id: 1 } }]));
+  assert.deepEqual(host.state.spoken.links, [], 'no link was accepted');
+  assert.equal(host.state.revealed.length, 4);
   assert.ok(host.state.ended);
 });
 

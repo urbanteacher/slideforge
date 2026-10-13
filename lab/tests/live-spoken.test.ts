@@ -20,6 +20,13 @@ test('the registry takes Random challenge and Question cube by format, on one en
   assert.equal(styleFor(q('question-cube')).scoreSlide, false);
 });
 
+test('the phones\' skin for the steps between a spoken game\'s questions is its engine\'s mechanic: count for the challenges, judge for the rest', () => {
+  const skins = (format: string, style: string) => showFromDeck(deckOf(format, [quiz(style, { format })])).slides.filter((s) => !s.quiz).map((s) => s.style);
+  assert.deepEqual(skins('random-challenge', 'randomchallenge'), ['count']);
+  assert.deepEqual(skins('question-cube', 'randomchallenge'), ['count']);
+  for (const [format, style] of [['spin-explain', 'spinexplain'], ['heads-up', 'headsup'], ['connection-maker', 'connection'], ['concept-chain', 'conceptchain']]) assert.deepEqual(skins(format, style), ['judge', 'judge'], `${format}: the cover and the scores`);
+});
+
 test('what a verdict credits: a team (teams room) or the named player (when the game scores spoken), never the room, never a pass', () => {
   const players = [{ id: 1, name: 'Ada', score: 0, connected: true, away: false, manual: false, team: 1 }];
   const spin: SpokenSpec = { accepts: [0, 1], half: 1, scores: true, counts: 'explained' };
