@@ -79,7 +79,9 @@ try {
   await page.waitForFunction((id) => SF.Shell.current().doc().id !== id && String(SF.Shell.current().doc().id).startsWith('lab-'), before, { timeout: 60000 });
   const lesson = await page.evaluate(() => SF.Shell.current().doc().slides.length);
 
-  // The bridge: Rehearse runs SlideForge's player on the lab's slides as pictures, games back in place.
+  // The bridge: Rehearse runs SlideForge's player on the lab's slides as pictures, games back in place. The
+  // studio's show is the default (M14); the bridge is what "Use the classic slideshow" and every fallback run.
+  await page.evaluate(() => SF.LabEngine.setStudioPresent(false));
   await page.evaluate(() => document.getElementById('btnRehearse').click());
   await page.waitForFunction(() => window.SF.Player.open, null, { timeout: 90000 });
   const show = await page.evaluate(() => {
@@ -131,9 +133,19 @@ try {
   // Present is SlideForge's show, with its HUD, and the lab drawing the slide live inside it.
   await lab.getByRole('button', { name: 'Present', exact: true }).click();
   await page.waitForFunction(() => window.SF.Player.open && SF.LabStage.active(), null, { timeout: 90000 });
+  await page.evaluate(() => SF.Player.close());
+
+  // The default (M14): Present opens the studio's own show over the frame, not SlideForge's player.
+  await page.evaluate(() => SF.LabEngine.setStudioPresent(true));
+  await lab.getByRole('button', { name: 'Present', exact: true }).click();
+  await lab.locator('.show').waitFor({ timeout: 30000 });
+  assert.deepEqual(await page.evaluate(() => ({ shown: document.documentElement.classList.contains('lab-show'), classic: !!SF.Player.open })), { shown: true, classic: false }, 'Present is the studio’s show by default');
+  await lab.locator('body').press('Escape');
+  await lab.locator('.show').waitFor({ state: 'detached', timeout: 8000 });
+  await page.waitForFunction(() => !document.documentElement.classList.contains('lab-show'), null, { timeout: 5000 });
 
   assert.equal(errors.join('\n'), '');
-  console.log(`PASS lab lesson: lab in the workspace, name synced, demo converted to ${demo.labSlides} slides, Library card, Rehearse with ${show.pictures} lab slides live and ${show.games} game slides, builds walked ${live.walked ? 'yes' : 'none found'}, share ${shareMB.toFixed(1)} MB, Present runs SlideForge's show with the lab live`);
+  console.log(`PASS lab lesson: lab in the workspace, name synced, demo converted to ${demo.labSlides} slides, Library card, Rehearse with ${show.pictures} lab slides live and ${show.games} game slides, builds walked ${live.walked ? 'yes' : 'none found'}, share ${shareMB.toFixed(1)} MB, Present runs SlideForge's show with the lab live, and the studio's show by default`);
 } finally {
   await browser.close();
   relay.kill();

@@ -10,7 +10,7 @@
  *   reveal     Next (after the grace) reveals: the typed answers as groups, the right one marked and written as the question
  *              accepts it; the accepted answer said; right and wrong told to the phones
  *   scores     the relay's scores: the right phone has points, the wrong one none; the rail shows the gain
- *   ranking    a lesson that also has an unported style (Ranking challenge) is not routed: the classic Host live opens instead
+ *   ranking    a lesson that also has Ranking challenge is hosted by the studio too (the room runs Ranking)
  *
  * Needs lab-app/ built (npm --prefix lab run build:app). */
 import assert from 'node:assert/strict';
@@ -137,17 +137,20 @@ try {
   await lab.locator('.show').waitFor({ state: 'detached', timeout: 5000 });
   step('Esc ends the room and Back returns to the editor');
 
-  // ======================================================== a style the studio's room does not run yet is the classic host's
+  // ======================================================== Ranking is the studio's too (its own style in the room's registry, fd5ca03)
   await addGame('ranking', /^Ranking challenge/);
   const formats = await page.evaluate(() => [...new Set(SF.Shell.current().doc().slides.filter((s) => s.game).map((s) => s.game.format))]);
   assert.deepEqual(formats.sort(), ['ranking', 'type']);
-  await page.evaluate(() => { window.__toasts = []; const t = document.getElementById('toast'); new MutationObserver(() => window.__toasts.push(t.textContent)).observe(t, { childList: true, characterData: true, subtree: true }); });
   await hostLive();
-  await page.waitForFunction(() => !!document.querySelector('#joincard.on, #lobby.on') || !!SF.Live?.active || (window.__toasts || []).some((t) => /Preparing the show/.test(t)), null, { timeout: 60000 });
-  assert.equal(await lab.locator('.show').count(), 0, 'the studio\'s show did not open for a lesson with Ranking challenge in it');
-  assert.equal(await page.evaluate(() => document.documentElement.classList.contains('lab-show')), false);
-  step('a lesson that also has Ranking challenge is not routed: the classic Host live starts');
-  await page.evaluate(() => { try { SF.Live.stop(); } catch (e) { /* the classic room may still be preparing */ } });
+  await lab.locator('[data-testid=pin]').waitFor({ timeout: 30000 });
+  const both = await page.evaluate(() => ({ shown: document.documentElement.classList.contains('lab-show'), classic: !!SF.Live?.active || !!document.querySelector('#joincard.on, #lobby.on') }));
+  assert.deepEqual(both, { shown: true, classic: false }, 'a lesson with Type answer and Ranking is hosted by the studio');
+  step('a lesson that also has Ranking challenge is hosted by the studio too; the classic room did not start');
+  await lab.locator('body').press('Escape');
+  await lab.locator('.show').waitFor({ state: 'detached', timeout: 8000 }).catch(async () => {
+    await lab.getByRole('button', { name: 'Back to the lesson' }).click();
+    await lab.locator('.show').waitFor({ state: 'detached', timeout: 5000 });
+  });
 
   assert.deepEqual(errors, [], 'no page errors');
   console.log('studio-room-type: ok');

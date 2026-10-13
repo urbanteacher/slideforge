@@ -46,7 +46,7 @@ try {
   await pdf.waitForFunction(
     () => { const b = document.querySelector('.pdf-toolbar button'); return b && !b.disabled; },
     { timeout: 40000 });
-  assert.equal(await pdf.locator('.pdf-toolbar button').innerText(), 'Print / Save as PDF',
+  assert.equal(await pdf.locator('.pdf-toolbar button').first().innerText(), 'Print / Save as PDF',
     'the handout finished preparing rather than reporting a failure');
 
   const pages = await pdf.locator('.pdf-page').count();
