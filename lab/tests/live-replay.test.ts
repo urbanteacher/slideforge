@@ -33,7 +33,7 @@ const list = (Array.isArray(games) ? games : ((games as { games?: unknown[] }).g
 
 /** The recorded deck, as the room's steps: the section, How to play, the three questions, the scores. Its
  *  slide and game ids are the recorded deck's (read off the frames), as the relay's frames quote them. */
-function recordedShow(rec: Rec, format: string): RoomShow {
+function recordedShow(rec: Rec, format: string, scores = true): RoomShow {
   const starter = list.find((g) => g.format === format)!;
   const sent = rec.host.filter((f) => f.dir === 'send').map((f) => f.data!);
   const ids = [...new Set(sent.filter((m) => m.t === 'at').map((m) => String(m.slideId)))];
@@ -45,7 +45,7 @@ function recordedShow(rec: Rec, format: string): RoomShow {
     if (s.type === 'content') return { id, title: String(s.title), text: (s.bullets as string[]).join('\n'), activity: 'moment', gameId: gid, style: 'points' };
     return { id, title: String(s.question), text: String(s.question), activity: 'question', gameId: gid, style: String(s.style), quiz: { ...(s as object), id, gameId: gid } as RoomSlide['quiz'] };
   });
-  slides.push({ id: ids[k], title: `${starter.title} — scores`, text: '', activity: 'moment', gameId: gid, style: 'points', results: true });
+  if (scores) slides.push({ id: ids[k], title: `${starter.title} — scores`, text: '', activity: 'moment', gameId: gid, style: 'points', results: true });
   return { title: starter.title, slides };
 }
 
@@ -88,9 +88,9 @@ function assertSame(lab: Record<string, unknown>[], classic: Record<string, unkn
 }
 
 /** Feed a recording to the lab host and return it, the frames it sent, and the classic frames, normalised. */
-async function replay(rec: Rec, format: string) {
+async function replay(rec: Rec, format: string, scores = true) {
   const sock = new Recorded();
-  const host = new LiveHost({ url: 'ws://replay', show: recordedShow(rec, format), makeSocket: () => sock });
+  const host = new LiveHost({ url: 'ws://replay', show: recordedShow(rec, format, scores), makeSocket: () => sock });
 
   // The relay's frames and the recorder's steps, on the recording's one clock.
   type Ev = { ms: number; k: number; recv?: unknown; step?: Step };
@@ -188,5 +188,21 @@ test('the lab host sends what the classic host sent for a Ranking game', async (
   const reveals = lab.filter((f) => f.t === 'reveal');
   assert.deepEqual(reveals[0].gains, [[1, 10], [2, 0], [3, 10], [4, 0]]);
   assert.equal(host.state.revealed.length, 2);
+  assert.ok(host.state.ended);
+});
+
+// Odd one out (format 'odd-one-out', style 'oddone'): an unmarked vote (marks [], no points), never revealed by itself,
+// the phones told their role (`discuss`) in `at` and in the question, and after each reveal a brainstorm prompt
+// ("defend a pick") that closes on the next step. The game has no scores slide, so the show ends on its last question.
+test('the lab host sends what the classic host sent for an Odd one out game', async () => {
+  const { host, classic, lab } = await replay(load('game-odd-one-out'), 'odd-one-out', false);
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 4);
+  for (const q of asked) { assert.equal(q.unmarked, true); assert.equal(q.input, 'choice'); assert.equal(q.headPrompt, 'Odd one out'); assert.equal(q.points, 0); }
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => r.marks), [[], [], [], []]);
+  assert.equal(lab.filter((f) => f.t === 'prompt').length, 4, 'a defence prompt after each reveal');
+  assert.equal(lab.filter((f) => f.t === 'promptEnd').length, 3, 'closed when the show moves on (the last ends with the room)');
+  assert.equal(host.state.revealed.length, 4);
   assert.ok(host.state.ended);
 });
