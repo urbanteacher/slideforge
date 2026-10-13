@@ -56,6 +56,27 @@ test('the lab host sends what the classic host sent for a Random challenge game'
   assert.ok(host.state.ended);
 });
 
+// Heads up (format 'heads-up', style 'headsup'). The question frame carries the term, the guesser once one is picked (the teacher's
+// `recipient` sends `guesser` first, and the guesser keeps the whole round) and `roundLeft`, the seconds of one clock for the whole pile
+// (60 when the first term lands, then 57 and 55 as the recording's clock ran). A verdict moves straight on to the next term after a
+// beat, with no Next: the replay runs the host's timer on the recording's clock (replay-kit.ts), so the move-on lands where classic's did.
+// Counts only: the relay pays this engine 0, so the reveal carries no gains.
+test('the lab host sends what the classic host sent for a Heads up game', async () => {
+  const rec = load('game-heads-up');
+  const { host, classic, lab } = await replay(rec, 'heads-up', true, recordedDraw(rec, 'judge'));
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.deepEqual(asked.map((q) => q.term), ['Mitochondrion', 'Gravity', 'Photosynthesis']);
+  assert.deepEqual(asked.map((q) => q.guesser), [undefined, 1, 1], 'the guesser keeps the round');
+  assert.deepEqual(asked.map((q) => q.roundLeft), [60, 57, 55]);
+  for (const q of asked) { assert.equal(q.spoken, true); assert.equal(q.style, 'headsup'); assert.deepEqual(q.options, ['Correct', 'Pass']); assert.equal(q.headPrompt, 'Heads up'); }
+  assert.deepEqual(lab.filter((f) => f.t === 'guesser'), [1, 1, 1].map((id) => ({ t: 'guesser', id })));
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => [r.correct, r.gains, r.spoken]), Array.from({ length: 3 }, () => [0, [], { recipient: { type: 'player', id: 1 } }]));
+  assert.equal(host.state.spoken.round?.count, 3, 'three terms got right in the round');
+  assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
+
 // Spin and explain (format 'spin-explain', style 'spinexplain'): the concept drawn is the question, the verdicts Clear, With hint and
 // Reject, the points the game's own (2, which the relay does not use for a verdict). Same frames as the other spoken games; the
 // scores slide follows the last concept, and `finish` is the final scores. The recorded room is individual and does not score

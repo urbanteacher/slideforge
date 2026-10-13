@@ -84,7 +84,10 @@ export async function replay(rec: Rec, format: string, scores = true, tweak?: (s
   const sock = new Recorded();
   const show = recordedShow(rec, format, scores);
   tweak?.(show);
-  const host = new LiveHost({ url: 'ws://replay', show, makeSocket: () => sock });
+  // What runs on time apart from the relay (Heads up's round and its move on after a verdict) runs on the recording's clock, so the
+  // seconds left in a frame are the recorded ones: a timer set at `ms` for `d` is due at `ms + d`, and fires before the first event after that.
+  const clock = { ms: 0, due: [] as { at: number; fn: () => void }[] };
+  const host = new LiveHost({ url: 'ws://replay', show, makeSocket: () => sock, now: () => clock.ms, after: (fn, d) => { clock.due.push({ at: clock.ms + d, fn }); } });
 
   // The relay's frames and the recorder's steps, on the recording's one clock.
   type Ev = { ms: number; k: number; recv?: unknown; step?: Step };
@@ -95,6 +98,14 @@ export async function replay(rec: Rec, format: string, scores = true, tweak?: (s
 
   let ended: Promise<unknown> | null = null;
   for (const e of evs) {
+    for (;;) {
+      const due = clock.due.filter((d) => d.at <= e.ms).sort((a, b) => a.at - b.at)[0];
+      if (!due) break;
+      clock.due.splice(clock.due.indexOf(due), 1);
+      clock.ms = due.at;
+      due.fn();
+    }
+    clock.ms = e.ms;
     if (e.recv) { sock.feed(e.recv); continue; }
     const s = e.step!;
     if (s.what === 'hosting') { host.start(); await new Promise((r) => setTimeout(r, 0)); }
@@ -103,6 +114,7 @@ export async function replay(rec: Rec, format: string, scores = true, tweak?: (s
     else if (s.what === 'next') host.next();
     else if (s.what === 'manual:answer') host.manualAnswer(s.answer!.playerId, s.answer!.order ? { order: s.answer!.order } : s.answer!.fill ? { fill: s.answer!.fill } : s.answer!.sort ? { sort: s.answer!.sort } : s.answer!.value != null ? { value: s.answer!.value } : s.answer!.text ?? s.answer!.choice!, s.answer!.id);
     else if (s.what === 'manual:recipient') host.recipient(s.recipient);
+    else if (s.what === 'manual:verdictRoom') host.verdictRoom();
     else if (s.what === 'manual:revealWith') host.revealWith(s.choice!);
     else if (s.what === 'stop') ended = host.end();
   }
