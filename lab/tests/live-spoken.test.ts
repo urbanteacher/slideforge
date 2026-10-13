@@ -117,3 +117,38 @@ test('the cube names its face (the question\'s category) on the wall; Random cha
   assert.deepEqual(cube?.verdicts.map((v) => v.label), ['Answered', 'Pass']);
   assert.equal((await faceOf('random-challenge'))?.face, '');
 });
+
+const spinQuiz = (extra: object = {}) => quiz('spinexplain', { options: ['Clear', 'With hint', 'Reject'], term: 'Diffusion', question: 'Diffusion', hint: 'Particles', ...extra });
+
+test('Spin and explain: in a teams room a verdict that scores is held until the teacher says who spoke, and the speaker completes it', async () => {
+  const { host, sent, wall } = await room(deckOf('spin-explain', [spinQuiz()]), 'teams');
+  assert.equal(host.verdict(1), true, 'With hint: accepted, so it would score');
+  assert.equal(sent('reveal').length, 0, 'held: nothing is revealed yet');
+  assert.deepEqual(host.state.spoken.pending, { slideId: host.slide!.quiz!.id, choice: 1 });
+  const held = wall().question!.detail;
+  assert.equal(held.kind === 'spoken' && held.spoken.held, 'With hint');
+  host.recipient({ type: 'player', id: 2 }); // Bo, who is on Blue
+  const r = sent('reveal')[0];
+  assert.deepEqual([r.correct, r.answer, r.gains, r.spoken], [1, 'With hint', [], { recipient: { type: 'player', id: 2 } }]);
+  assert.equal(host.state.spoken.pending, null);
+  assert.deepEqual(host.state.spoken.credit, { slideId: host.slide!.quiz!.id, accepted: true, who: 'Blue', points: 500, line: 'Blue +500' }, 'half credit, to the speaker\'s team');
+  assert.deepEqual(host.state.spoken.recent, [2]);
+});
+
+test('Spin and explain: counting a held verdict for the room lands it with no points; a Reject is never held; a held verdict belongs to its item', async () => {
+  const two = deckOf('spin-explain', [spinQuiz(), spinQuiz({ question: 'Osmosis', term: 'Osmosis' })]);
+  const a = await room(two, 'teams');
+  a.host.verdict(0);
+  a.host.verdictRoom();
+  assert.deepEqual([a.sent('reveal')[0].correct, a.sent('reveal')[0].spoken], [0, { recipient: { type: 'room' } }]);
+  assert.equal(a.host.state.spoken.credit?.points, 0);
+  const b = await room(two, 'teams');
+  b.host.verdict(2);
+  assert.deepEqual([b.sent('reveal')[0].correct, b.host.state.spoken.credit?.line], [2, ''], 'Reject lands at once and names nobody');
+  const c = await room(two, 'teams');
+  c.host.verdict(0);
+  assert.ok(c.host.state.spoken.pending);
+  c.host.next(); // closes the held item without a verdict
+  c.host.next();
+  assert.equal(c.host.state.spoken.pending, null, 'the next item has no held verdict');
+});

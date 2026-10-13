@@ -55,3 +55,20 @@ test('the lab host sends what the classic host sent for a Random challenge game'
   assert.deepEqual(Object.values(host.state.oralCounts), [2], 'the relay counted both verdicts');
   assert.ok(host.state.ended);
 });
+
+// Spin and explain (format 'spin-explain', style 'spinexplain'): the concept drawn is the question, the verdicts Clear, With hint and
+// Reject, the points the game's own (2, which the relay does not use for a verdict). Same frames as the other spoken games; the
+// scores slide follows the last concept, and `finish` is the final scores. The recorded room is individual and does not score
+// spoken, so the verdict lands at once with Ada named; the held verdict of a teams room is in live-spoken.test.ts.
+test('the lab host sends what the classic host sent for a Spin and explain game', async () => {
+  const rec = load('game-spin-explain');
+  const { host, classic, lab } = await replay(rec, 'spin-explain', true, recordedDraw(rec, 'judge'));
+  assertSame(lab, classic);
+  const asked = lab.filter((f) => f.t === 'question');
+  assert.equal(asked.length, 3);
+  for (const q of asked) { assert.equal(q.spoken, true); assert.equal(q.style, 'spinexplain'); assert.deepEqual(q.options, ['Clear', 'With hint', 'Reject']); assert.equal(q.points, 2); assert.equal(q.headPrompt, 'Spin & explain'); }
+  assert.deepEqual(lab.filter((f) => f.t === 'reveal').map((r) => [r.correct, r.answer, r.gains, r.spoken]), Array.from({ length: 3 }, () => [0, 'Clear', [], { recipient: { type: 'player', id: 1 } }]));
+  assert.deepEqual(lab.filter((f) => f.t === 'finish'), [{ t: 'finish', title: 'Final scores' }]);
+  assert.equal(host.state.revealed.length, 3);
+  assert.ok(host.state.ended);
+});
