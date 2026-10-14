@@ -34,7 +34,18 @@ input, select, textarea { font: inherit; color: inherit; }
 ::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-.app { display: grid; grid-template-rows: auto 1fr; grid-template-columns: 272px 1fr 320px; height: 100%; }
+/* The side columns are the teacher's to drag (app/columns.tsx sets --left-w and --right-w once one is dragged). Until then, on
+   a narrow window each gives way to a share of it, never below a usable width, so the slide in the middle is not squashed. */
+.app { --left-col: var(--left-w, max(200px, min(272px, 24vw))); --right-col: var(--right-w, max(260px, min(320px, 30vw)));
+  position: relative; display: grid; grid-template-rows: auto 1fr; grid-template-columns: var(--left-col) minmax(0, 1fr) var(--right-col); height: 100%; }
+.col-handle { position: absolute; grid-row: 2 / 3; top: 0; bottom: 0; width: 8px; cursor: col-resize; z-index: 6; touch-action: none; }
+.col-handle-left { grid-column: 1 / 2; right: -4px; }
+.col-handle-right { grid-column: 3 / 4; left: -4px; }
+.col-handle::after { content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: transparent; transition: background .12s; }
+.col-handle:hover::after, .col-handle:focus-visible::after, body.col-dragging .col-handle::after { background: var(--accent); }
+.col-handle:focus-visible { outline: none; }
+body.col-dragging { cursor: col-resize; user-select: none; }
+body.col-dragging iframe, body.col-dragging canvas { pointer-events: none; }
 .topbar { grid-column: 1 / -1; display: flex; flex-direction: column; border-bottom: 1px solid var(--line); background: var(--bg); }
 /* Row one is the deck and the show; row two the tools that act on the slide. */
 .tb-row { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 48px; }
@@ -668,7 +679,7 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .shell-sizes { display: flex; gap: 4px; padding: 2px 10px 6px; }
 .shell-sizes button { width: auto; padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 999px; font-variant-numeric: tabular-nums; }
 /* The right-hand panel folded away (the canvas bar's panel button): the canvas takes its width. */
-.app.no-panel { grid-template-columns: 272px 1fr; }
+.app.no-panel { grid-template-columns: var(--left-col) minmax(0, 1fr); }
 
 /* Engage → + Add activity: SlideForge's activities by phase, each with its designs as buttons. */
 .engage-picker { display: grid; gap: 10px; margin: 8px 0; max-height: 460px; overflow-y: auto; padding-right: 2px; }
@@ -741,6 +752,10 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .empty-pick span { font-size: 12px; color: var(--text); opacity: 1; line-height: 1.35; }
 .empty-view .btn-soft { margin-top: 6px; }
 .canvas-bar .add-view { background: var(--accent); color: #fff; font-weight: 600; }
+/* A narrow canvas keeps the add button on one line: just its plus. */
+.center { container-type: inline-size; }
+.canvas-bar .add-view { white-space: nowrap; flex: none; }
+@container (max-width: 560px) { .canvas-bar .add-view .add-label { display: none; } }
 .canvas-bar .add-view:hover { filter: brightness(1.08); }
 
 /* Reduced motion: the studio's own menus, toasts and HUD appear rather than pop or slide, and the

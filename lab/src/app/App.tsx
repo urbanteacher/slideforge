@@ -7,6 +7,7 @@ import { registerGuideFonts } from '../theme';
 import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS } from '../ui';
 import { present } from './showInSlideForge';
 import { TopBar } from './TopBar';
+import { ColumnHandle, useColumns } from './columns';
 
 const isTyping = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -148,11 +149,12 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
     return () => { removeEventListener('keydown', on); removeEventListener('paste', onPaste); };
   }, []);
 
+  const cols = useColumns();
   const view = useStore((s) => s.view);
   const anyInView = useStore((s) => s.deck.slides.some((x) => inView(x, s.view)));
   if (!restored) return <div className="app app-loading" aria-busy="true" />;
   return (
-    <div className={`app${embedded ? ' embedded' : ''}${panelHidden ? ' no-panel' : ''}`}>
+    <div className={`app${embedded ? ' embedded' : ''}${panelHidden ? ' no-panel' : ''}`} style={cols.style}>
       <TopBar embedded={embedded} />
       {view === 'lesson' ? <LeftPanel /> : <BrowsePanel kind={view === 'quiz' ? 'games' : view === 'nodes' ? 'nodes' : 'activities'} />}
       <main className="center">
@@ -162,6 +164,8 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
         <Filmstrip />
       </main>
       {!panelHidden && <Inspector />}
+      <ColumnHandle side="left" cols={cols} />
+      {!panelHidden && <ColumnHandle side="right" cols={cols} />}
       {galleryOpen && <Gallery />}
       {toast && <div className="toast">{toast}</div>}
       <ShowLayer />

@@ -24,7 +24,7 @@ export function CanvasBar() {
     <div className="canvas-bar" role="toolbar" aria-label="Slide and zoom">
       {view === 'lesson' ? <AddMenu /> : (
         // The Quiz studio and Activities add what they make: Engage's list, on the right, opens on it.
-        <button className="tb-btn add-view" onClick={focusBrowse} title={view === 'quiz' ? 'Browse the games, on the left' : view === 'nodes' ? 'Browse the Nodes formats, on the left' : 'Browse the activities, on the left'}><Plus size={15} />{view === 'quiz' ? 'Game' : view === 'nodes' ? 'Nodes format' : 'Activity'}</button>
+        <button className="tb-btn add-view" onClick={focusBrowse} title={view === 'quiz' ? 'Browse the games, on the left' : view === 'nodes' ? 'Browse the Nodes formats, on the left' : 'Browse the activities, on the left'}><Plus size={15} /><span className="add-label">{view === 'quiz' ? 'Game' : view === 'nodes' ? 'Nodes format' : 'Activity'}</span></button>
       )}
       <div className="spacer" />
       <AnimateButton />
