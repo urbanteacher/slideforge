@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import harness from '../../tests/harness.js';
+import { leaveFullscreen } from './lib/fullscreen.mjs';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-lab-lesson-'));
 const port = await harness.freePort();
@@ -85,6 +86,7 @@ try {
     await open();
     await lab.locator('.show').waitFor({ timeout: 30000 });
     assert.deepEqual(await page.evaluate(() => ({ shown: document.documentElement.classList.contains('lab-show'), classic: !!(window.SF.Player && SF.Player.open) })), { shown: true, classic: false }, what + ' opens the studio’s show');
+    await leaveFullscreen(page);
     await lab.locator('body').press('Escape');
     if (await lab.locator('.show').count()) await lab.locator('body').press('Escape');
     await lab.locator('.show').waitFor({ state: 'detached', timeout: 8000 });

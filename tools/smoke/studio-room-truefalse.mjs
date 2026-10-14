@@ -17,6 +17,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import harness from '../../tests/harness.js';
+import { leaveFullscreen } from './lib/fullscreen.mjs';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-studio-room-tf-'));
 const port = await harness.freePort();
@@ -124,6 +125,7 @@ try {
   assert.deepEqual(rows[1], ['2', 'Bo', '0']);
   step(`scores: Ana ${rows[0][2]}, Bo 0 (the relay marked the verdicts the host sent)`);
 
+  await leaveFullscreen(page);
   await lab.locator('body').press('Escape');
   await lab.locator('[data-testid=ended]').waitFor({ timeout: 8000 });
   await lab.getByRole('button', { name: 'Back to the lesson' }).click();
@@ -139,6 +141,7 @@ try {
   const both = await page.evaluate(() => ({ shown: document.documentElement.classList.contains('lab-show'), classic: !!SF.Live?.active || !!document.querySelector('#joincard.on, #lobby.on') }));
   assert.deepEqual(both, { shown: true, classic: false }, 'a lesson with True or false and the Showdown is hosted by the studio');
   step('a lesson that also has the True / false showdown is hosted by the studio too; the classic room did not start');
+  await leaveFullscreen(page);
   await lab.locator('body').press('Escape');
   await lab.locator('.show').waitFor({ state: 'detached', timeout: 8000 }).catch(async () => {
     await lab.getByRole('button', { name: 'Back to the lesson' }).click();
