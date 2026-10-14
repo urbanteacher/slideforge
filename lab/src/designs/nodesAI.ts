@@ -19,6 +19,8 @@ const BASE = 'You write one Nodes challenge for a class. Reply with only a JSON 
 
 interface Spec { shape: string; rules: string; tokens: number; check: (v: any) => boolean; merge: (cur: any, v: any) => any }
 const str = (x: unknown) => typeof x === 'string' && x.trim().length > 0;
+/** Rows of two non-empty strings, or nothing. */
+const pairs = (v: unknown) => (Array.isArray(v) && v.length && v.every((p) => Array.isArray(p) && p.length === 2 && p.every(str)) ? v : undefined);
 const arr = (x: unknown, min = 1) => Array.isArray(x) && x.length >= min;
 
 const SPECS: Record<string, Spec> = {
@@ -43,24 +45,26 @@ const SPECS: Record<string, Spec> = {
     tokens: 800, check: (v) => str(v.question) && arr(v.parts, 3) && v.parts.every((p: any) => str(p.text) && str(p.role)), merge: (c, v) => ({ ...c, ...v, shown: undefined }),
   },
   'same-word': {
-    shape: '{"command":"Explain","questions":[{"question":"…","kind":"Definition","from":"a term","to":"its precise meaning"},{"question":"…","kind":"Explanation","from":"a claim","to":"the mechanism that explains it"},{"question":"…","kind":"Evaluation","from":"evidence and criteria","to":"a judgement"}]}',
-    rules: 'Three questions on the topic, all starting with the same command word, each needing a different relationship. "kind" is Definition, Description, Explanation or Evaluation.',
-    tokens: 800, check: (v) => str(v.command) && arr(v.questions, 2) && v.questions.every((q: any) => str(q.question) && str(q.kind)), merge: (c, v) => ({ ...c, ...v }),
+    shape: '{"command":"Explain","questions":[{"question":"…","kind":"Definition","from":"a term","to":"its precise meaning","model":["…","…"]},{"question":"…","kind":"Explanation","from":"a claim","to":"the mechanism that explains it","model":["…","…"]},{"question":"…","kind":"Evaluation","from":"evidence and criteria","to":"a judgement","model":["…","…"]}]}',
+    rules: 'Three questions on the topic, all starting with the same command word, each needing a different relationship. "kind" is Definition, Description, Explanation or Evaluation. "model" answers that question as its link: what it starts from, then what it reaches, under 14 words each.',
+    tokens: 1000, check: (v) => str(v.command) && arr(v.questions, 2) && v.questions.every((q: any) => str(q.question) && str(q.kind)), merge: (c, v) => ({ ...c, ...v }),
   },
   'before-during-after': {
-    shape: '{"task":"…"}', rules: 'One exam-style task on the topic for students to attempt.',
-    tokens: 300, check: (v) => str(v.task), merge: (c, v) => ({ ...c, task: v.task }),
+    shape: '{"task":"…","examples":["…","…","…"]}', rules: 'One exam-style task on the topic for students to attempt. "examples": what a strong student writes for it before (what to bring together), during (how the parts form the answer) and after (what was missing, and the repair), under 25 words each.',
+    // Examples belong to their task: a new task without them drops the old ones.
+    tokens: 500, check: (v) => str(v.task), merge: (c, v) => ({ ...c, task: v.task, points: c.points.map((p: any, i: number) => ({ ...p, example: Array.isArray(v.examples) && str(v.examples[i]) ? v.examples[i] : undefined })) }),
   },
   'ladder': {
-    shape: '{"question":"…","relation":"… → …","rungs":[{"name":"Unaided","text":"Have a go on your own first."},{"name":"Neutral prompt","text":"“…”"},{"name":"Partial hint","text":"“…”"},{"name":"Model","text":"…"},{"name":"New task","text":"“…”"}],"repair":"…","later":"“…”"}',
-    rules: 'The relation is the link the answer must make, as "a → b". The neutral prompt names no answer; the partial hint gives one piece; the model is a short correct answer; the new task is a near case. "later" is a far case for another lesson; "repair" says what an unasked correct answer looks like.',
-    tokens: 1000, check: (v) => str(v.question) && str(v.relation) && arr(v.rungs, 4) && str(v.later), merge: (c, v) => ({ ...c, ...v }),
+    shape: '{"question":"…","relation":"… → …","rungs":[{"name":"Unaided","text":"Have a go on your own first."},{"name":"Neutral prompt","text":"“…”"},{"name":"Partial hint","text":"“…”"},{"name":"Model","text":"…"},{"name":"New task","text":"“…”"}],"repair":"…","later":"“…”","answer":[["…","…"],["…","…"],["…","…"],["…","…"]],"laterAnswer":[["…","…"],["…","…"],["…","…"],["…","…"]]}',
+    rules: 'The relation is the link the answer must make, as "a → b". The neutral prompt names no answer; the partial hint gives one piece; the model is a short correct answer; the new task is a near case. "later" is a far case for another lesson; "repair" says what an unasked correct answer looks like. "answer" answers the question as the relation, a pair per row (each side of the arrow, under 14 words); "laterAnswer" answers "later" the same way.',
+    // Answers belong to their questions: a new question without them drops the old ones.
+    tokens: 1400, check: (v) => str(v.question) && str(v.relation) && arr(v.rungs, 4) && str(v.later), merge: (c, v) => ({ ...c, ...v, answer: pairs(v.answer), laterAnswer: pairs(v.laterAnswer) }),
   },
   'new-case': {
-    shape: '{"relation":"… → … → …","near":"…","far":"…","same":"…","worked":{"near":"…","far":"…"}}',
-    rules: 'The relation is the link, as "a → b → c". "near": the same topic, a new case. "far": another context entirely that needs the same link. "same": what stays the same, in one sentence. "worked": each case\'s worked answer, the link applied step by step, under 30 words each.',
+    shape: '{"relation":"… → … → …","near":"…","far":"…","same":"…","worked":{"near":["…","…","…"],"far":["…","…","…"]}}',
+    rules: 'The relation is the link, as "a → b → c". "near": the same topic, a new case. "far": another context entirely that needs the same link. "same": what stays the same, in one sentence. "worked": each case\'s working, one step per link of the relation, in order, under 14 words a step.',
     // New cases need their own worked answers: the old ones answered the old cases.
-    tokens: 700, check: (v) => str(v.relation) && str(v.near) && str(v.far), merge: (c, v) => ({ ...c, ...v, worked: str(v.worked?.near) && str(v.worked?.far) ? v.worked : undefined }),
+    tokens: 700, check: (v) => str(v.relation) && str(v.near) && str(v.far), merge: (c, v) => ({ ...c, ...v, worked: (arr(v.worked?.near) && arr(v.worked?.far)) || (str(v.worked?.near) && str(v.worked?.far)) ? v.worked : undefined }),
   },
   'keep-apart': {
     shape: '{"a":{"term":"…","is":"…"},"b":{"term":"…","is":"…"},"test":"…","statements":[{"text":"…","side":"a"},{"text":"…","side":"b"},{"text":"…","side":"a"},{"text":"…","side":"b"},{"text":"…","side":"a"},{"text":"…","side":"b"}]}',
@@ -68,9 +72,9 @@ const SPECS: Record<string, Spec> = {
     tokens: 800, check: (v) => str(v.a?.term) && str(v.b?.term) && str(v.test) && arr(v.statements, 4), merge: (c, v) => ({ ...c, ...v }),
   },
   'size-answer': {
-    shape: '{"questions":[{"question":"…","command":"State","marks":1,"needs":["one precise point"]},{"question":"…","command":"Describe","marks":2,"needs":["a point","its expansion"]},{"question":"…","command":"Explain","marks":2,"needs":["a point","because…"]}]}',
-    rules: 'Three exam-style questions on the topic with different command words and marks. "needs" is what the answer must contain, one part per mark, in a few words each.',
-    tokens: 700, check: (v) => arr(v.questions, 2) && v.questions.every((q: any) => str(q.question) && Number.isInteger(q.marks) && arr(q.needs)), merge: (c, v) => ({ ...c, ...v }),
+    shape: '{"questions":[{"question":"…","command":"State","marks":1,"needs":["one precise point"],"model":["…"]},{"question":"…","command":"Describe","marks":2,"needs":["a point","its expansion"],"model":["…","…"]},{"question":"…","command":"Explain","marks":2,"needs":["a point","because…"],"model":["…","…"]}]}',
+    rules: 'Three exam-style questions on the topic with different command words and marks. "needs" is what the answer must contain, one part per mark, in a few words each. "model" answers the question, one part per need, under 14 words a part.',
+    tokens: 1000, check: (v) => arr(v.questions, 2) && v.questions.every((q: any) => str(q.question) && Number.isInteger(q.marks) && arr(q.needs)), merge: (c, v) => ({ ...c, ...v }),
   },
   'model-marks': {
     shape: '{"question":"… [4 marks]","outOf":4,"scheme":[{"marks":"1","needs":"…","falls":"…"},{"marks":"2","needs":"…","falls":"…"},{"marks":"3–4","needs":"…","falls":"…"}],"answers":[{"label":"A","text":"…","marks":0,"why":"…"},{"label":"B","text":"…","marks":2,"why":"…"},{"label":"C","text":"…","marks":4,"why":"…"}]}',

@@ -9,8 +9,11 @@ import { marked, sortQuiz, type NodesFormat } from './types';
 
 export interface SameWord {
   command: string;
-  questions: { question: string; kind: string; from: string; to: string }[];
+  /** `model`: the answer to that question, as its link: what it starts from, and what it reaches. */
+  questions: { question: string; kind: string; from: string; to: string; model?: [string, string] }[];
 }
+
+const modelOf = (q: SameWord['questions'][number]) => (Array.isArray(q.model) && q.model.length === 2 && q.model.every((m) => typeof m === 'string' && m.trim()) ? q.model : null);
 
 const KIND_COLOUR: Record<string, string> = { Definition: LINK.U, Description: LINK.U, Explanation: LINK.A, Evaluation: LINK.C, Judgement: LINK.C };
 const colourOf = (k: string) => KIND_COLOUR[k] ?? LINK.J;
@@ -18,16 +21,16 @@ const colourOf = (k: string) => KIND_COLOUR[k] ?? LINK.J;
 const STARTER: SameWord = {
   command: 'Explain',
   questions: [
-    { question: 'Explain what cache memory is.', kind: 'Definition', from: 'a term', to: 'its precise meaning' },
-    { question: 'Explain how cache memory improves a CPU’s performance.', kind: 'Explanation', from: 'a claim', to: 'the mechanism that explains it' },
-    { question: 'Explain whether a 5.2 GHz laptop is the right choice for a video editor.', kind: 'Evaluation', from: 'evidence and criteria', to: 'a judgement' },
+    { question: 'Explain what cache memory is.', kind: 'Definition', from: 'a term', to: 'its precise meaning', model: ['Cache memory', 'small, fast memory beside the CPU that holds frequently used data'] },
+    { question: 'Explain how cache memory improves a CPU’s performance.', kind: 'Explanation', from: 'a claim', to: 'the mechanism that explains it', model: ['Cache makes the CPU faster', 'it fetches data from cache, not slower RAM, so it waits less'] },
+    { question: 'Explain whether a 5.2 GHz laptop is the right choice for a video editor.', kind: 'Evaluation', from: 'evidence and criteria', to: 'a judgement', model: ['Exports use many cores; GHz alone is not speed', 'not on GHz alone: choose by cores and measured export time'] },
   ],
 };
 
 export const sameWord: NodesFormat<SameWord> = {
   id: 'same-word', label: 'Same word, different links', part: 'Linkage matched to the task',
   aim: 'One command word, three questions, three relationships: the word alone does not say what to join. Students match each question to its link.',
-  howTo: ['Three questions with the same command word.', 'On phones, match each question to the relationship it needs.', 'Then the formula: a row per question, its link drawn from what it starts with to what it must reach.'],
+  howTo: ['Three questions with the same command word.', 'On phones, match each question to the relationship it needs.', 'Then the formula: a row per question, its link drawn from what it starts with to what it must reach; a click more fills it with the answer.'],
   phones: 'Match each question to its link',
   starter: STARTER,
   slides: (st, o) => {
@@ -63,9 +66,17 @@ export const sameWord: NodesFormat<SameWord> = {
           T(st, `Row ${i + 1} — arrow`, '→', LEFT + 970, y + rh / 2 - 6, 70, 56, { weight: '800', size: 46, align: 'center', color: col }, after()),
           card(st, `Row ${i + 1} — to`, LEFT + 1050, y + rh / 2 - 14, W - LEFT * 2 - 1080, 72, { fill: col, sw: 0, radius: 14 }, after()),
           T(st, `Row ${i + 1} — to words`, q.to, LEFT + 1070, y + rh / 2 + 2, W - LEFT * 2 - 1120, 44, { weight: '800', size: 30, align: 'center', color: '#ffffff' }, after()),
+          // The answer, in the same two boxes: the link's names stay as small labels beneath.
+          ...(modelOf(q) ? [
+            card(st, `Row ${i + 1} — model from`, LEFT + 520, y + rh / 2 - 36, 440, 90, { fill: st.panel, stroke: col, sw: 3, radius: 14 }, onClick()),
+            T(st, `Row ${i + 1} — model from words`, modelOf(q)![0], LEFT + 536, y + rh / 2 - 26, 408, 76, { weight: '700', size: 26, align: 'center', valign: 'middle', fit: 'shrink' }, after()),
+            card(st, `Row ${i + 1} — model to`, LEFT + 1050, y + rh / 2 - 36, W - LEFT * 2 - 1080, 90, { fill: col, sw: 0, radius: 14 }, after()),
+            T(st, `Row ${i + 1} — model to words`, modelOf(q)![1], LEFT + 1066, y + rh / 2 - 26, W - LEFT * 2 - 1112, 76, { weight: '700', size: 26, align: 'center', valign: 'middle', color: '#ffffff', fit: 'shrink' }, after()),
+            T(st, `Row ${i + 1} — model labels`, `${q.from}  →  ${q.to}`, LEFT + 520, y + rh / 2 + 60, W - LEFT * 2 - 550, 22, { weight: '600', size: 18, color: st.muted, align: 'center' }, after()),
+          ] : []),
         ];
       }),
-    ], st, qs.map((q) => `${q.kind}: connect ${q.from} → ${q.to}. (${q.question})`).join('\n'));
+    ], st, qs.map((q) => `${q.kind}: connect ${q.from} → ${q.to}. (${q.question})${modelOf(q) ? ` Answer: ${modelOf(q)!.join(' → ')}` : ''}`).join('\n'));
     return marked('same-word', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o,
       { ask: 'ask', answer: 'reveal', quiz: sortQuiz(`Which link does each “${o.command}” question need?`, kinds, qs.map((q) => q.question), qs.map((q) => kinds.indexOf(q.kind))) });
   },

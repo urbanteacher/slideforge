@@ -95,16 +95,37 @@ test('with no room, each Nodes phones cue says what to do without phones', async
   assert.match(cue(join.slides(st, join.starter))[0], /^ON PHONES · /);
 });
 
-test('Same link, new case ends on both cases worked through', () => {
-  const f = NODES.find((x) => x.id === 'new-case')!;
+// Every format shows its answers in its question's own layout (docs/nodes-studio-plan.md, without phones).
+const words = (slides: Slide[]) => slides.flatMap((s) => s.layers.map((l) => String(l.params.text ?? '')));
+const pick = (id: string) => NODES.find((x) => x.id === id)!;
+
+test('Same link, new case: each case worked a step per link, in the link’s chain', () => {
+  const f = pick('new-case');
   const slides = f.slides(st, f.starter);
-  const last = slides[slides.length - 1];
-  assert.equal(last.nodes?.role, 'worked');
-  const words = last.layers.map((l) => String(l.params.text ?? '')).join(' | ');
-  assert.match(words, /0\.4 ns/);
-  assert.match(words, /20 ms/);
-  const bare = f.slides(st, { ...(f.starter as object), worked: undefined } as never);
-  assert.ok(!bare.some((s) => s.nodes?.role === 'worked'), 'no worked answers, no slide');
+  const near = slides.find((s) => s.nodes?.role === 'near')!, far = slides.find((s) => s.nodes?.role === 'far')!;
+  assert.equal(near.layers.filter((l) => /^Step \d — words$/.test(l.name)).length, 3);
+  assert.match(words([near]).join(' | '), /0\.4 ns/);
+  assert.match(words([far]).join(' | '), /20 ms/);
+  assert.ok(!slides.some((s) => s.nodes?.role === 'worked'), 'no separate worked slide');
+  // An older answer as one sentence a case keeps its own slide.
+  const old = f.slides(st, { ...(f.starter as object), worked: { near: '0.4 ns', far: '20 ms' } } as never);
+  assert.equal(old[old.length - 1].nodes?.role, 'worked');
+});
+
+test('Size the answer and Same word fill the reveal’s own boxes with an answer', () => {
+  for (const [id, n] of [['size-answer', 5], ['same-word', 6]] as const) {
+    const f = pick(id), reveal = f.slides(st, f.starter).find((s) => s.nodes?.role === 'reveal')!;
+    assert.equal(reveal.layers.filter((l) => /(model \d — words|model (from|to) words)$/.test(l.name)).length, n, id);
+  }
+});
+
+test('the ladder and Before, during, after end on their answers, laid out as the question', () => {
+  const l = pick('ladder').slides(st, pick('ladder').starter);
+  assert.deepEqual(l.map((s) => s.nodes?.role), ['ask', 'rungs', 'reattempt', 'answer', 'later', 'later-answer']);
+  assert.match(words(l.filter((s) => s.nodes?.role === 'answer')).join(' | '), /ALU/);
+  const b = pick('before-during-after').slides(st, pick('before-during-after').starter);
+  assert.deepEqual(b.map((s) => s.nodes?.role), ['routine', 'answered']);
+  assert.equal(b[1].layers.filter((l2) => /^Example /.test(l2.name)).length, 3);
 });
 
 test('every Framework stage writes its model answer into its scaffold, a part per slot', async () => {
