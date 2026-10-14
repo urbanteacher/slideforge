@@ -11,7 +11,7 @@ import { KeySheet, QuestionsList, QuickPollForm, ROOM_VIEW_SAYS, ShowSide, contr
 import { FLOOR_SAYS, reactionsSay, type QuickAsk } from '../live';
 import { useStore } from '../store';
 import './show.css';
-import { shownDeck, slideFor, stepAt, stepsOf } from './steps';
+import { shownDeck, slideFor, stepAt, stepsOf, withoutPhones } from './steps';
 import { Boundary } from './Boundary';
 import { gridMove, jumpTarget, presenterState, prompterFrame, pushDigit, whoAnswered } from './desk';
 import { PrompterLink, prompterLinkFor } from './prompter';
@@ -80,7 +80,8 @@ function Show() {
   const { room: roomOn, slideId, hooks, rehearse: rehearse0 } = useShow.getState(); // read once: a show is opened plain or as a room, and does not change
   // A room can start from this show: inside SlideForge (it hands the show its hooks, and serves the relay), or ?studioRoom=1.
   const canLive = !!hooks || studioRoomEnabled();
-  const deck = useMemo(() => shownDeck(full), []); // the lesson as it was when the show opened
+  // The lesson as it was when the show opened; with no room, a Nodes slide's phones cue says what to do without them.
+  const deck = useMemo(() => (roomOn ? shownDeck(full) : withoutPhones(shownDeck(full))), []);
   const { show, steps } = useMemo(() => stepsOf(deck), [deck]);
   const start = useMemo(() => {
     const at = full.slides.findIndex((x) => x.id === slideId);

@@ -23,6 +23,19 @@ export function shownDeck<T extends DeckLike>(deck: T): T {
   return { ...deck, slides: deck.slides.filter((s) => !s.hidden) };
 }
 
+/** A show with no room: a Nodes slide's phones cue ("On phones · …", the layer named Phones) becomes its cue for a class
+ *  without phones: its own (`nodes.paper`: "Hands up · A, B or C"), or "On paper ·" and the same task. */
+export function withoutPhones<T extends DeckLike>(deck: T): T {
+  return { ...deck, slides: deck.slides.map((s) => {
+    if (!s.nodes || !s.layers.some((l) => l.name === 'Phones')) return s;
+    return { ...s, layers: s.layers.map((l) => {
+      const text = l.params?.text;
+      if (l.name !== 'Phones' || typeof text !== 'string') return l;
+      return { ...l, params: { ...l.params, text: s.nodes!.paper ? s.nodes!.paper.toUpperCase() : text.replace(/^ON PHONES/, 'ON PAPER') } };
+    }) };
+  }) };
+}
+
 /** The room's show for a shown deck, with each step placed on the deck's slides. */
 export function stepsOf(shown: DeckLike): { show: RoomShow; steps: Step[] } {
   const show = showFromDeck(shown);

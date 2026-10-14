@@ -56,9 +56,10 @@ const SPECS: Record<string, Spec> = {
     tokens: 1000, check: (v) => str(v.question) && str(v.relation) && arr(v.rungs, 4) && str(v.later), merge: (c, v) => ({ ...c, ...v }),
   },
   'new-case': {
-    shape: '{"relation":"… → … → …","near":"…","far":"…","same":"…"}',
-    rules: 'The relation is the link, as "a → b → c". "near": the same topic, a new case. "far": another context entirely that needs the same link. "same": what stays the same, in one sentence.',
-    tokens: 500, check: (v) => str(v.relation) && str(v.near) && str(v.far), merge: (c, v) => ({ ...c, ...v }),
+    shape: '{"relation":"… → … → …","near":"…","far":"…","same":"…","worked":{"near":"…","far":"…"}}',
+    rules: 'The relation is the link, as "a → b → c". "near": the same topic, a new case. "far": another context entirely that needs the same link. "same": what stays the same, in one sentence. "worked": each case\'s worked answer, the link applied step by step, under 30 words each.',
+    // New cases need their own worked answers: the old ones answered the old cases.
+    tokens: 700, check: (v) => str(v.relation) && str(v.near) && str(v.far), merge: (c, v) => ({ ...c, ...v, worked: str(v.worked?.near) && str(v.worked?.far) ? v.worked : undefined }),
   },
   'keep-apart': {
     shape: '{"a":{"term":"…","is":"…"},"b":{"term":"…","is":"…"},"test":"…","statements":[{"text":"…","side":"a"},{"text":"…","side":"b"},{"text":"…","side":"a"},{"text":"…","side":"b"},{"text":"…","side":"a"},{"text":"…","side":"b"}]}',
@@ -81,11 +82,15 @@ const SPECS: Record<string, Spec> = {
 function frameworkSpec(cur: any): Spec {
   const stages = (cur.stages ?? []).map((s: any, i: number) => `${i + 1}. ${s.name}: ${s.ask}`).join('\n');
   return {
-    shape: '{"topic":"…","recall":[{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"}],"tasks":["…"]}',
-    rules: `The framework is ${cur.framework}. Its stages, in order (keep this order; one task per stage, ${cur.stages?.length ?? 0} tasks):\n${stages}\nEach task is one short classroom task on the topic that does what its stage asks. Six recall terms the class must know first, each meaning in one sentence.`,
-    tokens: 2200,
+    shape: '{"topic":"…","recall":[{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"}],"tasks":["…"],"models":["…"]}',
+    rules: `The framework is ${cur.framework}. Its stages, in order (keep this order; one task per stage, ${cur.stages?.length ?? 0} tasks):\n${stages}\nEach task is one short classroom task on the topic that does what its stage asks. "models" has one model answer per task, in the same order: what a secure student answer says, under 35 words, accurate and specific to the topic. Six recall terms the class must know first, each meaning in one sentence.`,
+    tokens: 2400,
     check: (v) => str(v.topic) && arr(v.recall, 3) && arr(v.tasks, Math.max(1, (cur.stages?.length ?? 1) - 1)),
-    merge: (c, v) => ({ ...c, topic: v.topic, recall: v.recall.slice(0, 6), stages: c.stages.map((s: any, i: number) => ({ ...s, task: str(v.tasks[i]) ? v.tasks[i] : s.task })) }),
+    merge: (c, v) => ({ ...c, topic: v.topic, recall: v.recall.slice(0, 6), stages: c.stages.map((s: any, i: number) => {
+      const task = str(v.tasks[i]) ? v.tasks[i] : s.task, model = Array.isArray(v.models) && str(v.models[i]) ? v.models[i] : undefined;
+      // A new task needs its own model answer: the old one answered the old task.
+      return { ...s, task, model: model ?? (task === s.task ? s.model : undefined) };
+    }) }),
   };
 }
 

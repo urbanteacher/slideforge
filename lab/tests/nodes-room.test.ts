@@ -76,3 +76,46 @@ test('a sort too wide for the phones becomes a written answer', async () => {
   assert.deepEqual(sortQuiz('q', ['RAM', 'Storage'], ['x', 'y'], [0, 1])!.sortBins, ['RAM', 'Both', 'Storage']);
   assert.deepEqual(sortQuiz('q', ['RAM', 'Storage'], ['x', 'y'], [0, 1])!.sortAnswers, [0, 2]);
 });
+
+// Without phones (a show opened with no room): the cue says what to do instead, and every challenge shows its answers.
+test('with no room, each Nodes phones cue says what to do without phones', async () => {
+  const { withoutPhones } = await import('../src/show/steps');
+  const cue = (slides: Slide[]) => slides.flatMap((s) => s.layers.filter((l) => l.name === 'Phones').map((l) => String(l.params.text)));
+  for (const f of NODES) {
+    const shown = withoutPhones(deckOf(f.slides(st, f.starter)));
+    for (const t of cue(shown.slides)) assert.ok(!/PHONES/.test(t), `${f.id}: "${t}"`);
+  }
+  const three = NODES.find((f) => f.id === 'three-answers')!;
+  assert.deepEqual(cue(withoutPhones(deckOf(three.slides(st, three.starter))).slides), ['HANDS UP · A, B OR C']);
+  const step = NODES.find((f) => f.id === 'which-step')!;
+  assert.deepEqual(cue(withoutPhones(deckOf(step.slides(st, step.starter))).slides), ['HANDS UP · WHICH STEP?']);
+  const join = NODES.find((f) => f.id === 'join-it-up')!;
+  assert.match(cue(withoutPhones(deckOf(join.slides(st, join.starter))).slides)[0], /^ON PAPER · /);
+  // The slides themselves are not changed: a room still says phones.
+  assert.match(cue(join.slides(st, join.starter))[0], /^ON PHONES · /);
+});
+
+test('Same link, new case ends on both cases worked through', () => {
+  const f = NODES.find((x) => x.id === 'new-case')!;
+  const slides = f.slides(st, f.starter);
+  const last = slides[slides.length - 1];
+  assert.equal(last.nodes?.role, 'worked');
+  const words = last.layers.map((l) => String(l.params.text ?? '')).join(' | ');
+  assert.match(words, /0\.4 ns/);
+  assert.match(words, /20 ms/);
+  const bare = f.slides(st, { ...(f.starter as object), worked: undefined } as never);
+  assert.ok(!bare.some((s) => s.nodes?.role === 'worked'), 'no worked answers, no slide');
+});
+
+test('every Framework stage shows a model answer on its last click', () => {
+  const f = NODES.find((x) => x.id === 'framework')!;
+  for (const content of [f.starter, ...(f.variants ?? []).map((v) => v.content)]) {
+    const stages = f.slides(st, content as never).filter((s) => /^stage-/.test(s.nodes?.role ?? ''));
+    assert.ok(stages.length >= 13);
+    for (const s of stages) {
+      const i = s.layers.findIndex((l) => l.name === 'Model answer');
+      assert.ok(i > 0, `${s.name}: a model answer`);
+      assert.ok(String(s.layers.find((l) => l.name === 'Model answer — words')!.params.text).length > 20);
+    }
+  }
+});

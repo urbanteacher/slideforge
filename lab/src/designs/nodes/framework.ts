@@ -12,7 +12,7 @@ import { marked } from './types';
 // Challenge a challenge card, Judge a decision chain. It closes on the map again.
 
 export type Backbone = 'U' | 'A' | 'C' | 'X' | 'J';
-export interface FrameworkStage { name: string; ask: string; task: string; outcome: string; backbone: Backbone }
+export interface FrameworkStage { name: string; ask: string; task: string; outcome: string; backbone: Backbone; /** A model answer, shown on the stage's last click. */ model?: string }
 export interface FrameworkRun { framework: string; topic: string; recall: { term: string; meaning: string }[]; stages: FrameworkStage[] }
 
 export const BACKBONE: Record<Backbone, { name: string; color: string }> = {
@@ -153,7 +153,13 @@ export function frameworkSlides(st: LayoutStyle, o: FrameworkRun, format = 'fram
       T(st, 'Aim for — label', `AIM FOR · ${BACKBONE[s.backbone]?.name.toUpperCase()}`, W - LEFT - 362, ty + 20, 340, 30, { weight: '800', size: 20, color: col, tracking: 0.06, fit: 'shrink' }, still),
       T(st, 'Aim for — words', s.outcome, W - LEFT - 362, ty + 56, 340, th - 70, { weight: '700', size: 30, lineHeight: 1.2 }, still),
       ...scaffold(st, s, sy, sh),
-    ], st, `Stage ${i + 1} of ${n}: ${s.name} (${BACKBONE[s.backbone]?.name}). ${s.ask}\nTask: ${s.task}\nAim for: ${s.outcome}`), role: `stage-${i + 1}` };
+      // Without phones too, the class sees what a secure answer looks like: one more click lays it over the scaffold.
+      ...(s.model ? [
+        card(st, 'Model answer', LEFT, sy, W - LEFT * 2, sh, { fill: st.panel, stroke: col }, onClick()),
+        T(st, 'Model answer — label', 'A MODEL ANSWER', LEFT + 44, sy + 28, 900, 36, { weight: '800', size: 26, color: col, tracking: 0.08 }, after()),
+        T(st, 'Model answer — words', s.model, LEFT + 44, sy + 84, W - LEFT * 2 - 88, sh - 116, { weight: '600', size: 46, lineHeight: 1.3 }, after()),
+      ] : []),
+    ], st, `Stage ${i + 1} of ${n}: ${s.name} (${BACKBONE[s.backbone]?.name}). ${s.ask}\nTask: ${s.task}\nAim for: ${s.outcome}${s.model ? `\nModel answer (last click): ${s.model}` : ''}`), role: `stage-${i + 1}` };
   });
   const close = slideOf(`${o.framework} · where did you get to?`, [
     ground(st), label(st, `${o.framework} · ${n} stages`, LEFT, EY, 1400, st.accent, 30),

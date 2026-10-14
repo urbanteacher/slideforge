@@ -33,6 +33,8 @@ export interface NodesRoom {
   answer?: string;
   quiz?: Record<string, unknown> | null;
   open?: Record<string, string>;
+  /** The phones cue's words for a class without phones (default: "On paper ·" and the same task). */
+  paper?: string;
 }
 
 const FORMAT_OF: Record<string, string> = { choice: 'choice', order: 'ranking', compare: 'compare-contrast' };
@@ -44,7 +46,7 @@ export function marked(format: string, slides: { slide: Slide; role: string }[],
   const style = String(room.quiz?.style ?? 'choice');
   const gameFormat = FORMAT_OF[style] ?? 'choice';
   return slides.map(({ slide, role }) => {
-    slide.nodes = { id, format, role, content: structuredClone(content) };
+    slide.nodes = { id, format, role, content: structuredClone(content), ...(room.paper ? { paper: room.paper } : {}) };
     if (room.quiz && role === room.ask) slide.game = { id, format: gameFormat, label: slide.name, role: 'question', key: id, settings, quiz: { type: 'quiz', ...structuredClone(room.quiz) } };
     else if (room.quiz && role === room.answer) slide.game = { id, format: gameFormat, label: slide.name, role: 'answer', key: id, settings };
     else if (room.quiz === null && role === room.ask) slide.feedback = { kind: 'brainstorm', prompt: 'Write your answer', max: 1, hold: true, presentAs: 'rail' };

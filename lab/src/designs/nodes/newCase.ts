@@ -1,12 +1,12 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
-import { LINK, T, barCard, chain, heading, label, pill, still } from './look';
+import { LINK, T, after, barCard, chain, heading, label, onClick, pill, still } from './look';
 import { marked, type NodesFormat } from './types';
 
 // Same link, new case: transfer. Exams test joining, not transfer — of 495 exam parts, 0 asked for strict
 // transfer (Nodes). So each link is tried again unsupported, first on a near case, then a far one, where
 // only the link stays the same.
 
-export interface NewCase { relation: string; near: string; far: string; same: string }
+export interface NewCase { relation: string; near: string; far: string; same: string; /** Each case worked through: the answers slide after the far case. */ worked?: { near: string; far: string } }
 
 // GCSE Computer Science, stage 3 (Nodes src/data/stage-ladders.ts).
 const STARTER: NewCase = {
@@ -14,12 +14,16 @@ const STARTER: NewCase = {
   near: 'Calculate the time for one clock cycle at 2.5 GHz, in nanoseconds.',
   far: 'A wheel turns 50 times a second. How long is one turn, in milliseconds?',
   same: 'The time for one event is the reciprocal of a rate.',
+  worked: {
+    near: '1 ÷ (2.5 × 10⁹ Hz) = 4 × 10⁻¹⁰ s = 0.4 ns',
+    far: '1 ÷ 50 per second = 0.02 s = 20 ms',
+  },
 };
 
 export const newCase: NodesFormat<NewCase> = {
   id: 'new-case', label: 'Same link, new case', part: 'Transfer',
   aim: 'The link, then a near case and a far one, with no support: exams test joining, not transfer, so transfer is practised here.',
-  howTo: ['The link, as a chain.', 'A near case: same topic, new numbers or words. No support.', 'A far case: another context, the same link. What stays the same?'],
+  howTo: ['The link, as a chain.', 'A near case: same topic, new numbers or words. No support.', 'A far case: another context, the same link. What stays the same?', 'Then both worked through, a click each, with what stayed the same.'],
   phones: 'Answer on your own',
   starter: STARTER,
   slides: (st, o) => {
@@ -38,6 +42,22 @@ export const newCase: NodesFormat<NewCase> = {
       heading(st, words, HY + 110, 72, W - LEFT * 2, 320),
       ...pill(st, 'No support', 'No hints on this one', LEFT, FOOT - 80, { fill: rgba(st.ink, 0.08), size: 26 }, still),
     ], st, `${near ? 'Near' : 'Far'} transfer, unsupported: ${words}`);
-    return marked('new-case', [{ slide: linkSlide, role: 'link' }, { slide: task('near', o.near, true), role: 'near' }, { slide: task('far', o.far, false), role: 'far' }], o, { open: { near: o.near, far: o.far } });
+    // The answers, after both cases: each worked through on a click, then the link that carried across.
+    const worked = o.worked?.near && o.worked?.far ? slideOf('Same link, new case · worked', [
+      ground(st), label(st, 'Same link, new case · worked', LEFT, EY, 1300, LINK.J, 30),
+      heading(st, 'Both cases, worked through', HY, 64, W - LEFT * 2, 90),
+      ...[['Near', o.near, o.worked.near], ['Far', o.far, o.worked.far]].flatMap(([k, q, a], i) => {
+        const y = HY + 140 + i * 250, anim = onClick();
+        return [
+          ...barCard(st, `${k} — worked`, LEFT, y, W - LEFT * 2, 220, i ? LINK.C : LINK.A, st.panel, anim),
+          T(st, `${k} — question`, `${k.toUpperCase()} · ${q}`, LEFT + 44, y + 22, W - LEFT * 2 - 88, 60, { weight: '700', size: 28, color: st.muted }, after()),
+          T(st, `${k} — answer`, a, LEFT + 44, y + 92, W - LEFT * 2 - 88, 100, { weight: '700', size: 44, valign: 'middle' }, after()),
+        ];
+      }),
+      ...barCard(st, 'Same', LEFT, FOOT - 150, W - LEFT * 2, 130, LINK.J, rgba(LINK.J, 0.1), onClick()),
+      T(st, 'Same — words', `What stayed the same: ${o.same}`, LEFT + 44, FOOT - 130, W - LEFT * 2 - 88, 90, { weight: '700', size: 36, valign: 'middle' }, after()),
+    ], st, `Worked answers. Near: ${o.worked.near}. Far: ${o.worked.far}. What stayed the same: ${o.same}`) : null;
+    return marked('new-case', [{ slide: linkSlide, role: 'link' }, { slide: task('near', o.near, true), role: 'near' }, { slide: task('far', o.far, false), role: 'far' },
+      ...(worked ? [{ slide: worked, role: 'worked' }] : [])], o, { open: { near: o.near, far: o.far } });
   },
 };

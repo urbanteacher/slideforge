@@ -64,6 +64,6 @@ export const threeAnswers: NodesFormat<ThreeAnswers> = {
     });
     const best = Math.max(0, list.findIndex((a) => a.verdict === 'excellent'));
     return marked('three-answers', [{ slide: ask, role: 'ask' }, ...each], o,
-      { ask: 'ask', answer: each[0]?.role, quiz: choiceQuiz(`${o.question} Which answer is strongest?`, list.map((a) => `Answer ${a.label}`), best, list[best]?.why ?? '') });
+      { ask: 'ask', answer: each[0]?.role, paper: `Hands up · ${list.map((a) => a.label).join(', ').replace(/, ([^,]*)$/, ' or $1')}`, quiz: choiceQuiz(`${o.question} Which answer is strongest?`, list.map((a) => `Answer ${a.label}`), best, list[best]?.why ?? '') });
   },
 };
