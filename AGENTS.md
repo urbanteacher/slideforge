@@ -83,7 +83,7 @@ The 54 activities are in `src/activities/`.
 3. the host (`lab/src/live/`): what the room's question frame sends, the gains, and the wall's reveal;
 4. the phone (`join.html`): an `askQuestion` branch, which must `return` or the generic pads draw too, and the `locked` case;
 5. teacher entry (`js/manual.js`): a way to record it by key;
-6. the wall (`src/render/quiz.js`): a branch placed before the generic options and before any format's early `return`;
+6. the wall (`lab/src/show/StyleViews.tsx`, from the style's `wall()` in `lab/src/live/styles/`): how the room's answers are drawn once revealed;
 7. the rehearsal (`lab/src/rehearse/`): answers and a reveal;
 8. a relay test through `tests/harness.js`.
 

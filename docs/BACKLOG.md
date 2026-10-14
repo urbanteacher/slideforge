@@ -798,6 +798,11 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 14 October 2026 — Legacy print and the classic quiz and live renderers removed; every smoke green
+
+- **Smokes:** `lab-lesson`, `studio-room-truefalse` and `studio-room-type` left full screen before their closing Esc (headless Chrome keeps full screen on a pressed Esc); `layout-slots` and `demo-deck` skip the slide types the studio draws itself.
+- **Deleted:** `js/print.js` and its CSS, the bridge's print half, `src/deck/labshow.js`, and `src/render/quiz.js` and `src/render/live.js` ([lab-engine-plan.md](lab-engine-plan.md), change log). The command-line PDFs (`tools/export-teaching-pdf.mjs`, `AiAd27-Classic/export.mjs`) save the studio's handout. The AiAd27 page numbers in `bundles/wp-instructions.json` changed with it: a poll no longer adds a page.
+
 ### 14 October 2026 — Nodes challenges in the room; resizable studio panels
 
 - **Nodes room** ([nodes-studio-plan.md](nodes-studio-plan.md) step 4): every Nodes format plays in the room. Ranking, a three-column sort or a choice is marked and scored; the open steps take one written answer. Each challenge has its own question key: a shared key had skipped every challenge after the first. Tests: `lab/tests/nodes-room.test.ts` and the `nodes-room` smoke.

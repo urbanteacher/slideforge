@@ -608,3 +608,12 @@ move code out from under it.
 > moved. Constants, regexes and lookup tables are all referenced this way.
 
 **External consumers.** For any name, `grep -rl "SF\.<name>\b" js/ --exclude=render.js`.
+- **2026-10-14** — `src/render/quiz.js` and `src/render/live.js` deleted (about 1,930 lines), with their
+  wiring in `js/render.js` (the two `create…Renderer` calls, `stableShuffle`, the quiz, explain, results,
+  game and join layouts) and 18 SF names: `bossBar`, `chainMap`, `feedbackFocus`, `feedbackRail`,
+  `feedbackViewOpts`, `paintFeedbackRail`, `paintRailJoin`, `paintScoreRail`, `questionCard`, `quizPresent`,
+  `raceTrack`, `railSurface`, `sampleJoinInfo`, `scoreRail`, `soloScore`, `studyCards`, `wordRevealWall`
+  (`sampleFeedbackDigest` stays: `src/deck/feedback.js` puts it on SF). Their only consumer, the classic
+  show and room, went at M14 (`docs/games/m14-deletions.md` §6); the studio draws these slides with its own
+  room and wall. A classic slide of one of those five types that still reaches `SF.renderSlide` (the review
+  tool, `tools/lab-import.mjs`) is drawn as plain content. Baseline re-recorded: 78 SF names, 31 layouts.

@@ -107,8 +107,8 @@ The owner retired the safety net, so nothing routes to classic. Commits on the w
 
 | Kept | Who needs it |
 |---|---|
-| `src/render/quiz.js`, `src/render/live.js` | `js/render.js` draws classic slides with them (the quiz, game, results, join and explain layouts): the figure stills a classic lesson is converted with, the review tool (`js/review.js`), `tools/lab-import.mjs`, and print |
-| `js/print.js`, and the bridge's print half (`printDeck`, `buildPrintDeck`, `printsAsPages`, `buildShowDeck`, `drawShowDeck`, `pictureSlide`) | `tools/export-teaching-pdf.mjs`: the only route to the experiment teaching sheets, which the studio's handout does not print; the `handout`, `exports` and `theme-manifest` smokes check it |
+| ~~`src/render/quiz.js`, `src/render/live.js`~~ | **Deleted 14 Oct 2026.** Nothing a teacher reaches used them: the figure stills draw only figure slides, print never drew quizzes, and the review tool and `tools/lab-import.mjs` now draw those five slide types as plain content (`docs/render-split.md` §7) |
+| ~~`js/print.js`, and the bridge's print half~~ | **Deleted 14 Oct 2026**, with `css/print-teaching.css`, `SF.Experiments.staticState`, `src/deck/labshow.js` and the `labStill` poster. The two command-line PDFs (`tools/export-teaching-pdf.mjs`, `AiAd27-Classic/export.mjs`) save the studio's handout (`SF.LabEngine.handoutHtml`); the experiment teaching-sheet pages are gone (owner's decision) |
 | `lessonFrom`, `ordered`, `carried`, `buildable`, `figureSlide`, `wordsSlide`, `wordsDeck` | the practice notes (Export → .md) |
 | the stills warm-up (`warmShow`) | readies the studio's student PDF, which draws every slide at 1600 |
 | `classicOnly` | a guard reason: SlideForge slides the lab cannot build are refused, not dropped |
@@ -122,6 +122,7 @@ The owner retired the safety net, so nothing routes to classic. Commits on the w
 
 ## Change log
 
+- **14 Oct 2026.** The rest of section 6's "Kept" for print and the renderers went: `js/print.js` and the bridge's print half, and `src/render/quiz.js` and `src/render/live.js`. The command-line PDFs save the studio's handout instead.
 - **13 Oct 2026, the deletion.** Section 6 added: reactions ported, the fallbacks became refusals, and the classic room, player, desk, lab stage and the bridge's show half were deleted. The quiz and live renderers, `js/print.js` and the bridge's print and words halves stay (section 6 says who needs them).
 - **13 Oct 2026, M12.** Section 4a added: Share, the student view and the student PDF run in the studio for lessons it shows (`2d17857`, `37b6cea`, `97de4e3`), so step 5 no longer waits on a lab viewer. Nothing deleted: `view.html`, `js/print.js` and the bridge's `shareDeck` and `printDeck` still serve old links and the lessons the guard keeps classic.
 
