@@ -7,6 +7,7 @@ import ukbtInstitute from '../assets/ukbt/ukbt-institute.svg?inline';
 import blackInAcademia from '../assets/frontiers/black-in-academia.png?inline';
 import nulLogo from '../assets/nul/nu-london-logo.png?inline';
 import nulMonogram from '../assets/nul/nu-monogram.svg?raw';
+import ycLogo from '../assets/youth-charter/yc-logo.png?inline';
 
 // Palettes a teacher picks from, each already three grounds. A deck in one colour is the easy
 // mistake; a palette here always comes as three surfaces that work together, the way the AI
@@ -155,6 +156,26 @@ const CAMPAIGNS: PalettePreset[] = [
     ],
     marks: [{ name: 'UKBT Institute logo', src: ukbtInstitute }, { name: 'Black in Academia logo', src: blackInAcademia }],
     display: 'Uncut Sans', displayWeight: '700', body: 'Uncut Sans',
+  },
+  {
+    // Youth Charter, Street and Matchday (css/youth-charter.css): a street poster for a room of teenagers.
+    // Newsprint for the working slides, the charity's navy for the quiet ones, its red for the loud ones,
+    // and the highlighter as the pop (navy on it 8.9:1; it never carries white). Impact for the headlines,
+    // as the theme sets them: the one heavy condensed face on every Windows and Mac classroom machine.
+    id: 'youth-charter', name: 'Youth Charter', source: 'Youth Charter packs · css/youth-charter.css',
+    light: '#f3efe6', dark: '#16203a', loud: '#e21c21', loudInk: '#ffffff', accent2: '#224476',
+    quiet: { ground: '#12284a', ink: '#ffffff' },
+    sets: [
+      { loud: '#e21c21', deep: '#12284a', ink: '#ffffff' }, { loud: '#224476', deep: '#12284a', ink: '#ffffff' },
+      { loud: '#ffe14d', deep: '#224476', ink: '#16203a' },
+    ],
+    named: [
+      { name: 'youth charter navy', value: '#224476' }, { name: 'navy deep', value: '#12284a' }, { name: 'youth charter red', value: '#e21c21' },
+      { name: 'red deep', value: '#a8120f' }, { name: 'highlighter', value: '#ffe14d' }, { name: 'newsprint', value: '#f3efe6' },
+      { name: 'ink', value: '#16203a' }, { name: 'dim', value: '#4f5868' },
+    ],
+    marks: [{ name: 'Youth Charter logo', src: ycLogo }],
+    display: 'Impact', displayWeight: '400', body: 'Inter',
   },
   {
     // css/aiad27.css: cream, ink and five brights with their deeps, set in Uncut Sans.

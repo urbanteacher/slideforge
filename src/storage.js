@@ -45,6 +45,7 @@ export const LIBRARY_GROUPS = [
   { id: 'nodes', label: 'Nodes' },
   { id: 'aiad26', label: 'AI Awareness Day 2026' },
   { id: 'aiad27', label: 'AI Awareness Day 2027' },
+  { id: 'youth-charter', label: 'Youth Charter' },
   { id: 'other', label: 'Other' }
 ];
 
@@ -59,6 +60,8 @@ export function libraryGroupFromTheme(theme) {
      everything else. */
   if (theme && theme.indexOf('aiad26-') === 0) return 'aiad26';
   if (theme && theme.indexOf('aiad27-') === 0) return 'aiad27';
+  /* Street and Matchday: one charity, one folder. */
+  if (theme && theme.indexOf('youth-charter') === 0) return 'youth-charter';
   return 'other';
 }
 

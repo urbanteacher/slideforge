@@ -166,6 +166,16 @@
   "file": "assets/lab-lessons/ukbt-template.lesson.json",
   "hash": "8c034ac87056a61a",
   "carried": 16
+ },
+ "yc-soccerwise-ai": {
+  "file": "assets/lab-lessons/yc-soccerwise-ai.lesson.json",
+  "hash": "19ec1272a7529b9c",
+  "carried": 16
+ },
+ "yc-youthwise-ai": {
+  "file": "assets/lab-lessons/yc-youthwise-ai.lesson.json",
+  "hash": "015580b27d7d5a62",
+  "carried": 16
  }
 };
 })(typeof window !== 'undefined' ? window : globalThis);

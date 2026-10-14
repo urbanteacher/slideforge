@@ -17477,6 +17477,7 @@
     { id: "nodes", label: "Nodes" },
     { id: "aiad26", label: "AI Awareness Day 2026" },
     { id: "aiad27", label: "AI Awareness Day 2027" },
+    { id: "youth-charter", label: "Youth Charter" },
     { id: "other", label: "Other" }
   ];
   function libraryGroupFromTheme(theme) {
@@ -17486,6 +17487,7 @@
     if (theme === "nodes") return "nodes";
     if (theme && theme.indexOf("aiad26-") === 0) return "aiad26";
     if (theme && theme.indexOf("aiad27-") === 0) return "aiad27";
+    if (theme && theme.indexOf("youth-charter") === 0) return "youth-charter";
     return "other";
   }
   function normalizeLibraryGroup(raw, theme) {

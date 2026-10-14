@@ -34,7 +34,7 @@ export function nodeLessons() {
   const context = { window: {}, console, localStorage, Date };
   context.globalThis = context;
   vm.createContext(context);
-  for (const f of ['js/model.js', 'js/lessons.js', 'js/lessons-ipdv-week4.js', 'js/lessons-ipdv-week5.js', 'js/lessons-ipdv-week7.js', 'js/lesson-hash.js']) {
+  for (const f of ['js/model.js', 'js/lessons.js', 'js/lessons-ipdv-week4.js', 'js/lessons-ipdv-week5.js', 'js/lessons-ipdv-week7.js', 'js/lessons-youth-charter.js', 'js/lesson-hash.js']) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), context);
   }
   const SF = context.window.SF;

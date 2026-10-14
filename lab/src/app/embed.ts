@@ -70,6 +70,8 @@ function paletteFor(theme = ''): { palette: string; frame: boolean; set?: string
   }
   if (theme.startsWith('ukbt-institute')) return { palette: 'ukbt-institute', frame: false };
   if (theme.startsWith('ukbt')) return { palette: 'ukbt', frame: false };
+  // Street and Matchday share the palette: Matchday differs only in the pitch drawn on its dark grounds.
+  if (theme.startsWith('youth-charter')) return { palette: 'youth-charter', frame: false };
   const m = /^(aiad2[67])(?:-([a-z]+))?/.exec(theme);
   if (m) {
     const i = STRANDS.indexOf(m[2] ?? '');

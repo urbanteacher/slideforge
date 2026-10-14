@@ -44,6 +44,8 @@ export const FONTS = [
   'Poppins',
   // Nodes' face (Google Fonts), wide for the wordmark.
   'Archivo',
+  // Installed on every Windows and Mac machine: Youth Charter's headline face (css/youth-charter.css).
+  'Impact',
 ];
 
 export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [
