@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 and 3 are built (14 October): the schema, the keep-alive and the sign-in. They come alive when the owner creates the project (section 6, step 2).
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 and 3 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment and the Auth redirect URLs wait on the owner.
 
 ## 1. The problem
 
@@ -146,6 +146,8 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 4. **Built-in lessons:** keep them in the code (simple, versioned with the app), or move them to the shared online folder (step 7)?
 
 ## Change log
+
+- 14 October 2026, evening: the SlideForge project created in London through the Supabase connection, and `0001_lessons.sql` applied (with `execute_sql`, so it is not in the project's migration history; its `drop policy` lines were left out, as the project was new). Checked: four tables with Row Level Security, five policies, the private `media` bucket, nulondon.ac.uk allowed. With the public key alone, lessons read empty, and writing a lesson or a domain is refused (401). `.env` holds the URL and anon key, and localhost shows Sign in.
 
 - 14 October 2026, later: step 3 built, the email magic-link sign-in (`js/cloud.js`), hidden until the project exists.
 - 14 October 2026: teachers only and an email magic link decided. Step 2's code built: the schema with Row Level Security and the teachers-only rule, the private media bucket, the weekly keep-alive, and `/api/cloud-config`. The project itself waits on the owner.
