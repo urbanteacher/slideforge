@@ -798,6 +798,11 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 14 October 2026 — An older Lesson-studio copy of a lesson with live figures presents again
+
+- **Bug:** Present refused IPDV Week 5 on Render: *"Live figure · Find the United Kingdom" has a live figure the lesson does not carry*. The browser's saved copy had been carried to converter version 15 after the lesson was filed again under new slide ids, so the carry matched no figure by id and marked the copy up to date anyway.
+- **Fix:** `carryDeckFigures` (`lab/src/decks/fromSlideForge.ts`) matches a stand-in by id, then title, then place among the figures left; `lab/src/app/embed.ts` mends an up-to-date copy that still lacks a figure each time it opens. Pinned in `tests/lab-convert.test.js`; `node tools/smoke/run.mjs stale-figure` breaks Week 5's saved copy that way and presents it (fails before the fix).
+
 ### 14 October 2026 — Legacy print and the classic quiz and live renderers removed; every smoke green
 
 - **Smokes:** `lab-lesson`, `studio-room-truefalse` and `studio-room-type` left full screen before their closing Esc (headless Chrome keeps full screen on a pressed Esc); `layout-slots` and `demo-deck` skip the slide types the studio draws itself.
