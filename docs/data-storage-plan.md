@@ -117,7 +117,7 @@ Each step is its own commit and works on its own.
 3. **Sign-in: an email magic link, teachers only. Built 14 October; live once the project exists.** Signed out, the app is as today.
    - `js/cloud.js` (`SF.Cloud`): asks the relay for the project (`/api/cloud-config`). With none, nothing shows, and the Supabase library is never loaded.
    - With one, it loads `@supabase/supabase-js` 2.45.4 from jsDelivr, pinned, and the header gains **Sign in**.
-   - The dialog takes a work email. An email outside `allowed_domains` is refused before anything is sent. A work email is sent a magic link (the PKCE flow) that brings the teacher back to the page they were on, signed in. The button then names them, and the dialog signs out.
+   - The dialog takes a work email. An email outside `allowed_domains` is refused before anything is sent. A work email is sent a magic link that brings the teacher back to the page they were on, signed in. It uses the implicit flow, so the link works in whichever browser opens it (a phone, say); PKCE would complete only in the browser that asked. The button then names them, and the dialog signs out.
    - Checked by `tools/smoke/cloud-signin.mjs` (in the CI set), against a stand-in for Supabase. The real email can only be tried once the project exists.
 4. **Sync lessons.**
    - On save, write locally, then push to Supabase.
@@ -147,6 +147,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 14 October 2026, later: the sign-in link works in any browser (the implicit flow in place of PKCE).
 - 14 October 2026, later: the allowed domain changed from nulondon.ac.uk to urbanteacher.co.uk, in the project and in `0001_lessons.sql`.
 - 14 October 2026, evening: the SlideForge project created in London through the Supabase connection, and `0001_lessons.sql` applied (with `execute_sql`, so it is not in the project's migration history; its `drop policy` lines were left out, as the project was new). Checked: four tables with Row Level Security, five policies, the private `media` bucket, nulondon.ac.uk allowed. With the public key alone, lessons read empty, and writing a lesson or a domain is refused (401). `.env` holds the URL and anon key, and localhost shows Sign in.
 
