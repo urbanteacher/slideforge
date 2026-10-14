@@ -17,11 +17,18 @@ const USER = { id: 'u-teacher', email: 'mark@urbanteacher.co.uk' };
 
 /* The account's documents table, as the stand-in's backend: rows by id (one teacher). */
 const table = new Map();
+/* The account's assets table and media bucket: hash → row, path → { type, base64 }. */
+const assets = new Map();
+const bucket = new Map();
 const db = (op) => {
   if (op.do === 'list') return [...table.values()].map(({ body, ...r }) => r);
   if (op.do === 'get') { const r = table.get(op.id); return r && r.kind === op.kind ? { body: r.body } : null; }
   if (op.do === 'upsert') { table.set(op.row.id, JSON.parse(JSON.stringify(op.row))); return null; }
   if (op.do === 'update') { const r = table.get(op.id); if (r) Object.assign(r, op.patch); return null; }
+  if (op.do === 'assets') return [...assets.values()].map((a) => ({ hash: a.hash }));
+  if (op.do === 'asset') { assets.set(op.row.hash, op.row); return null; }
+  if (op.do === 'upload') { if (bucket.has(op.path)) return { error: { message: 'The resource already exists', statusCode: '409' } }; bucket.set(op.path, { type: op.type, b64: op.b64 }); return { ok: true }; }
+  if (op.do === 'download') return bucket.get(op.path) || null;
   throw new Error('unknown op ' + op.do);
 };
 
@@ -47,7 +54,22 @@ const FAKE = `window.supabase = { createClient() {
       signInWithOtp: () => Promise.resolve({ error: null }),
       signOut: () => Promise.resolve({ error: null }),
     },
-    from: (t) => t === 'documents' ? docs() : { select: () => Promise.resolve({ data: [{ domain: 'urbanteacher.co.uk' }] }) },
+    from: (t) => t === 'documents' ? docs()
+      : t === 'assets' ? { select: () => call({ do: 'assets' }), upsert: (row) => call({ do: 'asset', row }) }
+      : { select: () => Promise.resolve({ data: [{ domain: 'urbanteacher.co.uk' }] }) },
+    storage: { from: () => ({
+      upload: async (path, blob, o) => {
+        const b64 = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
+        const r = await window.__db({ do: 'upload', path, type: o.contentType, b64 });
+        return r && r.error ? { data: null, error: r.error } : { data: { path }, error: null };
+      },
+      download: async (path) => {
+        const r = await window.__db({ do: 'download', path });
+        if (!r) return { data: null, error: { message: 'Object not found' } };
+        const bytes = Uint8Array.from(atob(r.b64), (c) => c.charCodeAt(0));
+        return { data: new Blob([bytes], { type: r.type }), error: null };
+      },
+    }) },
   };
 } };`;
 
@@ -123,6 +145,38 @@ try {
   assert.equal(await a.evaluate(() => SF.Store.get('sync-classic')), null, 'the deleted lesson does not come back to A');
   assert.equal(back.down, 0);
   step('a deletion on A is marked online, does not come back to A, and leaves B’s copy alone');
+
+  // ---- pictures: kept in the bucket once, a reference in the online lesson, whole again on the other device
+  const picture = await a.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 240; c.height = 240;
+    const g = c.getContext('2d');
+    const img = g.createImageData(240, 240);
+    for (let i = 0; i < img.data.length; i++) img.data[i] = (i % 4 === 3) ? 255 : (Math.random() * 256) | 0;
+    g.putImageData(img, 0, 0);
+    return c.toDataURL('image/png');
+  });
+  assert.ok(picture.length > 20000, 'a real picture, not an icon');
+  await a.evaluate((src) => {
+    for (const [id, title] of [['sync-pics-1', 'Pictures one'], ['sync-pics-2', 'Pictures two']]) {
+      const d = SF.makeDeck(title); d.id = id; d.slides = [SF.normalizeSlide({ type: 'image', title: 'A leaf', image: src })];
+      SF.Store.save(d, { force: true });
+    }
+  }, picture);
+  await sync(a);
+  const online = JSON.stringify(table.get('sync-pics-1').body);
+  assert.ok(!online.includes('data:image/'), 'the online lesson holds no embedded picture');
+  assert.match(online, /sf-asset:[0-9a-f]{64}\.png/);
+  assert.equal(bucket.size, 1, 'the picture used in two lessons is stored once');
+  assert.equal(assets.size, 1);
+  assert.ok([...bucket.keys()][0].startsWith(USER.id + '/'), 'in the teacher’s own folder');
+  assert.ok(online.length < picture.length / 4, `the online lesson is small (${online.length} characters, the picture ${picture.length})`);
+  await sync(b);
+  const onB2 = await b.evaluate(() => [SF.Store.get('sync-pics-1')?.slides[0]?.image, SF.Store.get('sync-pics-2')?.slides[0]?.image]);
+  assert.equal(onB2[0], picture, 'device B has the picture back, exactly');
+  assert.equal(onB2[1], picture);
+  const again = await sync(b);
+  assert.equal(again.up, 0, 'putting the pictures back is not a change to upload');
+  step(`pictures: one copy in the bucket for two lessons, a ${online.length}-character online lesson, the exact picture back on device B`);
 
   // ---- the dialog says so
   const line = await a.evaluate(() => document.getElementById('accountSync').textContent);

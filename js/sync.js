@@ -13,8 +13,11 @@
    - deleted here, after being in step:     marked deleted online (and so on every device's next pass);
    - deleted online:                        left here untouched (a deletion never removes the only copy a
                                             device has; delete it here too if it should go).
-   Pictures are still inside the lessons (step 5 moves them to the bucket), so a lesson over 12 MB is not uploaded
-   and the account dialog says so.
+   Pictures and videos (step 5): this browser's copy keeps them inside the lesson, as the editor, Export and Share
+   expect. The online copy does not: each embedded picture is stored once in the account's private bucket (media,
+   under the teacher's own folder, named by its SHA-256), and the online lesson holds "sf-asset:<hash>.<ext>" in its
+   place. Downloading puts the pictures back, so a lesson arrives whole. A picture used in many lessons is stored
+   once. A lesson still over 12 MB without its pictures is not uploaded, and the account dialog says so.
 
    SF.Sync
      now()      a promise of a pass: { up, down, kept, skipped: [titles], error }
@@ -27,6 +30,9 @@
   var EVERY_MS = 30000;
   var MAX_BYTES = 12 * 1024 * 1024;
   var KEY = 'slideforge.sync.v1.';
+  /* The online form: 2 keeps pictures in the bucket (step 5). A document last uploaded in an older form is uploaded
+     once more, so pictures already online move to the bucket too. */
+  var FORM = 2;
 
   /** @type {any} */ var last = null;
   /** @type {Promise<any> | null} */ var running = null;
@@ -91,6 +97,87 @@
     return bodyOf(d).then(function (b) { return b ? SF.History.snapshot(b, 'Before a newer copy came from another device') : null; }).catch(function () {});
   }
 
+  /* ------------------------------------------------------------ pictures to the bucket, and back */
+  var EMBEDDED = /data:((?:image|video|audio)\/[a-z0-9.+-]+);base64,[A-Za-z0-9+/=]+/gi;
+  var REF = /sf-asset:([0-9a-f]{64})\.([a-z0-9]+)/g;
+  var SMALL = 2048;   // a tiny picture (an icon) stays in the lesson: not worth a request of its own
+  var EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/avif': 'avif', 'video/mp4': 'mp4', 'video/webm': 'webm', 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/wav': 'wav' };
+  var TYPE = Object.keys(EXT).reduce(function (o, t) { o[EXT[t]] = t; return o; }, /** @type {any} */ ({}));
+  /** @type {Record<string, true>} */ var stored = {};       // hashes already in the bucket, this account
+  /** @type {Record<string, string>} */ var pictures = {};   // hash → data URL, as downloaded this session
+
+  /** Every string in a document, rewritten by `fn` (which may resolve later). @param {any} v @param {(s: string) => Promise<string>} fn */
+  function mapStrings(v, fn) {
+    if (typeof v === 'string') return fn(v);
+    if (Array.isArray(v)) return Promise.all(v.map(function (x) { return mapStrings(x, fn); }));
+    if (v && typeof v === 'object') {
+      var keys = Object.keys(v);
+      return Promise.all(keys.map(function (k) { return mapStrings(v[k], fn); })).then(function (vals) {
+        var out = /** @type {any} */ ({}); keys.forEach(function (k, i) { out[k] = vals[i]; }); return out;
+      });
+    }
+    return Promise.resolve(v);
+  }
+  /** @param {ArrayBuffer} buf */
+  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+
+  /** One embedded picture put in the bucket (once), and its reference. @param {any} client @param {string} url @param {string} type */
+  function store(client, url, type) {
+    return fetch(url).then(function (r) { return r.blob(); }).then(function (blob) {
+      return blob.arrayBuffer().then(function (buf) { return crypto.subtle.digest('SHA-256', buf); }).then(function (d) {
+        var hash = hex(d), ext = EXT[type.toLowerCase()] || 'bin', ref = 'sf-asset:' + hash + '.' + ext;
+        pictures[hash] = url;
+        if (stored[hash]) return ref;
+        var path = userId + '/' + hash + '.' + ext;
+        return client.storage.from('media').upload(path, blob, { contentType: type, upsert: false }).then(function (/** @type {any} */ r) {
+          // Already there (another lesson, another device): the same bytes, by its name.
+          if (r && r.error && !/exists|duplicate|409/i.test(String(r.error.message || r.error.statusCode || ''))) throw new Error('a picture could not be stored online: ' + (r.error.message || 'the bucket refused it'));
+          return client.from('assets').upsert({ hash: hash, path: path, bytes: blob.size, type: type }, { onConflict: 'owner,hash' }).then(check);
+        }).then(function () { stored[hash] = true; return ref; });
+      });
+    });
+  }
+
+  /** The online copy of a document: its embedded pictures in the bucket, a reference in their place. @param {any} client @param {any} body */
+  function withRefs(client, body) {
+    return mapStrings(body, function (text) {
+      if (text.length < SMALL || text.indexOf('data:') < 0) return Promise.resolve(text);
+      var found = text.match(EMBEDDED) || [];
+      var big = found.filter(function (m) { return m.length >= SMALL; });
+      if (!big.length) return Promise.resolve(text);
+      // One at a time, in order: a lesson can carry dozens of pictures, and the free plan is small.
+      return big.reduce(function (chain, m) {
+        return chain.then(function (acc) {
+          var type = /^data:([^;]+);/.exec(m)[1];
+          return store(client, m, type).then(function (ref) { return acc.split(m).join(ref); });
+        });
+      }, Promise.resolve(text));
+    });
+  }
+
+  /** A blob as a data URL. @param {Blob} blob */
+  function dataUrl(blob) {
+    return new Promise(function (resolve, reject) { var fr = new FileReader(); fr.onload = function () { resolve(String(fr.result)); }; fr.onerror = reject; fr.readAsDataURL(blob); });
+  }
+  /** A downloaded document with its pictures back in it. @param {any} client @param {any} body */
+  function withPictures(client, body) {
+    return mapStrings(body, function (text) {
+      if (text.indexOf('sf-asset:') < 0) return Promise.resolve(text);
+      var refs = text.match(REF) || [];
+      return refs.reduce(function (chain, ref) {
+        return chain.then(function (acc) {
+          var m = /sf-asset:([0-9a-f]{64})\.([a-z0-9]+)/.exec(ref), hash = m[1], ext = m[2];
+          var got = pictures[hash] ? Promise.resolve(pictures[hash]) : client.storage.from('media').download(userId + '/' + hash + '.' + ext).then(function (/** @type {any} */ r) {
+            if (r && r.error) throw new Error('a picture could not be fetched: ' + (r.error.message || 'not found'));
+            var blob = r.data.type ? r.data : new Blob([r.data], { type: TYPE[ext] || 'application/octet-stream' });
+            return dataUrl(blob).then(function (u) { pictures[hash] = u; stored[hash] = true; return u; });
+          });
+          return got.then(function (u) { return acc.split(ref).join(u); });
+        });
+      }, Promise.resolve(text));
+    });
+  }
+
   /** A fingerprint of a document's content, its own modified time left out (a re-save that changed nothing must not
       upload again). FNV-1a over its JSON. @param {any} body */
   function fingerprint(body) {
@@ -109,8 +196,10 @@
     var st = readState(), up = 0, down = 0, kept = 0, skipped = [], sent = [], touched = {};
     return Promise.all([
       localDocs(),
-      client.from('documents').select('id,kind,title,modified,deleted').then(check)
+      client.from('documents').select('id,kind,title,modified,deleted').then(check),
+      client.from('assets').select('hash').then(check)
     ]).then(function (got) {
+      (got[2].data || []).forEach(function (/** @type {any} */ a) { stored[a.hash] = true; });
       var here = {}, there = {};
       got[0].forEach(function (/** @type {any} */ d) { here[d.kind + ':' + d.id] = d; });
       (got[1].data || []).forEach(function (/** @type {any} */ r) { there[r.kind + ':' + r.id] = Object.assign({}, r, { modified: Date.parse(r.modified) || 0 }); });
@@ -119,7 +208,7 @@
       return keys.reduce(function (chain, k) {
         return chain.then(function () {
           var l = here[k], r = there[k], s = st[k];
-          var localChanged = !!l && (!s || l.modified > s.l);
+          var localChanged = !!l && (!s || l.modified > s.l || s.v !== FORM);
           var remoteChanged = !!r && !r.deleted && (!s || r.modified > s.r);
           if (l && (!r || r.deleted && !s)) return push(l);
           if (!l && r && !r.deleted) {
@@ -137,28 +226,31 @@
       function push(l) {
         return bodyOf(l).then(function (body) {
           if (!body) return;
-          var size = JSON.stringify(body).length;
-          if (size > MAX_BYTES) { skipped.push(l.title); return; }
           var k = l.kind + ':' + l.id, fp = fingerprint(body), was = st[k];
           // Saved again with nothing changed: in step already, at its new time.
-          if (was && was.h === fp && there[k] && !there[k].deleted) { st[k] = { l: l.modified, r: was.r, h: fp }; return; }
-          var at = new Date(l.modified || Date.now()).toISOString();
-          return client.from('documents').upsert({ id: l.id, kind: l.kind, title: l.title, folder: l.folder, modified: at, deleted: false, body: body }, { onConflict: 'owner,id' })
-            .then(check).then(function () { up++; sent.push(k); st[k] = { l: l.modified, r: Date.parse(at), h: fp }; });
+          if (was && was.h === fp && was.v === FORM && there[k] && !there[k].deleted) { st[k] = { l: l.modified, r: was.r, h: fp, v: FORM }; return; }
+          return withRefs(client, body).then(function (online) {
+            if (JSON.stringify(online).length > MAX_BYTES) { skipped.push(l.title); return; }
+            var at = new Date(l.modified || Date.now()).toISOString();
+            return client.from('documents').upsert({ id: l.id, kind: l.kind, title: l.title, folder: l.folder, modified: at, deleted: false, body: online }, { onConflict: 'owner,id' })
+              .then(check).then(function () { up++; sent.push(k); st[k] = { l: l.modified, r: Date.parse(at), h: fp, v: FORM }; });
+          });
         });
       }
       /** @param {any} r */
       function pull(r) {
         return client.from('documents').select('body').eq('id', r.id).eq('kind', r.kind).single().then(check).then(function (/** @type {any} */ res) {
-          var fp = fingerprint(res.data.body);
-          return file(r.kind, res.data.body).then(function () { down++; touched[r.kind + ':' + r.id] = { r: r.modified, h: fp }; });
+          return withPictures(client, res.data.body);
+        }).then(function (/** @type {any} */ body) {
+          var fp = fingerprint(body);
+          return file(r.kind, body).then(function () { down++; touched[r.kind + ':' + r.id] = { r: r.modified, h: fp }; });
         });
       }
     }).then(function () {
       // Filing a download stamps it as modified now, here: that stamp is what "in step" is measured from.
       if (!Object.keys(touched).length) return;
       return localDocs().then(function (docs) {
-        docs.forEach(function (d) { var k = d.kind + ':' + d.id; if (k in touched) st[k] = { l: d.modified, r: touched[k].r, h: touched[k].h }; });
+        docs.forEach(function (d) { var k = d.kind + ':' + d.id; if (k in touched) st[k] = { l: d.modified, r: touched[k].r, h: touched[k].h, v: FORM }; });
       });
     }).then(function () {
       writeState(st);
@@ -185,6 +277,7 @@
   function start(/** @type {any} */ u) {
     clearInterval(timer);
     userId = u && u.id ? String(u.id) : '';
+    stored = {}; pictures = {};
     if (!userId) return;
     now();
     timer = setInterval(now, EVERY_MS);
