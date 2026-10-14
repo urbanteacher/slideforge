@@ -169,7 +169,7 @@
  },
  "yc-premier-league-ai": {
   "file": "assets/lab-lessons/yc-premier-league-ai.lesson.json",
-  "hash": "4dcb34c535735d61",
+  "hash": "6f10052f15f3e136",
   "carried": 16
  },
  "yc-soccerwise-ai": {

@@ -5698,6 +5698,7 @@
     display: "Impact, Haettenschweiler, 'Arial Narrow Bold', 'Franklin Gothic Heavy', sans-serif",
     sans: "'Helvetica Neue', Helvetica, Arial, sans-serif"
   };
+  var ART = { w: 788, h: 576 };
   var MAP2 = { x: 36, y: 112, w: 788, h: 576 };
   var PANEL = { x: 852, y: 112, w: 392, h: 576 };
   var ZONES = [
@@ -5734,6 +5735,10 @@
     /** @param {any} fig */
     mount: function(fig) {
       var d = fig.data || {}, svg = fig.svg, zones = d.zones || {};
+      var list = Array.isArray(fig.steps) ? fig.steps : [];
+      var paged = list.length === 1 && list[0] && list[0].zone && list[0].zone !== "all" && list[0].zone !== "cloud";
+      MAP2 = paged ? { x: 36, y: 112, w: 668, h: 576 } : { x: 36, y: 112, w: 788, h: 576 };
+      PANEL = paged ? { x: 728, y: 112, w: 516, h: 576 } : { x: 852, y: 112, w: 392, h: 576 };
       var defs = el("defs", {}, svg);
       var clip = el("clipPath", { id: "stadium-clip" }, defs);
       el("rect", { x: MAP2.x, y: MAP2.y, width: MAP2.w, height: MAP2.h, rx: 18 }, clip);
@@ -5751,8 +5756,8 @@
       el("rect", { x: MAP2.x, y: MAP2.y, width: MAP2.w, height: MAP2.h, fill: YC.night }, frame);
       var map = el("g", {}, frame);
       var art = el("g", { transform: "translate(" + MAP2.x + " " + MAP2.y + ")" }, map);
-      for (var gx = 40; gx < MAP2.w; gx += 80) el("line", { x1: gx, y1: 0, x2: gx, y2: MAP2.h, stroke: "rgba(255,255,255,.04)", "stroke-width": 10 }, art);
-      for (var gy = 40; gy < MAP2.h; gy += 80) el("line", { x1: 0, y1: gy, x2: MAP2.w, y2: gy, stroke: "rgba(255,255,255,.04)", "stroke-width": 10 }, art);
+      for (var gx = 40; gx < ART.w; gx += 80) el("line", { x1: gx, y1: 0, x2: gx, y2: ART.h, stroke: "rgba(255,255,255,.04)", "stroke-width": 10 }, art);
+      for (var gy = 40; gy < ART.h; gy += 80) el("line", { x1: 0, y1: gy, x2: ART.w, y2: gy, stroke: "rgba(255,255,255,.04)", "stroke-width": 10 }, art);
       el("rect", { x: 176, y: 112, width: 436, height: 362, rx: 70, fill: YC.navy, stroke: "#2d5592", "stroke-width": 3 }, art);
       for (var r = 0; r < 5; r++) el("rect", { x: 188 + r * 14, y: 124 + r * 13, width: 412 - r * 28, height: 338 - r * 26, rx: 62 - r * 8, fill: "none", stroke: "rgba(255,255,255,.10)", "stroke-width": 4 }, art);
       var seed = 7;
@@ -5858,7 +5863,7 @@
           cx = 230;
           cy = 180;
         }
-        el("path", { d: "M" + cx + " " + cy + "Q" + (cx + CLOUD[0]) / 2 + " " + (Math.min(cy, CLOUD[1]) - 10) + " " + CLOUD[0] + " " + (CLOUD[1] + 18), fill: "none", stroke: YC.pop, "stroke-width": 2.5, "stroke-dasharray": "3 7", opacity: 0.9 }, flows);
+        el("path", { d: "M" + cx + " " + cy + "Q" + (cx + CLOUD[0]) / 2 + " " + (Math.min(cy, CLOUD[1]) - 10) + " " + CLOUD[0] + " " + (CLOUD[1] + 18), fill: "none", stroke: YC.pop, "stroke-width": 2, "stroke-dasharray": "3 8", opacity: 0.75 }, flows);
       });
       var shade2 = el("path", { fill: "rgba(5,12,26,.62)", "fill-rule": "evenodd", "pointer-events": "none", opacity: 0 }, art);
       var zoneLayer = el("g", {}, art);
@@ -5875,14 +5880,7 @@
       });
       var cards = el("g", { "pointer-events": "none" }, svg);
       var panel2 = el("g", {}, svg);
-      function line(g, text2, x, y, size, fill2, width, extra) {
-        var lines = wrap(text2, size, width);
-        lines.forEach(function(ln, k) {
-          el("text", Object.assign({ x, y: y + k * size * 1.28, "font-family": YC.sans, "font-size": size, fill: fill2 }, extra || {}), g, ln);
-        });
-        return y + lines.length * size * 1.28;
-      }
-      function paintPanel(info, tag) {
+      function frameOf(tag, name, k) {
         panel2.textContent = "";
         var P = PANEL, x = P.x + 28, wide = P.w - 56;
         el("rect", { x: P.x + 6, y: P.y + 6, width: P.w, height: P.h, rx: 14, fill: YC.red }, panel2);
@@ -5890,27 +5888,104 @@
         el("rect", { x: P.x, y: P.y, width: P.w, height: 96, rx: 14, fill: YC.navy }, panel2);
         el("rect", { x: P.x, y: P.y + 80, width: P.w, height: 16, fill: YC.navy }, panel2);
         if (tag) el("text", { x, y: P.y + 32, "font-family": YC.sans, "font-size": 14, "font-weight": 700, "letter-spacing": 2.2, fill: YC.pop }, panel2, tag.toUpperCase());
-        var nameLines = wrap(String(info.name || "").toUpperCase(), 32, wide);
-        nameLines.slice(0, 2).forEach(function(ln, k) {
-          el("text", { x, y: P.y + (nameLines.length > 1 ? 60 : 72) + k * 30, "font-family": YC.display, "font-size": nameLines.length > 1 ? 28 : 34, fill: "#ffffff" }, panel2, ln);
+        var size = Math.round(34 * Math.min(1, k + 0.1)), nameLines = wrap(String(name || "").toUpperCase(), size, wide);
+        if (nameLines.length > 1) {
+          size = 28;
+          nameLines = wrap(String(name || "").toUpperCase(), size, wide);
+        }
+        nameLines.slice(0, 2).forEach(function(ln, i) {
+          el("text", { x, y: P.y + (nameLines.length > 1 ? 60 : 72) + i * 30, "font-family": YC.display, "font-size": size, fill: "#ffffff" }, panel2, ln);
         });
-        var y = P.y + 128;
-        function section(head, body, size) {
-          if (!body) return;
-          el("text", { x, y, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.red }, panel2, head);
-          y = line(panel2, body, x, y + 24, size, YC.ink, wide, null) + 12;
+        return { x, wide };
+      }
+      function block(head, body, x, y, size, width, draw) {
+        if (!body) return y;
+        if (draw) el("text", { x, y, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.red }, panel2, head);
+        var lines = wrap(body, size, width);
+        if (draw) lines.forEach(function(ln, i) {
+          el("text", { x, y: y + 22 + size * 0.2 + i * size * 1.28, "font-family": YC.sans, "font-size": size, fill: YC.ink }, panel2, ln);
+        });
+        return y + 22 + lines.length * size * 1.28 + 14;
+      }
+      function askBar(ask, x, wide, size, draw) {
+        if (!ask) return PANEL.y + PANEL.h;
+        var lines = wrap(ask, size, wide - 28), h = lines.length * size * 1.25 + 46, top = PANEL.y + PANEL.h - 22 - h;
+        if (!draw) return top;
+        el("rect", { x: x - 8, y: top, width: wide + 16, height: h, rx: 8, fill: YC.pop }, panel2);
+        el("text", { x: x + 6, y: top + 24, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.ink }, panel2, "ASK THE ROOM");
+        lines.forEach(function(ln, i) {
+          el("text", { x: x + 6, y: top + 30 + size + i * size * 1.25, "font-family": YC.sans, "font-size": size, "font-weight": 700, fill: YC.ink }, panel2, ln);
+        });
+        return top;
+      }
+      function chips(kinds, x, y, wide, draw) {
+        if (!kinds || !kinds.length) return y;
+        if (draw) el("text", { x, y, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.red }, panel2, "THE AI");
+        var cx = x, cy = y + 12;
+        kinds.forEach(function(kind) {
+          var w2 = textWidth(kind, 16, false) + 26;
+          if (cx + w2 > x + wide) {
+            cx = x;
+            cy += 38;
+          }
+          if (draw) {
+            el("rect", { x: cx, y: cy, width: w2, height: 30, rx: 15, fill: YC.navy }, panel2);
+            el("text", { x: cx + 13, y: cy + 20.5, "font-family": YC.sans, "font-size": 16, "font-weight": 700, fill: YC.pop }, panel2, kind);
+          }
+          cx += w2 + 8;
+        });
+        return cy + 30 + 20;
+      }
+      function paintZone(info, tag) {
+        var scales = [1, 0.94, 0.88, 0.82, 0.76, 0.7], k = scales[scales.length - 1];
+        for (var i = 0; i < scales.length; i++) {
+          if (layout(info, tag, scales[i], false)) {
+            k = scales[i];
+            break;
+          }
         }
-        section("WHAT AI DOES HERE", info.does || info.body, 19);
-        section("WHO STILL DECIDES", info.decides, 17);
-        section("THE CATCH", info.risk, 17);
-        if (info.ask) {
-          var askLines = wrap(info.ask, 19, wide - 28), top = Math.max(y + 4, P.y + P.h - 40 - askLines.length * 24 - 34);
-          el("rect", { x: x - 8, y: top, width: wide + 16, height: askLines.length * 24 + 46, rx: 8, fill: YC.pop }, panel2);
-          el("text", { x: x + 6, y: top + 24, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.ink }, panel2, "ASK THE ROOM");
-          askLines.forEach(function(ln, k) {
-            el("text", { x: x + 6, y: top + 50 + k * 24, "font-family": YC.sans, "font-size": 19, "font-weight": 700, fill: YC.ink }, panel2, ln);
+        layout(info, tag, k, true);
+      }
+      function layout(info, tag, k, draw) {
+        var f2 = draw ? frameOf(tag, info.name, k) : { x: PANEL.x + 28, wide: PANEL.w - 56 };
+        var x = f2.x, wide = f2.wide, big = (paged ? 21 : 19) * k, small = (paged ? 18 : 16) * k;
+        var y = PANEL.y + 126;
+        y = chips(info.ai, x, y, wide, draw);
+        y = block("WHAT HAPPENS HERE", info.does || info.body, x, y, big, wide, draw);
+        y = block("HOW THE AI WORKS", info.how, x, y, small, wide, draw);
+        var half = (wide - 24) / 2;
+        var yl = block("WHO STILL DECIDES", info.decides, x, y, small, info.risk ? half : wide, draw);
+        var yr = info.risk ? block("THE CATCH", info.risk, x + half + 24, y, small, half, draw) : y;
+        var bottom = Math.max(yl, yr);
+        var top = askBar(info.ask, x, wide, Math.max(16, 20 * k), draw);
+        return bottom <= top + 4;
+      }
+      function paintContents(info, tag) {
+        var f2 = frameOf(tag, info.name || "Matchday", 1), x = f2.x, wide = f2.wide, y = PANEL.y + 128;
+        if (info.body) {
+          wrap(info.body, 17, wide).forEach(function(ln, i) {
+            el("text", { x, y: y + i * 22, "font-family": YC.sans, "font-size": 17, fill: YC.ink }, panel2, ln);
           });
+          y += wrap(info.body, 17, wide).length * 22 + 14;
         }
+        var top = askBar(info.ask, x, wide, 18, true);
+        var rows2 = ZONES.filter(function(z) {
+          return zones[z.id];
+        }), groups = [["IN THE GROUND", rows2.slice(0, 8)], ["BEYOND THE GROUND", rows2.slice(8)]];
+        var lh = Math.min(30, (top - y - 52) / Math.max(1, rows2.length)), r2 = Math.min(11, lh / 2 - 1.5), fs = Math.min(18, lh * 0.7);
+        groups.forEach(function(g) {
+          if (!g[1].length) return;
+          el("text", { x, y: y + 8, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.red }, panel2, String(g[0]));
+          y += 18;
+          g[1].forEach(function(z) {
+            var n = ZONES.indexOf(z) + 1;
+            el("circle", { cx: x + 11, cy: y + lh / 2, r: r2, fill: YC.pop, stroke: YC.ink, "stroke-width": 1.5 }, panel2);
+            el("text", { x: x + 11, y: y + lh / 2 + r2 * 0.45, "text-anchor": "middle", "font-family": YC.display, "font-size": r2 * 1.25, fill: YC.ink }, panel2, String(n));
+            el("text", { x: x + 32, y: y + lh / 2 + fs * 0.36, "font-family": YC.sans, "font-size": fs, fill: YC.ink }, panel2, String(zones[z.id].name || z.id));
+            y += lh;
+          });
+          y += 10;
+        });
       }
       if (d.source) el("text", { x: PANEL.x + PANEL.w, y: H - 12, "text-anchor": "end", "font-family": YC.sans, "font-size": 12, fill: "rgba(255,255,255,.55)" }, svg, d.source);
       var pips = el("g", {}, svg);
@@ -5920,26 +5995,35 @@
       }
       var view = { s: 1, x: 0, y: 0 }, cancel = function() {
       };
+      function fit0() {
+        return Math.min(MAP2.w / ART.w, MAP2.h / ART.h);
+      }
+      function whole() {
+        return { s: fit0(), x: ART.w / 2, y: ART.h / 2 };
+      }
       function aim(id) {
         var p = parts[id];
-        if (!p || id === "stands") return id === "stands" ? { s: 1.18, x: 394, y: 293 } : { s: 1, x: MAP2.w / 2, y: MAP2.h / 2 };
-        var b = p.z.box, s2 = Math.max(1, Math.min(2.4, Math.min(MAP2.w * 0.55 / b[2], MAP2.h * 0.55 / b[3])));
+        if (!p) return whole();
+        if (id === "stands") return { s: Math.max(fit0(), 1.18 * fit0()), x: 394, y: 293 };
+        var b = p.z.box, s2 = Math.max(fit0(), Math.min(2.4, Math.min(MAP2.w * 0.55 / b[2], MAP2.h * 0.55 / b[3])));
         return { s: s2, x: b[0] + b[2] / 2, y: b[1] + b[3] / 2 };
       }
       function place(v) {
-        var s2 = v.s, cx = Math.max(MAP2.w / (2 * s2), Math.min(MAP2.w - MAP2.w / (2 * s2), v.x)), cy = Math.max(MAP2.h / (2 * s2), Math.min(MAP2.h - MAP2.h / (2 * s2), v.y));
+        var s2 = v.s, hw = MAP2.w / (2 * s2), hh = MAP2.h / (2 * s2);
+        var cx = hw * 2 >= ART.w ? ART.w / 2 : Math.max(hw, Math.min(ART.w - hw, v.x)), cy = hh * 2 >= ART.h ? ART.h / 2 : Math.max(hh, Math.min(ART.h - hh, v.y));
         set(map, { transform: "translate(" + (MAP2.x + MAP2.w / 2) + " " + (MAP2.y + MAP2.h / 2) + ") scale(" + s2 + ") translate(" + (-cx - MAP2.x) + " " + (-cy - MAP2.y) + ")" });
       }
       function move(to, animate) {
         cancel();
-        var from = { s: view.s, x: view.x || MAP2.w / 2, y: view.y || MAP2.h / 2 };
+        var from = { s: view.s, x: view.x, y: view.y };
         cancel = tween(animate ? 1100 : 0, function(k) {
           view = { s: lerp(from.s, to.s, k), x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k) };
           place(view);
         }, ease.inOut);
       }
-      view = { s: 1, x: MAP2.w / 2, y: MAP2.h / 2 };
+      view = whole();
       place(view);
+      var first = true;
       function spotlight(id) {
         var p = parts[id];
         if (!p) {
@@ -5949,7 +6033,7 @@
         var b = p.z.box, pad = 10, r2 = id === "stands" ? 74 : 12;
         var x = b[0] - pad, y = b[1] - pad, w2 = b[2] + pad * 2, h = b[3] + pad * 2;
         var hole = "M" + (x + r2) + " " + y + "h" + (w2 - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 " + r2 + " " + r2 + "v" + (h - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 -" + r2 + " " + r2 + "h-" + (w2 - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 -" + r2 + " -" + r2 + "v-" + (h - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 " + r2 + " -" + r2 + "Z";
-        set(shade2, { d: "M-400 -400H" + (MAP2.w + 400) + "V" + (MAP2.h + 400) + "H-400Z" + hole, opacity: 1 });
+        set(shade2, { d: "M-400 -400H" + (ART.w + 400) + "V" + (ART.h + 400) + "H-400Z" + hole, opacity: 1 });
       }
       var step = (
         /** @type {any} */
@@ -6000,19 +6084,20 @@
             set(p.badge, { opacity: all || on ? 1 : 0.35 });
           });
           spotlight(all ? "" : id);
-          move(all ? { s: 1, x: MAP2.w / 2, y: MAP2.h / 2 } : aim(id), animate);
+          move(all ? whole() : aim(id), animate || first && fig.interactive && !all);
+          first = false;
           tween(animate ? 700 : 0, function(k) {
             set(flows, { opacity: cloud ? k : 0 });
             set(cloudG, { opacity: cloud ? k : 0 });
           });
-          var count = Array.isArray(fig.steps) ? fig.steps.length : 0;
+          var count = list.length;
           var order2 = ZONES.findIndex(function(z) {
             return z.id === id;
           });
-          if (cloud) paintPanel(d.cloud || { name: "One cloud" }, "Every zone");
-          else if (all) paintPanel(d.intro || { name: "Matchday" }, "The whole club");
-          else paintPanel(zones[id] || { name: id }, "Zone " + (order2 + 1) + " of " + ZONES.length);
-          paintPips(typeof step.index === "number" ? step.index : 0, count || 0);
+          if (cloud) paintZone(d.cloud || { name: "One cloud" }, "Every zone");
+          else if (all) paintContents(d.intro || { name: "Matchday" }, "The whole club");
+          else paintZone(zones[id] || { name: id }, "Zone " + (order2 + 1) + " of " + ZONES.length);
+          paintPips(typeof step.index === "number" ? step.index : 0, count > 1 ? count : 0);
           hovered = null;
           paintHover();
         }

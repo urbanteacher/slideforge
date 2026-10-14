@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <rect width="1600" height="900" fill="#f3efe6"/>
+  <circle cx="430" cy="470" r="380" fill="#224476"/>
+  <circle cx="470" cy="540" r="290" fill="#e21c21"/>
+  <circle cx="505" cy="610" r="200" fill="#12284a"/>
+  <circle cx="530" cy="665" r="112" fill="#ffe14d"/>
+  <g font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif" text-anchor="middle">
+    <text x="430" y="205" font-size="42" fill="#ffffff">ARTIFICIAL INTELLIGENCE</text>
+    <text x="470" y="320" font-size="48" fill="#ffffff">MACHINE LEARNING</text>
+    <text x="505" y="480" font-size="44" fill="#ffffff">DEEP LEARNING</text>
+    <text x="530" y="660" font-size="36" fill="#16203a">GENERATIVE</text>
+    <text x="530" y="700" font-size="36" fill="#16203a">AI</text>
+  </g>
+  <g fill="none" stroke="#16203a" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round">
+    <path d="M700 200H900"/>
+    <path d="M700 305H900"/>
+    <path d="M660 465H900"/>
+    <path d="M640 680H900"/>
+  </g>
+  <g fill="#16203a">
+    <circle cx="900" cy="200" r="9"/><circle cx="900" cy="305" r="9"/><circle cx="900" cy="465" r="9"/><circle cx="900" cy="680" r="9"/>
+  </g>
+  <g font-size="30" fill="#16203a">
+    <text x="930" y="150" font-weight="700" fill="#224476">Artificial intelligence</text>
+    <text x="930" y="190">Computers doing jobs that usually</text>
+    <text x="930" y="226">need human intelligence.</text>
+    <text x="930" y="295" font-weight="700" fill="#e21c21">Machine learning</text>
+    <text x="930" y="335">Learns patterns from data,</text>
+    <text x="930" y="371">instead of following written rules.</text>
+    <text x="930" y="455" font-weight="700" fill="#12284a">Deep learning</text>
+    <text x="930" y="495">Machine learning with many layers</text>
+    <text x="930" y="531">of “neurons”, loosely like a brain.</text>
+    <text x="930" y="670" font-weight="700" fill="#a8120f">Generative AI</text>
+    <text x="930" y="710">Deep learning that makes new</text>
+    <text x="930" y="746">words, pictures and video.</text>
+  </g>
+</svg>

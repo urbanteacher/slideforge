@@ -5,16 +5,18 @@
  * room, the TV gantry, the grass, the training ground, the scouts, the
  * club's business and the fans at home each run on data.
  *
- * Each step zooms the map to one zone and lights it; the panel says what the
- * AI does there, who still decides, the catch, and a question for the room.
- * The room can hover any zone for its name. The last step can draw every
- * zone's data running to one cloud.
+ * A slide shows the whole map with its zones listed (zone 'all'), one zone
+ * (the map zooms in from the whole ground as the slide opens, and the panel
+ * says what happens there, which kinds of AI do it, how they work, who still
+ * decides, the catch and a question for the room), or every zone's data
+ * running to one cloud (zone 'cloud'). Several steps on one slide walk the
+ * zones in turn. The room can hover any zone for its name.
  *
  * The map is the figure's own drawing (the zones' places are fixed below);
  * the words are the slide's, in figureData:
  *   eyebrow, title     drawn in the figure's own Youth Charter type
  *   intro              { name, body, ask } the panel for the overview step
- *   zones              { [id]: { name, does, decides, risk, ask } }
+ *   zones              { [id]: { name, does, ai: [kinds of AI], how, decides, risk, ask } }
  *   cloud              { name, does, decides, risk, ask } the panel for the cloud step
  *   source             a credit line under the panel
  * Each step sets:
@@ -33,7 +35,9 @@ var YC = {
   sans: "'Helvetica Neue', Helvetica, Arial, sans-serif"
 };
 
-/* The map's window on the slide, and the panel beside it. */
+/* The map is drawn at ART's size; its window on the slide, and the panel beside it, are set per
+   slide in mount: a zone's page gives the panel more room. */
+var ART = { w: 788, h: 576 };
 var MAP = { x: 36, y: 112, w: 788, h: 576 };
 var PANEL = { x: 852, y: 112, w: 392, h: 576 };
 
@@ -69,6 +73,10 @@ export var stadium = {
   /** @param {any} fig */
   mount: function (fig) {
     var d = fig.data || {}, svg = fig.svg, zones = d.zones || {};
+    var list = Array.isArray(fig.steps) ? fig.steps : [];
+    var paged = list.length === 1 && list[0] && list[0].zone && list[0].zone !== 'all' && list[0].zone !== 'cloud';
+    MAP = paged ? { x: 36, y: 112, w: 668, h: 576 } : { x: 36, y: 112, w: 788, h: 576 };
+    PANEL = paged ? { x: 728, y: 112, w: 516, h: 576 } : { x: 852, y: 112, w: 392, h: 576 };
     var defs = el('defs', {}, svg);
     var clip = el('clipPath', { id: 'stadium-clip' }, defs);
     el('rect', { x: MAP.x, y: MAP.y, width: MAP.w, height: MAP.h, rx: 18 }, clip);
@@ -92,8 +100,8 @@ export var stadium = {
     var art = el('g', { transform: 'translate(' + MAP.x + ' ' + MAP.y + ')' }, map);
 
     /* Streets, faint, so the ground sits in a town. */
-    for (var gx = 40; gx < MAP.w; gx += 80) el('line', { x1: gx, y1: 0, x2: gx, y2: MAP.h, stroke: 'rgba(255,255,255,.04)', 'stroke-width': 10 }, art);
-    for (var gy = 40; gy < MAP.h; gy += 80) el('line', { x1: 0, y1: gy, x2: MAP.w, y2: gy, stroke: 'rgba(255,255,255,.04)', 'stroke-width': 10 }, art);
+    for (var gx = 40; gx < ART.w; gx += 80) el('line', { x1: gx, y1: 0, x2: gx, y2: ART.h, stroke: 'rgba(255,255,255,.04)', 'stroke-width': 10 }, art);
+    for (var gy = 40; gy < ART.h; gy += 80) el('line', { x1: 0, y1: gy, x2: ART.w, y2: gy, stroke: 'rgba(255,255,255,.04)', 'stroke-width': 10 }, art);
 
     /* The bowl: four stands of seats round the pitch. */
     el('rect', { x: 176, y: 112, width: 436, height: 362, rx: 70, fill: YC.navy, stroke: '#2d5592', 'stroke-width': 3 }, art);
@@ -179,7 +187,7 @@ export var stadium = {
     ZONES.forEach(function (z) {
       var cx = z.box[0] + z.box[2] / 2, cy = z.box[1] + z.box[3] / 2;
       if (z.id === 'stands') { cx = 230; cy = 180; }
-      el('path', { d: 'M' + cx + ' ' + cy + 'Q' + ((cx + CLOUD[0]) / 2) + ' ' + (Math.min(cy, CLOUD[1]) - 10) + ' ' + CLOUD[0] + ' ' + (CLOUD[1] + 18), fill: 'none', stroke: YC.pop, 'stroke-width': 2.5, 'stroke-dasharray': '3 7', opacity: 0.9 }, flows);
+      el('path', { d: 'M' + cx + ' ' + cy + 'Q' + ((cx + CLOUD[0]) / 2) + ' ' + (Math.min(cy, CLOUD[1]) - 10) + ' ' + CLOUD[0] + ' ' + (CLOUD[1] + 18), fill: 'none', stroke: YC.pop, 'stroke-width': 2, 'stroke-dasharray': '3 8', opacity: 0.75 }, flows);
     });
 
     /* Each zone: a hit area, a spotlight ring, and a numbered badge. */
@@ -204,13 +212,8 @@ export var stadium = {
 
     /* ------------------------------------------------------------ the panel */
     var panel = el('g', {}, svg);
-    function line(/** @type {any} */ g, /** @type {string} */ text, /** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ size, /** @type {string} */ fill, /** @type {number} */ width, /** @type {any} */ extra) {
-      var lines = wrap(text, size, width);
-      lines.forEach(function (ln, k) { el('text', Object.assign({ x: x, y: y + k * size * 1.28, 'font-family': YC.sans, 'font-size': size, fill: fill }, extra || {}), g, ln); });
-      return y + lines.length * size * 1.28;
-    }
-    /** @param {any} info @param {string} tag */
-    function paintPanel(info, tag) {
+    /** The panel's frame and header: a red shadow, newsprint, a navy band with the tag and the name. @param {string} tag @param {string} name @param {number} k */
+    function frameOf(tag, name, k) {
       panel.textContent = '';
       var P = PANEL, x = P.x + 28, wide = P.w - 56;
       el('rect', { x: P.x + 6, y: P.y + 6, width: P.w, height: P.h, rx: 14, fill: YC.red }, panel);
@@ -218,24 +221,88 @@ export var stadium = {
       el('rect', { x: P.x, y: P.y, width: P.w, height: 96, rx: 14, fill: YC.navy }, panel);
       el('rect', { x: P.x, y: P.y + 80, width: P.w, height: 16, fill: YC.navy }, panel);
       if (tag) el('text', { x: x, y: P.y + 32, 'font-family': YC.sans, 'font-size': 14, 'font-weight': 700, 'letter-spacing': 2.2, fill: YC.pop }, panel, tag.toUpperCase());
-      var nameLines = wrap(String(info.name || '').toUpperCase(), 32, wide);
-      nameLines.slice(0, 2).forEach(function (ln, k) { el('text', { x: x, y: P.y + (nameLines.length > 1 ? 60 : 72) + k * 30, 'font-family': YC.display, 'font-size': nameLines.length > 1 ? 28 : 34, fill: '#ffffff' }, panel, ln); });
-      var y = P.y + 128;
-      /** @param {string} head @param {string} body @param {number} size */
-      function section(head, body, size) {
-        if (!body) return;
-        el('text', { x: x, y: y, 'font-family': YC.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 2, fill: YC.red }, panel, head);
-        y = line(panel, body, x, y + 24, size, YC.ink, wide, null) + 12;
-      }
-      section('WHAT AI DOES HERE', info.does || info.body, 19);
-      section('WHO STILL DECIDES', info.decides, 17);
-      section('THE CATCH', info.risk, 17);
-      if (info.ask) {
-        var askLines = wrap(info.ask, 19, wide - 28), top = Math.max(y + 4, P.y + P.h - 40 - askLines.length * 24 - 34);
-        el('rect', { x: x - 8, y: top, width: wide + 16, height: askLines.length * 24 + 46, rx: 8, fill: YC.pop }, panel);
-        el('text', { x: x + 6, y: top + 24, 'font-family': YC.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 2, fill: YC.ink }, panel, 'ASK THE ROOM');
-        askLines.forEach(function (ln, k) { el('text', { x: x + 6, y: top + 50 + k * 24, 'font-family': YC.sans, 'font-size': 19, 'font-weight': 700, fill: YC.ink }, panel, ln); });
-      }
+      var size = Math.round(34 * Math.min(1, k + 0.1)), nameLines = wrap(String(name || '').toUpperCase(), size, wide);
+      if (nameLines.length > 1) { size = 28; nameLines = wrap(String(name || '').toUpperCase(), size, wide); }
+      nameLines.slice(0, 2).forEach(function (ln, i) { el('text', { x: x, y: P.y + (nameLines.length > 1 ? 60 : 72) + i * 30, 'font-family': YC.display, 'font-size': size, fill: '#ffffff' }, panel, ln); });
+      return { x: x, wide: wide };
+    }
+    /** A head and its words at (x, y), `width` wide; returns the y after it. @param {boolean} draw */
+    function block(/** @type {string} */ head, /** @type {string} */ body, /** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ size, /** @type {number} */ width, /** @type {boolean} */ draw) {
+      if (!body) return y;
+      if (draw) el('text', { x: x, y: y, 'font-family': YC.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 2, fill: YC.red }, panel, head);
+      var lines = wrap(body, size, width);
+      if (draw) lines.forEach(function (ln, i) { el('text', { x: x, y: y + 22 + size * 0.2 + i * size * 1.28, 'font-family': YC.sans, 'font-size': size, fill: YC.ink }, panel, ln); });
+      return y + 22 + lines.length * size * 1.28 + 14;
+    }
+    /** The question for the room, in the highlighter bar at the panel's foot; returns its top. */
+    function askBar(/** @type {string} */ ask, /** @type {number} */ x, /** @type {number} */ wide, /** @type {number} */ size, /** @type {boolean} */ draw) {
+      if (!ask) return PANEL.y + PANEL.h;
+      var lines = wrap(ask, size, wide - 28), h = lines.length * size * 1.25 + 46, top = PANEL.y + PANEL.h - 22 - h;
+      if (!draw) return top;
+      el('rect', { x: x - 8, y: top, width: wide + 16, height: h, rx: 8, fill: YC.pop }, panel);
+      el('text', { x: x + 6, y: top + 24, 'font-family': YC.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 2, fill: YC.ink }, panel, 'ASK THE ROOM');
+      lines.forEach(function (ln, i) { el('text', { x: x + 6, y: top + 30 + size + i * size * 1.25, 'font-family': YC.sans, 'font-size': size, 'font-weight': 700, fill: YC.ink }, panel, ln); });
+      return top;
+    }
+    /** The kinds of AI at work, as highlighter chips; returns the y after them. */
+    function chips(/** @type {string[]} */ kinds, /** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ wide, /** @type {boolean} */ draw) {
+      if (!kinds || !kinds.length) return y;
+      if (draw) el('text', { x: x, y: y, 'font-family': YC.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 2, fill: YC.red }, panel, 'THE AI');
+      var cx = x, cy = y + 12;
+      kinds.forEach(function (kind) {
+        var w = textWidth(kind, 16, false) + 26;
+        if (cx + w > x + wide) { cx = x; cy += 38; }
+        if (draw) {
+          el('rect', { x: cx, y: cy, width: w, height: 30, rx: 15, fill: YC.navy }, panel);
+          el('text', { x: cx + 13, y: cy + 20.5, 'font-family': YC.sans, 'font-size': 16, 'font-weight': 700, fill: YC.pop }, panel, kind);
+        }
+        cx += w + 8;
+      });
+      return cy + 30 + 20;
+    }
+    /* A zone's page: everything in the panel at the largest size that fits it. */
+    /** @param {any} info @param {string} tag */
+    function paintZone(info, tag) {
+      var scales = [1, 0.94, 0.88, 0.82, 0.76, 0.7], k = scales[scales.length - 1];
+      for (var i = 0; i < scales.length; i++) { if (layout(info, tag, scales[i], false)) { k = scales[i]; break; } }
+      layout(info, tag, k, true);
+    }
+    /** @param {any} info @param {string} tag @param {number} k @param {boolean} draw @returns {boolean} whether it fits */
+    function layout(info, tag, k, draw) {
+      var f = draw ? frameOf(tag, info.name, k) : { x: PANEL.x + 28, wide: PANEL.w - 56 };
+      var x = f.x, wide = f.wide, big = (paged ? 21 : 19) * k, small = (paged ? 18 : 16) * k;
+      var y = PANEL.y + 126;
+      y = chips(info.ai, x, y, wide, draw);
+      y = block('WHAT HAPPENS HERE', info.does || info.body, x, y, big, wide, draw);
+      y = block('HOW THE AI WORKS', info.how, x, y, small, wide, draw);
+      var half = (wide - 24) / 2;
+      var yl = block('WHO STILL DECIDES', info.decides, x, y, small, info.risk ? half : wide, draw);
+      var yr = info.risk ? block('THE CATCH', info.risk, x + half + 24, y, small, half, draw) : y;
+      var bottom = Math.max(yl, yr);
+      var top = askBar(info.ask, x, wide, Math.max(16, 20 * k), draw);
+      return bottom <= top + 4;
+    }
+    /* The whole map: the zones, numbered, as the session's contents. */
+    /** @param {any} info @param {string} tag */
+    function paintContents(info, tag) {
+      var f = frameOf(tag, info.name || 'Matchday', 1), x = f.x, wide = f.wide, y = PANEL.y + 128;
+      if (info.body) { wrap(info.body, 17, wide).forEach(function (ln, i) { el('text', { x: x, y: y + i * 22, 'font-family': YC.sans, 'font-size': 17, fill: YC.ink }, panel, ln); }); y += wrap(info.body, 17, wide).length * 22 + 14; }
+      var top = askBar(info.ask, x, wide, 18, true);
+      var rows = ZONES.filter(function (z) { return zones[z.id]; }), groups = [['IN THE GROUND', rows.slice(0, 8)], ['BEYOND THE GROUND', rows.slice(8)]];
+      var lh = Math.min(30, (top - y - 52) / Math.max(1, rows.length)), r = Math.min(11, lh / 2 - 1.5), fs = Math.min(18, lh * 0.7);
+      groups.forEach(function (g) {
+        if (!g[1].length) return;
+        el('text', { x: x, y: y + 8, 'font-family': YC.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 2, fill: YC.red }, panel, String(g[0]));
+        y += 18;
+        /** @type {any[]} */ (g[1]).forEach(function (z) {
+          var n = ZONES.indexOf(z) + 1;
+          el('circle', { cx: x + 11, cy: y + lh / 2, r: r, fill: YC.pop, stroke: YC.ink, 'stroke-width': 1.5 }, panel);
+          el('text', { x: x + 11, y: y + lh / 2 + r * 0.45, 'text-anchor': 'middle', 'font-family': YC.display, 'font-size': r * 1.25, fill: YC.ink }, panel, String(n));
+          el('text', { x: x + 32, y: y + lh / 2 + fs * 0.36, 'font-family': YC.sans, 'font-size': fs, fill: YC.ink }, panel, String(zones[z.id].name || z.id));
+          y += lh;
+        });
+        y += 10;
+      });
     }
     if (d.source) el('text', { x: PANEL.x + PANEL.w, y: H - 12, 'text-anchor': 'end', 'font-family': YC.sans, 'font-size': 12, fill: 'rgba(255,255,255,.55)' }, svg, d.source);
     var pips = el('g', {}, svg);
@@ -246,29 +313,35 @@ export var stadium = {
 
     /* ------------------------------------------------------------ the camera */
     var view = { s: 1, x: 0, y: 0 }, cancel = function () {};
+    /** The scale at which the whole map fills its window. */
+    function fit0() { return Math.min(MAP.w / ART.w, MAP.h / ART.h); }
+    function whole() { return { s: fit0(), x: ART.w / 2, y: ART.h / 2 }; }
     /** @param {string} id */
     function aim(id) {
       var p = parts[id];
-      if (!p || id === 'stands') return id === 'stands' ? { s: 1.18, x: 394, y: 293 } : { s: 1, x: MAP.w / 2, y: MAP.h / 2 };
-      var b = p.z.box, s = Math.max(1, Math.min(2.4, Math.min(MAP.w * 0.55 / b[2], MAP.h * 0.55 / b[3])));
+      if (!p) return whole();
+      if (id === 'stands') return { s: Math.max(fit0(), 1.18 * fit0()), x: 394, y: 293 };
+      var b = p.z.box, s = Math.max(fit0(), Math.min(2.4, Math.min(MAP.w * 0.55 / b[2], MAP.h * 0.55 / b[3])));
       return { s: s, x: b[0] + b[2] / 2, y: b[1] + b[3] / 2 };
     }
     /** @param {{s: number, x: number, y: number}} v */
     function place(v) {
-      var s = v.s, cx = Math.max(MAP.w / (2 * s), Math.min(MAP.w - MAP.w / (2 * s), v.x)), cy = Math.max(MAP.h / (2 * s), Math.min(MAP.h - MAP.h / (2 * s), v.y));
+      var s = v.s, hw = MAP.w / (2 * s), hh = MAP.h / (2 * s);
+      var cx = hw * 2 >= ART.w ? ART.w / 2 : Math.max(hw, Math.min(ART.w - hw, v.x)), cy = hh * 2 >= ART.h ? ART.h / 2 : Math.max(hh, Math.min(ART.h - hh, v.y));
       set(map, { transform: 'translate(' + (MAP.x + MAP.w / 2) + ' ' + (MAP.y + MAP.h / 2) + ') scale(' + s + ') translate(' + (-cx - MAP.x) + ' ' + (-cy - MAP.y) + ')' });
     }
     /** @param {{s: number, x: number, y: number}} to @param {boolean} animate */
     function move(to, animate) {
       cancel();
-      var from = { s: view.s, x: view.x || MAP.w / 2, y: view.y || MAP.h / 2 };
+      var from = { s: view.s, x: view.x, y: view.y };
       cancel = tween(animate ? 1100 : 0, function (k) {
         view = { s: lerp(from.s, to.s, k), x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k) };
         place(view);
       }, ease.inOut);
     }
-    view = { s: 1, x: MAP.w / 2, y: MAP.h / 2 };
+    view = whole();
     place(view);
+    var first = true;
 
     /** The spotlight: everything dark but the zone's box. @param {string} id */
     function spotlight(id) {
@@ -277,7 +350,7 @@ export var stadium = {
       var b = p.z.box, pad = 10, r = id === 'stands' ? 74 : 12;
       var x = b[0] - pad, y = b[1] - pad, w = b[2] + pad * 2, h = b[3] + pad * 2;
       var hole = 'M' + (x + r) + ' ' + y + 'h' + (w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r + 'v' + (h - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 -' + r + ' ' + r + 'h-' + (w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 -' + r + ' -' + r + 'v-' + (h - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' -' + r + 'Z';
-      set(shade, { d: 'M-400 -400H' + (MAP.w + 400) + 'V' + (MAP.h + 400) + 'H-400Z' + hole, opacity: 1 });
+      set(shade, { d: 'M-400 -400H' + (ART.w + 400) + 'V' + (ART.h + 400) + 'H-400Z' + hole, opacity: 1 });
     }
 
     var step = /** @type {any} */ ({}), hovered = /** @type {string|null} */ (null);
@@ -309,14 +382,16 @@ export var stadium = {
           set(p.badge, { opacity: all || on ? 1 : 0.35 });
         });
         spotlight(all ? '' : id);
-        move(all ? { s: 1, x: MAP.w / 2, y: MAP.h / 2 } : aim(id), animate);
+        /* A zone's own page flies in from the whole ground as it opens; a still is drawn where it lands. */
+        move(all ? whole() : aim(id), animate || (first && fig.interactive && !all));
+        first = false;
         tween(animate ? 700 : 0, function (k) { set(flows, { opacity: cloud ? k : 0 }); set(cloudG, { opacity: cloud ? k : 0 }); });
-        var count = Array.isArray(fig.steps) ? fig.steps.length : 0;
+        var count = list.length;
         var order = ZONES.findIndex(function (z) { return z.id === id; });
-        if (cloud) paintPanel(d.cloud || { name: 'One cloud' }, 'Every zone');
-        else if (all) paintPanel(d.intro || { name: 'Matchday' }, 'The whole club');
-        else paintPanel(zones[id] || { name: id }, 'Zone ' + (order + 1) + ' of ' + ZONES.length);
-        paintPips(typeof step.index === 'number' ? step.index : 0, count || 0);
+        if (cloud) paintZone(d.cloud || { name: 'One cloud' }, 'Every zone');
+        else if (all) paintContents(d.intro || { name: 'Matchday' }, 'The whole club');
+        else paintZone(zones[id] || { name: id }, 'Zone ' + (order + 1) + ' of ' + ZONES.length);
+        paintPips(typeof step.index === 'number' ? step.index : 0, count > 1 ? count : 0);
         hovered = null; paintHover();
       }
     };
