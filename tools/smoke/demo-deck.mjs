@@ -49,7 +49,10 @@ try {
 
   const summary = await page.evaluate(async () => {
     const rows = await window.__demoAuditAll();
-    const fail = rows.filter((r) => !r.fits);
+    // Quiz, game, results, join and explain slides are the studio's to draw; their classic layouts went with the
+    // classic show, so this prototype draws them as plain content and their fit says nothing. They are not counted.
+    const studioDrawn = new Set(['quiz', 'explain', 'results', 'game', 'join']);
+    const fail = rows.filter((r) => !r.fits && !studioDrawn.has(r.type));
     const tiny = rows.filter((r) => !r.legible);
     return {
       total: rows.length,

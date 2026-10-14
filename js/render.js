@@ -1541,37 +1541,9 @@
     }
   }
 
-  /* The live session's furniture lives in src/render/live.js — see
-     docs/render-split.md. Sixteen names come back; eighteen stay private. */
-  var live = SF.createLiveRenderer(SF, {el: el, themedRoot: themedRoot});
-  var bossBar = live.bossBar;
-  var feedbackFocus = live.feedbackFocus;
-  var feedbackRail = live.feedbackRail;
-  var feedbackViewOpts = live.feedbackViewOpts;
-  var paintFeedbackRail = live.paintFeedbackRail;
-  var paintRailJoin = live.paintRailJoin;
-  var paintScoreRail = live.paintScoreRail;
-  var questionCard = live.questionCard;
-  var raceTrack = live.raceTrack;
-  var railSurface = live.railSurface;
-  var sampleFeedbackDigest = live.sampleFeedbackDigest;
-  var scoreRail = live.scoreRail;
-  var soloScore = live.soloScore;
-  var studyCards = live.studyCards;
-  var tint = live.tint;
-  var wordRevealWall = live.wordRevealWall;
-
-  /* Quizzes, games and their surrounding screens live in src/render/quiz.js
-     — see docs/render-split.md. The five layouts go back into LAYOUTS below
-     exactly as before; this stays a plain table, not a registry. */
-  var quiz = SF.createQuizRenderer(SF, {LETTERS: LETTERS, asStep: asStep, el: el, rich: rich, ring: ring, stableShuffle: stableShuffle, tint: tint});
-  var layoutExplain = quiz.layoutExplain;
-  var layoutGame = quiz.layoutGame;
-  var layoutJoin = quiz.layoutJoin;
-  var layoutQuiz = quiz.layoutQuiz;
-  var layoutResults = quiz.layoutResults;
-  var quizPresent = quiz.quizPresent;
-  var sampleJoinInfo = quiz.sampleJoinInfo;
+  /* Quiz, game, results, join and explain slides are classic slide types the studio draws itself (its own room and
+     wall). Their classic layouts (src/render/quiz.js) and the live furniture (src/render/live.js) were removed with
+     the classic show; such a slide, if one reaches this renderer, is drawn as plain content. */
   function layoutKeyFact(slide, pad) {
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var hero = el('div', 'keyfact');
@@ -2366,33 +2338,11 @@
     chart: layoutChart,
     image: layoutImage,
     gallery: layoutGallery,
-    video: layoutVideo,
-    quiz: layoutQuiz,
-    explain: layoutExplain,
-    results: layoutResults,
-    game: layoutGame,
-    join: layoutJoin
+    video: layoutVideo
   };
 
   /* ------------------------------------------------------------ entry */
 
-  /* A shuffle that is the same every time for the same slide.
-     Math.random would reshuffle on every repaint — the items would jump
-     around while the room was reading them — and a rejoining phone would see
-     a different arrangement from the wall. */
-  function stableShuffle(list, seed) {
-    var out = list.slice();
-    var h = 2166136261;
-    var key = String(seed || '');
-    for (var c = 0; c < key.length; c++) { h ^= key.charCodeAt(c); h = Math.imul(h, 16777619); }
-    for (var i = out.length - 1; i > 0; i--) {
-      h = Math.imul(h ^ (h >>> 15), 2246822507);
-      h = Math.imul(h ^ (h >>> 13), 3266489909);
-      var j = ((h >>> 0) % (i + 1));
-      var t = out[i]; out[i] = out[j]; out[j] = t;
-    }
-    return out;
-  }
 
   var compositions = SF.createCompositionRenderer(SF, {
     el:el, rich:rich, asStep:asStep, layoutQuote:layoutQuote,
@@ -2567,8 +2517,7 @@
     }
 
     /* A timed activity gets the same countdown the quiz has. The quiz builds
-       its own inside layoutQuiz, because there the clock has to clear the
-       question block; anywhere else it can hang off the slide. Drawn whenever a
+       its own clock; anywhere else it can hang off the slide. Drawn whenever a
        time limit is set — including in the editor, where it shows the length
        you chose — and it is the player that makes it move. */
     if (slide.timeLimit > 0 && !root.querySelector('.clock')) {
@@ -2713,23 +2662,6 @@
     videoEmbed: videoEmbed,
     letterbox: letterbox,
     ring: ring,
-    scoreRail: scoreRail,
-    paintRailJoin: paintRailJoin,
-    railSurface: railSurface,
-    raceTrack: raceTrack,
-    bossBar: bossBar,
-    wordRevealWall: wordRevealWall,
-    studyCards: studyCards,
-    quizPresent: quizPresent,
-    feedbackRail: feedbackRail,
-    feedbackFocus: feedbackFocus,
-    questionCard: questionCard,
-    sampleFeedbackDigest: sampleFeedbackDigest,
-    feedbackViewOpts: feedbackViewOpts,
-    paintFeedbackRail: paintFeedbackRail,
-    paintScoreRail: paintScoreRail,
-    soloScore: soloScore,
-    sampleJoinInfo: sampleJoinInfo,
     LETTERS: LETTERS,
     el: el
   });

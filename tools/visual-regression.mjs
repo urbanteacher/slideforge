@@ -245,7 +245,11 @@ async function run() {
 
   const catalog = await page.evaluate(() => {
     return {
-      styles: Object.keys(window.SF?.GAME_STYLES || {}),
+      // Only the board games are drawn by this renderer now (SF.Boards); every other game style is the studio's own
+      // wall, and its classic layout went with the classic show (docs/render-split.md, 2026-10-14).
+      styles: Object.keys(window.SF?.GAME_STYLES || {}).filter((st) => {
+        try { return window.SF.gameToRunDeck(window.SF.makeGame('x', st)).slides.some((s) => window.SF.Boards && window.SF.Boards.forSlide(s)); } catch { return false; }
+      }),
       themes: Object.keys(window.SF?.THEMES || {})
     };
   });

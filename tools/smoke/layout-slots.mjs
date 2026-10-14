@@ -21,11 +21,15 @@ try {
     const style = document.createElement('style');
     style.textContent = '* { animation:none!important;transition:none!important }';
     stage.append(style);
+    const STUDIO_DRAWN = ['figure', 'quiz', 'explain', 'results', 'game', 'join'];
     const keys = ['layout-bank', ...Object.keys(SF.LIBRARY_SEED_KEYS).filter(k => SF.LIBRARY_SEED_KEYS[k] === 'nul' || k.startsWith('aiad27-'))];
     const rows = [];
     for (const key of keys) {
       const deck = SF.buildLesson(key);
       for (const [index, slide] of deck.slides.entries()) {
+        // Slides the studio draws itself, which the classic renderer no longer lays out: live figures, and the quiz,
+        // game, results, join and explain slides (their classic layouts went with the classic show; a board still draws).
+        if (STUDIO_DRAWN.includes(slide.type) && !(SF.Boards && SF.Boards.forSlide(slide))) continue;
         const root = SF.renderSlide(deck, slide, { index, total: deck.slides.length });
         stage.append(root);
         await document.fonts.ready;
