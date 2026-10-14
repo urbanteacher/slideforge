@@ -530,15 +530,34 @@ export function figureOf(s: SFSlide): LiveFigure {
 }
 
 /** A lab copy made before version 15 kept only a figure's picture; the show took the figure from the
- *  SlideForge lesson. Each stand-in gets its figure from that lesson now, once. */
+ *  SlideForge lesson. Each stand-in gets its figure from that lesson: by the slide it came from, or,
+ *  when the lesson's slide ids have changed since (a lesson rebuilt and filed again), by its title,
+ *  and last by place among the figures still to find. A stand-in that finds none keeps the picture. */
 export function carryDeckFigures(deck: Deck, source: SFSlide[]): number {
-  const byId = new Map(source.filter((s) => s.id && s.type === 'figure').map((s) => [s.id, s] as const));
-  let n = 0;
-  for (const sl of deck.slides) {
-    const from = sl.liveFigure && !sl.figure && sl.sourceSlideId ? byId.get(sl.sourceSlideId) : undefined;
-    if (from) { sl.figure = figureOf(from); n++; }
+  const figures = source.filter((s) => s.type === 'figure' && (s as { figure?: unknown }).figure);
+  const left = new Set(figures);
+  const take = (s: SFSlide | undefined) => (s && left.delete(s) ? s : undefined);
+  // The figure each stand-in shows, from its name: `Live figure · ${title}`, after any page number.
+  const titleOf = (name?: string) => (name ?? '').replace(/^\s*\d+\s*·\s*/, '').replace(/^Live figure\s*·\s*/, '').trim();
+  const wanting = deck.slides.filter((sl) => sl.liveFigure && !sl.figure?.figure);
+  if (!wanting.length) return 0;
+  // Stand-ins that already carry their figure have theirs: it is not another's to take.
+  for (const sl of deck.slides) if (sl.liveFigure && sl.figure?.figure) take(figures.find((s) => s.id && s.id === sl.sourceSlideId));
+  const found = new Map<Slide, SFSlide>();
+  for (const sl of wanting) { const s = take(figures.find((f) => left.has(f) && f.id && f.id === sl.sourceSlideId)); if (s) found.set(sl, s); }
+  for (const sl of wanting) {
+    if (found.has(sl)) continue;
+    const t = titleOf(sl.name);
+    const s = t ? take(figures.find((f) => left.has(f) && (f.title ?? '').trim() === t)) : undefined;
+    if (s) found.set(sl, s);
   }
-  return n;
+  const rest = wanting.filter((sl) => !found.has(sl));
+  if (rest.length && rest.length === left.size) { const order = [...left]; rest.forEach((sl, i) => found.set(sl, take(order[i])!)); }
+  for (const [sl, s] of found) {
+    sl.figure = figureOf(s);
+    if (s.id) sl.sourceSlideId = s.id;
+  }
+  return found.size;
 }
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a

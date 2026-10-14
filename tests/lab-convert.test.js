@@ -694,6 +694,21 @@ test('a live figure comes into the lab with the figure itself, and a copy made b
   live.forEach((s) => { delete s.figure; });
   assert.equal(carryDeckFigures(deck, src.slides), figures.length);
   assert.equal(carryDeckFigures(deck, src.slides), 0, 'a second time changes nothing');
+  // A copy whose lesson was filed again since, under new slide ids: each stand-in finds its figure by title.
+  const refiled = JSON.parse(JSON.stringify(src));
+  refiled.slides.forEach((s, i) => { s.id = 'new-' + i; });
+  live.forEach((s) => { delete s.figure; });
+  assert.equal(carryDeckFigures(deck, refiled.slides), figures.length);
+  live.forEach((s) => {
+    const from = refiled.slides.find((f) => f.id === s.sourceSlideId);
+    assert.equal(from.type, 'figure');
+    assert.equal(`Live figure · ${from.title}`, s.name.replace(/^\d+ · /, ''), 'the figure with its own title');
+    assert.deepEqual(s.figure.figureData, from.figureData);
+  });
+  // Renamed stand-ins, and ids that match nothing: the figures still to find go in order.
+  live.forEach((s) => { delete s.figure; s.name = 'Renamed'; s.sourceSlideId = 'gone'; });
+  assert.equal(carryDeckFigures(deck, refiled.slides), figures.length);
+  live.forEach((s, i) => assert.equal(s.figure.title, figures[i].title));
 });
 
 test('the Motion lab’s specimens come into the lab on its scene layer, each in its behaviour and look (M13)', { skip }, async () => {

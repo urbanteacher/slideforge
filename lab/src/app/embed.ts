@@ -139,7 +139,8 @@ export const isLabDeck = (d: unknown): d is Deck => {
  *  version 3 the theme's artwork and picture addresses that work from the lab. */
 function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   const from = d.carried ?? 0;
-  if (from >= CARRIED || !source || !Array.isArray(source.slides)) return d;
+  if (!source || !Array.isArray(source.slides)) return d;
+  if (from >= CARRIED) return figuresMended(d, source);
   const copy = structuredClone(d);
   const { palette, set } = paletteFor(source.theme);
   const art = { theme: source.theme || '', title: source.title || '' };
@@ -159,9 +160,18 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   if (from < 3) repairAddresses(copy);
   if (from < 7) carryDeckHidden(copy, source.slides);
   if (from < 12) carryDeckVideo(copy, source.slides);
-  if (from < 15) carryDeckFigures(copy, source.slides);
+  carryDeckFigures(copy, source.slides);
   copy.carried = CARRIED;
   return copy;
+}
+
+/** A copy already up to date whose live figure still has only its picture: a copy carried to version 15
+ *  when its lesson's slide ids no longer matched, so the carry found nothing and the show refused it
+ *  ("has a live figure the lesson does not carry"). Mended each time it opens until it finds them. */
+function figuresMended(d: Deck, source: ClassicDeck): Deck {
+  if (!d.slides.some((s) => s.liveFigure && !s.figure?.figure)) return d;
+  const copy = structuredClone(d);
+  return carryDeckFigures(copy, source.slides ?? []) ? copy : d;
 }
 
 function show(d: Deck) {
