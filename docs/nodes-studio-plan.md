@@ -161,7 +161,8 @@ Each step works on its own and can be pushed on its own.
    - **Sort into three columns:** Keep them apart (its two ideas with a middle "Both"), Same word, Size the answer, Label the parts with up to three roles.
    - **Choice:** Three answers (the strongest), Which step broke?
    - **One written answer:** the ladder's attempt and reattempt, a new case's near and far, Before during after's routine, each Framework stage. A challenge whose content falls outside what the relay carries (3–8 to rank, 2–10 to sort) takes a written answer instead.
-   - The phones are told right or wrong, the reveal slide is the Nodes reveal, and the scores add up across challenges. Tests: `lab/tests/nodes-room.test.ts`, `node tools/smoke/run.mjs nodes-room` (two phones through the relay).
+   - The phones are told right or wrong and then the right answer itself (a Ranking's order, a line per place; a sort's columns with their statements; a choice's answer and why). The reveal slide is the Nodes reveal, and the scores add up across challenges.
+   - **The teacher's copy:** every question slide's speaker notes carry its answer under THE ANSWER, taken from the slides that reveal it, so Teacher Presenter and notes on another device show it before the class sees it. Tests: `lab/tests/nodes-room.test.ts`, `node tools/smoke/run.mjs nodes-room` (two phones through the relay).
    - **Without phones** the slides work as they are: the ask slide is the question, the reveal slide the answer, built click by click. A show opened with no room changes each Nodes slide's "On phones" cue into its own cue for a class without phones: "Hands up · A, B or C" or "Hands up · which step?", otherwise "On paper" and the same task (`withoutPhones` in `show/steps.ts`, from `slide.nodes.paper`). Same link, new case ends on both cases worked through, and every Framework stage writes its model answer into its own scaffold, a part per slot and a click each: under each box of a chain, beside each step of working, in each side of a comparison, under each challenge (`slotsOf` in `designs/nodes/framework.ts`). The AI writes these too, a part per slot. Every other format shows its answers in its question's own layout too: Size the answer and Same word fill their reveal's boxes, the ladder answers its question and its later task as rows of its relation, Same link new case writes each case's working into the link's chain, and Before during after ends on its three cards answered. Join it up, Keep them apart, Label the parts, Which step broke?, Three answers and Model marks already did.
 5. **The rest of the formats:** Breakdown, Missing-link ladder, Keep them apart, Level it, Size the answer, Mark it.
 6. **Scaffold:** every node of Technical Analysis (16) or the GCSE CS ladder (13) on one topic, AI-written from the real node definitions, with the class on the framework map.
@@ -185,6 +186,7 @@ Each step works on its own and can be pushed on its own.
 
 ## Change log
 
+- 14 October 2026: answers in the teacher's notes on every question slide, and the right answer on each phone after a reveal.
 - 14 October 2026: answers for every format in its question's layout (Size the answer, Same word, ladder, new case, before during after), in the starters and from the AI.
 - 14 October 2026: Framework model answers moved into each stage's scaffold, a part per slot.
 - 14 October 2026: without phones: worked answers for Same link, new case, a model answer per Framework stage (both starters, and AI-written), and a hands-up or on-paper cue in a show with no room.
