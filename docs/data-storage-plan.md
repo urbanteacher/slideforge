@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Step 2's code is ready (14 October): the project itself waits on the owner (section 6, step 2).
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 and 3 are built (14 October): the schema, the keep-alive and the sign-in. They come alive when the owner creates the project (section 6, step 2).
 
 ## 1. The problem
 
@@ -114,7 +114,11 @@ Each step is its own commit and works on its own.
      2. In its SQL editor, run `supabase/migrations/0001_lessons.sql`.
      3. Under Authentication → Providers, keep Email on, with "Confirm email" on. Under Authentication → URL configuration, set the Site URL to the Render address, and add `http://localhost:8787` as a redirect URL.
      4. From Settings → API, copy the Project URL and the anon public key into Render's environment (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), into `.env` locally, and into the GitHub repository's Actions secrets under the same two names. The service_role key stays in Supabase.
-3. **Sign-in: an email magic link, teachers only (decided 14 October).** Signed out, the app is as today.
+3. **Sign-in: an email magic link, teachers only. Built 14 October; live once the project exists.** Signed out, the app is as today.
+   - `js/cloud.js` (`SF.Cloud`): asks the relay for the project (`/api/cloud-config`). With none, nothing shows, and the Supabase library is never loaded.
+   - With one, it loads `@supabase/supabase-js` 2.45.4 from jsDelivr, pinned, and the header gains **Sign in**.
+   - The dialog takes a work email. An email outside `allowed_domains` is refused before anything is sent. A work email is sent a magic link (the PKCE flow) that brings the teacher back to the page they were on, signed in. The button then names them, and the dialog signs out.
+   - Checked by `tools/smoke/cloud-signin.mjs` (in the CI set), against a stand-in for Supabase. The real email can only be tried once the project exists.
 4. **Sync lessons.**
    - On save, write locally, then push to Supabase.
    - On open, pull any newer versions.
@@ -143,6 +147,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 14 October 2026, later: step 3 built, the email magic-link sign-in (`js/cloud.js`), hidden until the project exists.
 - 14 October 2026: teachers only and an email magic link decided. Step 2's code built: the schema with Row Level Security and the teachers-only rule, the private media bucket, the weekly keep-alive, and `/api/cloud-config`. The project itself waits on the owner.
 
 - 12 October 2026: step 1 built. `SF.Docs` reads both stores, and the backup carries Lesson-studio lessons.
