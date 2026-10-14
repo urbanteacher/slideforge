@@ -798,6 +798,12 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 14 October 2026 — Youth Charter gets a Library folder, its two starters ship, and the Lesson studio has its palette
+
+- **Was:** Soccerwise and Youthwise were written only to `output/` (git ignores it) for File → Import, so no other machine had them; an imported one was filed under Other; and the studio opened it in Northeastern's colours, having no Youth Charter palette.
+- **Now:** a Youth Charter folder (`src/storage.js`), which both Youth Charter themes file into; `tools/build-youth-charter-ai.js` also writes `js/lessons-youth-charter.js` (keys `yc-soccerwise-ai`, `yc-youthwise-ai`), seeded into that folder; the studio's Youth Charter palette in `lab/src/theme/palettes.ts` (Impact headlines, the logo), which both themes use; and the shipped studio copies.
+- **Still open:** the studio draws neither the street-poster art (tape, stickers, halftone dots) nor Matchday's pitch stripes. Classic's `css/youth-charter.css` does, but the studio's `themeArt.ts` has no Youth Charter family yet.
+
 ### 14 October 2026 — An older Lesson-studio copy of a lesson with live figures presents again
 
 - **Bug:** Present refused IPDV Week 5 on Render: *"Live figure · Find the United Kingdom" has a live figure the lesson does not carry*. The browser's saved copy had been carried to converter version 15 after the lesson was filed again under new slide ids, so the carry matched no figure by id and marked the copy up to date anyway.
