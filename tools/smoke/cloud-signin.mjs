@@ -57,8 +57,8 @@ try {
   await page.locator('#btnAccount').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#btnAccount').innerText(), 'Sign in');
   const made = await page.evaluate(() => window.__sb.made);
-  assert.deepEqual(made, { url: 'https://slideforgetest.supabase.co', key: 'anon-test-key', flow: 'pkce' });
-  step('with a project: Sign in in the header, the client made with its URL, public key and the PKCE flow');
+  assert.deepEqual(made, { url: 'https://slideforgetest.supabase.co', key: 'anon-test-key', flow: 'implicit' });
+  step('with a project: Sign in in the header, the client made with its URL, public key and the implicit flow (a link that works in any browser)');
 
   await page.locator('#btnAccount').click();
   await page.locator('#accountEmail').fill('someone@gmail.com');

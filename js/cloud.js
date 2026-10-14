@@ -64,8 +64,11 @@
         if (!cfg || !cfg.enabled || !cfg.url || !cfg.anonKey) return false;
         return loadLib().then(function () {
           var g = /** @type {any} */ (global);
+          /* The implicit flow, not PKCE: a teacher often asks for the link on a laptop and opens the email on a phone
+             or in another browser. PKCE completes only in the browser that asked; the implicit link signs in
+             whichever browser opens it. The link works once and expires within the hour either way. */
           client = g.supabase.createClient(cfg.url, cfg.anonKey, {
-            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'implicit' }
           });
           client.auth.onAuthStateChange(function (/** @type {string} */ _e, /** @type {any} */ session) { setUser(session && session.user); });
           return Promise.all([
