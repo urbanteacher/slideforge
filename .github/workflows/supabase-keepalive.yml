@@ -1,0 +1,28 @@
+# A free Supabase project pauses after a week without use (docs/data-storage-plan.md §3). One small read a week keeps
+# it awake. It reads the public list of allowed sign-in domains, so it needs only the public URL and anon key, set as
+# the repository's Actions secrets SUPABASE_URL and SUPABASE_ANON_KEY. Until they are set, it does nothing.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read one row
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Supabase secrets not set yet; nothing to keep awake."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/allowed_domains?select=domain&limit=1")
+          echo "Supabase answered $code"
+          test "$code" = "200"

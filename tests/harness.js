@@ -20,10 +20,10 @@ async function freePort() {
   return p;
 }
 
-async function start(port, dir) {
+async function start(port, dir, env = {}) {
   const child = spawn(process.execPath, ['server/server.js'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', SLIDEFORGE_SESSION_DIR: dir },
+    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', SLIDEFORGE_SESSION_DIR: dir, ...env },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   await new Promise((resolve, reject) => {

@@ -315,6 +315,14 @@ function listData(res) {
    Absent key is not an error: SF.AI falls back to its offline heuristics, so a
    deployment with no key still generates polls. */
 const AI_KEY = process.env.GEMINI_API_KEY || '';
+
+/* Saving lessons online (docs/data-storage-plan.md): the Supabase project's URL and its public "anon" key. Both are
+   public by design: the browser talks to Supabase with them, and Row Level Security (supabase/migrations) is what
+   keeps each teacher's lessons theirs. The service key is never read here. Unset, or not a Supabase project URL,
+   the app stays browser-only, exactly as before. */
+const CLOUD_URL = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(String(process.env.SUPABASE_URL || '').replace(/\/+$/, ''))
+  ? String(process.env.SUPABASE_URL).replace(/\/+$/, '') : '';
+const CLOUD_KEY = CLOUD_URL ? String(process.env.SUPABASE_ANON_KEY || '').trim() : '';
 /* Moving aliases, not pinned versions: a key issued in the newer AQ. format
    does not resolve pinned aliases, and the provider answers 404 for the MODEL
    rather than 401 for the key — so a perfectly good key reads as "model
@@ -628,6 +636,12 @@ function serve(req, res) {
     });
   }
   if (rel === '/api/ai/generate' && req.method === 'POST') return aiGenerate(req, res);
+
+  /* Where lessons are saved online, for the browser: the Supabase project and its public key, or nothing (the app
+     then saves in this browser only). Sign-in is an email magic link, for teachers only (data-storage-plan §8). */
+  if (rel === '/api/cloud-config' && req.method === 'GET') {
+    return jsonReply(res, 200, CLOUD_URL && CLOUD_KEY ? { enabled: true, url: CLOUD_URL, anonKey: CLOUD_KEY, signIn: 'email' } : { enabled: false });
+  }
 
   /* Sharing is deliberately NOT gated the way /api/data is when hosted.
      They look similar and are opposites: /api/data writes whatever is posted
