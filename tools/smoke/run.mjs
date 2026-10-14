@@ -45,7 +45,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
    missing. Measured at 150s for the whole ci set, of which demo-deck is 39. */
 const SETS = {
   ci: [
-    'campaign-chrome', 'chrome-region', 'demo-deck', 'exports', 'fit-check', 'handout',
+    'campaign-chrome', 'chrome-region', 'cloud-signin', 'demo-deck', 'exports', 'fit-check', 'handout',
     'lab-lesson', 'nodes-room', 'review-tool', 'share', 'slide-review', 'studio-room', 'type-scale',
   ],
   /* Everything that touches saving, reloading, exporting or sharing a deck.

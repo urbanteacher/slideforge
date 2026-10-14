@@ -119,6 +119,8 @@ html:not([data-ready]) body { background: #0a0a0b; }
     <button class="btn" id="btnSettings" title="Theme, logo, slide numbers — how this lesson looks">Settings</button>
     <!-- Hidden from a file:// page, where there is no server to put a copy on. -->
     <button class="btn share-btn" id="btnShareTop" title="Share a read-only link to this lesson">↗ Share</button>
+    <!-- The teacher's account (js/cloud.js): shown only when online saving is set up on this server. -->
+    <button class="btn account-btn" id="btnAccount" type="button" hidden>Sign in</button>
     </div>
 
     <span class="bar-break" aria-hidden="true"></span>
@@ -338,6 +340,7 @@ SF.installExplore(SF);
 <script src="js/lesson-runtime.js?v=5"></script>
 <script src="js/lab-engine.js?v=50"></script>
 <script src="js/docs.js?v=2"></script>
+<script src="js/cloud.js?v=1"></script>
 <script src="js/studio.js?v=18"></script>
 <script src="js/adapt.js?v=2"></script>
 <script src="js/reports.js?v=3"></script>
@@ -351,5 +354,27 @@ try {
   document.documentElement.setAttribute('data-ready', '1');
 }
 </script>
+<dialog id="accountDialog" class="account-dialog" aria-labelledby="accountTitle">
+  <form method="dialog">
+    <h2 id="accountTitle">Your account</h2>
+    <div class="account-out">
+      <p>Sign in with your work email to keep your lessons on every device. We email you a link; there is no password.</p>
+      <label for="accountEmail">Work email</label>
+      <input id="accountEmail" type="email" autocomplete="email" placeholder="name@nulondon.ac.uk" required>
+      <div class="account-actions">
+        <button class="btn primary" id="accountSend" type="button">Email me a link</button>
+        <button class="btn" type="button" onclick="this.closest('dialog').close()">Not now</button>
+      </div>
+    </div>
+    <div class="account-in" hidden>
+      <p>Signed in as <b id="accountWho"></b>.</p>
+      <div class="account-actions">
+        <button class="btn" id="accountOut" type="button">Sign out</button>
+        <button class="btn" type="button" onclick="this.closest('dialog').close()">Close</button>
+      </div>
+    </div>
+    <p class="account-say" id="accountSay" role="status" aria-live="polite"></p>
+  </form>
+</dialog>
 </body>
 </html>

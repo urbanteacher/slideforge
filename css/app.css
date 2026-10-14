@@ -5706,6 +5706,16 @@ html[data-ws="deck"] #railCount { display: none; }
 
 .share-btn { font-weight: 600; }
 .share-btn:hover { border-color: var(--ink, currentColor); }
+/* The teacher's account (js/cloud.js): the button names who is signed in. */
+.account-btn.signed-in { border-color: var(--accent, #ff5a36); }
+.account-dialog { width: min(420px, calc(100vw - 32px)); border: 1px solid var(--line, #333); border-radius: 14px; padding: 22px 24px; background: var(--panel, #17171a); color: var(--text, #ececef); }
+.account-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.account-dialog h2 { margin: 0 0 10px; font-size: 18px; }
+.account-dialog p { margin: 0 0 12px; line-height: 1.45; }
+.account-dialog label { display: block; font-weight: 600; margin-bottom: 6px; }
+.account-dialog input { box-sizing: border-box; width: 100%; padding: 10px 12px; font: inherit; border-radius: 8px; border: 1px solid var(--line-2, #444); background: var(--field, #1f1f23); color: inherit; }
+.account-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.account-say { min-height: 1.4em; margin: 12px 0 0 !important; color: var(--accent, #ff5a36); }
 
 /* Teaching exploration: movement has a destination and then settles. */
 .exploration-slide .pad{gap:14px;display:flex;flex-direction:column;padding:40px 60px}
