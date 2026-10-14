@@ -104,7 +104,7 @@ Each step is its own commit and works on its own.
      - `documents (owner, id, kind, title, folder, modified, deleted, body jsonb)`
      - `folders (owner, id, name, sort)`
      - `assets (owner, hash, path, bytes, type)`
-     - `allowed_domains`, starting with `nulondon.ac.uk`
+     - `allowed_domains`, starting with `urbanteacher.co.uk` (the owner's choice, 14 October; it was `nulondon.ac.uk`)
    - Row Level Security: a teacher reads and writes only their own rows, and only when signed in with an email at an allowed domain (`is_teacher()`).
    - A private `media` bucket, each teacher's files under a folder named by their user id.
    - `.github/workflows/supabase-keepalive.yml` reads one row every Monday, so the free project never pauses. It does nothing until the repository has the secrets.
@@ -147,6 +147,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 14 October 2026, later: the allowed domain changed from nulondon.ac.uk to urbanteacher.co.uk, in the project and in `0001_lessons.sql`.
 - 14 October 2026, evening: the SlideForge project created in London through the Supabase connection, and `0001_lessons.sql` applied (with `execute_sql`, so it is not in the project's migration history; its `drop policy` lines were left out, as the project was new). Checked: four tables with Row Level Security, five policies, the private `media` bucket, nulondon.ac.uk allowed. With the public key alone, lessons read empty, and writing a lesson or a domain is refused (401). `.env` holds the URL and anon key, and localhost shows Sign in.
 
 - 14 October 2026, later: step 3 built, the email magic-link sign-in (`js/cloud.js`), hidden until the project exists.
