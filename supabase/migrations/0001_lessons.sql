@@ -10,7 +10,7 @@
 create table if not exists public.allowed_domains (
   domain text primary key check (domain = lower(domain) and domain !~ '@')
 );
-insert into public.allowed_domains (domain) values ('nulondon.ac.uk') on conflict do nothing;
+insert into public.allowed_domains (domain) values ('urbanteacher.co.uk') on conflict do nothing;
 alter table public.allowed_domains enable row level security;
 -- Readable by anyone (it is the sign-in page's own rule, and the weekly keep-alive reads it); written only from the
 -- dashboard, by the project's owner.

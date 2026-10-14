@@ -4,7 +4,7 @@
    project is set up (GET /api/cloud-config): when it is not, nothing here shows and the app saves in this browser
    only, exactly as before. When it is, the header gains a Sign in button; a teacher types their work email, Supabase
    emails a link, and the link brings them back signed in. Only an email at an allowed domain (the project's
-   allowed_domains, nulondon.ac.uk) is offered a link; the database refuses everyone else anyway (Row Level Security,
+   allowed_domains, urbanteacher.co.uk) is offered a link; the database refuses everyone else anyway (Row Level Security,
    supabase/migrations/0001_lessons.sql).
 
    SF.Cloud

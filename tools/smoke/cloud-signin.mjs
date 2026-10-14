@@ -23,7 +23,7 @@ window.supabase = { createClient(url, key, opts) {
       signInWithOtp: (a) => { window.__sb.sent.push(a); return Promise.resolve({ error: null }); },
       signOut: () => { window.__sb.out++; return Promise.resolve({ error: null }); },
     },
-    from: (t) => ({ select: () => Promise.resolve({ data: t === 'allowed_domains' ? [{ domain: 'nulondon.ac.uk' }] : [] }) }),
+    from: (t) => ({ select: () => Promise.resolve({ data: t === 'allowed_domains' ? [{ domain: 'urbanteacher.co.uk' }] : [] }) }),
   };
 } };`;
 
@@ -67,19 +67,19 @@ try {
   assert.equal((await page.evaluate(() => window.__sb.sent)).length, 0);
   step('an email outside the allowed domains is refused, and nothing is sent');
 
-  await page.locator('#accountEmail').fill('M.Martin@nulondon.ac.uk');
+  await page.locator('#accountEmail').fill('Mark@urbanteacher.co.uk');
   await page.locator('#accountSend').click();
   await page.locator('#accountSay').filter({ hasText: /Check your email/ }).waitFor();
   const sent = await page.evaluate(() => window.__sb.sent);
   assert.equal(sent.length, 1);
-  assert.equal(sent[0].email, 'M.Martin@nulondon.ac.uk');
+  assert.equal(sent[0].email, 'Mark@urbanteacher.co.uk');
   assert.equal(sent[0].options.emailRedirectTo, `http://127.0.0.1:${port}/`);
   step('a work email is sent a magic link that comes back to this page');
 
-  await page.evaluate(() => window.__sb.cb('SIGNED_IN', { user: { id: 'u-1', email: 'm.martin@nulondon.ac.uk' } }));
+  await page.evaluate(() => window.__sb.cb('SIGNED_IN', { user: { id: 'u-1', email: 'mark@urbanteacher.co.uk' } }));
   await page.locator('#btnAccount.signed-in').waitFor();
-  assert.equal(await page.locator('#btnAccount').innerText(), 'm.martin');
-  assert.equal(await page.locator('#accountWho').innerText(), 'm.martin@nulondon.ac.uk');
+  assert.equal(await page.locator('#btnAccount').innerText(), 'mark');
+  assert.equal(await page.locator('#accountWho').innerText(), 'mark@urbanteacher.co.uk');
   step('signed in: the button names the teacher, and the dialog says who');
 
   await page.locator('#accountOut').click();
