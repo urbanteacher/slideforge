@@ -44,7 +44,9 @@ export const compare = defineStyle({
   unsupported: (q) => (q.compareDiscuss === true || (q.input ?? 'sort') !== 'sort' ? 'its discussion mode is still SlideForge\'s to run' : ''),
   scoreSlide: false,
   companion: () => ({ role: '', participation: '', headPrompt: 'Sort it' }),
-  reveal: () => ({ correct: -1, answer: '' }),
+  // The phones are told the sort in words only when the question asks for it (`tell`: a Nodes challenge); classic's
+  // reveal says none, though its compile writes one.
+  reveal: (q) => ({ correct: -1, answer: q.tell === true && typeof q.answer === 'string' ? q.answer : '' }),
   flags: (q) => ({ bins: (Array.isArray(q.sortBins) ? q.sortBins as string[] : []).slice() }),
   gains: (q, answers) => answers.map((a) => [a.id, Math.round((Number(q.points) || 0) * sortScore(q, a.response))] as [number, number]),
   manualQuestion: (q) => ({ bins: (Array.isArray(q.sortBins) ? q.sortBins as string[] : []).slice() }),

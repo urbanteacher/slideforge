@@ -40,4 +40,7 @@ export const order = defineStyle({
   },
   gains: (q, answers) => answers.map((a) => [a.id, q.scaled === true ? Math.round((Number(q.points) || 0) * orderScore(q, a.response)) : orderPoints(q, a.response)] as [number, number]),
   wall: (q, answers, revealed) => ({ kind: 'slots', slots: revealed ? slotsOf(q.options.filter((o) => String(o).trim()), answers) : null }),
+  // What the phones are told: the question's own answer when it says one (a Nodes challenge: "the right order", the order
+  // itself in its explanation), else the first item, as classic.
+  reveal: (q) => ({ correct: Number.isInteger(q.correct) ? q.correct : 0, answer: typeof q.answer === 'string' && q.answer.trim() ? q.answer : String(q.options[Number(q.correct) || 0] ?? '') }),
 });

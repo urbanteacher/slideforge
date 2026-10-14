@@ -61,7 +61,9 @@ try {
     const a = await ana.next('result'), b = await bo.next('result');
     assert.equal(a.right, true, `${label}: Ana is right`);
     assert.equal(b.right, false, `${label}: Bo is wrong`);
-    step(`${label}: the question reached both phones (${q.input}), the reveal marked Ana right and Bo wrong, the phones were told`);
+    assert.ok(String(a.answer || '').trim() && (String(a.why || '').trim() || /choice/.test(label)), `${label}: the phone is told the right answer`);
+    assert.equal(a.answer, b.answer, `${label}: every phone is told the same answer`);
+    step(`${label}: the question reached both phones (${q.input}), the reveal marked Ana right and Bo wrong, and each phone was told the answer (“${String(a.answer).slice(0, 40)}”${a.why ? `, ${String(a.why).split('\n')[0].slice(0, 40)}…` : ''})`);
   };
   await play('Which step broke? (choice)', (q) => ({ choice: 1 }), (q) => ({ choice: 0 }));
   const sorted = await page.evaluate(() => SF.Shell.current().doc().slides.find((s) => s.nodes?.format === 'keep-apart' && s.game?.quiz).game.quiz.sortAnswers);

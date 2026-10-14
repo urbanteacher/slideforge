@@ -148,3 +148,35 @@ test('every Framework stage writes its model answer into its scaffold, a part pe
   one.stages[0].model = 'Clock speed is cycles per second.';
   assert.ok(f.slides(st, one as never).some((s) => s.layers.some((l) => l.name === 'Model answer')));
 });
+
+// The teacher's copy: every question slide's notes say the answer before the class sees it.
+test('each Nodes question slide’s notes carry its answer for the teacher', () => {
+  const ask = (id: string, role = 'ask') => { const f = NODES.find((x) => x.id === id)!; return f.slides(st, f.starter).find((s) => s.nodes?.role === role)!.notes; };
+  assert.match(ask('join-it-up'), /THE ANSWER[\s\S]*means more clock cycles/);
+  assert.match(ask('keep-apart'), /THE ANSWER[\s\S]*Holds the address of the next instruction/);
+  assert.match(ask('which-step'), /THE ANSWER[\s\S]*It broke at Retrieve/);
+  assert.match(ask('three-answers'), /THE ANSWER[\s\S]*excellent/i);
+  assert.match(ask('size-answer'), /THE ANSWER[\s\S]*An answer: The ALU/);
+  assert.match(ask('same-word'), /THE ANSWER[\s\S]*Answer: Cache memory/);
+  assert.match(ask('ladder'), /THE ANSWER[\s\S]*Control unit → decodes/);
+  assert.match(ask('ladder', 'later'), /THE ANSWER[\s\S]*Router → connects/);
+  assert.match(ask('before-during-after', 'routine'), /THE ANSWER[\s\S]*Repair/);
+  assert.match(ask('model-marks'), /THE ANSWER/);
+  // The answer slides themselves are not given it twice.
+  const f = NODES.find((x) => x.id === 'join-it-up')!;
+  assert.ok(!f.slides(st, f.starter).find((s) => s.nodes?.role === 'reveal')!.notes.includes('THE ANSWER'));
+});
+
+test('a Nodes Ranking and sort tell each phone the right answer after the reveal', async () => {
+  const { order } = await import('../src/live/styles/order');
+  const { compare } = await import('../src/live/styles/compare');
+  const q = (id: string) => { const f = NODES.find((x) => x.id === id)!; return f.slides(st, f.starter).find((s) => s.game?.quiz)!.game!.quiz as never as Record<string, unknown>; };
+  const o = q('join-it-up');
+  assert.equal(order.reveal(o as never).answer, 'the right order, first to last');
+  assert.match(String(o.explanation), /^1\. A higher clock speed\n\n2\. /);
+  const c = q('keep-apart');
+  assert.equal(compare.reveal(c as never).answer, 'each in its column');
+  assert.match(String(c.explanation), /^Registers[^:]*: Holds/);
+  // A classic Ranking still says its first item.
+  assert.equal(order.reveal({ options: ['a', 'b', 'c'], correct: 0 } as never).answer, 'a');
+});
