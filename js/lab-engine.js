@@ -911,6 +911,17 @@
         }).then(function (/** @type {any[]} */ decks) { return decks.filter(Boolean); });
       });
     },
+    /** The saved lessons as their list rows ({ id, title, modified, libraryGroup }), without reading any lesson:
+        what the online sync compares (js/sync.js). */
+    savedRows: function () {
+      return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) {
+        return a.flush().catch(function () {}).then(function () { return a.listSaved(); });
+      });
+    },
+    /** One saved lesson as it is stored, or null (js/sync.js). */
+    savedDeck: function (/** @type {string} */ id) {
+      return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) { return a.readSaved(id); });
+    },
     /** Lessons from a backup, filed in the lab with their Library cards. Resolves to how many were filed. */
     restoreDecks: function (/** @type {any[]} */ decks) {
       return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) {

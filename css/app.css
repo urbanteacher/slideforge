@@ -5715,6 +5715,7 @@ html[data-ws="deck"] #railCount { display: none; }
 .account-dialog label { display: block; font-weight: 600; margin-bottom: 6px; }
 .account-dialog input { box-sizing: border-box; width: 100%; padding: 10px 12px; font: inherit; border-radius: 8px; border: 1px solid var(--line-2, #444); background: var(--field, #1f1f23); color: inherit; }
 .account-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.account-sync { color: var(--text, #ececef); }
 .account-say { min-height: 1.4em; margin: 12px 0 0 !important; color: var(--accent, #ff5a36); }
 
 /* Teaching exploration: movement has a destination and then settles. */

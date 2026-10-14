@@ -36,10 +36,17 @@ export async function listSaved(): Promise<SavedRow[]> {
 // written, so the autosave, the page-hide flush and the shell's flush cannot put the lesson back.
 let cleared = false;
 
+// The deck last written, as the object it was. The editor makes a new deck object on every edit, so the same object
+// again (a flush, the page-hide save, a sync asking for the list) has nothing new: it is not written again, and its
+// modified time stays when it was last changed, which is what the online sync compares (js/sync.js).
+let lastWritten: Deck | null = null;
+
 /** Keep one deck under its own id, and list it for the shell's Open. */
 export function persistDeck(d: Deck): Promise<SavedRow[]> {
   return serial(async () => {
     if (cleared) return [];
+    if (d === lastWritten) return listSaved();
+    lastWritten = d;
     const deck = { ...d, modified: Date.now() };
     await idbSet(key(d.id), deck);
     const rows = (await listSaved()).filter((r) => r.id !== d.id);

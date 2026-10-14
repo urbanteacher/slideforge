@@ -342,6 +342,7 @@ SF.installExplore(SF);
 <script src="js/lab-engine.js?v=50"></script>
 <script src="js/docs.js?v=2"></script>
 <script src="js/cloud.js?v=2"></script>
+<script src="js/sync.js?v=1"></script>
 <script src="js/studio.js?v=18"></script>
 <script src="js/adapt.js?v=2"></script>
 <script src="js/reports.js?v=3"></script>
@@ -369,7 +370,9 @@ try {
     </div>
     <div class="account-in" hidden>
       <p>Signed in as <b id="accountWho"></b>.</p>
+      <p class="account-sync" id="accountSync" role="status" aria-live="polite">Your lessons save to your account while you are signed in.</p>
       <div class="account-actions">
+        <button class="btn" id="accountSyncNow" type="button">Save to account now</button>
         <button class="btn" id="accountOut" type="button">Sign out</button>
         <button class="btn" type="button" onclick="this.closest('dialog').close()">Close</button>
       </div>
