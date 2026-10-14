@@ -5,7 +5,7 @@
     "principle": "SAFE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Safe.pdf",
-    "pages": 15,
+    "pages": 13,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "This topic can be distressing for students who have experienced image-based abuse: have your safeguarding lead's name ready to say, and details to share privately.",
@@ -23,7 +23,7 @@
       {
         "action": "Ask the question and give pairs 60 seconds. Take a vote on the four options by hands or phones.",
         "duration": "1 min",
-        "resource_ref": "Slides 2–3",
+        "resource_ref": "Slide 2",
         "student_action": "Pair discussion, then vote",
         "teacher_tip": "\"Send it to a friend to check\" is the teachable answer: it feels responsible and it is the one that spreads the harm. Do not say so until after the vote.",
         "optional": false
@@ -31,7 +31,7 @@
       {
         "action": "Read the headline aloud and let the room work out what \"1 in 17\" means for a class of thirty.",
         "duration": "45 sec",
-        "resource_ref": "Slide 4",
+        "resource_ref": "Slide 3",
         "student_action": "",
         "teacher_tip": "Pause after \"1 in 17\" and say that support is always available. State 98% once and move on.",
         "optional": false
@@ -39,7 +39,7 @@
       {
         "action": "Take the room's answers first, then go through the four cards, matching them to what was said.",
         "duration": "1 min",
-        "resource_ref": "Slide 5",
+        "resource_ref": "Slide 4",
         "student_action": "Share answers",
         "teacher_tip": "Say plainly that forwarding something to warn people is still forwarding it, and that creating AI-generated intimate images of anyone is illegal.",
         "optional": false
@@ -47,7 +47,7 @@
       {
         "action": "Turn the lesson back on the deck: go through the source check row by row.",
         "duration": "45 sec",
-        "resource_ref": "Slide 6",
+        "resource_ref": "Slide 5",
         "student_action": "",
         "teacher_tip": "Be fair to the number — it is a serious figure from a serious source. The point is that nobody asked.",
         "optional": false
@@ -55,7 +55,7 @@
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
-        "resource_ref": "Slide 7",
+        "resource_ref": "Slide 6",
         "student_action": "Copy the definitions",
         "teacher_tip": "",
         "optional": false
@@ -63,7 +63,7 @@
       {
         "action": "Go through the three habits.",
         "duration": "30 sec",
-        "resource_ref": "Slide 8",
+        "resource_ref": "Slide 7",
         "student_action": "",
         "teacher_tip": "If you are short of time, end here.",
         "optional": false
@@ -71,7 +71,7 @@
       {
         "action": "Read the takeaway, then stop talking.",
         "duration": "15 sec",
-        "resource_ref": "Slide 9",
+        "resource_ref": "Slide 8",
         "student_action": "",
         "teacher_tip": "",
         "optional": false
@@ -79,7 +79,7 @@
       {
         "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
         "duration": "1 min",
-        "resource_ref": "Slides 10–11",
+        "resource_ref": "Slide 9",
         "student_action": "Vote",
         "teacher_tip": "Challenge card: What if the deepfake was of a famous politician and made a serious point?",
         "optional": true
@@ -87,7 +87,7 @@
       {
         "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
         "duration": "5 min",
-        "resource_ref": "Slides 12–13",
+        "resource_ref": "Slides 10–11",
         "student_action": "Prepare, speak, vote again",
         "teacher_tip": "Ask who changed their mind, and what changed it.",
         "optional": true
@@ -95,7 +95,7 @@
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 14–15",
+        "resource_ref": "Slides 12–13",
         "student_action": "",
         "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
         "optional": false
@@ -122,7 +122,7 @@
     "principle": "SMART",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Smart.pdf",
-    "pages": 15,
+    "pages": 13,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Arrange students into pairs.",
@@ -140,7 +140,7 @@
       {
         "action": "Ask the question, give pairs 60 seconds, then take the vote.",
         "duration": "1 min",
-        "resource_ref": "Slides 2–3",
+        "resource_ref": "Slide 2",
         "student_action": "Pair discussion, then vote",
         "teacher_tip": "Note who says AI \"thinks\" for gentle correction later. \"Somewhere in between\" is the most interesting answer to unpick.",
         "optional": false
@@ -148,7 +148,7 @@
       {
         "action": "Walk through the four rows: what a language model does, against what understanding would need.",
         "duration": "45 sec",
-        "resource_ref": "Slide 4",
+        "resource_ref": "Slide 3",
         "student_action": "",
         "teacher_tip": "This slide is the whole starter. If you only have two minutes, show the question and then this.",
         "optional": false
@@ -156,7 +156,7 @@
       {
         "action": "Read the three figures: nearly everyone uses it, and half already know it makes things up.",
         "duration": "45 sec",
-        "resource_ref": "Slide 5",
+        "resource_ref": "Slide 4",
         "student_action": "",
         "teacher_tip": "A hallucination is not a rare glitch. It is what prediction does when the pattern runs out.",
         "optional": false
@@ -164,7 +164,7 @@
       {
         "action": "Go through the four answer cards, matching them to what pairs said.",
         "duration": "1 min",
-        "resource_ref": "Slide 6",
+        "resource_ref": "Slide 5",
         "student_action": "Share answers",
         "teacher_tip": "Do not skip the last card: explaining the limits should not tip into \"AI is rubbish\".",
         "optional": false
@@ -172,7 +172,7 @@
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
-        "resource_ref": "Slide 7",
+        "resource_ref": "Slide 6",
         "student_action": "Copy the definitions",
         "teacher_tip": "",
         "optional": false
@@ -180,7 +180,7 @@
       {
         "action": "Go through the three habits and invite pupils to name one they will change.",
         "duration": "30 sec",
-        "resource_ref": "Slide 8",
+        "resource_ref": "Slide 7",
         "student_action": "Name one habit",
         "teacher_tip": "Emphasise \"Verify\". If you are short of time, end here.",
         "optional": false
@@ -188,7 +188,7 @@
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
-        "resource_ref": "Slide 9",
+        "resource_ref": "Slide 8",
         "student_action": "",
         "teacher_tip": "",
         "optional": false
@@ -196,7 +196,7 @@
       {
         "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
         "duration": "1 min",
-        "resource_ref": "Slides 10–11",
+        "resource_ref": "Slide 9",
         "student_action": "Vote",
         "teacher_tip": "Challenge card: What if someone followed an AI's health advice and it was wrong?",
         "optional": true
@@ -204,7 +204,7 @@
       {
         "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
         "duration": "5 min",
-        "resource_ref": "Slides 12–13",
+        "resource_ref": "Slides 10–11",
         "student_action": "Prepare, speak, vote again",
         "teacher_tip": "Ask who changed their mind, and what changed it.",
         "optional": true
@@ -212,7 +212,7 @@
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 14–15",
+        "resource_ref": "Slides 12–13",
         "student_action": "",
         "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
         "optional": false
@@ -239,7 +239,7 @@
     "principle": "CREATIVE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Creative.pdf",
-    "pages": 14,
+    "pages": 12,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Optional: have one example of a student creative task to refer to when discussing AI's role."
@@ -256,7 +256,7 @@
       {
         "action": "Ask the question, give pairs 60 seconds, then take the vote.",
         "duration": "1 min",
-        "resource_ref": "Slides 2–3",
+        "resource_ref": "Slide 2",
         "student_action": "Pair discussion, then vote",
         "teacher_tip": "Accept a range of answers and let two people who voted differently argue it out. Do not resolve it.",
         "optional": false
@@ -264,7 +264,7 @@
       {
         "action": "Read the three figures aloud.",
         "duration": "45 sec",
-        "resource_ref": "Slide 4",
+        "resource_ref": "Slide 3",
         "student_action": "",
         "teacher_tip": "The \"None\" tile often surprises students — let it land, and take the pushback.",
         "optional": false
@@ -272,7 +272,7 @@
       {
         "action": "Go through the four cards.",
         "duration": "1 min",
-        "resource_ref": "Slide 5",
+        "resource_ref": "Slide 4",
         "student_action": "Share answers",
         "teacher_tip": "The answer depends on how much human creative input was involved. Spend your time on \"The test\".",
         "optional": false
@@ -280,7 +280,7 @@
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
-        "resource_ref": "Slide 6",
+        "resource_ref": "Slide 5",
         "student_action": "Copy the definitions",
         "teacher_tip": "",
         "optional": false
@@ -288,7 +288,7 @@
       {
         "action": "Go through the three ways, then ask pupils to name one project where they would use AI as a starting point, not a shortcut.",
         "duration": "30 sec",
-        "resource_ref": "Slide 7",
+        "resource_ref": "Slide 6",
         "student_action": "Name one project",
         "teacher_tip": "",
         "optional": false
@@ -296,7 +296,7 @@
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
-        "resource_ref": "Slide 8",
+        "resource_ref": "Slide 7",
         "student_action": "",
         "teacher_tip": "",
         "optional": false
@@ -304,7 +304,7 @@
       {
         "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
         "duration": "1 min",
-        "resource_ref": "Slides 9–10",
+        "resource_ref": "Slide 8",
         "student_action": "Vote",
         "teacher_tip": "Challenge card: What if AI made it so easy that nobody bothered to learn to draw, write or play an instrument?",
         "optional": true
@@ -312,7 +312,7 @@
       {
         "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
         "duration": "5 min",
-        "resource_ref": "Slides 11–12",
+        "resource_ref": "Slides 9–10",
         "student_action": "Prepare, speak, vote again",
         "teacher_tip": "Ask who changed their mind, and what changed it.",
         "optional": true
@@ -320,7 +320,7 @@
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 13–14",
+        "resource_ref": "Slides 11–12",
         "student_action": "",
         "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
         "optional": false
@@ -347,7 +347,7 @@
     "principle": "RESPONSIBLE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Responsible.pdf",
-    "pages": 15,
+    "pages": 13,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Optional: have one short article or graphic ready about AI energy use or data centres."
@@ -364,7 +364,7 @@
       {
         "action": "Ask the question, give pairs 60 seconds, then ask pupils to place themselves from 1 (not at all) to 5 (enormously).",
         "duration": "1 min",
-        "resource_ref": "Slides 2–3",
+        "resource_ref": "Slide 2",
         "student_action": "Pair discussion, then vote",
         "teacher_tip": "Listen for students who assume online activity is \"free\" for the planet. Redirect guilt to \"when is it worth it?\".",
         "optional": false
@@ -372,7 +372,7 @@
       {
         "action": "Go through the four layers: everything under one chatbot answer.",
         "duration": "45 sec",
-        "resource_ref": "Slide 4",
+        "resource_ref": "Slide 3",
         "student_action": "",
         "teacher_tip": "The water layer is the one students remember, because nobody expects computing to be thirsty.",
         "optional": false
@@ -380,7 +380,7 @@
       {
         "action": "Go through the four cards.",
         "duration": "1 min",
-        "resource_ref": "Slide 5",
+        "resource_ref": "Slide 4",
         "student_action": "Share answers",
         "teacher_tip": "Say card B clearly: nobody should leave thinking they have been told off for using a chatbot.",
         "optional": false
@@ -388,7 +388,7 @@
       {
         "action": "Ask the room which of the five uses is in the wrong place.",
         "duration": "45 sec",
-        "resource_ref": "Slide 6",
+        "resource_ref": "Slide 5",
         "student_action": "Argue one position",
         "teacher_tip": "The positions are arguable, and that is the exercise. Do not defend the exact spots.",
         "optional": false
@@ -396,7 +396,7 @@
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
-        "resource_ref": "Slide 7",
+        "resource_ref": "Slide 6",
         "student_action": "Copy the definitions",
         "teacher_tip": "",
         "optional": false
@@ -404,7 +404,7 @@
       {
         "action": "Go through the three habits.",
         "duration": "30 sec",
-        "resource_ref": "Slide 8",
+        "resource_ref": "Slide 7",
         "student_action": "",
         "teacher_tip": "Keep it balanced: the goal is thoughtful use, not fear of AI.",
         "optional": false
@@ -412,7 +412,7 @@
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
-        "resource_ref": "Slide 9",
+        "resource_ref": "Slide 8",
         "student_action": "",
         "teacher_tip": "",
         "optional": false
@@ -420,7 +420,7 @@
       {
         "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
         "duration": "1 min",
-        "resource_ref": "Slides 10–11",
+        "resource_ref": "Slide 9",
         "student_action": "Vote",
         "teacher_tip": "Challenge card: What if companies only change when their customers demand it?",
         "optional": true
@@ -428,7 +428,7 @@
       {
         "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
         "duration": "5 min",
-        "resource_ref": "Slides 12–13",
+        "resource_ref": "Slides 10–11",
         "student_action": "Prepare, speak, vote again",
         "teacher_tip": "Ask who changed their mind, and what changed it.",
         "optional": true
@@ -436,7 +436,7 @@
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 14–15",
+        "resource_ref": "Slides 12–13",
         "student_action": "",
         "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
         "optional": false
@@ -463,7 +463,7 @@
     "principle": "FUTURE",
     "kind": "starter",
     "pdf": "AiAd27-Classic-Future.pdf",
-    "pages": 14,
+    "pages": 12,
     "preparation": [
       "Open the PDF (or the SlideForge deck) on the board before the class arrives.",
       "Optional: have the WEF Future of Jobs Report 2025 figures to hand in case students ask."
@@ -480,7 +480,7 @@
       {
         "action": "Ask the question and give pairs 60 seconds. Collect one skill from each pair.",
         "duration": "1 min",
-        "resource_ref": "Slides 2–3",
+        "resource_ref": "Slide 2",
         "student_action": "Pair discussion",
         "teacher_tip": "Listen for students who focus only on job loss, and draw out the opportunities too.",
         "optional": false
@@ -488,7 +488,7 @@
       {
         "action": "Read the three figures, leading with the net number.",
         "duration": "45 sec",
-        "resource_ref": "Slide 4",
+        "resource_ref": "Slide 3",
         "student_action": "",
         "teacher_tip": "Pause after each figure. \"Transformed, not disappeared\": most jobs will change rather than vanish.",
         "optional": false
@@ -496,7 +496,7 @@
       {
         "action": "Go through the four cards, matching them to the skills pairs suggested.",
         "duration": "1 min",
-        "resource_ref": "Slide 5",
+        "resource_ref": "Slide 4",
         "student_action": "Share answers",
         "teacher_tip": "\"Somebody said kindness — that is this one\" makes the list theirs rather than yours.",
         "optional": false
@@ -504,7 +504,7 @@
       {
         "action": "Leave the two definitions up for pupils to copy.",
         "duration": "20 sec",
-        "resource_ref": "Slide 6",
+        "resource_ref": "Slide 5",
         "student_action": "Copy the definitions",
         "teacher_tip": "",
         "optional": false
@@ -512,7 +512,7 @@
       {
         "action": "Go through the three moves and invite pupils to name one habit they will try.",
         "duration": "30 sec",
-        "resource_ref": "Slide 7",
+        "resource_ref": "Slide 6",
         "student_action": "Name one habit",
         "teacher_tip": "End on an empowering note.",
         "optional": false
@@ -520,7 +520,7 @@
       {
         "action": "Read the takeaway, then stop.",
         "duration": "15 sec",
-        "resource_ref": "Slide 8",
+        "resource_ref": "Slide 7",
         "student_action": "",
         "teacher_tip": "",
         "optional": false
@@ -528,7 +528,7 @@
       {
         "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
         "duration": "1 min",
-        "resource_ref": "Slides 9–10",
+        "resource_ref": "Slide 8",
         "student_action": "Vote",
         "teacher_tip": "Challenge card: What if the new jobs need skills that the people who lost their jobs do not have?",
         "optional": true
@@ -536,7 +536,7 @@
       {
         "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
         "duration": "5 min",
-        "resource_ref": "Slides 11–12",
+        "resource_ref": "Slides 9–10",
         "student_action": "Prepare, speak, vote again",
         "teacher_tip": "Ask who changed their mind, and what changed it.",
         "optional": true
@@ -544,7 +544,7 @@
       {
         "action": "Say, out loud, who pupils can go to if anything today affected them, and leave the support slides up as the room moves on.",
         "duration": "15 sec",
-        "resource_ref": "Slides 13–14",
+        "resource_ref": "Slides 11–12",
         "student_action": "",
         "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
         "optional": false
@@ -571,7 +571,7 @@
     "principle": "SMART",
     "kind": "assembly",
     "pdf": "AiAd27-Classic-Assembly.pdf",
-    "pages": 16,
+    "pages": 13,
     "preparation": [
       "Open the PDF (or the SlideForge deck) and check the BBC Ideas film plays with sound in the hall: youtube.com/watch?v=E4bvQZRC6Bo",
       "Have the video open in a browser tab, so you can switch to it on slide 5.",
@@ -589,7 +589,7 @@
       {
         "action": "Hook: ask for a show of hands — has anyone used AI today? Then ask whether AI \"understands\" what it writes.",
         "duration": "1 min",
-        "resource_ref": "Slides 2–3",
+        "resource_ref": "Slide 2",
         "student_action": "Show of hands",
         "teacher_tip": "Most hands stay down at first. The next slide changes that.",
         "optional": false
@@ -597,7 +597,7 @@
       {
         "action": "Go through the four everyday uses, then ask again who has used AI today.",
         "duration": "1 min",
-        "resource_ref": "Slide 4",
+        "resource_ref": "Slide 3",
         "student_action": "Show of hands",
         "teacher_tip": "Card C is the bridge to the film: a chatbot is autocomplete at enormous scale.",
         "optional": false
@@ -605,7 +605,7 @@
       {
         "action": "Play the BBC Ideas film \"How AI actually works\".",
         "duration": "5 min",
-        "resource_ref": "Slide 5",
+        "resource_ref": "Slide 4",
         "student_action": "Watch",
         "teacher_tip": "Ask them to listen for one thing the AI does NOT do.",
         "optional": false
@@ -613,7 +613,7 @@
       {
         "action": "Discuss: AI as pattern prediction — advanced autocomplete — against genuine understanding. Take two or three answers from the hall.",
         "duration": "4 min",
-        "resource_ref": "Slide 6",
+        "resource_ref": "Slide 5",
         "student_action": "Turn to a neighbour, then answers from the hall",
         "teacher_tip": "Row 3 is the surprise: a model has no way of noticing that it does not know.",
         "optional": false
@@ -621,7 +621,7 @@
       {
         "action": "Explain hallucinations: plausible wording can still be wrong, so verify important facts.",
         "duration": "2 min",
-        "resource_ref": "Slide 7",
+        "resource_ref": "Slide 6",
         "student_action": "",
         "teacher_tip": "If you prepared a fact-check example, show it here.",
         "optional": false
@@ -629,7 +629,7 @@
       {
         "action": "Present the three Being AI-smart habits and invite responses from the hall.",
         "duration": "3 min",
-        "resource_ref": "Slide 8",
+        "resource_ref": "Slide 7",
         "student_action": "Respond",
         "teacher_tip": "",
         "optional": false
@@ -637,7 +637,7 @@
       {
         "action": "Exit check: ask students for one safe use of AI and one use that must be fact-checked.",
         "duration": "2 min",
-        "resource_ref": "Slides 9–10",
+        "resource_ref": "Slide 8",
         "student_action": "Answer as they leave, or tell a tutor",
         "teacher_tip": "",
         "optional": false
@@ -645,7 +645,7 @@
       {
         "action": "Debate it (optional — now or next lesson): read the motion and take a first vote — for, against or not sure yet.",
         "duration": "1 min",
-        "resource_ref": "Slides 11–12",
+        "resource_ref": "Slide 9",
         "student_action": "Vote",
         "teacher_tip": "Challenge card: What if the warnings appeared so often that everyone started ignoring them?",
         "optional": true
@@ -653,7 +653,7 @@
       {
         "action": "Split the class for and against. Each side builds its case from the three points, then hear two speakers a side and vote again.",
         "duration": "5 min",
-        "resource_ref": "Slides 13–14",
+        "resource_ref": "Slides 10–11",
         "student_action": "Prepare, speak, vote again",
         "teacher_tip": "Ask who changed their mind, and what changed it.",
         "optional": true
@@ -661,7 +661,7 @@
       {
         "action": "Signpost reporting and support resources, and leave them up as the hall empties.",
         "duration": "1 min",
-        "resource_ref": "Slides 15–16",
+        "resource_ref": "Slides 12–13",
         "student_action": "",
         "teacher_tip": "Name the actual person — tutor, head of year or safeguarding lead — rather than leaving it to the slide.",
         "optional": false
