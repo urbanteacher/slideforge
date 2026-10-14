@@ -162,7 +162,7 @@ Each step works on its own and can be pushed on its own.
    - **Choice:** Three answers (the strongest), Which step broke?
    - **One written answer:** the ladder's attempt and reattempt, a new case's near and far, Before during after's routine, each Framework stage. A challenge whose content falls outside what the relay carries (3–8 to rank, 2–10 to sort) takes a written answer instead.
    - The phones are told right or wrong, the reveal slide is the Nodes reveal, and the scores add up across challenges. Tests: `lab/tests/nodes-room.test.ts`, `node tools/smoke/run.mjs nodes-room` (two phones through the relay).
-   - Without phones the slides work as they are: the ask slide is the question, the reveal slide the answer, built click by click.
+   - **Without phones** the slides work as they are: the ask slide is the question, the reveal slide the answer, built click by click. A show opened with no room changes each Nodes slide's "On phones" cue into its own cue for a class without phones: "Hands up · A, B or C" or "Hands up · which step?", otherwise "On paper" and the same task (`withoutPhones` in `show/steps.ts`, from `slide.nodes.paper`). Same link, new case ends on both cases worked through, and every Framework stage shows a model answer on its last click. The AI writes these too.
 5. **The rest of the formats:** Breakdown, Missing-link ladder, Keep them apart, Level it, Size the answer, Mark it.
 6. **Scaffold:** every node of Technical Analysis (16) or the GCSE CS ladder (13) on one topic, AI-written from the real node definitions, with the class on the framework map.
 7. **The Teacher Presenter and Reports:** stuck-by-operation and the bottleneck node, for this class.
@@ -185,5 +185,6 @@ Each step works on its own and can be pushed on its own.
 
 ## Change log
 
+- 14 October 2026: without phones: worked answers for Same link, new case, a model answer per Framework stage (both starters, and AI-written), and a hands-up or on-paper cue in a show with no room.
 - 14 October 2026: step 4 built: every format plays in the room, marked and scored. Model marks' AI writes what earns each mark, never a weak answer.
 - 13 October 2026: plan written. Later the same day: the Framework, Label the parts, Same word different links, Before during after, and Model marks formats built; the Nodes tab (step 0); redirected to Nodes formats custom built like games and activities, in our own styles, rather than copying the Nodes decks; step 1 built (the first three formats); the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
