@@ -273,6 +273,5 @@ export function installExperiments(SF) {
     parent.appendChild(node('p','Present: Next reveals each state; Previous steps back. Up to 12 categories and 4 grouped series display. Edit explanations when changing data. Field and geometry are illustrative examples. Changing the experiment resets its data and states.'));
     return true;
   }
-  function staticState(s,index){var host=document.createElement('div'),c=config(s),st=c.states[index];draw(host,s,c,st);if(st.hideValues){host.querySelectorAll('[data-motion^="value:"]').forEach(function(el){el.remove();});/** @type {Element} */(host.querySelector('title')).textContent=st.label+' — estimate before reading the reveal.';}return host.firstElementChild;}
-  SF.Experiments={config:config,render:render,inspector:inspector,presets:presets,staticState:staticState};
+  SF.Experiments={config:config,render:render,inspector:inspector,presets:presets};
 }

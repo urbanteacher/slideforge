@@ -429,40 +429,6 @@
       (shown.length > 1 ? ' (and ' + (shown.length - 1) + ' more)' : '');
   }
 
-  function pictureSlide(still) {
-    var s = SF.makeSlide('image');
-    s.id = still.id;
-    s.image = still.image;
-    /* Contain, not cover: the whole slide shows even when the room's rail takes
-       part of the width. No title or caption — the words are in the picture. */
-    s.imageFit = 'contain';
-    s.title = ''; s.subtitle = ''; s.body = '';
-    s.notes = still.notes || '';
-    if (still.hidden) s.hidden = true;
-    s.design = Object.assign({}, s.design, { labStill: true, capStyle: 'none' });
-    /* The picture already carries the lab's header and footer; the theme's own
-       logo and page number would sit on top of it a second time. */
-    s.headerFooter = { enabled: false, slots: {} };
-    /* A picture of the lab's slide, built: nothing to fade between. */
-    s.transition = 'none';
-    /* The slide's audience feedback with its settings (a converted lesson brings
-       them; the lab's Engage tab sets the kind). What is not set takes
-       SlideForge's defaults, and the prompt falls back to the slide's name. */
-    var f = still.feedback;
-    if (f && SF.makeFeedback) {
-      var kind = typeof f === 'string' ? f : f.kind;
-      s.feedback = SF.makeFeedback(kind);
-      if (typeof f === 'object') {
-        ['prompt', 'max', 'presentAs', 'points', 'lowLabel', 'highLabel', 'hold'].forEach(function (k) {
-          if (f[k] != null && f[k] !== '') s.feedback[k] = f[k];
-        });
-        if (Array.isArray(f.options) && f.options.length) s.feedback.options = f.options.slice();
-      }
-      if (!s.feedback.prompt) s.feedback.prompt = still.name || '';
-    }
-    return s;
-  }
-
   /* The lesson's own games and activities, each filed under the slide before
      it: the lab keeps which SlideForge slide each of its slides came from. */
   function carried(source, keep) {
@@ -474,8 +440,8 @@
     return after;
   }
 
-  /* The lesson in SlideForge's form, which the practice notes (wordsDeck) and the classic handout (printDeck,
-     js/print.js: tools/export-teaching-pdf.mjs) read. Since M14 nothing shows or hosts it. */
+  /* The lesson in SlideForge's form, which the practice notes (wordsDeck) read. Since M14 nothing shows or hosts
+     it, and the handout is the studio's own (lab/src/export/handout.ts). */
   /* A slide's words as a SlideForge content slide: what the practice notes read. */
   function wordsSlide(o) {
     var s = SF.makeSlide('content');
@@ -557,8 +523,7 @@
   /* Drawing every slide as a picture is what keeps the student PDF waiting (the studio's handout, embed.ts
      handout, draws them at 1600: most of a minute for a long lesson on a slow machine). So once a lesson is
      open, its pictures are drawn quietly ahead of time. The lab keeps each picture until its slide changes
-     (embed.ts stills), so a PDF asked for later only draws what was edited since. A print deck asked for
-     meanwhile waits for the warm-up rather than drawing the same slides a second time beside it. */
+     (embed.ts stills), so a PDF asked for later only draws what was edited since. */
   /** @type {Promise<any>|null} */ var warming = null;
   function warmShow() {
     if (!api || warming) return;
@@ -566,68 +531,6 @@
       .then(function () { return api.stills(1600, null, 0.9); })
       .catch(function () {})
       .then(function () { warming = null; });
-  }
-
-  function buildShowDeck(width, quality) {
-    return (warming || Promise.resolve()).then(function () { return drawShowDeck(width, quality); });
-  }
-
-  function drawShowDeck(width, quality) {
-    var total = api.getDeck().slides.length, shown = 0;
-    return api.stills(width || 1600, function (done) {
-      if (total > 12 && done - shown >= 10) {
-        shown = done;
-        SF.toast('Preparing the lesson \u2014 ' + done + ' of ' + total + ' slides');
-      }
-    }, quality || 0.9).then(function (stills) {
-      /* The lab's games play as SlideForge's own: its quiz slides under the lab's drawing, its
-         boards where the room's state is kept (src/deck/labshow.js). The rest are pictures. */
-      var items = SF.labShowSlides ? SF.labShowSlides(stills) : stills;
-      return lessonFrom(items, function (/** @type {any} */ it) { return it.sf || pictureSlide(it); });
-    });
-  }
-
-  /* The handout. SlideForge prints a slide that moves as the pages it moves
-     through (js/print.js): an experiment two states to a page, each with what
-     changes, what stays fixed and the takeaway; a picture with facts on its
-     back as the picture, then the facts; a before-and-after as each side. A
-     picture of the lab's slide is one state, so Week 2's 70 slides printed as
-     70 pages where SlideForge's handout had 102. A slide SlideForge's handout
-     gives more pages than the lab's picture of it prints from its SlideForge
-     original, which is what the lab slide was made from; the rest are the
-     lab's pictures. The handout itself decides, so a kind of slide it learns
-     to print as pages is followed here without a list to keep. */
-  function printsAsPages(original, picture) {
-    if (!original) return false;
-    /* A game prints its questions for the room to answer on paper, as SlideForge's handout does. */
-    if (original.type === 'game') return true;
-    /* An experiment prints all its states, side by side, even when they fit one page. */
-    if (original.type === 'experiment') return true;
-    var pages = function (s) { return SF.Print.pagesFor({ slides: [s] }).length; };
-    return pages(original) > pages(picture);
-  }
-
-  function buildPrintDeck() {
-    return buildShowDeck().then(function (deck) {
-      var source = sourceLesson(api.getDeck());
-      if (!source || !SF.Print || !SF.Print.pagesFor) return deck;
-      var original = {};
-      source.slides.forEach(function (s) { original[s.id] = s; });
-      var from = {};
-      api.getDeck().slides.forEach(function (s) { if (s.sourceSlideId) from[s.id] = s.sourceSlideId; });
-      var changed = false, printed = {};
-      var slides = [];
-      deck.slides.forEach(function (s) {
-        var o = original[from[s.id]];
-        if (!printsAsPages(o, s)) { slides.push(s); return; }
-        changed = true;
-        /* A game is several lab slides (its cover, its questions): its original prints once. */
-        if (printed[o.id]) return;
-        printed[o.id] = true;
-        slides.push(Object.assign(JSON.parse(JSON.stringify(o)), { hidden: s.hidden }));
-      });
-      return changed ? SF.normalizeDeck(Object.assign({}, deck, { slides: slides })) : deck;
-    });
   }
 
   /* The lesson as words, for the practice notes. */
@@ -1039,12 +942,13 @@
         if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
       });
     },
-    /* For the tests: which slides print from their SlideForge original, the picture a lab slide becomes, and a lesson's games as the lab gets them. */
-    printsAsPages: printsAsPages, pictureSlide: pictureSlide, lessonGames: lessonGames,
-    /* The classic handout's lesson (js/print.js, for tools/export-teaching-pdf.mjs): every slide as a picture,
-       with the slides SlideForge prints as pages from their originals. */
-    printDeck: function () {
-      return new Promise(function (resolve, reject) { whenReady(function () { buildPrintDeck().then(resolve, reject); }); });
+    /* For the tests: a lesson's games as the lab gets them. */
+    lessonGames: lessonGames,
+    /** The studio's handout as its print document (lab/src/export/handout.ts): the student copy, or the teacher copy
+        with the answer slides and each slide's notes. For the command-line PDFs (tools/export-teaching-pdf.mjs,
+        AiAd27-Classic/export.mjs), which save it headlessly; the app's Export opens it in a window. */
+    handoutHtml: function (/** @type {boolean} */ teacher) {
+      return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) { return a.handout(!!teacher); });
     },
     /* Share for the studio viewer (lab-app/view.html, M12): the lab deck itself, its pictures packed once. Resolves
        to { doc } to share, or { why } when the lesson cannot be shared: one the studio cannot show, or one too

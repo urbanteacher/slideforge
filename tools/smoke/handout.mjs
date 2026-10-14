@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-/* The student handout, built from the real lecture.
+/* The PDF handout, built from the real lecture, as the studio makes it (lab/src/export/handout.ts): the lesson opened
+ * in the studio, then the print document Export → PDF handout opens (SF.LabEngine.handoutHtml).
  *
- * The unit tests cover the rules; this checks them against the deck that is
- * actually going to be handed out — forty slides, a four-question check, five
- * response moments and a set of plots that have to arrive as pictures.
+ * The student copy is every shown slide fully built, one to a page, with no answer slides and no speaker notes; the
+ * teacher copy adds the answer slides and each slide's notes. Every page is a picture of the slide, and every picture
+ * has to arrive.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -11,145 +12,50 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import harness from '../../tests/harness.js';
+import { handoutPage, openInStudio } from './lib/handout.mjs';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-handout-'));
 const port = await harness.freePort();
 const relay = await harness.start(port, dir);
 const browser = await chromium.launch({ headless: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const page = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('app: ' + e.message));
   await page.goto(`http://127.0.0.1:${port}/`);
-  await page.waitForFunction(() => window.SF?.Print && SF.Shell?.current()?.doc()?.id, null, { timeout: 60000 });
-  /* The handout is SlideForge's own print of the lecture, so it is built from
-     the lesson itself rather than through the lab, which would first draw
-     every one of its forty slides as a picture. */
-  await page.evaluate(() => { window.__lecture = SF.buildLesson('ipdv-intro'); });
-  /* The lecture is edited often, so this checks it is the real one and big
-     enough to be worth printing rather than pinning an exact count that goes
-     stale every time a slide is added. */
-  const lecture = await page.evaluate(() => ({
-    title: window.__lecture.title, n: window.__lecture.slides.length
-  }));
-  assert.match(lecture.title, /Advanced Information Presentation/, 'the IPDV lecture is loaded');
-  assert.ok(lecture.n >= 35, `the full lecture is loaded, got ${lecture.n} slides`);
-
-  const [pdf] = await Promise.all([
-    page.context().waitForEvent('page'),
-    page.evaluate(() => SF.Print.open(window.__lecture))
-  ]);
-  pdf.on('pageerror', (e) => errors.push('handout: ' + e.message));
-  await pdf.waitForSelector('.pdf-page');
-  /* The button only enables once every image and font has settled, so this is
-     also the check that nothing hangs. */
-  await pdf.waitForFunction(
-    () => { const b = document.querySelector('.pdf-toolbar button'); return b && !b.disabled; },
-    { timeout: 40000 });
-  assert.equal(await pdf.locator('.pdf-toolbar button').first().innerText(), 'Print / Save as PDF',
-    'the handout finished preparing rather than reporting a failure');
-
-  const pages = await pdf.locator('.pdf-page').count();
-  assert.ok(pages >= lecture.n, `every slide reached the handout, got ${pages} pages from ${lecture.n} slides`);
-
-  const text = await pdf.evaluate(() => document.body.innerText);
-
-  /* The check expands into one page per question, with the options offered
-     and nothing saying which is right. */
-  for (const q of ['core purpose', 'Anscombe', 'Sankey', 'historical breakthrough']) {
-    assert.ok(text.includes(q), `question about ${q} reached the handout`);
-  }
-  assert.ok(!text.includes('This activity is not available'),
-    'the embedded check expanded rather than falling back to a placeholder');
-
-  /* Nothing that would tell a student the answer. */
-  const leaks = [
-    ['Munzner emphasizes that visualization is designed', 'a quiz explanation'],
-    ['Welcome to Advanced Information Presentation', 'a speaker note'],
-    ['Close the lecture. Remind them of the lab', 'another speaker note']
-  ];
-  for (const [needle, what] of leaks) {
-    assert.ok(!text.includes(needle), `${what} must not be in a student handout`);
-  }
-  /* An answer-reveal card would carry a lettered key beside the right option. */
-  assert.equal(await pdf.locator('.pdf-page .ex-answer').count(), 0,
-    'no answer-reveal card was printed');
-  assert.equal(await pdf.locator('.pdf-page .layout-results, .pdf-page .layout-join').count(), 0,
-    'no results or join page was printed');
-
-  /* Pictures have to be pictures, not empty frames. */
-  const media = await pdf.evaluate(() => {
-    const out = { broken: 0, backgrounds: 0 };
-    document.querySelectorAll('.pdf-page img').forEach((i) => {
-      if (!i.complete || i.naturalWidth === 0) out.broken++;
-    });
-    document.querySelectorAll('.pdf-page .img').forEach((n) => {
-      if (getComputedStyle(n).backgroundImage !== 'none') out.backgrounds++;
-    });
-    return out;
+  await openInStudio(page, 'ipdv-intro');
+  const lesson = await page.evaluate(() => {
+    const d = SF.LabEngine.labDeck(), shown = d.slides.filter((s) => !s.hidden);
+    return { title: d.title, shown: shown.length, answers: shown.filter((s) => s.game && s.game.role === 'answer').length, noted: shown.filter((s) => String(s.notes || '').trim()).length };
   });
-  assert.equal(media.broken, 0, 'every <img> on the handout loaded');
-  assert.ok(media.backgrounds > 0, 'the picture slides carried their images through');
+  assert.match(lesson.title, /Advanced Information Presentation/, 'the IPDV lecture is open in the studio');
+  assert.ok(lesson.shown >= 35, `the full lecture is open, got ${lesson.shown} shown slides`);
 
-  /* A handout is fixed-size paper: content that overflows its page is lost,
-     not scrolled to. */
-  const spill = await pdf.evaluate(() => {
-    const bad = [];
-    document.querySelectorAll('.pdf-page').forEach((p, i) => {
-      const slide = p.querySelector('.slide');
-      if (slide && (slide.scrollHeight > slide.clientHeight + 4 || slide.scrollWidth > slide.clientWidth + 4)) {
-        bad.push(i + ' ' + slide.className.replace(/theme-\S+\s*/, '').trim());
-      }
-    });
-    return bad;
-  });
-  assert.deepEqual(spill, [], 'no page overflows the paper');
+  const pages = async (doc) => doc.evaluate(() => [...document.querySelectorAll('section.page')].map((p) => ({ img: !!p.querySelector('img')?.naturalWidth, notes: (p.querySelector('.notes')?.innerText || '').trim() })));
 
-  /* Every response moment has to be answerable on paper. The lecture's two
-     open ones — a word cloud and a confidence scale — carry no options, and
-     printed as bare questions they gave a student nothing to record. */
-  const unanswerable = await pdf.evaluate(() => {
-    const bad = [];
-    document.querySelectorAll('.pdf-page').forEach((p, i) => {
-      const t = (p.innerText || '').replace(/\s+/g, ' ').trim();
-      if (/\?/.test(t) && p.querySelectorAll('li').length === 0 && !p.querySelector('.img, img')) {
-        bad.push((i + 1) + ': ' + t.slice(0, 50));
-      }
-    });
-    return bad;
-  });
-  assert.deepEqual(unanswerable, [], 'no question is printed with nothing to answer on');
+  const student = await handoutPage(page);
+  const sp = await pages(student);
+  assert.equal(sp.length, lesson.shown - lesson.answers, `the student copy is every shown slide but the answers (${sp.length} pages)`);
+  assert.ok(sp.every((p) => p.img), 'every page of the student copy is its slide’s picture');
+  assert.ok(sp.every((p) => !p.notes), 'no speaker notes in a student copy');
+  assert.match(await student.locator('.toolbar .hint').innerText(), /Student copy/);
+  const pdf = path.join(dir, 'handout.pdf');
+  await student.pdf({ path: pdf, printBackground: true, preferCSSPageSize: true });
+  assert.ok(fs.statSync(pdf).size > 50_000, 'the PDF is a real multi-page file');
+  const kb = (fs.statSync(pdf).size / 1024).toFixed(0);
+  await student.close();
 
-  /* The confidence scale prints its points rather than a bare question. */
-  const scale = await pdf.evaluate(() => {
-    const p = [...document.querySelectorAll('.pdf-page')]
-      .find((n) => /How confident do you feel/.test(n.innerText));
-    return p ? [...p.querySelectorAll('li')].map((li) => li.innerText.trim()) : null;
-  });
-  assert.ok(scale && scale.length === 5, 'the scale printed all five points');
-  assert.match(scale[0], /Need guidance/, 'the low end says what it means');
-  assert.match(scale[4], /Ready to critique/, 'and so does the high end');
-
-  /* Mind maps arrive whole — every branch, not just the centre. */
-  const maps = await pdf.evaluate(() => [...document.querySelectorAll('.pdf-page')]
-    .map((p, i) => ({ page: i + 1, branches: p.querySelectorAll('.mindmap-branch').length }))
-    .filter((x) => x.branches > 0));
-  /* Measured against the lecture rather than pinned to a number: "two maps of
-     six branches" was true when it was written and failed the day a third map
-     of four was added — and being outside the smoke chain, nobody heard it.
-     What has to hold is that every map arrives whole. */
-  const authored = await page.evaluate(() => window.__lecture.slides
-    .filter((s) => s.type === 'mindmap')
-    .map((s) => (s.bullets || []).filter((b) => String(b).trim()).length)
-    .sort((a, b) => a - b));
-  assert.ok(authored.length >= 2, 'the lecture still has mind maps to print');
-  assert.deepEqual(maps.map((m) => m.branches).sort((a, b) => a - b), authored,
-    'every mind map printed with all its branches');
+  const teacher = await handoutPage(page, { teacher: true });
+  const tp = await pages(teacher);
+  assert.equal(tp.length, lesson.shown, 'the teacher copy is every shown slide, the answers included');
+  assert.ok(tp.every((p) => p.img), 'every page of the teacher copy is its slide’s picture');
+  assert.equal(tp.filter((p) => p.notes).length, lesson.noted, 'each slide with notes carries them in the teacher copy');
+  assert.match(await teacher.locator('.toolbar .hint').innerText(), /Teacher copy/);
+  await teacher.close();
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log(`PASS: ${pages}-page handout from the ${lecture.n}-slide lecture — questions without answers, no notes, every image loaded, nothing over the edge`);
+  console.log(`handout ok · ${lesson.title}: student copy ${sp.length} pages (${kb} KB PDF), teacher copy ${tp.length} with ${lesson.noted} slides’ notes`);
 } finally {
   await browser.close();
-  await harness.stop(relay);
-  fs.rmSync(dir, { recursive: true, force: true });
+  await harness.stop(relay).catch(() => {});
 }

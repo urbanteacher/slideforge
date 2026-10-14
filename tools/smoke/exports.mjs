@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import harness from '../../tests/harness.js';
+import { handoutPage, openInStudio } from './lib/handout.mjs';
 
 /* '../..' — two levels, because this file lives in tools/smoke/ and ROOT is
    the repo. It was '..' when the smokes sat directly in tools/, and the move
@@ -36,12 +37,12 @@ function note(label, file, detail) {
 }
 
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const page = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('app: ' + e.message));
 
   await page.goto(`http://127.0.0.1:${port}/`);
-  await page.waitForFunction(() => window.SF?.Print && SF.Shell?.current()?.doc()?.id, null, { timeout: 60000 });
+  await page.waitForFunction(() => window.SF?.LabEngine && SF.Shell?.current()?.doc()?.id, null, { timeout: 60000 });
   /* The artefacts are built from the lecture itself, as SlideForge builds it,
      rather than through the lab, which would first draw every one of its
      slides as a picture. The picker below is the app's own. */
@@ -76,23 +77,14 @@ try {
     note('This presentation', name, `${parsed.slides.length} slides`);
   }
 
-  /* ---- 2. Student PDF handout ---- */
+  /* ---- 2. Student PDF handout: the studio's (lab/src/export/handout.ts), the lecture opened in the studio ---- */
   {
-    const [pdfPage] = await Promise.all([
-      page.context().waitForEvent('page'),
-      page.evaluate(() => SF.Print.open(window.__lecture))
-    ]);
+    await openInStudio(page, 'ipdv-intro');
+    const shown = await page.evaluate(() => SF.LabEngine.labDeck().slides.filter((s) => !s.hidden && !(s.game && s.game.role === 'answer')).length);
+    const pdfPage = await handoutPage(page);
     pdfPage.on('pageerror', (e) => errors.push('handout: ' + e.message));
-    await pdfPage.waitForSelector('.pdf-page');
-    await pdfPage.waitForFunction(
-      () => {
-        const b = document.querySelector('.pdf-toolbar button');
-        return b && !b.disabled && b.innerText === 'Print / Save as PDF';
-      },
-      { timeout: 60000 }
-    );
-    const pages = await pdfPage.locator('.pdf-page').count();
-    assert.ok(pages >= lecture.n, `handout pages (${pages}) cover the deck (${lecture.n})`);
+    const pages = await pdfPage.locator('section.page').count();
+    assert.equal(pages, shown, `handout pages (${pages}) are the lecture's shown slides (${shown})`);
     const pdfName = 'Student_PDF_handout.pdf';
     const pdfPath = path.join(outDir, pdfName);
     await pdfPage.pdf({

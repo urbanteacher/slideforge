@@ -8,7 +8,7 @@ try {
  const page=await browser.newPage({viewport:{width:1440,height:1000}}), errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.env.SLIDEFORGE_URL||'http://localhost:8787');
- await page.waitForFunction(()=>window.SF?.Print&&SF.renderSlide);
+ await page.waitForFunction(()=>window.SF?.renderSlide);
  const result=await page.evaluate(()=>{
   const host=document.createElement('div');document.body.append(host);
   const failures=[];let checked=0;
@@ -57,15 +57,8 @@ try {
   host.remove();return{checked,failures};
  });
  assert.deepEqual(result.failures,[]);
- // The same decision must reach the handout (the classic player it was also checked in went in M14).
- // (The editor preview it was also checked in went with the classic studios; the lab draws its own slides.)
- await page.evaluate(()=>{const d=SF.makeDeck('Theme manifest review');d.theme='aiad27-safe';d.logo='assets/brand/aiad27/aiad27-lockup.svg';d.logoOn='all';d.slides=[SF.normalizeSlide({type:'quote',body:'A human decision'})];SF.Store.save(d);window.__manifestDeck=d;});
- const [print]=await Promise.all([page.context().waitForEvent('page'),page.evaluate(()=>SF.Print.open(window.__manifestDeck))]);
- await print.waitForSelector('.pdf-page .slide[data-ground="dark"]');
- await print.emulateMedia({media:'print'});
- const printed=await print.locator('.pdf-page .slide').first().evaluate(root=>({background:getComputedStyle(root).backgroundColor,logo:getComputedStyle(root.querySelector('.slide-logo img')).filter}));
- assert.equal(printed.background,'rgb(255, 255, 255)');assert.equal(printed.logo,'none');
- await print.screenshot({path:'/tmp/slideforge-manifest-print.png'});
+ // The handout is the studio's now (lab/src/export/handout.ts): each page is a picture of the slide as the studio
+ // draws it, so the classic print's dark-to-white check (js/print.js, gone) has nothing to check.
  assert.deepEqual(errors,[]);
- console.log(JSON.stringify({...result,surfaces:['handout/print'],screenshots:'/tmp/slideforge-manifest-*.png'},null,2));
+ console.log(JSON.stringify({...result,surfaces:['slides'],screenshots:'/tmp/slideforge-manifest-*.png'},null,2));
 } finally {await browser.close();}

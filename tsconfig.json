@@ -34,7 +34,7 @@
     //
     // Not checked because they do not pass yet — a quarantine, not a decision,
     // and each one is a file nobody can safely refactor:
-    //   js/ai.js (36 errors)      js/callouts.js (7)   js/print.js (4)
+    //   js/ai.js (36 errors)      js/callouts.js (7)
     //   js/activities.js (3)      js/quick-poll.js (1)
     //   js/history.js, js/share.js, js/slide-clip.js (0 — just never added)
     // Adding a file here is cheap when it passes. The real fix is to stop

@@ -1,7 +1,8 @@
 // The student PDF from the studio (lab-engine-plan M12): every shown slide fully built, as the lab draws it
 // (renderStill), one to a page, in a print document the shell opens (window.print, with page CSS). The student copy
 // has no speaker notes and no answers: a game's answer slides are left out. The teacher copy keeps them, with each
-// slide's notes under it. SlideForge's own handout (js/print.js) stays for the lessons the studio does not show.
+// slide's notes under it. It is the only handout: SlideForge's classic one (js/print.js) was removed on 14 Oct 2026, and the
+// command-line PDFs (tools/export-teaching-pdf.mjs, AiAd27-Classic/export.mjs) save this one (SF.LabEngine.handoutHtml).
 import type { Deck } from '../core';
 
 export interface HandoutPage { id: string; name: string; notes: string }

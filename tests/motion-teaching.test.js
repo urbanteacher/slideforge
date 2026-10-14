@@ -95,7 +95,5 @@ test('a build can hide, dim, or spotlight — and nothing else', () => {
   assert.match(css, /build-spot .step\.step-past/, 'the past steps are not held back');
   assert.match(css, /build-spot:has\(\.step-live\)::after/,
     'the vignette should only appear once the build has started');
-  assert.match(css, /\.pdf-page \.slide\.build-spot::after \{ display: none/,
-    'a handout is read, not presented — it should not be vignetted');
 });
 

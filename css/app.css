@@ -6785,8 +6785,6 @@ html[data-ws="deck"] #railCount { display: none; }
   .slide .slide-motion .mo,
   .slide .slide-motion::after { animation: none; }
 }
-.pdf-page .slide-motion .mo,
-.pdf-page .slide-motion::after { animation: none; }
 
 /* Centred type takes its furniture with it. The accent bar is a box, so
    text-align does nothing to it: pinned left under a centred title it reads as
@@ -6899,8 +6897,6 @@ html[data-ws="deck"] #railCount { display: none; }
     opacity: 1; filter: none; clip-path: none; transform: none;
   }
 }
-/* And a printed page is a still by definition. */
-.pdf-page .statement.words .w { animation: none !important; }
 
 /* ---- words arriving, and leaving again ---------------------------------- */
 
@@ -6985,8 +6981,6 @@ html[data-ws="deck"] #railCount { display: none; }
     transform: var(--kb-from, scale(1.2));
   }
 }
-.pdf-page .img.img-motion-travel,
-.pdf-page .free-image-img.img-motion-travel { animation: none; transform: var(--kb-from, scale(1.2)); }
 
 /* ---- chart callouts ----------------------------------------------------- */
 
@@ -7060,9 +7054,6 @@ html[data-ws="deck"] #railCount { display: none; }
 @media (prefers-reduced-motion: reduce) {
   #player .slide.build-spot::after { transition: none; }
 }
-/* A handout is read, not presented: every point at full strength. */
-.pdf-page .slide.build-spot::after { display: none; }
-.pdf-page .slide.build-spot .step.step-past { opacity: 1; filter: none; }
 
 /* A per-word choreography, written rather than chosen.
 
@@ -7510,14 +7501,3 @@ dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
 .layout-feedback .fk-held-line { font-size: 36px; font-weight: 650; }
 .layout-feedback .fk-held-note { font-size: 26px; color: var(--s-dim); margin-top: 18px; }
 
-/* A lab question on SlideForge's wall (js/render.js, design.labStill): its picture is the whole
-   slide until the lab draws over it, and SlideForge's own quiz layout stays out of sight, as it is
-   under the lab's drawing. */
-.slide.lab-poster > .pad { visibility: hidden; }
-.slide.lab-poster > .lab-poster-img {
-  position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background: var(--s-bg, #fff) center / contain no-repeat;
-}
-/* Beside the rail it stops at the rail, as a picture slide does, so none of it is under the rail. */
-.deck-viewport.railed .slide.lab-poster > .lab-poster-img,
-#previewBox.railed .slide.lab-poster > .lab-poster-img { right: var(--rail-w); }

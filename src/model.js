@@ -4,7 +4,6 @@ import {measureSlideFit,probeLayoutFit,boxSpill,svgScale,FIT_TOLERANCE,LEGIBLE_F
 import {bindCanvasRegions} from './render/canvas-regions.js';
 import { CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions } from './render/regions.js';
 import { createActivityFields } from './activities/fields.js';
-import { labShowSlides as labShowOf } from './deck/labshow.js';
 import { createCompositionRenderer } from './render/compositions.js';
 import { createChartRenderer } from './render/charts.js';
 import { installExplore } from './render/explore.js';
@@ -1792,8 +1791,6 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GALLERY_MAX: GALLERY_MAX,
   uid: uid,
   makeSlide: makeSlide,
-  /* A lab lesson's games as SlideForge plays them live (src/deck/labshow.js). */
-  labShowSlides: function (/** @type {any[]} */ stills) { return labShowOf(stills, makeSlide); },
   makeDeck: makeDeck,
   starterDeck: starterDeck,
   normalizeDeck: normalizeDeck,

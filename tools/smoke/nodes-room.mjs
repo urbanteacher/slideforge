@@ -79,6 +79,6 @@ try {
 } finally {
   for (const p of phones) p.close?.();
   await browser.close();
-  await relay.stop?.();
+  await harness.stop(relay).catch(() => {});
 }
 console.log('nodes-room: ok');

@@ -218,7 +218,7 @@
 .sf-handle-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
 /* The thumbnails and the player draw the same markup; handles are an
    authoring affordance and belong on the canvas only. */
-.thumb .sf-handle, #player .sf-handle, .pdf-page .sf-handle { display: none; }
+.thumb .sf-handle, #player .sf-handle { display: none; }
 
 /* An item sitting in one of the layout's named slots is drawn as that slot,
    not as a generic block. The numbers are the reference deck's own: across

@@ -238,21 +238,6 @@ function SF_GAME(src, check) {
   return g.slides.find((s) => s.type === 'quiz');
 }
 
-test('in the live room, each Check the lab built is SlideForge\u2019s own quiz question, with its answer drawn on reveal', { skip }, async () => {
-  const { deckFromSlideForge } = await converter();
-  const src = lessonWithGames('ipdv-vc-hybrid');
-  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
-  // What the lab hands the room: a picture of each slide, carrying its game (lab/src/app/embed.ts stills).
-  const stills = deck.slides.map((s) => ({ id: s.id, sourceSlideId: s.sourceSlideId, image: 'still.jpg', notes: s.notes || '', hidden: false, name: s.name, game: s.game }));
-  const room = src.SF.labShowSlides(stills).map((it) => it.sf).filter((s) => s && s.type === 'quiz');
-  assert.equal(room.length, 5, 'five questions for the phones');
-  src.slides.filter((s) => s.type === 'game').forEach((c, i) => {
-    const q = SF_GAME(src, c);
-    assert.equal(room[i].question, q.question);
-    assert.equal(room[i].correct, q.correct, 'marked against the Check\u2019s own answer');
-    assert.ok(room[i].design && room[i].design.labStill && room[i].design.labReveal, 'the lab draws the question, and its answer on reveal');
-  });
-});
 
 test('the Week 2 cover as you left it: your N where you moved it, the date, and the rail along the foot', { skip }, async () => {
   const { deckFromSlideForge } = await converter();

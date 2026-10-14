@@ -4,18 +4,12 @@
  *   node AiAd27-Classic/build.js
  *   node AiAd27-Classic/export.mjs            # needs the server (npm start)
  *
- * The PDF is the app's own handout route, SF.Print.open — the same pages a
- * teacher gets from Export → PDF handout — saved headlessly, as
- * tools/export-teaching-pdf.mjs does for the lectures. Two differences, both
- * because this PDF is projected rather than handed out:
- *
- *   - the handout footer ("Slide 4 / 14 · PDF 5 / 12") is removed. It counts
- *     the held-back slides, and a class reading "4 / 14" on the board is
- *     doing arithmetic instead of answering the question;
- *   - every page is checked for text running off it, since nobody in the room
- *     can scroll a PDF to find it;
- *   - it is drawn with screen styles, so the strand grounds survive: the
- *     handout's print styles put the aiad27 themes on white paper.
+ * The PDF is the app's own handout route: each deck opened in the studio (which converts it), then the studio's
+ * handout (lab/src/export/handout.ts, the page Export → PDF handout opens), saved headlessly, as
+ * tools/export-teaching-pdf.mjs does for the lectures. Every page is a picture of a slide as the studio draws it, so
+ * the strand grounds and colours come through as they are on the board. Because this PDF is projected rather than
+ * handed out, it is the teacher copy (the answer slides included) without its notes, and the preview window's
+ * toolbar is left out.
  *
  * Writes:
  *   pdf/AiAd27-Classic-<Name>.pdf     the slides to present or print
@@ -28,6 +22,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { handoutPage, openDeckInStudio } from '../tools/smoke/lib/handout.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const URL_BASE = process.env.SLIDEFORGE_URL || 'http://localhost:8787';
@@ -47,7 +42,7 @@ if (!res || !res.ok()) {
   await browser.close();
   process.exit(1);
 }
-await page.waitForFunction(() => window.SF && window.SF.Print && window.SF.renderSlide, null, { timeout: 30000 });
+await page.waitForFunction(() => window.SF && window.SF.LabEngine, null, { timeout: 30000 });
 
 const out = [];
 let failed = 0;
@@ -55,51 +50,30 @@ let failed = 0;
 for (const run of runs) {
   const deck = JSON.parse(fs.readFileSync(path.join(__dirname, 'bundles', run.file + '.sfbundle.json'), 'utf8')).decks[0];
 
-  /* Which deck slide each PDF page comes from. A poll adds a page after its
-     slide (the options, for a room voting by hand), so page numbers run ahead
-     of slide numbers from the first question on. */
-  const sources = await page.evaluate((d) => window.SF.Print.pagesFor(d).map((p) => p._sourceSlide), deck);
+  await openDeckInStudio(page, deck);
+  /* Which deck slide each PDF page comes from: the studio keeps it on each slide it converts (sourceSlideId). A game
+     is several pages (its cover, its questions, its answers), so page numbers run ahead of slide numbers from the
+     first game on. */
+  const sources = await page.evaluate((d) => {
+    const at = {}; d.slides.forEach((s, i) => { at[s.id] = i + 1; });
+    return SF.LabEngine.labDeck().slides.filter((s) => !s.hidden).map((s) => at[s.sourceSlideId] || 0);
+  }, deck);
 
-  const popup = context.waitForEvent('page');
-  await page.evaluate((d) => window.SF.Print.open(d), deck);
-  const preview = await popup;
+  const preview = await handoutPage(page, { teacher: true });
   preview.on('pageerror', (e) => errors.push(`${run.file}: ${e.message}`));
-  await preview.waitForFunction(() => document.documentElement.dataset.pdfReady, null, { timeout: 30000 });
-
-  /* Projected, not handed out: keep the strand grounds. The handout prints
-     the aiad27 themes on white paper (css/aiad27.css, @media print), which is
-     right for paper and wrong for a deck on the board — the covers, questions
-     and takeaways lost their colour. So the PDF is drawn with screen styles,
-     with the preview window's own furniture removed. */
-  await preview.emulateMedia({ media: 'screen' });
-  await preview.addStyleTag({
-    content: '.pdf-toolbar{display:none!important}' +
-      'html,body{background:#fff!important}' +
-      '.pdf-page{margin:0!important}'
-  });
+  /* Projected, not handed out: the slides alone, edge to edge. */
+  await preview.addStyleTag({ content: '.toolbar,.notes{display:none!important}html,body{background:#fff!important}.page{margin:0 auto!important;box-shadow:none!important}' });
   await preview.waitForTimeout(300);
 
   const audit = await preview.evaluate(() => {
-    document.querySelectorAll('.pdf-page-reference').forEach((n) => n.remove());
-    const pages = Array.from(document.querySelectorAll('.pdf-page'));
-    const overflow = [];
-    pages.forEach((p, i) => {
-      const box = p.getBoundingClientRect();
-      p.querySelectorAll('h1,h2,h3,p,li,.cp-choice,.kw-def,.kw-term,span').forEach((el) => {
-        const r = el.getBoundingClientRect();
-        if (!r.width || !r.height || !el.textContent.trim()) return;
-        if (r.bottom > box.bottom + 1 || r.right > box.right + 1) {
-          overflow.push({ page: i + 1, text: el.textContent.trim().slice(0, 60) });
-        }
-      });
-    });
-    return { ready: document.documentElement.dataset.pdfReady, pages: pages.length, overflow };
+    const pages = Array.from(document.querySelectorAll('section.page'));
+    return { pages: pages.length, pictures: pages.filter((p) => p.querySelector('img')?.naturalWidth).length };
   });
 
   const shots = path.join(__dirname, 'preview', run.file.replace('AiAd27-Classic-', '').toLowerCase());
   fs.rmSync(shots, { recursive: true, force: true });
   fs.mkdirSync(shots, { recursive: true });
-  const pageEls = await preview.$$('.pdf-page');
+  const pageEls = await preview.$$('section.page');
   for (let i = 0; i < pageEls.length; i++) {
     await pageEls[i].screenshot({ path: path.join(shots, String(i + 1).padStart(2, '0') + '.png') });
   }
@@ -125,12 +99,9 @@ for (const run of runs) {
   });
 
   const kb = Math.round(fs.statSync(pdf).size / 1024);
-  console.log(`${run.file}.pdf — ${audit.pages} pages, ${kb} KB${audit.ready === 'true' ? '' : ' (some resources did not load)'}`);
-  if (audit.overflow.length) {
-    failed += audit.overflow.length;
-    audit.overflow.slice(0, 8).forEach((o) => console.log(`    !! page ${o.page}: runs off the page — "${o.text}"`));
-  }
-  if (audit.ready !== 'true') failed++;
+  console.log(`${run.file}.pdf — ${audit.pages} pages, ${kb} KB${audit.pictures === audit.pages ? '' : ' (some pictures did not load)'}`);
+  if (audit.pictures !== audit.pages) failed++;
+  if (sources.some((n) => !n)) console.log('    note: a page the studio added has no slide of its own in the deck; it counts in the page numbers');
 
   out.push({
     wp: run.wp,
