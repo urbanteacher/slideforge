@@ -272,41 +272,42 @@ export const GCSE_CS: FrameworkRun = {
  ]
 };
 
-// A model answer for each stage, on the same CPU case: what a secure answer looks like, shown on the stage's last click
-// (written for SlideForge; Nodes holds the tasks and outcomes, not answers).
-const withModels = (run: FrameworkRun, models: string[]) => { run.stages.forEach((s, i) => { if (models[i]) s.model = models[i]; }); };
+// A model answer for each stage, on the same CPU case, a part per slot of the stage's scaffold (slotsOf in framework.ts):
+// what a secure answer says, written into the scaffold a click at a time (written for SlideForge; Nodes holds the tasks
+// and outcomes, not answers).
+const withModels = (run: FrameworkRun, models: string[][]) => { run.stages.forEach((s, i) => { if (models[i]) s.model = models[i]; }); };
 
 withModels(TECHNICAL_ANALYSIS, [
-  'Clock speed: how many cycles the CPU’s clock completes each second. 5.2 GHz is 5.2 billion cycles per second.',
-  'The clock sets the pace of cycles. Each core runs instructions, so more cores can run more at once. Cache is fast memory beside the CPU, so it waits less for data.',
-  'Each fetch-decode-execute cycle takes clock cycles, so a faster clock completes more cycles per second, which means more instructions per second, as long as the CPU is not waiting for data.',
-  'A student editing video: needs fast exports, a full day’s battery and a quiet fan, for under £800.',
-  '5.2 GHz = 5,200,000,000 cycles per second. Before trusting the claim: the number of cores, the cache size, whether 5.2 GHz lasts or is a short boost, and timings on real tasks.',
-  'LOAD 7 → 7; ADD 5 → 12; SUB 2 → 10; OUTPUT 10. Four instructions × 3 cycles = 12 cycles.',
-  'Time the same export on each laptop, three runs, the same file and settings. Keep: the task, the time, the conditions. Leave out: colour, screen and price.',
-  'start ← time()\nrun the export\nelapsed ← time() − start\nrepeat 3 times, then OUTPUT the mean',
-  'A Python program that wraps the export in time.perf_counter(), runs it three times and prints each time and the mean: 41.2 s.',
-  'Normal: a one-minute clip gives a time. Boundary: an empty file gives 0 s. Invalid: a missing file crashed it, so I added a check and a message, and retested.',
-  'For: quick single-core tasks such as opening apps. Against: an export waits for data from memory, the chip slows when hot, and software using one core leaves the rest idle, so 5.2 GHz alone will not make it fast.',
-  'On the same export, the eight-core at 3.8 GHz shares the work across more cores, so it can finish sooner; the 5.2 GHz chip is only faster per core. Criteria: export time, heat, battery.',
-  'Buyers who judge on GHz alone could overspend or buy the wrong laptop. The advert assumes clock speed is performance.',
-  'Not justified for a video editor: core count and the measured export time matter more than GHz. I recommend the laptop with the shorter export time.',
-  'The same test on phones: time one real task on each, with the same settings, and check cores, heat and battery, not the headline claim.',
-  'Developing: my definition and calculation are secure, and my comparison used shared criteria, but without measured data. Next: run the timing test on both laptops.',
+  ['Clock speed', 'how many cycles the CPU’s clock completes each second', '5.2 GHz is 5.2 billion cycles per second'],
+  ['The clock, the cores and the cache', 'the clock sets the pace; each core runs instructions; the cache keeps data close', 'more cores run more at once, and a bigger cache means less waiting for data'],
+  ['The fetch-decode-execute cycle', 'each instruction is fetched, decoded and executed, taking clock cycles', 'a faster clock completes more cycles a second, so more instructions, unless it is waiting for data'],
+  ['Fast video exports, a full day’s battery, a quiet fan, under £800', 'Gaming graphics, a touch screen, the highest clock speed'],
+  ['5.2 GHz, and 1 GHz = 10⁹ Hz', '5.2 × 10⁹ = 5,200,000,000', '5.2 billion cycles per second. Still needed: cores, cache, the sustained speed, real task timings'],
+  ['LOAD 7, ADD 5, SUB 2, OUTPUT, at three cycles each', 'ACC 7 → 12 → 10; four instructions × 3 cycles', 'Output 10, in 12 cycles'],
+  ['The same export, file and settings on each laptop, timed over three runs', 'Colour, screen size, price and the advert’s wording'],
+  ['The test: time one export, three times', 'start ← time(); run the export; elapsed ← time() − start; repeat 3 times', 'OUTPUT the mean of the three times'],
+  ['A CPU simulator, then Python’s time.perf_counter()', 'Wrap the export in the timer and run it three times', 'It prints each time and the mean: 41.2 s'],
+  ['A one-minute clip gives a time', 'An empty file gives 0 s', 'A missing file crashed it: I added a check and a message, and retested'],
+  ['Quick single-core tasks, such as opening apps', 'It waits for data from memory, slows when hot, and software using one core leaves the rest idle'],
+  ['Velox 14 at 5.2 GHz: faster per core, so quicker at single-core tasks', 'The 3.8 GHz eight-core shares the export across more cores, so it can finish sooner'],
+  ['Buyers who judge a laptop on GHz alone', 'That clock speed is performance', 'They overspend, or buy a laptop that exports slowly'],
+  ['Not justified for a video editor', 'export speed depends on cores and on waiting for data, not GHz alone', 'the measured export times on both laptops'],
+  ['Test the phone the same way', 'a headline chip claim says nothing about real tasks', 'time one real task on each phone, with the same settings'],
+  ['Developing', 'my definition and calculation are secure, but my comparison had no measured data', 'run the timing test on both laptops'],
 ]);
 
 withModels(GCSE_CS, [
-  'The CPU is the component that fetches, decodes and executes a program’s instructions. In my words: it is the part that runs the program, one instruction after another.',
-  'Control unit: decodes instructions and sends control signals. ALU: arithmetic and logic. Registers: tiny fast stores (the PC holds the next instruction’s address). Cache: fast memory for frequently used data. Clock: sets the pace.',
-  'Time = 1 ÷ frequency = 1 ÷ (3.2 × 10⁹) = 3.125 × 10⁻¹⁰ s = 0.3125 ns.',
-  'total ← 7\ntotal ← total + 5\ntotal ← total − 2\nOUTPUT total',
-  'LOAD 7: ACC = 7. ADD 5: ACC = 12. SUB 2: ACC = 10. OUTPUT: 10.',
-  'A higher clock speed means more instructions per second, so shorter renders. But it uses more power and makes more heat, the CPU may slow when hot, and gains are small if the software uses few cores or waits for memory.',
-  'The address in the PC is copied to the MAR and the instruction is fetched from memory into the MDR, then the CIR. The PC is advanced so that it points at the next instruction for the next cycle.',
-  'Editors need fast rendering and smooth playback, so many cores and enough RAM. Constraints: the budget, noise in a classroom, and software licensed for these machines.',
-  'The 3 GHz quad-core can run four threads at once; the 4 GHz dual-core is faster per core. For rendering, which uses many cores, the quad-core is likely faster; for single-threaded tasks, the dual-core.',
-  'Buyers, and schools on tight budgets, may pay for GHz that does not speed up their work. Assumption: GHz means speed. Missing perspective: the technician who maintains them.',
-  'The quad-core: rendering uses many cores, so it exports faster and stays within budget. Single-threaded tasks may be a little slower, but they are not the department’s main need.',
-  'Keep: the fetch-decode-execute cycle, the PC, the accumulator and memory. Leave out: cache, pipelining and timing. Outline: a loop that fetches from a list, decodes the opcode and executes it.',
-  'LOAD 7, ADD 5: expected 12, actual 12. LOAD 7, SUB 9 (below zero): expected −2, actual a crash. Fixed to allow negatives; retested, passes.',
+  ['The CPU', 'the component that fetches, decodes and executes a program’s instructions', 'in my words: the part that runs the program, one instruction after another'],
+  ['Control unit, ALU, registers, cache and clock', 'the CU decodes and sends control signals; the ALU does arithmetic and logic', 'the PC holds the next instruction’s address; the cache holds frequently used data'],
+  ['f = 3.2 GHz = 3.2 × 10⁹ Hz', 't = 1 ÷ f = 1 ÷ (3.2 × 10⁹) = 3.125 × 10⁻¹⁰ s', '0.3125 ns'],
+  ['The program: LOAD 7, ADD 5, SUB 2, OUTPUT', 'total ← 7; total ← total + 5; total ← total − 2', 'OUTPUT total'],
+  ['LOAD 7, ADD 5, SUB 2, OUTPUT', 'ACC: 7 → 12 → 10', 'Output: 10'],
+  ['More instructions per second, so shorter renders', 'More heat and power use; it may slow when hot; small gains if the software uses few cores'],
+  ['The fetch stage', 'the PC’s address goes to the MAR; the instruction comes from memory through the MDR to the CIR', 'the PC is advanced, so it points at the next instruction for the next cycle'],
+  ['A media department that edits video', 'Editing needs fast rendering and smooth playback, so many cores and enough RAM', 'Needs: many cores, 16 GB of RAM. Constraints: the budget, classroom noise, licensed software'],
+  ['4 GHz dual-core: faster per core, better for single-threaded tasks', '3 GHz quad-core: runs four threads at once, likely faster for rendering'],
+  ['Buyers, and schools on tight budgets', 'That GHz means speed', 'They pay for GHz that does not speed up their work; the technician’s view is missing'],
+  ['Buy the quad-core', 'rendering uses many cores, and it is within budget', 'the department’s main need is exporting video'],
+  ['Fetch-decode-execute, the PC, the accumulator and memory', 'Cache, pipelining and timing'],
+  ['LOAD 7, ADD 5: expected 12, actual 12', 'SUB to exactly 0: expected 0, actual 0', 'SUB below zero crashed: fixed to allow negatives, retested, passes'],
 ]);

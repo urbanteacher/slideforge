@@ -107,15 +107,23 @@ test('Same link, new case ends on both cases worked through', () => {
   assert.ok(!bare.some((s) => s.nodes?.role === 'worked'), 'no worked answers, no slide');
 });
 
-test('every Framework stage shows a model answer on its last click', () => {
+test('every Framework stage writes its model answer into its scaffold, a part per slot', async () => {
+  const { slotsOf } = await import('../src/designs/nodes');
   const f = NODES.find((x) => x.id === 'framework')!;
   for (const content of [f.starter, ...(f.variants ?? []).map((v) => v.content)]) {
+    const run = content as { stages: { name: string; backbone: string; model?: unknown }[] };
     const stages = f.slides(st, content as never).filter((s) => /^stage-/.test(s.nodes?.role ?? ''));
-    assert.ok(stages.length >= 13);
-    for (const s of stages) {
-      const i = s.layers.findIndex((l) => l.name === 'Model answer');
-      assert.ok(i > 0, `${s.name}: a model answer`);
-      assert.ok(String(s.layers.find((l) => l.name === 'Model answer — words')!.params.text).length > 20);
-    }
+    assert.equal(stages.length, run.stages.length);
+    stages.forEach((s, i) => {
+      const slots = slotsOf(run.stages[i] as never);
+      const parts = s.layers.filter((l) => /^Model \d — words$/.test(l.name)).map((l) => String(l.params.text));
+      assert.equal(parts.length, slots.length, `${s.name}: a part for each of ${slots.join(', ')}`);
+      assert.ok(parts.every((p) => p.length > 1));
+      assert.ok(!s.layers.some((l) => l.name === 'Model answer'), `${s.name}: written into the scaffold, not over it`);
+    });
   }
+  // A model as one sentence (an older AI answer) is laid over the scaffold instead.
+  const one = structuredClone(f.starter) as { stages: { model?: unknown }[] };
+  one.stages[0].model = 'Clock speed is cycles per second.';
+  assert.ok(f.slides(st, one as never).some((s) => s.layers.some((l) => l.name === 'Model answer')));
 });

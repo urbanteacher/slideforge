@@ -30,4 +30,5 @@ const framework: NodesFormat<FrameworkRun> = {
 };
 
 export type { NodesFormat } from './types';
+export { slotsOf } from './framework';
 export const NODES: NodesFormat<any>[] = [framework, ladder, newCase, keepApart, sizeAnswer, beforeDuringAfter, joinItUp, labelParts, sameWord, threeAnswers, modelMarks, whichStep]; // eslint-disable-line @typescript-eslint/no-explicit-any

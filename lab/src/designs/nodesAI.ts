@@ -5,6 +5,7 @@
 // backbone) is never rewritten, only the topic-specific words. Sources, examiner quotes and statistics
 // are never invented.
 import type { Audience } from './activityAI';
+import { slotsOf } from './nodes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Host = { AI: { generateJson: (system: string, user: string, maxTokens?: number) => Promise<any> } };
@@ -78,18 +79,21 @@ const SPECS: Record<string, Spec> = {
   },
 };
 
-/** A framework sends only its stages' names and questions (the request is small); AI writes the topic's recall and a task per stage. */
+/** A framework sends only its stages' names and their scaffolds' slots (the request stays inside the relay's 2,200
+ *  characters); AI writes the topic's recall, a task per stage, and a model answer per stage, a part per slot. */
 function frameworkSpec(cur: any): Spec {
-  const stages = (cur.stages ?? []).map((s: any, i: number) => `${i + 1}. ${s.name}: ${s.ask}`).join('\n');
+  const list: { name: string; backbone: string }[] = cur.stages ?? [];
+  const stages = list.map((s, i) => `${i + 1}. ${s.name} [${slotsOf(s as never).join(' | ')}]`).join('\n');
+  const fits = (m: unknown, s: { name: string; backbone: string }) => Array.isArray(m) && m.length === slotsOf(s as never).length && m.every(str);
   return {
-    shape: '{"topic":"…","recall":[{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"}],"tasks":["…"],"models":["…"]}',
-    rules: `The framework is ${cur.framework}. Its stages, in order (keep this order; one task per stage, ${cur.stages?.length ?? 0} tasks):\n${stages}\nEach task is one short classroom task on the topic that does what its stage asks. "models" has one model answer per task, in the same order: what a secure student answer says, under 35 words, accurate and specific to the topic. Six recall terms the class must know first, each meaning in one sentence.`,
+    shape: '{"topic":"…","recall":[{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"},{"term":"…","meaning":"…"}],"tasks":["…"],"models":[["…","…","…"],["…","…"]]}',
+    rules: `The framework is ${cur.framework}. Its stages in order, each with its answer's slots in brackets (keep this order; ${list.length} tasks, ${list.length} models):\n${stages}\nEach task is one short classroom task on the topic that does what its stage name asks. Each model is an array with one part per slot of that stage, in order: what a secure student answer puts there, under 18 words a part, accurate and specific. Six recall terms, each meaning in one sentence.`,
     tokens: 2400,
-    check: (v) => str(v.topic) && arr(v.recall, 3) && arr(v.tasks, Math.max(1, (cur.stages?.length ?? 1) - 1)),
+    check: (v) => str(v.topic) && arr(v.recall, 3) && arr(v.tasks, Math.max(1, list.length - 1)),
     merge: (c, v) => ({ ...c, topic: v.topic, recall: v.recall.slice(0, 6), stages: c.stages.map((s: any, i: number) => {
-      const task = str(v.tasks[i]) ? v.tasks[i] : s.task, model = Array.isArray(v.models) && str(v.models[i]) ? v.models[i] : undefined;
-      // A new task needs its own model answer: the old one answered the old task.
-      return { ...s, task, model: model ?? (task === s.task ? s.model : undefined) };
+      const task = str(v.tasks[i]) ? v.tasks[i] : s.task, m = Array.isArray(v.models) ? v.models[i] : undefined;
+      // A model that fits the slots is kept; a new task without one loses the old model, which answered the old task.
+      return { ...s, task, model: fits(m, s) ? m : task === s.task ? s.model : undefined };
     }) }),
   };
 }

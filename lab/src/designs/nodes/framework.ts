@@ -12,7 +12,10 @@ import { marked } from './types';
 // Challenge a challenge card, Judge a decision chain. It closes on the map again.
 
 export type Backbone = 'U' | 'A' | 'C' | 'X' | 'J';
-export interface FrameworkStage { name: string; ask: string; task: string; outcome: string; backbone: Backbone; /** A model answer, shown on the stage's last click. */ model?: string }
+export interface FrameworkStage { name: string; ask: string; task: string; outcome: string; backbone: Backbone;
+  /** A model answer: a part per slot of the stage's scaffold (`slotsOf`), written into it a click at a time; or one
+   *  sentence, laid over the scaffold. */
+  model?: string | string[] }
 export interface FrameworkRun { framework: string; topic: string; recall: { term: string; meaning: string }[]; stages: FrameworkStage[] }
 
 export const BACKBONE: Record<Backbone, { name: string; color: string }> = {
@@ -70,13 +73,33 @@ function progress(st: LayoutStyle, o: FrameworkRun, here: number, y: number): La
   });
 }
 
-/** The scaffold under a stage's task, drawn for its kind of thinking. */
+/** What a stage's scaffold asks for, slot by slot: what a model answer fills, in order. */
+export function slotsOf(s: Pick<FrameworkStage, 'name' | 'backbone'>): string[] {
+  if (s.backbone === 'U') return ['Name it', 'Say what it is or does', 'Give one precise detail'];
+  if (s.backbone === 'A') return ['What you are given', 'The working', 'The result'];
+  if (s.backbone === 'C') return /pros|discuss/i.test(s.name) ? ['Benefits', 'Limitations'] : /compare/i.test(s.name) ? ['This one', 'The alternative'] : ['Must have', 'Can leave out'];
+  if (s.backbone === 'X') return /test|refine/i.test(s.name) ? ['Normal', 'Boundary', 'Invalid'] : ['Who is affected?', 'What is assumed?', 'What could go wrong?'];
+  return /review/i.test(s.name) ? ['Secure, developing or emerging?', 'because', 'my next step'] : ['My recommendation', 'because', 'the evidence that supports it'];
+}
+
+/** The model's parts when they fit the scaffold's slots; otherwise none (a sentence is laid over it instead). */
+const partsOf = (s: FrameworkStage) => (Array.isArray(s.model) && s.model.length === slotsOf(s).length && s.model.every((m) => typeof m === 'string' && m.trim()) ? s.model : null);
+
+/** The scaffold under a stage's task, drawn for its kind of thinking, with the model's parts written into it (a click each). */
 function scaffold(st: LayoutStyle, s: FrameworkStage, y: number, h: number): Layer[] {
   const col = colorOf(s.backbone), full = W - LEFT * 2;
-  if (s.backbone === 'U') {
-    return [T(st, 'Scaffold', 'Build it like this:', LEFT, y, 900, 46, { weight: '800', size: 34 }, still),
-      ...chain(st, ['Name it', 'Say what it is or does', 'Give one precise detail'], LEFT, y + 64, { h: Math.min(130, h - 70), size: 34, gap: 80, strokes: [LINK.U, LINK.A, LINK.A], firstOnClick: true, name: 'Define' })];
-  }
+  const slots = slotsOf(s), parts = partsOf(s);
+  // A chain's boxes, equal widths so each part sits under its own box.
+  const chained = (title: string, strokes: string[], name: string): Layer[] => {
+    const gap = 80, bw = Math.floor((full - gap * 2) / 3), bh = parts ? 110 : Math.min(130, h - 70), ay = y + 64 + bh + 22;
+    return [T(st, 'Scaffold', title, LEFT, y, 900, 46, { weight: '800', size: 34 }, still),
+      ...chain(st, slots, LEFT, y + 64, { h: bh, size: 32, gap, strokes, widths: [bw, bw, bw], firstOnClick: true, name }),
+      ...(parts ?? []).flatMap((m, i) => [
+        card(st, `Model ${i + 1}`, LEFT + i * (bw + gap), ay, bw, y + h - ay, { fill: rgba(strokes[i], 0.1), stroke: strokes[i], sw: 2, radius: 18 }, onClick()),
+        T(st, `Model ${i + 1} — words`, m, LEFT + i * (bw + gap) + 24, ay + 18, bw - 48, y + h - ay - 36, { weight: '600', size: 38, lineHeight: 1.22, fit: 'shrink' }, after()),
+      ])];
+  };
+  if (s.backbone === 'U') return chained('Build it like this:', [LINK.U, LINK.A, LINK.A], 'Define');
   if (s.backbone === 'A') {
     const steps = ['Pick out what you are given', 'Work it through, step by step', 'State the result, with its unit or output'];
     const sw = 760;
@@ -88,10 +111,18 @@ function scaffold(st: LayoutStyle, s: FrameworkStage, y: number, h: number): Lay
       ]),
       card(st, 'Working', LEFT + sw + 40, y, full - sw - 40, h, { fill: rgba(col, 0.08), stroke: rgba(col, 0.5) }, still),
       T(st, 'Working — label', 'SHOW YOUR WORKING', LEFT + sw + 76, y + 26, 600, 36, { weight: '800', size: 24, color: col, tracking: 0.08 }, still),
+      // The working, a line per step, level with its step.
+      ...(parts ?? []).flatMap((m, i) => {
+        const ry = y + 80 + i * ((h - 100) / 3), rh = (h - 100) / 3 - 8;
+        return [
+          badge(st, LEFT + sw + 76, ry, 40, col, String(i + 1), onClick()),
+          T(st, `Model ${i + 1} — words`, m, LEFT + sw + 130, ry - 4, full - sw - 196, rh, { weight: '600', size: 34, lineHeight: 1.2, fit: 'shrink' }, after()),
+        ];
+      }),
     ];
   }
   if (s.backbone === 'C') {
-    const sides = /pros|discuss/i.test(s.name) ? ['Benefits', 'Limitations'] : /compare/i.test(s.name) ? ['This one', 'The alternative'] : ['Must have', 'Can leave out'];
+    const sides = slots;
     const cw = Math.floor((full - 260) / 2);
     return [
       ...barCard(st, sides[0], LEFT, y, cw, h, col, st.panel, still),
@@ -99,19 +130,23 @@ function scaffold(st: LayoutStyle, s: FrameworkStage, y: number, h: number): Lay
       ...pill(st, 'Criteria', 'same criteria', LEFT + cw + 20, y + h / 2 - 30, { w: 220, fill: rgba(col, 0.18), size: 24 }, still),
       ...barCard(st, sides[1], LEFT + cw + 260, y, cw, h, col, st.panel, still),
       T(st, `${sides[1]} — label`, sides[1].toUpperCase(), LEFT + cw + 300, y + 26, cw - 80, 40, { weight: '800', size: 28, color: col, tracking: 0.08 }, still),
+      ...(parts ?? []).map((m, i) => T(st, `Model ${i + 1} — words`, m, LEFT + 40 + i * (cw + 260), y + 84, cw - 80, h - 110, { weight: '600', size: 40, lineHeight: 1.25, fit: 'shrink' }, onClick())),
     ];
   }
   if (s.backbone === 'X') {
-    const asks = /test|refine/i.test(s.name) ? ['Normal', 'Boundary', 'Invalid'] : ['Who is affected?', 'What is assumed?', 'What could go wrong?'];
-    const pw = Math.floor((full - 80 - 2 * 24) / 3);
+    const asks = slots;
+    const pw = Math.floor((full - 80 - 2 * 24) / 3), ph = parts ? 76 : Math.min(110, h - 130), ay = y + 96 + ph + 16;
     return [
       ...barCard(st, 'Challenge it', LEFT, y, full, h, col, rgba(col, 0.08), still),
       T(st, 'Challenge — label', 'CHALLENGE IT', LEFT + 44, y + 26, 800, 40, { weight: '800', size: 28, color: col, tracking: 0.08 }, still),
-      ...asks.flatMap((a, i) => pill(st, `Challenge ${i + 1}`, a, LEFT + 44 + i * (pw + 24), y + 96, { w: pw, h: Math.min(110, h - 130), fill: st.panel, size: 32 }, i ? onClick() : still)),
+      ...asks.flatMap((a, i) => pill(st, `Challenge ${i + 1}`, a, LEFT + 44 + i * (pw + 24), y + 96, { w: pw, h: ph, fill: st.panel, size: 30 }, i ? onClick() : still)),
+      ...(parts ?? []).flatMap((m, i) => [
+        card(st, `Model ${i + 1}`, LEFT + 44 + i * (pw + 24), ay, pw, y + h - 24 - ay, { fill: st.panel, stroke: col, sw: 2, radius: 18 }, onClick()),
+        T(st, `Model ${i + 1} — words`, m, LEFT + 64 + i * (pw + 24), ay + 16, pw - 40, y + h - 56 - ay, { weight: '600', size: 36, lineHeight: 1.22, fit: 'shrink' }, after()),
+      ]),
     ];
   }
-  return [T(st, 'Scaffold', 'Make the call:', LEFT, y, 900, 46, { weight: '800', size: 34 }, still),
-    ...chain(st, /review/i.test(s.name) ? ['Secure, developing or emerging?', 'because', 'my next step'] : ['My recommendation', 'because', 'the evidence that supports it'], LEFT, y + 64, { h: Math.min(130, h - 70), size: 34, gap: 80, strokes: [LINK.J, LINK.A, LINK.U], firstOnClick: true, name: 'Decide' })];
+  return chained('Make the call:', [LINK.J, LINK.A, LINK.U], 'Decide');
 }
 
 const PHONES: Record<Backbone, string> = { U: 'write it in a sentence', A: 'show your working', C: 'fill both sides', X: 'challenge it', J: 'make the call' };
@@ -153,13 +188,13 @@ export function frameworkSlides(st: LayoutStyle, o: FrameworkRun, format = 'fram
       T(st, 'Aim for — label', `AIM FOR · ${BACKBONE[s.backbone]?.name.toUpperCase()}`, W - LEFT - 362, ty + 20, 340, 30, { weight: '800', size: 20, color: col, tracking: 0.06, fit: 'shrink' }, still),
       T(st, 'Aim for — words', s.outcome, W - LEFT - 362, ty + 56, 340, th - 70, { weight: '700', size: 30, lineHeight: 1.2 }, still),
       ...scaffold(st, s, sy, sh),
-      // Without phones too, the class sees what a secure answer looks like: one more click lays it over the scaffold.
-      ...(s.model ? [
+      // A model written as one sentence (an older AI answer, say): one more click lays it over the scaffold.
+      ...(typeof s.model === 'string' && s.model.trim() ? [
         card(st, 'Model answer', LEFT, sy, W - LEFT * 2, sh, { fill: st.panel, stroke: col }, onClick()),
         T(st, 'Model answer — label', 'A MODEL ANSWER', LEFT + 44, sy + 28, 900, 36, { weight: '800', size: 26, color: col, tracking: 0.08 }, after()),
-        T(st, 'Model answer — words', s.model, LEFT + 44, sy + 84, W - LEFT * 2 - 88, sh - 116, { weight: '600', size: 46, lineHeight: 1.3 }, after()),
+        T(st, 'Model answer — words', s.model as string, LEFT + 44, sy + 84, W - LEFT * 2 - 88, sh - 116, { weight: '600', size: 46, lineHeight: 1.3 }, after()),
       ] : []),
-    ], st, `Stage ${i + 1} of ${n}: ${s.name} (${BACKBONE[s.backbone]?.name}). ${s.ask}\nTask: ${s.task}\nAim for: ${s.outcome}${s.model ? `\nModel answer (last click): ${s.model}` : ''}`), role: `stage-${i + 1}` };
+    ], st, `Stage ${i + 1} of ${n}: ${s.name} (${BACKBONE[s.backbone]?.name}). ${s.ask}\nTask: ${s.task}\nAim for: ${s.outcome}${s.model ? `\nModel answer (last clicks): ${Array.isArray(s.model) ? slotsOf(s).map((k, j) => `${k}: ${s.model![j] ?? ''}`).join(' | ') : s.model}` : ''}`), role: `stage-${i + 1}` };
   });
   const close = slideOf(`${o.framework} · where did you get to?`, [
     ground(st), label(st, `${o.framework} · ${n} stages`, LEFT, EY, 1400, st.accent, 30),
