@@ -341,7 +341,7 @@ SF.installExplore(SF);
 <script src="js/lesson-runtime.js?v=5"></script>
 <script src="js/lab-engine.js?v=50"></script>
 <script src="js/docs.js?v=2"></script>
-<script src="js/cloud.js?v=3"></script>
+<script src="js/cloud.js?v=4"></script>
 <script src="js/sync.js?v=1"></script>
 <script src="js/studio.js?v=18"></script>
 <script src="js/adapt.js?v=2"></script>
@@ -360,11 +360,13 @@ try {
   <form method="dialog">
     <h2 id="accountTitle">Your account</h2>
     <div class="account-out">
-      <p>Sign in with your work email to keep your lessons on every device. We email you a link; there is no password.</p>
+      <p>Sign in to keep your lessons on every device.</p>
       <label for="accountEmail">Work email</label>
-      <input id="accountEmail" type="email" autocomplete="email" placeholder="name@urbanteacher.co.uk" required>
+      <input id="accountEmail" type="email" autocomplete="username" placeholder="name@urbanteacher.co.uk" required>
+      <label for="accountPassword">Password</label>
+      <input id="accountPassword" type="password" autocomplete="current-password" required>
       <div class="account-actions">
-        <button class="btn primary" id="accountSend" type="button">Email me a link</button>
+        <button class="btn primary" id="accountSignIn" type="button">Sign in</button>
         <button class="btn" type="button" onclick="this.closest('dialog').close()">Not now</button>
       </div>
     </div>

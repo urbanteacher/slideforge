@@ -638,9 +638,9 @@ function serve(req, res) {
   if (rel === '/api/ai/generate' && req.method === 'POST') return aiGenerate(req, res);
 
   /* Where lessons are saved online, for the browser: the Supabase project and its public key, or nothing (the app
-     then saves in this browser only). Sign-in is an email magic link, for teachers only (data-storage-plan §8). */
+     then saves in this browser only). Sign-in is a work email and password, for teachers only (data-storage-plan §8). */
   if (rel === '/api/cloud-config' && req.method === 'GET') {
-    return jsonReply(res, 200, CLOUD_URL && CLOUD_KEY ? { enabled: true, url: CLOUD_URL, anonKey: CLOUD_KEY, signIn: 'email' } : { enabled: false });
+    return jsonReply(res, 200, CLOUD_URL && CLOUD_KEY ? { enabled: true, url: CLOUD_URL, anonKey: CLOUD_KEY, signIn: 'password' } : { enabled: false });
   }
 
   /* Sharing is deliberately NOT gated the way /api/data is when hosted.

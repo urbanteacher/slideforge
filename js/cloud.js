@@ -1,17 +1,18 @@
 /* SlideForge — the teacher's account, for saving lessons online (docs/data-storage-plan.md, step 3).
 
-   Teachers only, signing in with an email magic link (decided 14 Oct 2026). The relay says whether a Supabase
-   project is set up (GET /api/cloud-config): when it is not, nothing here shows and the app saves in this browser
-   only, exactly as before. When it is, the header gains a Sign in button; a teacher types their work email, Supabase
-   emails a link, and the link brings them back signed in. Only an email at an allowed domain (the project's
-   allowed_domains, urbanteacher.co.uk) is offered a link; the database refuses everyone else anyway (Row Level Security,
-   supabase/migrations/0001_lessons.sql).
+   Teachers only, signing in with their work email and a password (decided 14 Oct 2026, in place of the magic link,
+   whose emails Supabase's own mailer limits to a few an hour). A teacher's account is made by the project's owner in
+   the Supabase dashboard (Authentication → Users → Add user, auto-confirmed), so no email is sent and nobody signs
+   themselves up. The relay says whether a Supabase project is set up (GET /api/cloud-config): when it is not, nothing
+   here shows and the app saves in this browser only, exactly as before. Only an email at an allowed domain (the
+   project's allowed_domains, urbanteacher.co.uk) is tried; the database refuses everyone else anyway (Row Level
+   Security, supabase/migrations/0001_lessons.sql).
 
    SF.Cloud
      ready()        a promise: true when online saving is set up here, false when it is not
      user()         the signed-in teacher ({ id, email }) or null
      onChange(fn)   fn(user) on every sign-in and sign-out (and once, now)
-     signIn(email)  a promise: the link is sent, or it rejects with what to tell the teacher
+     signIn(email, password)  a promise: signed in, or it rejects with what to tell the teacher
      signOut()      a promise
      client()       the Supabase client, for step 4's sync (null when not set up) */
 (function (global) {
@@ -83,25 +84,23 @@
     return started;
   }
 
-  /** @param {string} email */
-  function signIn(email) {
+  /** @param {string} email @param {string} password */
+  function signIn(email, password) {
     return ready().then(function (on) {
       if (!on || !client) throw new Error('Online saving is not set up on this server.');
       var d = domainOf(email);
       if (!d) throw new Error('That is not an email address.');
       if (domains.length && domains.indexOf(d) < 0) throw new Error('Sign in with your work email (' + domains.map(function (x) { return '@' + x; }).join(' or ') + ').');
-      return client.auth.signInWithOtp({
-        email: String(email).trim(),
-        options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true }
-      }).then(function (/** @type {any} */ r) {
+      if (!password) throw new Error('Type your password.');
+      return client.auth.signInWithPassword({ email: String(email).trim(), password: String(password) }).then(function (/** @type {any} */ r) {
         if (r && r.error) {
           var m = String(r.error.message || '');
-          // Supabase's own mailer sends only a few sign-in emails an hour per project (docs/data-storage-plan.md §6.3).
-          if (/rate limit|too many|over_email_send_rate_limit/i.test(m) || r.error.status === 429) {
-            throw new Error('Too many sign-in emails were sent in the last hour. Wait up to an hour and ask once; an earlier link may still be in your inbox.');
-          }
-          throw new Error(m || 'The link could not be sent. Try again in a minute.');
+          if (/invalid login credentials/i.test(m)) throw new Error('That email and password do not match an account. Check the password, or ask for your account to be set up.');
+          if (/not confirmed/i.test(m)) throw new Error('This account is not confirmed yet: in Supabase, confirm the user (Authentication \u2192 Users).');
+          if (/rate limit|too many/i.test(m) || r.error.status === 429) throw new Error('Too many tries just now. Wait a minute and try again.');
+          throw new Error(m || 'Could not sign in. Try again in a minute.');
         }
+        if (r && r.data && r.data.user) setUser(r.data.user);
         return true;
       });
     });
@@ -128,23 +127,27 @@
     if (!btnAccount || !dlg) return;
     var btn = btnAccount;
     var input = /** @type {HTMLInputElement} */ (dlg.querySelector('#accountEmail'));
+    var pass = /** @type {HTMLInputElement} */ (dlg.querySelector('#accountPassword'));
     var say = /** @type {HTMLElement} */ (dlg.querySelector('#accountSay'));
     var who = /** @type {HTMLElement} */ (dlg.querySelector('#accountWho'));
     var signedOut = /** @type {HTMLElement} */ (dlg.querySelector('.account-out'));
     var signedIn = /** @type {HTMLElement} */ (dlg.querySelector('.account-in'));
     btnAccount.onclick = function () { say.textContent = ''; dlg.showModal(); if (!current) input.focus(); };
 
-    var accountSend = /** @type {HTMLButtonElement} */ (document.getElementById('accountSend')), send = accountSend;
-    var sendLink = function () {
-      send.disabled = true; say.textContent = 'Sending\u2026';
-      signIn(input.value).then(function () {
-        say.textContent = 'Check your email: the link signs you in here. It works once, for an hour.';
+    var accountSignIn = /** @type {HTMLButtonElement} */ (document.getElementById('accountSignIn')), go = accountSignIn;
+    var signInNow = function () {
+      go.disabled = true; say.textContent = 'Signing in\u2026';
+      signIn(input.value, pass.value).then(function () {
+        say.textContent = '';
+        pass.value = '';
+        dlg.close();
+        if (SF.toast) SF.toast('Signed in. Your lessons save to your account.');
       }, function (/** @type {any} */ err) {
-        say.textContent = err && err.message ? err.message : 'The link could not be sent.';
-      }).then(function () { send.disabled = false; });
+        say.textContent = err && err.message ? err.message : 'Could not sign in.';
+      }).then(function () { go.disabled = false; });
     };
-    accountSend.onclick = sendLink;
-    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); sendLink(); } });
+    accountSignIn.onclick = signInNow;
+    [input, pass].forEach(function (f) { f.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); signInNow(); } }); });
 
     var out = /** @type {HTMLButtonElement} */ (document.getElementById('accountOut'));
     out.addEventListener('click', function () { signOut().then(function () { dlg.close(); if (SF.toast) SF.toast('Signed out. Lessons save in this browser only.'); }); });

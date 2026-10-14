@@ -20,7 +20,13 @@ window.supabase = { createClient(url, key, opts) {
     auth: {
       getSession: () => Promise.resolve({ data: { session: null } }),
       onAuthStateChange: (cb) => { window.__sb.cb = cb; return { data: { subscription: { unsubscribe() {} } } }; },
-      signInWithOtp: (a) => { window.__sb.sent.push(a); return Promise.resolve({ error: window.__sb.limit ? { message: 'email rate limit exceeded', status: 429 } : null }); },
+      signInWithPassword: (a) => {
+        window.__sb.sent.push(a.email);
+        if (a.password !== 'right-test-password') return Promise.resolve({ data: {}, error: { message: 'Invalid login credentials', status: 400 } });
+        const user = { id: 'u-1', email: a.email.toLowerCase() };
+        if (window.__sb.cb) window.__sb.cb('SIGNED_IN', { user });
+        return Promise.resolve({ data: { user, session: { user } }, error: null });
+      },
       signOut: () => { window.__sb.out++; return Promise.resolve({ error: null }); },
     },
     from: (t) => ({ select: () => Promise.resolve({ data: t === 'allowed_domains' ? [{ domain: 'urbanteacher.co.uk' }] : [] }) }),
@@ -58,37 +64,32 @@ try {
   assert.equal(await page.locator('#btnAccount').innerText(), 'Sign in');
   const made = await page.evaluate(() => window.__sb.made);
   assert.deepEqual(made, { url: 'https://slideforgetest.supabase.co', key: 'anon-test-key', flow: 'implicit' });
-  step('with a project: Sign in in the header, the client made with its URL, public key and the implicit flow (a link that works in any browser)');
+  step('with a project: Sign in in the header, the client made with its URL, public key, the session kept in this browser');
 
   await page.locator('#btnAccount').click();
   await page.locator('#accountEmail').fill('someone@gmail.com');
-  await page.locator('#accountSend').click();
+  await page.locator('#accountPassword').fill('anything');
+  await page.locator('#accountSignIn').click();
   await page.locator('#accountSay').filter({ hasText: /work email/ }).waitFor();
   assert.equal((await page.evaluate(() => window.__sb.sent)).length, 0);
-  step('an email outside the allowed domains is refused, and nothing is sent');
-
-  // Supabase's mailer refusing (its hourly limit) is said in plain words.
-  await page.evaluate(() => { window.__sb.limit = true; });
-  await page.locator('#accountEmail').fill('Mark@urbanteacher.co.uk');
-  await page.locator('#accountSend').click();
-  await page.locator('#accountSay').filter({ hasText: /Too many sign-in emails/ }).waitFor();
-  await page.evaluate(() => { window.__sb.limit = false; window.__sb.sent = []; });
-  step('Supabase’s hourly email limit is said in plain words');
+  step('an email outside the allowed domains is refused before anything is tried');
 
   await page.locator('#accountEmail').fill('Mark@urbanteacher.co.uk');
-  await page.locator('#accountSend').click();
-  await page.locator('#accountSay').filter({ hasText: /Check your email/ }).waitFor();
-  const sent = await page.evaluate(() => window.__sb.sent);
-  assert.equal(sent.length, 1);
-  assert.equal(sent[0].email, 'Mark@urbanteacher.co.uk');
-  assert.equal(sent[0].options.emailRedirectTo, `http://127.0.0.1:${port}/`);
-  step('a work email is sent a magic link that comes back to this page');
+  await page.locator('#accountPassword').fill('wrong-test-password');
+  await page.locator('#accountSignIn').click();
+  await page.locator('#accountSay').filter({ hasText: /do not match an account/ }).waitFor();
+  assert.equal(await page.locator('#btnAccount').innerText(), 'Sign in');
+  step('a wrong password is said plainly, and nobody is signed in');
 
-  await page.evaluate(() => window.__sb.cb('SIGNED_IN', { user: { id: 'u-1', email: 'mark@urbanteacher.co.uk' } }));
+  await page.locator('#accountPassword').fill('right-test-password');
+  await page.locator('#accountPassword').press('Enter');
   await page.locator('#btnAccount.signed-in').waitFor();
   assert.equal(await page.locator('#btnAccount').innerText(), 'mark');
+  assert.equal(await page.locator('#accountDialog').evaluate((d) => d.open), false, 'the dialog closes once signed in');
+  assert.equal(await page.locator('#accountPassword').inputValue(), '', 'the password is not left in the box');
+  await page.locator('#btnAccount').click();
   assert.equal(await page.locator('#accountWho').innerText(), 'mark@urbanteacher.co.uk');
-  step('signed in: the button names the teacher, and the dialog says who');
+  step('the right password signs in (Enter works too): the button names the teacher, the box is cleared, the dialog says who');
 
   await page.locator('#accountOut').click();
   await page.locator('#btnAccount:not(.signed-in)').waitFor();

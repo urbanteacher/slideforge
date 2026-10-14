@@ -25,7 +25,7 @@ test('with no project set, lessons are saved in this browser only', async () => 
 
 test('with a project set, the browser is told its URL, its public key and the sign-in', async () => {
   const got = await config({ SUPABASE_URL: 'https://abcdefgh.supabase.co/', SUPABASE_ANON_KEY: 'public-anon-key', SUPABASE_SERVICE_ROLE_KEY: 'secret' });
-  assert.deepEqual(got, { enabled: true, url: 'https://abcdefgh.supabase.co', anonKey: 'public-anon-key', signIn: 'email' });
+  assert.deepEqual(got, { enabled: true, url: 'https://abcdefgh.supabase.co', anonKey: 'public-anon-key', signIn: 'password' });
   assert.ok(!JSON.stringify(got).includes('secret'), 'the service key never leaves the server');
 });
 

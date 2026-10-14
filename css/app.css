@@ -5712,7 +5712,7 @@ html[data-ws="deck"] #railCount { display: none; }
 .account-dialog::backdrop { background: rgba(0, 0, 0, .55); }
 .account-dialog h2 { margin: 0 0 10px; font-size: 18px; }
 .account-dialog p { margin: 0 0 12px; line-height: 1.45; }
-.account-dialog label { display: block; font-weight: 600; margin-bottom: 6px; }
+.account-dialog label { display: block; font-weight: 600; margin: 10px 0 6px; }
 .account-dialog input { box-sizing: border-box; width: 100%; padding: 10px 12px; font: inherit; border-radius: 8px; border: 1px solid var(--line-2, #444); background: var(--field, #1f1f23); color: inherit; }
 .account-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .account-sync { color: var(--text, #ececef); }
