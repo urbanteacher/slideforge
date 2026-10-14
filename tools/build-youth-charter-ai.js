@@ -2,7 +2,7 @@
 'use strict';
 
 /* Build two SlideForge starter decks: Soccerwise and Youthwise brought up to
- * date with an AI focus. Writes output/*.sfdeck.json (for File → Import) and
+ * date with an AI focus, and The AI stadium (AI across a Premier League club). Writes output/*.sfdeck.json (for File → Import) and
  * js/lessons-youth-charter.js, which builds both into the app's lesson list
  * and seeds them into the Library's Youth Charter folder.
  *
@@ -33,6 +33,9 @@ const stamp = Date.parse('2026-10-02T00:00:00Z');
 const CREDIT = 'Themes from Youth Charter’s education packs. Our own copy, not their materials.';
 const info = (label, value, note) => [label, value, note].join('\t');
 const card = (heading, body) => `${heading}\t${body}`;
+/* A compare row is three cells: the row's own label, then one per column. */
+const row = (label, left, right) => [label, left, right].join('\t');
+const myth = (claim, fact, verdict = 'Myth') => row(claim, verdict, fact);
 
 /* The arrangement travels with each slide, so a deck moved to another theme
    keeps its poster cover, ballot and rules rather than falling back to lists. */
@@ -157,12 +160,12 @@ const soccerwise = [
   {
     type: 'compare',
     title: 'Myth or fact?',
-    subtitle: 'Myth | Fact',
+    subtitle: 'Myth or fact? | The facts',
     bullets: [
-      card('The AI makes the offside decision', 'The officials decide. The technology draws the line.'),
-      card('Football is an aerobic sport', 'It is both: steady running and all-out sprints.'),
-      card('Only famous people can be heroes', 'Anyone who speaks up for others can be one.'),
-      card('If a video looks real, it is real', 'AI can fake faces and voices. Check first.')
+      myth('The AI makes the offside decision', 'The officials decide. The technology draws the line.'),
+      myth('Football is an aerobic sport', 'It is both: steady running and all-out sprints.'),
+      myth('Only famous people can be heroes', 'Anyone who speaks up for others can be one.'),
+      myth('If a video looks real, it is real', 'AI can fake faces and voices. Check first.')
     ],
     progressive: true,
     notes: 'BEAT 7 · 2 MINUTES · QUESTIONS AND ANSWERS. Read each myth aloud. Thumbs up for true, thumbs down for false. Then click to show the fact.\n\nRow 1 answers the four corners: today it is C, both.\nRow 3: in 2020 Marcus Rashford spoke from his own childhood and won free school meals over the holidays. Ask who in their own community speaks up for others.'
@@ -294,12 +297,12 @@ const youthwise = [
   {
     type: 'compare',
     title: 'Myth or fact?',
-    subtitle: 'Myth | Fact',
+    subtitle: 'Myth or fact? | The facts',
     bullets: [
-      card('AI knows the right answer', 'It predicts likely words. It can be confidently wrong.'),
-      card('AI lives in the cloud, so it costs nothing', 'The cloud is buildings full of computers using power and water.'),
-      card('AI will take all the jobs', 'Experts expect jobs to change more than disappear.'),
-      card('Your rights stop at the screen', 'The UN says children’s rights apply online too.')
+      myth('AI knows the right answer', 'It predicts likely words. It can be confidently wrong.'),
+      myth('AI lives in the cloud, so it costs nothing', 'The cloud is buildings full of computers using power and water.'),
+      myth('AI will take all the jobs', 'Experts expect jobs to change more than disappear.'),
+      myth('Your rights stop at the screen', 'The UN says children’s rights apply online too.')
     ],
     progressive: true,
     notes: 'BEAT 7 · 2 MINUTES · QUESTIONS AND ANSWERS. Read each myth. Thumbs up for true, thumbs down for false. Click to reveal the fact.\n\nRow 1: when AI is confidently wrong it is called a hallucination.\nRow 4: UN Committee on the Rights of the Child, General Comment No. 25 (2021).'
@@ -326,7 +329,296 @@ const youthwise = [
   }
 ];
 
-function build(id, title, slides, theme) {
+/* ===================================================== THE AI STADIUM (EPL)
+   The whole club, not one gadget: a map of a Premier League ground on
+   matchday and the club around it, zone by zone. The facts about the Premier
+   League come from AI Awareness Day's "Did you know the English Premier
+   League uses AI?" (aiawarenessday.co.uk/timeline/english-premier-league/);
+   Liverpool's neuroscience and the Klopp hire come from Ulrich
+   Lichtenthaler, "Liverpool FC: Extending data analytics and AI with
+   neuroscience" (2022). The rest is said as what clubs and grounds can do,
+   not as any one club's practice. Every zone names who still decides and the catch, so the map is
+   a debate and not an advert. */
+const STADIUM_ZONES = {
+  gates: { name: 'Gates & turnstiles',
+    does: 'Digital tickets are scanned at the turnstiles, and software counts fans in and predicts where queues will build, so stewards can open more gates before a crush starts.',
+    decides: 'The stewards and the ground’s safety officer.',
+    risk: 'Some police forces have trialled live facial recognition outside football grounds. Your face could become your ticket.',
+    ask: 'Would you scan your face to get in quicker?' },
+  control: { name: 'Safety control room',
+    does: 'CCTV software watches stairways and concourses and alerts the safety team when a crowd gets too dense or starts moving the wrong way.',
+    decides: 'The safety officer. Keeping 50,000 people safe is a human job.',
+    risk: 'The cameras watch everyone, not only the trouble. Who looks at the footage, and for how long is it kept?',
+    ask: 'Is being watched the price of being safe?' },
+  stands: { name: 'The stands',
+    does: 'Club apps hold your ticket, let you order food to your seat and suggest offers from what you bought last time.',
+    decides: 'You, every time you tap “accept”.',
+    risk: 'The app learns where you sit, what you buy and when you leave. That data is worth money to the club.',
+    ask: 'What does your phone tell the club about you?' },
+  pitch: { name: 'The pitch & the officials',
+    does: 'Semi-automated offside tracks dozens of points on every player’s body and a chip in the ball. VAR checks camera angles in seconds.',
+    decides: 'The referee and the VAR officials. The machine draws the line; people make the call.',
+    risk: 'Perfect accuracy can take the joy out of a goal while everyone waits for the check.',
+    ask: 'Would you trade the wait for a fairer result?' },
+  dugout: { name: 'Dugout & analysts’ box',
+    does: 'Analysts track every player 25 times a second to model “pitch control”: which team owns which space. Google DeepMind’s TacticAI tests thousands of corner routines.',
+    decides: 'The manager picks the team and the tactics.',
+    risk: 'If every club follows the same models, does football get more predictable?',
+    ask: 'Should a manager ever ignore what the data says?' },
+  medical: { name: 'Dressing room & medical',
+    does: 'GPS vests and sensors measure every sprint. Machine learning flags when a player’s muscles are tired enough to risk an injury.',
+    decides: 'The medical team and the player.',
+    risk: 'A player’s body becomes data. Who owns it: the player, the club or the app maker?',
+    ask: 'Would you wear a sensor that tells your coach you are tired?' },
+  tv: { name: 'TV gantry & media',
+    does: 'Cameras follow the play, clips are cut into highlights in seconds, and the Opta supercomputer simulates seasons 10,000 times to show live win chances.',
+    decides: 'The TV director chooses what millions of people see.',
+    risk: 'The highlights pick which moments, and which players, become famous.',
+    ask: 'Who decides what goes viral?' },
+  grounds: { name: 'Pitch care & energy',
+    does: 'Sensors under the grass can measure moisture and temperature, and software helps decide when to water, light and mow.',
+    decides: 'The head groundsperson, who knows the pitch.',
+    risk: 'A sensor can say the grass is fine when a player knows it is not.',
+    ask: 'Where would you trust the sensor over the expert?' },
+  training: { name: 'Training ground & academy',
+    does: 'Every session is tracked and filmed. Liverpool worked with neuro11, a neuroscience company, to train players’ focus for penalties, and academies collect data on young players.',
+    decides: 'The coaches and academy staff.',
+    risk: 'Data on a 12-year-old can label them early: too small, too slow, not ready.',
+    ask: 'Should data decide who gets released from an academy?' },
+  scouting: { name: 'Scouting office',
+    does: 'PLAIER works with Premier League clubs, simulating a new signing’s season 100,000 times. Reading made the first head of AI at an English club, to find players they never knew about.',
+    decides: 'The scouts. Reading kept its human scouts; the AI gives them more players to look at.',
+    risk: 'A player in a league with no data can be invisible to the machine.',
+    ask: 'Who gets missed when scouting runs on data?' },
+  business: { name: 'Club business',
+    does: 'Clubs use data to set prices and sell sponsorship. At least three Premier League clubs are reported to be exploring an AI “clone” of rival clubs, to predict how they will react to a transfer bid.',
+    decides: 'The club’s owners and directors.',
+    risk: 'A clone is built from what real people have said and done. Nobody asked them.',
+    ask: 'Is it fair to practise a deal against an AI copy of the other side?' },
+  home: { name: 'Fans at home',
+    does: 'The Premier League Companion, built with Microsoft, answers fans’ questions from 30 seasons of stats and live data, in their own language. The Fantasy Premier League Companion helps pick your team.',
+    decides: 'You pick your team. Platforms decide what you are shown.',
+    risk: 'It learns what keeps you on the app. And abuse aimed at players still gets past the filters.',
+    ask: 'Is it still your team if an AI picked it?' }
+};
+const stadiumData = (title) => ({
+  eyebrow: 'The AI stadium', title,
+  source: 'Sources: AI Awareness Day · Microsoft · BBC · Sky Sports · OneFootball · Mirror · Liverpool.com · U. Lichtenthaler',
+  intro: { name: 'Matchday', body: 'Twelve places where AI works on a matchday: eight inside the ground, four beyond it. Each one helps people decide, and each one has a catch.', ask: 'Before we zoom in: where do you think AI matters most?' },
+  cloud: { name: 'One league, one cloud', does: 'Every zone sends its data to the same place: tickets, cameras, sensors, scouting, prices, your app. The Premier League is building one platform with Microsoft for 1.8 billion fans.', decides: 'Whoever controls the data.', risk: 'Data collected to keep you safe can be used to sell to you.', ask: 'Who should be allowed to see all of it?' },
+  zones: STADIUM_ZONES
+});
+const zoneStep = (zone, caption) => ({ zone, caption });
+
+const premierLeague = [
+  teacherPage(
+    'Students map where AI works across a whole football club on matchday, and decide where people must keep control.',
+    'RUNNING ORDER · ABOUT 30 MINUTES\n' +
+    '1 Cover — up as they come in\n' +
+    '2 The 95th minute — 1 min\n' +
+    '3 Four corners — 2 min, where does AI work hardest?\n' +
+    '4 THE AI STADIUM, inside the ground — 7 min, one click per zone, ask each zone’s question\n' +
+    '5 Pair talk — 2 min, the sensor that knows you are tired\n' +
+    '6 THE AI STADIUM, beyond the ground — 4 min, the four corners and the data cloud\n' +
+    '7 The numbers — 1 min\n' +
+    '8 The Klopp hire — 1 min\n' +
+    '9 Integrated intelligence — 2 min, what AI brings and what people bring\n' +
+    '10 The 90/10 debate — 2 min\n' +
+    '11 Stand on the line — 3 min\n' +
+    '12 Myth or fact — 2 min\n' +
+    '13 Bad at team sports — 1 min\n' +
+    '14 Careers four corners — 2 min\n' +
+    '15 Three rules — 1 min\n' +
+    '16 Your move — 1 min\n' +
+    '17 The last word\n\n' +
+    'THE BIG IDEA. Integrated intelligence: the clubs that win combine AI and data with human skills, like Jürgen Klopp’s people skills at Liverpool. Every zone on the map is AI plus a person, never AI alone. Slides 8 and 9 say it out loud, and slide 10 argues with it.\n\n' +
+    'THE MAP. Slides 4 and 6 are a live map. Each click zooms to one zone; the panel says what the AI does, who still decides and the catch. Read the question in the yellow box and take two answers before the next click. Hover a zone to name it.\n\n' +
+    'THE MOVE THAT MAKES IT WORK. Every zone has a catch. Do not sell the technology; let them argue about it.\n\n' +
+    'SOURCES. The Premier League facts are from AI Awareness Day’s timeline post, “Did you know the English Premier League uses AI?”. Liverpool’s neuroscience work and the Klopp hire are from Ulrich Lichtenthaler, “Liverpool FC: Extending data analytics and AI with neuroscience” (May 2022). The Premier League Companion and the fan figures are Microsoft’s (unlocked.microsoft.com/premier-league and its customer story); treat them as the company’s claims. Reading’s head of AI is from BBC Sport, “Reading hope AI can take them to the Premier League” (6 March 2026). PLAIER’s simulations, the Kane prediction and the 90/10 claim are from Sky Sports, “AI revolution in football: how PLAIER is helping Premier League clubs make better decisions” (6 February 2025): the company’s own findings. William Spearman’s words are from the Mirror (21 September 2022), quoting Liverpoolfc.com. The 1.3% goal probability and Moneyball are from Liverpool.com, “Liverpool are using incredible data science during matches” (15 January 2020). The negotiation clone is from OneFootball (10 June 2026), reporting the Telegraph: the software is Nostrada.ai, and clubs were said to be considering it, not yet using it. The other zones say what clubs and grounds can do, not what one named club does.\n\n' +
+    'SEND / YOUNGER LEARNERS. Give pairs a printed map and twelve sticky dots: they place a dot where they think AI is before slide 4.\n\n' +
+    'EXTENSION. Design one new zone: where else in a club could AI help, and what would its catch be?'
+  ),
+  {
+    type: 'title',
+    title: 'The AI stadium',
+    subtitle: 'Youth Charter · AI in football',
+    body: 'Twelve places AI works on matchday. Can you find them?',
+    image: 'assets/youth-charter/poster-premier-league.svg',
+    notes: 'COVER. Up as the class comes in. Ask the door: "How many computers do you think are working at a Premier League match?"'
+  },
+  {
+    type: 'quote',
+    body: 'Ninety-five minutes on the clock. The ball hits the net. Before the celebration ends, the cameras have already found the foul.',
+    subtitle: 'Arsenal v West Ham · 1 minute',
+    notes: 'BEAT 1 · 1 MINUTE. From the AI Awareness Day post: West Ham scored what looked like a late equaliser against Arsenal; multiple camera angles were checked in seconds and the foul on goalkeeper David Raya was found. The 1-0 stood.\n\nAsk: "Was that fair? Would you feel differently if you supported West Ham?"'
+  },
+  {
+    type: 'cards',
+    title: 'Where does AI work hardest on matchday?',
+    subtitle: 'Four corners · walk to your letter · 2 minutes',
+    bullets: [
+      card('On the pitch', 'Offside lines, VAR, the ball.'),
+      card('In the stands', 'Tickets, crowds, cameras.'),
+      card('On TV', 'Highlights, graphics, predictions.'),
+      card('Behind the scenes', 'Injuries, scouting, tactics.')
+    ],
+    notes: 'BEAT 2 · 2 MINUTES. Everyone moves. One reason from each corner.\n\nThe answer is all four, which the map shows next. Remember who stood where: come back to it after slide 6.'
+  },
+  {
+    type: 'figure', figure: 'stadium', title: 'Inside the ground',
+    figureAlt: 'A top-down map of a football stadium on matchday, with eight numbered zones inside the ground where AI is used: gates, control room, stands, pitch, dugout, medical room, TV gantry and pitch care.',
+    figureData: stadiumData('Inside the ground'),
+    figureSteps: [
+      zoneStep('all', 'The whole club on matchday'),
+      zoneStep('gates', 'Zone 1 · Gates & turnstiles'),
+      zoneStep('control', 'Zone 2 · Safety control room'),
+      zoneStep('stands', 'Zone 3 · The stands'),
+      zoneStep('pitch', 'Zone 4 · The pitch & the officials'),
+      zoneStep('dugout', 'Zone 5 · Dugout & analysts’ box'),
+      zoneStep('medical', 'Zone 6 · Dressing room & medical'),
+      zoneStep('tv', 'Zone 7 · TV gantry & media'),
+      zoneStep('grounds', 'Zone 8 · Pitch care & energy')
+    ],
+    notes: 'BEAT 3 · 7 MINUTES. THE MAP. Nine clicks: the whole ground, then eight zones. Each click zooms in.\n\nOn every zone: read "What AI does" in your own words, then put the yellow question to the room and take two answers. Keep it moving, under a minute a zone.\n\nThe ones that land with teenagers: the facial recognition at the gates, the app in the stands, and the sensor in the medical room. Spend longer there if the room is arguing.'
+  },
+  {
+    type: 'statement',
+    body: 'A sensor knows a player is tired before they do. Who should be allowed to see that?',
+    subtitle: 'Pair talk · 2 minutes',
+    notes: 'BEAT 4 · 2 MINUTES. Pair with someone from a different corner.\n\nPush for a list: the player, the coach, the doctor, the manager, a new club that wants to buy them, a betting company. Where does it stop being OK?'
+  },
+  {
+    type: 'figure', figure: 'stadium', title: 'Beyond the ground',
+    figureAlt: 'The same stadium map zoomed out to four more zones beyond the ground where AI is used: training ground, scouting office, club business and fans at home, then every zone linked to one data cloud.',
+    figureData: stadiumData('Beyond the ground'),
+    figureSteps: [
+      zoneStep('training', 'Zone 9 · Training ground & academy'),
+      zoneStep('scouting', 'Zone 10 · Scouting office'),
+      zoneStep('business', 'Zone 11 · Club business'),
+      zoneStep('home', 'Zone 12 · Fans at home'),
+      zoneStep('cloud', 'Every zone, one cloud')
+    ],
+    notes: 'BEAT 5 · 4 MINUTES. The club does not stop at the ground. Four zones, then the last click joins every zone to one cloud.\n\nThe academy question matters most for this room: some of them may be in a club’s system already.\n\nOn the cloud: "Data collected to keep you safe can be used to sell to you." Ask who should be allowed to see all of it. Then go back to the four corners: everyone was right.'
+  },
+  {
+    type: 'stats',
+    title: 'The numbers behind matchday',
+    subtitle: 'Did you know?',
+    bullets: [
+      info('Chance of a goal in the next 15 seconds', '1.3%', 'Liverpool’s model, from where the ball and players are'),
+      info('Premier League fans, in 189 countries', '1.8bn', 'Microsoft and the Premier League’s figure'),
+      info('Penalties Liverpool scored in a cup final shootout', '11 of 11', 'after neuroscience training, February 2022')
+    ],
+    body: 'Sources: Liverpool.com (2020) on pitch control; Microsoft, “AI at the heart of the beautiful game” (2026); Ulrich Lichtenthaler (2022) on Liverpool and neuro11',
+    notes: 'BEAT 6 · 1 MINUTE. Liverpool’s Director of Research, William Spearman, has a PhD in particle physics and worked at CERN. Ask: "Did you think football clubs hired physicists?"\n\nThe 1.3%: Liverpool’s data scientist Tim Waskett, an astrophysicist, showed at the Royal Institution Christmas Lectures how the club turns every moment of a match into a goal probability: with the ball in one position, a 1.3% chance of a goal in the next 15 seconds (Liverpool.com, January 2020). Every pass changes the number. Ask: "Which pass would you make to push it up?"\n\nThe 1.8 billion: Microsoft says the Premier League Companion reached 60 million active fans in its first two months, with 20% more engagement on the league’s app and website. Those are Microsoft’s own figures, from its customer story; say so.\n\nThe 11 of 11: Liverpool beat Chelsea on penalties in the February 2022 League Cup final, with every Liverpool taker scoring. Jürgen Klopp credited neuro11, a German neuroscience company the club had worked with since 2021, for preparing players for penalties and set pieces.'
+  },
+  {
+    type: 'journey',
+    title: 'Why Liverpool hired Jürgen Klopp',
+    subtitle: '2015 · what the data saw',
+    bullets: [
+      card('A bad season', 'Klopp’s last season at Borussia Dortmund went badly, and the papers criticised him.'),
+      card('The data', 'Liverpool’s research team, led by Ian Graham, found Dortmund had been very unlucky. Klopp was still one of the best.'),
+      card('The result', 'Liverpool hired him. They won the Champions League in 2019 and the Premier League in 2020.')
+    ],
+    progressive: true,
+    notes: 'BEAT 7 · 1 MINUTE. From Ulrich Lichtenthaler (2022): after a bad final season at Borussia Dortmund, Klopp was heavily criticised. Liverpool’s Head of Research, Ian Graham, and his team showed that Dortmund had been very unlucky and that Klopp was still one of the best managers. Liverpool won the Champions League in 2019 and the Premier League in 2020.\n\nAsk: "So did the data win those trophies?" Take answers, then the next slide.'
+  },
+  {
+    type: 'compare',
+    title: 'Integrated intelligence',
+    subtitle: 'What AI brings | What people bring',
+    bullets: [
+      row('Matchday', 'Tracks every player 25 times a second.', 'Spots who is having a bad week at home.'),
+      row('The season', 'Simulates the season 10,000 times.', 'Picks the moment to take a risk.'),
+      row('Transfers', 'Finds players in data from around the world.', 'Sees who will fit the dressing room.'),
+      row('Penalties', 'Trains players’ focus for the shootout.', 'Puts an arm round the one who missed.')
+    ],
+    progressive: true,
+    notes: 'BEAT 8 · 2 MINUTES. THE BIG IDEA. Lichtenthaler calls it integrated intelligence: Liverpool’s data and AI only paid off when they were combined with Klopp’s emotional intelligence and people skills. Neither side wins alone.\n\nRead each AI line, ask "and what does a person bring?", take an answer, then click. Then: "Go back to the map. Which zone has AI with no person beside it?" (None should.)\n\nLiverpool.com (2020) put it simply: whatever the data scientists find, Klopp has to interpret it and apply it in a footballing sense. Liverpool’s owners have trusted data for a long time: John Henry once offered Billy Beane, the man behind Moneyball, the job of running the Boston Red Sox.\n\nThe same idea from BBC Sport (March 2026): Professor Nick Jennings of Loughborough University says AI “complements human expertise and human insight”, and Reading’s head of AI says that for now it complements the team, and results are down to the coaches.'
+  },
+  {
+    type: 'statement',
+    body: 'An AI company says players are 90% of a team’s success, and the coach only 10%.',
+    subtitle: 'Agree or disagree · hands up · 2 minutes',
+    notes: 'BEAT 9 · 2 MINUTES. THE DEBATE. Hands up: agree, disagree, not sure. Then one reason from each side.\n\nFrom Sky Sports (February 2025): Jan Wendt, co-founder of PLAIER, said its models found player quality responsible for around 90% of success and the coach around 10%, though 10% can still make the difference. PLAIER also said Klopp’s Liverpool performed about as well as its squad should have.\n\nSet that against the last two slides: Lichtenthaler credits Klopp’s people skills. Who is right? Maybe both: the coach is part of why the players got that good. That is integrated intelligence again.'
+  },
+  {
+    type: 'spectrum',
+    title: 'Where should AI decide?',
+    subtitle: 'AI can decide | A person must decide',
+    bullets: [
+      info('When to water the pitch', '8', ''),
+      info('Which gate to open next', '22', ''),
+      info('Drawing the offside line', '38', ''),
+      info('Resting a tired player', '58', ''),
+      info('Who you are, from your face', '76', 'facial recognition at the gate'),
+      info('Releasing a 12-year-old from the academy', '94', 'a decision about someone’s future')
+    ],
+    progressive: true,
+    body: 'The positions are arguable. That is the activity.',
+    notes: 'BEAT 10 · 3 MINUTES. STAND ON THE LINE. One wall "AI can decide", the opposite wall "a person must decide". Read each item, students move, then click to show where we put it.\n\nAsk: "Which one did we put in the wrong place?" The academy is the one to land.'
+  },
+  {
+    type: 'compare',
+    title: 'Myth or fact?',
+    subtitle: 'Myth or fact? | The facts',
+    bullets: [
+      myth('AI picks the Premier League teams', 'Managers pick the team. AI gives them evidence.'),
+      myth('The supercomputer knows who will win', 'It gives chances, not answers. Upsets still happen.'),
+      myth('Football clubs hire physicists', 'Liverpool’s research team includes physicists and an astrophysicist.', 'Fact'),
+      myth('Signing a superstar always makes a team better', 'An AI model predicted Harry Kane would not improve Bayern. Their goal difference fell.')
+    ],
+    progressive: true,
+    notes: 'Row 4 is from Sky Sports (February 2025): PLAIER’s model predicted Bayern’s record signing would not have a positive effect, and Bayern’s goal difference was 49 with him against 54 the season before (PLAIER’s figures). It is no slight on Kane: football is a team game.\n\nBEAT 11 · 2 MINUTES. Thumbs up for true, down for false, then click for the fact.\n\nRow 3 is a good one to argue: if the computer says 70%, who is surprised when the 30% happens?'
+  },
+  {
+    type: 'quote',
+    body: 'I grew up being really bad at most team sports. I still am.',
+    subtitle: 'William Spearman, lead data scientist, Liverpool',
+    notes: 'BEAT 12 · 1 MINUTE. You do not have to be good at football to work in football. Spearman did a physics PhD, got hooked on sports data watching American football, and now works in Liverpool’s six-person research team on transfers and tactics. His best-known idea is “pitch control”: which areas of the pitch a team controls, so that a pass there would reach them, and how runs create and close space.\n\nSource: the Mirror (21 September 2022), quoting his interview with Liverpoolfc.com.\n\nAsk: "What are you really good at that is not football?"'
+  },
+  {
+    type: 'cards',
+    title: 'Which job would you want?',
+    subtitle: 'Four corners · the people behind the manager · 2 minutes',
+    bullets: [
+      card('Data scientist', 'Turns tracking data into tactics.'),
+      card('Machine learning engineer', 'Builds the models that flag injuries.'),
+      card('Video analyst', 'Breaks down every match, frame by frame.'),
+      card('Head of AI', 'Reading made the first one at an English club.')
+    ],
+    notes: 'BEAT 13 · 2 MINUTES. From the AI Awareness Day post: "The sports industry is hungry for tech talent."\n\nEveryone picks a corner. Ask: "What do you already do that is a start? Gaming, maths, coding, stats, editing videos?" Link to Youth Charter’s digital tech pathway.\n\nHead of AI is a real job title now: BBC Sport (March 2026) reported that Reading, in League One, appointed Stuart Fenton as the first head of AI at an English club, working on recruitment, tactics and the business. Reading point to Brentford and Brighton as clubs that climbed using data.'
+  },
+  {
+    type: 'journey',
+    title: 'Three rules for the AI stadium',
+    subtitle: 'In the order you would use them',
+    bullets: [
+      card('Ask what it collects', 'Tickets, faces, bodies, clicks: know what is being measured.'),
+      card('Keep people in the big calls', 'AI can measure. People decide what is fair.'),
+      card('Your data, your say', 'You can ask a club or app what it holds about you.')
+    ],
+    progressive: true,
+    notes: 'BEAT 14 · 1 MINUTE. One rule per click.\n\nRule 3 is real: under UK data protection law anyone can ask an organisation for the personal data it holds about them.'
+  },
+  {
+    type: 'keyfact',
+    subtitle: 'Your move · 1 minute',
+    title: 'Pick your zone',
+    body: 'Choose one zone on the map. Decide one thing you would change about how AI is used there, or one job there you would like to do.',
+    bullets: ['My zone and my move:'],
+    notes: 'BEAT 15 · 1 MINUTE. Everyone decides. Two or three volunteers share. Collect the zones: the most popular one is your next session.'
+  },
+  {
+    type: 'statement',
+    body: 'The future of football isn’t just played. It’s programmed.',
+    subtitle: 'AI Awareness Day',
+    notes: 'CLOSE. The line from the AI Awareness Day post. Leave it up as they go: "Your passion for coding, gaming, maths or statistics could help your favourite club win its next trophy." And the other half, from Liverpool: the club still needs people who understand people.'
+  }
+];
+
+function build(id, title, slides, theme, visible = 10) {
   const authored = slides.map((slide, index) => ({
     id: `${id}-${String(index).padStart(2, '0')}`,
     ...slide,
@@ -352,7 +644,7 @@ function build(id, title, slides, theme) {
   if (!deck || deck.slides.length !== slides.length) throw new Error(`${title}: SlideForge did not keep every slide`);
   if (deck.theme !== theme) throw new Error(`${title}: theme became ${deck.theme}`);
   if (deck.logo !== 'assets/youth-charter/yc-logo.png') throw new Error(`${title}: lost its logo`);
-  if (deck.slides.filter(s => !s.hidden).length !== 10) throw new Error(`${title}: wants 10 visible slides`);
+  if (deck.slides.filter(s => !s.hidden).length !== visible) throw new Error(`${title}: wants ${visible} visible slides`);
   slides.forEach((source, index) => {
     const output = deck.slides[index];
     const where = `${title}: slide ${index} (${source.type})`;
@@ -372,9 +664,12 @@ const LESSONS = [
     blurb: 'Ten minutes on fairness and AI in football: the robot referee, fair play online and who gets to be a hero. Hands up and four corners, no phones.' },
   { key: 'yc-youthwise-ai', file: 'Youthwise_AI.sfdeck.json', icon: '✊', slides: youthwise, theme: 'youth-charter',
     title: 'Youthwise · Will AI make your future fairer?',
-    blurb: 'Ten minutes on AI and a fair future: jobs, the feed and who gets heard. Hands up and four corners, no phones.' }
+    blurb: 'Ten minutes on AI and a fair future: jobs, the feed and who gets heard. Hands up and four corners, no phones.' },
+  { key: 'yc-premier-league-ai', file: 'PremierLeague_AI.sfdeck.json', icon: '🏟', slides: premierLeague, theme: 'youth-charter-matchday', visible: 17, minutes: 30,
+    title: 'The AI stadium · AI in the Premier League',
+    blurb: 'Thirty minutes on the whole club: a live map of a Premier League ground on matchday, zone by zone, from the turnstiles to the TV gantry, the training ground and fans at home. Hands up and four corners, no phones.' }
 ];
-const outputs = LESSONS.map(L => [L.file, build(L.key.replace(/^yc-/, '') + '-2026', L.title, L.slides, L.theme)]);
+const outputs = LESSONS.map(L => [L.file, build(L.key.replace(/^yc-/, '') + '-2026', L.title, L.slides, L.theme, L.visible)]);
 for (const [file, deck] of outputs) {
   const target = path.join(__dirname, '..', 'output', file);
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -387,7 +682,7 @@ for (const [file, deck] of outputs) {
 const lessons = LESSONS.map((L, i) => {
   const deck = outputs[i][1];
   return {
-    key: L.key, title: L.title, blurb: L.blurb, icon: L.icon, kind: 'lecture', minutes: 10,
+    key: L.key, title: L.title, blurb: L.blurb, icon: L.icon, kind: 'lecture', minutes: L.minutes || 10,
     theme: deck.theme, libraryGroup: 'youth-charter', org: deck.org, closingNote: deck.closingNote,
     showSlideNumbers: deck.showSlideNumbers, logo: deck.logo, logoOn: deck.logoOn, logoSize: deck.logoSize, games: [],
     slides: L.slides.map(slide => (!slide.hidden && COMPOSITION[slide.type] ? { ...slide, design: { composition: COMPOSITION[slide.type] } } : slide))
@@ -395,7 +690,7 @@ const lessons = LESSONS.map((L, i) => {
 });
 const builtIn = path.join(__dirname, '..', 'js', 'lessons-youth-charter.js');
 fs.writeFileSync(builtIn, `/* Generated by tools/build-youth-charter-ai.js: do not edit by hand, rebuild instead.
-   Soccerwise and Youthwise, built into SlideForge's lesson list and seeded into
+   Youth Charter's lessons, built into SlideForge's lesson list and seeded into
    the Youth Charter folder of every browser's Library. Loaded after js/lessons.js,
    whose LESSONS and LIBRARY_SEED_KEYS it extends. */
 (function (root) {

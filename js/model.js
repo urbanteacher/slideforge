@@ -90,7 +90,7 @@
       return b;
     };
     const range = (parent, label, key, action) => {
-      const wrap = el2("label", "ml-range", label), input = document.createElement("input");
+      const wrap2 = el2("label", "ml-range", label), input = document.createElement("input");
       input.type = "range";
       input.min = "0";
       input.max = "100";
@@ -99,8 +99,8 @@
       input.setAttribute("aria-label", label);
       input.value = String(view[key]);
       input.oninput = () => send(action, Number(input.value));
-      wrap.append(input);
-      parent.append(wrap);
+      wrap2.append(input);
+      parent.append(wrap2);
       return input;
     };
     pad.replaceChildren();
@@ -1059,9 +1059,9 @@
       return String(Math.round(v * 100) / 100).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
     function chartKey(data, slide) {
-      var wrap = el2("div", "chart-key");
+      var wrap2 = el2("div", "chart-key");
       if (!SF.chartUsesSeriesLegend || !SF.chartUsesSeriesLegend(slide && slide.chartKind, data.series.length)) {
-        return wrap;
+        return wrap2;
       }
       data.series.forEach(function(s, i) {
         var item = el2("span", "ck-item");
@@ -1069,9 +1069,9 @@
         dot.style.background = chartColor(i);
         item.appendChild(dot);
         item.appendChild(el2("span", null, s.name));
-        wrap.appendChild(item);
+        wrap2.appendChild(item);
       });
-      return wrap;
+      return wrap2;
     }
     function chartTable(data, slide) {
       if (slide && slide.chartKind === "sankey" && SF.chartFlows) {
@@ -2551,7 +2551,7 @@
         return b;
       }
       function range(parent, label, min, max, value, action) {
-        var wrap = node("label", "explore-range"), text2 = node("span", null, label);
+        var wrap2 = node("label", "explore-range"), text2 = node("span", null, label);
         var input2 = node("input");
         input2.type = "range";
         input2.min = String(min);
@@ -2563,8 +2563,8 @@
         input2.oninput = function() {
           send(action, Number(input2.value));
         };
-        wrap.append(text2, input2);
-        parent.appendChild(wrap);
+        wrap2.append(text2, input2);
+        parent.appendChild(wrap2);
         return input2;
       }
       root.classList.add("exploration-slide");
@@ -5682,8 +5682,346 @@
     }
   };
 
+  // src/figures/stadium.js
+  var YC = {
+    navy: "#224476",
+    deep: "#12284a",
+    night: "#0b1a33",
+    red: "#e21c21",
+    pop: "#ffe14d",
+    paper: "#f3efe6",
+    ink: "#16203a",
+    dim: "#4f5868",
+    grass: "#2f7d4a",
+    grass2: "#378c55",
+    line: "rgba(255,255,255,.85)",
+    display: "Impact, Haettenschweiler, 'Arial Narrow Bold', 'Franklin Gothic Heavy', sans-serif",
+    sans: "'Helvetica Neue', Helvetica, Arial, sans-serif"
+  };
+  var MAP2 = { x: 36, y: 112, w: 788, h: 576 };
+  var PANEL = { x: 852, y: 112, w: 392, h: 576 };
+  var ZONES = [
+    { id: "gates", box: [282, 474, 224, 52] },
+    { id: "control", box: [552, 126, 66, 50] },
+    { id: "stands", box: [176, 112, 436, 362] },
+    { id: "pitch", box: [262, 192, 264, 204] },
+    { id: "dugout", box: [330, 396, 128, 56] },
+    { id: "medical", box: [478, 418, 96, 44] },
+    { id: "tv", box: [290, 104, 208, 40] },
+    { id: "grounds", box: [184, 254, 56, 82] },
+    { id: "training", box: [14, 14, 176, 120] },
+    { id: "scouting", box: [598, 14, 176, 120] },
+    { id: "business", box: [598, 442, 176, 120] },
+    { id: "home", box: [14, 442, 176, 120] }
+  ];
+  var CLOUD = [394, 52];
+  function wrap(text2, size, width) {
+    var words = String(text2 || "").split(/\s+/).filter(Boolean), lines = (
+      /** @type {string[]} */
+      []
+    ), line = "";
+    words.forEach(function(w) {
+      var next = line ? line + " " + w : w;
+      if (line && textWidth(next, size, false) > width) {
+        lines.push(line);
+        line = w;
+      } else line = next;
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+  var stadium = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data || {}, svg = fig.svg, zones = d.zones || {};
+      var defs = el("defs", {}, svg);
+      var clip = el("clipPath", { id: "stadium-clip" }, defs);
+      el("rect", { x: MAP2.x, y: MAP2.y, width: MAP2.w, height: MAP2.h, rx: 18 }, clip);
+      var dots = el("pattern", { id: "stadium-dots", width: 15, height: 15, patternUnits: "userSpaceOnUse" }, defs);
+      el("circle", { cx: 7.5, cy: 7.5, r: 1.3, fill: "rgba(255,255,255,.07)" }, dots);
+      var stripes = el("pattern", { id: "stadium-stripes", width: 44, height: 10, patternUnits: "userSpaceOnUse" }, defs);
+      el("rect", { width: 22, height: 10, fill: YC.grass }, stripes);
+      el("rect", { x: 22, width: 22, height: 10, fill: YC.grass2 }, stripes);
+      el("rect", { width: W, height: H, fill: YC.deep }, svg);
+      el("rect", { width: W, height: H, fill: "url(#stadium-dots)" }, svg);
+      el("rect", { x: 0, y: 0, width: 14, height: H, fill: YC.red }, svg);
+      if (d.eyebrow) el("text", { x: 48, y: 52, "font-family": YC.sans, "font-size": 15, "font-weight": 700, "letter-spacing": 2.6, fill: YC.pop }, svg, String(d.eyebrow).toUpperCase());
+      if (d.title) el("text", { x: 48, y: 94, "font-family": YC.display, "font-size": 42, fill: "#ffffff" }, svg, String(d.title).toUpperCase());
+      var frame = el("g", { "clip-path": "url(#stadium-clip)" }, svg);
+      el("rect", { x: MAP2.x, y: MAP2.y, width: MAP2.w, height: MAP2.h, fill: YC.night }, frame);
+      var map = el("g", {}, frame);
+      var art = el("g", { transform: "translate(" + MAP2.x + " " + MAP2.y + ")" }, map);
+      for (var gx = 40; gx < MAP2.w; gx += 80) el("line", { x1: gx, y1: 0, x2: gx, y2: MAP2.h, stroke: "rgba(255,255,255,.04)", "stroke-width": 10 }, art);
+      for (var gy = 40; gy < MAP2.h; gy += 80) el("line", { x1: 0, y1: gy, x2: MAP2.w, y2: gy, stroke: "rgba(255,255,255,.04)", "stroke-width": 10 }, art);
+      el("rect", { x: 176, y: 112, width: 436, height: 362, rx: 70, fill: YC.navy, stroke: "#2d5592", "stroke-width": 3 }, art);
+      for (var r = 0; r < 5; r++) el("rect", { x: 188 + r * 14, y: 124 + r * 13, width: 412 - r * 28, height: 338 - r * 26, rx: 62 - r * 8, fill: "none", stroke: "rgba(255,255,255,.10)", "stroke-width": 4 }, art);
+      var seed = 7;
+      function rand() {
+        seed = seed * 16807 % 2147483647;
+        return seed / 2147483647;
+      }
+      for (var f = 0; f < 340; f++) {
+        var a = rand() * Math.PI * 2, rx = 160 + rand() * 46, ry = 128 + rand() * 40;
+        var fx = 394 + Math.cos(a) * rx * 1.08, fy = 293 + Math.sin(a) * ry * 1.05;
+        if (fx > 262 && fx < 526 && fy > 192 && fy < 396) continue;
+        el("circle", { cx: fx, cy: fy, r: 2.2, fill: rand() < 0.5 ? YC.red : "#ffffff", opacity: 0.55 }, art);
+      }
+      el("rect", { x: 262, y: 192, width: 264, height: 204, fill: "url(#stadium-stripes)", stroke: YC.line, "stroke-width": 2.5 }, art);
+      el("line", { x1: 394, y1: 192, x2: 394, y2: 396, stroke: YC.line, "stroke-width": 2 }, art);
+      el("circle", { cx: 394, cy: 294, r: 26, fill: "none", stroke: YC.line, "stroke-width": 2 }, art);
+      el("rect", { x: 262, y: 246, width: 40, height: 96, fill: "none", stroke: YC.line, "stroke-width": 2 }, art);
+      el("rect", { x: 486, y: 246, width: 40, height: 96, fill: "none", stroke: YC.line, "stroke-width": 2 }, art);
+      el("rect", { x: 255, y: 280, width: 7, height: 28, fill: "#ffffff" }, art);
+      el("rect", { x: 526, y: 280, width: 7, height: 28, fill: "#ffffff" }, art);
+      var team = [[300, 230], [330, 300], [310, 360], [370, 250], [365, 340], [420, 290]];
+      var rival = [[450, 230], [470, 320], [430, 360], [500, 270], [410, 220]];
+      team.forEach(function(p, i) {
+        if (i) el("line", { x1: team[i - 1][0], y1: team[i - 1][1], x2: p[0], y2: p[1], stroke: YC.pop, "stroke-width": 1.4, "stroke-dasharray": "2 5", opacity: 0.8 }, art);
+      });
+      team.forEach(function(p) {
+        el("circle", { cx: p[0], cy: p[1], r: 6, fill: YC.red, stroke: "#ffffff", "stroke-width": 2 }, art);
+      });
+      rival.forEach(function(p) {
+        el("circle", { cx: p[0], cy: p[1], r: 6, fill: "#ffffff", stroke: YC.deep, "stroke-width": 2 }, art);
+      });
+      el("circle", { cx: 438, cy: 300, r: 4, fill: "#ffffff", stroke: YC.ink, "stroke-width": 1.5 }, art);
+      el("line", { x1: 452, y1: 196, x2: 452, y2: 392, stroke: YC.pop, "stroke-width": 2, opacity: 0.9 }, art);
+      el("rect", { x: 296, y: 112, width: 196, height: 18, rx: 4, fill: YC.ink, stroke: YC.pop, "stroke-width": 1.5 }, art);
+      [316, 356, 396, 436, 472].forEach(function(cx) {
+        el("rect", { x: cx - 8, y: 116, width: 16, height: 10, rx: 2, fill: YC.pop }, art);
+        el("circle", { cx, cy: 134, r: 3, fill: YC.pop }, art);
+      });
+      el("rect", { x: 556, y: 132, width: 58, height: 38, rx: 6, fill: YC.red, stroke: "#ffffff", "stroke-width": 2 }, art);
+      for (var s = 0; s < 3; s++) el("rect", { x: 562 + s * 17, y: 140, width: 13, height: 10, fill: "#ffffff", opacity: 0.85 }, art);
+      el("rect", { x: 562, y: 154, width: 47, height: 8, fill: "#ffffff", opacity: 0.4 }, art);
+      el("rect", { x: 340, y: 400, width: 44, height: 14, rx: 4, fill: YC.ink, stroke: "#ffffff", "stroke-width": 1.5 }, art);
+      el("rect", { x: 404, y: 400, width: 44, height: 14, rx: 4, fill: YC.ink, stroke: "#ffffff", "stroke-width": 1.5 }, art);
+      el("rect", { x: 362, y: 424, width: 64, height: 22, rx: 4, fill: YC.pop }, art);
+      for (var m = 0; m < 3; m++) el("rect", { x: 368 + m * 19, y: 429, width: 15, height: 11, fill: YC.ink }, art);
+      el("rect", { x: 484, y: 424, width: 84, height: 32, rx: 6, fill: "#ffffff" }, art);
+      el("rect", { x: 520, y: 430, width: 12, height: 20, fill: YC.red }, art);
+      el("rect", { x: 514, y: 436, width: 24, height: 8, fill: YC.red }, art);
+      el("rect", { x: 190, y: 260, width: 44, height: 70, rx: 6, fill: YC.grass, stroke: "#ffffff", "stroke-width": 2 }, art);
+      for (var w = 0; w < 4; w++) el("circle", { cx: 212, cy: 272 + w * 15, r: 4, fill: YC.pop }, art);
+      for (var t = 0; t < 7; t++) {
+        el("rect", { x: 292 + t * 30, y: 478, width: 18, height: 14, rx: 3, fill: YC.red }, art);
+        el("rect", { x: 299 + t * 30, y: 478, width: 4, height: 14, fill: "#ffffff" }, art);
+        for (var q = 0; q < 3; q++) el("circle", { cx: 301 + t * 30, cy: 500 + q * 9, r: 3, fill: "#ffffff", opacity: 0.75 - q * 0.2 }, art);
+      }
+      var TILES = [
+        { id: "training", label: "Training ground", glyph: "cones" },
+        { id: "scouting", label: "Scouting office", glyph: "globe" },
+        { id: "business", label: "Club business", glyph: "chart" },
+        { id: "home", label: "Fans at home", glyph: "phone" }
+      ];
+      TILES.forEach(function(tile) {
+        var z = ZONES.find(function(x) {
+          return x.id === tile.id;
+        }), b = z ? z.box : [0, 0, 0, 0];
+        var cx = b[0] + b[2] / 2, cy = b[1] + b[3] / 2;
+        el("line", { x1: cx, y1: cy, x2: 394, y2: 293, stroke: "rgba(255,255,255,.12)", "stroke-width": 3, "stroke-dasharray": "6 8" }, art);
+        el("rect", { x: b[0], y: b[1], width: b[2], height: b[3], rx: 14, fill: YC.paper }, art);
+        el("text", { x: cx, y: b[1] + b[3] - 16, "text-anchor": "middle", "font-family": YC.display, "font-size": 19, fill: YC.ink }, art, tile.label.toUpperCase());
+        var g = el("g", { transform: "translate(" + cx + " " + (b[1] + 44) + ")" }, art);
+        if (tile.glyph === "cones") {
+          [-34, 0, 34].forEach(function(x) {
+            el("path", { d: "M" + (x - 10) + " 18L" + x + " -16L" + (x + 10) + " 18Z", fill: YC.red }, g);
+          });
+          el("line", { x1: -50, y1: 20, x2: 50, y2: 20, stroke: YC.ink, "stroke-width": 3 }, g);
+        }
+        if (tile.glyph === "globe") {
+          el("circle", { r: 24, fill: "none", stroke: YC.navy, "stroke-width": 4 }, g);
+          el("ellipse", { rx: 10, ry: 24, fill: "none", stroke: YC.navy, "stroke-width": 3 }, g);
+          el("line", { x1: -24, x2: 24, stroke: YC.navy, "stroke-width": 3 }, g);
+          el("circle", { cx: 14, cy: -10, r: 6, fill: YC.red }, g);
+        }
+        if (tile.glyph === "chart") {
+          [[-36, 8], [-14, -6], [8, 0], [30, -20]].forEach(function(p) {
+            el("rect", { x: p[0], y: p[1], width: 16, height: 24 - p[1], fill: YC.navy }, g);
+          });
+          el("path", { d: "M-30 4L-6 -12L16 -6L40 -26", fill: "none", stroke: YC.red, "stroke-width": 4 }, g);
+        }
+        if (tile.glyph === "phone") {
+          el("rect", { x: -15, y: -24, width: 30, height: 50, rx: 6, fill: YC.ink }, g);
+          el("rect", { x: -11, y: -18, width: 22, height: 34, fill: YC.pop }, g);
+          el("rect", { x: -8, y: -14, width: 16, height: 5, fill: YC.red }, g);
+          el("rect", { x: -8, y: -5, width: 12, height: 4, fill: YC.ink, opacity: 0.6 }, g);
+        }
+      });
+      var flows = el("g", { opacity: 0 }, art);
+      var cloudG = el("g", { transform: "translate(" + CLOUD[0] + " " + CLOUD[1] + ")", opacity: 0 }, art);
+      el("path", { d: "M-58 18a24 24 0 0 1 6-44a32 32 0 0 1 58-10a26 26 0 0 1 48 16a20 20 0 0 1 4 38Z", fill: "#ffffff", stroke: YC.pop, "stroke-width": 3 }, cloudG);
+      el("text", { y: 10, "text-anchor": "middle", "font-family": YC.display, "font-size": 18, fill: YC.ink }, cloudG, "THE DATA CLOUD");
+      ZONES.forEach(function(z) {
+        var cx = z.box[0] + z.box[2] / 2, cy = z.box[1] + z.box[3] / 2;
+        if (z.id === "stands") {
+          cx = 230;
+          cy = 180;
+        }
+        el("path", { d: "M" + cx + " " + cy + "Q" + (cx + CLOUD[0]) / 2 + " " + (Math.min(cy, CLOUD[1]) - 10) + " " + CLOUD[0] + " " + (CLOUD[1] + 18), fill: "none", stroke: YC.pop, "stroke-width": 2.5, "stroke-dasharray": "3 7", opacity: 0.9 }, flows);
+      });
+      var shade2 = el("path", { fill: "rgba(5,12,26,.62)", "fill-rule": "evenodd", "pointer-events": "none", opacity: 0 }, art);
+      var zoneLayer = el("g", {}, art);
+      var parts = {};
+      ZONES.forEach(function(z, i) {
+        var b = z.box, g = el("g", { cursor: "default" }, zoneLayer);
+        var ring = z.id === "stands" ? el("rect", { x: b[0] - 3, y: b[1] - 3, width: b[2] + 6, height: b[3] + 6, rx: 74, fill: "none", stroke: YC.pop, "stroke-width": 4, opacity: 0 }, g) : el("rect", { x: b[0] - 4, y: b[1] - 4, width: b[2] + 8, height: b[3] + 8, rx: 10, fill: "none", stroke: YC.pop, "stroke-width": 4, opacity: 0 }, g);
+        var hit = z.id === "stands" ? el("path", { d: "M" + b[0] + " " + (b[1] + 70) + "a70 70 0 0 1 70 -70h" + (b[2] - 140) + "a70 70 0 0 1 70 70v" + (b[3] - 140) + "a70 70 0 0 1 -70 70h-" + (b[2] - 140) + "a70 70 0 0 1 -70 -70Z M262 192v204h264v-204Z", fill: "transparent", "fill-rule": "evenodd" }, g) : el("rect", { x: b[0], y: b[1], width: b[2], height: b[3], fill: "transparent" }, g);
+        var bx = z.id === "stands" ? b[0] + 30 : b[0] + b[2] - 2, by = z.id === "stands" ? b[1] + 30 : b[1] + 2;
+        var badge = el("g", { transform: "translate(" + bx + " " + by + ")", "pointer-events": "none" }, g);
+        el("circle", { r: 13, fill: YC.pop, stroke: YC.ink, "stroke-width": 2 }, badge);
+        el("text", { y: 5.5, "text-anchor": "middle", "font-family": YC.display, "font-size": 16, fill: YC.ink }, badge, String(i + 1));
+        parts[z.id] = { z, g, ring, hit, badge, n: i + 1 };
+      });
+      var cards = el("g", { "pointer-events": "none" }, svg);
+      var panel2 = el("g", {}, svg);
+      function line(g, text2, x, y, size, fill2, width, extra) {
+        var lines = wrap(text2, size, width);
+        lines.forEach(function(ln, k) {
+          el("text", Object.assign({ x, y: y + k * size * 1.28, "font-family": YC.sans, "font-size": size, fill: fill2 }, extra || {}), g, ln);
+        });
+        return y + lines.length * size * 1.28;
+      }
+      function paintPanel(info, tag) {
+        panel2.textContent = "";
+        var P = PANEL, x = P.x + 28, wide = P.w - 56;
+        el("rect", { x: P.x + 6, y: P.y + 6, width: P.w, height: P.h, rx: 14, fill: YC.red }, panel2);
+        el("rect", { x: P.x, y: P.y, width: P.w, height: P.h, rx: 14, fill: YC.paper }, panel2);
+        el("rect", { x: P.x, y: P.y, width: P.w, height: 96, rx: 14, fill: YC.navy }, panel2);
+        el("rect", { x: P.x, y: P.y + 80, width: P.w, height: 16, fill: YC.navy }, panel2);
+        if (tag) el("text", { x, y: P.y + 32, "font-family": YC.sans, "font-size": 14, "font-weight": 700, "letter-spacing": 2.2, fill: YC.pop }, panel2, tag.toUpperCase());
+        var nameLines = wrap(String(info.name || "").toUpperCase(), 32, wide);
+        nameLines.slice(0, 2).forEach(function(ln, k) {
+          el("text", { x, y: P.y + (nameLines.length > 1 ? 60 : 72) + k * 30, "font-family": YC.display, "font-size": nameLines.length > 1 ? 28 : 34, fill: "#ffffff" }, panel2, ln);
+        });
+        var y = P.y + 128;
+        function section(head, body, size) {
+          if (!body) return;
+          el("text", { x, y, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.red }, panel2, head);
+          y = line(panel2, body, x, y + 24, size, YC.ink, wide, null) + 12;
+        }
+        section("WHAT AI DOES HERE", info.does || info.body, 19);
+        section("WHO STILL DECIDES", info.decides, 17);
+        section("THE CATCH", info.risk, 17);
+        if (info.ask) {
+          var askLines = wrap(info.ask, 19, wide - 28), top = Math.max(y + 4, P.y + P.h - 40 - askLines.length * 24 - 34);
+          el("rect", { x: x - 8, y: top, width: wide + 16, height: askLines.length * 24 + 46, rx: 8, fill: YC.pop }, panel2);
+          el("text", { x: x + 6, y: top + 24, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.ink }, panel2, "ASK THE ROOM");
+          askLines.forEach(function(ln, k) {
+            el("text", { x: x + 6, y: top + 50 + k * 24, "font-family": YC.sans, "font-size": 19, "font-weight": 700, fill: YC.ink }, panel2, ln);
+          });
+        }
+      }
+      if (d.source) el("text", { x: PANEL.x + PANEL.w, y: H - 12, "text-anchor": "end", "font-family": YC.sans, "font-size": 12, fill: "rgba(255,255,255,.55)" }, svg, d.source);
+      var pips = el("g", {}, svg);
+      function paintPips(at, of) {
+        pips.textContent = "";
+        for (var i = 0; i < of; i++) el("rect", { x: MAP2.x + i * 22, y: H - 20, width: 16, height: 5, rx: 2, fill: i === at ? YC.pop : "rgba(255,255,255,.3)" }, pips);
+      }
+      var view = { s: 1, x: 0, y: 0 }, cancel = function() {
+      };
+      function aim(id) {
+        var p = parts[id];
+        if (!p || id === "stands") return id === "stands" ? { s: 1.18, x: 394, y: 293 } : { s: 1, x: MAP2.w / 2, y: MAP2.h / 2 };
+        var b = p.z.box, s2 = Math.max(1, Math.min(2.4, Math.min(MAP2.w * 0.55 / b[2], MAP2.h * 0.55 / b[3])));
+        return { s: s2, x: b[0] + b[2] / 2, y: b[1] + b[3] / 2 };
+      }
+      function place(v) {
+        var s2 = v.s, cx = Math.max(MAP2.w / (2 * s2), Math.min(MAP2.w - MAP2.w / (2 * s2), v.x)), cy = Math.max(MAP2.h / (2 * s2), Math.min(MAP2.h - MAP2.h / (2 * s2), v.y));
+        set(map, { transform: "translate(" + (MAP2.x + MAP2.w / 2) + " " + (MAP2.y + MAP2.h / 2) + ") scale(" + s2 + ") translate(" + (-cx - MAP2.x) + " " + (-cy - MAP2.y) + ")" });
+      }
+      function move(to, animate) {
+        cancel();
+        var from = { s: view.s, x: view.x || MAP2.w / 2, y: view.y || MAP2.h / 2 };
+        cancel = tween(animate ? 1100 : 0, function(k) {
+          view = { s: lerp(from.s, to.s, k), x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k) };
+          place(view);
+        }, ease.inOut);
+      }
+      view = { s: 1, x: MAP2.w / 2, y: MAP2.h / 2 };
+      place(view);
+      function spotlight(id) {
+        var p = parts[id];
+        if (!p) {
+          set(shade2, { opacity: 0 });
+          return;
+        }
+        var b = p.z.box, pad = 10, r2 = id === "stands" ? 74 : 12;
+        var x = b[0] - pad, y = b[1] - pad, w2 = b[2] + pad * 2, h = b[3] + pad * 2;
+        var hole = "M" + (x + r2) + " " + y + "h" + (w2 - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 " + r2 + " " + r2 + "v" + (h - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 -" + r2 + " " + r2 + "h-" + (w2 - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 -" + r2 + " -" + r2 + "v-" + (h - 2 * r2) + "a" + r2 + " " + r2 + " 0 0 1 " + r2 + " -" + r2 + "Z";
+        set(shade2, { d: "M-400 -400H" + (MAP2.w + 400) + "V" + (MAP2.h + 400) + "H-400Z" + hole, opacity: 1 });
+      }
+      var step = (
+        /** @type {any} */
+        {}
+      ), hovered = (
+        /** @type {string|null} */
+        null
+      );
+      function paintHover() {
+        cards.textContent = "";
+        if (!hovered || !fig.interactive) return;
+        var p = parts[hovered], info = zones[hovered];
+        if (!p || !info) return;
+        var b = p.z.box, m2 = map.getCTM && map.getCTM(), local = svg.getCTM && svg.getCTM();
+        var x = MAP2.x + b[0] + b[2] / 2, y = MAP2.y + b[1] + b[3] / 2;
+        if (m2 && local) {
+          var pt = svg.createSVGPoint();
+          pt.x = x;
+          pt.y = y;
+          var q2 = pt.matrixTransform(local.inverse().multiply(m2));
+          x = q2.x;
+          y = q2.y;
+        }
+        tooltipCard(cards, [["Zone", p.n + " · " + String(info.name || hovered)]], x, y, { maxX: PANEL.x - 8 });
+      }
+      if (fig.interactive) {
+        Object.keys(parts).forEach(function(id) {
+          parts[id].hit.addEventListener("pointerenter", function() {
+            hovered = id;
+            paintHover();
+          });
+          parts[id].hit.addEventListener("pointerleave", function() {
+            if (hovered === id) {
+              hovered = null;
+              paintHover();
+            }
+          });
+        });
+      }
+      return {
+        /** @param {any} next @param {boolean} animate */
+        update: function(next, animate) {
+          step = next || {};
+          var id = String(step.zone || "all"), cloud = id === "cloud", all = id === "all" || cloud;
+          Object.keys(parts).forEach(function(k) {
+            var p = parts[k], on = k === id;
+            set(p.ring, { opacity: on ? 1 : 0 });
+            set(p.badge, { opacity: all || on ? 1 : 0.35 });
+          });
+          spotlight(all ? "" : id);
+          move(all ? { s: 1, x: MAP2.w / 2, y: MAP2.h / 2 } : aim(id), animate);
+          tween(animate ? 700 : 0, function(k) {
+            set(flows, { opacity: cloud ? k : 0 });
+            set(cloudG, { opacity: cloud ? k : 0 });
+          });
+          var count = Array.isArray(fig.steps) ? fig.steps.length : 0;
+          var order2 = ZONES.findIndex(function(z) {
+            return z.id === id;
+          });
+          if (cloud) paintPanel(d.cloud || { name: "One cloud" }, "Every zone");
+          else if (all) paintPanel(d.intro || { name: "Matchday" }, "The whole club");
+          else paintPanel(zones[id] || { name: id }, "Zone " + (order2 + 1) + " of " + ZONES.length);
+          paintPips(typeof step.index === "number" ? step.index : 0, count || 0);
+          hovered = null;
+          paintHover();
+        }
+      };
+    }
+  };
+
   // src/figures/index.js
-  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable };
+  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium };
   var CSS = ".figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}.figure-slide .pad{visibility:hidden}.figure-slide .fig-svg text{font-kerning:normal}";
   function installFigures(SF) {
     var styled = false;
@@ -5740,6 +6078,7 @@
         stage: stage2,
         data: slide.figureData || {},
         interactive: live,
+        steps: list,
         /** Where a pointer event lands, in slide pixels, whatever scale the slide is drawn at. */
         toSlide: function(e) {
           var m = svg.getScreenCTM(), p = svg.createSVGPoint();
@@ -6988,7 +7327,7 @@
     }
     function drawLogoFields(insp, redraw) {
       var deck = helpers.deck(), UI = helpers.UI();
-      var wrap = el2("div", "logo-fields");
+      var wrap2 = el2("div", "logo-fields");
       if (deck.logo) {
         var preview = el2("div", "logo-preview");
         var img = document.createElement("img");
@@ -7003,7 +7342,7 @@
           else draw();
         });
         preview.appendChild(clear);
-        wrap.appendChild(preview);
+        wrap2.appendChild(preview);
       }
       var pick2 = el2("input");
       pick2.type = "file";
@@ -7040,10 +7379,10 @@
         };
         fr.readAsDataURL(f);
       });
-      wrap.appendChild(pick2);
+      wrap2.appendChild(pick2);
       insp.appendChild(UI.field(
         "Lesson logo",
-        wrap,
+        wrap2,
         "Corner mark on slides. PNG or SVG works best."
       ));
       var url = UI.text("", function() {
