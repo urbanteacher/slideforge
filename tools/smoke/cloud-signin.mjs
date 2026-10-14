@@ -20,7 +20,7 @@ window.supabase = { createClient(url, key, opts) {
     auth: {
       getSession: () => Promise.resolve({ data: { session: null } }),
       onAuthStateChange: (cb) => { window.__sb.cb = cb; return { data: { subscription: { unsubscribe() {} } } }; },
-      signInWithOtp: (a) => { window.__sb.sent.push(a); return Promise.resolve({ error: null }); },
+      signInWithOtp: (a) => { window.__sb.sent.push(a); return Promise.resolve({ error: window.__sb.limit ? { message: 'email rate limit exceeded', status: 429 } : null }); },
       signOut: () => { window.__sb.out++; return Promise.resolve({ error: null }); },
     },
     from: (t) => ({ select: () => Promise.resolve({ data: t === 'allowed_domains' ? [{ domain: 'urbanteacher.co.uk' }] : [] }) }),
@@ -66,6 +66,14 @@ try {
   await page.locator('#accountSay').filter({ hasText: /work email/ }).waitFor();
   assert.equal((await page.evaluate(() => window.__sb.sent)).length, 0);
   step('an email outside the allowed domains is refused, and nothing is sent');
+
+  // Supabase's mailer refusing (its hourly limit) is said in plain words.
+  await page.evaluate(() => { window.__sb.limit = true; });
+  await page.locator('#accountEmail').fill('Mark@urbanteacher.co.uk');
+  await page.locator('#accountSend').click();
+  await page.locator('#accountSay').filter({ hasText: /Too many sign-in emails/ }).waitFor();
+  await page.evaluate(() => { window.__sb.limit = false; window.__sb.sent = []; });
+  step('Supabase’s hourly email limit is said in plain words');
 
   await page.locator('#accountEmail').fill('Mark@urbanteacher.co.uk');
   await page.locator('#accountSend').click();

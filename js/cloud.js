@@ -94,7 +94,14 @@
         email: String(email).trim(),
         options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true }
       }).then(function (/** @type {any} */ r) {
-        if (r && r.error) throw new Error(r.error.message || 'The link could not be sent. Try again in a minute.');
+        if (r && r.error) {
+          var m = String(r.error.message || '');
+          // Supabase's own mailer sends only a few sign-in emails an hour per project (docs/data-storage-plan.md §6.3).
+          if (/rate limit|too many|over_email_send_rate_limit/i.test(m) || r.error.status === 429) {
+            throw new Error('Too many sign-in emails were sent in the last hour. Wait up to an hour and ask once; an earlier link may still be in your inbox.');
+          }
+          throw new Error(m || 'The link could not be sent. Try again in a minute.');
+        }
         return true;
       });
     });
