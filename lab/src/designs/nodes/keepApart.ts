@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, T, after, barCard, card, heading, label, onClick, pill, still } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, sortQuiz, type NodesFormat } from './types';
 
 // Keep them apart: two ideas treated as one — 300 of 662 named wrong ideas in the examiner reports (Nodes).
 // The pair side by side, the one test that tells them apart, then statements to sort to the right side.
@@ -66,6 +66,7 @@ export const keepApart: NodesFormat<KeepApart> = {
           T(st, `Sorted ${side} ${k + 1} — words`, s.text, x, y + (sh - 38) / 2, cw, 42, { weight: '600', size: 28, align: 'center' }, after())];
       })),
     ], st, `${o.a.term}: ${sorted('a').map((x) => x.s.text).join('; ')}.\n${o.b.term}: ${sorted('b').map((x) => x.s.text).join('; ')}.`);
-    return marked('keep-apart', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o);
+    return marked('keep-apart', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o,
+      { ask: 'ask', answer: 'reveal', quiz: sortQuiz(`Which is it? ${o.test}`, [o.a.term, o.b.term], list.map((s) => s.text), list.map((s) => (s.side === 'b' ? 1 : 0))) });
   },
 };

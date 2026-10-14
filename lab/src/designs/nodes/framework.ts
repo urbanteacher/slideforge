@@ -161,5 +161,6 @@ export function frameworkSlides(st: LayoutStyle, o: FrameworkRun, format = 'fram
     ...map(st, o, HY + 190, FOOT - 90),
     ...legend(st, FOOT - 56),
   ], st, 'Close on the map: each student names the furthest stage they reached and the one where they got stuck. That stage is where next lesson starts.');
-  return marked(format, [{ slide: cover, role: 'map' }, { slide: recall, role: 'recall' }, ...stages, { slide: close, role: 'close' }], o);
+  return marked(format, [{ slide: cover, role: 'map' }, { slide: recall, role: 'recall' }, ...stages, { slide: close, role: 'close' }], o,
+    { open: { ...Object.fromEntries(o.stages.map((s, i) => [`stage-${i + 1}`, s.task])), close: 'Which stage did you get to, and where did you get stuck?' } });
 }

@@ -54,6 +54,6 @@ export const beforeDuringAfter: NodesFormat<BeforeDuringAfter> = {
       }),
       ...(o.quote ? [T(st, 'Quote', `“${o.quote}”`, LEFT, FOOT - 112, W - LEFT * 2, 100, { weight: '700', size: 34, lineHeight: 1.2 }, onClick())] : []),
     ], st, `Before, during and after the attempt. Task: ${o.task}\n${pts.map((p) => `${p.when}: ${p.ask} (${p.visible})`).join('\n')}`);
-    return marked('before-during-after', [{ slide, role: 'routine' }], o);
+    return marked('before-during-after', [{ slide, role: 'routine' }], o, { open: { routine: `Your answer: ${o.task}` } });
   },
 };

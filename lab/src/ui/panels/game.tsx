@@ -24,7 +24,8 @@ export function GamePanel() {
   const [teamText, setTeamText] = useState('');
   useEffect(() => { setTeamText((g?.settings.teams ?? []).join(', ')); }, [slide.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setAccept((g?.settings.accept ?? []).join('\n')); }, [slide.id, g?.settings.accept]);
-  if (!g) return null;
+  // A Nodes challenge plays on a game's question, but is edited as a Nodes format (panels/nodes.tsx).
+  if (!g || slide.nodes) return null;
   const s = g.settings;
   const apply = (change: GameSettings, every = false, merge?: string) => useStore.getState().mutate((d) => applyGameSettings(d, slide.id, change, every), merge);
   const timed = (g.role === 'question' || g.role === 'board') && g.clock !== 'none' && (g.role === 'question' || s.seconds != null);

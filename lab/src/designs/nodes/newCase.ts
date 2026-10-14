@@ -38,6 +38,6 @@ export const newCase: NodesFormat<NewCase> = {
       heading(st, words, HY + 110, 72, W - LEFT * 2, 320),
       ...pill(st, 'No support', 'No hints on this one', LEFT, FOOT - 80, { fill: rgba(st.ink, 0.08), size: 26 }, still),
     ], st, `${near ? 'Near' : 'Far'} transfer, unsupported: ${words}`);
-    return marked('new-case', [{ slide: linkSlide, role: 'link' }, { slide: task('near', o.near, true), role: 'near' }, { slide: task('far', o.far, false), role: 'far' }], o);
+    return marked('new-case', [{ slide: linkSlide, role: 'link' }, { slide: task('near', o.near, true), role: 'near' }, { slide: task('far', o.far, false), role: 'far' }], o, { open: { near: o.near, far: o.far } });
   },
 };

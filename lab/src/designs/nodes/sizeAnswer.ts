@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, T, after, card, chain, heading, label, onClick, pill, still } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, sortQuiz, type NodesFormat } from './types';
 
 // Size the answer: read the marks, not just the word. Command words promise less than the marks ask for —
 // Identify asked for more than a bare term in 35 of 54 exam parts, Explain in 0 of 16 (Nodes). Each question
@@ -42,6 +42,8 @@ export const sizeAnswer: NodesFormat<SizeAnswer> = {
       `Size the answer. ${qs.map((q) => `${q.question} (${q.command}, ${q.marks}): ${q.needs.join(' → ')}`).join('\n')}`);
     const reveal = slideOf('Size the answer · what each needs', [ground(st), label(st, 'Size the answer · what each needs', LEFT, EY, 1300, st.accent, 30),
       heading(st, 'What each answer needs', HY, 56, W - LEFT * 2, 80), ...rows(true), evidence], st, qs.map((q) => `${q.command}, ${q.marks}: ${q.needs.join(' → ')}`).join('\n'));
-    return marked('size-answer', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o);
+    const sizes = [...new Set(qs.map((q) => q.needs.join(' → ')))];
+    return marked('size-answer', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o,
+      { ask: 'ask', answer: 'reveal', quiz: sortQuiz('What does each answer need?', sizes, qs.map((q) => `${q.question} (${q.marks})`), qs.map((q) => sizes.indexOf(q.needs.join(' → ')))) });
   },
 };

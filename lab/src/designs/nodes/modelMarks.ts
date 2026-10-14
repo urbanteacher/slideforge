@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, T, after, badge, card, heading, label, onClick, still } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, orderQuiz, type NodesFormat } from './types';
 
 // Model marks: the mark scheme as the Nodes decks set it — a table card, MARKS · WHAT IT NEEDS · HOW THE
 // MARKS FALL — beside model answers students rank and mark against it; then the marks each one earned,
@@ -91,6 +91,8 @@ export const modelMarks: NodesFormat<ModelMarks> = {
       heading(st, 'Mark your own answer: which row is it on, and what would move it up?', HY, 52, W - LEFT * 2, 140),
       ...scheme(st, o, HY + 170, FOOT - HY - 170),
     ], st, 'Students mark their own answer against the same rows, and name what would move it up a row.');
-    return marked('model-marks', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }, { slide: own, role: 'own' }], o);
+    const ranked = [...ans].sort((a, b) => b.marks - a.marks).map((a) => `Answer ${a.label}`);
+    return marked('model-marks', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }, { slide: own, role: 'own' }], o,
+      { ask: 'ask', answer: 'reveal', quiz: orderQuiz('Rank the answers, the most marks first.', ranked), open: { own: 'Your own answer: which row is it on, and what would move it up a row?' } });
   },
 };

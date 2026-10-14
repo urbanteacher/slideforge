@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, T, barCard, card, label, onClick, after, still } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, choiceQuiz, type NodesFormat } from './types';
 
 // Which step broke? A wrong answer in a quote card, and the operations of the Nodes answer routine as
 // cards with ⇄ between them, as the Nodes decks draw "operations you move between, not steps in a
@@ -78,6 +78,7 @@ export const whichStep: NodesFormat<WhichStep> = {
       ...barCard(st, 'Instead', LEFT, fy, W - LEFT * 2, fh, LINK.A, rgba(LINK.A, 0.12), onClick()),
       T(st, 'Instead — words', `${o.why}\nInstead: ${o.fix}`, LEFT + 44, fy + 22, W - LEFT * 2 - 88, fh - 44, { weight: '600', size: 34, valign: 'middle' }, after()),
     ], st, `It broke at ${o.steps[o.broke]?.name}. ${o.why}\nInstead: ${o.fix}`);
-    return marked('which-step', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o);
+    return marked('which-step', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o,
+      { ask: 'ask', answer: 'reveal', quiz: choiceQuiz(`Which step broke? “${o.answer}”`, ops.map((s) => s.name), o.broke, `${o.why} Instead: ${o.fix}`) });
   },
 };

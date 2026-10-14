@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, ON_RIGHT, RIGHT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, T, answerTabs, badge, barCard, card, elementDots, heading, label, onClick, after, pill } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, choiceQuiz, type NodesFormat } from './types';
 
 // Three answers: the same question answered weak, stable and excellent, as the Nodes decks show them.
 // The room sees the three side by side and picks the strongest; then each answer has its own slide —
@@ -62,6 +62,8 @@ export const threeAnswers: NodesFormat<ThreeAnswers> = {
         T(st, 'Feedback — words', `Feedback for this answer: ${a!.feedback}`, LEFT + 44, fy + 26, W - LEFT * 2 - 88, 100, { size: 34 }, after()),
       ], st, `The ${v} answer (${a!.label}): ${a!.text}\n${a!.elements} of ${a!.of} elements. ${a!.why}\nFeedback: ${a!.feedback}`), role: `answer-${v}` };
     });
-    return marked('three-answers', [{ slide: ask, role: 'ask' }, ...each], o);
+    const best = Math.max(0, list.findIndex((a) => a.verdict === 'excellent'));
+    return marked('three-answers', [{ slide: ask, role: 'ask' }, ...each], o,
+      { ask: 'ask', answer: each[0]?.role, quiz: choiceQuiz(`${o.question} Which answer is strongest?`, list.map((a) => `Answer ${a.label}`), best, list[best]?.why ?? '') });
   },
 };

@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, T, after, badge, card, heading, label, onClick, pill, still } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, sortQuiz, type NodesFormat } from './types';
 
 // Same word, different links: one command word, three questions, three relationships. Nodes' formula —
 // linkage matched to the task — drawn as the Nodes decks draw it: a row per question, the kind of link,
@@ -66,6 +66,7 @@ export const sameWord: NodesFormat<SameWord> = {
         ];
       }),
     ], st, qs.map((q) => `${q.kind}: connect ${q.from} → ${q.to}. (${q.question})`).join('\n'));
-    return marked('same-word', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o);
+    return marked('same-word', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o,
+      { ask: 'ask', answer: 'reveal', quiz: sortQuiz(`Which link does each “${o.command}” question need?`, kinds, qs.map((q) => q.question), qs.map((q) => kinds.indexOf(q.kind))) });
   },
 };

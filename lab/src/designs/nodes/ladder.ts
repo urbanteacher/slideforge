@@ -78,6 +78,7 @@ export const ladder: NodesFormat<Ladder> = {
       T(st, 'Repaired — label', 'IT COUNTS AS REPAIRED WHEN', LEFT + 44, HY + 428, 1200, 36, { weight: '800', size: 24, color: LINK.A, tracking: 0.08 }, still),
       T(st, 'Repaired — words', o.repair, LEFT + 44, HY + 476, W - LEFT * 2 - 88, Math.min(130, FOOT - HY - 500), { size: 36 }, still),
     ], st, `The delayed check, in a later lesson: ${o.later}\nRepaired when: ${o.repair}`);
-    return marked('ladder', [{ slide: ask, role: 'ask' }, { slide: rungSlide, role: 'rungs' }, { slide: again, role: 'reattempt' }, { slide: later, role: 'later' }], o);
+    return marked('ladder', [{ slide: ask, role: 'ask' }, { slide: rungSlide, role: 'rungs' }, { slide: again, role: 'reattempt' }, { slide: later, role: 'later' }], o,
+      { open: { ask: `Have a go, unaided: ${o.question}`, reattempt: `On your own now: ${o.question}`, later: o.later } });
   },
 };

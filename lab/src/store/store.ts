@@ -11,7 +11,7 @@ export type InspectorTab = 'design' | 'picture' | 'video' | 'special' | 'animate
 /** SlideForge's three studios, as views of the lesson open in the lab. */
 export type LabView = 'lesson' | 'quiz' | 'activities' | 'nodes';
 /** Whether a slide belongs to a view: every slide to the lesson, a game's to the Quiz studio, an activity's to Activities. */
-export const inView = (s: Slide, view: LabView) => view === 'lesson' || (view === 'quiz' ? !!s.game : view === 'nodes' ? !!s.nodes : !!s.activity && !s.game);
+export const inView = (s: Slide, view: LabView) => view === 'lesson' || (view === 'quiz' ? !!s.game && !s.nodes : view === 'nodes' ? !!s.nodes : !!s.activity && !s.game);
 
 interface State {
   deck: Deck;

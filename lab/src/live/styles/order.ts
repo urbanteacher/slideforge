@@ -1,9 +1,10 @@
 // Ranking (style 'order', format 'ranking'): the phones send an ordering (indices into the options, which are authored
 // in the right order). The mark is "every item in its place" (SlideForge's markResponse); the part marks are the
-// host's: the reveal carries `gains` of round(10 x the share in place) for each answer, as classic's orderGains does.
+// host's: the reveal carries `gains` of round(10 x the share in place) for each answer, as classic's orderGains does. A
+// question with `scaled` (a Nodes challenge's, worth the same as its choices and sorts) earns its points x the share instead.
 // The wall, once revealed, lists the right order with a bar for each place showing how many of the room had the right
 // item there, and the pair the room swapped most often (classic's orderSlots).
-import { orderPoints } from '@sf/games/order.js';
+import { orderPoints, orderScore } from '@sf/games/order.js';
 import { gameStyle } from '@sf/games/registry.js';
 import { defineStyle, type SlotsModel } from './types';
 
@@ -37,6 +38,6 @@ export const order = defineStyle({
     st.normalize?.(q);
     st.compile?.(q, {}, q);
   },
-  gains: (q, answers) => answers.map((a) => [a.id, orderPoints(q, a.response)] as [number, number]),
+  gains: (q, answers) => answers.map((a) => [a.id, q.scaled === true ? Math.round((Number(q.points) || 0) * orderScore(q, a.response)) : orderPoints(q, a.response)] as [number, number]),
   wall: (q, answers, revealed) => ({ kind: 'slots', slots: revealed ? slotsOf(q.options.filter((o) => String(o).trim()), answers) : null }),
 });

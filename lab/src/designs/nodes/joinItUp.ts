@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, LINKS, T, barCard, chain, heading, label, onClick, after, pill } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, orderQuiz, type NodesFormat } from './types';
 
 // Join it up: the join a question needs, then the link to build, as the Nodes decks draw it — a size
 // pill, the join as a chain of boxes, and the link to build as a chain filled a link per click. Answers
@@ -70,6 +70,6 @@ export const joinItUp: NodesFormat<JoinItUp> = {
         T(st, 'The chain — words', links.map((l) => l.text).join(' → '), LEFT + 50, HY + 450, W - LEFT * 2 - 100, Math.min(220, FOOT - HY - 470), { weight: '600', size: 40 }, after()),
       ], st, `Refused without it: ${o.refused}.`), role: 'refused' });
     }
-    return marked('join-it-up', slides, o);
+    return marked('join-it-up', slides, o, { ask: 'ask', answer: 'reveal', quiz: orderQuiz(`${o.question} Put the links in order.`, links.map((l) => l.text)) });
   },
 };

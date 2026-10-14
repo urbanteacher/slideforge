@@ -1,6 +1,6 @@
 import { EY, FOOT, HY, LEFT, W, ground, phonesCue, rgba, slideOf } from '../engage/kit';
 import { LINK, T, after, badge, card, heading, label, onClick, pill, still } from './look';
-import { marked, type NodesFormat } from './types';
+import { marked, orderQuiz, sortQuiz, type NodesFormat } from './types';
 
 // Label the parts: a worked answer's parts, mixed up. Students tell a point from what explains it,
 // what follows from it, and why — then the breakdown, in order, as the Nodes decks draw it: numbered
@@ -39,18 +39,21 @@ function mixed(n: number): number[] {
 export const labelParts: NodesFormat<LabelParts> = {
   id: 'label-parts', label: 'Label the parts', part: 'What a complete answer is made of',
   aim: 'A worked answer, mixed up: students tell a point from what explains it, what follows, and why. Then the breakdown, in order.',
-  howTo: ['The parts of a good answer, in a mixed-up order.', 'On phones, sort each part: Point, Explained, So or Because.', 'Then the breakdown: each part in its place, a row per click.'],
+  howTo: ['The parts of a good answer, in a mixed-up order.', 'On phones, sort each part into its role (up to three roles), or put the answer back in order (more than three).', 'Then the breakdown: each part in its place, a row per click.'],
   phones: 'Sort each part',
   starter: STARTER,
   slides: (st, o) => {
     const parts = o.parts.slice(0, 7), n = parts.length;
     const order = o.shown?.length === n ? o.shown : mixed(n);
     const roles = [...new Set(parts.map((p) => p.role))];
+    // Phones sort into three columns at most. With more roles than that, students put the worked answer back in
+    // order instead: the order the breakdown then shows.
+    const ranked = roles.length > 3;
     let lx = LEFT;
     const legend = roles.flatMap((r) => { const w = r.length * 17 + 70; const l = pill(st, `Part ${r}`, r, lx, HY + 160, { w, fill: colourOf(r), color: '#ffffff', size: 26 }, still); lx += w + 14; return l; });
     const top = HY + 260, gap = 18, rh = Math.min(110, Math.floor((FOOT - top - gap * (n - 1)) / n));
     const ask = slideOf('Label the parts', [
-      ground(st), label(st, 'Label the parts', LEFT, EY, 1100, st.accent, 30), phonesCue(st, 'sort each part'),
+      ground(st), label(st, 'Label the parts', LEFT, EY, 1100, st.accent, 30), phonesCue(st, ranked ? 'put the parts in order' : 'sort each part'),
       heading(st, o.question, HY, 52, W - LEFT * 2, 140),
       ...legend,
       ...order.flatMap((pi, k) => {
@@ -80,6 +83,9 @@ export const labelParts: NodesFormat<LabelParts> = {
         ];
       }),
     ], st, parts.map((p, i) => `${i + 1}. ${p.role}: ${p.text}`).join('\n'));
-    return marked('label-parts', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o);
+    return marked('label-parts', [{ slide: ask, role: 'ask' }, { slide: reveal, role: 'reveal' }], o,
+      { ask: 'ask', answer: 'reveal', quiz: ranked
+        ? orderQuiz('Put the parts in order: which comes first?', parts.map((p) => p.text))
+        : sortQuiz('Which part is each?', roles, order.map((pi) => parts[pi].text), order.map((pi) => roles.indexOf(parts[pi].role))) });
   },
 };

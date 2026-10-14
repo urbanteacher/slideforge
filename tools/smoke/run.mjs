@@ -46,7 +46,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SETS = {
   ci: [
     'campaign-chrome', 'chrome-region', 'demo-deck', 'exports', 'fit-check', 'handout',
-    'lab-lesson', 'review-tool', 'share', 'slide-review', 'studio-room', 'type-scale',
+    'lab-lesson', 'nodes-room', 'review-tool', 'share', 'slide-review', 'studio-room', 'type-scale',
   ],
   /* Everything that touches saving, reloading, exporting or sharing a deck.
      The four added to `ci` above came from here after all four turned out to

@@ -72,7 +72,7 @@ const SPECS: Record<string, Spec> = {
   },
   'model-marks': {
     shape: '{"question":"… [4 marks]","outOf":4,"scheme":[{"marks":"1","needs":"…","falls":"…"},{"marks":"2","needs":"…","falls":"…"},{"marks":"3–4","needs":"…","falls":"…"}],"answers":[{"label":"A","text":"…","marks":0,"why":"…"},{"label":"B","text":"…","marks":2,"why":"…"},{"label":"C","text":"…","marks":4,"why":"…"}]}',
-    rules: 'A planning aid in the style of a points-based mark scheme, not any board’s own. Three model answers at different marks, each with a one-line reason.',
+    rules: 'A planning aid in the style of a points-based mark scheme, not any board’s own. Each scheme row says what EARNS that mark: "needs" is what the answer must contain (e.g. "Two points"), "falls" is what is credited, with a short example of a creditworthy point — never a description of a weak answer. Three model answers at different marks, each with a one-line reason for its mark.',
     tokens: 1400, check: (v) => str(v.question) && arr(v.scheme, 2) && arr(v.answers, 2), merge: (c, v) => ({ ...c, ...v }),
   },
 };
