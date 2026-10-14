@@ -798,6 +798,12 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 14 October 2026 — The AI stadium: a Youth Charter session on AI across a Premier League club
+
+- **New live figure `stadium`** (`src/figures/stadium.js`): a top-down map of a ground and the club around it, with twelve zones. Each step zooms to one zone and shows what the AI does there, who still decides, the catch and a question for the room. The last step joins every zone to one data cloud. Pinned in `tests/stadium-figure.test.js`.
+- **New lesson** `yc-premier-league-ai` (Youth Charter folder, Matchday theme, 17 slides, about 30 minutes, built by `tools/build-youth-charter-ai.js`). Its sources are named in the teacher page and slide notes.
+- **Fix:** the Myth or fact slides in Soccerwise and Youthwise gave each compare row two cells instead of three (label, then one per column), so the facts column was empty in the Lesson studio.
+
 ### 14 October 2026 — Youth Charter gets a Library folder, its two starters ship, and the Lesson studio has its palette
 
 - **Was:** Soccerwise and Youthwise were written only to `output/` (git ignores it) for File → Import, so no other machine had them; an imported one was filed under Other; and the studio opened it in Northeastern's colours, having no Youth Charter palette.
