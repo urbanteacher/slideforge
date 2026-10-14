@@ -802,6 +802,7 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 - **Nodes room** ([nodes-studio-plan.md](nodes-studio-plan.md) step 4): every Nodes format plays in the room. Ranking, a three-column sort or a choice is marked and scored; the open steps take one written answer. Each challenge has its own question key: a shared key had skipped every challenge after the first. Tests: `lab/tests/nodes-room.test.ts` and the `nodes-room` smoke.
 - **Nodes without phones:** Same link, new case gains a worked-answers slide. Each Framework stage shows a model answer on its last click. In a show with no room, the cue says "Hands up" or "On paper" instead of "On phones".
+- **Nodes answers:** every format now shows its answers in its question's own layout, the Framework's in each stage's scaffold.
 - **Studio panels:** both side columns drag (double-click resets, arrow keys too), and on a narrow window they give way to the slide. The canvas bar's add button no longer wraps.
 
 ### 13 October 2026 — The root `npm test` runs the lab's unit tests again
