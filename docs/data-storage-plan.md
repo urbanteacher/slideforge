@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`).
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Step 2's code is ready (14 October): the project itself waits on the owner (section 6, step 2).
 
 ## 1. The problem
 
@@ -99,16 +99,22 @@ Each step is its own commit and works on its own.
    - The studio side is `SF.LabEngine.savedDecks` and `restoreDecks`, over `readSaved` and `restoreSaved` in `lab/src/embed.ts`.
    - File → Export and Import go through it.
    - Tests: `tests/docs.test.js`.
-2. **The Supabase project.**
-   - Created in London.
-   - Tables:
-     - `documents (id, owner, kind, title, folder, modified, body jsonb)`
-     - `folders`
-     - `assets (hash, owner, path, bytes, type)`
-   - Row Level Security: owner only.
-   - A `media` bucket.
-   - A GitHub Action that pings it weekly so it never pauses.
-3. **Sign-in.** Email magic link first, with NU London Microsoft sign-in as an option (open question 2). Signed out, the app is as today.
+2. **The Supabase project. Code ready 14 October; the project waits on the owner.**
+   - The schema is `supabase/migrations/0001_lessons.sql`:
+     - `documents (owner, id, kind, title, folder, modified, deleted, body jsonb)`
+     - `folders (owner, id, name, sort)`
+     - `assets (owner, hash, path, bytes, type)`
+     - `allowed_domains`, starting with `nulondon.ac.uk`
+   - Row Level Security: a teacher reads and writes only their own rows, and only when signed in with an email at an allowed domain (`is_teacher()`).
+   - A private `media` bucket, each teacher's files under a folder named by their user id.
+   - `.github/workflows/supabase-keepalive.yml` reads one row every Monday, so the free project never pauses. It does nothing until the repository has the secrets.
+   - The relay tells the browser where to save (`GET /api/cloud-config`, from `SUPABASE_URL` and `SUPABASE_ANON_KEY`), or that it saves in this browser only. Test: `tests/cloud-config.test.js`.
+   - **What the owner does, once:**
+     1. At supabase.com, create a project named SlideForge in the London region (eu-west-2), on the free plan.
+     2. In its SQL editor, run `supabase/migrations/0001_lessons.sql`.
+     3. Under Authentication → Providers, keep Email on, with "Confirm email" on. Under Authentication → URL configuration, set the Site URL to the Render address, and add `http://localhost:8787` as a redirect URL.
+     4. From Settings → API, copy the Project URL and the anon public key into Render's environment (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), into `.env` locally, and into the GitHub repository's Actions secrets under the same two names. The service_role key stays in Supabase.
+3. **Sign-in: an email magic link, teachers only (decided 14 October).** Signed out, the app is as today.
 4. **Sync lessons.**
    - On save, write locally, then push to Supabase.
    - On open, pull any newer versions.
@@ -130,12 +136,14 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## 8. Open questions
 
-1. **Who signs in:** teachers only, or students too (for their own copies and notes)? Teachers only is the proposal; students keep using links.
-2. **Sign-in method:** email magic link, or NU London Microsoft accounts? A Microsoft sign-in may need the university's IT to register the app.
+1. ~~**Who signs in.**~~ **Decided 14 October: teachers only.** Students keep using links.
+2. ~~**Sign-in method.**~~ **Decided 14 October: an email magic link.** Microsoft sign-in can be added later without changing the data.
 3. **University policy:** is storing staff email addresses and teaching material with Supabase (London region, DPA signed) acceptable to NU London?
 4. **Built-in lessons:** keep them in the code (simple, versioned with the app), or move them to the shared online folder (step 7)?
 
 ## Change log
+
+- 14 October 2026: teachers only and an email magic link decided. Step 2's code built: the schema with Row Level Security and the teachers-only rule, the private media bucket, the weekly keep-alive, and `/api/cloud-config`. The project itself waits on the owner.
 
 - 12 October 2026: step 1 built. `SF.Docs` reads both stores, and the backup carries Lesson-studio lessons.
 
