@@ -114,11 +114,12 @@ Each step is its own commit and works on its own.
      2. In its SQL editor, run `supabase/migrations/0001_lessons.sql`.
      3. Under Authentication → Providers, keep Email on, with "Confirm email" on. Under Authentication → URL configuration, set the Site URL to the Render address, and add `http://localhost:8787` as a redirect URL.
      4. From Settings → API, copy the Project URL and the anon public key into Render's environment (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), into `.env` locally, and into the GitHub repository's Actions secrets under the same two names. The service_role key stays in Supabase.
-3. **Sign-in: an email magic link, teachers only. Built 14 October; live once the project exists.** Signed out, the app is as today.
-   - `js/cloud.js` (`SF.Cloud`): asks the relay for the project (`/api/cloud-config`). With none, nothing shows, and the Supabase library is never loaded.
-   - With one, it loads `@supabase/supabase-js` 2.45.4 from jsDelivr, pinned, and the header gains **Sign in**.
-   - The dialog takes a work email. An email outside `allowed_domains` is refused before anything is sent. A work email is sent a magic link that brings the teacher back to the page they were on, signed in. It uses the implicit flow, so the link works in whichever browser opens it (a phone, say); PKCE would complete only in the browser that asked. The button then names them, and the dialog signs out.
-   - Checked by `tools/smoke/cloud-signin.mjs` (in the CI set), against a stand-in for Supabase. The real email can only be tried once the project exists.
+3. **Sign-in: a work email and a password, teachers only. Built 14 October.** Signed out, the app is as today.
+   - At first an email magic link; changed the same day to a password, because Supabase's own mailer sends only a few emails an hour, and a link opened in another browser, or sent to the Site URL, never signed the teacher in here.
+   - `js/cloud.js` (`SF.Cloud`): asks the relay for the project (`/api/cloud-config`). With none, nothing shows, and the Supabase library is never loaded. With one, it loads `@supabase/supabase-js` 2.45.4 from jsDelivr, pinned, and the header gains **Sign in**.
+   - The dialog takes a work email and a password. An email outside `allowed_domains` is refused before anything is tried; a wrong password is said plainly. Signed in, the button names the teacher, and the dialog signs out.
+   - **Accounts are made by the owner,** in the Supabase dashboard (Authentication → Users → Add user → Create new user, with Auto Confirm), so no email is sent and nobody signs themselves up. Turning off "Allow new users to sign up" keeps it that way.
+   - Checked by `tools/smoke/cloud-signin.mjs` (in the CI set), against a stand-in for Supabase.
 4. **Sync lessons. Built 14 October** (`js/sync.js`, `SF.Sync`).
    - **When:** while a teacher is signed in: on sign-in, every 30 seconds, and when the tab is hidden. The account dialog says when they were last in step, with a **Save to account now** button.
    - **What:** every document this browser keeps: Lesson-studio lessons, classic lessons and games. A studio lesson's Library card is not a document of its own.
@@ -145,12 +146,13 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 ## 8. Open questions
 
 1. ~~**Who signs in.**~~ **Decided 14 October: teachers only.** Students keep using links.
-2. ~~**Sign-in method.**~~ **Decided 14 October: an email magic link.** Microsoft sign-in can be added later without changing the data.
+2. ~~**Sign-in method.**~~ **Decided 14 October: a work email and password** (first a magic link, the same day). Microsoft sign-in can be added later without changing the data.
 3. **University policy:** is storing staff email addresses and teaching material with Supabase (London region, DPA signed) acceptable to NU London?
 4. **Built-in lessons:** keep them in the code (simple, versioned with the app), or move them to the shared online folder (step 7)?
 
 ## Change log
 
+- 14 October 2026, evening: sign-in changed from the email magic link to a work email and password; accounts are made in the Supabase dashboard.
 - 14 October 2026, later still: step 4 built, lessons and games synced to the teacher's account (`js/sync.js`).
 - 14 October 2026, later: the sign-in link works in any browser (the implicit flow in place of PKCE).
 - 14 October 2026, later: the allowed domain changed from nulondon.ac.uk to urbanteacher.co.uk, in the project and in `0001_lessons.sql`.
