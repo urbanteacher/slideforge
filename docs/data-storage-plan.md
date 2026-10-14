@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 and 3 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment and the Auth redirect URLs wait on the owner.
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 4 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment and the Auth redirect URLs wait on the owner.
 
 ## 1. The problem
 
@@ -119,10 +119,14 @@ Each step is its own commit and works on its own.
    - With one, it loads `@supabase/supabase-js` 2.45.4 from jsDelivr, pinned, and the header gains **Sign in**.
    - The dialog takes a work email. An email outside `allowed_domains` is refused before anything is sent. A work email is sent a magic link that brings the teacher back to the page they were on, signed in. It uses the implicit flow, so the link works in whichever browser opens it (a phone, say); PKCE would complete only in the browser that asked. The button then names them, and the dialog signs out.
    - Checked by `tools/smoke/cloud-signin.mjs` (in the CI set), against a stand-in for Supabase. The real email can only be tried once the project exists.
-4. **Sync lessons.**
-   - On save, write locally, then push to Supabase.
-   - On open, pull any newer versions.
-   - When a lesson was edited on two devices, the newer one wins, and the older one is kept as a restore point (`js/history.js`) rather than lost.
+4. **Sync lessons. Built 14 October** (`js/sync.js`, `SF.Sync`).
+   - **When:** while a teacher is signed in: on sign-in, every 30 seconds, and when the tab is hidden. The account dialog says when they were last in step, with a **Save to account now** button.
+   - **What:** every document this browser keeps: Lesson-studio lessons, classic lessons and games. A studio lesson's Library card is not a document of its own.
+   - **How:** each document's local and online modified times are remembered as they were when last in step, per account, with a fingerprint of its content (modified time left out). Changed here only: uploaded. Changed online only: downloaded and filed, and the lesson open in the studio is shown as it now is. Changed in both: the newer wins, and the copy here is kept in History first. Saved again with nothing changed: nothing uploads.
+   - **Deletions:** a document deleted here after being in step is marked `deleted` online and does not come back. A deletion online never removes another device's copy.
+   - **Size:** pictures are still inside lessons until step 5, so a document over 12 MB stays in this browser only, and the dialog names it.
+   - The studio no longer re-writes a lesson that has not changed (`persistDeck` in `lab/src/app/embed.ts`), so its modified time is when it last changed.
+   - Checked by `tools/smoke/cloud-sync.mjs` (in the CI set): two browser profiles as the same teacher, against a stand-in for the documents table.
 5. **Pictures to the bucket.**
    - New pictures upload and are stored as URLs.
    - Existing data URLs are moved the first time a deck syncs.
@@ -147,6 +151,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 14 October 2026, later still: step 4 built, lessons and games synced to the teacher's account (`js/sync.js`).
 - 14 October 2026, later: the sign-in link works in any browser (the implicit flow in place of PKCE).
 - 14 October 2026, later: the allowed domain changed from nulondon.ac.uk to urbanteacher.co.uk, in the project and in `0001_lessons.sql`.
 - 14 October 2026, evening: the SlideForge project created in London through the Supabase connection, and `0001_lessons.sql` applied (with `execute_sql`, so it is not in the project's migration history; its `drop policy` lines were left out, as the project was new). Checked: four tables with Row Level Security, five policies, the private `media` bucket, nulondon.ac.uk allowed. With the public key alone, lessons read empty, and writing a lesson or a domain is refused (401). `.env` holds the URL and anon key, and localhost shows Sign in.
