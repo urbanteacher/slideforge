@@ -798,6 +798,11 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 14 October 2026 — Nodes challenges in the room; resizable studio panels
+
+- **Nodes room** ([nodes-studio-plan.md](nodes-studio-plan.md) step 4): every Nodes format plays in the room. Ranking, a three-column sort or a choice is marked and scored; the open steps take one written answer. Each challenge has its own question key: a shared key had skipped every challenge after the first. Tests: `lab/tests/nodes-room.test.ts` and the `nodes-room` smoke.
+- **Studio panels:** both side columns drag (double-click resets, arrow keys too), and on a narrow window they give way to the slide. The canvas bar's add button no longer wraps.
+
 ### 13 October 2026 — The root `npm test` runs the lab's unit tests again
 
 - `tests/lab-unit.test.js` spawned a `node --test` per lab file and passed it the root runner's `NODE_TEST_CONTEXT`. Node took the nested run for a recursive call, skipped its files and exited 0. So all 51 `lab/tests/*.test.ts` files showed as passing from `npm test` without running. That is how a deep import (`lab/src/app/showInSlideForge.ts` → `../show/state`) failed `boundaries.test.ts` under `npm --prefix lab test` but passed at the root. The lab tests' paths were not the cause: they resolve from the working directory, which the wrapper sets to `lab/`. The wrapper now drops the variable, reads the child's TAP output and fails a file that reports no tests. Checked by putting a deep import back: both runs fail on `boundaries.test.ts`, and the other 50 files pass at the root (`25ce87f`).

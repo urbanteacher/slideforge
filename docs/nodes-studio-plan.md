@@ -156,7 +156,13 @@ Each step works on its own and can be pushed on its own.
 1. **Done (13 October): the format system and the first three formats,** in our style: Join it up, Three answers, Which step broke? (`lab/src/designs/nodes/`). Each is drawn in the Nodes decks' own illustrated language (`designs/nodes/look.ts`: rounded cards, pills, chains of boxes joined by arrows, badges, element dots, answer tabs, cards with an accent bar) in the lesson's theme, the links in Nodes' colours; each has an ask slide and its reveal slides, and marks them `slide.nodes = { id, format, role, content }`. The Nodes tab's left pane is Browse for the formats (cards drawn in the lesson's theme), its empty screen offers the three, and a format added after another goes after the whole of it.
 2. **Their side panel:** content and settings, with editing redrawing the slides. (Part done 13 October: the Nodes · <format> section on the Design tab.)
 3. **Done (13 October): Write it with AI.** A topic, year group, what they get wrong and the class's constraints; one request per challenge (`lab/src/designs/nodesAI.ts`, through `SF.AI.generateJson`), checked against the format's shape, then its slides drawn again in place. A Framework sends only its stages' names and questions and gets the recall and a task per stage back; the stages' own questions, outcomes and backbones stay Nodes'. Tested on the CPU key: Join it up in 3.4 s, a 16-stage Framework (19 slides) in 5.4 s.
-4. **Their room:** the phones and the wall's results.
+4. **Done (14 October): their room.** Each format's ask slide is a room question and its reveal the answer (`marked()` in `designs/nodes/types.ts`, each challenge with its own question key):
+   - **Ranking:** Join it up, Model marks, and Label the parts when it has more than three roles (put the worked answer back in order). A Nodes Ranking is worth its points (share in place × 1000), not classic's 10.
+   - **Sort into three columns:** Keep them apart (its two ideas with a middle "Both"), Same word, Size the answer, Label the parts with up to three roles.
+   - **Choice:** Three answers (the strongest), Which step broke?
+   - **One written answer:** the ladder's attempt and reattempt, a new case's near and far, Before during after's routine, each Framework stage. A challenge whose content falls outside what the relay carries (3–8 to rank, 2–10 to sort) takes a written answer instead.
+   - The phones are told right or wrong, the reveal slide is the Nodes reveal, and the scores add up across challenges. Tests: `lab/tests/nodes-room.test.ts`, `node tools/smoke/run.mjs nodes-room` (two phones through the relay).
+   - Without phones the slides work as they are: the ask slide is the question, the reveal slide the answer, built click by click.
 5. **The rest of the formats:** Breakdown, Missing-link ladder, Keep them apart, Level it, Size the answer, Mark it.
 6. **Scaffold:** every node of Technical Analysis (16) or the GCSE CS ladder (13) on one topic, AI-written from the real node definitions, with the class on the framework map.
 7. **The Teacher Presenter and Reports:** stuck-by-operation and the bottleneck node, for this class.
@@ -179,4 +185,5 @@ Each step works on its own and can be pushed on its own.
 
 ## Change log
 
+- 14 October 2026: step 4 built: every format plays in the room, marked and scored. Model marks' AI writes what earns each mark, never a weak answer.
 - 13 October 2026: plan written. Later the same day: the Framework, Label the parts, Same word different links, Before during after, and Model marks formats built; the Nodes tab (step 0); redirected to Nodes formats custom built like games and activities, in our own styles, rather than copying the Nodes decks; step 1 built (the first three formats); the extra activities and the scaffolding challenge added; decided on its own studio, and on real stage data from Nodes (the exporter, served as a JSON route), with AI writing only what has no source.
