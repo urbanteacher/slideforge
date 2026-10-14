@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 4 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment and the Auth redirect URLs wait on the owner.
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 5 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment and the Auth redirect URLs wait on the owner.
 
 ## 1. The problem
 
@@ -128,10 +128,13 @@ Each step is its own commit and works on its own.
    - **Size:** pictures are still inside lessons until step 5, so a document over 12 MB stays in this browser only, and the dialog names it.
    - The studio no longer re-writes a lesson that has not changed (`persistDeck` in `lab/src/app/embed.ts`), so its modified time is when it last changed.
    - Checked by `tools/smoke/cloud-sync.mjs` (in the CI set): two browser profiles as the same teacher, against a stand-in for the documents table.
-5. **Pictures to the bucket.**
-   - New pictures upload and are stored as URLs.
-   - Existing data URLs are moved the first time a deck syncs.
-   - Export and share still embed pictures, so a file you download is complete on its own.
+5. **Pictures to the bucket. Built 14 October** (in `js/sync.js`).
+   - This browser's copy keeps its pictures inside the lesson, so the editor, working offline, Export and Share are unchanged: a file you download is complete on its own.
+   - The online copy does not. On upload, each embedded picture, video or sound over 2 KB is stored once in the private `media` bucket, at `<user id>/<sha256>.<ext>`, with a row in `assets`. The online lesson holds `sf-asset:<sha256>.<ext>` in its place. A picture used in many lessons is stored once.
+   - On download, the references are swapped back for the pictures, so the lesson arrives whole; that is not a change to upload again.
+   - Documents uploaded before this (in the older form) are uploaded once more, so their pictures move to the bucket too.
+   - The 12 MB limit now applies to a lesson without its pictures.
+   - Checked by `tools/smoke/cloud-sync.mjs`: one bucket copy for a picture in two lessons, a small online lesson, and the exact picture back on the other device.
 6. **Shares and reports to Supabase.** The server writes them to the database or bucket instead of `SHARE_DIR`, so they survive deploys. This lifts the 40-share limit.
 7. **Built-in lessons as data.** Lessons hard-coded today (`js/lab-decks.js`, `lessons/`) can be published to a shared "built-in" folder in Supabase instead of the code. Large MP4s move to the bucket. The code then keeps only the starter decks.
 
@@ -152,6 +155,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 14 October 2026, evening: step 5 built, pictures in the bucket for the online copy (`js/sync.js`).
 - 14 October 2026, evening: sign-in changed from the email magic link to a work email and password; accounts are made in the Supabase dashboard.
 - 14 October 2026, later still: step 4 built, lessons and games synced to the teacher's account (`js/sync.js`).
 - 14 October 2026, later: the sign-in link works in any browser (the implicit flow in place of PKCE).
