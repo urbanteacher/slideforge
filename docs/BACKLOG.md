@@ -798,6 +798,12 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 15 October 2026, later — Studio 90: case files from the sources, and a professional offside graphic
+
+- **Offside poster:** redrawn as broadcast analysis draws it (the attacking third from above, numbered player markers, both lines and the margin, the 30 tracking cameras) in place of stick figures.
+- **Case files:** a new poster type in `tools/football-studio/art.js`, used four times: PLAIER (Sky Sports, February 2025), the Premier League Companion (Microsoft's figures), the Klopp hire (Lichtenthaler, 2022) and Nostrada.ai's negotiation clone (OneFootball reporting the Telegraph, June 2026; reported, not confirmed). Also a slide on the companies behind the jobs, and the 90/10 debate. AI Awareness Day's Premier League page is cited for the Raya foul, the Opta simulations and the closing line.
+- **Length:** 50 slides, 49 shown, about 70 minutes, with 60- and 45-minute cuts. The BBC Sport article on Reading's head of AI could not be fetched, so the deck still cites it from the AI stadium deck's notes.
+
 ### 15 October 2026 — Studio 90: a university session on AI, football and the new jobs
 
 - **New lesson** `nul-ai-football-studio` (Northeastern folder, 44 slides, 43 shown, about 60 minutes with a 45-minute cut in the teacher page), built by `tools/build-football-studio.js`. It runs like a design studio. 01: a wall chart from 2013 to 2026 and six moments of the modern game (the sensor ball, the rendered offside line, ref cams, Spurs' dividing pitch, virtual boards, the Bernabéu's 360° screen). 02: one line from the pitch to the call (capture, engineer, model, design, decide). 03: a job atlas of five studios and their jobs. 04: a crit on authorship and data. 05: a brief where teams design a football job for 2035 on a poster template. Sources are named in each slide's notes.
