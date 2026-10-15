@@ -2,7 +2,7 @@
 'use strict';
 
 /* Build "The Power of AI: practical case studies and proven tips for
- * productivity", a 30-minute keynote for about 400 London SMEs at Working
+ * productivity", a 35-minute keynote for about 400 London SMEs at Working
  * Smarter, Growing Together (Central District Alliance, with Metro Bank,
  * LabTech, UK Black Tech, and Camden and Islington councils).
  *
@@ -48,23 +48,23 @@ const slides = [
     title: 'Speaker page',
     subtitle: 'Hidden from the room',
     bullets: [
-      'A 30-minute keynote for about 400 business owners and leaders: what AI is really doing for small firms, five case studies, seven tips, and one thing to try on Monday.',
+      'A 35-minute keynote for about 400 business owners and leaders: what AI is really doing for small firms, where it goes wrong, five case studies, seven tips, where the human stays in the loop, and one thing to try on Monday.',
       'No tech needed from the room. Interaction is hands up and turn to your neighbour, which works at 400.',
       'Before the day: add your name and role to the title slide notes, check the partners’ logos with CDA, and confirm any offers from the partners you want to name on “Grow together”.'
     ],
     notes:
-      'RUNNING ORDER · ABOUT 30 MINUTES\n' +
+      'RUNNING ORDER · ABOUT 35 MINUTES\n' +
       '· Open — 3 min: title, the claim, hands up\n' +
       '· 01 Where we are — 4 min: the figures, wide not deep\n' +
-      '· 02 What the evidence says — 5 min: four studies, the jagged frontier\n' +
+      '· 02 What the evidence says — 7 min: four studies, the honest counterweight, the jagged frontier, fluent is not right\n' +
       '· 03 Five case studies — 8 min: café, accountancy, trades, online shop, marketing agency\n' +
-      '· 04 Proven tips — 6 min: the prompt recipe, seven uses, the tools you already pay for\n' +
-      '· 05 Do it safely — 2 min: the data traffic light, four rules\n' +
-      '· 06 Make it stick — 2 min: the 30-day plan, the maths, grow together, your one thing, close\n\n' +
-      'FOR 20 MINUTES. Hide “Wide, not deep”, the tools table and two of the five case studies (keep the café and the trades firm: the room is mostly not office businesses).\n\n' +
+      '· 04 Proven tips — 5 min: the prompt recipe, seven uses, the tools you already pay for\n' +
+      '· 05 Humans in the loop — 5 min: how much checking, when nobody checked, accountability, the data traffic light, four rules\n' +
+      '· 06 Make it stick — 3 min: a pilot run properly, the 30-day plan, the maths, grow together, your one thing, close\n\n' +
+      'FOR 25 MINUTES. Hide “Wide, not deep”, the tools table, “A pilot, run properly” and two of the five case studies (keep the café and the trades firm: the room is mostly not office businesses).\n\n' +
       'THE BIG IDEA. Productivity from AI is not a purchase, it is a habit: one task, measured, checked, shared. The evidence says it makes people faster and better inside its frontier and confidently wrong outside it. Everything in the talk hangs off that.\n\n' +
-      'THE TONE. Practical and honest. 400 owners have heard the hype. Concede the catch early (the jagged frontier) and the room trusts the tips.\n\n' +
-      'SOURCES (also in each slide’s notes). ONS, “Artificial intelligence in UK businesses: 2023 to 2026” (20 July 2026, BICS wave 159, June 2026). British Chambers of Commerce with Atos and ISER/MiSoC, “Future of Work: AI in the Workplace” (19 March 2026; 668 firms, 94% SMEs). Noy and Zhang, “Experimental evidence on the productivity effects of generative artificial intelligence”, Science (2023). Brynjolfsson, Li and Raymond, “Generative AI at Work”, Quarterly Journal of Economics (2025). Dell’Acqua et al., “Navigating the Jagged Technological Frontier”, Harvard Business School working paper 24-013 (2023). Government Digital Service, Microsoft 365 Copilot cross-government experiment findings (2025). Dell Technologies, “AI in Action” UK SME research (2026; vendor). OpenAI with Enterprise Nation, UK SME survey (2026; vendor). DSIT, “What Works for AI Upskilling in the UK: supporting case studies” (10 June 2026). ICO, guidance on AI and data protection. NCSC, Cyber Essentials.\n\n' +
+      'THE TONE. Practical and honest. 400 owners have heard the hype. Concede the catch early (the counterweight, the jagged frontier, the cases where nobody checked) and the room trusts the tips. The human in the loop is not a disclaimer at the end: it is how every case study and every tip works.\n\n' +
+      'SOURCES (also in each slide’s notes). ONS, “Artificial intelligence in UK businesses: 2023 to 2026” (20 July 2026, BICS wave 159, June 2026). British Chambers of Commerce with Atos and ISER/MiSoC, “Future of Work: AI in the Workplace” (19 March 2026; 668 firms, 94% SMEs). Noy and Zhang, “Experimental evidence on the productivity effects of generative artificial intelligence”, Science (2023). Brynjolfsson, Li and Raymond, “Generative AI at Work”, Quarterly Journal of Economics (2025). Dell’Acqua et al., “Navigating the Jagged Technological Frontier”, Harvard Business School working paper 24-013 (2023). Government Digital Service, Microsoft 365 Copilot cross-government experiment findings (2025). Dell Technologies, “AI in Action” UK SME research (2026; vendor). OpenAI with Enterprise Nation, UK SME survey (2026; vendor). DSIT, “What Works for AI Upskilling in the UK: supporting case studies” (10 June 2026). Humlum and Vestergaard, “Still Waters, Rapid Currents: Early Labor Market Transformation under Generative AI”, NBER working paper 33777 (revised March 2026; first issued May 2025 as “Large Language Models, Small Labor Market Effects”). METR, “Measuring the impact of early-2025 AI on experienced open-source developer productivity” (10 July 2025), and its February 2026 update. Niederhoffer et al., “AI-generated ‘workslop’ is destroying productivity”, Harvard Business Review (September 2025; Stanford and BetterUp Labs survey). BBC News: “How long will humans be needed for translation?” (John Laurenson, 14 October 2026); “Paramedics experiment with AI note-taking tool” (13 October 2026); “Make sure use of AI is safe, Guernsey data watchdog warns” (12 October 2026). Moffatt v. Air Canada, BC Civil Resolution Tribunal (February 2024). Associated Press reporting on Deloitte and the Australian Department of Employment and Workplace Relations (October 2025). Ayinde v London Borough of Haringey and Al-Haroun v Qatar National Bank [2025] EWHC 1383 (Admin), 6 June 2025. ICO, guidance on AI and data protection. NCSC, Cyber Essentials.\n\n' +
       'CHECK BEFORE YOU PRESENT. ONS and BCC publish new waves often: if a newer figure is out on the day, use it and change the notes.'
   },
 
@@ -148,10 +148,34 @@ const slides = [
     notes: '02 · 3 MINUTES.\n\nNoy and Zhang, Science (2023): 453 college-educated professionals on writing tasks such as press releases, short reports and emails. With ChatGPT, time fell by 40% and graded quality rose by 18%.\n\nBrynjolfsson, Li and Raymond, “Generative AI at Work”, Quarterly Journal of Economics (2025): 5,179 customer support agents. An AI assistant raised issues resolved per hour by 14% on average and by 34% for novice and low-skilled workers; the most experienced barely gained.\n\nDell’Acqua et al., “Navigating the Jagged Technological Frontier”, Harvard Business School working paper 24-013 (2023), with Boston Consulting Group: 758 consultants. On tasks inside AI’s capability they completed 12% more tasks, 25% faster, at over 40% higher quality.\n\nGovernment Digital Service, Microsoft 365 Copilot experiment (2025): around 20,000 civil servants across government reported saving an average of 26 minutes a day. Self-reported, so say so.\n\nThe pattern to land: biggest gains for writing, summarising and first drafts, and for the least experienced. That is good news for small teams and new staff.'
   },
   {
+    type: 'stats',
+    title: 'The honest counterweight',
+    bullets: [
+      stat('Danish workers, two years on', 'No change', 'in earnings or hours worked; firms added AI-checking work (NBER, 2026)'),
+      stat('Experienced developers', '19% slower', 'measured, while feeling 20% faster (METR, early-2025 tools)'),
+      stat('AI “workslop” from colleagues', '~2 hours', 'to fix each piece that looked done but wasn’t (HBR survey, 2025)')
+    ],
+    progressive: true,
+    notes: '02 · 2 MINUTES. Say this slide plainly: the gains are real but not automatic, and the room has heard enough hype to respect you for it.\n\nHumlum and Vestergaard, “Still Waters, Rapid Currents”, NBER working paper 33777 (revised March 2026): Danish administrative records linked to large worker surveys. Precise null effects on earnings and recorded hours two years after ChatGPT’s launch, ruling out effects larger than 2%. Employers reorganised work, adding tasks in content generation, AI oversight and AI integration. So the time saved often goes into new work, including checking the AI.\n\nMETR (10 July 2025): a randomised trial of 16 experienced open-source developers on 246 real tasks. With AI tools they took 19% longer; they had expected a 24% speed-up and afterwards believed they had been 20% faster. METR says the result reflects early-2025 tools in one setting and that tools have improved since; its February 2026 update could not measure the new effect reliably. The lesson that lasts is the gap between feeling faster and being faster: measure it.\n\nHarvard Business Review (September 2025), a Stanford and BetterUp Labs survey of about 1,150 US desk workers: 40% had received “workslop” in the last month (AI output that looks finished but does not do the job), and each case took nearly two hours to deal with. Self-reported, so say so.\n\nWhat not to quote: the widely shared “95% of AI pilots fail” figure (MIT NANDA, 2025) rests on 52 interviews and 153 survey responses, so it is not used here.'
+  },
+  {
     type: 'statement',
     body: 'AI makes good work faster. It also makes unchecked work wrong, faster.',
     subtitle: 'The jagged frontier',
     notes: '02 · 2 MINUTES. The catch, from the same Harvard and BCG study: on a task just outside AI’s capability, consultants using it were 19 percentage points less likely to get the right answer than those working without it. They trusted a confident, plausible answer.\n\nThe researchers call it the jagged frontier: AI is brilliant at some tasks and wrong at others that look just as easy, and you cannot tell which from the outside. The fix is not avoiding AI, it is knowing your frontier: test it on work you already know the answer to, and keep a human check on anything that goes to a customer, a regulator or the bank.'
+  },
+  {
+    type: 'keyfact',
+    title: 'Fluent isn’t the same as right',
+    subtitle: 'BBC News, 14 October 2026 · AI translation for Wikipedia',
+    body: '27% of AI-drafted text still needed a human fix before publishing',
+    bullets: [
+      'And 5 to 6% of the errors changed the meaning.',
+      'The better AI writes, the harder its mistakes are to spot: they sound natural.',
+      'Low stakes, a light check. High stakes, an expert reads every line.'
+    ],
+    progressive: true, buildMode: 'dim',
+    notes: '02 · 2 MINUTES. From the BBC, “How long will humans be needed for translation?” (John Laurenson, 14 October 2026). The Open Knowledge Association, a non-profit that has published more than 10,000 AI-assisted Wikipedia translations, studied 119 articles, 10 language pairs and over 1,000 hours of translator work: 27% of the AI-generated text was corrected before publication, three quarters of those corrections were errors the AI introduced, and 5 to 6% of errors changed the meaning. Its founder says raw AI translation is the right call for internal documents or product listings; for an encyclopedia that runs on trust it is not.\n\nA medical translator in the same piece found μ (micro) translated as milli: a thousand-fold dosing error. Her point is the one to land: older machine errors jumped out because they sounded clunky; today’s sound fluent and natural, so they are harder to catch.\n\nThis is why every case study coming up has a row called “the human check”.'
   },
 
   /* -------------------------------------------------- 03 FIVE CASE STUDIES */
@@ -273,9 +297,39 @@ const slides = [
   /* ------------------------------------------------------ 05 DO IT SAFELY */
   {
     type: 'section',
-    title: 'Do it safely',
-    subtitle: 'Four rules and a traffic light',
-    notes: '05 · 2 MINUTES.'
+    title: 'Humans in the loop',
+    subtitle: 'How much checking, who checks, and what goes in',
+    notes: '05 · 5 MINUTES. The human in the loop is not a brake on productivity; it is what makes the gain safe to keep.'
+  },
+  {
+    type: 'content',
+    title: 'How much checking?',
+    subtitle: 'Match the check to the stakes',
+    bullets: [
+      card('Low · for you', 'Notes, ideas, first drafts, summaries for your own use. A quick read.'),
+      card('Medium · for customers', 'Emails, posts, listings, quotes. A person reads every word before it goes.'),
+      card('High · money, law, health, people', 'Contracts, tax, safety, medical, hiring and credit decisions. Someone who knows the subject checks every line, against the source.')
+    ],
+    progressive: true, buildMode: 'dim',
+    notes: '05 · 1 MINUTE. The BBC translation piece draws the same line: raw AI output can be the right call for internal documents and product listings, and an expert must check legal and medical work.\n\nDecisions about people need a human. Under UK data protection law, people have the right to have a significant automated decision about them reviewed by a person; the ICO’s guidance on AI and data protection covers it. If AI screens CVs or scores credit, a person decides.\n\nThe North East Ambulance Service’s current trial (BBC, 13 October 2026) is the high level done right: every AI-drafted note is reviewed and edited by a clinician before it goes into a patient’s record.'
+  },
+  {
+    type: 'cards',
+    title: 'When nobody checked',
+    subtitle: 'Three real cases',
+    bullets: [
+      card('Air Canada · 2024', 'Its chatbot invented a refund policy. A tribunal ruled the airline was responsible for what its chatbot said.'),
+      card('Deloitte · 2025', 'A report to the Australian government cited research that didn’t exist. Deloitte refunded part of the fee.'),
+      card('UK High Court · 2025', 'Lawyers cited cases that didn’t exist. The court warned the profession and referred lawyers to their regulators.')
+    ],
+    progressive: true,
+    notes: '05 · 2 MINUTES. One line each, then the point: in every case the AI was wrong in a fluent, confident way, and a person put their name to it without checking.\n\nAir Canada: Moffatt v. Air Canada, British Columbia Civil Resolution Tribunal (February 2024). The chatbot told a bereaved passenger he could claim a bereavement fare after travel, which contradicted the airline’s own policy page. Air Canada argued the chatbot was responsible for its own statements; the tribunal rejected that and ordered it to pay about C$650 plus interest and fees. A tribunal decision, not binding precedent, but widely read as the rule: your chatbot speaks for you.\n\nDeloitte: reported by the Associated Press (October 2025). A A$440,000 report for the Department of Employment and Workplace Relations contained a fabricated quote from a court judgment and references to non-existent papers. Deloitte repaid the final instalment and the revised report disclosed it had used Azure OpenAI; the department said the recommendations did not change.\n\nUK High Court: Ayinde and Al-Haroun [2025] EWHC 1383 (Admin), 6 June 2025, Dame Victoria Sharp. In one case 18 of 45 citations were fabricated. The court said lawyers may use AI but must check it against authoritative sources, and referred lawyers to their regulators.\n\nThe small-business version is smaller and just as real: a wrong price, a made-up allergen answer, a quote with the wrong VAT.'
+  },
+  {
+    type: 'statement',
+    body: 'You can hand AI the task. You can’t hand it the accountability.',
+    subtitle: 'Whoever signs it, owns it',
+    notes: '05 · 30 SECONDS. Echoes the Guernsey data protection commissioner, Brent Homan, to the BBC (12 October 2026): organisations “can outsource certain responsibilities, but they can’t outsource their accountability.” Guernsey and Jersey’s cyber security director, in the same piece, on the right attitude: careful testing, good controls, sensible and pragmatic adoption; “it is never going to be risk-free.”'
   },
   {
     type: 'content',
@@ -287,19 +341,19 @@ const slides = [
       card('Red · stop', 'Personal data, client files, passwords, bank details, health records. Not without a proper agreement and a reason.')
     ],
     progressive: true, buildMode: 'dim',
-    notes: '05 · 1 MINUTE. A rule small teams can remember without a policy document. The legal background: the UK GDPR still applies when the processing is done by an AI tool; the ICO publishes guidance on AI and data protection.\n\nThe practical step: decide which tools are approved, on which accounts, and tell the team. Most data leaks from AI are someone pasting client data into a free personal account.'
+    notes: '05 · 30 SECONDS. A rule small teams can remember without a policy document. The legal background: the UK GDPR still applies when the processing is done by an AI tool; the ICO publishes guidance on AI and data protection.\n\nThe practical step: decide which tools are approved, on which accounts, and tell the team. Most data leaks from AI are someone pasting client data into a free personal account.'
   },
   {
     type: 'content',
     title: 'Four rules for every team',
     bullets: [
-      card('A person signs it off', 'Anything going to a customer, regulator, lender or the public is checked by a human.'),
+      card('Name the checker', 'Every AI task has a named person who checks it, at the level the stakes need.'),
       card('Say when it matters', 'Be open with customers about where AI is used, especially chatbots.'),
       card('Lock the doors', 'Strong passwords and two-factor sign-in on every AI account. Cyber Essentials is a good start.'),
       card('Write it down', 'One page: which tools, which data, who checks. Review it every quarter.')
     ],
     progressive: true, buildMode: 'dim',
-    notes: '05 · 1 MINUTE. Cyber Essentials is the government-backed scheme run by the NCSC. The one-page policy is the thing most small firms are missing: it protects the business and it gives staff permission to use the tools properly instead of in secret.'
+    notes: '05 · 30 SECONDS. Cyber Essentials is the government-backed scheme run by the NCSC. The one-page policy is the thing most small firms are missing: it protects the business and it gives staff permission to use the tools properly instead of in secret.'
   },
 
   /* ------------------------------------------------------ 06 MAKE IT STICK */
@@ -307,7 +361,20 @@ const slides = [
     type: 'section',
     title: 'Make it stick',
     subtitle: 'From one task to a habit',
-    notes: '06 · 2 MINUTES.'
+    notes: '06 · 3 MINUTES.'
+  },
+  {
+    type: 'keyfact',
+    title: 'A pilot, run properly',
+    subtitle: 'BBC News, 13 October 2026 · North East Ambulance Service',
+    body: '38 staff, eight weeks, every AI note checked by a clinician',
+    bullets: [
+      'One task: recording and summarising patient conversations.',
+      'A clear question: does it cut workload and keep records accurate?',
+      'A decision date: keep it or drop it in November.'
+    ],
+    progressive: true, buildMode: 'dim',
+    notes: '06 · 1 MINUTE. From the BBC, “Paramedics experiment with AI note-taking tool” (13 October 2026). The North East Ambulance Service is running an eight-week trial with 38 staff of ambient voice technology on iPads that records, transcribes and summarises patient conversations. Every note is reviewed and edited by a clinician before it goes into the record. Its digital clinical lead says the trial is to learn how the technology can be used “safely and effectively”.\n\nThe point for a small business: this is the shape of a good pilot at any size. One task, a human check, a question, a date. The next slide is the same thing for your business.'
   },
   {
     type: 'journey',
@@ -317,10 +384,10 @@ const slides = [
       card('Week 1 · Pick', 'One task that eats time every week. Time it as it is.'),
       card('Week 2 · Try', 'Use the prompt recipe every time. Save the prompts that work.'),
       card('Week 3 · Share', 'Show one colleague. Build a shared prompt library.'),
-      card('Week 4 · Measure', 'Time it again. Keep it, fix it, or drop it.')
+      card('Week 4 · Measure', 'Time it again, including the checking. Keep it, fix it, or drop it.')
     ],
     progressive: true,
-    notes: '06 · 1 MINUTE. The firms that get value treat it as an experiment, not a purchase. The before-and-after timing is the step everyone skips and the one that turns a feeling into a decision. If it does not save time after a month, drop it and pick another task: that is a result too.'
+    notes: '06 · 1 MINUTE. The firms that get value treat it as an experiment, not a purchase. The before-and-after timing is the step everyone skips and the one that turns a feeling into a decision: the METR developers felt 20% faster and were 19% slower. Count the checking time too, or the saving is imaginary. If it does not save time after a month, drop it and pick another task: that is a result too.'
   },
   {
     type: 'keyfact',
@@ -343,10 +410,10 @@ const slides = [
       card('Swap a prompt', 'Before you leave, swap one prompt that works with someone from another business.'),
       card('Find a buddy', 'Pair with a business your size and check in after 30 days.'),
       card('Use the partners', 'Central District Alliance, Metro Bank, LabTech, UK Black Tech, Camden and Islington councils.'),
-      card('Bring your team', 'The biggest gains go to the least experienced. Train everyone, not just the keen ones.')
+      card('Bring your team', 'Train everyone, not just the keen ones. The checks need people who know the work.')
     ],
     progressive: true,
-    notes: '06 · 1 MINUTE. The event’s promise is collaboration, so make it practical: the networking after this talk is the first prompt swap.\n\nBefore the day, confirm with each partner what support they want named here (programmes, workshops, funding, digital skills) and add it to these notes, so you can point people to the right table. Do not promise an offer a partner has not confirmed.\n\nThe last card is the customer support study again: novices gained most. Small firms with new or junior staff stand to gain the most.'
+    notes: '06 · 1 MINUTE. The event’s promise is collaboration, so make it practical: the networking after this talk is the first prompt swap.\n\nBefore the day, confirm with each partner what support they want named here (programmes, workshops, funding, digital skills) and add it to these notes, so you can point people to the right table. Do not promise an offer a partner has not confirmed.\n\nThe last card: in the customer support study novices gained most, so train everyone. And keep growing people who know the work: the human check is only as good as the person doing it, and the Danish study found firms adding AI-checking work, not removing people.'
   },
   {
     type: 'keyfact',
@@ -360,17 +427,17 @@ const slides = [
     body: 'Working smarter is a habit, not a purchase.',
     subtitle: 'Working Smarter, Growing Together',
     design: { words: 'rise', wordStagger: 'wave' },
-    notes: 'CLOSE. One task. Measured. Checked. Shared. Thank CDA and the partners again, and hand over to the networking: "Go and swap a prompt."'
+    notes: 'CLOSE. One task. Measured. Checked by a person. Shared. Thank CDA and the partners again, and hand over to the networking: "Go and swap a prompt."'
   },
   {
     type: 'content',
     title: 'Sources',
     bullets: [
-      'ONS, Artificial intelligence in UK businesses: 2023 to 2026 (July 2026).',
-      'British Chambers of Commerce, Atos and ISER/MiSoC, Future of Work: AI in the Workplace (March 2026).',
-      'Noy and Zhang, Science (2023). Brynjolfsson, Li and Raymond, Quarterly Journal of Economics (2025). Dell’Acqua et al., Harvard Business School working paper 24-013 (2023).',
-      'Government Digital Service, Microsoft 365 Copilot experiment (2025). DSIT, What Works for AI Upskilling in the UK: case studies (June 2026).',
-      'Vendor surveys: Dell Technologies, AI in Action (2026); OpenAI and Enterprise Nation (2026). Guidance: ICO on AI and data protection; NCSC Cyber Essentials.'
+      'ONS, AI in UK businesses (July 2026). BCC, Atos and ISER, Future of Work (March 2026).',
+      'Noy and Zhang, Science (2023). Brynjolfsson et al., QJE (2025). Dell’Acqua et al., HBS (2023). Humlum and Vestergaard, NBER (2026). METR (2025). HBR on workslop (2025).',
+      'GDS Copilot experiment (2025). DSIT AI upskilling case studies (2026). BBC News, 12–14 October 2026.',
+      'Moffatt v. Air Canada (2024). AP on Deloitte (2025). Ayinde and Al-Haroun [2025] EWHC 1383.',
+      'Vendor surveys: Dell (2026); OpenAI and Enterprise Nation (2026). ICO; NCSC Cyber Essentials.'
     ],
     notes: 'Leave up during questions if the organisers want the sources visible, or hide it. The full references are on the speaker page.'
   }
@@ -379,7 +446,7 @@ const slides = [
 /* ---------------------------------------------------------------- the build */
 const KEY = 'ai-sme-productivity';
 const TITLE = 'The Power of AI · practical case studies and proven tips for productivity';
-const BLURB = 'A 30-minute keynote (with a 20-minute cut) for about 400 London SMEs at Working Smarter, Growing Together: where small firms are with AI, what controlled studies say it does to productivity and where it fails, five case studies (café, accountancy, trades, online shop, marketing agency), seven proven tips, a data traffic light, a 30-day plan and one commitment each.';
+const BLURB = 'A 35-minute keynote (with a 25-minute cut) for about 400 London SMEs at Working Smarter, Growing Together: where small firms are with AI, what controlled studies say it does to productivity and the honest counterweight, five case studies (café, accountancy, trades, online shop, marketing agency), seven proven tips, where the human stays in the loop (with three cases where nobody checked), a data traffic light, a 30-day plan and one commitment each.';
 const THEME = 'ukbt';
 const LOGO = 'assets/brand/ukbt-wordmark.png';
 
@@ -414,7 +481,7 @@ console.log(`${path.relative(ROOT, target)} (${deck.slides.length} slides, ${dec
 
 /* Built in: the app's lesson list and the Library's UK Black Tech folder. */
 const lesson = {
-  key: KEY, title: TITLE, blurb: BLURB, icon: '❯', kind: 'lecture', minutes: 30,
+  key: KEY, title: TITLE, blurb: BLURB, icon: '❯', kind: 'lecture', minutes: 35,
   theme: THEME, libraryGroup: 'ukbt', org: 'UK Black Tech',
   logo: LOGO, logoOn: 'all', logoSize: 'small', logoReverse: 'never',
   showSlideNumbers: true, games: [], slides
