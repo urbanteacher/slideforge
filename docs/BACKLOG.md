@@ -798,6 +798,13 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 15 October 2026 — Studio 90: a university session on AI, football and the new jobs
+
+- **New lesson** `nul-ai-football-studio` (Northeastern folder, 44 slides, 43 shown, about 60 minutes with a 45-minute cut in the teacher page), built by `tools/build-football-studio.js`. It runs like a design studio. 01: a wall chart from 2013 to 2026 and six moments of the modern game (the sensor ball, the rendered offside line, ref cams, Spurs' dividing pitch, virtual boards, the Bernabéu's 360° screen). 02: one line from the pitch to the call (capture, engineer, model, design, decide). 03: a job atlas of five studios and their jobs. 04: a crit on authorship and data. 05: a brief where teams design a football job for 2035 on a poster template. Sources are named in each slide's notes.
+- **Posters:** 21, drawn by `tools/football-studio/art.js` into `assets/football-studio/` (riso inks on ink black, halftone, grain, Impact).
+- **New theme** Studio 90 · Riso ink (`src/themes.js`, `css/variant-themes.css`), with the studio palette `studio90` (`lab/src/theme/palettes.ts`, mapped in `lab/src/app/embed.ts`). Every ground is dark, so the text slides match the posters. The lab copy ships in `assets/lab-lessons/`.
+- **Still open:** the studio's card slides show four cards, so the builder keeps each card slide to four. Four facts come from general knowledge rather than a checked source, and should be checked before teaching: goal-line technology from 2013–14, GPS vests allowed from 2015, Project Red Card (2021) and TacticAI's 90% figure. The classic player's view of the theme was not checked in a browser.
+
 ### 14 October 2026 — The AI stadium: a Youth Charter session on AI across a Premier League club
 
 - **New live figure `stadium`** (`src/figures/stadium.js`): a top-down map of a ground and the club around it, with twelve zones. Each step zooms to one zone and shows what the AI does there, who still decides, the catch and a question for the room. The last step joins every zone to one data cloud. Pinned in `tests/stadium-figure.test.js`.
