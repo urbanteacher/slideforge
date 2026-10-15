@@ -798,6 +798,12 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 15 October 2026 — The Power of AI: a keynote for 400 London SMEs
+
+- **New deck** `ai-sme-productivity` (UK Black Tech folder, 30 slides, 29 shown, about 30 minutes with a 20-minute cut on the speaker page), built by `tools/build-ai-sme-productivity.js`, which also writes `output/Power_of_AI_SMEs.sfdeck.json` for File → Import. It is for Working Smarter, Growing Together (Central District Alliance, with Metro Bank, LabTech, UK Black Tech, and Camden and Islington councils). Where small firms are with AI (ONS July 2026, BCC March 2026), four controlled studies and the jagged frontier, five case studies, seven tips, a data traffic light, a 30-day plan and one commitment each. Sources are in each slide's notes.
+- **UK Black Tech theme:** no decorative object on compare slides, where every slot landed on a cell.
+- **Still open:** four of the five case studies are composites and say so; only Vertis Media (DSIT, June 2026) is a named firm. The speaker's name, the partners' logos and any partner offers on "Grow together" need confirming with CDA. No Lesson-studio copy ships yet.
+
 ### 15 October 2026, later — Studio 90: case files from the sources, and a professional offside graphic
 
 - **Offside poster:** redrawn as broadcast analysis draws it (the attacking third from above, numbered player markers, both lines and the margin, the 30 tracking cameras) in place of stick figures.
