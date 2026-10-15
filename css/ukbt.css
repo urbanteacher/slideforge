@@ -305,7 +305,8 @@
 
    NOT on chart and table slides. This deck teaches that the ink on a chart
    should carry data, and putting a decorative object behind one would be
-   chartjunk by the definition the deck itself gives. Not on quiz or game
+   chartjunk by the definition the deck itself gives. Nor on compare, which is
+   a table of cells running the full width: any slot lands on a cell. Not on quiz or game
    layouts either, where the room is reading an answer under time pressure,
    and not on image, gallery or split, where the picture is the content. */
 
@@ -382,6 +383,8 @@
 .theme-ukbt-institute.layout-chart::after,
 .theme-ukbt.layout-table::after,
 .theme-ukbt-institute.layout-table::after,
+.theme-ukbt.layout-compare::after,
+.theme-ukbt-institute.layout-compare::after,
 .theme-ukbt.layout-stats::after,
 .theme-ukbt-institute.layout-stats::after,
 .theme-ukbt.layout-funnel::after,
