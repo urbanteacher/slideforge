@@ -2,19 +2,22 @@
 'use strict';
 
 /* Build "The Power of AI: practical case studies and proven tips for
- * productivity", a 35-minute keynote for about 400 London SMEs at Working
- * Smarter, Growing Together (Central District Alliance, with Metro Bank,
- * LabTech, UK Black Tech, and Camden and Islington councils).
+ * productivity", a 40-minute session by Mark Martin MBE CITP for about 400
+ * London SMEs at Working Smarter, Growing Together (Central District
+ * Alliance, with Metro Bank, LabTech, UK Black Tech, and Camden and Islington
+ * councils).
  *
  * The shape: where London's small firms are with AI (official figures), what
- * the research says AI does to productivity and where it fails, five case
- * studies by kind of business, seven proven tips, the guardrails, a 30-day
- * plan, and one commitment each before the networking.
+ * the research says AI does to productivity and where it falls short, five
+ * case studies by kind of business, seven proven tips, where the human stays
+ * in the loop, and a 7-day SME action plan that each person fills in on
+ * sme-plan.html (a phone page at the root of the app; its QR code is drawn
+ * here into assets/ai-sme/) and copies to take away.
  *
  * Every figure names its source in the slide's notes. Vendor surveys are said
- * as the vendor's. The five case studies are composites of common SME uses,
- * not named firms, and the notes say so; the one named firm (Vertis Media) is
- * from the government's AI upskilling case studies.
+ * as the vendor's. Four of the five case studies are composites of common SME
+ * uses, not named firms, and the notes say so; the named firm (Vertis Media)
+ * is from the government's AI upskilling case studies.
  *
  * Writes output/Power_of_AI_SMEs.sfdeck.json (for File → Import) and
  * js/lessons-ai-sme.js, which builds it into the app's lesson list and seeds
@@ -38,6 +41,11 @@ const card = (heading, body) => `${heading}\t${body}`;
 const stat = (label, value, note) => [label, value, note].join('\t');
 /* A compare row is three cells: the row's own label, then one per column. */
 const row = (label, left, right) => [label, left, right].join('\t');
+/* The take-away page: sme-plan.html at the root of the app, live on Render. */
+const PLAN_URL = 'https://slideforge-rpjj.onrender.com/sme-plan.html';
+const PLAN_SHORT = 'slideforge-rpjj.onrender.com/sme-plan.html';
+const PLAN_QR = 'assets/ai-sme/plan-qr.svg';
+const PLAN_POSTER = 'assets/ai-sme/plan-poster.svg';
 const COMPOSITE = 'A composite of how firms like this commonly use AI, not a named business. Say so out loud: "This is what I see again and again in businesses like yours."';
 
 /* --------------------------------------------------------------- the deck */
@@ -48,20 +56,21 @@ const slides = [
     title: 'Speaker page',
     subtitle: 'Hidden from the room',
     bullets: [
-      'A 35-minute keynote for about 400 business owners and leaders: what AI is really doing for small firms, where it goes wrong, five case studies, seven tips, where the human stays in the loop, and one thing to try on Monday.',
+      'A 40-minute session for about 400 business owners and leaders: what AI is really doing for small firms, where it goes wrong, five case studies, seven tips, where the human stays in the loop, and a 7-day action plan each person fills in during the session.',
       'No tech needed from the room. Interaction is hands up and turn to your neighbour, which works at 400.',
       'Before the day: add your name and role to the title slide notes, check the partners’ logos with CDA, and confirm any offers from the partners you want to name on “Grow together”.'
     ],
     notes:
-      'RUNNING ORDER · ABOUT 35 MINUTES\n' +
-      '· Open — 3 min: title, the claim, hands up\n' +
+      'RUNNING ORDER · ABOUT 40 MINUTES\n' +
+      '· Open — 4 min: title, about me, the claim, hands up\n' +
       '· 01 Where we are — 4 min: the figures, wide not deep\n' +
       '· 02 What the evidence says — 7 min: four studies, the honest counterweight, the jagged frontier, fluent is not right\n' +
       '· 03 Five case studies — 8 min: café, accountancy, trades, online shop, marketing agency\n' +
       '· 04 Proven tips — 5 min: the prompt recipe, seven uses, the tools you already pay for\n' +
       '· 05 Humans in the loop — 5 min: how much checking, when nobody checked, accountability, the data traffic light, four rules\n' +
-      '· 06 Make it stick — 3 min: a pilot run properly, the 30-day plan, the maths, grow together, your one thing, close\n\n' +
-      'FOR 25 MINUTES. Hide “Wide, not deep”, the tools table, “A pilot, run properly” and two of the five case studies (keep the café and the trades firm: the room is mostly not office businesses).\n\n' +
+      '· 06 Make it stick — 3 min: a pilot run properly, the maths, the key message\n' +
+      '· 07 Your 7-day action plan — 7 min: the plan and QR code, five questions, grow together, one commitment, thank you\n\n' +
+      'FOR 30 MINUTES. Hide “Wide, not deep”, the tools table, “A pilot, run properly”, “Small hours add up” and two of the five case studies (keep the café and the trades firm: the room is mostly not office businesses).\n\n' +
       'THE BIG IDEA. Productivity from AI is not a purchase, it is a habit: one task, measured, checked, shared. The evidence says it makes people faster and better inside its frontier and confidently wrong outside it. Everything in the talk hangs off that.\n\n' +
       'THE TONE. Practical and honest. 400 owners have heard the hype. Concede the catch early (the counterweight, the jagged frontier, the cases where nobody checked) and the room trusts the tips. The human in the loop is not a disclaimer at the end: it is how every case study and every tip works.\n\n' +
       'SOURCES (also in each slide’s notes). ONS, “Artificial intelligence in UK businesses: 2023 to 2026” (20 July 2026, BICS wave 159, June 2026). British Chambers of Commerce with Atos and ISER/MiSoC, “Future of Work: AI in the Workplace” (19 March 2026; 668 firms, 94% SMEs). Noy and Zhang, “Experimental evidence on the productivity effects of generative artificial intelligence”, Science (2023). Brynjolfsson, Li and Raymond, “Generative AI at Work”, Quarterly Journal of Economics (2025). Dell’Acqua et al., “Navigating the Jagged Technological Frontier”, Harvard Business School working paper 24-013 (2023). Government Digital Service, Microsoft 365 Copilot cross-government experiment findings (2025). Dell Technologies, “AI in Action” UK SME research (2026; vendor). OpenAI with Enterprise Nation, UK SME survey (2026; vendor). DSIT, “What Works for AI Upskilling in the UK: supporting case studies” (10 June 2026). Humlum and Vestergaard, “Still Waters, Rapid Currents: Early Labor Market Transformation under Generative AI”, NBER working paper 33777 (revised March 2026; first issued May 2025 as “Large Language Models, Small Labor Market Effects”). METR, “Measuring the impact of early-2025 AI on experienced open-source developer productivity” (10 July 2025), and its February 2026 update. Niederhoffer et al., “AI-generated ‘workslop’ is destroying productivity”, Harvard Business Review (September 2025; Stanford and BetterUp Labs survey). BBC News: “How long will humans be needed for translation?” (John Laurenson, 14 October 2026); “Paramedics experiment with AI note-taking tool” (13 October 2026); “Make sure use of AI is safe, Guernsey data watchdog warns” (12 October 2026). Moffatt v. Air Canada, BC Civil Resolution Tribunal (February 2024). Associated Press reporting on Deloitte and the Australian Department of Employment and Workplace Relations (October 2025). Ayinde v London Borough of Haringey and Al-Haroun v Qatar National Bank [2025] EWHC 1383 (Admin), 6 June 2025. ICO, guidance on AI and data protection. NCSC, Cyber Essentials.\n\n' +
@@ -73,7 +82,22 @@ const slides = [
     type: 'title',
     title: 'The Power of AI',
     subtitle: 'Practical case studies and proven tips for productivity',
-    notes: 'TITLE · up as the room settles. Working Smarter, Growing Together: Productivity, AI and the Future of Local SMEs, facilitated by Central District Alliance with Metro Bank, LabTech, UK Black Tech, and Camden and Islington councils.\n\nIntroduce yourself in one line: [your name, your role]. Thank CDA and the partners by name.'
+    notes: 'TITLE · up as the room settles. Working Smarter, Growing Together: Productivity, AI and the Future of Local SMEs, facilitated by Central District Alliance with Metro Bank, LabTech, UK Black Tech, and Camden and Islington councils.\n\nThank CDA and the partners by name, then the next slide introduces you.'
+  },
+  {
+    type: 'split',
+    title: 'Mark Martin MBE CITP',
+    bullets: [
+      'AI tools for SMEs',
+      'Productivity improvements',
+      'Streamlining business processes',
+      'Identifying growth opportunities',
+      'Practical implementation'
+    ],
+    image: 'assets/lesson/ipdv/mark-martin-portrait.jpg',
+    imageSide: 'left',
+    imageAlt: 'Mark Martin',
+    notes: 'INTRO · 30 SECONDS. One line about who you are and why you care about small firms, then the promise: the five things on the slide, all practical, and everyone leaves with a 7-day action plan they fill in during the session.'
   },
   {
     type: 'statement',
@@ -374,10 +398,11 @@ const slides = [
       'A decision date: keep it or drop it in November.'
     ],
     progressive: true, buildMode: 'dim',
-    notes: '06 · 1 MINUTE. From the BBC, “Paramedics experiment with AI note-taking tool” (13 October 2026). The North East Ambulance Service is running an eight-week trial with 38 staff of ambient voice technology on iPads that records, transcribes and summarises patient conversations. Every note is reviewed and edited by a clinician before it goes into the record. Its digital clinical lead says the trial is to learn how the technology can be used “safely and effectively”.\n\nThe point for a small business: this is the shape of a good pilot at any size. One task, a human check, a question, a date. The next slide is the same thing for your business.'
+    notes: '06 · 1 MINUTE. From the BBC, “Paramedics experiment with AI note-taking tool” (13 October 2026). The North East Ambulance Service is running an eight-week trial with 38 staff of ambient voice technology on iPads that records, transcribes and summarises patient conversations. Every note is reviewed and edited by a clinician before it goes into the record. Its digital clinical lead says the trial is to learn how the technology can be used “safely and effectively”.\n\nThe point for a small business: this is the shape of a good pilot at any size. One task, a human check, a question, a date. The action plan in a moment is the same thing for your business.'
   },
   {
     type: 'journey',
+    hidden: true,
     title: 'Your first 30 days',
     subtitle: 'One task, measured',
     bullets: [
@@ -387,7 +412,7 @@ const slides = [
       card('Week 4 · Measure', 'Time it again, including the checking. Keep it, fix it, or drop it.')
     ],
     progressive: true,
-    notes: '06 · 1 MINUTE. The firms that get value treat it as an experiment, not a purchase. The before-and-after timing is the step everyone skips and the one that turns a feeling into a decision: the METR developers felt 20% faster and were 19% slower. Count the checking time too, or the saving is imaginary. If it does not save time after a month, drop it and pick another task: that is a result too.'
+    notes: 'BACKUP · HIDDEN. The 7-day action plan replaces this in the talk; show it if someone asks what happens after the first week.\n\nThe firms that get value treat it as an experiment, not a purchase. The before-and-after timing is the step everyone skips and the one that turns a feeling into a decision: the METR developers felt 20% faster and were 19% slower. Count the checking time too, or the saving is imaginary. If it does not save time after a month, drop it and pick another task: that is a result too.'
   },
   {
     type: 'keyfact',
@@ -403,6 +428,82 @@ const slides = [
     notes: '06 · 1 MINUTE. 1 hour × 10 people × 52 weeks = 520 hours; at 37.5 hours a week, about 14 weeks.\n\nThe survey range, said as the vendors’: Dell Technologies’ “AI in Action” research (2026, 2,013 UK SME decision-makers) puts the average at about 2.5 hours per employee a week, and six or more for the 7% it calls front-runners. OpenAI’s UK SME survey with Enterprise Nation (2026) puts it at 5.2 hours a week for decision-makers using AI. Both sell AI, so the slide claims one hour.\n\nLand the question: the value is not the hours, it is what you do with them. More customers, better work, or home on time.'
   },
   {
+    type: 'statement',
+    body: 'Technology alone will not solve every challenge, and finance alone will not fix inefficient processes.',
+    subtitle: 'Success comes from combining the right tools, systems and support',
+    notes: 'THE KEY MESSAGE · 30 SECONDS. Say it slowly; it is the bridge into the action plan. This room has a bank, tech partners and councils in it for a reason: the fix for most small firms is the right tool, a better process and the right support together, not any one of them alone.'
+  },
+  {
+    type: 'journey',
+    title: 'Your 7-day SME action plan',
+    subtitle: 'Five questions · fill it in now',
+    bullets: [
+      card('The problem', 'One key business challenge.'),
+      card('The action', 'One thing you will do about it.'),
+      card('The support', 'What help you need.'),
+      card('The timescale', '48 hours, 7 days or 30 days.'),
+      card('The measure', 'How you will know it worked.')
+    ],
+    progressive: true,
+    notes: 'ACTION PLAN · 6 MINUTES IN ALL. Five questions, about a minute each, one slide each. Everyone answers on their phone (next slide) or on paper.'
+  },
+  {
+    type: 'image',
+    title: 'Scan to fill in your plan',
+    image: PLAN_POSTER,
+    imageFit: 'cover',
+    imageAlt: `Scan to fill in your 7-day SME action plan: a QR code for ${PLAN_SHORT}. Nothing is sent anywhere; copy your answers to take away.`,
+    design: { capStyle: 'none' },
+    notes: `SCAN · 30 SECONDS. Leave it up long enough for the room to scan, then keep it handy: go back to it before the close. The page is ${PLAN_SHORT}. It works on any phone, needs no sign-in and keeps nothing on a server; the answers stay on the phone (kept as a draft if the screen locks) and a button copies them to take away, or shares or saves them as a file. Paper works just as well.\n\nBefore the day: the page is live only once the deck is pushed to deploy-render. Scan the code on your own phone to check.`
+  },
+  {
+    type: 'keyfact',
+    title: 'Question 1',
+    subtitle: 'The main problem I want to solve',
+    body: 'Where does your business lose time, money or opportunities?',
+    bullets: ['One problem. Small and specific beats big and vague.'],
+    notes: 'Q1 · 1 MINUTE. Examples if people are stuck: chasing late invoices, writing quotes, answering the same customer questions, finding new customers, month-end bookkeeping. Push for specific: “invoicing takes me four hours every Friday” beats “admin”.'
+  },
+  {
+    type: 'keyfact',
+    title: 'Question 2',
+    subtitle: 'One action I will take',
+    body: 'One step you can take yourself, starting this week',
+    bullets: ['Try one tool on one task, change one process, or make one call.'],
+    notes: 'Q2 · 1 MINUTE. It does not have to be AI. Examples: draft invoice reminders with the prompt recipe; turn on the AI feature in the accounting software you already pay for; write the one-page AI policy; book a call with the bank about cash flow. One action, not six.'
+  },
+  {
+    type: 'cards',
+    title: 'Question 3 · The support I need',
+    subtitle: 'Tick any that apply',
+    bullets: [
+      card('Finance', 'Banking, cash flow or finance advice.'),
+      card('Technology', 'Technology, automation or AI support.'),
+      card('Customers', 'Corporate contracts or new customers.'),
+      card('Skills', 'Skills, mentoring or business advice.')
+    ],
+    notes: 'Q3 · 1 MINUTE. This is the key message made practical: tools, systems and support. Point people to the partners in the room for each kind of support, once each partner has confirmed what they offer (add it to these notes before the day; do not promise an offer that is not confirmed).'
+  },
+  {
+    type: 'cards',
+    title: 'Question 4 · When will I take action?',
+    subtitle: 'Pick one',
+    bullets: [
+      card('Within 48 hours', 'Small enough to start before the week gets busy.'),
+      card('Within 7 days', 'The plan’s default: one week to try it.'),
+      card('Within 30 days', 'For a bigger change, with a first step this week.')
+    ],
+    notes: 'Q4 · 30 SECONDS. Encourage 48 hours or 7 days. A plan with no date is a wish.'
+  },
+  {
+    type: 'keyfact',
+    title: 'Question 5',
+    subtitle: 'How will I know it worked?',
+    body: 'For example: two hours a week less on invoicing',
+    bullets: ['A number you can check: hours, pounds, customers, days. Time it now, then again in a week.'],
+    notes: 'Q5 · 1 MINUTE. The step that turns a feeling into a decision. Remember the developers who felt 20% faster and were 19% slower: measure it, and count the checking time too. If it did not work, that is a result as well: drop it and try the next problem.'
+  },
+  {
     type: 'cards',
     title: 'Grow together',
     subtitle: 'You don’t have to work this out alone',
@@ -416,18 +517,23 @@ const slides = [
     notes: '06 · 1 MINUTE. The event’s promise is collaboration, so make it practical: the networking after this talk is the first prompt swap.\n\nBefore the day, confirm with each partner what support they want named here (programmes, workshops, funding, digital skills) and add it to these notes, so you can point people to the right table. Do not promise an offer a partner has not confirmed.\n\nThe last card: in the customer support study novices gained most, so train everyone. And keep growing people who know the work: the human check is only as good as the person doing it, and the Danish study found firms adding AI-checking work, not removing people.'
   },
   {
-    type: 'keyfact',
-    title: 'Your one thing',
-    subtitle: 'Write it down now · 30 seconds',
-    body: 'The one task I’ll try with AI on Monday, and how long it takes now',
-    notes: 'CLOSE · 1 MINUTE. Ask everyone to write it on their phone or the back of their badge, then tell their neighbour. Saying it to someone else is what makes it happen.'
+    type: 'statement',
+    body: 'Don’t leave with six new ideas and no action. Leave with one commitment.',
+    subtitle: 'Copy your answers before you go',
+    design: { words: 'rise', wordStagger: 'wave' },
+    notes: 'CLOSE · 30 SECONDS. Ask everyone to tell their neighbour their answer to question 2 and question 4: the action and the date. Saying it to someone else is what makes it happen.'
   },
   {
-    type: 'statement',
-    body: 'Working smarter is a habit, not a purchase.',
-    subtitle: 'Working Smarter, Growing Together',
-    design: { words: 'rise', wordStagger: 'wave' },
-    notes: 'CLOSE. One task. Measured. Checked by a person. Shared. Thank CDA and the partners again, and hand over to the networking: "Go and swap a prompt."'
+    type: 'keyfact',
+    title: 'Thank you',
+    subtitle: 'The biggest takeaway',
+    body: 'Productivity doesn’t always need a big investment',
+    bullets: [
+      'It starts with finding where your business loses time, money or opportunities, and taking one practical step.',
+      'Speak to our team after the session about the support available to your business.'
+    ],
+    progressive: true, buildMode: 'dim',
+    notes: 'CLOSE · 1 MINUTE. Say it: "We aim to help local businesses not only survive, but become more productive, resilient and ready to grow." Thank CDA and the partners again, say where the team will be standing, and hand over to the networking: "Go and swap a prompt, and find the support you ticked."'
   },
   {
     type: 'content',
@@ -446,9 +552,37 @@ const slides = [
 /* ---------------------------------------------------------------- the build */
 const KEY = 'ai-sme-productivity';
 const TITLE = 'The Power of AI · practical case studies and proven tips for productivity';
-const BLURB = 'A 35-minute keynote (with a 25-minute cut) for about 400 London SMEs at Working Smarter, Growing Together: where small firms are with AI, what controlled studies say it does to productivity and the honest counterweight, five case studies (café, accountancy, trades, online shop, marketing agency), seven proven tips, where the human stays in the loop (with three cases where nobody checked), a data traffic light, a 30-day plan and one commitment each.';
+const BLURB = 'A 40-minute session (with a 30-minute cut) by Mark Martin MBE CITP for about 400 London SMEs at Working Smarter, Growing Together: where small firms are with AI, what controlled studies say it does to productivity and the honest counterweight, five case studies (café, accountancy, trades, online shop, marketing agency), seven proven tips, where the human stays in the loop (with three cases where nobody checked), a data traffic light, and a 7-day SME action plan each person fills in on their phone and takes away.';
 const THEME = 'ukbt';
 const LOGO = 'assets/brand/ukbt-wordmark.png';
+
+require(path.join(ROOT, 'js/qr.js'));
+fs.mkdirSync(path.join(ROOT, path.dirname(PLAN_QR)), { recursive: true });
+fs.writeFileSync(path.join(ROOT, PLAN_QR), SF.qrSvg(PLAN_URL, { dark: '#264258', title: PLAN_SHORT }) + '\n');
+/* The scan slide: the code large on a white card, the address under it, on
+   the theme's navy, drawn as one picture so nothing else lands on the code. */
+{
+  const code = SF.qr(PLAN_URL, {});
+  const quiet = 4, span = code.size + quiet * 2, side = 440, unit = side / span;
+  const x0 = 760, y0 = 110;
+  let d = '';
+  for (let y = 0; y < code.size; y++) for (let x = 0; x < code.size; x++) {
+    if (code.modules[y][x]) d += `M${(x0 + (x + quiet) * unit).toFixed(2)} ${(y0 + (y + quiet) * unit).toFixed(2)}h${unit.toFixed(2)}v${unit.toFixed(2)}h-${unit.toFixed(2)}z`;
+  }
+  const font = `font-family="'Uncut Sans', 'Helvetica Neue', Arial, sans-serif"`;
+  fs.writeFileSync(path.join(ROOT, PLAN_POSTER), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img">
+<title>Scan to fill in your 7-day SME action plan: ${PLAN_SHORT}</title>
+<rect width="1280" height="720" fill="#264258"/>
+<path d="M0 720 L230 470 L0 220 Z" fill="#00c57f" opacity=".14"/>
+<text x="96" y="214" ${font} font-size="26" letter-spacing="3" fill="#00c57f">YOUR 7-DAY SME ACTION PLAN</text>
+<text ${font} font-size="76" font-weight="600" fill="#ffffff"><tspan x="92" y="306">Scan to fill</tspan><tspan x="92" y="390">in your plan</tspan></text>
+<text ${font} font-size="28" fill="#d7e2ea"><tspan x="96" y="462">Works on any phone. No sign-in.</tspan><tspan x="96" y="502">Nothing is sent anywhere.</tspan><tspan x="96" y="542">Copy your answers to take away.</tspan></text>
+<rect x="${x0 - 20}" y="${y0 - 20}" width="${side + 40}" height="${side + 40}" rx="28" fill="#ffffff"/>
+<path fill="#264258" shape-rendering="crispEdges" d="${d}"/>
+<text x="${x0 + side / 2}" y="${y0 + side + 72}" text-anchor="middle" ${font} font-size="25" fill="#ffffff">${PLAN_SHORT}</text>
+</svg>
+`);
+}
 
 const deck = SF.normalizeDeck({
   id: 'ai-sme-productivity-2026',
@@ -472,6 +606,7 @@ slides.forEach((source, index) => {
   const where = `slide ${index} (${source.type})`;
   if (output.type !== source.type || output.notes !== source.notes) throw new Error(`${where} changed`);
   if ((source.bullets || []).length !== output.bullets.length) throw new Error(`${where} lost content`);
+  if (source.image && !fs.existsSync(path.join(ROOT, source.image))) throw new Error(`${where}: missing ${source.image}`);
 });
 
 const target = path.join(ROOT, 'output', 'Power_of_AI_SMEs.sfdeck.json');
@@ -481,7 +616,7 @@ console.log(`${path.relative(ROOT, target)} (${deck.slides.length} slides, ${dec
 
 /* Built in: the app's lesson list and the Library's UK Black Tech folder. */
 const lesson = {
-  key: KEY, title: TITLE, blurb: BLURB, icon: '❯', kind: 'lecture', minutes: 35,
+  key: KEY, title: TITLE, blurb: BLURB, icon: '❯', kind: 'lecture', minutes: 40,
   theme: THEME, libraryGroup: 'ukbt', org: 'UK Black Tech',
   logo: LOGO, logoOn: 'all', logoSize: 'small', logoReverse: 'never',
   showSlideNumbers: true, games: [], slides

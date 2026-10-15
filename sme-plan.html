@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>7-Day SME Action Plan</title>
+<meta name="description" content="Working Smarter, Growing Together: write your 7-day SME action plan and copy it to take away.">
+<meta name="theme-color" content="#264258">
+<!--
+  The take-away page for "The Power of AI" (tools/build-ai-sme-productivity.js),
+  reached from the QR code on the deck's action plan slide.
+
+  Nothing leaves the phone: no server call, no analytics. The answers are kept
+  in this browser's localStorage as a draft so a locked screen or a reload does
+  not lose them, and the person takes them away by copying, sharing or saving a
+  text file. Storage can be blocked (private windows), so every read and write
+  is guarded and the page works without it.
+-->
+<style>
+:root {
+  --ground: #f5f7f8;
+  --card: #ffffff;
+  --ink: #142433;
+  --muted: #536371;
+  --line: #d5dde3;
+  --navy: #264258;
+  --green: #00a86b;
+  --green-ink: #006b45;
+  --focus: #0072b2;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0f1c27;
+    --card: #182b3a;
+    --ink: #eef3f6;
+    --muted: #a9b8c4;
+    --line: #2d4558;
+    --navy: #0b1620;
+    --green: #00c57f;
+    --green-ink: #6ee7b7;
+    --focus: #7cc4ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0f1c27; --card: #182b3a; --ink: #eef3f6; --muted: #a9b8c4; --line: #2d4558;
+  --navy: #0b1620; --green: #00c57f; --green-ink: #6ee7b7; --focus: #7cc4ff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+header {
+  background: var(--navy);
+  color: #fff;
+  padding: 28px 16px 24px;
+}
+header .wrap, main { max-width: 640px; margin: 0 auto; }
+.eyebrow { margin: 0 0 6px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #8be3bf; }
+h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.15; }
+header p { margin: 0; color: #d7e2ea; }
+main { padding: 16px 16px 48px; }
+.step {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 16px;
+  margin: 0 0 14px;
+}
+.step h2 { margin: 0 0 4px; font-size: 18px; display: flex; gap: 10px; align-items: baseline; }
+.num {
+  flex: none; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--green); color: #fff; font-size: 15px;
+  display: inline-grid; place-items: center; transform: translateY(-2px);
+}
+.hint { margin: 0 0 10px; color: var(--muted); font-size: 15px; }
+textarea, input[type="text"] {
+  width: 100%; font: inherit; color: var(--ink); background: var(--ground);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+textarea { min-height: 84px; resize: vertical; }
+fieldset { border: 0; margin: 0; padding: 0; }
+legend { padding: 0; }
+.choice {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px; margin: 0 0 8px; border: 1px solid var(--line); border-radius: 10px;
+  cursor: pointer;
+}
+.choice:has(input:checked) { border-color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
+.choice input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--green); flex: none; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.actions { position: sticky; bottom: 0; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--ground) 18px); }
+.actions button { width: 100%; }
+.more { display: flex; gap: 8px; margin: 4px 0 24px; }
+.more button { flex: 1; }
+button {
+  font: inherit; font-weight: 600; border-radius: 12px; padding: 14px 12px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+}
+button.primary { background: var(--green); border-color: var(--green); color: #fff; font-size: 18px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.primary { color: #062417; } }
+:root[data-theme="dark"] button.primary { color: #062417; }
+.status { min-height: 1.5em; margin: 6px 0 0; text-align: center; color: var(--green-ink); font-weight: 600; }
+.close { color: var(--muted); font-size: 15px; }
+.close strong { color: var(--ink); }
+.reset { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 8px 0; font-weight: 400; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Working Smarter, Growing Together</p>
+    <h1>Your 7-day SME action plan</h1>
+    <p>Complete it during the session, then copy your answers to take away. Nothing is sent anywhere: it stays on your phone.</p>
+  </div>
+</header>
+
+<main>
+  <form id="plan" autocomplete="off">
+    <section class="step">
+      <h2><span class="num">1</span><label for="problem">The main problem I want to solve</label></h2>
+      <p class="hint">Where does your business lose time, money or opportunities? One problem, small and specific.</p>
+      <textarea id="problem" name="problem" placeholder="e.g. Invoicing takes me four hours every Friday"></textarea>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">2</span><label for="action">One action I will take</label></h2>
+      <p class="hint">One step you can take yourself: try a tool, change a process, or make a call.</p>
+      <textarea id="action" name="action" placeholder="e.g. Use AI to draft my invoice reminders, and check each one before it goes"></textarea>
+    </section>
+
+    <section class="step">
+      <fieldset>
+        <legend><h2><span class="num">3</span>The support I need</h2></legend>
+        <p class="hint">Tick any that apply.</p>
+        <label class="choice"><input type="checkbox" name="support" value="Banking, cash flow, or finance advice"> Banking, cash flow, or finance advice</label>
+        <label class="choice"><input type="checkbox" name="support" value="Technology, automation, or AI support"> Technology, automation, or AI support</label>
+        <label class="choice"><input type="checkbox" name="support" value="Corporate contracts or new customers"> Corporate contracts or new customers</label>
+        <label class="choice"><input type="checkbox" name="support" value="Skills, mentoring, or business advice"> Skills, mentoring, or business advice</label>
+      </fieldset>
+    </section>
+
+    <section class="step">
+      <fieldset>
+        <legend><h2><span class="num">4</span>When will I take action?</h2></legend>
+        <label class="choice"><input type="radio" name="when" value="Within 48 hours"> Within 48 hours</label>
+        <label class="choice"><input type="radio" name="when" value="Within 7 days"> Within 7 days</label>
+        <label class="choice"><input type="radio" name="when" value="Within 30 days"> Within 30 days</label>
+      </fieldset>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">5</span><label for="measure">How will I know it worked?</label></h2>
+      <p class="hint">A number you can check: hours, pounds, customers or days. Time it now, then again in a week.</p>
+      <textarea id="measure" name="measure" placeholder="e.g. Reducing time spent on invoicing by two hours per week"></textarea>
+    </section>
+
+    <div class="actions">
+      <button type="button" class="primary" id="copy">Copy my answers</button>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </div>
+    <div class="more">
+      <button type="button" id="share">Share</button>
+      <button type="button" id="save">Save as file</button>
+    </div>
+  </form>
+
+  <section class="close">
+    <p><strong>Don’t leave with six new ideas and no action. Leave with one commitment.</strong></p>
+    <p>Improving productivity doesn’t always need a big investment. It starts with finding where your business loses time, money or opportunities, and taking one practical step.</p>
+    <p>Please speak to the team after the session about the support available to your business.</p>
+    <button type="button" class="reset" id="clear">Clear my answers from this phone</button>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'sme-plan-2026';
+  var form = document.getElementById('plan');
+  var status = document.getElementById('status');
+  /* By id, not form.action: a form's own action property hides a field named action. */
+  var field = function (id) { return document.getElementById(id); };
+
+  function read() {
+    var support = [].slice.call(form.querySelectorAll('input[name="support"]:checked')).map(function (i) { return i.value; });
+    var when = form.querySelector('input[name="when"]:checked');
+    return {
+      problem: field('problem').value.trim(),
+      action: field('action').value.trim(),
+      support: support,
+      when: when ? when.value : '',
+      measure: field('measure').value.trim()
+    };
+  }
+
+  function write(data) {
+    if (!data) return;
+    field('problem').value = data.problem || '';
+    field('action').value = data.action || '';
+    field('measure').value = data.measure || '';
+    [].forEach.call(form.querySelectorAll('input[name="support"]'), function (i) { i.checked = (data.support || []).indexOf(i.value) !== -1; });
+    [].forEach.call(form.querySelectorAll('input[name="when"]'), function (i) { i.checked = i.value === data.when; });
+  }
+
+  function text() {
+    var d = read();
+    var blank = '(not filled in)';
+    return [
+      'MY 7-DAY SME ACTION PLAN',
+      'Working Smarter, Growing Together',
+      '',
+      '1. The main problem I want to solve',
+      d.problem || blank,
+      '',
+      '2. One action I will take',
+      d.action || blank,
+      '',
+      '3. The support I need',
+      d.support.length ? d.support.map(function (s) { return '- ' + s; }).join('\n') : blank,
+      '',
+      '4. When I will take action',
+      d.when || blank,
+      '',
+      '5. How I will know it worked',
+      d.measure || blank,
+      '',
+      'One commitment, not six ideas.'
+    ].join('\n');
+  }
+
+  function say(message) {
+    status.textContent = message;
+    clearTimeout(say.t);
+    say.t = setTimeout(function () { status.textContent = ''; }, 4000);
+  }
+
+  try { write(JSON.parse(localStorage.getItem(KEY) || 'null')); } catch (e) { /* no storage: start empty */ }
+  form.addEventListener('input', function () {
+    try { localStorage.setItem(KEY, JSON.stringify(read())); } catch (e) { /* no storage: nothing to keep */ }
+  });
+
+  function fallbackCopy(value) {
+    var area = document.createElement('textarea');
+    area.value = value;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(area);
+    return ok;
+  }
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var value = text();
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(value).then(function () {
+        say('Copied. Paste it into your notes or an email to yourself.');
+      }, function () {
+        say(fallbackCopy(value) ? 'Copied.' : 'Could not copy. Try Share or Save as file.');
+      });
+    } else {
+      say(fallbackCopy(value) ? 'Copied.' : 'Could not copy. Try Share or Save as file.');
+    }
+  });
+
+  var shareButton = document.getElementById('share');
+  if (!navigator.share) shareButton.hidden = true;
+  shareButton.addEventListener('click', function () {
+    navigator.share({ title: 'My 7-day SME action plan', text: text() }).catch(function () { /* closed the sheet */ });
+  });
+
+  document.getElementById('save').addEventListener('click', function () {
+    var blob = new Blob([text() + '\n'], { type: 'text/plain;charset=utf-8' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'my-7-day-action-plan.txt';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(function () { URL.revokeObjectURL(link.href); link.remove(); }, 1000);
+    say('Saved to your downloads.');
+  });
+
+  document.getElementById('clear').addEventListener('click', function () {
+    if (!confirm('Clear your answers from this phone?')) return;
+    form.reset();
+    try { localStorage.removeItem(KEY); } catch (e) { /* nothing stored */ }
+    say('Cleared.');
+  });
+})();
+</script>
+</body>
+</html>
