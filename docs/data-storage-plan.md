@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 5 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment and the Auth redirect URLs wait on the owner.
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 5 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment is set (15 October), so the live site saves online.
 
 ## 1. The problem
 
@@ -128,6 +128,11 @@ Each step is its own commit and works on its own.
    - **Size:** pictures are still inside lessons until step 5, so a document over 12 MB stays in this browser only, and the dialog names it.
    - The studio no longer re-writes a lesson that has not changed (`persistDeck` in `lab/src/app/embed.ts`), so its modified time is when it last changed.
    - Checked by `tools/smoke/cloud-sync.mjs` (in the CI set): two browser profiles as the same teacher, against a stand-in for the documents table.
+   - **Built-in lessons stay out** (`js/builtins.js`, 15 October). On the hosted site a new visitor's Library starts empty. The built-in lessons are offered at its foot as templates, and **Use** files a copy. Localhost still fills the Library with them, as before.
+     - A built-in's copy nobody has changed is not saved to the account: a Library pack, a shipped Lesson-studio deck, or their games. The modified time each copy had when it was filed is remembered per browser. The copy joins the account the first time that changes.
+     - A copy already in an account stays in step as before.
+     - The Library footer says when it is saved to the account, and when the last save failed.
+     - Checked by `tests/builtins.test.js` and `tools/smoke/hosted-library.mjs` (in the CI set).
 5. **Pictures to the bucket. Built 14 October** (in `js/sync.js`).
    - This browser's copy keeps its pictures inside the lesson, so the editor, working offline, Export and Share are unchanged: a file you download is complete on its own.
    - The online copy does not. On upload, each embedded picture, video or sound over 2 KB is stored once in the private `media` bucket, at `<user id>/<sha256>.<ext>`, with a row in `assets`. The online lesson holds `sf-asset:<sha256>.<ext>` in its place. A picture used in many lessons is stored once.
@@ -155,6 +160,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 15 October 2026: the hosted Library starts empty, with the built-in lessons as templates, and a built-in's unchanged copy is kept out of the account (`js/builtins.js`). The live site was given `SUPABASE_URL` and `SUPABASE_ANON_KEY`, so saving online is on there. The 67 documents already in the owner's account are mostly built-in copies, uploaded before this rule; they are left as they are.
 - 14 October 2026, evening: step 5 built, pictures in the bucket for the online copy (`js/sync.js`).
 - 14 October 2026, evening: sign-in changed from the email magic link to a work email and password; accounts are made in the Supabase dashboard.
 - 14 October 2026, later still: step 4 built, lessons and games synced to the teacher's account (`js/sync.js`).
