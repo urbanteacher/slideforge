@@ -461,3 +461,26 @@
 .theme-product .stat { background: #fff; border: 1px solid rgba(0,0,0,.06); border-radius: 22px; }
 .theme-product .stat-value { color: var(--s-fg); font-weight: 700; }
 .theme-product .compare-cell { background: #fff; border: 1px solid rgba(0,0,0,.06); border-radius: 16px; }
+
+/* ---- Studio 90 · riso ink (tools/build-football-studio.js) ----
+   Ink black, warm paper type, the acid ink as the accent and coral as the second,
+   Impact for headings: the deck's posters and its words are one print run. */
+.theme-studio90 {
+  --s-bg: #0e0f12;
+  --s-fg: #f1ede4;
+  --s-dim: #a9a69e;
+  --s-accent: #d7ff3a;
+  --s-accent-2: #ff4d3d;
+  --s-rule: rgba(241, 237, 228, .16);
+  --s-card: rgba(241, 237, 228, .07);
+  --s-scrim: rgba(0, 0, 0, .55);
+  --s-font: 'Avenir Next', Avenir, 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0e0f12;
+}
+.theme-studio90 h1, .theme-studio90 h2 {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-weight: 400;
+  letter-spacing: .005em;
+  text-transform: uppercase;
+}
+.theme-studio90 .accent-bar { height: 8px; width: 140px; border-radius: 0; background: var(--s-accent-2); }

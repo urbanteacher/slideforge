@@ -127,6 +127,11 @@
   "hash": "70c65bb10b95fe77",
   "carried": 16
  },
+ "nul-ai-football-studio": {
+  "file": "assets/lab-lessons/nul-ai-football-studio.lesson.json",
+  "hash": "cb978fc2613cce2a",
+  "carried": 16
+ },
  "nul-lab1": {
   "file": "assets/lab-lessons/nul-lab1.lesson.json",
   "hash": "3414b7204e428bf1",

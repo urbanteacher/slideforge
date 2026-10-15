@@ -1,0 +1,1 @@
+import{t as e}from"./viewer-BSUYGRE-.js";e();

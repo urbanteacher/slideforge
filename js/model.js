@@ -546,6 +546,10 @@
     product: { name: "Product · Keynote minimal", swatch: "#f5f5f7", art: { "className": "pd-art", "html": '<div class="pd-bloom"></div><div class="pd-ring"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
     editorial: { name: "Editorial · Paper", swatch: "#f3efe6", art: { "className": "ed-art", "html": '<div class="ed-rules"></div><div class="ed-quote">”</div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
     cinematic: { name: "Cinematic · Dark pitch", swatch: "#0a0b0f", ground: "dark", art: { "className": "cine-art", "html": '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div><div class="cine-streak"></div><div class="cine-vignette"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    /* Studio 90 (tools/build-football-studio.js): a riso print studio on ink black. Warm paper
+       type, acid, coral and cobalt inks, Impact headlines. Its posters carry the art, so the theme
+       draws none. The Lesson studio's palette is 'studio90' in lab/src/theme/palettes.ts. */
+    studio90: { name: "Studio 90 · Riso ink", swatch: "#d7ff3a", ground: "dark", art: null, defaults: {} },
     brutal: { name: "Brutal · Mono", swatch: "#111111", ground: "dark", art: { "className": "brut-art", "html": '<div class="brut-grid"></div><div class="brut-marks"></div>', "layouts": ["title", "section"] }, defaults: {} },
     /* Nodes (the-teaching-model.vercel.app): ink on cool grey, white cards, and the U A C X J backbone
        colours. css/nodes.css; the Lesson studio's palette is 'nodes' in lab/src/theme/palettes.ts. */

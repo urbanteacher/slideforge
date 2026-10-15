@@ -178,6 +178,26 @@ const CAMPAIGNS: PalettePreset[] = [
     display: 'Impact', displayWeight: '400', body: 'Inter',
   },
   {
+    // Studio 90 (css/variant-themes.css .theme-studio90): a riso print studio on ink black, for the AI and
+    // football studio session. Every ground is dark, so the posters and the words are one print run: ink for
+    // the working slides, a lifted ink for the quiet ones, acid for the loud ones (ink on it 15:1), with coral
+    // and cobalt as further sets. Impact for headlines, as on the posters.
+    id: 'studio90', name: 'Studio 90', source: 'tools/football-studio/art.js · css/variant-themes.css',
+    light: '#f1ede4', dark: '#0e0f12', loud: '#d7ff3a', loudInk: '#0e0f12', accent2: '#ff4d3d',
+    working: { ground: '#0e0f12', ink: '#f1ede4' },
+    quiet: { ground: '#191b21', ink: '#f1ede4' },
+    sets: [
+      { loud: '#d7ff3a', deep: '#0e0f12', ink: '#0e0f12' }, { loud: '#ff4d3d', deep: '#0e0f12', ink: '#0e0f12' },
+      { loud: '#3a5bff', deep: '#0e0f12', ink: '#ffffff' },
+    ],
+    named: [
+      { name: 'ink', value: '#0e0f12' }, { name: 'panel', value: '#191b21' }, { name: 'paper', value: '#f1ede4' },
+      { name: 'acid', value: '#d7ff3a' }, { name: 'coral', value: '#ff4d3d' }, { name: 'cobalt', value: '#3a5bff' },
+      { name: 'mute', value: '#8b8f99' },
+    ],
+    display: 'Impact', displayWeight: '400', body: 'Inter',
+  },
+  {
     // css/aiad27.css: cream, ink and five brights with their deeps, set in Uncut Sans.
     id: 'aiad27', name: 'AI Awareness Day 2027', source: 'This repository · css/aiad27.css',
     light: '#f6f4ed', dark: '#231f20', loud: '#00bedd', loudInk: '#231f20', accent2: '#006a7d',
