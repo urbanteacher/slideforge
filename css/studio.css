@@ -508,3 +508,4 @@ html[data-ws="game"] .topbar .header-row2>.header-tools,html[data-ws="plan"] .to
 /* The Present menu keeps its own shape: a label over a hint, from the left. */
 .header-row2 .present-menu>.btn{height:auto;display:flex;flex-direction:column;align-items:flex-start;padding:8px 10px;font-weight:500}
 .header-row2 .present-sizes .btn{height:26px;padding:0 10px}
+.local-dot.is-synced{background:var(--ui-live)}

@@ -134,6 +134,6 @@
   /* Once, as the page starts, before the studios draw. */
   SF.startLessons = function () {
     /* The Library's packs, before anything asks whether this is a first visit. */
-    if (SF.seedLibrary) SF.seedLibrary();
+    if (SF.seedLibrary && (!SF.BuiltIns || SF.BuiltIns.seeding())) SF.seedLibrary();
   };
 })(window);

@@ -81,11 +81,13 @@
     return fetch(entry.file, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); });
   }
   /* Like a built-in lesson (js/lessons.js seedLibrary), each shipped deck has a card in every
-     browser's Library under its folder, from the start: unless that browser deleted it, which
+     browser's Library under its folder, from the start (on this machine; js/builtins.js): unless that browser deleted it, which
      the Library remembers by the card's key. Opening the card the first time opens the deck as
      built (open, below); from then on it is that browser's own copy. */
   function seedShipped() {
     if (!SF.Store || !SF.Store.save || !SF.LAB_DECKS) return;
+    /* The hosted site's Library starts empty: the shipped decks are its templates instead (js/builtins.js). */
+    if (SF.BuiltIns && !SF.BuiltIns.seeding()) return;
     var dismissed = [];
     try { dismissed = JSON.parse(localStorage.getItem('slideforge.dismissedSeeds.v1') || '[]'); } catch (e) {}
     Object.keys(SF.LAB_DECKS).forEach(function (key) {
@@ -267,6 +269,7 @@
       var ship = d && d.labCard && !d.labSaved && !saved.some(function (x) { return x.id === d.id; }) ? shippedEntry(d.id) : null;
       if (ship) { shippedDeck(ship).then(function (deck) { open(deck); }, function () { SF.toast('That lesson could not be loaded.'); }); return; }
       var fromCard = d && !d.labSaved && isCard(d.id);
+      var before = saved.map(function (x) { return x.id; });
       /* A saved lab lesson opens with its SlideForge original to hand, so a copy
          made before the converter kept feedback and timers can take them, once. */
       var row = d && saved.filter(function (x) { return x.id === d.id; })[0];
@@ -282,6 +285,15 @@
         /* Known at once, not after the list is read back: the Library may be
            opened the next moment, and must already show this lesson once. */
         var now = a.getDeck();
+        /* A built-in's copy, just filed: noted as built, so it joins the teacher's account only once they change it
+           (js/builtins.js). Read back once written, for the modified time it was filed with. */
+        if (before.indexOf(now.id) < 0 && SF.BuiltIns && SF.BuiltIns.isTemplateLesson(now)) {
+          var newId = now.id;
+          a.flush().then(function () { return a.listSaved(); }).then(function (/** @type {any[]} */ rows) {
+            var row = (rows || []).filter(function (x) { return x.id === newId; })[0];
+            if (row) SF.BuiltIns.note('lesson:' + newId, Number(row.modified) || 0);
+          }, function () {});
+        }
         saved = [{ id: now.id, title: now.title, sourceId: now.sourceId, libraryGroup: now.libraryGroup, slides: now.slides.length, modified: Date.now() }]
           .concat(saved.filter(function (x) { return x.id !== now.id; }));
         refreshSaved();
@@ -380,7 +392,7 @@
      modified). A new build is stamped with its key so the next follow finds it. */
   function askedLesson(key) {
     if (!key || !SF.Studio || !SF.Studio.makeLesson || !SF.Store) return null;
-    if (SF.seedLibrary) SF.seedLibrary();
+    if (SF.seedLibrary && (!SF.BuiltIns || SF.BuiltIns.seeding())) SF.seedLibrary();
     var mine = SF.Store.list().filter(function (d) { return d && d.sourceKey === key; })[0] || null;
     var d = mine || SF.Studio.makeLesson(key);
     if (!d) return null;
@@ -883,6 +895,14 @@
     },
     /* For the Library, the demo and File → reload (js/studio.js, js/shell.js). */
     openLesson: openLesson, openKey: openKey,
+    /** Open a deck SlideForge ships (js/lab-decks.js) as built, by its key: the Library's templates. */
+    openShipped: function (/** @type {string} */ key) {
+      var e = enabled() ? shippedEntry(key) : null;
+      if (!e) return false;
+      if (SF.restoreLibrarySeed) SF.restoreLibrarySeed(key);
+      shippedDeck(e).then(function (deck) { open(deck); }, function () { SF.toast('That lesson could not be loaded.'); });
+      return true;
+    },
     /** The lesson on screen as a PowerPoint file, every slide a picture with its notes (File → Export). */
     /** A lesson converted for the copies the app ships, with its figures' stills and its games: not
         shown, not saved (tools/build-lab-lessons.mjs). */

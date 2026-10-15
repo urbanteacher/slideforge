@@ -126,8 +126,9 @@ test('a blank first visit, with the Library one click from the canvas', () => {
   const lab = fs.readFileSync(path.join(ROOT, 'js', 'lab-engine.js'), 'utf8');
   const studio = fs.readFileSync(path.join(ROOT, 'js', 'studio.js'), 'utf8');
 
-  /* The Library's packs are seeded as the page starts. */
-  assert.match(runtime, /if \(SF\.seedLibrary\) SF\.seedLibrary\(\);/);
+  /* The Library's packs are seeded as the page starts, on this machine only: the hosted site's Library starts
+     empty, with the built-ins as its templates (js/builtins.js). */
+  assert.match(runtime, /if \(SF\.seedLibrary && \(!SF\.BuiltIns \|\| SF\.BuiltIns\.seeding\(\)\)\) SF\.seedLibrary\(\);/);
   /* A first visit opens the lab's blank lesson, not somebody else's lecture:
      only a ?lesson= link builds a lesson as the page starts. */
   assert.ok(!/makeLesson\('ipdv-intro'\)/.test(lab + runtime), 'the cold start must not land in somebody else’s lecture');

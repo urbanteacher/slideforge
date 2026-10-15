@@ -46,7 +46,7 @@
     if (!modal || !body) return;
     var dlg = modal;
     var pane = body;
-    if (SF.seedLibrary) SF.seedLibrary();
+    if (SF.seedLibrary && (!SF.BuiltIns || SF.BuiltIns.seeding())) SF.seedLibrary();
     var picked = Object.create(null);
     var searchQuery = '';
     var searchCaret = 0;
@@ -412,9 +412,14 @@
         pane.appendChild(box);
       });
 
+      var spare = SF.BuiltIns ? SF.BuiltIns.templates().filter(function (t) {
+        return !q || String(t.title).toLowerCase().indexOf(q) >= 0;
+      }) : [];
+      if (spare.length) pane.appendChild(templatesBox(spare, !all.length || !!q));
+
       if (!all.length) {
-        pane.appendChild(el('p', 'library-note', 'Nothing in the Library yet. Save a lesson or start from New.'));
-      } else if (!shown) {
+        pane.appendChild(el('p', 'library-note', 'Nothing in the Library yet. Start from New, or use one of the built-in lessons above.'));
+      } else if (!shown && !spare.length) {
         pane.appendChild(el('p', 'library-note', 'Nothing matches “' + searchQuery + '”.'));
       }
 
@@ -425,7 +430,67 @@
       }
     }
 
+    /* The built-in lessons this Library does not hold (js/builtins.js): on the hosted site, all of them. Using one
+       files a copy here, which is saved to the teacher's account only once they change it. */
+    /** @param {Array<{ key: string, title: string, group: string, shipped: boolean }>} list @param {boolean} startOpen */
+    function templatesBox(list, startOpen) {
+      var names = {};
+      folders().forEach(function (g) { names[g.id] = g.label; });
+      var box = document.createElement('details');
+      box.className = 'library-group library-templates';
+      box.open = startOpen;
+      var sum = document.createElement('summary');
+      sum.className = 'library-folder-head';
+      sum.appendChild(el('h3', null, 'Built-in lessons'));
+      sum.appendChild(el('span', 'library-folder-count', String(list.length)));
+      box.appendChild(sum);
+      box.appendChild(el('p', 'library-empty', 'Ready-made lessons to start from. Use one and its copy is filed in your Library.'));
+      list.forEach(function (t) {
+        var row = el('article', 'library-row');
+        row.setAttribute('role', 'group');
+        row.setAttribute('aria-label', t.title);
+        var info = el('div', 'library-row-info');
+        info.appendChild(el('strong', null, t.title));
+        info.appendChild(el('span', null, names[t.group] || 'Other'));
+        row.appendChild(info);
+        var tools = el('div', 'library-row-tools');
+        var use = el('button', 'btn ghost', 'Use');
+        use.type = 'button';
+        use.onclick = function (e) {
+          e.stopPropagation();
+          var ok = SF.LabEngine && (t.shipped ? SF.LabEngine.openShipped(t.key) : SF.LabEngine.openKey(t.key));
+          if (!ok) { SF.toast('That lesson could not be opened here.'); return; }
+          dlg.close();
+        };
+        tools.appendChild(use);
+        row.appendChild(tools);
+        row.onclick = function () { use.click(); };
+        box.appendChild(row);
+      });
+      return box;
+    }
+
+    /* Where the Library is kept: this browser, and the teacher's account while they are signed in (js/sync.js). */
+    function footerSays() {
+      var foot = dlg.querySelector('footer');
+      if (!foot) return;
+      var who = SF.Cloud && SF.Cloud.user ? SF.Cloud.user() : null;
+      var last = SF.Sync && SF.Sync.status ? SF.Sync.status() : null;
+      var text = 'Saved in this browser — Export or Share for a copy that leaves this machine';
+      if (who && last && last.error) {
+        text = 'Saved in this browser. Not saved to your account (' + who.email + ') just now: ' + last.error + '. It tries again shortly.';
+      } else if (who) {
+        text = 'Saved in this browser and to your account, ' + who.email +
+          (last ? ', in step at ' + new Date(last.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '') +
+          '. Built-in lessons join it once you change them.';
+      }
+      foot.innerHTML = '';
+      foot.appendChild(el('span', 'local-dot' + (who && !(last && last.error) ? ' is-synced' : '')));
+      foot.appendChild(document.createTextNode(' ' + text));
+    }
+
     draw();
+    footerSays();
     dlg.showModal();
   }
 

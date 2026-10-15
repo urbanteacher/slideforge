@@ -13,6 +13,8 @@
    - deleted here, after being in step:     marked deleted online (and so on every device's next pass);
    - deleted online:                        left here untouched (a deletion never removes the only copy a
                                             device has; delete it here too if it should go).
+   A built-in lesson's copy (a Library pack, a shipped Lesson-studio deck, their games) is left out until it is
+   changed: it is SlideForge's, not the teacher's (js/builtins.js).
    Pictures and videos (step 5): this browser's copy keeps them inside the lesson, as the editor, Export and Share
    expect. The online copy does not: each embedded picture is stored once in the account's private bucket (media,
    under the teacher's own folder, named by its SHA-256), and the online lesson holds "sf-asset:<hash>.<ext>" in its
@@ -20,7 +22,7 @@
    once. A lesson still over 12 MB without its pictures is not uploaded, and the account dialog says so.
 
    SF.Sync
-     now()      a promise of a pass: { up, down, kept, skipped: [titles], error }
+     now()      a promise of a pass: { up, down, kept, builtIn, skipped: [titles], error }
      status()   the last pass's result and when it finished */
 (function (global) {
   'use strict';
@@ -54,17 +56,17 @@
     (SF.Store ? SF.Store.list() : []).forEach(function (/** @type {any} */ d) {
       // A Lesson-studio lesson's Library card is not a document of its own: the lesson travels as kind 'lesson'.
       if (!d || !d.id || d.labCard) return;
-      out.push({ kind: 'classic', id: String(d.id), title: d.title || 'Untitled', folder: d.libraryGroup || '', modified: Number(d.modified) || 0 });
+      out.push({ kind: 'classic', id: String(d.id), title: d.title || 'Untitled', folder: d.libraryGroup || '', modified: Number(d.modified) || 0, sourceKey: d.sourceKey || '' });
     });
     (SF.GameStore ? SF.GameStore.list() : []).forEach(function (/** @type {any} */ g) {
       if (!g || !g.id) return;
-      out.push({ kind: 'game', id: String(g.id), title: g.title || 'Untitled game', folder: '', modified: Number(g.modified) || 0 });
+      out.push({ kind: 'game', id: String(g.id), title: g.title || 'Untitled game', folder: '', modified: Number(g.modified) || 0, sourceDeckId: g.sourceDeckId || '' });
     });
     var rows = SF.LabEngine && SF.LabEngine.savedRows ? SF.LabEngine.savedRows() : Promise.resolve([]);
     return rows.then(function (/** @type {any[]} */ lessons) {
       (lessons || []).forEach(function (r) {
         if (!r || !r.id) return;
-        out.push({ kind: 'lesson', id: String(r.id), title: r.title || 'Untitled', folder: r.libraryGroup || '', modified: Number(r.modified) || 0 });
+        out.push({ kind: 'lesson', id: String(r.id), title: r.title || 'Untitled', folder: r.libraryGroup || '', modified: Number(r.modified) || 0, sourceId: r.sourceId || '' });
       });
       return out;
     }, function () { return out; });
@@ -193,7 +195,7 @@
   function pass() {
     var client = SF.Cloud && SF.Cloud.client();
     if (!client || !userId) return Promise.resolve({ up: 0, down: 0, kept: 0, skipped: [], error: 'not signed in' });
-    var st = readState(), up = 0, down = 0, kept = 0, skipped = [], sent = [], touched = {};
+    var st = readState(), up = 0, down = 0, kept = 0, builtIn = 0, skipped = [], sent = [], touched = {};
     return Promise.all([
       localDocs(),
       client.from('documents').select('id,kind,title,modified,deleted').then(check),
@@ -201,7 +203,9 @@
     ]).then(function (got) {
       (got[2].data || []).forEach(function (/** @type {any} */ a) { stored[a.hash] = true; });
       var here = {}, there = {};
-      got[0].forEach(function (/** @type {any} */ d) { here[d.kind + ':' + d.id] = d; });
+      // A built-in lesson's copy nobody has changed stays in this browser: it is SlideForge's, not the teacher's (js/builtins.js).
+      var mine = SF.BuiltIns ? SF.BuiltIns.leaveOut(got[0], function (/** @type {string} */ k) { return !!st[k]; }) : {};
+      got[0].forEach(function (/** @type {any} */ d) { var k = d.kind + ':' + d.id; if (mine[k]) builtIn++; else here[k] = d; });
       (got[1].data || []).forEach(function (/** @type {any} */ r) { there[r.kind + ':' + r.id] = Object.assign({}, r, { modified: Date.parse(r.modified) || 0 }); });
       var keys = Object.keys(Object.assign({}, here, there));
       // One at a time: a lesson can be megabytes, and a free project is small.
@@ -254,10 +258,10 @@
       });
     }).then(function () {
       writeState(st);
-      return { up: up, down: down, kept: kept, skipped: skipped, sent: sent, error: '' };
+      return { up: up, down: down, kept: kept, builtIn: builtIn, skipped: skipped, sent: sent, error: '' };
     }, function (/** @type {any} */ e) {
       writeState(st);
-      return { up: up, down: down, kept: kept, skipped: skipped, sent: sent, error: (e && e.message) || 'the sync failed' };
+      return { up: up, down: down, kept: kept, builtIn: builtIn, skipped: skipped, sent: sent, error: (e && e.message) || 'the sync failed' };
     });
   }
 
@@ -300,6 +304,7 @@
     if (r.down) parts.push(r.down + ' brought from another device');
     if (r.kept) parts.push(r.kept + ' older ' + (r.kept === 1 ? 'copy' : 'copies') + ' kept in History');
     return 'In step with your account at ' + t + (parts.length ? ' (' + parts.join(', ') + ')' : '') + '.' +
+      (r.builtIn ? ' ' + r.builtIn + ' built-in ' + (r.builtIn === 1 ? 'lesson stays' : 'lessons stay') + ' in this browser until you change ' + (r.builtIn === 1 ? 'it' : 'them') + '.' : '') +
       (r.skipped.length ? ' Too big to save online yet, kept in this browser only: ' + r.skipped.join(', ') + '.' : '');
   }
   function wire() {
