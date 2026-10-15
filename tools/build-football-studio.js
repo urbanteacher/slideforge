@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-/* Build "Studio 90: designing the modern game", a 60-minute university
+/* Build "Studio 90: designing the modern game", a 70-minute university
  * session on AI in football: how the game has been remade (the ball, the
  * offside line, the referee, the pitch, the boards, the screen), the line every
  * new job sits on (capture, engineer, model, design, decide), a job atlas of
@@ -84,21 +84,21 @@ const slides = [
     subtitle: 'Hidden from the room',
     bullets: [
       'Students map how AI and new technology have remade football, place the new jobs on one line from the pitch to the call, argue about authorship and data, then design a football job for 2035.',
-      'About 60 minutes. It runs like a studio: sheets, a wall chart, an atlas, a crit and a brief.',
+      'About 70 minutes, with 60- and 45-minute cuts. It runs like a studio: sheets, a wall chart, an atlas, case files, a crit and a brief.',
       'No phones needed. Votes are hands up; the brief is pen and A3, or one slide per team.'
     ],
     notes:
-      'RUNNING ORDER · ABOUT 60 MINUTES\n' +
+      'RUNNING ORDER · ABOUT 70 MINUTES\n' +
       '· 00 Open studio — 6 min: cover, the claim, the session as a studio, which job is real?\n' +
       '· 01 The game, remade — 12 min: the wall chart, six moments, old game and modern game, pair talk\n' +
       '· 02 Under the hood — 7 min: the line, three things AI does, the numbers\n' +
-      '· 03 The job atlas — 17 min: the atlas, five studios (cover and jobs each), how new is this job?, hybrid skills\n' +
-      '· 04 The crit — 7 min: who is the author?, AI and people, myth or fact, whose data?\n' +
+      '· 03 The job atlas — 21 min: the atlas, five studios (cover and jobs each), case files 01 (PLAIER) and 02 (the Companion), the companies behind the jobs, how new is this job?, hybrid skills\n' +
+      '· 04 The crit — 13 min: who is the author?, case file 03 (the Klopp hire), AI and people, the 90/10 debate, myth or fact, case file 04 (the clone), whose data?\n' +
       '· 05 The brief — 11 min: the brief, the poster, the crit rules, pin-up\n\n' +
-      'FOR 45 MINUTES. Hide "Old game, modern game", the numbers, "How new is this job?" and myth or fact, and give the brief 8 minutes.\n\n' +
+      'FOR 60 MINUTES. Hide the 90/10 debate, myth or fact and "How new is this job?".\n\nFOR 45 MINUTES. Also hide "Old game, modern game", the numbers and case files 02 and 04, and give the brief 8 minutes.\n\n' +
       'THE BIG IDEA. Football is now a production: the match is captured, engineered, modelled and designed before a person makes the call. Every one of those steps is somebody’s job, and many of them are design jobs. The line (sheet 02) is the spine: the atlas, the crit and the brief all hang off it.\n\n' +
       'THE MOVE THAT MAKES IT WORK. Do not sell the technology. Every studio has a catch, and the crit is where the room argues with it.\n\n' +
-      'SOURCES (also in each slide’s notes). Premier League, “Semi-automated offside technology: what you need to know” (April 2025). Adidas, the Al Rihla connected ball release (2022). CBS Sports and FIFA on referee body cameras at the Club World Cup (June 2025); IFAB on body-camera trials. Ingenia and Buro Happold on Tottenham Hotspur Stadium’s dividing pitch; The Stadium Business and ENR on the Bernabéu’s 360° screen (Daktronics). BusinessCloud (2018) on Southampton’s virtual boards (ADI and Supponor). Training Ground Guru and These Football Times on Thomas Grønnemark; Brentford FC (May 2024) on Bernardo Cueva. Leeds United’s data engineer/scientist advert (UK Sport jobs, June 2025). Business Today (24 July 2026) on Arsenal’s research engineer. BBC Sport (6 March 2026) on Reading’s head of AI. The Mirror (2022) quoting Liverpoolfc.com on William Spearman. Liverpool.com (January 2020) on the 1.3% goal probability. Google DeepMind, TacticAI (Nature Communications, March 2024). The Analyst on set-piece goals in 2025–26. BCAM on the San Mamés digital twin. World Economic Forum, The Future of Jobs Report 2025.\n\n' +
+      'SOURCES (also in each slide’s notes). Premier League, “Semi-automated offside technology: what you need to know” (April 2025). Adidas, the Al Rihla connected ball release (2022). CBS Sports and FIFA on referee body cameras at the Club World Cup (June 2025); IFAB on body-camera trials. Ingenia and Buro Happold on Tottenham Hotspur Stadium’s dividing pitch; The Stadium Business and ENR on the Bernabéu’s 360° screen (Daktronics). BusinessCloud (2018) on Southampton’s virtual boards (ADI and Supponor). Training Ground Guru and These Football Times on Thomas Grønnemark; Brentford FC (May 2024) on Bernardo Cueva. Leeds United’s data engineer/scientist advert (UK Sport jobs, June 2025). Business Today (24 July 2026) on Arsenal’s research engineer. BBC Sport (6 March 2026) on Reading’s head of AI. The Mirror (2022) quoting Liverpoolfc.com on William Spearman. Liverpool.com (January 2020) on the 1.3% goal probability. Google DeepMind, TacticAI (Nature Communications, March 2024). The Analyst on set-piece goals in 2025–26. BCAM on the San Mamés digital twin. World Economic Forum, The Future of Jobs Report 2025. Sky Sports, “AI revolution in football: how PLAIER is helping Premier League clubs make better decisions” (6 February 2025). Microsoft, “Premier League: transforming fan experiences” and unlocked.microsoft.com/premier-league (Microsoft’s figures). OneFootball (10 June 2026), reporting the Telegraph, on Nostrada.ai. Ulrich Lichtenthaler, “Liverpool Football Club: extending data analytics and AI with neuroscience” (23 May 2022). AI Awareness Day, “Did you know the English Premier League uses AI?” (aiawarenessday.co.uk/timeline/english-premier-league).\n\n' +
       'CHECK BEFORE YOU TEACH. Job adverts move fast: the Leeds and Arsenal adverts are cited as reported, and may have closed. Swap in a current advert from Jobs In Football or Training Ground Guru if you have one.'
   },
 
@@ -165,7 +165,7 @@ const slides = [
     'MOMENT 1 · 1 MINUTE. Adidas’s Al Rihla, the 2022 World Cup ball, held a 500 Hz inertial measurement unit (a motion sensor) suspended at its centre. It reported every touch to the video match officials within seconds, and with player tracking it fed FIFA’s semi-automated offside. Built with FIFA and KINEXON. The balls had to be charged before a match.\n\nSource: Adidas news release, “adidas reveals the first FIFA World Cup official match ball featuring connected ball technology” (2022). The “no change in performance” claim is Adidas’s.\n\nAsk: "If the ball is a device, who designs it: a kit designer or an electronics engineer?" (Both. That is the point.)'),
   sheet('moment-offside', art.moment({ sheet: 'Sheet 01b · the line', kicker: 'Moment 2', title: ['The offside', 'line is a', 'render'], figure: art.FIG.offside, number: '30', unit: ['cameras in each ground, some', 'filming at 100 frames a second'], tag: 'Premier League, 2025', ink: CORAL }),
     { title: 'Moment 2 · The offside line is a render', alt: 'The offside line is a render: skeleton figures with joint points on a pitch and a red offside line. Up to 30 cameras in each ground, some filming at 100 frames a second.' },
-    'MOMENT 2 · 2 MINUTES. Semi-automated offside technology began in the Premier League on 12 April 2025, after the FA Cup. Up to 30 cameras in each ground, several at 100 frames a second, twice broadcast rate, track the players’ bodies. The system suggests the kick point and draws the lines; the VAR checks and approves; then a 3D decision visual of the players, in their kits, goes to the big screen and to TV. Built with PGMOL and Genius Sports. The league says it makes decisions faster and more consistent, not more accurate.\n\nSource: Premier League, “Semi-automated offside technology: what you need to know” (April 2025).\n\nTHE DESIGN POINT. Somebody designed those 3D players: their proportions, the camera angle, the red and green lines, how long the replay holds. That picture is the decision fans see. Ask: "Is that a referee’s job or a designer’s?"'),
+    'MOMENT 2 · 2 MINUTES. Semi-automated offside technology began in the Premier League on 12 April 2025, after the FA Cup. Up to 30 cameras in each ground, several at 100 frames a second, twice broadcast rate, track the players’ bodies. The system suggests the kick point and draws the lines; the VAR checks and approves; then a 3D decision visual of the players, in their kits, goes to the big screen and to TV. Built with PGMOL and Genius Sports. The league says it makes decisions faster and more consistent, not more accurate.\n\nSource: Premier League, “Semi-automated offside technology: what you need to know” (April 2025). AI Awareness Day’s Premier League page adds the moment that makes it real: a 95th-minute West Ham equaliser against Arsenal was checked across camera angles in seconds, a foul on David Raya was found, and Arsenal’s 1-0 win stood.\n\nTHE DESIGN POINT. Somebody designed those 3D players: their proportions, the camera angle, the red and green lines, how long the replay holds. That picture is the decision fans see. Ask: "Is that a referee’s job or a designer’s?"'),
   sheet('moment-refcam', art.moment({ sheet: 'Sheet 01c · the referee', kicker: 'Moment 3', title: ['The referee', 'is a camera'], figure: art.FIG.refcam, number: '2025', unit: ['the first FIFA tournament to', 'put body cameras on referees'], tag: 'FIFA · IFAB', ink: ACID }),
     { title: 'Moment 3 · The referee is a camera', alt: 'The referee is a camera: a recording frame showing the referee’s point of view. 2025 was the first FIFA tournament to put body cameras on referees.' },
     'MOMENT 3 · 1 MINUTE. At the FIFA Club World Cup in the USA (June–July 2025), referees wore a small camera on their headset. The footage went into broadcasts after a check, mainly for non-controversial moments, and into referee training. Pierluigi Collina said it went “beyond our expectations”. The IFAB then opened body-camera trials to competitions worldwide, but FIFA does not pay for them.\n\nSources: CBS Sports (June 2025); Soccerway and AFP reporting Collina; IFAB trials page.\n\nAsk: "Who chooses which referee clip you see? That is an editor’s job."'),
@@ -222,7 +222,7 @@ const slides = [
       card('It makes', 'Generative AI writes, draws and talks: match reports, fan chatbots, kit concepts, a highlight voiced in your language.')
     ],
     progressive: true,
-    notes: 'PART 02 · 2 MINUTES. Short for a university room; they will know the terms. Make one link per card to the line: seeing is capture into model; predicting is model; making is design.\n\nTacticAI (Google DeepMind with Liverpool, Nature Communications, March 2024) predicted corner-kick outcomes and suggested player positions; Liverpool’s experts preferred its suggestions to existing tactics about 90% of the time in the study. Name it as the study’s finding.\n\nAsk: "Which of the three would a design studio use most?" (Make, then see.)'
+    notes: 'PART 02 · 2 MINUTES. Short for a university room; they will know the terms. Make one link per card to the line: seeing is capture into model; predicting is model; making is design.\n\nTacticAI (Google DeepMind with Liverpool, Nature Communications, March 2024) predicted corner-kick outcomes and suggested player positions; Liverpool’s experts preferred its suggestions to existing tactics about 90% of the time in the study. Name it as the study’s finding. The Opta supercomputer plays each Premier League season 10,000 times to forecast the title and relegation (AI Awareness Day’s Premier League page).\n\nAsk: "Which of the three would a design studio use most?" (Make, then see.)'
   },
   {
     type: 'stats',
@@ -286,6 +286,11 @@ const slides = [
     progressive: true,
     notes: 'STUDIO C · 2 MINUTES. William Spearman, Liverpool’s lead data scientist, has a physics PhD and worked at CERN; his best-known idea is pitch control, which parts of the pitch a team controls. He said: “I grew up being really bad at most team sports. I still am.” (The Mirror, September 2022, quoting Liverpoolfc.com.) You do not have to be good at football to work in it.\n\nBernardo Cueva: Brentford’s first-team tactical statistician, whose work was largely set pieces; he left for Chelsea to build a set-piece department (Brentford FC, May 2024). Stuart Fenton: Reading’s head of AI, working on recruitment, tactics and the business; Reading say AI complements the team and results are down to the coaches (BBC Sport, 6 March 2026).'
   },
+  sheet('case-plaier', art.caseFile({ n: 1, kicker: 'Model · PLAIER', title: ['The season,', 'played', '100,000 times'], ink: CORAL,
+    facts: [['100+', 'leagues in the company’s football database'], ['100,000', ['times it plays out a signing’s season,', '38 games against each opponent']], ['4', 'Premier League clubs working with it']],
+    job: 'Model builder at an AI supplier', tag: 'Sky Sports, Feb 2025' }),
+    { title: 'Case file 01 · PLAIER', alt: 'Case file 01, PLAIER: the season, played 100,000 times. Over 100 leagues in its database; a signing’s season simulated 100,000 times; four Premier League clubs. The job it shows: model builder at an AI supplier.' },
+    'CASE FILE 01 · 2 MINUTES. From Sky Sports, “AI revolution in football: how PLAIER is helping Premier League clubs make better decisions” (Adam Bate, 6 February 2025). PLAIER, co-founded by Jan Wendt, builds models from event, injury and salary data, and says it has the largest football database, over 100 leagues. It works with four Premier League clubs and about ten times as many worldwide. Its most-used tool is a player impact calculator: swap one player for another and see the likely change in goal difference. For a proposed signing it plays 38 games against each Premier League team 100,000 times. These are the company’s own claims; say so.\n\nThe headline case: its models said Harry Kane would not improve Bayern Munich, and Bayern’s goal difference went from 54 to 49 with him (PLAIER’s figures). AI Awareness Day’s Premier League page adds that PLAIER turns scouting metrics into written, natural-language scouting reports.\n\nAsk: "Some clubs use it as a filter, some as a sense-check, and the most advanced use its recommendations directly. Which would you trust, and who signs off?"'),
   studioCover('design', 'STUDIO D · 30 SECONDS. Design: the people who make the data seen and felt. For an art and design room, this is the studio to stay in longest.'),
   {
     type: 'cards',
@@ -300,6 +305,11 @@ const slides = [
     progressive: true,
     notes: 'STUDIO D · 3 MINUTES. THE ART-STUDIO STUDIO. Every moment in part 01 ended at a picture: the 3D replay, the virtual board, the 360° screen, the referee’s POV. Each picture is a design brief.\n\nThe broadcast motion designer: the semi-automated offside decision visual is generated and sent to the big screen and broadcasters (Premier League, 2025). Somebody sets how it looks. The virtual ad producer: the overlay has to respond to light and be hidden by passing players to look real (BusinessCloud, 2018). The immersive venue designer: 3,700 m² of LED at the Bernabéu (Daktronics). Also on the atlas, the fan product designer: the club app, the AI chatbot and the second screen; Microsoft and the Premier League built an AI Companion for fans (Microsoft’s own figures, 2026). The data visualisation designer: a coach at half-time has minutes, not an hour.\n\nGenerative AI is now in this studio too: concept art for kits and campaigns, auto-cut highlights, translated commentary. Ask: "Which part of a designer’s job does generative AI take, and which part does it make more valuable?"'
   },
+  sheet('case-companion', art.caseFile({ n: 2, kicker: 'Design · Premier League Companion', title: ['A chatbot', 'that knows', '30 seasons'], ink: ACID,
+    facts: [['30', 'seasons of stats behind every answer'], ['300,000', 'articles and 9,000 videos turned into content'], ['60m', ['fans in its first two months,', 'Microsoft’s own figure']]],
+    job: 'Conversational and fan product designer', tag: 'Microsoft · Premier League' }),
+    { title: 'Case file 02 · The Premier League Companion', alt: 'Case file 02, the Premier League Companion: a chatbot that knows 30 seasons. 30 seasons of stats; 300,000 articles and 9,000 videos; 60 million fans in its first two months, Microsoft’s figure. The job it shows: conversational and fan product designer.' },
+    'CASE FILE 02 · 2 MINUTES. From Microsoft’s customer story, “Premier League: transforming fan experiences”, and its Premier League page (unlocked.microsoft.com/premier-league). The Premier League Companion is a conversational AI assistant built on Microsoft Foundry and Azure: it reasons over 30 seasons of history and stats, 300,000 articles, 9,000 videos and live data from 380 matches a season, and answers each fan in the way they follow the game. A Fantasy Premier League Companion gives managers personalised gameweek advice. Microsoft says 60 million fans used it in its first two months and engagement on the league’s app and site rose 20% year on year: the company’s figures. The league’s Chris Archer, Director of Digital Products & Technology, calls it a multi-agent AI system; Will Brass, Chief Commercial Officer, calls it a storytelling platform for 1.8 billion fans in 189 countries.\n\nTHE DESIGN POINT. Somebody decides how the Companion speaks, what it will not answer, and what a fan sees first. That is conversation design, a design job that barely existed before chatbots.\n\nAsk: "Brass calls it a storytelling platform. Who writes the story when the AI writes the words?"'),
   studioCover('care', 'STUDIO E · 30 SECONDS. Decide and care: the people who make the call and look after the humans the data is about.'),
   {
     type: 'cards',
@@ -313,6 +323,19 @@ const slides = [
     ],
     progressive: true,
     notes: 'STUDIO E · 2 MINUTES. The studio people forget, and the one AI makes more important, not less. The last step on the line is a person.\n\nSpecialist coaches: Grønnemark at Liverpool (2018); set-piece coaches across the Premier League as set pieces became 27.4% of goals (The Analyst, 2025–26). Performance psychologists: advertised at clubs such as Southampton and West Bromwich Albion’s academy (sport psychology job roundups). Neuro coaching: neuro11, a German neuroscience company, worked with Liverpool from 2021; Klopp credited them after the February 2022 League Cup final shootout (Ulrich Lichtenthaler, 2022). FC Copenhagen built a brain-training function led by a neuroscientist (Training Ground Guru). AI ethics lead: a role more common in big organisations than in clubs yet. Say so: it is an opening, not a crowded field.'
+  },
+  {
+    type: 'cards',
+    title: 'Many of these jobs are not at clubs',
+    subtitle: 'The companies behind the modern game',
+    bullets: [
+      card('Genius Sports', 'Built semi-automated offside with the Premier League and PGMOL.'),
+      card('KINEXON', 'Built the sensor in the World Cup ball with Adidas and FIFA.'),
+      card('PLAIER', 'Sells transfer and squad models to four Premier League clubs.'),
+      card('Microsoft', 'Built the Premier League Companion for 1.8 billion fans.')
+    ],
+    progressive: true,
+    notes: 'PART 03 · 2 MINUTES. A club has a few dozen staff off the pitch; the companies that supply it employ thousands. Every moment in part 01 was built by a supplier: Genius Sports (offside, Premier League, 2025), KINEXON and Adidas (the ball, 2022), Daktronics (the Bernabéu screen), ADI and Supponor (virtual boards), Microsoft (the Companion), PLAIER (models, Sky Sports, 2025) and Nostrada.ai (the negotiation clone, case file 04).\n\nThe point for a job hunt: search the suppliers as well as the clubs. Ask: "Which of these companies would hire someone from your course?"'
   },
   {
     type: 'spectrum',
@@ -356,6 +379,11 @@ const slides = [
     design: { words: 'rise', wordStagger: 'wave' },
     notes: 'PART 04 · 2 MINUTES. Three-way vote. Then one reason from each.\n\nThe Premier League’s line: the VAR reviews and approves; the technology speeds it up. But the camera placement, the model, the kick-point suggestion and the 3D picture were all designed by someone. When a decision is disputed, fans argue with the picture.\n\nPush: "If a designer’s replay makes a toenail offside look obvious, is that fair design or persuasion?"'
   },
+  sheet('case-klopp', art.caseFile({ n: 3, kicker: 'Decide · Liverpool FC', title: ['The data', 'said hire', 'Klopp'], ink: CORAL,
+    facts: [['2015', ['Liverpool’s research team says Dortmund', 'had been unlucky, not badly managed']], ['2019', 'the Champions League'], ['2020', 'the Premier League']],
+    job: 'Head of research, beside the manager', tag: 'Lichtenthaler, 2022' }),
+    { title: 'Case file 03 · The Klopp hire', alt: 'Case file 03, Liverpool FC: the data said hire Klopp. In 2015 Liverpool’s research team found Dortmund had been unlucky, not badly managed; the Champions League in 2019; the Premier League in 2020. The job it shows: head of research, beside the manager.' },
+    'CASE FILE 03 · 2 MINUTES. From Ulrich Lichtenthaler, “Liverpool Football Club: extending data analytics and AI with neuroscience” (23 May 2022). After a hard final season at Borussia Dortmund, Jürgen Klopp was widely criticised; Liverpool’s Head of Research, Ian Graham, and his team found Dortmund had been unlucky and Klopp was still a top manager. Liverpool hired him in 2015 and won the Champions League in 2019 and the Premier League in 2020. From 2021 the club also worked with neuro11, a neuroscience company, on penalties: Liverpool won both 2022 domestic cup finals against Chelsea on penalties.\n\nLichtenthaler’s argument is integrated intelligence: the data found the manager, and the manager’s emotional intelligence and empathetic leadership made the data pay off. He writes that artificial and human intelligence complement each other. The next slide makes it a table.\n\nAsk: "So did the data win those trophies?"'),
   {
     type: 'compare',
     title: 'What AI brings and what people bring',
@@ -370,6 +398,12 @@ const slides = [
     notes: 'PART 04 · 2 MINUTES. Ulrich Lichtenthaler (2022) calls it integrated intelligence: Liverpool’s data paid off when it was combined with Klopp’s people skills. Read each AI cell, ask "and what do people bring?", then click.\n\nThe design row is the one to land for this room: generation is cheap; taste and judgement are not.'
   },
   {
+    type: 'statement',
+    body: 'An AI company says players are 90% of a team’s success, and the coach only 10%.',
+    subtitle: 'Agree or disagree · hands up · 2 minutes',
+    notes: 'PART 04 · 2 MINUTES. THE DEBATE. Hands up: agree, disagree, not sure. One reason from each side.\n\nFrom Sky Sports (6 February 2025): Jan Wendt of PLAIER says player quality explains around 90% of success and the coach around 10%. He says its models rated Klopp’s Liverpool as performing about as well as the squad should, and calls sacking a coach a “Hail Mary pass”. Set that against case file 03, where Liverpool’s data chose the coach. Both can be true: the coach is part of why the players got that good.\n\nFor a design room: if a model rates the people, who designs the rating, and who is allowed to see it?'
+  },
+  {
     type: 'compare',
     title: 'Myth or fact?',
     subtitle: 'Myth or fact? | The facts',
@@ -382,6 +416,11 @@ const slides = [
     progressive: true,
     notes: 'PART 04 · 2 MINUTES. Thumbs up for fact, down for myth, then click.\n\nRow 4 is the honest one: nobody knows. The World Economic Forum’s Future of Jobs Report 2025 lists creative thinking, with AI and big data, among the skills employers expect to grow most by 2030; it also expects graphic designers to be among the roles that decline. Both are in the same report. Ask: "How can both be true?" (The task is automated; the judgement is not.)'
   },
+  sheet('case-nostrada', art.caseFile({ n: 4, kicker: 'Model · Nostrada.ai', title: ['Negotiating', 'with a clone'], ink: COBALT,
+    facts: [['3', ['Premier League clubs reported to be', 'considering it, unnamed']], ['2026', ['reported in June: a tool first', 'built to model politicians']], ['0', 'clubs confirmed as using it']],
+    job: 'Negotiation analyst', tag: 'OneFootball · Telegraph, 2026' }),
+    { title: 'Case file 04 · Negotiating with a clone', alt: 'Case file 04, Nostrada.ai: negotiating with a clone. Three unnamed Premier League clubs reported to be considering it; reported in June 2026, from a tool first built to model politicians; no club confirmed as using it. The job it shows: negotiation analyst.' },
+    'CASE FILE 04 · 2 MINUTES. From OneFootball (10 June 2026), reporting the Telegraph: at least three unnamed Premier League clubs were considering an AI chatbot from Nostrada.ai, a company whose tool was first used to model politicians, that builds a “digital clone” of a rival club to predict how it would answer a bid before the real talks start. The football version uses transfer and market data from an Argentine firm. Nostrada says it would run on a secure platform for each club, and has not said whether it would sell to one club or many. Reported, not confirmed: no club is named as using it.\n\nAsk: "If both clubs bring a clone, who is negotiating? And would you tell the other side?" Then the last question of the crit.'),
   {
     type: 'statement',
     body: 'A player’s body is tracked every day for years. Who owns that data when they leave?',
@@ -426,14 +465,14 @@ const slides = [
     body: 'Football’s next great signing might be a designer.',
     subtitle: 'Studio 90 · close',
     design: { words: 'rise', wordStagger: 'wave' },
-    notes: 'CLOSE. Back to the throw-in coach: a job that looked weird in 2018 because nobody had measured throw-ins. The jobs on the wall look weird today for the same reason.\n\nFollow-up: Jobs In Football and Training Ground Guru list club roles; the World Economic Forum’s Future of Jobs Report 2025 is free to read.'
+    notes: 'CLOSE. AI Awareness Day ends its Premier League page with: “The future of football isn’t just played, it’s programmed.” This deck’s answer: and designed. Back to the throw-in coach: a job that looked weird in 2018 because nobody had measured throw-ins. The jobs on the wall look weird today for the same reason.\n\nFollow-up: Jobs In Football and Training Ground Guru list club roles; the World Economic Forum’s Future of Jobs Report 2025 is free to read.'
   }
 ];
 
 /* ---------------------------------------------------------------- the build */
 const KEY = 'nul-ai-football-studio';
 const TITLE = 'Studio 90 · AI, football and the new jobs';
-const BLURB = 'Sixty minutes for university students, run like a design studio: how AI and new technology remade football (the sensor ball, the rendered offside line, ref cams, moving pitches, virtual boards, the 360° screen), one line from the pitch to the call, a job atlas of five studios and twenty-five jobs, a crit on authorship and data, and a brief to design a football job for 2035.';
+const BLURB = 'Seventy minutes (with 60- and 45-minute cuts) for university students, run like a design studio: how AI and new technology remade football (the sensor ball, the rendered offside line, ref cams, moving pitches, virtual boards, the 360° screen), one line from the pitch to the call, a job atlas of five studios with four case files (PLAIER, the Premier League Companion, the Klopp hire, a negotiation clone), a crit on authorship and data, and a brief to design a football job for 2035.';
 const THEME = 'studio90';
 
 fs.mkdirSync(path.join(ROOT, ASSETS), { recursive: true });
@@ -468,7 +507,7 @@ console.log(`${path.relative(ROOT, target)} (${deck.slides.length} slides, ${dec
 
 /* Built in: the app's lesson list and the Library's Northeastern folder. */
 const lesson = {
-  key: KEY, title: TITLE, blurb: BLURB, icon: '🎨', kind: 'lecture', minutes: 60,
+  key: KEY, title: TITLE, blurb: BLURB, icon: '🎨', kind: 'lecture', minutes: 70,
   theme: deck.theme, libraryGroup: 'nul', showSlideNumbers: true, games: [], slides
 };
 const builtIn = path.join(ROOT, 'js', 'lessons-football-studio.js');

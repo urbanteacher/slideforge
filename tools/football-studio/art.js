@@ -123,12 +123,40 @@ const FIG = {
     `<rect x="1385" y="525" width="70" height="70" fill="${INK}" stroke="${ACID}" stroke-width="4"/>` +
     text(1420, 570, 'IMU', { font: MONO, size: 20, fill: ACID, anchor: 'middle' }) +
     [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * Math.PI / 4, x = 1420 + Math.cos(a) * 430, y = 560 + Math.sin(a) * 410; return text(x, y, i % 2 ? 'touch' : 'spin', { font: MONO, size: 18, fill: PAPER, anchor: 'middle', opacity: 0.55 }); }).join(''),
-  offside: pitch(980, 200, 840, 640, PAPER, 0.18) +
-    `<path d="M1420 200V840" stroke="${CORAL}" stroke-width="6"/><path d="M1452 200V840" stroke="${ACID}" stroke-width="3" stroke-dasharray="10 8"/>` +
-    [[1300, 520], [1405, 610], [1468, 470], [1560, 660], [1220, 380]].map(([x, y], i) =>
-      `<g opacity="0.95"><circle cx="${x}" cy="${y - 70}" r="18" fill="none" stroke="${i === 2 ? ACID : PAPER}" stroke-width="3"/><path d="M${x} ${y - 52}V${y + 10}M${x - 34} ${y - 30}H${x + 34}M${x} ${y + 10}L${x - 26} ${y + 70}M${x} ${y + 10}L${x + 26} ${y + 70}" stroke="${i === 2 ? ACID : PAPER}" stroke-width="3" fill="none"/>` +
-      [[0, -70], [-34, -30], [34, -30], [0, 10], [-26, 70], [26, 70]].map(([dx, dy]) => `<circle cx="${x + dx}" cy="${y + dy}" r="5" fill="${CORAL}"/>`).join('') + '</g>').join('') +
-    text(1430, 880, 'OFFSIDE · 3D DECISION VISUAL', { font: MONO, size: 18, fill: CORAL }),
+  /* Offside as broadcast analysis draws it: the attacking third from above, players as numbered
+     markers, the second-last defender's line and the attacker's, the margin between them, and the
+     ring of tracking cameras in the stand. */
+  offside: (() => {
+    const X0 = 1000, Y0 = 210, PW = 800, PH = 600;               // the pitch's final third, in plan
+    const stand = `<rect x="${X0 - 40}" y="${Y0 - 40}" width="${PW + 80}" height="${PH + 80}" fill="none" stroke="${PAPER}" stroke-width="2" opacity="0.18"/>`;
+    const cams = Array.from({ length: 30 }, (_, i) => {
+      const per = 2 * (PW + PH + 160), d = i / 30 * per, w = PW + 80, h = PH + 80;
+      const [x, y] = d < w ? [X0 - 40 + d, Y0 - 40] : d < w + h ? [X0 - 40 + w, Y0 - 40 + d - w] : d < 2 * w + h ? [X0 - 40 + w - (d - w - h), Y0 - 40 + h] : [X0 - 40, Y0 - 40 + h - (d - 2 * w - h)];
+      return `<rect x="${x - 6}" y="${y - 6}" width="12" height="12" fill="${PANEL}" stroke="${PAPER}" stroke-width="2" opacity="0.75"/>`;
+    }).join('');
+    const field = `<g stroke="${PAPER}" stroke-width="2.5" fill="none" opacity="0.3"><rect x="${X0}" y="${Y0}" width="${PW}" height="${PH}"/>` +
+      `<rect x="${X0 + PW - 170}" y="${Y0 + 110}" width="170" height="380"/><rect x="${X0 + PW - 58}" y="${Y0 + 210}" width="58" height="180"/>` +
+      `<path d="M${X0 + PW - 170} ${Y0 + 230}A70 70 0 0 0 ${X0 + PW - 170} ${Y0 + 370}"/></g>` +
+      `<rect x="${X0 + PW}" y="${Y0 + 262}" width="14" height="76" fill="${PAPER}" opacity="0.5"/>`;
+    const lineD = 1452, lineA = 1488;                               // second-last defender, attacker
+    const zone = `<rect x="${lineD}" y="${Y0}" width="${X0 + PW - lineD}" height="${PH}" fill="${CORAL}" opacity="0.10"/>`;
+    const lines = `<path d="M${lineD} ${Y0}V${Y0 + PH}" stroke="${CORAL}" stroke-width="5"/><path d="M${lineA} ${Y0}V${Y0 + PH}" stroke="${ACID}" stroke-width="3" stroke-dasharray="12 8"/>`;
+    const marker = (x, y, n, team) => {
+      const fill = team === 'att' ? ACID : PAPER, ink = INK;
+      return `<circle cx="${x}" cy="${y}" r="27" fill="${INK}" opacity="0.6"/><circle cx="${x}" cy="${y}" r="22" fill="${fill}"/>` +
+        text(x, y + 8, String(n), { font: MONO, size: 21, weight: 700, fill: ink, anchor: 'middle' });
+    };
+    const def = [[1452, 300, 5], [1405, 520, 4], [1440, 660, 2], [1330, 730, 6], [1735, 500, 1]];   // 5 is the second-last defender; 1 the keeper
+    const att = [[1488, 330, 9], [1330, 470, 10], [1410, 600, 7]];
+    const ball = `<circle cx="1270" cy="430" r="9" fill="${PAPER}"/><path d="M1278 424L1478 334" stroke="${PAPER}" stroke-width="2" stroke-dasharray="6 7" opacity="0.6"/>`;
+    const callout = `<path d="M${lineD} ${Y0 - 70}H${lineA}M${lineD} ${Y0 - 82}V${Y0 - 58}M${lineA} ${Y0 - 82}V${Y0 - 58}" stroke="${PAPER}" stroke-width="2.5"/>` +
+      text(lineA + 18, Y0 - 62, 'THE MARGIN', { font: MONO, size: 18, weight: 700, fill: PAPER });
+    const legend = `<circle cx="1010" cy="905" r="11" fill="${ACID}"/>` + text(1032, 912, 'ATTACK', { font: MONO, size: 17, fill: PAPER, opacity: 0.8 }) +
+      `<circle cx="1150" cy="905" r="11" fill="${PAPER}"/>` + text(1172, 912, 'DEFENCE', { font: MONO, size: 17, fill: PAPER, opacity: 0.8 }) +
+      `<rect x="1300" y="899" width="12" height="12" fill="${PANEL}" stroke="${PAPER}" stroke-width="2"/>` + text(1324, 912, 'TRACKING CAMERA', { font: MONO, size: 17, fill: PAPER, opacity: 0.8 }) +
+      `<path d="M1520 905h34" stroke="${CORAL}" stroke-width="5"/>` + text(1566, 912, 'OFFSIDE LINE', { font: MONO, size: 17, fill: PAPER, opacity: 0.8 });
+    return stand + cams + field + zone + lines + ball + def.map(([x, y, n]) => marker(x, y, n, 'def')).join('') + att.map(([x, y, n]) => marker(x, y, n, 'att')).join('') + callout + legend;
+  })(),
   refcam: `<rect x="1040" y="230" width="780" height="520" fill="${PANEL}" stroke="${PAPER}" stroke-width="3"/>` +
     pitch(1080, 330, 700, 360, PAPER, 0.25) +
     `<circle cx="1110" cy="270" r="10" fill="${CORAL}"/>` + text(1132, 278, 'REC · REFEREE POV', { font: MONO, size: 20, fill: PAPER }) +
@@ -242,4 +270,24 @@ function briefTemplate(fields) {
     frame('Sheet 05 · the brief', null));
 }
 
-module.exports = { cover, section, MOTIF, moment, FIG, timeline, pipeline, atlas, studioCard, briefTemplate, INK: { ACID, CORAL, COBALT, PAPER, INK }, STUDIO };
+/* A case file: one real case, pinned up as an evidence sheet. Its number, title, source, three
+   facts with their figures, and the job it shows. */
+function caseFile({ n, kicker, title, facts, job, tag, ink = ACID }) {
+  const fx = 1010, fw = 810;
+  return svg(
+    text(110, 230, `CASE FILE ${String(n).padStart(2, '0')} · ${kicker.toUpperCase()}`, { font: MONO, size: 24, weight: 600, fill: ink, ls: 4 }) +
+    head(104, 380, title, { size: 120, lead: 112 }) +
+    `<rect x="110" y="${400 + (title.length - 1) * 112 + 40}" width="${Math.min(760, job.length * 19 + 180)}" height="96" fill="none" stroke="${ink}" stroke-width="3"/>` +
+    text(134, 400 + (title.length - 1) * 112 + 78, 'THE JOB IT SHOWS', { font: MONO, size: 18, weight: 700, fill: ink, ls: 2 }) +
+    text(134, 400 + (title.length - 1) * 112 + 118, job, { size: 32, weight: 700, fill: PAPER }) +
+    `<rect x="${fx}" y="190" width="${fw}" height="720" fill="${PANEL}"/><rect x="${fx}" y="190" width="10" height="720" fill="${ink}"/>` +
+    facts.map(([num, label], i) => {
+      const y = 190 + 60 + i * 230;
+      return text(fx + 60, y + 110, num, { font: DISPLAY, size: 130, weight: 400, fill: ink }) +
+        lines(fx + 60, y + 160, [].concat(label), { size: 28, weight: 500, lead: 36, fill: PAPER }) +
+        (i < facts.length - 1 ? `<path d="M${fx + 60} ${y + 210}H${fx + fw - 60}" stroke="${PAPER}" stroke-width="1.5" opacity="0.2"/>` : '');
+    }).join('') +
+    frame(`Case file ${String(n).padStart(2, '0')}`, tag));
+}
+
+module.exports = { caseFile, cover, section, MOTIF, moment, FIG, timeline, pipeline, atlas, studioCard, briefTemplate, INK: { ACID, CORAL, COBALT, PAPER, INK }, STUDIO };

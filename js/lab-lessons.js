@@ -129,7 +129,7 @@
  },
  "nul-ai-football-studio": {
   "file": "assets/lab-lessons/nul-ai-football-studio.lesson.json",
-  "hash": "cb978fc2613cce2a",
+  "hash": "7ba71bf3c0c40ac4",
   "carried": 16
  },
  "nul-lab1": {
