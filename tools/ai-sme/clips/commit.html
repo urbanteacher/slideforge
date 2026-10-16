@@ -1,0 +1,103 @@
+<!doctype html>
+<!-- The close: six new ideas float up, five drift away, and one becomes a
+     filled-in line of the 7-day action plan. -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>One commitment</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+  #kick { left: 140px; top: 96px; }
+  #l1 { left: 140px; top: 138px; }
+  #l2 { left: 140px; top: 214px; color: #cefd85; }
+  .idea { height: 92px; padding: 0 36px; border-radius: 46px; display: flex; align-items: center; font-size: 42px; font-weight: 600;
+    white-space: nowrap; background: #1b3245; border: 3px solid rgba(255,255,255,.2); }
+  #plan { left: 140px; top: 400px; width: 1640px; padding: 44px 52px; border-radius: 28px; background: rgba(0,197,127,.12); border: 3px solid #00c57f; }
+  #plan .k { font-size: 28px; letter-spacing: .12em; text-transform: uppercase; color: #00c57f; font-weight: 600; }
+  #plan .t { margin-top: 10px; font-size: 76px; font-weight: 700; line-height: 1.05; }
+  #plan .row { margin-top: 34px; display: flex; gap: 18px; }
+  #plan .chip { padding: 14px 24px; border-radius: 16px; background: rgba(255,255,255,.08); font-size: 30px; color: #e3eae8; }
+  #plan .chip b { color: #cefd85; font-weight: 600; }
+  #tick { right: 52px; top: 44px; width: 96px; height: 96px; border-radius: 50%; background: #00c57f; color: #1b3245;
+    display: grid; place-items: center; font-size: 60px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="abs kicker" id="kick">Before you go</div>
+<div class="abs h2" id="l1"></div>
+<div class="abs h2" id="l2"></div>
+<div id="ideas"></div>
+<div class="abs" id="plan">
+  <div class="k">My 7-day action plan</div>
+  <div class="t">Automate my invoice reminders</div>
+  <div class="row">
+    <span class="chip">Support: <b>technology</b></span>
+    <span class="chip">When: <b>within 7 days</b></span>
+    <span class="chip">Worked if: <b>2 hours a week back</b></span>
+  </div>
+  <div class="abs" id="tick">✓</div>
+</div>
+<script src="kit.js"></script>
+<script>
+window.MOTION = { duration: 10, fps: 24, width: 1920, height: 1080, loop: false };
+const { INK, outExpo, inExpo, inOutQuart, span, spring, words, fade } = KIT;
+const $ = id => document.getElementById(id);
+
+/* Where each idea floats, and which way it leaves. The fourth one stays. */
+const IDEAS = [
+  ['A chatbot for the website', 140, 360, -1],
+  ['A new CRM', 900, 330, -1],
+  ['An AI policy', 1360, 470, 1],
+  ['Automate invoice reminders', 240, 580, 0],
+  ['AI social posts', 1000, 640, 1],
+  ['A smarter rota', 1300, 790, 1]
+];
+$('ideas').innerHTML = IDEAS.map(([label], i) => `<div class="abs idea" id="i${i}">${label}</div>`).join('');
+const KEEP = 3;
+const l1 = words($('l1'), 'Don’t leave with six new ideas.');
+const l2 = words($('l2'), 'Leave with one commitment.');
+
+function draw(t) {
+  fade($('kick'), outExpo(span(t, 0.1, 0.6)), 16);
+  l1(t, 0.3);
+  l2(t, 4.9);
+
+  IDEAS.forEach(([, x, y, dir], i) => {
+    const el = $('i' + i), s = 0.6 + i * 0.22;
+    const k = spring(t - s, 0.75, 1.5), e = outExpo(span(t, s, 0.5));
+    const bob = Math.sin((t + i * 0.7) * 1.3) * 8;
+    if (i === KEEP) {
+      /* The one that stays: it lights up, then hands over to the plan card. */
+      const pick = outExpo(span(t, 3.6, 0.4));
+      el.style.borderColor = pick > 0.5 ? INK.green : 'rgba(255,255,255,.2)';
+      el.style.color = pick > 0.5 ? INK.lime : INK.white;
+      const go = inOutQuart(span(t, 4.3, 0.8));
+      el.style.left = (x + (190 - x) * go) + 'px';
+      el.style.top = (y + (500 - y) * go) + 'px';
+      el.style.opacity = e * (1 - outExpo(span(t, 5.0, 0.3)));
+      el.style.transform = `translateY(${(1 - k) * 50 + bob * (1 - go)}px)`;
+    } else {
+      /* The rest drift off the side they are nearest. */
+      const out = inExpo(span(t, 3.7 + i * 0.06, 0.6));
+      el.style.left = (x + dir * out * 500 + (dir === 0 ? 0 : 0)) + 'px';
+      el.style.top = (y - (dir === -1 ? out * 120 : -out * 60)) + 'px';
+      el.style.opacity = e * (1 - out);
+      el.style.transform = `translateY(${(1 - k) * 50 + bob}px)`;
+      el.style.borderColor = 'rgba(255,255,255,.2)';
+    }
+  });
+
+  /* The plan card rises where the idea landed. */
+  const p = spring(t - 5.0, 0.8, 1.4);
+  $('plan').style.opacity = outExpo(span(t, 5.0, 0.4));
+  $('plan').style.transform = `translateY(${(1 - p) * 60}px)`;
+  const tk = spring(t - 5.9, 0.6, 1.8);
+  $('tick').style.opacity = outExpo(span(t, 5.9, 0.25));
+  $('tick').style.transform = `translateY(${(1 - tk) * -30}px)`;
+}
+
+window.renderAt = async t => { await KIT.fontsReady; draw(t); };
+window.renderAt(new URLSearchParams(location.search).has('t') ? Number(new URLSearchParams(location.search).get('t')) : 9);
+</script>
+</body>
+</html>

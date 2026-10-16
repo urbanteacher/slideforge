@@ -1,0 +1,24 @@
+/* The shared look for The Power of AI's clips: the UK Black Tech theme's
+   ground, colours and Uncut Sans. */
+@font-face { font-family: 'Uncut Sans'; src: url('fonts/UncutSans-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Uncut Sans'; src: url('fonts/UncutSans-Semibold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Uncut Sans'; src: url('fonts/UncutSans-Bold.woff2') format('woff2'); font-weight: 700; }
+html, body {
+  margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+  background: #254258; color: #fff;
+  font-family: 'Uncut Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+.abs { position: absolute; }
+/* Every animated element on its own layer from the first frame. Chrome
+   otherwise promotes an element the first time its opacity drops and paints
+   its text differently afterwards, so a frame drawn twice would not match.
+   The catch: a layer keeps its raster scale, so move these, never scale them. */
+.abs, .w { will-change: transform, opacity; }
+.w { display: inline-block; }
+.kicker { font-size: 30px; letter-spacing: .14em; text-transform: uppercase; color: #00c57f; font-weight: 600; }
+.h1 { font-size: 96px; line-height: 1.04; font-weight: 600; letter-spacing: -0.015em; }
+.h2 { font-size: 64px; line-height: 1.1; font-weight: 600; letter-spacing: -0.01em; }
+.body { font-size: 38px; line-height: 1.35; color: #c9d6df; }
+.small { font-size: 26px; color: #c9d6df; }
+.card { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16); border-radius: 22px; }

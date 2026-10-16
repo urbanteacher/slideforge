@@ -1,0 +1,116 @@
+<!doctype html>
+<!-- The jagged frontier (Dell'Acqua et al., Harvard and BCG, 2023): AI's
+     competence is a jagged shape, so tasks the same distance from the middle,
+     which look just as easy, land inside or outside it. -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>The jagged frontier</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+  #kick { left: 140px; top: 96px; }
+  #l1 { left: 140px; top: 138px; color: #fff; }
+  #l2 { left: 140px; top: 214px; color: #ff9667; }
+  #tip { left: 140px; top: 296px; font-size: 36px; font-weight: 600; color: #cefd85; }
+  .zone { font-size: 28px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+  #above { right: 140px; top: 300px; color: #ff9667; text-align: right; }
+  #below { left: 140px; top: 905px; color: #00c57f; }
+  .pill { width: 250px; height: 172px; padding: 18px 20px; border-radius: 20px; display: flex; flex-direction: column; gap: 12px;
+    font-size: 29px; line-height: 1.15; font-weight: 600; background: #1b3245; border: 3px solid rgba(255,255,255,.22); }
+  .mark { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; font-weight: 700; color: #1b3245; flex: none; }
+  canvas { left: 0; top: 0; }
+</style>
+</head>
+<body>
+<canvas class="abs" id="shape" width="1920" height="1080"></canvas>
+<div class="abs kicker" id="kick">The jagged frontier</div>
+<div class="abs h2" id="l1"></div>
+<div class="abs h2" id="l2"></div>
+<div class="abs zone" id="above">Above the line: AI gets it wrong</div>
+<div class="abs zone" id="below">Below the line: AI does it well</div>
+<div id="pills"></div>
+<div class="abs" id="tip"></div>
+<script src="kit.js"></script>
+<script>
+window.MOTION = { duration: 12, fps: 24, width: 1920, height: 1080, loop: false };
+const { INK, outExpo, inOutQuart, span, spring, words, fade } = KIT;
+const $ = id => document.getElementById(id);
+
+/* Six tasks in one row, all at the same height: they look just as hard. The
+   frontier is a jagged line that rises over the tasks AI does well and dips
+   under the ones it gets wrong. Below the line is AI's competence. */
+const TASKS = [
+  ['Draft a reply to a customer', true],
+  ['Cite a court case', false],
+  ['Summarise a meeting', true],
+  ['Allergen advice', false],
+  ['Write a product listing', true],
+  ['VAT on a quote', false]
+];
+const COL = 1640 / TASKS.length, ROW = 590;
+const cx = i => 140 + COL * (i + 0.5);
+/* The line: a point over or under each task, with small jags between. */
+const LINE = [[0, 700]];
+TASKS.forEach(([, inside], i) => {
+  const x = cx(i);
+  LINE.push([x - COL * 0.34, inside ? 440 : 840], [x - COL * 0.12, inside ? 392 : 880], [x + COL * 0.1, inside ? 410 : 858], [x + COL * 0.34, inside ? 450 : 830]);
+  if (i < TASKS.length - 1) LINE.push([x + COL * 0.5, 680 + (i % 2 ? -30 : 30)]);
+});
+LINE.push([1920, 690]);
+$('pills').innerHTML = TASKS.map(([label], i) =>
+  `<div class="abs pill" id="p${i}"><span class="mark" id="m${i}"></span><span>${label}</span></div>`).join('');
+const pills = TASKS.map((_, i) => $('p' + i));
+
+const l1 = words($('l1'), 'Brilliant at some tasks.');
+const l2 = words($('l2'), 'Wrong at others that look just as easy.');
+const tip = words($('tip'), 'So test it on work you already know the answer to.');
+
+function draw(t) {
+  fade($('kick'), outExpo(span(t, 0.1, 0.6)), 16);
+  l1(t, 0.3);
+  l2(t, 6.4, 0.08);
+  tip(t, 9.2, 0.07);
+  fade($('above'), outExpo(span(t, 2.2, 0.6)), 12);
+  fade($('below'), outExpo(span(t, 2.4, 0.6)), 12);
+
+  /* The frontier draws left to right, then the ground under it fills. */
+  const g = $('shape').getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, 1920, 1080);
+  const reach = inOutQuart(span(t, 0.6, 1.8)) * 1920;
+  const fill01 = outExpo(span(t, 1.9, 0.8));
+  const path = () => {
+    g.beginPath(); g.moveTo(LINE[0][0], LINE[0][1]);
+    for (let i = 1; i < LINE.length; i++) {
+      const [x0, y0] = LINE[i - 1], [x1, y1] = LINE[i];
+      if (x1 <= reach) g.lineTo(x1, y1);
+      else { if (x0 < reach) g.lineTo(reach, y0 + (y1 - y0) * (reach - x0) / (x1 - x0)); break; }
+    }
+  };
+  if (fill01 > 0) {
+    path(); g.lineTo(Math.min(reach, 1920), 1080); g.lineTo(0, 1080); g.closePath();
+    g.fillStyle = `rgba(0,197,127,${0.16 * fill01})`; g.fill();
+  }
+  if (reach > 0) { path(); g.strokeStyle = INK.green; g.lineWidth = 6; g.lineJoin = 'round'; g.stroke(); }
+
+  /* The tasks arrive, then get their verdict. */
+  TASKS.forEach(([, inside], i) => {
+    const s = 2.6 + i * 0.32;
+    const k = spring(t - s, 0.8, 1.6), e = outExpo(span(t, s, 0.5));
+    const p = pills[i];
+    p.style.left = (cx(i) - 125) + 'px'; p.style.top = (ROW - 74) + 'px';
+    p.style.opacity = e;
+    p.style.transform = `translateY(${(1 - k) * 40}px)`;
+    const v = span(t, 5.4 + i * 0.12, 0.01) >= 1;
+    const m = $('m' + i);
+    m.textContent = v ? (inside ? '✓' : '✕') : '';
+    m.style.background = v ? (inside ? INK.green : INK.coral) : 'rgba(255,255,255,.18)';
+    p.style.borderColor = v ? (inside ? INK.green : INK.coral) : 'rgba(255,255,255,.22)';
+  });
+}
+
+window.renderAt = async t => { await KIT.fontsReady; draw(t); };
+window.renderAt(new URLSearchParams(location.search).has('t') ? Number(new URLSearchParams(location.search).get('t')) : 11);
+</script>
+</body>
+</html>

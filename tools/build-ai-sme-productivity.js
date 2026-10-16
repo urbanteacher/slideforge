@@ -46,6 +46,34 @@ const PLAN_URL = 'https://slideforge-rpjj.onrender.com/sme-plan.html';
 const PLAN_SHORT = 'slideforge-rpjj.onrender.com/sme-plan.html';
 const PLAN_QR = 'assets/ai-sme/plan-qr.svg';
 const PLAN_POSTER = 'assets/ai-sme/plan-poster.svg';
+/* The clips: one HTML file each in tools/ai-sme/clips/, rendered to MP4 with
+   tools/motion/render.mjs (see its README). A clip slide plays once, muted. */
+const clip = (name, title, alt, notes) => ({
+  type: 'video', title, video: `assets/ai-sme/clips/${name}.mp4`, videoPoster: `assets/ai-sme/clips/${name}-poster.jpg`,
+  videoAutoplay: true, videoMuted: true, imageAlt: alt, design: { capStyle: 'none' }, notes
+});
+
+/* Who can help, for the support posters. A url of null draws a SAMPLE code
+   that says, when scanned, where to put the real link. Replace each null with
+   the partner's link once they confirm what they offer. */
+const SUPPORT = {
+  metro: { name: 'Metro Bank', logo: 'assets/ai-sme/logos/metro-bank.svg', lines: ['Business banking, cash flow', 'and finance'], url: null },
+  cda: { name: 'Central District Alliance', logo: 'assets/ai-sme/logos/cda.png', lines: ['Your local business network:', 'events, support, introductions'], url: null },
+  ukbt: { name: 'UK Black Tech', logo: 'assets/brand/ukbt-wordmark.png', lines: ['Tech skills, community', 'and events'], url: null },
+  labtech: { name: 'LabTech', logo: 'assets/ai-sme/logos/labtech-white.svg', lines: ['Workspace, and Camden’s tech', 'and creative community'], url: null },
+  camden: { name: 'Camden Council', logo: 'assets/ai-sme/logos/camden-white.svg', lines: ['Business support and advice', 'for Camden firms'], url: null },
+  islington: { name: 'Islington Council', logo: 'assets/ai-sme/logos/islington.svg', lines: ['Business support and advice', 'for Islington firms'], url: null },
+  survey: { name: 'local AI survey', lines: [], url: null }
+};
+const SUPPORT_SLIDES = [
+  { file: 'support-money', kicker: 'Who can help · finance and growth', title: 'Money, cash flow and contacts', cards: ['metro', 'cda'] },
+  { file: 'support-tech', kicker: 'Who can help · technology and AI', title: 'Skills, tools and community', cards: ['ukbt', 'labtech'] },
+  { file: 'support-council', kicker: 'Who can help · your council', title: 'Local business support', cards: ['camden', 'islington'] }
+];
+const supportAsset = file => `assets/ai-sme/${file}.svg`;
+/* Under 136 bytes, the most js/qr.js encodes. */
+const sampleText = key => `SAMPLE QR CODE. Put the ${SUPPORT[key].name} link in SUPPORT.${key}.url`;
+
 const COMPOSITE = 'A composite of how firms like this commonly use AI, not a named business. Say so out loud: "This is what I see again and again in businesses like yours."';
 
 /* --------------------------------------------------------------- the deck */
@@ -119,6 +147,9 @@ const slides = [
     progressive: true,
     notes: 'OPEN · 2 MINUTES. Reveal one card at a time; hands go down as you go. Most rooms go from nearly everyone to a handful. Name what just happened: "Almost everyone has tried it. Very few can say what it saved them. That gap is what today is about."'
   },
+  clip('friday', 'Imagine: it’s Friday, 4pm',
+    'Animation: it’s Friday, 4pm, and five jobs are still on the list. The clock runs on to 7:40pm, then one job, chasing 12 unpaid invoices, drops from an hour to ten minutes (AI drafts, you check) and the clock gives an hour back. One hour back: that’s where it starts.',
+    'IMAGINE · 45 SECONDS. Let it play without talking for the first few seconds, then: "Imagine it’s Friday, 4pm. Here’s what’s still on your list." As the clock runs: "That’s your evening gone." When the invoices turn green: "Now hand one of these to AI. It drafts the reminders, you check them, and you send them. Ten minutes, not an hour." Land it: "One hour back. That’s where it starts, and that’s what the next half hour is about."\n\nThe clip plays once and holds on its last frame. The list is a composite of what small firms say eats their Friday.'),
 
   /* -------------------------------------------------------- 01 WHERE WE ARE */
   {
@@ -182,12 +213,13 @@ const slides = [
     progressive: true,
     notes: '02 · 2 MINUTES. Say this slide plainly: the gains are real but not automatic, and the room has heard enough hype to respect you for it.\n\nHumlum and Vestergaard, “Still Waters, Rapid Currents”, NBER working paper 33777 (revised March 2026): Danish administrative records linked to large worker surveys. Precise null effects on earnings and recorded hours two years after ChatGPT’s launch, ruling out effects larger than 2%. Employers reorganised work, adding tasks in content generation, AI oversight and AI integration. So the time saved often goes into new work, including checking the AI.\n\nMETR (10 July 2025): a randomised trial of 16 experienced open-source developers on 246 real tasks. With AI tools they took 19% longer; they had expected a 24% speed-up and afterwards believed they had been 20% faster. METR says the result reflects early-2025 tools in one setting and that tools have improved since; its February 2026 update could not measure the new effect reliably. The lesson that lasts is the gap between feeling faster and being faster: measure it.\n\nHarvard Business Review (September 2025), a Stanford and BetterUp Labs survey of about 1,150 US desk workers: 40% had received “workslop” in the last month (AI output that looks finished but does not do the job), and each case took nearly two hours to deal with. Self-reported, so say so.\n\nWhat not to quote: the widely shared “95% of AI pilots fail” figure (MIT NANDA, 2025) rests on 52 interviews and 153 survey responses, so it is not used here.'
   },
-  {
-    type: 'statement',
-    body: 'AI makes good work faster. It also makes unchecked work wrong, faster.',
-    subtitle: 'The jagged frontier',
-    notes: '02 · 2 MINUTES. The catch, from the same Harvard and BCG study: on a task just outside AI’s capability, consultants using it were 19 percentage points less likely to get the right answer than those working without it. They trusted a confident, plausible answer.\n\nThe researchers call it the jagged frontier: AI is brilliant at some tasks and wrong at others that look just as easy, and you cannot tell which from the outside. The fix is not avoiding AI, it is knowing your frontier: test it on work you already know the answer to, and keep a human check on anything that goes to a customer, a regulator or the bank.'
-  },
+  clip('frontier', 'The jagged frontier',
+    'Animation: the jagged frontier. Six tasks sit in one row at the same height, so they look just as hard. A jagged line rises over the ones AI does well (draft a reply to a customer, summarise a meeting, write a product listing) and dips under the ones it gets wrong (cite a court case, allergen advice, VAT on a quote). Brilliant at some tasks, wrong at others that look just as easy. So test it on work you already know the answer to.',
+    '02 · 2 MINUTES. Let it play, then say the line under it: AI makes good work faster; it also makes unchecked work wrong, faster.\n\nThe catch, from the same Harvard and BCG study: on a task just outside AI’s capability, consultants using it were 19 percentage points less likely to get the right answer than those working without it. They trusted a confident, plausible answer.\n\nThe researchers call it the jagged frontier: AI is brilliant at some tasks and wrong at others that look just as easy, and you cannot tell which from the outside. The fix is not avoiding AI, it is knowing your frontier: test it on work you already know the answer to, and keep a human check on anything that goes to a customer, a regulator or the bank.'),
+
+  clip('check', 'Fluent isn’t the same as right',
+    'Animation: an AI translation of a patient leaflet types out perfectly: take 50 mg of vitamin B12 each morning, with food. A magnifier finds the unit: the source said µg. Micrograms, not milligrams, a thousand times the dose. The person corrects it and stamps it: checked by a person.',
+    '02 · 1 MINUTE. Let it play. It is built on the error the BBC’s medical translator describes (μ, micro, translated as milli: a thousand-fold dose); the leaflet and the vitamin are illustrations. The point to land: the sentence reads perfectly, which is exactly why the mistake survives. The next slide has the numbers.'),
   {
     type: 'keyfact',
     title: 'Fluent isn’t the same as right',
@@ -414,19 +446,10 @@ const slides = [
     progressive: true,
     notes: 'BACKUP · HIDDEN. The 7-day action plan replaces this in the talk; show it if someone asks what happens after the first week.\n\nThe firms that get value treat it as an experiment, not a purchase. The before-and-after timing is the step everyone skips and the one that turns a feeling into a decision: the METR developers felt 20% faster and were 19% slower. Count the checking time too, or the saving is imaginary. If it does not save time after a month, drop it and pick another task: that is a result too.'
   },
-  {
-    type: 'keyfact',
-    title: 'Small hours add up',
-    subtitle: 'The maths of one hour a week',
-    body: '1 hour a week × 10 people = 520 hours a year',
-    bullets: [
-      'That is about 14 working weeks.',
-      'Surveys of UK SMEs put the saving at 2.5 to 5 hours a week. Vendor surveys, so start with one.',
-      'What would you do with 14 weeks?'
-    ],
-    progressive: true, buildMode: 'dim',
-    notes: '06 · 1 MINUTE. 1 hour × 10 people × 52 weeks = 520 hours; at 37.5 hours a week, about 14 weeks.\n\nThe survey range, said as the vendors’: Dell Technologies’ “AI in Action” research (2026, 2,013 UK SME decision-makers) puts the average at about 2.5 hours per employee a week, and six or more for the 7% it calls front-runners. OpenAI’s UK SME survey with Enterprise Nation (2026) puts it at 5.2 hours a week for decision-makers using AI. Both sell AI, so the slide claims one hour.\n\nLand the question: the value is not the hours, it is what you do with them. More customers, better work, or home on time.'
-  },
+  clip('hours', 'Small hours add up',
+    'Animation: one hour back a week, for ten people. A grid of 10 rows and 52 weeks fills square by square, counting to 520 hours: about 14 working weeks of someone’s time, every year. Surveys of UK SMEs suggest 2.5 to 5 hours a week (vendor surveys); this claims one.',
+    '06 · 1 MINUTE. 1 hour × 10 people × 52 weeks = 520 hours; at 37.5 hours a week, about 14 weeks.\n\nThe survey range, said as the vendors’: Dell Technologies’ “AI in Action” research (2026, 2,013 UK SME decision-makers) puts the average at about 2.5 hours per employee a week, and six or more for the 7% it calls front-runners. OpenAI’s UK SME survey with Enterprise Nation (2026) puts it at 5.2 hours a week for decision-makers using AI. Both sell AI, so the slide claims one hour.\n\nLand the question: the value is not the hours, it is what you do with them. More customers, better work, or home on time.'),
+
   {
     type: 'statement',
     body: 'Technology alone will not solve every challenge, and finance alone will not fix inefficient processes.',
@@ -482,8 +505,18 @@ const slides = [
       card('Customers', 'Corporate contracts or new customers.'),
       card('Skills', 'Skills, mentoring or business advice.')
     ],
-    notes: 'Q3 · 1 MINUTE. This is the key message made practical: tools, systems and support. Point people to the partners in the room for each kind of support, once each partner has confirmed what they offer (add it to these notes before the day; do not promise an offer that is not confirmed).'
+    notes: 'Q3 · 1 MINUTE. This is the key message made practical. The next three slides show who can help with each kind of support: tools, systems and support. Point people to the partners in the room for each kind of support, once each partner has confirmed what they offer (add it to these notes before the day; do not promise an offer that is not confirmed).'
   },
+  ...SUPPORT_SLIDES.map(slide => ({
+    type: 'image',
+    title: slide.title,
+    image: supportAsset(slide.file),
+    imageFit: 'cover',
+    imageAlt: `${slide.kicker}: ${slide.cards.map(k => `${SUPPORT[k].name}, ${SUPPORT[k].lines.join(' ')}`).join('; ')}. Scan a code to find out more.`,
+    design: { capStyle: 'none' },
+    notes: `WHO CAN HELP · 30 SECONDS. Point to the people in the room: "${slide.cards.map(k => SUPPORT[k].name).join(' and ')} are here today." Leave it up long enough to scan.\n\n` +
+      (slide.cards.some(k => !SUPPORT[k].url) ? 'BEFORE THE DAY: these are SAMPLE codes. Scanned, they say where the real link goes (SUPPORT in tools/build-ai-sme-productivity.js). Confirm with each partner what they offer and the link they want, set it, and rebuild. The one-line descriptions are placeholders too.' : 'Links confirmed.')
+  })),
   {
     type: 'cards',
     title: 'Question 4 · When will I take action?',
@@ -516,13 +549,10 @@ const slides = [
     progressive: true,
     notes: '06 · 1 MINUTE. The event’s promise is collaboration, so make it practical: the networking after this talk is the first prompt swap.\n\nBefore the day, confirm with each partner what support they want named here (programmes, workshops, funding, digital skills) and add it to these notes, so you can point people to the right table. Do not promise an offer a partner has not confirmed.\n\nThe last card: in the customer support study novices gained most, so train everyone. And keep growing people who know the work: the human check is only as good as the person doing it, and the Danish study found firms adding AI-checking work, not removing people.'
   },
-  {
-    type: 'statement',
-    body: 'Don’t leave with six new ideas and no action. Leave with one commitment.',
-    subtitle: 'Copy your answers before you go',
-    design: { words: 'rise', wordStagger: 'wave' },
-    notes: 'CLOSE · 30 SECONDS. Ask everyone to tell their neighbour their answer to question 2 and question 4: the action and the date. Saying it to someone else is what makes it happen.'
-  },
+  clip('commit', 'Leave with one commitment',
+    'Animation: six new ideas float up: a chatbot for the website, a new CRM, an AI policy, automate invoice reminders, AI social posts, a smarter rota. Five drift away. One becomes a line of the 7-day action plan: automate my invoice reminders; support: technology; within 7 days; worked if two hours a week come back. Don’t leave with six new ideas. Leave with one commitment.',
+    'CLOSE · 30 SECONDS. Ask everyone to tell their neighbour their answer to question 2 and question 4: the action and the date. Saying it to someone else is what makes it happen.'),
+
   {
     type: 'keyfact',
     title: 'Thank you',
@@ -533,7 +563,16 @@ const slides = [
       'Speak to our team after the session about the support available to your business.'
     ],
     progressive: true, buildMode: 'dim',
-    notes: 'CLOSE · 1 MINUTE. Say it: "We aim to help local businesses not only survive, but become more productive, resilient and ready to grow." Thank CDA and the partners again, say where the team will be standing, and hand over to the networking: "Go and swap a prompt, and find the support you ticked."'
+    notes: 'CLOSE · 1 MINUTE. Then leave the survey slide (next) up through the networking. Say it: "We aim to help local businesses not only survive, but become more productive, resilient and ready to grow." Thank CDA and the partners again, say where the team will be standing, and hand over to the networking: "Go and swap a prompt, and find the support you ticked."'
+  },
+  {
+    type: 'image',
+    title: 'Tell us what you need',
+    image: supportAsset('support-survey'),
+    imageFit: 'cover',
+    imageAlt: 'Tell us what you need: a short survey on the AI support local businesses want. Scan the code. Two minutes.',
+    design: { capStyle: 'none' },
+    notes: 'LEAVE UP DURING THE NETWORKING. BEFORE THE DAY: this is a SAMPLE code; set SUPPORT.survey.url in tools/build-ai-sme-productivity.js to the real survey link and rebuild. Agree with CDA whose survey it is and what happens to the answers, and say so out loud.'
   },
   {
     type: 'content',
@@ -582,6 +621,64 @@ fs.writeFileSync(path.join(ROOT, PLAN_QR), SF.qrSvg(PLAN_URL, { dark: '#264258',
 <text x="${x0 + side / 2}" y="${y0 + side + 72}" text-anchor="middle" ${font} font-size="25" fill="#ffffff">${PLAN_SHORT}</text>
 </svg>
 `);
+}
+
+/* The support posters: partner cards with their logos and a code each, drawn
+   as one picture per slide so the codes are big enough to scan from the back
+   of a room. Logos sit on the deck's dark navy, which every partner's logo was
+   made for. A partner with no url yet gets a SAMPLE code, marked as one. */
+{
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const font = `font-family="'Uncut Sans', 'Helvetica Neue', Arial, sans-serif"`;
+  const dataUri = file => {
+    const mime = file.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+    return `data:${mime};base64,${fs.readFileSync(path.join(ROOT, file)).toString('base64')}`;
+  };
+  const qrPath = (text, x0, y0, side) => {
+    const code = SF.qr(text, {});
+    const quiet = 4, span = code.size + quiet * 2, unit = side / span;
+    let d = '';
+    for (let y = 0; y < code.size; y++) for (let x = 0; x < code.size; x++) {
+      if (code.modules[y][x]) d += `M${(x0 + (x + quiet) * unit).toFixed(2)} ${(y0 + (y + quiet) * unit).toFixed(2)}h${unit.toFixed(2)}v${unit.toFixed(2)}h-${unit.toFixed(2)}z`;
+    }
+    return `<rect x="${x0}" y="${y0}" width="${side}" height="${side}" rx="14" fill="#ffffff"/><path fill="#254258" shape-rendering="crispEdges" d="${d}"/>`;
+  };
+  const short = url => url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const scanLabel = (key, x, y) => {
+    const s = SUPPORT[key];
+    return s.url
+      ? `<text x="${x}" y="${y}" ${font} font-size="22" fill="#c9d6df">${esc(short(s.url))}</text>`
+      : `<rect x="${x}" y="${y - 25}" width="262" height="36" rx="18" fill="#ff9667"/><text x="${x + 131}" y="${y}" text-anchor="middle" ${font} font-size="18" font-weight="600" fill="#1b3245">SAMPLE · LINK TO COME</text>`;
+  };
+  const frame = (title, body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img"><title>${esc(title)}</title>
+<rect width="1280" height="720" fill="#254258"/>${body}
+</svg>
+`;
+  for (const slide of SUPPORT_SLIDES) {
+    let body = `<text x="96" y="104" ${font} font-size="22" letter-spacing="3" fill="#00c57f">${esc(slide.kicker.toUpperCase())}</text>
+<text x="94" y="162" ${font} font-size="52" font-weight="600" fill="#ffffff">${esc(slide.title)}</text>`;
+    slide.cards.forEach((key, i) => {
+      const s = SUPPORT[key], x = 96 + i * 552, y = 214, w = 528, h = 440;
+      body += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="26" fill="#1b3245" stroke="rgba(255,255,255,.16)"/>
+<image href="${dataUri(s.logo)}" x="${x + 32}" y="${y + 30}" width="${w - 64}" height="88" preserveAspectRatio="xMinYMid meet"/>
+<text x="${x + 32}" y="${y + 162}" ${font} font-size="30" font-weight="600" fill="#ffffff">${esc(s.name)}</text>
+<text ${font} font-size="23" fill="#c9d6df">${s.lines.map((l, j) => `<tspan x="${x + 32}" y="${y + 200 + j * 30}">${esc(l)}</tspan>`).join('')}</text>
+${qrPath(s.url || sampleText(key), x + 32, y + 262, 156)}
+<text x="${x + 212}" y="${y + 312}" ${font} font-size="26" font-weight="600" fill="#ffffff">Scan to find out more</text>
+${scanLabel(key, x + 212, y + 356)}`;
+    });
+    fs.writeFileSync(path.join(ROOT, supportAsset(slide.file)), frame(`${slide.kicker}: ${slide.title}`, body));
+  }
+  /* The survey: one large code, like the plan's scan slide. */
+  const sv = SUPPORT.survey;
+  fs.writeFileSync(path.join(ROOT, supportAsset('support-survey')), frame('Tell us what you need: a short survey on the AI support local businesses want',
+    `<path d="M0 720 L230 470 L0 220 Z" fill="#00c57f" opacity=".14"/>
+<text x="96" y="214" ${font} font-size="26" letter-spacing="3" fill="#00c57f">TELL US WHAT YOU NEED</text>
+<text ${font} font-size="70" font-weight="600" fill="#ffffff"><tspan x="92" y="300">Help shape local</tspan><tspan x="92" y="380">AI support</tspan></text>
+<text ${font} font-size="28" fill="#d7e2ea"><tspan x="96" y="452">A short survey on the help your</tspan><tspan x="96" y="492">business wants with AI.</tspan><tspan x="96" y="532">Two minutes, on your phone.</tspan></text>
+${qrPath(sv.url || sampleText('survey'), 760, 110, 440)}
+${sv.url ? `<text x="980" y="622" text-anchor="middle" ${font} font-size="25" fill="#ffffff">${esc(short(sv.url))}</text>`
+    : `<rect x="830" y="590" width="300" height="44" rx="22" fill="#ff9667"/><text x="980" y="620" text-anchor="middle" ${font} font-size="22" font-weight="600" fill="#1b3245">SAMPLE · LINK TO COME</text>`}`));
 }
 
 const deck = SF.normalizeDeck({

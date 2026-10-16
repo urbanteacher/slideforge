@@ -1,0 +1,128 @@
+<!doctype html>
+<!-- "Imagine it's Friday, 4pm": the week's admin piles up on the clock, then
+     one job is handed to AI (and checked by you) and the clock gives an hour
+     back. Plays after the hands-up in The Power of AI. -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Friday, 4pm</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+  #title { left: 140px; top: 150px; width: 900px; }
+  #sub { left: 140px; top: 380px; width: 820px; }
+  #end { left: 140px; top: 372px; width: 1000px; color: #cefd85; font-size: 50px; white-space: nowrap; }
+  #time { left: 1180px; top: 812px; width: 620px; text-align: center; font-size: 54px; font-weight: 600; color: #c9d6df; }
+  .task { left: 140px; width: 900px; height: 82px; padding: 0 30px; display: flex; align-items: center; gap: 22px;
+    font-size: 34px; font-weight: 600; transform-origin: left center; }
+  .task .dot { width: 18px; height: 18px; border-radius: 50%; flex: none; }
+  .task .note { margin-left: auto; font-size: 26px; font-weight: 400; color: #c9d6df; white-space: nowrap; }
+  #clock { left: 1180px; top: 170px; }
+</style>
+</head>
+<body>
+<div class="abs" id="title"><div class="kicker" id="kick">Imagine</div><div class="h1" id="h">It’s Friday. 4pm.</div></div>
+<div class="abs body" id="sub">And this is still on your list.</div>
+<div id="tasks"></div>
+<canvas class="abs" id="clock" width="620" height="620"></canvas>
+<div class="abs" id="time">4:00 pm</div>
+<div class="abs h2" id="end"></div>
+<script src="kit.js"></script>
+<script>
+window.MOTION = { duration: 11, fps: 24, width: 1920, height: 1080, loop: false };
+const { INK, outExpo, inOutQuart, inExpo, span, mix, spring, words, fade } = KIT;
+
+const TASKS = [
+  ['Chase 12 unpaid invoices', '1 hr', INK.coral],
+  ['Quote for the Hendersons', '45 min', INK.sky],
+  ['Reply to 3 reviews', '30 min', INK.violet],
+  ['Next week’s rota', '40 min', INK.lime],
+  ['Write the newsletter', '1 hr', INK.sky]
+];
+const box = document.getElementById('tasks');
+box.innerHTML = TASKS.map(([label, time, c], i) =>
+  `<div class="abs card task" id="t${i}"><span class="dot" style="background:${c}"></span><span class="label">${label}</span><span class="note">${time}</span></div>`).join('');
+const cards = TASKS.map((_, i) => document.getElementById('t' + i));
+
+
+const title = words(document.getElementById('h'), 'It’s Friday. 4pm.');
+const endLine = words(document.getElementById('end'), 'One hour back. That’s where it starts.');
+const $ = id => document.getElementById(id);
+
+/* Clock time in minutes after 4pm. It runs on to 7:40 as the list grows, then
+   gives an hour back when the invoices go to AI. */
+function minutesAt(t) {
+  const run = inOutQuart(span(t, 1.2, 4.2)) * 220;      // 4:00 → 7:40
+  const back = inOutQuart(span(t, 6.6, 1.4)) * 60;      // an hour back
+  return run - back;
+}
+
+function draw(t) {
+  fade($('kick'), outExpo(span(t, 0.1, 0.6)), 20);
+  title(t, 0.25);
+  fade($('sub'), outExpo(span(t, 1.0, 0.7)) * (1 - inExpo(span(t, 5.4, 0.4))), 20);
+
+  /* The list drops in one at a time while the clock runs. */
+  cards.forEach((c, i) => {
+    const k = spring(t - (1.5 + i * 0.55), 0.78, 1.5);
+    const enter = Math.min(1, outExpo(span(t, 1.5 + i * 0.55, 0.5)));
+    const y = 470 + i * 96;
+    let opacity = enter, x = (1 - k) * -60, scale = 1;
+    if (i === 0) {
+      /* The invoices: picked out, then shrunk to ten minutes. */
+      const pick = outExpo(span(t, 5.6, 0.6));
+      c.style.borderColor = pick > 0.5 ? INK.green : 'rgba(255,255,255,.16)';
+      c.style.background = `rgba(0,197,127,${0.08 + 0.14 * pick})`;
+      c.querySelector('.note').textContent = t >= 6.6 ? '10 min · AI drafts, you check' : '1 hr';
+      c.querySelector('.note').style.color = t >= 6.6 ? INK.lime : INK.mist;
+    } else {
+      opacity *= 1 - 0.55 * outExpo(span(t, 5.6, 0.6));
+    }
+    c.style.top = y + 'px';
+    c.style.opacity = opacity;
+    c.style.transform = `translateX(${x}px) scale(${scale})`;
+  });
+
+  /* The clock, drawn whole on every frame. */
+  const m = minutesAt(t);
+  const clockIn = spring(t - 0.4, 0.8, 1.2);
+  const cv = $('clock');
+  cv.style.transform = `translateY(${(1 - clockIn) * 50}px)`;
+  cv.style.opacity = outExpo(span(t, 0.4, 0.6));
+  const g = cv.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, 620, 620);
+  g.translate(310, 310);
+  g.fillStyle = INK.deep; g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 4;
+  g.beginPath(); g.arc(0, 0, 290, 0, Math.PI * 2); g.fill(); g.stroke();
+  for (let i = 0; i < 12; i++) {
+    const a = i / 12 * Math.PI * 2;
+    g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = i % 3 ? 4 : 8;
+    g.beginPath(); g.moveTo(Math.sin(a) * 250, -Math.cos(a) * 250); g.lineTo(Math.sin(a) * 272, -Math.cos(a) * 272); g.stroke();
+  }
+  /* The hour given back: a green wedge on the hour hand's scale. */
+  const back = inOutQuart(span(t, 6.6, 1.4)) * 60;
+  if (back > 0.5) {
+    const a0 = (240 + 220 - back) / 720 * Math.PI * 2 - Math.PI / 2, a1 = (240 + 220) / 720 * Math.PI * 2 - Math.PI / 2;
+    g.globalAlpha = 0.55; g.fillStyle = INK.green;
+    g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 230, a0, a1); g.closePath(); g.fill();
+    g.globalAlpha = 1;
+  }
+  const hand = (turn, len, width, colour) => {
+    g.strokeStyle = colour; g.lineWidth = width; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.sin(turn * Math.PI * 2) * len, -Math.cos(turn * Math.PI * 2) * len); g.stroke();
+  };
+  hand((4 * 60 + m) / 720, 150, 16, INK.white);
+  hand(m / 60, 230, 9, INK.lime);
+  g.fillStyle = INK.white; g.beginPath(); g.arc(0, 0, 16, 0, Math.PI * 2); g.fill();
+  const total = 16 * 60 + Math.round(m);
+  $('time').textContent = `${Math.floor(total / 60) - 12}:${String(total % 60).padStart(2, '0')} pm`;
+  fade($('time'), outExpo(span(t, 0.4, 0.6)), 20);
+
+  endLine(t, 8.2, 0.1);
+}
+
+window.renderAt = async t => { await KIT.fontsReady; draw(t); };
+window.renderAt(new URLSearchParams(location.search).has('t') ? Number(new URLSearchParams(location.search).get('t')) : 10);
+</script>
+</body>
+</html>

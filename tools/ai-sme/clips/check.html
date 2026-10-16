@@ -1,0 +1,104 @@
+<!doctype html>
+<!-- Fluent isn't the same as right: an AI translation that reads perfectly,
+     and the one-letter error a person catches (µg read as mg, a thousand-fold
+     dose). After the medical translator in BBC News, "How long will humans be
+     needed for translation?" (14 October 2026). -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>The check</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+  #kick { left: 140px; top: 96px; }
+  #head { left: 140px; top: 138px; }
+  #doc { left: 140px; top: 340px; width: 1160px; height: 420px; padding: 46px 56px; }
+  #doc .meta { font-size: 26px; color: #c9d6df; letter-spacing: .08em; text-transform: uppercase; }
+  #line { margin-top: 34px; font-size: 64px; line-height: 1.3; font-weight: 600; min-height: 250px; }
+  #caret { display: inline-block; width: 5px; height: 64px; background: #cefd85; vertical-align: -8px; margin-left: 4px; }
+  #unit { border-radius: 10px; padding: 0 6px; margin: 0 -6px; }
+  #tag { left: 196px; top: 660px; padding: 10px 22px; border-radius: 24px; font-size: 28px; font-weight: 600; background: rgba(0,197,127,.18); color: #00c57f; }
+  #lens { left: 0; top: 0; width: 230px; height: 230px; border-radius: 50%; border: 8px solid #fff; box-shadow: 0 0 0 4000px rgba(10,20,30,.0); }
+  #handle { left: 0; top: 0; width: 26px; height: 120px; border-radius: 13px; background: #fff; transform-origin: top center; }
+  #note { left: 1360px; top: 360px; width: 440px; }
+  #note .h { font-size: 40px; font-weight: 600; color: #ff9667; line-height: 1.15; }
+  #note .b { margin-top: 16px; font-size: 32px; color: #c9d6df; line-height: 1.35; }
+  #stamp { left: 1360px; top: 640px; padding: 20px 30px; border-radius: 18px; border: 4px solid #00c57f; color: #00c57f;
+    font-size: 36px; font-weight: 700; letter-spacing: .02em; }
+  #foot { left: 140px; top: 800px; font-size: 26px; color: #c9d6df; }
+</style>
+</head>
+<body>
+<div class="abs kicker" id="kick">Fluent isn’t the same as right</div>
+<div class="abs h2" id="head"></div>
+<div class="abs card" id="doc">
+  <div class="meta">Patient leaflet · translated by AI</div>
+  <div id="line"><span id="typed"></span><span id="caret"></span></div>
+</div>
+<div class="abs" id="tag">Reads perfectly</div>
+<div class="abs" id="lens"></div>
+<div class="abs" id="handle"></div>
+<div class="abs" id="note"><div class="h">The source said µg.</div><div class="b">Micrograms, not milligrams: a thousand times the dose.</div></div>
+<div class="abs" id="stamp">✓ Checked by a person</div>
+<div class="abs" id="foot">After a real error a medical translator caught · BBC News, 14 October 2026</div>
+<script src="kit.js"></script>
+<script>
+window.MOTION = { duration: 12, fps: 24, width: 1920, height: 1080, loop: false };
+const { INK, outExpo, inOutQuart, span, spring, words, fade } = KIT;
+const $ = id => document.getElementById(id);
+
+const BEFORE = 'Take 50 ', AFTER = ' of vitamin B12 each morning, with food.';
+const head = words($('head'), 'The better AI writes, the harder its mistakes are to spot.');
+
+function draw(t) {
+  fade($('kick'), outExpo(span(t, 0.1, 0.6)), 16);
+  head(t, 0.3, 0.06);
+  fade($('doc'), outExpo(span(t, 0.9, 0.6)), 30);
+  fade($('foot'), outExpo(span(t, 1.2, 0.6)), 0);
+
+  /* Typing: a steady 30 characters a second, from 1.4 s. */
+  const full = BEFORE + 'mg' + AFTER;
+  const n = Math.max(0, Math.min(full.length, Math.floor((t - 1.4) * 30)));
+  const fixed = t >= 8.0;
+  const unit = fixed ? 'µg' : 'mg';
+  const shown = full.slice(0, n);
+  const a = shown.slice(0, BEFORE.length), u = shown.slice(BEFORE.length, BEFORE.length + 2), b = shown.slice(BEFORE.length + 2);
+  $('typed').innerHTML = a + (u ? `<span id="unit">${u.length === 2 ? unit : u}</span>` : '') + b;
+  const typingDone = n >= full.length;
+  $('caret').style.opacity = typingDone ? 0 : 1;
+  const unitEl = $('unit');
+
+  fade($('tag'), outExpo(span(t, 3.4, 0.5)) * (1 - outExpo(span(t, 5.0, 0.4))), 12);
+
+  /* The lens sweeps the line and stops on the unit. */
+  const lensIn = outExpo(span(t, 4.2, 0.4)), lensOut = outExpo(span(t, 8.6, 0.4));
+  let lx = 0, ly = 0;
+  if (unitEl) {
+    const r = unitEl.getBoundingClientRect();
+    /* Reads along the first line past the unit, then comes back to it. */
+    const ex = r.left + r.width / 2 - 115, past = ex + 360;
+    const go = inOutQuart(span(t, 4.4, 1.0)), back = inOutQuart(span(t, 5.4, 0.6));
+    lx = 160 + (past - 160) * go - (past - ex) * back;
+    ly = r.top + r.height / 2 - 115;
+  }
+  $('lens').style.opacity = lensIn * (1 - lensOut);
+  $('lens').style.transform = `translate(${lx}px, ${ly}px)`;
+  $('handle').style.opacity = lensIn * (1 - lensOut);
+  $('handle').style.transform = `translate(${lx + 190}px, ${ly + 200}px) rotate(-45deg)`;
+
+  /* Caught: the unit goes coral, the note explains, then the fix goes green. */
+  const caught = span(t, 6.0, 0.01) >= 1;
+  if (unitEl) {
+    unitEl.style.background = fixed ? 'rgba(0,197,127,.28)' : caught ? 'rgba(255,150,103,.32)' : 'transparent';
+    unitEl.style.color = fixed ? INK.lime : caught ? INK.coral : INK.white;
+  }
+  fade($('note'), outExpo(span(t, 6.1, 0.6)), 24);
+  const st = spring(t - 8.4, 0.7, 1.6);
+  $('stamp').style.opacity = outExpo(span(t, 8.4, 0.3));
+  $('stamp').style.transform = `translateY(${(1 - st) * 40}px) rotate(-3deg)`;
+}
+
+window.renderAt = async t => { await KIT.fontsReady; draw(t); };
+window.renderAt(new URLSearchParams(location.search).has('t') ? Number(new URLSearchParams(location.search).get('t')) : 11);
+</script>
+</body>
+</html>

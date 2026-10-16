@@ -1,0 +1,87 @@
+<!doctype html>
+<!-- Small hours add up: one hour a week, for ten people, for 52 weeks, fills a
+     grid of 520 squares, about 14 working weeks at 37.5 hours. -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Small hours add up</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+  #kick { left: 140px; top: 96px; }
+  #head { left: 140px; top: 138px; }
+  canvas { left: 0; top: 0; }
+  .lab { font-size: 32px; font-weight: 600; color: #c9d6df; white-space: nowrap; }
+  #lp { left: 140px; top: 318px; }
+  #lw { right: 140px; top: 318px; text-align: right; }
+  #count { left: 140px; top: 790px; font-size: 120px; font-weight: 700; color: #cefd85; line-height: 1; }
+  #count small { font-size: 48px; font-weight: 600; color: #fff; margin-left: 12px; }
+  #weeks { left: 760px; top: 800px; font-size: 52px; font-weight: 600; line-height: 1.1; width: 1020px; }
+  #weeks span { color: #00c57f; }
+  #foot { left: 140px; top: 925px; font-size: 26px; color: #c9d6df; }
+</style>
+</head>
+<body>
+<canvas class="abs" id="grid" width="1920" height="1080"></canvas>
+<div class="abs kicker" id="kick">Small hours add up</div>
+<div class="abs h2" id="head"></div>
+<div class="abs lab" id="lp">10 people ↓</div>
+<div class="abs lab" id="lw">52 weeks →</div>
+<div class="abs" id="count"><span id="n">1</span><small>hours</small></div>
+<div class="abs" id="weeks">≈ <span>14 working weeks</span> of someone’s time, every year.</div>
+<div class="abs" id="foot">Surveys of UK SMEs suggest 2.5 to 5 hours a week (vendor surveys). This claims one.</div>
+<script src="kit.js"></script>
+<script>
+window.MOTION = { duration: 11, fps: 24, width: 1920, height: 1080, loop: false };
+const { INK, outExpo, inOutQuart, span, spring, words, fade } = KIT;
+const $ = id => document.getElementById(id);
+const head = words($('head'), 'One hour back a week, for ten people.');
+
+const X0 = 140, Y0 = 380, COLS = 52, ROWS = 10, PITCH = 1640 / COLS, CELL = PITCH - 6, RP = 38;
+
+/* When each square lights: the first one alone, then the first week's column
+   (ten people), then the year sweeps left to right. */
+function lightAt(c, r) {
+  if (c === 0 && r === 0) return 0.9;
+  if (c === 0) return 1.9 + r * 0.07;
+  return 3.2 + c * 0.055 + r * 0.012;
+}
+
+function draw(t) {
+  fade($('kick'), outExpo(span(t, 0.1, 0.6)), 16);
+  head(t, 0.3, 0.08);
+  fade($('lp'), outExpo(span(t, 1.8, 0.5)), 10);
+  fade($('lw'), outExpo(span(t, 3.1, 0.5)), 10);
+
+  const g = $('grid').getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, 1920, 1080);
+  let lit = 0;
+  for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+    const x = X0 + c * PITCH, y = Y0 + r * RP;
+    const s = lightAt(c, r), k = outExpo(span(t, s, 0.35));
+    g.fillStyle = 'rgba(255,255,255,.07)';
+    g.fillRect(x, y, CELL, RP - 8);
+    if (k > 0) {
+      if (t >= s + 0.12) lit++;
+      const lift = (1 - spring(t - s, 0.7, 2.2)) * 14;
+      g.globalAlpha = k;
+      g.fillStyle = c === 0 && r === 0 ? INK.lime : INK.green;
+      g.fillRect(x, y - lift, CELL, RP - 8);
+      g.globalAlpha = 1;
+    }
+  }
+  /* The grid itself fades in under the first square. */
+  $('grid').style.opacity = outExpo(span(t, 0.6, 0.5));
+
+  $('n').textContent = Math.max(1, lit);
+  $('count').querySelector('small').textContent = lit <= 1 ? 'hour' : 'hours';
+  fade($('count'), outExpo(span(t, 0.9, 0.5)), 20);
+  fade($('weeks'), outExpo(span(t, 6.9, 0.7)), 24);
+  fade($('foot'), outExpo(span(t, 7.8, 0.6)), 0);
+}
+
+window.renderAt = async t => { await KIT.fontsReady; draw(t); };
+window.renderAt(new URLSearchParams(location.search).has('t') ? Number(new URLSearchParams(location.search).get('t')) : 10);
+</script>
+</body>
+</html>
