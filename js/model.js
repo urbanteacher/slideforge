@@ -90,7 +90,7 @@
       return b;
     };
     const range = (parent, label, key, action) => {
-      const wrap2 = el2("label", "ml-range", label), input = document.createElement("input");
+      const wrap3 = el2("label", "ml-range", label), input = document.createElement("input");
       input.type = "range";
       input.min = "0";
       input.max = "100";
@@ -99,8 +99,8 @@
       input.setAttribute("aria-label", label);
       input.value = String(view[key]);
       input.oninput = () => send(action, Number(input.value));
-      wrap2.append(input);
-      parent.append(wrap2);
+      wrap3.append(input);
+      parent.append(wrap3);
       return input;
     };
     pad.replaceChildren();
@@ -1063,9 +1063,9 @@
       return String(Math.round(v * 100) / 100).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
     function chartKey(data, slide) {
-      var wrap2 = el2("div", "chart-key");
+      var wrap3 = el2("div", "chart-key");
       if (!SF.chartUsesSeriesLegend || !SF.chartUsesSeriesLegend(slide && slide.chartKind, data.series.length)) {
-        return wrap2;
+        return wrap3;
       }
       data.series.forEach(function(s, i) {
         var item = el2("span", "ck-item");
@@ -1073,9 +1073,9 @@
         dot.style.background = chartColor(i);
         item.appendChild(dot);
         item.appendChild(el2("span", null, s.name));
-        wrap2.appendChild(item);
+        wrap3.appendChild(item);
       });
-      return wrap2;
+      return wrap3;
     }
     function chartTable(data, slide) {
       if (slide && slide.chartKind === "sankey" && SF.chartFlows) {
@@ -2555,7 +2555,7 @@
         return b;
       }
       function range(parent, label, min, max, value, action) {
-        var wrap2 = node("label", "explore-range"), text2 = node("span", null, label);
+        var wrap3 = node("label", "explore-range"), text2 = node("span", null, label);
         var input2 = node("input");
         input2.type = "range";
         input2.min = String(min);
@@ -2567,8 +2567,8 @@
         input2.oninput = function() {
           send(action, Number(input2.value));
         };
-        wrap2.append(text2, input2);
-        parent.appendChild(wrap2);
+        wrap3.append(text2, input2);
+        parent.appendChild(wrap3);
         return input2;
       }
       root.classList.add("exploration-slide");
@@ -4324,8 +4324,8 @@
         return Math.abs(v) >= /** @type {number} */
         x[0];
       });
-      out = u ? (v / /** @type {number} */
-      u[0]).toPrecision(dp || 3).replace(/\.0+$/, "") + u[1] : String(Math.round(v));
+      out = u ? String(Number((v / /** @type {number} */
+      u[0]).toPrecision(dp || 3))) + u[1] : String(Math.round(v));
     } else {
       out = kind === "d" ? String(Math.round(v)) : v.toFixed(dp);
       if (comma) {
@@ -4399,6 +4399,72 @@
         pips.textContent = "";
         if (of < 2) return;
         for (var i = 0; i < of; i++) el("circle", { cx: -(of - 1 - i) * 18, cy: 0, r: i === at ? 5 : 3.5, fill: i === at ? NU.red : soft, opacity: i === at ? 1 : 0.55 }, pips);
+      }
+    };
+  }
+  function wrap(text2, size, width) {
+    var words = String(text2).split(/\s+/), lines = [], line = "";
+    for (var i = 0; i < words.length; i++) {
+      var next = line ? line + " " + words[i] : words[i];
+      if (line && textWidth(next, size, true) > width) {
+        lines.push(line);
+        line = words[i];
+      } else line = next;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  function explainer(svg, st) {
+    var ink = st.dark ? NU.paper : NU.ink, ground = st.dark ? NU.stage : NU.paper;
+    var panel2 = el("g", { class: "fig-explain", display: "none" }, svg);
+    var btn = el("g", { class: "fig-why", transform: "translate(" + (W - 64 - 108) + " 12)", cursor: "pointer", display: "none", role: "button", "aria-label": "Why? An explanation of this figure" }, svg);
+    var face = el("rect", { width: 108, height: 34, rx: 17, fill: st.dark ? "rgba(255,255,255,.08)" : "#fff", stroke: NU.red, "stroke-width": 2 }, btn);
+    var label = el("text", { x: 54, y: 23, "text-anchor": "middle", "font-family": NU.sans, "font-size": 17, "font-weight": 700, fill: st.dark ? NU.paper : NU.red }, btn, "Why?");
+    var open = false, text2 = "";
+    function draw() {
+      panel2.textContent = "";
+      if (!open) {
+        panel2.setAttribute("display", "none");
+        return;
+      }
+      panel2.setAttribute("display", "inline");
+      el("rect", { width: W, height: H, fill: ground, opacity: 0.96 }, panel2);
+      el("text", { x: 64, y: 58, "font-family": NU.sans, "font-size": 15, "font-weight": 700, "letter-spacing": 2.6, fill: NU.red }, panel2, "WHY? IN PLAIN WORDS");
+      var y = 136;
+      String(text2).split("\n").map(function(p) {
+        return p.trim();
+      }).filter(Boolean).forEach(function(p) {
+        wrap(p, 30, W - 200).forEach(function(l) {
+          el("text", { x: 64, y, "font-family": NU.sans, "font-size": 30, fill: ink }, panel2, l);
+          y += 43;
+        });
+        y += 20;
+      });
+    }
+    btn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      open = !open;
+      label.textContent = open ? "Back" : "Why?";
+      set(face, { fill: open ? NU.red : st.dark ? "rgba(255,255,255,.08)" : "#fff" });
+      set(label, { fill: open ? "#fff" : st.dark ? NU.paper : NU.red });
+      draw();
+      svg.appendChild(panel2);
+      svg.appendChild(btn);
+    });
+    return {
+      /** @param {string} [next] the step's explanation; none hides the button */
+      set: function(next) {
+        text2 = next || "";
+        btn.setAttribute("display", text2 ? "inline" : "none");
+        if (!text2 && open) {
+          open = false;
+          label.textContent = "Why?";
+          set(face, { fill: st.dark ? "rgba(255,255,255,.08)" : "#fff" });
+          set(label, { fill: st.dark ? NU.paper : NU.red });
+        }
+        draw();
+        svg.appendChild(panel2);
+        svg.appendChild(btn);
       }
     };
   }
@@ -4860,7 +4926,16 @@
 
   // src/figures/worldmap.js
   var cache = {};
+  function fromSite(url) {
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(url)) return url;
+    try {
+      if (/\/lab-app\//.test(location.pathname)) return new URL("../" + url, location.href).href;
+    } catch (e) {
+    }
+    return url;
+  }
   function load(url) {
+    url = fromSite(url);
     if (!cache[url]) cache[url] = fetch(url).then(function(r) {
       if (!r.ok) throw new Error("map " + r.status);
       return r.json();
@@ -4991,8 +5066,13 @@
         vals.forEach(function(v) {
           el("line", { x1: sx(v), x2: sx(v), y1: y + 3, y2: y + 11, stroke: st.ink, "stroke-opacity": 0.45 }, legend);
         });
+        var right = -Infinity;
         f.breaks.forEach(function(b) {
-          el("text", { x: sx(b), y: y - 18, "text-anchor": "middle", "font-size": 13, fill: st.ink }, legend, format(f.format || ".3s", b));
+          var label = format(f.format || ".3s", b), half = textWidth(label, 13, true) / 2 + 4, at = sx(b);
+          var x = Math.max(at, right + half);
+          right = x + half;
+          if (x - at > 1) el("path", { d: "M" + at + " " + (y - 13) + " L" + at + " " + (y - 17) + " L" + x + " " + (y - 30), fill: "none", stroke: st.ink, "stroke-opacity": 0.45, "stroke-width": 1 }, legend);
+          el("text", { x, y: x - at > 1 ? y - 33 : y - 18, "text-anchor": "middle", "font-size": 13, fill: st.ink }, legend, label);
         });
         el("text", { x: x0, y: y + 28, "font-size": 13, fill: st.soft }, legend, (f.title || f.field) + (f.method ? " · " + f.method : "") + " · each tick is a country");
       }
@@ -5720,7 +5800,7 @@
     { id: "home", box: [14, 442, 176, 120] }
   ];
   var CLOUD = [394, 52];
-  function wrap(text2, size, width) {
+  function wrap2(text2, size, width) {
     var words = String(text2 || "").split(/\s+/).filter(Boolean), lines = (
       /** @type {string[]} */
       []
@@ -5892,10 +5972,10 @@
         el("rect", { x: P.x, y: P.y, width: P.w, height: 96, rx: 14, fill: YC.navy }, panel2);
         el("rect", { x: P.x, y: P.y + 80, width: P.w, height: 16, fill: YC.navy }, panel2);
         if (tag) el("text", { x, y: P.y + 32, "font-family": YC.sans, "font-size": 14, "font-weight": 700, "letter-spacing": 2.2, fill: YC.pop }, panel2, tag.toUpperCase());
-        var size = Math.round(34 * Math.min(1, k + 0.1)), nameLines = wrap(String(name || "").toUpperCase(), size, wide);
+        var size = Math.round(34 * Math.min(1, k + 0.1)), nameLines = wrap2(String(name || "").toUpperCase(), size, wide);
         if (nameLines.length > 1) {
           size = 28;
-          nameLines = wrap(String(name || "").toUpperCase(), size, wide);
+          nameLines = wrap2(String(name || "").toUpperCase(), size, wide);
         }
         nameLines.slice(0, 2).forEach(function(ln, i) {
           el("text", { x, y: P.y + (nameLines.length > 1 ? 60 : 72) + i * 30, "font-family": YC.display, "font-size": size, fill: "#ffffff" }, panel2, ln);
@@ -5905,7 +5985,7 @@
       function block(head, body, x, y, size, width, draw) {
         if (!body) return y;
         if (draw) el("text", { x, y, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.red }, panel2, head);
-        var lines = wrap(body, size, width);
+        var lines = wrap2(body, size, width);
         if (draw) lines.forEach(function(ln, i) {
           el("text", { x, y: y + 22 + size * 0.2 + i * size * 1.28, "font-family": YC.sans, "font-size": size, fill: YC.ink }, panel2, ln);
         });
@@ -5913,7 +5993,7 @@
       }
       function askBar(ask, x, wide, size, draw) {
         if (!ask) return PANEL.y + PANEL.h;
-        var lines = wrap(ask, size, wide - 28), h = lines.length * size * 1.25 + 46, top = PANEL.y + PANEL.h - 22 - h;
+        var lines = wrap2(ask, size, wide - 28), h = lines.length * size * 1.25 + 46, top = PANEL.y + PANEL.h - 22 - h;
         if (!draw) return top;
         el("rect", { x: x - 8, y: top, width: wide + 16, height: h, rx: 8, fill: YC.pop }, panel2);
         el("text", { x: x + 6, y: top + 24, "font-family": YC.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: YC.ink }, panel2, "ASK THE ROOM");
@@ -5967,10 +6047,10 @@
       function paintContents(info, tag) {
         var f2 = frameOf(tag, info.name || "Matchday", 1), x = f2.x, wide = f2.wide, y = PANEL.y + 128;
         if (info.body) {
-          wrap(info.body, 17, wide).forEach(function(ln, i) {
+          wrap2(info.body, 17, wide).forEach(function(ln, i) {
             el("text", { x, y: y + i * 22, "font-family": YC.sans, "font-size": 17, fill: YC.ink }, panel2, ln);
           });
-          y += wrap(info.body, 17, wide).length * 22 + 14;
+          y += wrap2(info.body, 17, wide).length * 22 + 14;
         }
         var top = askBar(info.ask, x, wide, 18, true);
         var rows2 = ZONES.filter(function(z) {
@@ -6190,6 +6270,7 @@
         if (typeof console !== "undefined") console.error(err);
       }
       var inst = null, shown = -1;
+      var why = live ? explainer(svg, stage2) : null;
       try {
         inst = make.mount(fig);
       } catch (err) {
@@ -6204,6 +6285,7 @@
         } catch (err) {
           failed(err);
         }
+        if (why) why.set(list[k] && list[k].explain);
         shown = k;
       }
       show(at, false);
@@ -7416,7 +7498,7 @@
     }
     function drawLogoFields(insp, redraw) {
       var deck = helpers.deck(), UI = helpers.UI();
-      var wrap2 = el2("div", "logo-fields");
+      var wrap3 = el2("div", "logo-fields");
       if (deck.logo) {
         var preview = el2("div", "logo-preview");
         var img = document.createElement("img");
@@ -7431,7 +7513,7 @@
           else draw();
         });
         preview.appendChild(clear);
-        wrap2.appendChild(preview);
+        wrap3.appendChild(preview);
       }
       var pick2 = el2("input");
       pick2.type = "file";
@@ -7468,10 +7550,10 @@
         };
         fr.readAsDataURL(f);
       });
-      wrap2.appendChild(pick2);
+      wrap3.appendChild(pick2);
       insp.appendChild(UI.field(
         "Lesson logo",
-        wrap2,
+        wrap3,
         "Corner mark on slides. PNG or SVG works best."
       ));
       var url = UI.text("", function() {

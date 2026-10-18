@@ -24,12 +24,21 @@
  *   fly          'scatter' (bubbles at their chart places) | 'home' (at their countries)
  *   label        text set large over the map (a verdict, a question)
  */
-import { NU, W, H, el, set, tween, lerp, format, tooltipCard } from './kit.js';
+import { NU, W, H, el, set, tween, lerp, format, tooltipCard, textWidth } from './kit.js';
 
 /** @type {Record<string, Promise<any>>} */
 var cache = {};
+/* A deck names the world file from the site's root (assets/…). The Lesson studio
+   runs one folder down (lab-app/), where that relative name 404s. */
+/** @param {string} url */
+function fromSite(url) {
+  if (/^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(url)) return url;
+  try { if (/\/lab-app\//.test(location.pathname)) return new URL('../' + url, location.href).href; } catch (e) {}
+  return url;
+}
 /** @param {string} url */
 function load(url) {
+  url = fromSite(url);
   if (!cache[url]) cache[url] = fetch(url).then(function (r) { if (!r.ok) throw new Error('map ' + r.status); return r.json(); });
   return cache[url];
 }
@@ -134,7 +143,17 @@ export var worldmap = {
       var edges = [lo].concat(f.breaks, [hi]);
       for (var i = 0; i < f.colors.length; i++) el('rect', { x: sx(edges[i]), y: y - 12, width: Math.max(1, sx(edges[i + 1]) - sx(edges[i])), height: 12, fill: f.colors[i], stroke: edge, 'stroke-width': 0.6 }, legend);
       vals.forEach(function (v) { el('line', { x1: sx(v), x2: sx(v), y1: y + 3, y2: y + 11, stroke: st.ink, 'stroke-opacity': 0.45 }, legend); });
-      f.breaks.forEach(function (/** @type {number} */ b) { el('text', { x: sx(b), y: y - 18, 'text-anchor': 'middle', 'font-size': 13, fill: st.ink }, legend, format(f.format || '.3s', b)); });
+      /* Each break's label over its place on the line; when skewed data crowds the breaks together
+         (total GDP), a label moves right just enough to clear the one before, with a leader line
+         down to where its break really is. */
+      var right = -Infinity;
+      f.breaks.forEach(function (/** @type {number} */ b) {
+        var label = format(f.format || '.3s', b), half = textWidth(label, 13, true) / 2 + 4, at = sx(b);
+        var x = Math.max(at, right + half);
+        right = x + half;
+        if (x - at > 1) el('path', { d: 'M' + at + ' ' + (y - 13) + ' L' + at + ' ' + (y - 17) + ' L' + x + ' ' + (y - 30), fill: 'none', stroke: st.ink, 'stroke-opacity': 0.45, 'stroke-width': 1 }, legend);
+        el('text', { x: x, y: x - at > 1 ? y - 33 : y - 18, 'text-anchor': 'middle', 'font-size': 13, fill: st.ink }, legend, label);
+      });
       el('text', { x: x0, y: y + 28, 'font-size': 13, fill: st.soft }, legend, (f.title || f.field) + (f.method ? ' · ' + f.method : '') + ' · each tick is a country');
     }
     function paintSymbols() {

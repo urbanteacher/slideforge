@@ -5,6 +5,7 @@
  * Build it points to the same pattern in the student's guide. */
 const F = require('./figures.js');
 const { STRIP } = require('./drawings.js');
+const { STEPS: PAGE_STEPS, MAP_STEPS } = require('./page.js');
 
 const DIR = 'assets/lesson/ipdv/week5';
 const asset = name => `${DIR}/${name}`;
@@ -13,6 +14,42 @@ const pic = (title, file, notes, extra) => Object.assign({ type: 'image', title,
 /** A drawing built one part at a time: each state its own slide, the later ones cut with no transition. */
 const built = (title, files, notes) => files.map((f, i) => pic(title, f, notes[i] || '', i ? { transition: 'none' } : {}));
 const section = (title, part, notes) => ({ type: 'section', title, subtitle: part, notes });
+/* Build the page: the final infographic one week at a time, the Altair beside the panel it makes
+   (tools/ipdv-week5/page.js; the code runs in page/steps.py). Same slides in both lectures, marked for `here`. */
+const PAGE_NOTES = {
+  w1: 'Week 1: lead with the finding. Three tiles, each mark_text layered (big value over caption), set side by side with hconcat. The numbers are computed, never typed: growth from the totals, the leaders with idxmax.',
+  w2: 'Week 2: data → mark → encode → chart. One line of city totals. 2023 is missing for District C, so its total is NaN (min_count=6) and the line breaks: unknown is not zero.',
+  w3: 'Week 3: pick the channel by the task. "Who is highest?" is a comparison, so length on a shared baseline, ranked with sort="-x". Per 1,000 residents, not raw counts.',
+  w4: 'Week 4: colour is data. A sequential blues scale with a fixed domain, so the heatmap and the map can share it. Missing data gets its own grey, layered on top, never the lightest blue.',
+  w5: 'Week 5: the chart answers back. A tooltip with chosen fields and formats, and a hover selection (input → parameter → predicate → response) that turns one point red. Labels so the page still reads in print.',
+  w7: 'Week 7: maps. mark_geoshape, a join with transform_lookup on the district code, a projection. It reuses Week 4\'s rate_colour, so one legend serves both. The squares run clockwise: d3 fills an anticlockwise ring inside out.',
+  page: 'Compose. vconcat stacks the rows, hconcat pairs the panels; configure once, on the whole page. ASK: "Which week taught each panel?" Then save to HTML. The full file, every block in order, is infographic-by-week.py beside the slides.'
+};
+const buildPage = (here, PAGE, between = []) => [
+  section('How does every week end up on one page?', 'Build the page · week by week',
+    '20 s. The final piece, one panel per week, the code that makes each. All of it runs, on the workbook\'s synthetic city: assets/lesson/ipdv/week5/infographic-by-week.py.'),
+  ...between,
+  /* Before any code, for a room new to it: each chart is a piece of paper, | glues side by side, & underneath. */
+  pic('Cut and glue: how Altair makes a page', 'page-cut.svg',
+    '2 min. For anyone nervous about code: no new syntax yet, just the idea. SAY: "Every chart you have made is a piece of paper with a name. ' +
+    'A bar between two names puts them side by side. An and-sign puts one under the other. That is all a page is." ' +
+    'Point at each picture, left to right. Then: "You never move anything by hand, and if the order is wrong you swap two names and run it again. Nothing breaks." ' +
+    'The | and & are shorthand for alt.hconcat and alt.vconcat, which the compose slide uses.'),
+  ...PAGE.map((st, i) => pic(st.week === '★' ? 'Compose: one page, every week' : `Build the page · Week ${st.week}`, `page-${st.id}-w${here}.svg`,
+    `1 min. ${PAGE_NOTES[st.id]}`, i ? { transition: 'none' } : {}))
+];
+/* Before the lecture: a map of London on made-up data, one move at a time, then the hand-over into the maps lecture's three parts. */
+const MAP_NOTES = {
+  m1: 'Before the lecture. Move 1, shapes: load the 33 boroughs (GeoJSON), one feature each, its name in properties. No data yet, so every borough is the same grey. Today\'s Part 1 asks whether this geometry adds meaning at all. If a map ever fills the whole frame, the rings run the wrong way round: d3 wants outer rings clockwise (this copy is fixed).',
+  m2: 'Move 2, data and the join. Made-up numbers, one row per borough, from a seeded generator so everyone gets the same map. transform_lookup brings each row to its shape by name. Colour by name is a check, not the map: any grey borough found no row. Fix the key, never the colour. The lab joins by GSS code instead (guide §3–4), which survives spelling.',
+  m3: 'Move 3, fill: a sequential blues scale, darker means more. A rate per 1,000 residents, not a count, or the biggest boroughs win. Today\'s Part 3 is about this choice: rates, class breaks, palettes.',
+  m4: 'Move 4, flatten and answer back: a projection and a tooltip, saved to HTML so it can be hovered. Try type="identity" with reflectY: London squashes. Choosing the projection is today\'s Part 2.'
+};
+const makeMap = () => [
+  ...MAP_STEPS.map((st, i) => pic(`Make a map of London · move ${st.move}`, `page-${st.id}.svg`, `1 min. ${MAP_NOTES[st.id]}`, i ? { transition: 'none' } : {})),
+  pic('Four moves, and why each one matters', 'page-bridge.svg',
+    '1 min. The hand-over. SAY: "You can write every move already. Today is why: does geography add meaning (Part 1), what the flattening lies about (Part 2), how to fill it honestly (Part 3). The join you practise in the lab."')
+];
 /* An animated demonstration as a silent clip that loops: the Lesson studio draws a GIF as one
    still frame, so each GIF is made into an MP4 (tools/ipdv-week5/gif2mp4.swift) and plays here. */
 const clip = (title, file, notes, extra) => Object.assign({ type: 'video', title, video: asset(file), videoAutoplay: true, videoLoop: true, videoMuted: true, design: { capStyle: 'none' }, notes }, extra || {});
@@ -537,6 +574,8 @@ function week5() {
     ],
     notes: '2 min. One card per stop.' },
 
+  ...buildPage('5', PAGE_STEPS),
+
   { type: 'content', title: 'Next: Lab 5 · Interaction and animation',
     bullets: [
       'Audience\tTask 1: a persona for your chart (guide §1)',
@@ -577,11 +616,6 @@ function maps() {
     ],
     notes: '1 min. Fixes carried over from the 2025 maps deck: it said "Week 6 / Lecture 6" throughout, "Analysis Farmwork", and its recap slide listed interaction goals rather than last lecture.' },
 
-  pic('One chart at a time', 'route-maps.svg',
-    '1 min. The route so far: five weeks behind them. Week 5 taught the chart to answer back.'),
-  pic('Then one page', 'ahead-maps.svg',
-    '1 min. Reading week is done; today, Week 7, the chart learns where. The map grid is one panel of the final infographic.', { transition: 'none' }),
-
   { type: 'content', title: 'Last lecture: charts that answer back',
     bullets: [
       'Audience\tStart from a persona: who asks, and what',
@@ -591,13 +625,25 @@ function maps() {
     ],
     notes: '1 min. A real recap this time (the 2025 maps deck\'s recap slide listed interaction goals instead).' },
 
+  /* Moved here by the user: the pack opens the lecture. The section, the route, the page built
+     week by week, then the map panel one move at a time, handing over to today's three parts. */
+  ...buildPage('7', PAGE_STEPS, [
+    pic('One chart at a time', 'route-maps.svg',
+      '1 min. The route so far: five weeks behind them. Week 5 taught the chart to answer back.'),
+    pic('Then one page', 'ahead-maps.svg',
+      '1 min. Reading week is done; today, Week 7, the chart learns where. The map grid is one panel of the final infographic.', { transition: 'none' })
+  ]),
+  ...makeMap(),
+
+
   { type: 'content', title: 'By the end of today you can',
     bullets: [
       'Explain\twhy maps matter, and when to use given spatial position',
       'Choose\ta projection by what it must keep: shape, area, distance or direction',
       'Design\ta choropleth: normalised rates, honest class breaks, an accessible palette',
       'Pick\tthe map type for the data: choropleth, symbols, dot density, flow',
-      'Build\ta map in Altair with mark_geoshape, a join and a tooltip'
+      'Build\ta map in Altair with mark_geoshape, a join and a tooltip',
+      'Map\tresponsibly: privacy, disputed borders, colour-blind readers'
     ], progressive: true,
     notes: '1 min. Rewritten from the 2025 maps deck\'s overview (slide 5).' },
 
@@ -608,7 +654,7 @@ function maps() {
       { caption: 'Week 5 ended here: Rosling\'s chart, every country a bubble.', projection: 'equalEarth', fly: 'scatter' },
       { caption: 'Same marks, a different layout: geography. Today: when that adds meaning, and what the map lies about.', projection: 'equalEarth', fly: 'home' }
     ],
-    notes: '1 min. The hook: the last thing they saw last time. Then into Part 1.' },
+    notes: '1 min. The hook: the last thing they saw last time, the bubbles landing on a map. Then what they will be able to do by the end, and the page this map joins.' },
 
   { type: 'journey', title: 'Today’s route', subtitle: 'Three stops, one question each', progressive: false,
     bullets: [
@@ -693,7 +739,17 @@ function maps() {
     notes: '2 min. LIVE: drag Greenland with the mouse; it is re-projected as it moves (Mercator stretches by 1/cos(latitude)). NEXT moves it beside West Africa.\n' +
       'Greenland 2.2 million km², Africa 30.4 million km²: about 14 times. The true size of: thetruesize.com.' },
 
-  pic('See it: Is Greenland bigger than Africa?', 'greenland-africa.jpg', '30 s. From the maps deck. The question everyone has asked once.'),
+  pic('See it: Is Greenland bigger than Africa?', 'greenland-africa.jpg',
+    '30 s. From the maps deck. The question everyone has asked once. It opens Part 2 as a question: ASK "Hands up if you think Greenland is about Africa\'s size." Don\'t flip yet: the next slides answer it live (Drag Greenland). Come back and press ⇄ for the facts afterwards, or now if time is short.\n' +
+    'Checked: Greenland 2,166,086 km², Africa about 30.37 million km² (WorldAtlas; truesize.net).',
+    { body: [
+      'No. Africa is about 14 times bigger than Greenland.',
+      'Greenland: about 2.17 million km². Africa: about 30.4 million km².',
+      'On a Mercator map they look the same size, because Mercator stretches land more the further it is from the equator.',
+      'Greenland is far north, so it is stretched a lot. Africa sits on the equator, so it is hardly stretched at all.',
+      'Mercator was made in 1569 for sailors: it keeps shapes and directions right, and gives up true areas to do it.',
+      'For data maps, pick an equal-area projection such as Equal Earth, so a bigger shape really means a bigger place.'
+    ].join('\n') }),
 
   { type: 'table', title: 'What each projection keeps', tableHeader: true,
     body: 'Family\tKeeps\tDistorts\tUse for\n' +
@@ -742,7 +798,7 @@ function maps() {
     bullets: [
       'MAUP\tThe same points give different patterns with different boundaries: boroughs, wards, postcodes (Openshaw 1984).',
       'Big empty places\tLarge, sparsely populated areas dominate the ink. Consider a cartogram or symbols.',
-      'Colour\tWeek 4: sequential for rates, diverging only with a real midpoint, a colour-blind-safe scheme, and grey for no data.'
+      'No data\tA place with no data gets its own grey, never the lightest colour: unknown is not low.'
     ],
     notes: '2 min. MAUP: the modifiable areal unit problem. Land is not people: Russia and Canada dominate any world choropleth.' },
 
@@ -795,4 +851,220 @@ function maps() {
   ];
 }
 
-module.exports = { week5, maps };
+/* Every outside picture in the maps lecture gets a title on the slide and plain-English facts
+   on its back (Flip to facts, ⇄), so a student who has not seen it before knows what it shows
+   and why it is here. Keyed by picture; the title replaces the slide's own. */
+const SEE = {
+  'election-data.png': {
+    title: 'As a chart: how many seats each party held',
+    facts: [
+      'This is a chart, not a map: one dot for each of the 650 seats in Parliament.',
+      'It shows the seats each party held just before the 2019 general election (BBC).',
+      'It answers "who has the most?": Conservatives 298, Labour 243, then the smaller parties.',
+      'It cannot answer "where?". Every seat looks the same, wherever it is.'
+    ],
+    notes: '1 min. The chart half of the pair: seats before the 2019 election (BBC). It tells you who, not where. Note: the map on the next slide is the 2017 result, so the numbers are not meant to match; the point is what each picture can answer.' },
+  'election-map.png': {
+    title: 'As a map: where each party won',
+    facts: [
+      'The same kind of data, results by seat, drawn as a map: each shape is one constituency, coloured by the party that won it (BBC, 2017 general election).',
+      'Now you can see where: Labour (red) in the big cities, the SNP (yellow) across Scotland, Conservatives (blue) across most of rural England.',
+      'Watch out: big rural seats look important, but each seat counts once. Tiny city seats (London, Birmingham) almost disappear.',
+      'So a map answers "where?" well, and "how many?" badly. Many maps put a chart beside them for that reason.'
+    ] },
+  'projection-surfaces.jpg': {
+    title: 'Flattening the globe: plane, cone, cylinder',
+    facts: [
+      'A projection is a recipe for flattening the round Earth onto a flat page.',
+      'Imagine a light inside the globe throwing the outlines onto a flat sheet (plane), a cone, or a cylinder wrapped around it.',
+      'Mercator is a cylinder projection. Many maps of countries, like the USA, use a cone.',
+      'You cannot flatten a sphere without stretching or tearing it, so every flat map gets something wrong: shape, area, distance or direction.'
+    ] },
+  'dw-choropleth.png': {
+    title: 'Smaller areas show more of the pattern',
+    facts: [
+      'Both maps show the same measure across the USA. Left: one colour per state (about 50 areas). Right: one colour per county (about 3,000).',
+      'The state map averages everything inside each state, so a whole state turns one colour and the detail inside it is lost.',
+      'The county map shows where values are really high or low, inside each state.',
+      'Datawrapper\'s advice: use the smallest areas your data has. Exception: for US presidential elections states matter, because each state\'s votes are counted as a whole.'
+    ],
+    notes: '1 min. Datawrapper\'s choropleth guide: choose the smallest units you can ("a more refined image of the data"), states vs counties. The exception they give is US presidential elections (winner takes all by state).' },
+  'class-breaks-four.png': {
+    title: 'Same data, four maps: where you cut the colours',
+    facts: [
+      'All four maps show the same data: unemployment rate in every US county. Only the colour groups (class breaks) change.',
+      'Min/Max: one smooth scale from lowest to highest. A few extreme counties stretch it, so most of the map looks pale.',
+      'Min/Medium/Max: the middle of the scale moves to the middle value, so more of the map gets darker.',
+      'Quartiles and quintiles: each colour holds the same number of counties (a quarter, or a fifth). The map looks evenly mixed, even where the real differences are small.',
+      'None of them is "the truth". Pick the breaks for the question you are asking, and say which you used.'
+    ] },
+  'boston-road-satellite.png': {
+    title: 'Same place, two pictures: every map tells white lies',
+    facts: [
+      'Both show the same part of Boston. Left: a Google road map. Right: a satellite photo of what is really there.',
+      'The road map looks simple and tidy, but the ground is not: it is packed with buildings, trees, water and many small streets.',
+      'The map invents things to help you: main roads drawn thick and yellow, smaller ones thin or left out. Real roads are not those colours or widths.',
+      'It leaves out almost everything else, so the routes and places like Cambridge or the airport stand out.',
+      'Mark Monmonier: "to present a useful and truthful picture, an accurate map must tell white lies" (How to Lie with Maps).',
+      'Those lies help here: you could not drive around Boston with the photo. The same tricks can mislead when they hide something that matters.'
+    ],
+    notes: '1 min. The example from the open textbook Mapping, Society, and Technology (Manson, ed.), ch. 7 Lying With Maps (Deluca and Nelson): Google road map vs satellite imagery of Boston. Symbolisation (road size and colour) and generalisation are the white lies. ASK: "What has the left map left out? Would you want it back?"' }
+};
+/* The three world Build-it slides, drawn with the picture each makes (page.js BUILDS). */
+const BUILD_OF = { 'Build it: one line makes a world': 'world', 'Build it: change one word': 'projection', 'Build it: a choropleth that answers back': 'choropleth' };
+/* Why?: a plain-English explanation behind each step of every live figure (the figure's Why? button,
+   src/figures/kit.js explainer), for a room meeting the idea for the first time. Keyed by title. */
+const WHY = {
+  'The bubbles flew home': [
+    'Last week every country was a bubble on a chart: how rich it is (across) against how long people live (up).\nThe bubbles keep their colour and size. Only their position changes.',
+    'Now each bubble has moved to where its country is on a map.\nSame data, a different layout: on a chart, position means a number. On a map, position means a place.\nToday asks when that swap is worth it.'
+  ],
+  'The world was there all along': [
+    'Each colour is a region of the world, the same colours as last week\'s bubbles.\nBecause regions are places, a map shows them more naturally than a chart: you can see which countries sit together.',
+    'A map can answer back like any chart: point at a country to read its name and numbers.\nThe tooltip is the same Altair code as last week: tooltip=.'
+  ],
+  'Watch the world change shape': [
+    'This is the Mercator projection. A projection is the recipe for flattening the round Earth onto a flat screen.\nMercator keeps shapes and directions right, which is why sailors used it. But it stretches land the further it is from the equator, so Greenland, Canada and Russia look huge.',
+    'This is Equal Earth. It keeps every country\'s area right, so size can be trusted.\nThe price: shapes near the edges look squashed or bent. Every point on the map has moved, but no country has changed.',
+    'This is Robinson, a compromise: shapes and sizes are both a little wrong, nothing badly wrong.\nIt is common on wall maps. For data, where size must mean something, an equal-area projection like Equal Earth is the safer choice.'
+  ],
+  'Drag Greenland': [
+    'On this Mercator map Greenland looks about as big as Africa.\nDrag it south towards the equator and watch it shrink: Mercator only exaggerates size far from the equator.',
+    'At Africa\'s latitude Greenland is drawn at its true size. Africa is about 14 times bigger (30.4 million km² against 2.2 million km²).\nThe land did not change. Only the map\'s stretching did.'
+  ],
+  'Map rates, not people': [
+    'Each country is coloured by its total GDP: the whole value of everything it produces in a year.\nThe darkest countries are mostly just the biggest ones, with the most people. So this map mainly shows where people live, not how rich they are.\nThe strip under the map is the colour key: each tick is a country.',
+    'Now each country is coloured by GDP per person: total GDP divided by population. That is a rate.\nA very different world appears: small rich countries go dark, big populous ones get lighter.\nRule of thumb: fill a map with rates (per person, per cent), never raw counts.'
+  ],
+  'Break it three ways': [
+    'A choropleth sorts countries into a few colour groups (classes). Where you cut the groups changes the map.\nEqual interval: the range from lowest to highest is cut into five equal slices. A few very rich countries (Qatar) stretch the top, so almost everyone lands in the palest group.',
+    'Quantile: each colour gets the same number of countries. Every colour is used and the map looks lively.\nBut countries only a little apart can land in different colours, and very far apart ones in the same colour.',
+    'Natural breaks: the cuts are placed where the data has gaps, so similar countries share a colour.\nIt is usually the most honest default. Whatever you choose, say which method you used in the legend.'
+  ],
+  'Counts belong in symbols': [
+    'A count, like population, goes in the size of a circle drawn at each country, not in its fill.\nIf you filled the shapes by count, big countries would look important just because they are big.',
+    'A rate, like life expectancy, goes in the fill colour, because it does not depend on how big the country is.\nPoint at a country: the tooltip shows the exact numbers behind the colour.'
+  ]
+};
+function withSee(slides) {
+  return slides.map(sl => {
+    /* The six map types as cards, each with what it is good for and what to watch out for (maptypes.js). */
+    if (sl.type === 'image' && /map-types\.jpg$/.test(sl.image || '')) {
+      return pic('Six kinds of map: good for, watch out', 'map-types-cards.svg',
+        '2 min. One card at a time, left to right. For each: what data it suits, and the trap. ASK: "Which would you use for London\'s population? For commuting into the City?"');
+    }
+    if (sl.type === 'figure' && WHY[sl.title]) {
+      return { ...sl, figureSteps: sl.figureSteps.map((st, i) => (WHY[sl.title][i] ? { ...st, explain: WHY[sl.title][i] } : st)),
+        notes: sl.notes + '\nWhy? (top right) opens a plain-English explanation of this step over the figure.' };
+    }
+    if (sl.type === 'code' && BUILD_OF[sl.title]) {
+      return pic(sl.title, `build-${BUILD_OF[sl.title]}.svg`, sl.notes + '\nThe code to copy:\n' + sl.code);
+    }
+    const file = sl.type === 'image' && String(sl.image || '').split('/').pop();
+    const see = file && SEE[file];
+    /* The caption on a fade over the picture (capStyle 'scrim'), not on a bar beneath it: the
+       picture keeps the slide's height, so the back row can read it. Every outside picture with
+       facts, from here on. */
+    if (!see) return sl.body && /\.(png|jpe?g)$/i.test(file || '') ? { ...sl, design: { ...(sl.design || {}), capStyle: 'scrim' } } : sl;
+    return { ...sl, title: see.title, body: see.facts.join('\n'), design: { ...(sl.design || {}), capStyle: 'scrim' },
+      notes: (see.notes || sl.notes) + '\nPress ⇄ to turn the slide over for the facts.' };
+  });
+}
+
+/* The maps lecture in scaffold order (18 Oct 2026): the hook and the outcomes before the pack; the
+   London map taught before the infographic's map panel uses it; in each part the concrete example
+   before the rule, the question before the demo that answers it. Positions are the slides as
+   maps() lists them (1-based); every slide appears once. */
+/* What the 2025 maps deck taught that this lecture had dropped (compared on 18 Oct 2026, its PDF
+   01_Lecture_IPDV_6): each piece in plain words, placed where it builds on what comes before. */
+const ADDED = {
+  london: pic('Same place, three different jobs', 'london-three.svg',
+    '2 min. From the 2025 deck (slides 14–16). ASK: "What is each one for?" A map to find your way (Tirion, 1754, after John Rocque\'s survey), a map to explore, a map to compare data (Kousoulis and Goldie, The Lancet Psychiatry, 2017). Only the last is a data visualisation; today is about that kind.'),
+  uses: { type: 'content', title: 'Why maps matter: where they are used', progressive: true,
+    bullets: [
+      'Decisions\tWhere to build, spend money or send help.',
+      'Deliveries\tShorter routes and live apps: less fuel, faster vans, taxis on time.',
+      'Environment\tFloods, wildfires and pollution tracked, and people warned early.',
+      'Cities\tTraffic, buses and trains, shops, and where crime happens.'
+    ],
+    notes: '2 min. From the 2025 deck (slide 11), in plain words. Also from that slide: shops choose new sites from who lives nearby and footfall; ride-sharing and delivery firms compete on real-time maps. ASK: "Which map did you use today?" Most have: a bus app, a delivery tracker, the weather.' },
+  whatwhyhow: { type: 'cards', title: 'What? Why? How? for a map', progressive: true,
+    bullets: [
+      'What?\tThe data: places (shapes or points) with a value for each, like bike hires per 1,000 residents in each borough.',
+      'Why?\tThe task: find where values are high or low, spot clusters, compare neighbours.',
+      'How?\tThe idiom: use the real position as the layout, then put the value into colour or size.'
+    ],
+    notes: '2 min. Munzner\'s What–Why–How, the frame from Week 3 (the 2025 deck spent slides 6–9 on her three diagrams). The map decides How: x and y are taken by the place, so the value must go into a weaker channel.' },
+  story: { type: 'content', title: 'When geography is the story', progressive: true,
+    bullets: [
+      'Nearby\tWhere things are matters to each other: a shop next to its competitors.',
+      'Pattern\tThe insight is a pattern of places: cities and countryside vote differently.',
+      'Questions\tPeople ask by place: "Which areas voted for X?"',
+      'Movement\tThings flow between places: migration, shipping routes.'
+    ],
+    notes: '1 min. From the 2025 deck (slide 13), each with its example. If none of the four fits, a chart is probably clearer.' },
+  mental: { type: 'cards', title: 'Everyone carries a map in their head', progressive: true,
+    bullets: [
+      'Recognise\tPeople know familiar shapes at once, with no training: the UK, the Thames, their own borough.',
+      'Varies\tWhat people know about places depends on where they grew up and what they learned.',
+      'Label\tSo label the places that matter. Don\'t assume everyone knows where Hackney or Bratislava is.'
+    ],
+    notes: '1 min. Mental models and geographic literacy (2025 deck, slide 17). It is question 3 of "Should this be a map?" (two slides on): will the audience understand the places?' },
+  colour: { type: 'content', title: 'Choose the colours', progressive: true,
+    bullets: [
+      'Sequential\tOne colour, light to dark, for low to high: rates and percentages.',
+      'Diverging\tTwo colours out from a middle, for above or below average.',
+      'Colour-blind\tAbout 1 in 12 men cannot tell red from green: never rely on red against green.',
+      'Context\tHow many colours, and where to cut them, always depends on the data and the question.'
+    ],
+    notes: '2 min. From the 2025 deck (slides 30 and 32). Week 4 taught these schemes; here they meet a map. About 8% of men (and about 0.5% of women) have red–green colour-vision deficiency.' },
+  brewer: { type: 'content', title: 'Try it: ColorBrewer',
+    bullets: [
+      'Open\tcolorbrewer2.org',
+      'Set\t5 classes, and "sequential" for the nature of your data',
+      'Tick\t"colorblind safe": which schemes are left?',
+      'Use\tThe same names work in Altair: scheme=\'blues\', \'greens\', \'purples\''
+    ],
+    notes: '3 min. The 2025 deck\'s activity (slide 30). Pairs. Then switch to "diverging" and tick colour-blind safe again: fewer survive. ColorBrewer is Cynthia Brewer\'s tool, made for maps.' },
+  formats: { type: 'content', title: 'Map files and coordinates', progressive: true,
+    bullets: [
+      'GeoJSON\tShapes written as text: what you load in Altair (our London file).',
+      'TopoJSON\tGeoJSON made smaller: shared borders stored once (our world map).',
+      'Others\tShapefile (the GIS format, several files: open with GeoPandas); KML (Google Earth).',
+      'Coordinates\tDegrees (longitude, latitude) are not metres: check before you join or measure.'
+    ],
+    notes: '2 min. From the 2025 deck (slide 33). Detail: simplify shapes for the web, since fewer points draw faster. Our London file keeps one point in four of the original, and draws instantly. A projected file (British National Grid, in metres) will not line up with longitude and latitude until it is converted.' },
+  europe: pic('See it: calls across Europe', 'europe-bubbles.png',
+    '1 min. From the 2025 deck (slide 22), from the Online Journalism Blog\'s guide to when to use maps (2015). ASK: "Does this need to be a map?"',
+    { body: [
+      'Each circle is a country, coloured by its call volume: normal, warning or high.',
+      'Circles, not filled countries, so a big country does not look busier just because it is big.',
+      'But the colours are green, orange and red: colour-blind readers may not tell them apart.',
+      'And the question is "which countries are busiest?": a ranked bar chart would answer it faster.',
+      'A map earns its place only when where the countries are helps the answer.'
+    ].join('\n'), design: { capStyle: 'scrim' } }),
+  responsible: { type: 'cards', title: 'Map responsibly', progressive: true,
+    bullets: [
+      'Privacy\tA dot on a map can be someone\'s home. Group points into areas, or blur them, before you publish.',
+      'Borders\tSome borders and names are disputed. Drawing one takes a side: say whose borders you used.',
+      'Access\tColour-blind-safe palettes, labels on the map, and a sentence that says what it shows.'
+    ],
+    notes: '2 min. The 2025 deck promised "ethical and responsible practice: privacy, geopolitical and accessibility considerations" (slide 5) but never taught it. Disputed borders: Natural Earth, our world file, draws the borders as they are in practice.' }
+};
+/* The order: numbers are the slides as maps() lists them (1-based), names are ADDED. */
+const MAPS_ORDER = [1, 2, 3, 21, 20, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 13, 14, 19, 22,
+  /* Part 1: why maps matter, then kinds of map, then a data map against a chart; then the frame, and the four
+     ideas in the order the decision tree asks them (Q1 given position, Q2 the story, Q3 the audience, Q4 precise
+     values), so "Should this be a map?" recaps them. */
+  23, 24, 'uses', 'london', 27, 28, 'whatwhyhow', 26, 'story', 'mental', 25, 29, 30, 31,
+  32, 49, 36, 33, 34, 35, 37, 38, 39,
+  /* Part 3: ColorBrewer asks for a number of classes, so it follows the class breaks. */
+  40, 41, 'colour', 44, 43, 'brewer', 42, 45, 48, 'formats', 'europe', 46, 47, 'responsible',
+  50, 51, 52, 53, 54];
+function inOrder(slides) {
+  const nums = MAPS_ORDER.filter(n => typeof n === 'number');
+  if (nums.length !== slides.length || new Set(nums).size !== slides.length) throw new Error(`MAPS_ORDER has ${nums.length} places for ${slides.length} slides`);
+  return MAPS_ORDER.map(n => (typeof n === 'number' ? slides[n - 1] : ADDED[n]));
+}
+
+module.exports = { week5, maps: () => inOrder(withSee(maps())) };

@@ -321,7 +321,7 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
         return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), '16:9', 'none', facts), s.imageFit), ground: g };
       }
       if (frame || facts) {
-        const cap = capStyle === 'bar' ? 'bar' : 'plain';
+        const cap = capStyle === 'bar' ? 'bar' : capStyle === 'scrim' ? 'scrim' : 'plain'; // scrim: the gradient caption
         return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), frame || '4:3', cap, facts), s.imageFit), ground: g };
       }
       return { slide: fitted(photo(st, img(s.image), t, sub), s.imageFit), ground: g };

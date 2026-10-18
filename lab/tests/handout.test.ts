@@ -39,3 +39,12 @@ test('the print document: one page to a slide, page CSS, the copy switch, nothin
   assert.match(teacher, /<div class="notes">Say &lt;a&gt;<\/div>/);
   assert.match(teacher, /Teacher copy ▸ switch to student copy/);
 });
+
+test('a slide with facts on its back prints twice: the front, then the facts', () => {
+  const flip = slide('f', { layers: [{ id: 'p', kind: 'image' }, { id: 'b', kind: 'text', face: 'back' }] as unknown as Slide['layers'] });
+  const d = { ...deck, slides: [slide('a'), flip] } as unknown as Deck;
+  const pages = handoutPages(d, false);
+  assert.deepEqual(pages.map((p) => p.id), ['a', 'f', 'f:back']);
+  assert.equal(pages[2].back, true);
+  assert.equal(pages[2].name, 'Slide f (the facts)');
+});

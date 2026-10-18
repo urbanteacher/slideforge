@@ -74,12 +74,12 @@
  },
  "ipdv-ia-w5": {
   "file": "assets/lab-lessons/ipdv-ia-w5.lesson.json",
-  "hash": "0be061a55ae316b3",
+  "hash": "2e0711b37b30aade",
   "carried": 16
  },
  "ipdv-ia-w5-student": {
   "file": "assets/lab-lessons/ipdv-ia-w5-student.lesson.json",
-  "hash": "2a129502602e574a",
+  "hash": "f8ae6b60ff25d3c7",
   "carried": 16
  },
  "ipdv-intro": {
@@ -94,12 +94,12 @@
  },
  "ipdv-maps-w7": {
   "file": "assets/lab-lessons/ipdv-maps-w7.lesson.json",
-  "hash": "f85af6295f7a6f31",
+  "hash": "31365a0ac534640e",
   "carried": 16
  },
  "ipdv-maps-w7-student": {
   "file": "assets/lab-lessons/ipdv-maps-w7-student.lesson.json",
-  "hash": "d1cd41a8ffd6da1f",
+  "hash": "da7b9c156ee14e30",
   "carried": 16
  },
  "ipdv-vc": {

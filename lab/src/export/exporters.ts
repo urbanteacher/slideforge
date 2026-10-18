@@ -72,7 +72,8 @@ function still(): { canvas: HTMLCanvasElement; r: Renderer } {
 }
 
 /** Render a fully built slide to an image data URL. */
-export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2, quality = 0.9, hidden?: Set<string>): string {
+/** `flip` 1 draws the slide turned over to its back face (Flip to facts), as the handout prints it. */
+export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2, quality = 0.9, hidden?: Set<string>, flip = 0): string {
   const { canvas, r } = still();
   r.deckW = deck.width;
   // A thumbnail can be drawn against a bare size with no slides; it simply has no page number.
@@ -80,7 +81,7 @@ export function renderStill(slide: Slide, deck: Deck, width: number, type = 'ima
   r.deckH = deck.height;
   r.setSize(width, Math.round((width * deck.height) / deck.width));
   // `hidden`: layers left out of the picture, as the editable PowerPoint does with the words it sets as text.
-  r.drawSlide(slide, { time, mouse: [0.5, 0.5], t: Infinity, clicks: [], hidden }, null);
+  r.drawSlide(slide, { time, mouse: [0.5, 0.5], t: Infinity, clicks: [], hidden, flip }, null);
   const url = canvas.toDataURL(type, quality);
   // Thumbnails are drawn for every slide in turn; keeping each one's textures would hold the whole
   // deck on the GPU (93 slides of pictures and type was enough to crash it), so only this slide's stay.

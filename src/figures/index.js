@@ -21,7 +21,7 @@
  * Installed per page, before installExplore (index.html, presenter.html,
  * view.html), like the other teaching interactions.
  */
-import { W, H, NS, stage as makeStage, seek } from './kit.js';
+import { W, H, NS, stage as makeStage, seek, explainer } from './kit.js';
 import { bubbles } from './bubbles.js';
 import { codechart } from './codechart.js';
 import { worldmap } from './worldmap.js';
@@ -99,12 +99,15 @@ export function installFigures(SF) {
       if (typeof console !== 'undefined') console.error(err);
     }
     var inst = null, shown = -1;
+    /* Why?: a step's explanation, over the figure, for the room to read (kit.js explainer). Live only. */
+    var why = live ? explainer(svg, stage) : null;
     try { inst = make.mount(fig); } catch (err) { failed(err); return; }
     /** @param {number} i @param {boolean} animate */
     function show(i, animate) {
       var k = Math.max(0, Math.min(last, i));
       stage.pips(k, list.length);
       try { if (inst) inst.update(Object.assign({ index: k }, list[k]), animate && k !== shown); } catch (err) { failed(err); }
+      if (why) why.set(list[k] && list[k].explain);
       shown = k;
     }
     show(at, false);

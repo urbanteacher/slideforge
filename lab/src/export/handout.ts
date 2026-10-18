@@ -5,13 +5,18 @@
 // command-line PDFs (tools/export-teaching-pdf.mjs, AiAd27-Classic/export.mjs) save this one (SF.LabEngine.handoutHtml).
 import type { Deck } from '../core';
 
-export interface HandoutPage { id: string; name: string; notes: string }
+/** `back`: the slide turned over (Flip to facts), its picture under `${id}:back`. */
+export interface HandoutPage { id: string; name: string; notes: string; back?: boolean }
 
-/** The pages of a handout: the shown slides, the answers only in the teacher copy, the notes only there too. */
+/** The pages of a handout: the shown slides, the answers only in the teacher copy, the notes only there too. A slide
+ *  with facts on its back (Flip to facts) gets a second page, turned over, so the facts are on paper too. */
 export function handoutPages(deck: Deck, teacher: boolean): HandoutPage[] {
   return deck.slides
     .filter((s) => !s.hidden && (teacher || s.game?.role !== 'answer'))
-    .map((s) => ({ id: s.id, name: s.name, notes: teacher ? String(s.notes ?? '').trim() : '' }));
+    .flatMap((s) => {
+      const front: HandoutPage = { id: s.id, name: s.name, notes: teacher ? String(s.notes ?? '').trim() : '' };
+      return s.layers.some((l) => l.face === 'back') ? [front, { id: `${s.id}:back`, name: `${s.name} (the facts)`, notes: '', back: true }] : [front];
+    });
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);

@@ -72,10 +72,13 @@ export function exploreSlide(st: LayoutStyle, title: string, src: string, spots:
  * With `facts`, SlideForge's Flip to facts: a ⇄ in the picture's corner turns the slide over to the
  * facts, the picture faint behind them; pressed again, it turns back. Turning over is not a build step.
  */
-export function framedPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, frame = '4:3', cap: 'bar' | 'plain' | 'none' = 'bar', facts = ''): Slide {
+export function framedPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, frame = '4:3', cap: 'bar' | 'plain' | 'none' | 'scrim' = 'bar', facts = ''): Slide {
   const [fw, fh] = frame.split(':').map(Number), ratio = fw > 0 && fh > 0 ? fw / fh : 4 / 3;
   const padT = 84, padB = 72, padX = 138, gap = 39;
   // No caption (SlideForge's capStyle 'none'): the picture is the whole slide, as the deck drew it.
+  // 'scrim' (SlideForge's gradient caption): the picture as large as the slide allows, the caption
+  // over a fade at its foot, so nothing below the picture takes its height. Read from the back row.
+  if (cap === 'scrim') return scrimPictureSlide(st, caption, credit, src, facts);
   const bare = cap === 'none';
   const capH = bare ? 0 : (cap === 'bar' ? 54 : 0) + 62 + (credit ? 50 : 0);
   let h = 1080 - padT - padB - gap - capH, w = h * ratio;
@@ -92,32 +95,50 @@ export function framedPictureSlide(st: LayoutStyle, caption: string, credit: str
   const inner = onBand ? inset(band, 45, 27) : band;
   if (!bare) layers.push(text('Caption', caption, { ...inner, h: 62 }, { font: st.body, weight: '650', size: 51, color: onBand ? '#ffffff' : st.ink, align: 'center', lineHeight: 1.15 }, after(0.4)));
   if (credit && !bare) layers.push(text('Caption credit', credit, { ...inner, y: inner.y + 70, h: 44 }, { font: st.body, weight: '400', size: 36, color: onBand ? 'rgba(255,255,255,0.85)' : st.muted, align: 'center' }, after(0.5)));
-  if (facts.trim()) {
-    const lines = facts.split('\n').map((l) => l.trim()).filter(Boolean);
-    const back = (l: Layer) => { l.face = 'back'; l.anim = { ...l.anim, type: 'none' }; return l; };
-    // The back: the slide's own ground over the picture, the heading, then the facts a paragraph each.
-    const scrim = back(createLayer('shape', { name: 'Facts ground', box: { x: 0, y: 0, w: 1920, h: 1080, rot: 0 }, params: { shape: 'rect', radius: 0, fill: st.ground, strokeWidth: 0 } }));
-    scrim.opacity = 0.94;
-    layers.push(
-      scrim,
-      // Clear of the ⇄, which keeps its corner on both faces.
-      back(heading(st, caption || 'Behind the image', { x: 150, y: (bare ? 84 : pic.y) + 140, w: 1620, h: 100, rot: 0 }, 66, { fit: 'shrink' })),
-      back(text('Facts', lines.join('\n\n'), { x: 150, y: (bare ? 84 : pic.y) + 280, w: 1350, h: 1080 - ((bare ? 84 : pic.y) + 280) - 130, rot: 0 }, { font: st.body, weight: '400', size: 42, color: st.ink, lineHeight: 1.45, fit: 'shrink' })),
-    );
-    // The toggle, just outside the picture's top right corner: clear of the picture on the front and
-    // of the heading and facts on the back. Quiet on the front, lit in the accent on the back.
-    // On a bare, full-slide picture there is no outside: the toggle takes the top right corner.
-    const at: Box = bare ? { x: 1920 - 72 - 30, y: 30, w: 72, h: 72, rot: 0 } : { x: pic.x + w + 24, y: pic.y, w: 72, h: 72, rot: 0 };
-    const toggle = (lit: boolean) => {
-      const disc = createLayer('shape', { name: lit ? 'Back to image' : 'Flip to facts', box: at, params: { shape: 'rect', radius: 14, fill: lit ? st.accent : st.ground, fillOpacity: lit ? 1 : 0.82, stroke: lit ? st.accent : st.ink, strokeOpacity: lit ? 1 : 0.22, strokeWidth: 2, label: '\u21c4', labelColor: lit ? '#ffffff' : st.ink, labelSize: 36, labelFont: st.body, labelWeight: '600' }, anim: after(0.6) });
-      disc.interact = { ...disc.interact, click: 'flip' };
-      if (lit) back(disc);
-      return [disc];
-    };
-    layers.push(...toggle(false), ...toggle(true));
-  }
+  if (facts.trim()) layers.push(...factsLayers(st, caption, facts, bare ? 84 : pic.y,
+    bare ? { x: 1920 - 72 - 30, y: 30, w: 72, h: 72, rot: 0 } : { x: pic.x + w + 24, y: pic.y, w: 72, h: 72, rot: 0 }));
   const s = slide(st, facts.trim() ? 'Flip to facts' : 'Framed picture', layers);
   s.recipe = { kind: 'flip', args: { caption, credit, src, frame, cap, facts } };
+  return s;
+}
+
+/** Flip to facts: the back's ground, heading and facts, and the ⇄ that turns the slide over (both faces). */
+function factsLayers(st: LayoutStyle, caption: string, facts: string, top: number, at: Box): Layer[] {
+  const lines = facts.split('\n').map((l) => l.trim()).filter(Boolean);
+  const back = (l: Layer) => { l.face = 'back'; l.anim = { ...l.anim, type: 'none' }; return l; };
+  // The back: the slide's own ground over the picture, the heading, then the facts a paragraph each.
+  const scrim = back(createLayer('shape', { name: 'Facts ground', box: { x: 0, y: 0, w: 1920, h: 1080, rot: 0 }, params: { shape: 'rect', radius: 0, fill: st.ground, strokeWidth: 0 } }));
+  scrim.opacity = 0.94;
+  const out: Layer[] = [
+    scrim,
+    // Clear of the ⇄, which keeps its place on both faces.
+    back(heading(st, caption || 'Behind the image', { x: 150, y: top + 140, w: 1620, h: 100, rot: 0 }, 66, { fit: 'shrink' })),
+    back(text('Facts', lines.join('\n\n'), { x: 150, y: top + 280, w: 1350, h: 1080 - (top + 280) - 130, rot: 0 }, { font: st.body, weight: '400', size: 42, color: st.ink, lineHeight: 1.45, fit: 'shrink' })),
+  ];
+  // Quiet on the front, lit in the accent on the back.
+  for (const lit of [false, true]) {
+    const disc = createLayer('shape', { name: lit ? 'Back to image' : 'Flip to facts', box: at, params: { shape: 'rect', radius: 14, fill: lit ? st.accent : st.ground, fillOpacity: lit ? 1 : 0.82, stroke: lit ? st.accent : st.ink, strokeOpacity: lit ? 1 : 0.22, strokeWidth: 2, label: '\u21c4', labelColor: lit ? '#ffffff' : st.ink, labelSize: 36, labelFont: st.body, labelWeight: '600' }, anim: after(0.6) });
+    disc.interact = { ...disc.interact, click: 'flip' };
+    out.push(lit ? back(disc) : disc);
+  }
+  return out;
+}
+
+/** SlideForge's gradient caption on a picture with facts: the picture across the slide, clear of the
+ *  logo at the top, fitted whole and ending where the fade begins, so the fade never darkens the
+ *  picture's own words; the caption on the fade at the foot; the ⇄ at the fade's right. */
+function scrimPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, facts: string): Slide {
+  const pic: Box = { x: 60, y: 92, w: 1800, h: 750, rot: 0 };
+  const layers: Layer[] = [
+    createLayer('image', { name: 'Picture', box: pic, params: { src, fit: 'contain', radius: 0 }, anim: { type: 'fade', duration: 0.9 } }),
+    // Clear at the top, dark at the foot, so the caption reads over any picture.
+    createLayer('shape', { name: 'Caption band', box: { x: 0, y: 850, w: 1920, h: 230, rot: 0 }, params: { shape: 'rect', radius: 0, gradient: true, fill: '#000000', fillOpacity: 0, fill2: '#000000', fill2Opacity: 0.82, angle: 90, strokeWidth: 0 }, anim: after(0.3) }),
+    text('Caption', caption, { x: 138, y: 952, w: 1440, h: 66, rot: 0 }, { font: st.body, weight: '650', size: 52, color: '#ffffff', lineHeight: 1.12, fit: 'shrink' }, after(0.4)),
+  ];
+  if (credit) layers.push(text('Caption credit', credit, { x: 138, y: 1010, w: 1440, h: 40, rot: 0 }, { font: st.body, weight: '500', size: 26, color: 'rgba(255,255,255,0.85)', tracking: 0.06, uppercase: true }, after(0.5)));
+  if (facts.trim()) layers.push(...factsLayers(st, caption, facts, 84, { x: 1920 - 138 - 72, y: 948, w: 72, h: 72, rot: 0 }));
+  const s = slide(st, facts.trim() ? 'Flip to facts' : 'Framed picture', layers);
+  s.recipe = { kind: 'flip', args: { caption, credit, src, frame: '16:9', cap: 'scrim', facts } };
   return s;
 }
 

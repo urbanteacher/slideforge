@@ -1,0 +1,145 @@
+{
+ "setup": "import altair as alt\nimport pandas as pd\n\n# The workbook's synthetic city, cleaned (workbook §3-4). Not London.\nhires = {\"A\": [12000, 15000, 19000, 24000], \"B\": [18000, 21000, 24000, 27000],\n         \"C\": [30000, None, 36000, 40000],  \"D\": [9000, 10000, 11000, 12000],\n         \"E\": [10000, 15000, 22000, 28000], \"F\": [22000, 25000, 27000, 30000]}\nresidents = dict(A=80000, B=45000, C=100000, D=60000, E=35000, F=120000)\nlane_km = dict(A=12, B=21, C=28, D=8, E=23, F=20)\ndata = pd.DataFrame([\n    {\"district_code\": c, \"district\": \"District \" + c, \"year\": year,\n     \"hires\": h, \"residents\": residents[c], \"cycle_lane_km\": lane_km[c]}\n    for c, values in hires.items() for year, h in zip(range(2022, 2026), values)])\ndata[\"hires_per_1000\"] = data[\"hires\"] / data[\"residents\"] * 1000\nlatest = data[data[\"year\"] == 2025]\n# A year with a missing district is unknown, not lower: min_count keeps it NaN.\ntotals = data.groupby(\"year\", as_index=False)[\"hires\"].sum(min_count=6)\n\n# Six artificial square districts (workbook §12): x = longitude, y = latitude.\n# Each ring runs clockwise: Altair (d3) fills an anticlockwise one inside out.\nfeatures = []\nfor i, code in enumerate(\"ABCDEF\"):\n    x, y = (i % 3) * 0.08, 51.0 + (i // 3) * 0.055\n    ring = [[x, y], [x, y + .053], [x + .078, y + .053], [x + .078, y], [x, y]]\n    features.append({\"type\": \"Feature\", \"properties\": {\"district_code\": code},\n                     \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [ring]}})\n\n# The page: one width, one gutter, everything else follows from them.\nPAGE_W, GAP = 1120, 24\nHALF_W = (PAGE_W - GAP) / 2\nTILE_W = (PAGE_W - 2 * GAP) / 3\nNAVY, RED, GREY, PANEL = \"#0c3354\", \"#c8102e\", \"#5a6572\", \"#ece8e0\"\none = pd.DataFrame({\"one\": [1]})\n",
+ "steps": [
+  {
+   "id": "w1",
+   "week": "1",
+   "title": "Lead with the finding",
+   "slot": "B",
+   "panel": "tiles",
+   "new": [
+    "mark_text",
+    "alt.layer",
+    "alt.hconcat"
+   ],
+   "code": "# Week 1 · a chart shows what a table hides.\n# Three checked numbers, each a big value over a caption.\ndef tile(value, label):\n    big = alt.Chart(one).mark_text(\n        x=16, y=14, align=\"left\", baseline=\"top\", fontSize=38,\n        fontWeight=\"bold\", color=NAVY, text=value)\n    small = alt.Chart(one).mark_text(\n        x=16, y=72, align=\"left\", baseline=\"top\", fontSize=14,\n        color=GREY, text=label)\n    return alt.layer(big, small).properties(\n        width=TILE_W, height=104,\n        view=alt.ViewConfig(fill=PANEL, stroke=None))\n\ngrowth = totals.hires.iloc[-1] / totals.hires.iloc[0] - 1\nrate = latest.loc[latest.hires_per_1000.idxmax()]\nmost = latest.loc[latest.hires.idxmax()]\ntiles = alt.hconcat(\n    tile(f\"+{growth:.0%}\", \"Total hires, 2022 to 2025\"),\n    tile(f\"{rate.hires_per_1000:.0f}\", f\"Hires per 1,000: {rate.district}\"),\n    tile(f\"{most.hires:,.0f}\", f\"Total hires: {most.district}\"),\n    spacing=GAP)"
+  },
+  {
+   "id": "w2",
+   "week": "2",
+   "title": "One mark, two channels",
+   "slot": "D",
+   "panel": "line",
+   "new": [
+    "mark_line",
+    ".encode(x=, y=)"
+   ],
+   "code": "# Week 2 · data → mark → encode → chart.\nline = alt.Chart(totals).mark_line(\n    point=alt.OverlayMarkDef(color=NAVY, size=60),\n    color=NAVY, strokeWidth=3\n).encode(\n    x=alt.X(\"year:O\", title=None, axis=alt.Axis(labelAngle=0)),\n    y=alt.Y(\"hires:Q\", title=\"Total hires\", scale=alt.Scale(zero=True)),\n).properties(\n    width=HALF_W - 80, height=260,\n    title=\"2 / City total hires · 2023 incomplete\")\n\n# 2023 is NaN, so the line breaks there: unknown is not zero."
+  },
+  {
+   "id": "w3",
+   "week": "3",
+   "title": "Pick the channel by the task",
+   "slot": "C",
+   "panel": "bars",
+   "new": [
+    "mark_bar",
+    "sort=\"-x\""
+   ],
+   "code": "# Week 3 · compare → length on a shared baseline.\nbars = alt.Chart(latest).mark_bar(color=NAVY).encode(\n    x=alt.X(\"hires_per_1000:Q\", axis=alt.Axis(tickCount=9),\n            title=\"Hire events per 1,000 residents\"),\n    y=alt.Y(\"district:N\", sort=\"-x\", title=None),\n).properties(\n    width=PAGE_W - 110, height=220,\n    title=\"1 / Compare district rates · 2025\")\n\n# sort=\"-x\" ranks the bars: the reader's task is \"who is highest?\""
+  },
+  {
+   "id": "w4",
+   "week": "4",
+   "title": "Colour is data",
+   "slot": "F",
+   "panel": "heat",
+   "new": [
+    "mark_rect",
+    "alt.Color(scheme=)"
+   ],
+   "code": "# Week 4 · colour is data: lightness orders.\nrate_colour = alt.Color(\n    \"hires_per_1000:Q\", title=\"Per 1,000\",\n    scale=alt.Scale(scheme=\"blues\", domain=[0, 900]))\n\ncells = alt.Chart(data).mark_rect(stroke=\"white\").encode(\n    x=alt.X(\"year:O\", title=None, axis=alt.Axis(labelAngle=0)),\n    y=alt.Y(\"district:N\", title=None),\n    color=rate_colour)\ngaps = cells.transform_filter(\"!isValid(datum.hires)\").mark_rect(\n    color=\"#d9d9d9\").encode(color=alt.value(\"#d9d9d9\"))\n\nheat = (cells + gaps).properties(\n    width=HALF_W - 170, height=250,\n    title=\"4 / Scan district × year rates\")\n# Missing is its own grey, never the lightest blue."
+  },
+  {
+   "id": "w5",
+   "week": "5",
+   "title": "The chart answers back",
+   "slot": "E",
+   "panel": "scatter",
+   "new": [
+    "tooltip=",
+    "selection_point",
+    "add_params"
+   ],
+   "code": "# Week 5 · charts that answer back.\nhover = alt.selection_point(on=\"pointerover\", fields=[\"district\"],\n                            empty=False)\ndots = alt.Chart(latest).mark_circle(size=160, opacity=1).encode(\n    x=alt.X(\"cycle_lane_km:Q\", title=\"Cycle-lane length (km)\",\n            scale=alt.Scale(domain=[0, 35])),\n    y=alt.Y(\"hires_per_1000:Q\", title=\"Hires per 1,000\",\n            scale=alt.Scale(domain=[0, 900])),\n    color=alt.condition(hover, alt.value(RED), alt.value(NAVY)),\n    tooltip=[alt.Tooltip(\"district:N\", title=\"District\"),\n             alt.Tooltip(\"hires_per_1000:Q\", title=\"Per 1,000\",\n                         format=\".0f\")],\n).add_params(hover)\nnames = dots.mark_text(dx=10, dy=-8, align=\"left\").encode(\n    text=\"district_code:N\", color=alt.value(GREY))\n\nscatter = (dots + names).properties(\n    width=HALF_W - 80, height=260,\n    title=\"3 / Lane length and use · 2025\")"
+  },
+  {
+   "id": "w7",
+   "week": "7",
+   "title": "Where adds meaning",
+   "slot": "G",
+   "panel": "choro",
+   "new": [
+    "mark_geoshape",
+    "transform_lookup",
+    ".project"
+   ],
+   "code": "# Week 7 · maps: shapes, a join, a projection.\nchoro = alt.Chart(alt.Data(values=features)).mark_geoshape(\n    stroke=\"white\", strokeWidth=3\n).transform_lookup(\n    lookup=\"properties.district_code\",          # the join key\n    from_=alt.LookupData(latest, \"district_code\",\n                         [\"district\", \"hires_per_1000\"])\n).encode(\n    color=rate_colour,                          # Week 4's scale\n    tooltip=[\"district:N\",\n             alt.Tooltip(\"hires_per_1000:Q\", format=\".0f\")],\n).project(type=\"mercator\").properties(\n    width=HALF_W - 170, height=250,\n    title=\"5 / Locate rates · fictional districts\")\n\n# Same field, same scale as the heatmap: one legend for both."
+  },
+  {
+   "id": "page",
+   "week": "★",
+   "title": "Compose: one page, every week",
+   "slot": "*",
+   "panel": "page",
+   "new": [
+    "alt.vconcat",
+    "alt.hconcat",
+    ".configure"
+   ],
+   "code": "# Final piece · every week becomes one panel.\ntop = dict(x=0, y=0, align=\"left\", baseline=\"top\")\ntitle = alt.Chart(one).mark_text(\n    **top, fontSize=30, fontWeight=\"bold\", color=NAVY,\n    text=\"Hires grew 59%; District E rides most per resident\"\n).properties(width=PAGE_W, height=40)\nsource = alt.Chart(one).mark_text(\n    **top, fontSize=13, color=GREY,\n    text=\"Synthetic data, fictional districts. Not London.\"\n).properties(width=PAGE_W, height=20)\n\npage = alt.vconcat(\n    title,                                     # Week 1\n    tiles,                                     # Week 1\n    bars,                                      # Week 3\n    alt.hconcat(line, scatter, spacing=GAP),   # Weeks 2 and 5\n    alt.hconcat(heat, choro, spacing=GAP),     # Weeks 4 and 7\n    source,\n    spacing=GAP,\n).configure_view(stroke=None).configure(background=\"#fbfaf8\")\npage.save(\"infographic.html\")"
+  }
+ ],
+ "map": [
+  {
+   "id": "m1",
+   "move": "1",
+   "title": "Shapes: draw the geometry",
+   "panel": "outline",
+   "new": [
+    "mark_geoshape",
+    "json.load",
+    "alt.Data(values="
+   ],
+   "part": "Place",
+   "code": "# 1 · Shapes. A map starts from geometry, not from data.\nimport json\nwith open(\"london-boroughs.geojson\") as f:\n    london = json.load(f)\nprint(len(london[\"features\"]), london[\"features\"][0][\"properties\"])\n# 33 {'name': 'Barking and Dagenham'}\n\nshapes = alt.Data(values=london[\"features\"])\noutline = alt.Chart(shapes).mark_geoshape(\n    fill=\"#dcd8d0\", stroke=\"white\", strokeWidth=1\n).properties(width=420, height=330, title=\"33 boroughs, no data yet\")"
+  },
+  {
+   "id": "m2",
+   "move": "2",
+   "title": "Join: every shape finds its row",
+   "panel": "joined",
+   "new": [
+    "transform_lookup",
+    "LookupData",
+    "assert",
+    "default_rng"
+   ],
+   "part": "lab",
+   "code": "# 2 · Data and join. Made-up numbers, one row per borough.\nimport numpy as np\nnames = [f[\"properties\"][\"name\"] for f in london[\"features\"]]\nrng = np.random.default_rng(6253)\nfake = pd.DataFrame({\"borough\": names,\n                     \"hires_per_1000\": rng.integers(150, 900, len(names))})\nassert set(fake.borough) == set(names)   # every shape has a row\n\njoined = alt.Chart(shapes).mark_geoshape(\n    stroke=\"white\", strokeWidth=1\n).transform_lookup(\n    lookup=\"properties.name\",                 # the shape's key\n    from_=alt.LookupData(fake, \"borough\",     # the table's key\n                         [\"borough\", \"hires_per_1000\"])\n).encode(\n    color=alt.Color(\"borough:N\", legend=None)  # a check, not the map\n).properties(width=420, height=330, title=\"Check: every borough took a name\")\n# A borough left grey found no row: fix the key, never the colour."
+  },
+  {
+   "id": "m3",
+   "move": "3",
+   "title": "Fill: colour the number",
+   "panel": "filled",
+   "new": [
+    "scheme=\"blues\""
+   ],
+   "part": "Fill",
+   "code": "# 3 · Fill. A sequential scale: darker means more.\nfilled = alt.Chart(shapes).mark_geoshape(\n    stroke=\"white\", strokeWidth=1\n).transform_lookup(\n    lookup=\"properties.name\",\n    from_=alt.LookupData(fake, \"borough\", [\"borough\", \"hires_per_1000\"])\n).encode(\n    color=alt.Color(\"hires_per_1000:Q\", title=\"Per 1,000\",\n                    scale=alt.Scale(scheme=\"blues\")),\n).properties(width=420, height=330,\n             title=\"Bike hires per 1,000 residents (made up)\")\n\n# A rate per resident, not a count: big boroughs would win a count."
+  },
+  {
+   "id": "m4",
+   "move": "4",
+   "title": "Flatten, then answer back",
+   "panel": "london_map",
+   "new": [
+    ".project",
+    "tooltip="
+   ],
+   "part": "Flatten",
+   "code": "# 4 · Flatten and answer back: a projection, a tooltip.\nlondon_map = filled.encode(\n    tooltip=[alt.Tooltip(\"borough:N\", title=\"Borough\"),\n             alt.Tooltip(\"hires_per_1000:Q\", title=\"Per 1,000\")],\n).project(\n    type=\"mercator\"       # the choice today's Part 2 is about\n)\nlondon_map.save(\"london-map.html\")\n\n# Try type=\"identity\", reflectY=True: London comes out squashed.\n# That is a projection choice too, and today is why."
+  }
+ ]
+}

@@ -411,7 +411,11 @@ export const labApi = {
     const deck = useStore.getState().deck;
     const pages = handoutPages(deck, teacher);
     const shots = await stills(1600);
-    const images = Object.fromEntries(shots.map((s) => [s.id, s.image]));
+    const images: Record<string, string> = Object.fromEntries(shots.map((s) => [s.id, s.image]));
+    for (const p of pages.filter((x) => x.back)) {
+      const slide = deck.slides.find((s) => `${s.id}:back` === p.id);
+      if (slide) images[p.id] = renderStill(slide, deck, 1600, 'image/jpeg', 2, 0.9, undefined, 1);
+    }
     return handoutHtml(deck.title, pages, images, teacher, deck.width / deck.height);
   },
   /** The lesson as Share uploads it for the studio viewer (lab-app/view.html, M12): shown slides, no notes, pictures packed. */

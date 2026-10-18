@@ -42,6 +42,7 @@ const { routeSvg, aheadSvg } = require('./ipdv-week5/journey.js');
 const { strip, anatomy, STRIP, PARTS } = require('./ipdv-week5/drawings.js');
 const FIG = require('./ipdv-week5/figures.js');
 const { week5, maps } = require('./ipdv-week5/lesson.js');
+const { pageSvg, mapSvg, bridgeSvg, cutSvg, buildSvg, BUILDS, STEPS: PAGE_STEPS, MAP_STEPS } = require('./ipdv-week5/page.js');
 
 /* Every drawing is plain SVG: the Lesson studio cannot draw a foreignObject,
    and a bare & breaks the file. */
@@ -65,6 +66,14 @@ function drawPictures() {
   writeSvg('ahead.svg', aheadSvg(null));
   writeSvg('route-maps.svg', routeSvg(null, '7'));
   writeSvg('ahead-maps.svg', aheadSvg(null, '7'));
+  /* Build the page: the final infographic, one week at a time (tools/ipdv-week5/page/steps.py). */
+  for (const here of ['5', '7']) PAGE_STEPS.forEach((st, i) => writeSvg(`page-${st.id}-w${here}.svg`, pageSvg(i, here)));
+  MAP_STEPS.forEach((st, i) => writeSvg(`page-${st.id}.svg`, mapSvg(i)));
+  writeSvg('page-bridge.svg', bridgeSvg());
+  writeSvg('page-cut.svg', cutSvg());
+  writeSvg('map-types-cards.svg', require('./ipdv-week5/maptypes.js').mapTypesSvg());
+  writeSvg('london-three.svg', require('./ipdv-week5/london.js').londonSvg());
+  for (const k of Object.keys(BUILDS)) writeSvg(`build-${k}.svg`, buildSvg(k));
   /* The final piece itself: the students' five-chart infographic (Guides for info vis). */
   const finalPiece = path.join(process.env.HOME || '', 'Desktop/Guides for info vis/alt_Week5_visualisation_infographic.png');
   if (fs.existsSync(finalPiece)) fs.copyFileSync(finalPiece, path.join(root, DIR, 'infographic-final.png'));
@@ -85,6 +94,10 @@ function drawPictures() {
    (maps), which share the figures, the data and the route drawing. Each gets a
    lecture bundle, a student copy and a built-in lesson. The keys are new for
    the split, so no browser holds a stale copy of either. */
+/* A statement's words go in body as well as title: the Lesson studio's converter reads body,
+   and an empty body there draws a blank slide. */
+const withWords = slides => slides.map(s => (s.type === 'statement' && !String(s.body || '').trim() ? { ...s, body: s.title } : s));
+
 const BASE = {
   theme: 'northeastern', org: 'Northeastern University London',
   logo: 'assets/brand/nu-london-logo.png', logoOn: 'all', logoSize: 'small'
@@ -93,13 +106,13 @@ const LESSONS = [
   { ...BASE, key: 'ipdv-ia', id: 'ipdv-ia-2026', week: 5, title: 'LDSCI6253 Week 5 · Charts that answer back',
     file: '05_Lecture_IPDV_Interaction_Animation', builtIn: 'js/lessons-ipdv-week5.js', seed: 'ipdv-ia-w5', icon: '✦',
     blurb: 'Target audience, interaction and animation, on Hans Rosling\'s Gapminder world. Every technique is seen in a real chart, its mechanics named, then built in Altair, with live figures the room can hover, click and drag.',
-    slides: week5(),
+    slides: withWords(week5()),
     student: [['One chart at a time', 'last'], ['Then one page', 'last'], ['Every interaction is four boxes', 'last'], ['Tooltip, exploded', 'last'],
       ['Starter: a static chart', 'none'], ['Your turn: one persona, one chart', 'none'], ['Questions?', 'none']] },
   { ...BASE, key: 'ipdv-maps', id: 'ipdv-maps-2026', week: 7, title: 'LDSCI6253 Week 7 · Where in the world? Maps',
     file: '07_Lecture_IPDV_Maps', builtIn: 'js/lessons-ipdv-week7.js', seed: 'ipdv-maps-w7', icon: '◍',
     blurb: 'When a map adds meaning, what every projection distorts, and how to colour a map honestly, with live projections, Greenland at its true size, class breaks that change the story, and the Altair for each.',
-    slides: maps(),
+    slides: withWords(maps()),
     student: [['Name every mechanic', 'none'], ['Questions?', 'none']] }
 ];
 

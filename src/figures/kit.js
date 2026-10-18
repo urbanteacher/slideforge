@@ -129,7 +129,8 @@ export function format(spec, v) {
   if (kind === '%') out = (v * 100).toFixed(dp) + '%';
   else if (kind === 's') {
     var units = [[1e12, 'T'], [1e9, 'G'], [1e6, 'M'], [1e3, 'k']], u = units.find(function (x) { return Math.abs(v) >= /** @type {number} */ (x[0]); });
-    out = u ? (v / /** @type {number} */ (u[0])).toPrecision(dp || 3).replace(/\.0+$/, '') + u[1] : String(Math.round(v));
+    /* Number(): toPrecision writes 160 at two figures as 1.6e+2. */
+    out = u ? String(Number((v / /** @type {number} */ (u[0])).toPrecision(dp || 3))) + u[1] : String(Math.round(v));
   } else {
     out = kind === 'd' ? String(Math.round(v)) : v.toFixed(dp);
     if (comma) { var parts = out.split('.'); parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); out = parts.join('.'); }
@@ -214,3 +215,64 @@ export function stage(svg, o) {
     }
   };
 }
+
+/* ------------------------------------------------------------ why? an explanation over the figure
+
+   A step can carry `explain`: a few plain-English paragraphs (one per line) for a room new to the
+   idea. A "Why?" button sits under the source; pressed, a panel covers the figure with the
+   explanation, and pressed again ("Back") it goes. It sits in the top right corner, above any source line. The figure under it keeps its state. Steps
+   without one hide the button. */
+/** @param {string} text @param {number} size @param {number} width */
+function wrap(text, size, width) {
+  var words = String(text).split(/\s+/), lines = [], line = '';
+  for (var i = 0; i < words.length; i++) {
+    var next = line ? line + ' ' + words[i] : words[i];
+    if (line && textWidth(next, size, true) > width) { lines.push(line); line = words[i]; } else line = next;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+/**
+ * @param {Element} svg @param {{dark: boolean}} st
+ * @returns {{set: function(string=): void}}
+ */
+export function explainer(svg, st) {
+  var ink = st.dark ? NU.paper : NU.ink, ground = st.dark ? NU.stage : NU.paper;
+  var panel = el('g', { class: 'fig-explain', display: 'none' }, svg);
+  var btn = el('g', { class: 'fig-why', transform: 'translate(' + (W - 64 - 108) + ' 12)', cursor: 'pointer', display: 'none', role: 'button', 'aria-label': 'Why? An explanation of this figure' }, svg);
+  var face = el('rect', { width: 108, height: 34, rx: 17, fill: st.dark ? 'rgba(255,255,255,.08)' : '#fff', stroke: NU.red, 'stroke-width': 2 }, btn);
+  var label = el('text', { x: 54, y: 23, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 17, 'font-weight': 700, fill: st.dark ? NU.paper : NU.red }, btn, 'Why?');
+  var open = false, text = '';
+  function draw() {
+    panel.textContent = '';
+    if (!open) { panel.setAttribute('display', 'none'); return; }
+    panel.setAttribute('display', 'inline');
+    el('rect', { width: W, height: H, fill: ground, opacity: 0.96 }, panel);
+    el('text', { x: 64, y: 58, 'font-family': NU.sans, 'font-size': 15, 'font-weight': 700, 'letter-spacing': 2.6, fill: NU.red }, panel, 'WHY? IN PLAIN WORDS');
+    var y = 136;
+    String(text).split('\n').map(function (p) { return p.trim(); }).filter(Boolean).forEach(function (p) {
+      wrap(p, 30, W - 200).forEach(function (l) { el('text', { x: 64, y: y, 'font-family': NU.sans, 'font-size': 30, fill: ink }, panel, l); y += 43; });
+      y += 20;
+    });
+  }
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    open = !open;
+    label.textContent = open ? 'Back' : 'Why?';
+    set(face, { fill: open ? NU.red : st.dark ? 'rgba(255,255,255,.08)' : '#fff' });
+    set(label, { fill: open ? '#fff' : st.dark ? NU.paper : NU.red });
+    draw();
+    svg.appendChild(panel); svg.appendChild(btn);
+  });
+  return {
+    /** @param {string} [next] the step's explanation; none hides the button */
+    set: function (next) {
+      text = next || '';
+      btn.setAttribute('display', text ? 'inline' : 'none');
+      if (!text && open) { open = false; label.textContent = 'Why?'; set(face, { fill: st.dark ? 'rgba(255,255,255,.08)' : '#fff' }); set(label, { fill: st.dark ? NU.paper : NU.red }); }
+      draw();
+      svg.appendChild(panel); svg.appendChild(btn);
+    }
+  };
+}
+
