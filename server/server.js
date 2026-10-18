@@ -13,6 +13,7 @@ const path = require('path');
 const os = require('os');
 const ws = require('./ws');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
 const Sessions = require('./sessions');
 
 const PORT = Number(process.env.PORT) || 8787;
@@ -680,6 +681,14 @@ function serve(req, res) {
       return;
     }
     const type = MIME[path.extname(full).toLowerCase()] || 'application/octet-stream';
+    /* Caching and compression: see "bandwidth" below serve(). */
+    const tag = etagOf(st);
+    const cache = HASHED.test(rel) ? 'public, max-age=31536000, immutable' : 'no-cache';
+    const validators = { 'Cache-Control': cache, 'ETag': tag, 'Last-Modified': st.mtime.toUTCString() };
+    if ((req.method === 'GET' || req.method === 'HEAD') && notModified(req, tag, st)) {
+      res.writeHead(304, validators).end();
+      return;
+    }
 
     /* Byte ranges, which video needs and nothing else here does.
        Without a 206 the browser reports an empty seekable range: the scrubber
@@ -708,19 +717,81 @@ function serve(req, res) {
         'Content-Length': end - start + 1,
         'Content-Range': 'bytes ' + start + '-' + end + '/' + st.size,
         'Accept-Ranges': 'bytes',
-        'Cache-Control': 'no-cache'
+        ...validators
       });
       fs.createReadStream(full, { start: start, end: end }).pipe(res);
       return;
     }
 
+    const gzipOk = /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
+    if (COMPRESSIBLE.test(type) && st.size > 1024 && st.size <= GZIP_MAX && gzipOk) {
+      gzipOf(full, tag, (gerr, buf) => {
+        if (gerr) { res.writeHead(500, { 'Content-Type': 'text/plain' }).end('Could not read ' + rel); return; }
+        res.writeHead(200, { 'Content-Type': type, 'Content-Length': buf.length, 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Accept-Ranges': 'bytes', ...validators });
+        res.end(req.method === 'HEAD' ? undefined : buf);
+      });
+      return;
+    }
     res.writeHead(200, {
       'Content-Type': type,
       'Content-Length': st.size,
       'Accept-Ranges': 'bytes',
-      'Cache-Control': 'no-cache'
+      ...(COMPRESSIBLE.test(type) ? { 'Vary': 'Accept-Encoding' } : {}),
+      ...validators
     });
+    if (req.method === 'HEAD') { res.end(); return; }
     fs.createReadStream(full).pipe(res);
+  });
+}
+
+/* ------------------------------------------------------------ bandwidth
+
+   Render's free plan sends 5 GB a month (October 2026: 4 GB used in a month of
+   lessons). Every visit used to download every file again, whole: "no-cache"
+   with nothing to revalidate against, and nothing compressed — about 9 MB a
+   teacher's page load. Three things stop that:
+   - An ETag (size and modified time) and Last-Modified on every file, so a
+     browser revalidating "no-cache" gets 304 and no body when nothing changed.
+   - Text compressed with gzip when the browser accepts it: scripts, lessons,
+     SVG and JSON shrink by three to six times. Each file is compressed once
+     per version and kept in memory, within a cap.
+   - The studio's built chunks (lab-app/assets/name-HASH.js) never change under
+     a name, so they are cached for a year and never asked about again. */
+const COMPRESSIBLE = /^(text\/|application\/(json|javascript|xml|x-ipynb\+json)|image\/svg\+xml)/;
+const HASHED = /^\/lab-app\/assets\/[^/]+-[A-Za-z0-9_-]{8}\.(js|css|woff2|png|svg|jpg|webp)$/;
+const GZIP_MAX = 24 * 1024 * 1024;        // one file larger than this is sent as it is
+const GZIP_CACHE_MAX = 96 * 1024 * 1024;  // compressed copies kept in memory, in all
+const gzipped = new Map();                // full path -> { tag, buf } or { tag, waiting: [] }
+let gzippedBytes = 0;
+
+function etagOf(st) { return 'W/"' + st.size.toString(36) + '-' + Math.floor(st.mtimeMs).toString(36) + '"'; }
+
+/** True when the browser's copy is current: its ETag matches, or (with no ETag sent) it is no older than the file. */
+function notModified(req, tag, st) {
+  const inm = req.headers['if-none-match'];
+  if (inm) return String(inm).split(',').some(t => { t = t.trim(); return t === '*' || t.replace(/^W\//, '') === tag.replace(/^W\//, ''); });
+  const ims = Date.parse(String(req.headers['if-modified-since'] || ''));
+  return Number.isFinite(ims) && Math.floor(st.mtimeMs / 1000) * 1000 <= ims;
+}
+
+/** The file gzipped, from memory when this version was compressed before. */
+function gzipOf(full, tag, done) {
+  const have = gzipped.get(full);
+  if (have && have.tag === tag) { if (have.buf) return done(null, have.buf); have.waiting.push(done); return; }
+  if (have && have.buf) gzippedBytes -= have.buf.length;
+  const entry = { tag, buf: null, waiting: [done] };
+  gzipped.set(full, entry);
+  fs.readFile(full, (err, raw) => {
+    if (err) { gzipped.delete(full); entry.waiting.forEach(w => w(err)); return; }
+    zlib.gzip(raw, { level: 6 }, (zerr, buf) => {
+      if (zerr) { gzipped.delete(full); entry.waiting.forEach(w => w(zerr)); return; }
+      entry.buf = buf;
+      gzippedBytes += buf.length;
+      /* Over the cap: forget the oldest copies (a Map keeps insertion order). */
+      for (const [k, v] of gzipped) { if (gzippedBytes <= GZIP_CACHE_MAX || k === full) break; if (v.buf) { gzippedBytes -= v.buf.length; gzipped.delete(k); } }
+      const waiting = entry.waiting; entry.waiting = [];
+      waiting.forEach(w => w(null, buf));
+    });
   });
 }
 
