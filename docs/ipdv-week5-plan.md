@@ -374,6 +374,47 @@ Each fix is recorded in the slide's speaker notes.
 
 ## Change log
 
+- **18 Oct 2026:** Both lectures get **Build the page, week by week**, eight slides before the lab slide: a section, then one slide per week (1, 2, 3, 4, 5, 7). Each shows the Altair that week adds to the final infographic, the panel it makes, and where that panel sits on the page. A last slide composes the page with `vconcat`/`hconcat`. The code and the pictures come from one source, `tools/ipdv-week5/page/steps.py`, which runs every step on the workbook's synthetic city (fictional districts, not London) and renders each panel. The whole file ships as `assets/lesson/ipdv/week5/infographic-by-week.py`. The slides are drawn by `tools/ipdv-week5/page.js` and marked "you are here" for each lecture's own week. Week 5 now has 87 slides and Week 7 has 48. A browser that already opened either lecture keeps its own copy: delete it from the Library to get the new slides.
+- **18 Oct 2026 (later):** The user moved the pack to the start of the maps lecture, after the recap: section, the two route slides, then the build slides. The source now has that order. After the compose slide come four **Make the map** slides: shapes, the join (with a colour-by-name check), fill and flatten. They use the same layout, and the four moves are tagged with the part of the lecture that asks why each matters. A bridge slide, "Four moves, and why each one matters", hands over to Part 1 Place, Part 2 Flatten, Part 3 Fill and the lab's join. The map steps run in `steps.py` (`MAP_STEPS`) and are part of `infographic-by-week.py`. Week 7 now has 53 slides. The Week 5 deck is unchanged.
+- **18 Oct 2026 (later still):** At the user's request, the four map moves now make **a map of London on made-up data** instead of redrawing the infographic's six squares. The data is bike hires per 1,000 residents from a seeded generator, joined by borough name. The boundaries are `assets/lesson/ipdv/week5/london-boroughs.geojson`, a 190 KB copy of the course's London Poverty file (`Story telling/London Poverty/london_boroughs.geojson`): coordinates rounded, every fourth point kept. Its rings had to be rewound so the outer ring runs clockwise, which d3 needs; anticlockwise rings fill the whole globe. The original file's source and licence are not recorded, so check them before it goes to students.
+- **18 Oct 2026 (review):** Changes from the user's run-through of the maps lecture, for a room new to code:
+  - **Slide 7, "Cut and glue: how Altair makes a page"**, before any code: each chart is a piece of paper, `|` puts two side by side, `&` puts one under another. Both lectures get it.
+  - **The three world Build-it slides** now show the code, what each part does in plain words, and the picture it makes. "Change one word" shows Mercator before and Equal Earth after. They are rendered offline by `tools/ipdv-week5/page/world.py`, with the code to copy in the notes.
+  - **Every outside picture** in the maps lecture now has a title on the slide and plain-English facts on its back (⇄): election chart and map, projection surfaces, Greenland vs Africa (checked: about 14 times), states vs counties (Datawrapper), four class breaks, map types, and Boston road map vs satellite (Mapping, Society, and Technology, ch. 7). The election chart is the seats held before 2019, not the 2017 result, and the facts say so.
+  - **Statements** also carry their words in `body`: the studio's converter reads `body ?? title`, and an empty body drew a blank slide.
+  - **Live world maps** in the studio fetched `world-110m.json` relative to `lab-app/` and got a 404. `src/figures/worldmap.js` now resolves it from the site root.
+  - **Picture captions on a fade.** The accent bar under each picture took about a fifth of its height. Picture slides with facts now use SlideForge's gradient caption (`capStyle: 'scrim'`), and the Lesson studio draws it: `scrimPictureSlide` in `lab/src/layouts/show.ts`, also offered as "A fade over the picture" in the flip slide's Caption menu. The picture fills the slide below the logo, and the ⇄ sits at the right of the fade.
+  - **Why?, a new figure feature.** A live figure step can carry `explain`, plain-English paragraphs. A "Why?" button in the figure's top-right corner opens them over the figure; "Back" closes them (`explainer` in `src/figures/kit.js`). Every live figure in the maps lecture has one for each step.
+  - **Legend labels** on the world maps no longer overlap when skewed data crowds the breaks: they move right with a leader line. The SI format now prints 160G, not 1.6e+2G.
+  - **The fade sits below the picture.** On a fade-caption slide the picture now ends where the fade begins (`scrimPictureSlide`), so the fade never darkens the picture's own words (states vs counties: "NOT IDEAL / BETTER").
+  - **"Six kinds of map: good for, watch out"** replaces the bare six-map grid: each map type as a card cropped from the same image, with what it suits and its trap (`tools/ipdv-week5/maptypes.js`; the image is embedded once and reused in every card).
+- **18 Oct 2026 (scaffold order):** The maps lecture was reordered so no idea is used before it is taught (`MAPS_ORDER` in `tools/ipdv-week5/lesson.js`):
+  - The hook ("The bubbles flew home") and the outcomes now come before the Build-the-page pack.
+  - The four London map moves come before the infographic's Week 7 map panel, which uses them.
+  - Part 1 shows the election chart and map before the rules for when a map helps.
+  - Part 2 opens with Boston's white lies, the idea that frames the part, then asks "Is Greenland bigger than Africa?" before the live projections answer it.
+  - Part 3 shows the four class-break maps before the live "Break it three ways". "Smaller areas" sits beside "Three more ways a map misleads", which covers the same boundary problem (MAUP). The choropleth build comes before symbols and the six map types.
+  - The Greenland and hook notes were retuned for their new neighbours.
+- **18 Oct 2026 (student PDF):** `output/pdf/LDSCI6253_Week_7_Maps_Student.pdf`, 59 pages: the 52 slides students see, plus each Flip-to-facts slide's back on the page after it.
+  - The studio's handout now prints those backs (`handoutPages` in `lab/src/export/handout.ts`, drawn with `renderStill(..., flip = 1)`).
+  - `tools/export-teaching-pdf.mjs` takes `--student`, so it can save the student copy as well as the teacher copy.
+- **18 Oct 2026 (what 2025 taught):** We compared the lecture with the 2025 maps deck (`01_Lecture_IPDV_6.pdf`). It had dropped eight things, now back in plain words (`ADDED` in `lesson.js`; the lecture is 64 slides):
+  - **Part 1:**
+    - "Same place, three different jobs": Tirion's 1754 London, an illustrated tourist map, and Kousoulis and Goldie's 2017 Lancet Psychiatry borough map (`tools/ipdv-week5/london.js`).
+    - "Why maps matter: where they are used".
+    - "What? Why? How? for a map" (Munzner).
+    - "When geography is the story".
+    - "Everyone carries a map in their head" (label strategically).
+  - **Part 3:**
+    - "Choose the colours": sequential, diverging, colour-blind (about 1 in 12 men), context.
+    - "Try it: ColorBrewer".
+    - "Map files and coordinates": GeoJSON, TopoJSON, Shapefile, KML, degrees vs metres.
+    - "See it: calls across Europe", with facts.
+    - "Map responsibly": privacy, disputed borders, access.
+  - **Outcomes:** gained "Map responsibly".
+  - **"Three more ways a map misleads":** its colour card, now covered by "Choose the colours", became "No data".
+  - **Student PDF:** remade, 70 pages, also on the Desktop.
+
 - **9 Oct 2026 (later):** Split, at the user's request: Week 5 is **target audience, interaction and animation**; maps are their own lecture, **Week 7 · Where in the world? Maps** (Week 6 is reading week).
   - **Week 5** (`ipdv-ia-w5`, 75 slides) adds the 2025 Week 5 deck (`01_Lecture_IPDV_5 [Auto-saved].pptx`):
     - the static/animated starter, and Why–Persona–Why with when personas help or mislead;
