@@ -414,6 +414,12 @@ Each fix is recorded in the slide's speaker notes.
   - **Outcomes:** gained "Map responsibly".
   - **"Three more ways a map misleads":** its colour card, now covered by "Choose the colours", became "No data".
   - **Student PDF:** remade, 70 pages, also on the Desktop.
+- **19 Oct 2026 (Nodes checks, no new slides):** Four checks from the Nodes method, built into slides that were already there:
+  - **Which step broke?** is on the back of "Four moves, and why each one matters".
+  - **Three answers** (why not Mercator) is on the back of "Build it: change one word".
+  - **Keep them apart** (fill or symbol) is in the Why? panels of "Counts belong in symbols".
+  - **Same link, new case** (rates not counts, London to the world) is in the notes of "Three things to keep".
+  - Each has a "run it" line in the notes. The student PDF is 72 pages.
 
 - **9 Oct 2026 (later):** Split, at the user's request: Week 5 is **target audience, interaction and animation**; maps are their own lecture, **Week 7 · Where in the world? Maps** (Week 6 is reading week).
   - **Week 5** (`ipdv-ia-w5`, 75 slides) adds the 2025 Week 5 deck (`01_Lecture_IPDV_5 [Auto-saved].pptx`):
