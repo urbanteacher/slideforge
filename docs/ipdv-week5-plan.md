@@ -420,6 +420,10 @@ Each fix is recorded in the slide's speaker notes.
   - **Keep them apart** (fill or symbol) is in the Why? panels of "Counts belong in symbols".
   - **Same link, new case** (rates not counts, London to the world) is in the notes of "Three things to keep".
   - Each has a "run it" line in the notes. The student PDF is 72 pages.
+- **19 Oct 2026 (red titles, not fades):** The user found the fade caption tacky. The picture slides now set their title above the picture, on the grid's left margin, in red (`capStyle: 'top'`).
+  - The studio draws it in `topPictureSlide` (`lab/src/layouts/show.ts`), also offered as "A title above, in red" in the flip slide's Caption menu.
+  - The picture gets 860 px of the slide's height, up from 750 with the fade, and the ⇄ sits in the top-right corner.
+  - The classic player has no such style and draws its fade.
 
 - **9 Oct 2026 (later):** Split, at the user's request: Week 5 is **target audience, interaction and animation**; maps are their own lecture, **Week 7 · Where in the world? Maps** (Week 6 is reading week).
   - **Week 5** (`ipdv-ia-w5`, 75 slides) adds the 2025 Week 5 deck (`01_Lecture_IPDV_5 [Auto-saved].pptx`):
