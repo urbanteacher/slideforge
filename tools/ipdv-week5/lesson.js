@@ -981,11 +981,11 @@ function withSee(slides) {
     }
     const file = sl.type === 'image' && String(sl.image || '').split('/').pop();
     const see = file && SEE[file];
-    /* The caption on a fade over the picture (capStyle 'scrim'), not on a bar beneath it: the
-       picture keeps the slide's height, so the back row can read it. Every outside picture with
-       facts, from here on. */
-    if (!see) return sl.body && /\.(png|jpe?g)$/i.test(file || '') ? { ...sl, design: { ...(sl.design || {}), capStyle: 'scrim' } } : sl;
-    return { ...sl, title: see.title, body: see.facts.join('\n'), design: { ...(sl.design || {}), capStyle: 'scrim' },
+    /* The caption as a red title above the picture (capStyle 'top'): not a bar beneath it, which
+       shrank the picture, nor a fade over it, which looked cheap. The picture keeps the slide's
+       height, so the back row can read it. Every outside picture with facts, from here on. */
+    if (!see) return sl.body && /\.(png|jpe?g)$/i.test(file || '') ? { ...sl, design: { ...(sl.design || {}), capStyle: 'top' } } : sl;
+    return { ...sl, title: see.title, body: see.facts.join('\n'), design: { ...(sl.design || {}), capStyle: 'top' },
       notes: (see.notes || sl.notes) + '\nPress ⇄ to turn the slide over for the facts.' };
   });
 }
@@ -1061,7 +1061,7 @@ const ADDED = {
       'But the colours are green, orange and red: colour-blind readers may not tell them apart.',
       'And the question is "which countries are busiest?": a ranked bar chart would answer it faster.',
       'A map earns its place only when where the countries are helps the answer.'
-    ].join('\n'), design: { capStyle: 'scrim' } }),
+    ].join('\n'), design: { capStyle: 'top' } }),
   responsible: { type: 'cards', title: 'Map responsibly', progressive: true,
     bullets: [
       'Privacy\tA dot on a map can be someone\'s home. Group points into areas, or blur them, before you publish.',

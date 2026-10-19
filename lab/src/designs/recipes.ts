@@ -11,7 +11,7 @@ import { barsSlide, closingSlide, coverSlide, heroSlide, logosSlide, mosaicSlide
 type Args = Record<string, unknown>;
 const BUILD: Record<string, (st: ReturnType<typeof slideStyle>, a: Args) => Slide> = {
   explore: (st, a) => exploreSlide(st, String(a.title ?? ''), String(a.src ?? ''), (a.spots as never) ?? [], Number(a.aspect) || 16 / 9),
-  flip: (st, a) => framedPictureSlide(st, String(a.caption ?? ''), String(a.credit ?? ''), String(a.src ?? ''), String(a.frame ?? '4:3'), (['plain', 'none', 'scrim'] as const).find((c) => c === a.cap) ?? 'bar', String(a.facts ?? '')),
+  flip: (st, a) => framedPictureSlide(st, String(a.caption ?? ''), String(a.credit ?? ''), String(a.src ?? ''), String(a.frame ?? '4:3'), (['plain', 'none', 'scrim', 'top'] as const).find((c) => c === a.cap) ?? 'bar', String(a.facts ?? '')),
   gallery: (st, a) => gallerySlide(st, String(a.title ?? ''), (a.figs as never) ?? [], String(a.frame ?? '4:3'), a.cap === 'plain' ? 'plain' : 'bar', a.fit === 'cover' ? 'cover' : 'contain'),
   callouts: (st, a) => chartCalloutSlide(st, String(a.title ?? ''), String(a.data ?? ''), String(a.source ?? ''), (a.callouts as never) ?? []),
   'story-numbers': (st, a) => numbersSlide(st, a as unknown as NumbersArgs),

@@ -52,7 +52,7 @@ export function RecipePanel() {
         <Row label="Caption"><Input value={str('caption')} onChange={(v) => put('caption', v)} /></Row>
         <Row label="Credit"><Input value={str('credit')} onChange={(v) => put('credit', v)} /></Row>
         <Row label="Frame"><Select value={str('frame') || '4:3'} options={['16:9', '4:3', '3:2', '1:1', '4:5'].map((f) => ({ value: f, label: f }))} onChange={(v) => put('frame', v)} /></Row>
-        <Row label="Caption on"><Select value={str('cap') || 'bar'} options={[{ value: 'bar', label: 'An accent bar' }, { value: 'plain', label: 'The slide' }, { value: 'scrim', label: 'A fade over the picture' }]} onChange={(v) => put('cap', v)} /></Row>
+        <Row label="Caption on"><Select value={str('cap') || 'bar'} options={[{ value: 'bar', label: 'An accent bar' }, { value: 'plain', label: 'The slide' }, { value: 'scrim', label: 'A fade over the picture' }, { value: 'top', label: 'A title above, in red' }]} onChange={(v) => put('cap', v)} /></Row>
         <div className="desc">The facts on the back, one paragraph a line. Empty takes the ⇄ away.</div>
         <Area rows={6} value={str('facts')} onChange={(v) => put('facts', v)} />
       </>

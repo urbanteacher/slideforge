@@ -72,13 +72,15 @@ export function exploreSlide(st: LayoutStyle, title: string, src: string, spots:
  * With `facts`, SlideForge's Flip to facts: a ⇄ in the picture's corner turns the slide over to the
  * facts, the picture faint behind them; pressed again, it turns back. Turning over is not a build step.
  */
-export function framedPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, frame = '4:3', cap: 'bar' | 'plain' | 'none' | 'scrim' = 'bar', facts = ''): Slide {
+export function framedPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, frame = '4:3', cap: 'bar' | 'plain' | 'none' | 'scrim' | 'top' = 'bar', facts = ''): Slide {
   const [fw, fh] = frame.split(':').map(Number), ratio = fw > 0 && fh > 0 ? fw / fh : 4 / 3;
   const padT = 84, padB = 72, padX = 138, gap = 39;
   // No caption (SlideForge's capStyle 'none'): the picture is the whole slide, as the deck drew it.
   // 'scrim' (SlideForge's gradient caption): the picture as large as the slide allows, the caption
   // over a fade at its foot, so nothing below the picture takes its height. Read from the back row.
   if (cap === 'scrim') return scrimPictureSlide(st, caption, credit, src, facts);
+  // 'top': the caption as a title above, in the accent, on the grid's left margin; the picture keeps the rest.
+  if (cap === 'top') return topPictureSlide(st, caption, credit, src, facts);
   const bare = cap === 'none';
   const capH = bare ? 0 : (cap === 'bar' ? 54 : 0) + 62 + (credit ? 50 : 0);
   let h = 1080 - padT - padB - gap - capH, w = h * ratio;
@@ -122,6 +124,22 @@ function factsLayers(st: LayoutStyle, caption: string, facts: string, top: numbe
     out.push(lit ? back(disc) : disc);
   }
   return out;
+}
+
+/** The caption as a title above the picture, in the accent, on the grid's left margin, clear of the logo; the
+ *  picture fitted whole into everything below it, so a title costs it no more than a line; the ⇄ in the top
+ *  right corner, where the bare picture keeps it. The picture slides of a lecture read at the back of a room. */
+function topPictureSlide(st: LayoutStyle, caption: string, credit: string, src: string, facts: string): Slide {
+  const pic: Box = { x: 78, y: 150, w: 1764, h: 860, rot: 0 };
+  const layers: Layer[] = [
+    text('Caption', caption, { x: 78, y: 50, w: 1440, h: 80, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 60, color: st.accent, lineHeight: 1.05, fit: 'shrink' }, after(0.1)),
+    createLayer('image', { name: 'Picture', box: pic, params: { src, fit: 'contain', radius: 0 }, anim: { type: 'fade', duration: 0.9 } }),
+  ];
+  if (credit) layers.push(text('Caption credit', credit, { x: 78, y: 118, w: 1440, h: 30, rot: 0 }, { font: st.body, weight: '500', size: 24, color: st.muted }, after(0.3)));
+  if (facts.trim()) layers.push(...factsLayers(st, caption, facts, 84, { x: 1920 - 72 - 30, y: 30, w: 72, h: 72, rot: 0 }));
+  const s = slide(st, facts.trim() ? 'Flip to facts' : 'Framed picture', layers);
+  s.recipe = { kind: 'flip', args: { caption, credit, src, frame: '16:9', cap: 'top', facts } };
+  return s;
 }
 
 /** SlideForge's gradient caption on a picture with facts: the picture across the slide, clear of the

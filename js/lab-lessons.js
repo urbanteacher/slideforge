@@ -94,12 +94,12 @@
  },
  "ipdv-maps-w7": {
   "file": "assets/lab-lessons/ipdv-maps-w7.lesson.json",
-  "hash": "56c83b55834fad9c",
+  "hash": "eb260117d970b77c",
   "carried": 16
  },
  "ipdv-maps-w7-student": {
   "file": "assets/lab-lessons/ipdv-maps-w7-student.lesson.json",
-  "hash": "42028d0c7b832677",
+  "hash": "f80e9ac2aafa7444",
   "carried": 16
  },
  "ipdv-vc": {

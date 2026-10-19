@@ -170,7 +170,8 @@ export interface SlideDesign {
   backdrop?: '' | 'drift' | 'grid' | 'glow';
   logoGround?: '' | 'light' | 'dark';
   imageFrame?: '' | '16:9' | '4:3' | '3:2' | '1:1' | '4:5';
-  capStyle?: 'scrim' | 'bar' | 'plain' | 'none';
+  /** 'top': the Lesson studio sets the caption as a title above the picture, in the accent. The classic player has no such style and draws its fade (js/render.js). */
+  capStyle?: 'scrim' | 'bar' | 'plain' | 'none' | 'top';
   capPos?: 'bottom' | 'top';
   capFade?: 0 | 5 | 10 | 15 | 20 | 30;
   imageMotion?: '' | 'zoom' | 'travel';

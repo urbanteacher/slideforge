@@ -320,8 +320,8 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       if (capStyle === 'none' && !frame) {
         return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), '16:9', 'none', facts), s.imageFit), ground: g };
       }
-      if (frame || facts) {
-        const cap = capStyle === 'bar' ? 'bar' : capStyle === 'scrim' ? 'scrim' : 'plain'; // scrim: the gradient caption
+      if (frame || facts || capStyle === 'top') {
+        const cap = (['bar', 'scrim', 'top'] as const).find((c) => c === capStyle) ?? 'plain'; // scrim: a fade; top: red title above
         return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), frame || '4:3', cap, facts), s.imageFit), ground: g };
       }
       return { slide: fitted(photo(st, img(s.image), t, sub), s.imageFit), ground: g };
