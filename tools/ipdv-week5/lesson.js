@@ -48,7 +48,15 @@ const MAP_NOTES = {
 const makeMap = () => [
   ...MAP_STEPS.map((st, i) => pic(`Make a map of London · move ${st.move}`, `page-${st.id}.svg`, `1 min. ${MAP_NOTES[st.id]}`, i ? { transition: 'none' } : {})),
   pic('Four moves, and why each one matters', 'page-bridge.svg',
-    '1 min. The hand-over. SAY: "You can write every move already. Today is why: does geography add meaning (Part 1), what the flattening lies about (Part 2), how to fill it honestly (Part 3). The join you practise in the lab."')
+    '1 min. The hand-over. SAY: "You can write every move already. Today is why: does geography add meaning (Part 1), what the flattening lies about (Part 2), how to fill it honestly (Part 3). The join you practise in the lab."' +
+    '\nNODES · Which step broke? (on the back, ⇄). Read each symptom, hands up for the move, then flip for the answers.',
+    { body: [
+      'Which step broke? Each map went wrong at one of the four moves.',
+      'The whole frame is one block of colour. → Move 1, shapes: the outlines run the wrong way round (Altair wants them clockwise).',
+      'Some boroughs are grey. → Move 2, join: their names or codes did not match, so they found no row.',
+      'The biggest boroughs are always darkest. → Move 3, fill: it was coloured by a count, not a rate per resident.',
+      'London looks squashed sideways. → Move 4, flatten: no projection, or the wrong one.'
+    ].join('\n') })
 ];
 /* An animated demonstration as a silent clip that loops: the Lesson studio draws a GIF as one
    still frame, so each GIF is made into an MP4 (tools/ipdv-week5/gif2mp4.swift) and plays here. */
@@ -835,7 +843,8 @@ function maps() {
       'Flatten\tEvery flat map distorts: choose the projection by what it must keep; equal-area for data.',
       'Fill\tMap rates, not people; choose class breaks honestly; symbols for counts.'
     ],
-    notes: '2 min. One card per stop. ASK someone to read the strip for the Milton map.' },
+    notes: '2 min. One card per stop. ASK someone to read the strip for the Milton map.\n' +
+      'NODES · Same link, new case (hands up or on paper, 2 min). The link: map rates, not counts. NEAR: London boroughs, bike hires. Which do you map, total hires or hires per 1,000 residents? (Per 1,000: Westminster is small but busy.) FAR: the whole world, internet users. Total users or the share of people online? (The share: otherwise China and India win by size alone.) Then: which projection for the far case? (Equal-area.)' },
 
   { type: 'content', title: 'Next: the maps lab',
     bullets: [
@@ -942,8 +951,8 @@ const WHY = {
     'Natural breaks: the cuts are placed where the data has gaps, so similar countries share a colour.\nIt is usually the most honest default. Whatever you choose, say which method you used in the legend.'
   ],
   'Counts belong in symbols': [
-    'A count, like population, goes in the size of a circle drawn at each country, not in its fill.\nIf you filled the shapes by count, big countries would look important just because they are big.',
-    'A rate, like life expectancy, goes in the fill colour, because it does not depend on how big the country is.\nPoint at a country: the tooltip shows the exact numbers behind the colour.'
+    'A count, like population, goes in the size of a circle drawn at each country, not in its fill.\nIf you filled the shapes by count, big countries would look important just because they are big.\nKeep them apart, before the next step: fill or symbol? Population · % unemployed · number of hospitals · bike hires per 1,000 · life expectancy · total GDP.',
+    'A rate, like life expectancy, goes in the fill colour, because it does not depend on how big the country is.\nPoint at a country: the tooltip shows the exact numbers behind the colour.\nFill (rates): % unemployed, bike hires per 1,000, life expectancy. Symbol (counts): population, number of hospitals, total GDP.\nThe test: would the number grow just because the place is bigger? Then it is a count, and it goes in a symbol.'
   ]
 };
 function withSee(slides) {
@@ -955,10 +964,20 @@ function withSee(slides) {
     }
     if (sl.type === 'figure' && WHY[sl.title]) {
       return { ...sl, figureSteps: sl.figureSteps.map((st, i) => (WHY[sl.title][i] ? { ...st, explain: WHY[sl.title][i] } : st)),
-        notes: sl.notes + '\nWhy? (top right) opens a plain-English explanation of this step over the figure.' };
+        notes: sl.notes + '\nWhy? (top right) opens a plain-English explanation of this step over the figure.' + (sl.title === 'Counts belong in symbols' ? '\nNODES · Keep them apart: in step 1\'s Why?, the room sorts six measures into fill or symbol; step 2\'s Why? has the answers and the one test.' : '') };
     }
     if (sl.type === 'code' && BUILD_OF[sl.title]) {
-      return pic(sl.title, `build-${BUILD_OF[sl.title]}.svg`, sl.notes + '\nThe code to copy:\n' + sl.code);
+      /* Nodes · Three answers, on the back of the projection build: the same question answered weak, stable
+         and excellent, just before the rule it explains. */
+      const three = BUILD_OF[sl.title] === 'projection' ? { body: [
+        'Three answers: why not Mercator for a map of life expectancy? Which is strongest, and why?',
+        'Weak: "Because it looks wrong."',
+        'Stable: "Mercator makes countries near the poles look bigger than they are."',
+        'Excellent: "Mercator stretches area more the further a country is from the equator, so Russia and Canada take far more colour than their share. On a choropleth the eye reads area, so the map overstates the north. An equal-area projection such as Equal Earth keeps area true."',
+        'The excellent answer names the cause (stretching by latitude), what it does to this map (area grabs the eye), and the fix.'
+      ].join('\n') } : {};
+      const run = three.body ? '\nNODES · Three answers (on the back, ⇄). ASK: "Which of the three would you write?" Hands up for weak, stable, excellent; then what makes the excellent one excellent.' : '';
+      return pic(sl.title, `build-${BUILD_OF[sl.title]}.svg`, sl.notes + run + '\nThe code to copy:\n' + sl.code, three);
     }
     const file = sl.type === 'image' && String(sl.image || '').split('/').pop();
     const see = file && SEE[file];
