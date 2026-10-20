@@ -1,4 +1,6 @@
 // layouts/: its public interface. Code outside layouts/ imports from here, never from its files (lab-engine-plan hard rule 13).
+import { setEdgeResolver } from '../engine';
+import { slideStyle as styleOfSlide, themeOf as themeOfDeck } from './style';
 export { applyTheme, setSlideGround, themeSlide, varyGrounds } from './applyTheme';
 export { backdropOf, isBackdrop, setBackdrop } from './backdrop';
 export type { BackdropMode } from './backdrop';
@@ -13,3 +15,6 @@ export { groundParams, itemStyle } from './blocks';
 export { icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide } from './infographics';
 export { blankSlide, explainSlide, resultsSlide, spotfakeSlide } from './leftovers';
 export type { LayoutStyle } from './style';
+
+// Transitions' edges (the burn, the iris ring, the shape's outline) in the theme's accent, slide by slide.
+setEdgeResolver((deck, slide) => { const st = themeOfDeck(deck); return st ? styleOfSlide(st, slide).accent : undefined; });

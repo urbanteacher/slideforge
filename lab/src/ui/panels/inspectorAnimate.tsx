@@ -46,6 +46,9 @@ const TRANSITIONS: { value: TransitionType; label: string }[] = [
   { value: 'none', label: 'Cut' }, { value: 'fade', label: 'Crossfade' }, { value: 'push', label: 'Push' }, { value: 'zoom', label: 'Zoom' },
   { value: 'ripple', label: 'Ripple' }, { value: 'dissolve', label: 'Burn dissolve' }, { value: 'wipe', label: 'Soft wipe' },
   { value: 'pixelate', label: 'Pixelate' }, { value: 'blur', label: 'Blur' },
+  { value: 'iris', label: 'Iris — opens in a circle from the middle' },
+  { value: 'shape', label: 'Shape — the cut-corner shape grows to hold the next slide' },
+  { value: 'camera', label: 'Camera — pulls back, travels across, pushes in' },
   { value: 'morph', label: 'Morph — carry what the slides share' },
 ];
 const FEELS: { value: 'rise' | 'fade' | 'reveal' | 'plain'; label: string }[] = [

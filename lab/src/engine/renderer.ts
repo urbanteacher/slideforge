@@ -5,13 +5,11 @@ import { REDUCED_CHANGE } from './motion';
 import { getAssetVersion, groupSizes, rasterise, textSize } from './raster';
 import { contentFrame } from './media';
 import { kind } from './registry';
+import { DEFAULT_EDGE, TRANSITION_FRAG, TRANSITION_INDEX, type TransitionLook } from './transitions';
 
 const BLEND_INDEX: Record<BlendMode, number> = {
   normal: 0, multiply: 1, screen: 2, overlay: 3, softLight: 4, hardLight: 5, darken: 6, lighten: 7,
   colorDodge: 8, colorBurn: 9, difference: 10, exclusion: 11, add: 12,
-};
-const TRANSITION_INDEX: Record<TransitionType, number> = {
-  none: 0, fade: 1, push: 2, zoom: 3, ripple: 4, dissolve: 5, wipe: 6, pixelate: 7, blur: 8, morph: 1,
 };
 
 /** Where a layer carried across a Morph is drawn this frame, relative to its place on the new slide. */
@@ -22,62 +20,6 @@ const SPOT_PARAMS = { amount: 0.34, radius: 0.36, softness: 0.78, color: '#00000
 
 const COPY_FRAG = PRELUDE + `void main() { outColor = textureLod(uBelow, vUv, 0.0); }`;
 
-const TRANSITION_FRAG = PRELUDE + /* glsl */ `
-uniform sampler2D uA;
-uniform sampler2D uB;
-uniform float uP;
-uniform int uType;
-uniform float uDir;
-vec3 SA(vec2 uv, float l) { if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec3(0.0); return textureLod(uA, vec2(uv.x, 1.0 - uv.y), l).rgb; }
-vec3 SB(vec2 uv, float l) { if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec3(0.0); return textureLod(uB, vec2(uv.x, 1.0 - uv.y), l).rgb; }
-void main() {
-  vec2 uv = vec2(vUv.x, 1.0 - vUv.y);
-  float p = uP;
-  vec3 c;
-  if (uType == 1) {
-    c = mix(SA(uv, 0.0), SB(uv, 0.0), p);
-  } else if (uType == 2) {
-    float x = uv.x + p * uDir;
-    vec3 a = SA(vec2(uv.x + p * uDir, uv.y), 0.0);
-    vec3 b = SB(vec2(uv.x + (p - 1.0) * uDir, uv.y), 0.0);
-    bool inB = uDir > 0.0 ? x > 1.0 : x < 0.0;
-    float edge = uDir > 0.0 ? x - 1.0 : -x;
-    c = inB ? b * (0.85 + 0.15 * smoothstep(0.0, 0.08, edge)) : a * (1.0 - 0.35 * p);
-  } else if (uType == 3) {
-    vec3 a = SA((uv - 0.5) / (1.0 + p * 0.35) + 0.5, 0.0);
-    vec3 b = SB((uv - 0.5) / (0.88 + 0.12 * p) + 0.5, 0.0);
-    c = mix(a, b, smoothstep(0.15, 0.85, p));
-  } else if (uType == 4) {
-    vec2 as = aspect();
-    vec2 d = (uv - 0.5) * as;
-    float r = length(d);
-    float R = p * 1.25;
-    float env = sin(p * PI);
-    vec2 off = (r > 1e-4 ? d / r : vec2(0.0)) * sin((r - R) * 38.0) * 0.022 * env * exp(-abs(r - R) * 5.0) / as;
-    float m = smoothstep(R + 0.04, R - 0.04, r);
-    c = mix(SA(uv + off, 0.0), SB(uv + off, 0.0), m);
-  } else if (uType == 5) {
-    float n = fbm(uv * aspect() * 3.0 + uSeed) * 0.5 + 0.5;
-    float th = p * 1.3 - 0.15;
-    float m = smoothstep(th + 0.03, th - 0.03, n);
-    float e = smoothstep(0.06, 0.0, abs(n - th)) * (1.0 - p) * step(0.001, p);
-    c = mix(SA(uv, 0.0), SB(uv, 0.0), m) + vec3(1.0, 0.45, 0.2) * e * 1.4;
-  } else if (uType == 6) {
-    float x = uDir > 0.0 ? uv.x + (uv.y - 0.5) * 0.2 : 1.0 - uv.x + (uv.y - 0.5) * 0.2;
-    float m = smoothstep(p * 1.3 - 0.15 + 0.06, p * 1.3 - 0.15 - 0.06, x);
-    c = mix(SA(uv, 0.0), SB(uv, 0.0), m);
-  } else if (uType == 7) {
-    float s = mix(1.0, 64.0, sin(p * PI));
-    vec2 q = (floor(uv * uRes / s) + 0.5) * s / uRes;
-    c = p < 0.5 ? SA(q, 0.0) : SB(q, 0.0);
-  } else if (uType == 8) {
-    float l = sin(p * PI) * 5.0;
-    c = mix(SA(uv, l), SB(uv, l), smoothstep(0.3, 0.7, p));
-  } else {
-    c = SB(uv, 0.0);
-  }
-  outColor = vec4(c, 1.0);
-}`;
 
 interface FBO { fb: WebGLFramebuffer; tex: WebGLTexture; w: number; h: number }
 interface Prog { prog: WebGLProgram; loc: Map<string, WebGLUniformLocation | null> }
@@ -638,11 +580,11 @@ export class Renderer {
   }
 
   /** Render two slides and blend them with a shader transition. p: 0..1 eased. */
-  drawTransition(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, type: TransitionType, p: number, dir: 1 | -1) {
+  drawTransition(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, type: TransitionType, p: number, dir: 1 | -1, look: TransitionLook = {}) {
     // Reduced motion: every transition, Morph included, is a crossfade.
     if (toOpts.reduce) { this.blend(from, fromOpts, to, toOpts, 'fade', p, dir, null); return; }
     if (type === 'morph') { this.drawMorph(from, fromOpts, to, toOpts, p); return; }
-    this.blend(from, fromOpts, to, toOpts, type, p, dir, null);
+    this.blend(from, fromOpts, to, toOpts, type, p, dir, null, { gap: to.background, ...look });
   }
 
   /**
@@ -687,7 +629,7 @@ export class Renderer {
     this.drawSlide(carried, { ...toOpts, t: Infinity, morph }, null, this.slots[2]);
   }
 
-  private blend(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, type: TransitionType, p: number, dir: 1 | -1, target: FBO | null) {
+  private blend(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, type: TransitionType, p: number, dir: 1 | -1, target: FBO | null, look: TransitionLook = {}) {
     const gl = this.gl;
     this.drawSlide(from, fromOpts, this.slots[0]);
     this.drawSlide(to, toOpts, this.slots[1]);
@@ -708,6 +650,10 @@ export class Renderer {
     gl.uniform1i(this.u(prog, 'uType'), TRANSITION_INDEX[type] ?? 1);
     gl.uniform1f(this.u(prog, 'uDir'), dir);
     gl.uniform1f(this.u(prog, 'uSeed'), 0.37);
+    gl.uniform1f(this.u(prog, 'uSpread'), Math.min(0.2, Math.max(0, look.spread ?? 0)));
+    gl.uniform3f(this.u(prog, 'uEdge'), ...hexToRgb(look.edge || DEFAULT_EDGE));
+    gl.uniform3f(this.u(prog, 'uGap'), ...hexToRgb(look.gap && look.gap.startsWith('#') ? look.gap : '#000000'));
+    gl.uniform2f(this.u(prog, 'uCenter'), ...(look.centre ?? [0.5, 0.5]));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 

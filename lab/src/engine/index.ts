@@ -3,6 +3,8 @@ export { animTotal, defaultAnim, defaultInteract, DIM_TO, EASE, isTextUnit, pres
 export type { Spacing, Speed } from './anim';
 export { exitDuration, kick, MOTION, spring, SPRING_ZETA } from './curves';
 export { reducesMotion } from './motion';
+export { BLURRED, DEFAULT_EDGE, setEdgeResolver, transitionEdge, transitionSpread } from './transitions';
+export type { TransitionLook } from './transitions';
 export { DeckPlayer, hitLayer } from './player';
 export { autoHeight, canFilter, contentHeight, fitted, fontString, getAssetVersion, getImage, groupSizes, imageSettled, layoutText, makeCanvas, MAX_TEX, mctx, measureTextHeight, MODEL_PLOT, refreshAssets, setupFont, shrinks, textSize } from './raster';
 export { ALL_KINDS, CATEGORIES, CATEGORY_LABEL, FIT, FONTS, defaultParams, kind, kindsIn, opt, registerKinds, style } from './registry';

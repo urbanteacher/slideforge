@@ -115,7 +115,9 @@ export interface Layer {
   face?: 'back';
 }
 
-export type TransitionType = 'none' | 'fade' | 'push' | 'zoom' | 'ripple' | 'dissolve' | 'wipe' | 'pixelate' | 'blur' | 'morph';
+export type TransitionType = 'none' | 'fade' | 'push' | 'zoom' | 'ripple' | 'dissolve' | 'wipe' | 'pixelate' | 'blur' | 'morph'
+  // from the motion studio: an iris from the centre, the signature cut-corner shape, and one world the camera travels
+  | 'iris' | 'shape' | 'camera';
 
 export type FeedbackKind = 'poll' | 'wordcloud' | 'brainstorm' | 'scale';
 /** SlideForge's audience feedback on a slide (src/deck/feedback.js): the kind, and the settings a
