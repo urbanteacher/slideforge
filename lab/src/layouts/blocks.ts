@@ -56,6 +56,8 @@ export function itemStyle(st: LayoutStyle) {
     table: { params: { font: st.body, size: 36, textColor: st.ink, accent: st.accent }, anim: after(0.2) },
     chart: { params: { color: st.accent, color2: st.muted, textColor: st.ink, font: st.body, size: 36 }, anim: { type: 'draw' as const, duration: 0.9 } },
     rule: { params: { shape: 'rect', radius: 0, fill: st.muted, strokeWidth: 0 }, anim: after(0.15) },
+    // A diagram builds a station, step or event at a time, on the slide's own ground.
+    diagram: { params: { surface: st.ground, textColor: st.ink, muted: st.muted, accent: st.accent, font: st.body, size: 40 }, anim: { type: 'draw' as const, duration: 0.9, stagger: 0.6, easing: 'linear' as const } },
   };
 }
 

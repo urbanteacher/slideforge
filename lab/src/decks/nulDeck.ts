@@ -2,7 +2,8 @@ import londonNight from '../assets/motion-lab-london-night.jpg?inline';
 import skyline from '../assets/nul/nu-london-skyline.png?inline';
 import snowMap from '../assets/nul/snow-cholera-map-1854.jpg?inline';
 import { uid, type Deck, type Slide } from '../core';
-import { LAYOUTS, closerSlide, columnsSlide, funnelSlide, introductionSlide, journeySlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, splitSlide, timelineSlide, type LayoutStyle } from '../layouts';
+import { LAYOUTS, closerSlide, columnsSlide, diagramSlide, funnelSlide, introductionSlide, journeySlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, splitSlide, timelineSlide, type LayoutStyle } from '../layouts';
+import { teachingRoutineSlides } from './teachingRoutine';
 import { finish, framed, kit } from './ukbtDeck';
 
 // Northeastern University London: SlideForge's "Openers, breakaways & a layout range" (`pace-nul`)
@@ -51,12 +52,18 @@ export function nulDeck(): Deck {
       ['Open', 'Title or image that states the stake.'], ['Break', 'Section — Part one.'], ['Build', 'Cards, split, keywords — the work.'],
       ['Break', 'Section — Part two.'], ['Close', 'Fact, quote, or photograph.'],
     ]), 'working', 'VARIATION — journey. This slide is the map of the gallery itself. Replace the milestones with your session outline.'),
+    // Diagrams drawn from a list (the diagram layer): the Teaching Routine, split as a loop past its budget is.
+    ...teachingRoutineSlides(on('working')).map((s, i) => put(s, 'working', i === 0
+      ? 'DIAGRAM — loop. The Teaching Routine round the one lesson it serves, its eight stages in pairs: a loop holds six stations at slide size. Reflect is the focal station. It builds a station at a time; edit the list in the Diagram tab.'
+      : 'DIAGRAM — flowchart. The same eight stages in order, Reflect carrying into the next lesson’s Plan. The detail to the loop’s overview.')),
     // The layout range: the richer layouts from SlideForge's Layout bank.
     put(timelineSlide(on('working'), 'Where the ideas in this module came from', '', [
       ['1786', 'Playfair', 'The bar chart and the line chart, in one atlas'], ['1858', 'Nightingale', 'The rose diagram takes an argument to Parliament'],
       ['1967', 'Bertin', 'Semiology of Graphics — the visual variables named'], ['1983', 'Tufte', 'Data-ink ratio and chartjunk'],
       ['2010s', 'FT & Datawrapper', 'The visual vocabulary goes mainstream'],
     ]), 'working', 'TIMELINE — date, event, detail; up to eight. Dates are labels, so “Week 3” or “Term 2” work.'),
+    put(diagramSlide(on('working'), 'The same ideas, to scale', 'timeline', '1786 | Playfair | the bar chart\n1858 | Nightingale | the rose diagram\n1967 | Bertin | the visual variables\n*1983 | Tufte | data-ink'), 'working',
+      'DIAGRAM — timeline. The years are numbers, so the line keeps their distances: seventy-two years between Playfair and Nightingale, sixteen between Bertin and Tufte. Words for dates set the events in order instead.'),
     put(funnelSlide(on('working'), 'What happens to a chart between the analyst and the reader', '', [
       ['Data points plotted', '1,200', 'everything the query returned'], ['Marks the eye registers', '300', 'the rest is texture'],
       ['Marks that are compared', '40', 'where the reading actually happens'], ['Number remembered', '1', 'if the title did its job'],

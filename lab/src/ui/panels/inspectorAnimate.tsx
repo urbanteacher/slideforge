@@ -45,6 +45,7 @@ const FEELS: { value: 'rise' | 'fade' | 'reveal' | 'plain'; label: string }[] = 
   { value: 'reveal', label: 'Reveal — wiped up from behind its line' },
 ];
 const CHART_ENTRANCES: { value: EntranceType; label: string }[] = [{ value: 'draw', label: 'Draws itself' }];
+const DIAGRAM_ENTRANCES: { value: EntranceType; label: string }[] = [{ value: 'draw', label: 'Builds step by step' }];
 const SPEED_OPTIONS: { value: Speed | 'custom'; label: string }[] = [
   { value: 'gentle', label: 'Gentle — slower, and holds longer' }, { value: 'medium', label: 'Medium' }, { value: 'quick', label: 'Quick' },
 ];
@@ -71,7 +72,7 @@ export function LayerAnimate({ layer }: { layer: Layer }) {
   const a = layer.anim;
   const up = (fn: (an: Layer['anim']) => void, m?: string) => update(layer.id, (l) => fn(l.anim), m);
   const options = k.content
-    ? (layer.kind === 'text' ? [...ENTRANCES, ...TEXT_ENTRANCES] : layer.kind === 'chart' ? [...ENTRANCES, ...CHART_ENTRANCES] : ENTRANCES)
+    ? (layer.kind === 'text' ? [...ENTRANCES, ...TEXT_ENTRANCES] : layer.kind === 'chart' ? [...ENTRANCES, ...CHART_ENTRANCES] : layer.kind === 'diagram' ? [...ENTRANCES, ...DIAGRAM_ENTRANCES] : ENTRANCES)
     : ENTRANCES.filter((e) => e.value === 'none' || e.value === 'fade');
   const pre = presetOf(a);
   const setPreset = (speed: Speed, spacing: Spacing) => up((x) => { const t = presetTiming(x.type, speed, spacing); x.duration = t.duration; x.stagger = t.stagger; });
@@ -81,7 +82,8 @@ export function LayerAnimate({ layer }: { layer: Layer }) {
       <Section title="Entrance" right={<button className="btn-soft accent" onClick={play}><Play size={12} />Play</button>}>
         <Row label="Effect"><Select value={a.type} options={options} onChange={(v) => up((x) => {
           x.type = v;
-          if (v === 'draw') { x.duration = 0.7; x.stagger = 0.12; x.easing = 'cubicOut'; }
+          if (v === 'draw' && layer.kind === 'diagram') { x.duration = 0.9; x.stagger = 0.6; x.easing = 'linear'; }
+          else if (v === 'draw') { x.duration = 0.7; x.stagger = 0.12; x.easing = 'cubicOut'; }
           // A count takes long enough to read the numbers rising, slowing as it lands.
           else if (v === 'count') { x.duration = 1.6; x.stagger = 0; x.easing = 'expoOut'; }
           // Words, letters and lines start on SlideForge's defaults, Medium and Wave, unless already on a preset.
@@ -115,7 +117,7 @@ export function LayerAnimate({ layer }: { layer: Layer }) {
                 </Row>}
               </>
             )}
-            {((isTextUnit(a.type) && a.type !== 'count') || a.type === 'draw') && !a.plan?.length && <Row label="Stagger" info={a.type === 'draw' ? 'Time between each bar, point or wedge.' : 'Time between each letter, word or line. Speed and Spacing set this for you.'}><Scrub value={a.stagger} min={0} max={a.type === 'draw' ? 1 : 0.4} step={0.005} decimals={3} unit=" s" onChange={(v, m) => up((x) => { x.stagger = v; }, m)} /></Row>}
+            {((isTextUnit(a.type) && a.type !== 'count') || a.type === 'draw') && !a.plan?.length && <Row label="Stagger" info={a.type === 'draw' ? (layer.kind === 'diagram' ? 'Time between each station, step or event.' : 'Time between each bar, point or wedge.') : 'Time between each letter, word or line. Speed and Spacing set this for you.'}><Scrub value={a.stagger} min={0} max={a.type === 'draw' ? (layer.kind === 'diagram' ? 2 : 1) : 0.4} step={0.005} decimals={3} unit=" s" onChange={(v, m) => up((x) => { x.stagger = v; }, m)} /></Row>}
             {a.type === 'typewriter' && (
               <Row label="Cursor" info="A cursor follows the typing, then blinks for three seconds once the line is typed.">
                 <Toggle value={!!a.caret} onChange={(v) => up((x) => { if (v) x.caret = true; else delete x.caret; })} />

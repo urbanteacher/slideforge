@@ -1,6 +1,7 @@
 import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../core';
 import { experimentStates, sceneSteps } from '../experiments';
 import { beatsOf, isTableKind } from '../charts';
+import { diagramBeats } from '../diagrams';
 import { isWordMotion, shuffledRank, wordsTotal } from './words';
 
 /** A CSS cubic-bezier(x1, y1, x2, y2) as a function of progress: solve x for t, return y. */
@@ -77,9 +78,11 @@ export function buildLines(l: Layer): number {
   return String(l.params.text ?? '').split('\n').filter((x) => x.trim()).length;
 }
 
-/** A chart that draws itself: how many bars, points or wedges it draws, one after another. */
-export const isChartDraw = (l: Layer) => l.kind === 'chart' && l.anim.type === 'draw';
+/** A chart that draws itself: how many bars, points or wedges it draws, one after another. A diagram
+ *  that builds step by step is drawn the same way, a station, step or event at a time. */
+export const isChartDraw = (l: Layer) => (l.kind === 'chart' || l.kind === 'diagram') && l.anim.type === 'draw';
 export function chartItems(l: Layer): number {
+  if (l.kind === 'diagram') return diagramBeats(String(l.params.diagram ?? 'loop'), String(l.params.data ?? ''));
   const kind = String(l.params.chart ?? 'column');
   if (isTableKind(kind)) return beatsOf(kind, String(l.params.data ?? ''));
   return Math.max(1, String(l.params.data ?? '').split('\n').filter((x) => x.trim()).length);

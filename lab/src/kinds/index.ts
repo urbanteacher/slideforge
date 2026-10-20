@@ -9,6 +9,7 @@ import { imageKind } from './image';
 import { shapeKind } from './shape';
 import { videoKind } from './video';
 import { chartKind } from './chart';
+import { diagramKind } from './diagram';
 import { quizKind } from './quiz';
 import { activityKind } from './activity';
 import { noteKind } from './note';
@@ -28,6 +29,7 @@ export const KINDS: LayerKind[] = [
   shapeKind,
   videoKind,
   chartKind,
+  diagramKind,
   quizKind,
   activityKind,
   noteKind,

@@ -26,6 +26,7 @@ export function createLayer(kindId: string, o: LayerOpts = {}): Layer {
       image: { x: 610, y: 190, w: 700, h: 700 },
       video: { x: 320, y: 180, w: 1280, h: 720 },
       chart: { x: 360, y: 220, w: 1200, h: 640 },
+      diagram: { x: 160, y: 200, w: 1600, h: 760 },
       quiz: { x: 260, y: 270, w: 1400, h: 540 },
       activity: { x: 360, y: 250, w: 1200, h: 580 },
       note: { x: 360, y: 760, w: 1200, h: 160 },

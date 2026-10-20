@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Layer } from '../../core';
+import { DiagramPanel } from '../../kinds/diagram/Inspector';
 import { ExperimentPanel } from '../../kinds/experiment/Inspector';
 import { SimulationPanel } from '../../kinds/model/Inspector';
 import { ScenePanel } from '../../kinds/scene/Inspector';
@@ -18,6 +19,7 @@ const KIND_INSPECTORS: Record<string, { tab: string; Inspector: (props: { layer:
   experiment: { tab: 'Experiment', Inspector: ExperimentPanel },
   scene: { tab: 'Motion', Inspector: ScenePanel },
   timer: { tab: 'Timer', Inspector: TimerPanel },
+  diagram: { tab: 'Diagram', Inspector: DiagramPanel },
 };
 
 /** The special layers, and the name of the tab each gets. */

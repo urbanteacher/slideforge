@@ -17,6 +17,7 @@ function sampleSlide(kindId: string): Slide {
   if (k.content === 'shape') return createSlide('', [createLayer('solid', { params: { color: '#141417' } }), createLayer('shape', { params: { shape: 'star', points: 6, fill: '#ff5a36', gradient: true, fill2: '#ffc15e' }, box: { x: 610, y: 190, w: 700, h: 700 } })], '#141417');
   if (k.content === 'video') return createSlide('', [createLayer('solid', { params: { color: '#2a2a30' } }), createLayer('video', { box: { x: 260, y: 150, w: 1400, h: 780 } })], '#2a2a30');
   if (k.content === 'chart') return createSlide('', [createLayer('solid', { params: { color: '#f4ede4' } }), createLayer('chart', { params: { values: false, grid: false }, box: { x: 260, y: 160, w: 1400, h: 760 } })], '#f4ede4');
+  if (k.content === 'diagram') return createSlide('', [createLayer('solid', { params: { color: '#f4ede4' } }), createLayer('diagram', { params: { surface: '#f4ede4' }, box: { x: 160, y: 120, w: 1600, h: 840 } })], '#f4ede4');
   if (k.content === 'note' || k.content === 'quote') {
     const box = k.content === 'quote' ? { x: 260, y: 200, w: 1400, h: 600 } : { x: 160, y: 220, w: 1600, h: 600 };
     return createSlide('', [createLayer('solid', { params: { color: '#f4ede4' } }), createLayer(kindId, { box, params: { size: k.content === 'quote' ? 110 : 60 } })], '#f4ede4');

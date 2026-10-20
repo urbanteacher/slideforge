@@ -22,7 +22,7 @@ export interface KindDef {
   category: Category;
   featured?: boolean;
   description: string;
-  content?: 'text' | 'image' | 'shape' | 'video' | 'chart' | 'quiz' | 'activity' | 'note' | 'quote' | 'table' | 'timer' | 'wipe' | 'model' | 'experiment' | 'scene';
+  content?: 'text' | 'image' | 'shape' | 'video' | 'chart' | 'diagram' | 'quiz' | 'activity' | 'note' | 'quote' | 'table' | 'timer' | 'wipe' | 'model' | 'experiment' | 'scene';
   params: ParamDef[];
   glsl?: string;
   needsMips?: boolean;

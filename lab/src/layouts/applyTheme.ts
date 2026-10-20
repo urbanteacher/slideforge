@@ -65,6 +65,8 @@ function restyle(l: Layer, st: LayoutStyle, ground: string, scale: number, from?
   if ('accent' in p) p.accent = st.accent;
   if ('fill' in p) p.fill = st.panel;
   if (l.kind === 'chart') { p.color = st.accent; p.color2 = st.muted; }
+  // A diagram's boxes and label masks are cut from the slide's ground, and its arrows are the quiet text.
+  if (l.kind === 'diagram') { p.surface = st.ground; p.muted = st.muted; }
   if ('font' in p) p.font = st.body;
 }
 

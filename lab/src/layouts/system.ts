@@ -3,7 +3,7 @@
 import { createLayer, type Layer, type Slide } from '../core';
 import { contentHeight } from '../engine';
 import { CARD_PAD, CARD_TOP } from './cards';
-import { CONTENT_FOOT, CONTENT_TOP, after, bar, body, bullets, colours, colsFor, heading, inset, item, panel, picture, rise, rowsFor, rule, slide, text, titleBar, titleRow, type Pair } from './blocks';
+import { CONTENT_FOOT, CONTENT_TOP, after, bar, body, bullets, colours, colsFor, heading, inset, item, itemStyle, panel, picture, rise, rowsFor, rule, slide, text, titleBar, titleRow, type Pair } from './blocks';
 import { GRID, cell, type LayoutStyle } from './style';
 
 // ─── The layouts ────────────────────────────────────────────────────────────
@@ -163,6 +163,25 @@ export function chartSlide(st: LayoutStyle, title: string, source: string): Slid
     // The chart draws itself, SlideForge's chart motion: bars rise, lines draw along, a beat at a time.
     createLayer('chart', { name: 'Chart', box: { ...cell(1, 5, 12, 1), h: CONTENT_FOOT - CONTENT_TOP - 60 }, params: { color: st.accent, color2: st.muted, textColor: st.ink, font: st.body, size: 36 }, anim: { type: 'draw', duration: 0.9, stagger: 0.22, delay: 0.3, easing: 'cubicOut' } }),
     text('Source', source, { ...cell(1, 5, 12, 1), y: CONTENT_FOOT - 44, h: 44 }, { font: st.body, size: 36, color: st.muted, fit: 'shrink' }, after(0.4)),
+  ]);
+}
+
+/** A title and a diagram — a loop, a flowchart or a timeline — built a step at a time. A loop is as wide
+ *  as it is tall, so it takes the full height on the right with its title beside it; a flowchart and a
+ *  timeline read across, so they fill the content area under the title. `data` is the diagram's list
+ *  (kinds/diagram/def.ts). */
+export function diagramSlide(st: LayoutStyle, title: string, diagram: 'loop' | 'flowchart' | 'timeline', data: string, extra: Record<string, unknown> = {}): Slide {
+  const kit = itemStyle(st).diagram;
+  const layer = (box: Layer['box']) => createLayer('diagram', { name: 'Diagram', box, params: { ...kit.params, diagram, data, ...extra } as never, anim: { ...kit.anim, delay: 0.3 } });
+  if (diagram === 'loop') return slide(st, 'Diagram', [
+    heading(st, title, { ...cell(1, 4, 4, 1), h: 8 * GRID.stepY }, 88, { fitGroup: 'title' }),
+    bar(st, { x: GRID.left, y: GRID.top + 3 * GRID.stepY - 30, w: 132, h: 8, rot: 0 }),
+    layer({ ...cell(5, 1, 8, 1), h: CONTENT_FOOT - GRID.top }),
+  ]);
+  return slide(st, 'Diagram', [
+    titleRow(st, title),
+    titleBar(st),
+    layer({ ...cell(1, 5, 12, 1), h: CONTENT_FOOT - CONTENT_TOP }),
   ]);
 }
 

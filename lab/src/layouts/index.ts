@@ -7,7 +7,7 @@ export { HF_KINDS, HF_SLOTS, carryCanvasEdits, editHeaderFooter, headerFooterSta
 export { LAYOUTS, LAYOUT_GROUPS } from './catalogue';
 export { LAYOUT_STYLES, cell, gridFor, guideStyle, layoutFor, slideStyle, themeOf } from './style';
 export { beforeAfterSlide, chartCalloutSlide, experimentSlide, exploreSlide, framedPictureSlide, gallerySlide, gameClock, sceneSlide, simulationSlide, youtubeSlide } from './show';
-export { bulletsSlide, cardsSlide, chartSlide, compareSlide, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, splitSlide, statsSlide, tableSlide, titleSlide } from './system';
+export { bulletsSlide, cardsSlide, chartSlide, compareSlide, diagramSlide, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, splitSlide, statsSlide, tableSlide, titleSlide } from './system';
 export { closerSlide, codeSlide, columnsSlide, funnelSlide, introductionSlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, timelineSlide } from './rich';
 export { groundParams, itemStyle } from './blocks';
 export { icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide } from './infographics';

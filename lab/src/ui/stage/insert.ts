@@ -167,9 +167,9 @@ function freeRow(slide: Slide, h: number, skip: string): number | null {
   }
   return y + h <= g.foot ? y : null;
 }
-const WIDE = new Set(['chart', 'note', 'heading', 'table', 'line']);
+const WIDE = new Set(['chart', 'diagram', 'note', 'heading', 'table', 'line']);
 
-export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'table', 'line', 'timer'] as const;
+export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'diagram', 'table', 'line', 'timer'] as const;
 export type ItemId = (typeof ITEMS)[number];
 
 export function addItem(id: Exclude<ItemId, 'image'>) {
@@ -201,6 +201,7 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     case 'line': return make('shape', 'Line', { ...kit.rule.params }, { x: 160, y: 540, w: 1600, h: 3 }, kit.rule.anim);
     case 'table': return make('table', 'Table', { ...kit.table.params }, undefined, kit.table.anim);
     case 'note': return make('note', 'Note', { ...kit.note.params }, undefined, kit.note.anim);
+    case 'diagram': return make('diagram', 'Diagram', { ...kit.diagram.params }, { h: 760 }, kit.diagram.anim);
     // An empty video at 16:9 in the middle of the slide, with its Video tab open for the address.
     case 'video': {
       const g = gridFor(st.deck), w = (g.right - g.left) * 0.7, h = (w * 9) / 16;

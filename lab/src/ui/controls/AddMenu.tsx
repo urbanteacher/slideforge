@@ -1,4 +1,4 @@
-import { ChartColumn, ChevronDown, Heading, ImagePlus, LayoutGrid, List, ListOrdered, Minus, Play, Plus, Quote, Rows2, Shapes, SquareSplitHorizontal, StickyNote, Table, Timer, Type, Video } from 'lucide-react';
+import { ChartColumn, ChevronDown, Heading, ImagePlus, LayoutGrid, List, ListOrdered, Minus, Play, Plus, Quote, Rows2, Shapes, SquareSplitHorizontal, StickyNote, Table, Timer, Type, Video, Workflow } from 'lucide-react';
 import { useRef } from 'react';
 import { useStore } from '../../store';
 import { addImageFile, addItem, addTextImage } from '../stage/insert';
@@ -31,6 +31,7 @@ export function AddMenu() {
                   <button onClick={() => { imageRef.current?.click(); close(); }}><ImagePlus size={15} />Image…</button>
                   <button onClick={item('video')}><Video size={15} />Video</button>
                   <button onClick={item('chart')}><ChartColumn size={15} />Chart</button>
+                  <button onClick={item('diagram')}><Workflow size={15} />Diagram</button>
                   <button onClick={item('table')}><Table size={15} />Table</button>
                 </div>
                 <div className="add-col">

@@ -3,4 +3,5 @@ export { CARRIED, carryDeck27, carryDeckArt, carryDeckExperimentPresets, carryDe
 export type { LessonGame, SFDeck, SFSlide, SlideDesign } from './fromSlideForge';
 export type { MotionLabData } from './motionLab';
 export { nulDeck } from './nulDeck';
+export { TEACHING_ROUTINE_FLOW, TEACHING_ROUTINE_LOOP, teachingRoutineSlides } from './teachingRoutine';
 export { ukbtDeck, ukbtInstituteDeck } from './ukbtDeck';
