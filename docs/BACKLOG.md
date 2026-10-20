@@ -798,6 +798,14 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 20 October 2026 — The Lesson studio draws diagrams: loop, flowchart and timeline
+
+- **A new layer kind, Diagram** (`lab/src/kinds/diagram`, drawn by `lab/src/diagrams/`), on Add → Diagram. It lays out a structural diagram from one item a line, the way a chart reads its table, with the geometry and connector rules of diagram-design (MIT, Cathryn Lavery, github.com/cathrynlavery/diagram-design). Loop: stations on one circle round a hub, clockwise ring arcs landing on each box's edge, dashed write-back spokes. Flowchart: ovals, steps and decisions on a grid read left to right and back, straight arrows between neighbours, r=8 elbows otherwise, labelled exits on masks. Timeline: to scale when the times are numbers or dates, an even order when they are words.
+- **Legible and in the slide's colours.** No text under 30px (fit-check's 20px on 720); a loop holds six stations, a flowchart nine steps, a timeline eight events, and a diagram that does not fit says so in its Diagram tab rather than shrinking. Every colour is held to WCAG against the surface it sits on, on every palette's working, quiet and loud grounds.
+- **Builds step by step** through the slide clock, a station, step or event at a time; reduced motion and still slides show it finished. It renders in the studio, in PNG export and in exported HTML.
+- **The NU London deck** gains the Teaching Routine: an overview loop of its eight stages in pairs round "One real lesson / Y8 micro:bit step counter", Reflect focal, then the eight in order as a flow; and a timeline of Playfair to Tufte to scale. `lab/tests/diagrams.test.ts` checks the connector rules, the floor, contrast and motion. `lab-app/` rebuilt.
+- **Still open:** Quiz studio cannot write a diagram yet, and Diagram is not in the layout catalogue. Venn, quadrant and tree are the next types.
+
 ### 15 October 2026 — The Power of AI: a keynote for 400 London SMEs
 
 - **New deck** `ai-sme-productivity` (UK Black Tech folder, 30 slides, 29 shown, about 30 minutes with a 20-minute cut on the speaker page), built by `tools/build-ai-sme-productivity.js`, which also writes `output/Power_of_AI_SMEs.sfdeck.json` for File → Import. It is for Working Smarter, Growing Together (Central District Alliance, with Metro Bank, LabTech, UK Black Tech, and Camden and Islington councils). Where small firms are with AI (ONS July 2026, BCC March 2026), four controlled studies and the jagged frontier, five case studies, seven tips, a data traffic light, a 30-day plan and one commitment each. Sources are in each slide's notes.
