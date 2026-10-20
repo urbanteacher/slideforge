@@ -111,6 +111,21 @@ export interface Schedule {
  * end of the previous animation; `withSlide` starts with the current step.
  */
 export function schedule(slide: Slide, clicks: number[]): Schedule {
+  const first = scheduleWith(slide, clicks, []);
+  // Hand-off: what arrives on a click waits until what leaves on it is MOTION.overlapAt of the way out,
+  // so a new point never rises into the space the old one is still sinking out of.
+  const handoff: number[] = [];
+  for (const l of slide.layers) {
+    const x = l.anim.exit;
+    if (!x || x.when !== 'next' || !l.visible) continue;
+    const k = (first.stepOf.get(l.id) ?? 0) + 1;
+    if (k > first.sched.steps) continue;
+    handoff[k] = Math.max(handoff[k] ?? 0, (Math.max(0, x.delay) + exitDuration(l)) * MOTION.overlapAt);
+  }
+  return (handoff.some((h) => h > 0) ? scheduleWith(slide, clicks, handoff) : first).sched;
+}
+
+function scheduleWith(slide: Slide, clicks: number[], handoff: number[]): { sched: Schedule; stepOf: Map<string, number> } {
   const start = new Map<string, number>();
   const lines = new Map<string, number[]>();
   let step = 0;
@@ -127,7 +142,7 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
     if (a.trigger === 'onClick') {
       stepEnds.push(stepLocalEnd);
       step++;
-      stepBase = clicks[step - 1] ?? Infinity;
+      stepBase = (clicks[step - 1] ?? Infinity) + (handoff[step] ?? 0);
       stepLocalEnd = 0;
       s = stepBase + a.delay;
     } else if (a.trigger === 'afterPrev') {
@@ -151,7 +166,7 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
       for (let i = 1; i < n; i++) {
         stepEnds.push(stepLocalEnd);
         step++;
-        stepBase = clicks[step - 1] ?? Infinity;
+        stepBase = (clicks[step - 1] ?? Infinity) + (handoff[step] ?? 0);
         stepLocalEnd = a.duration;
         starts.push(stepBase);
         prevEnd = stepBase + a.duration;
@@ -161,7 +176,9 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
     stepOf.set(l.id, step);
   }
   stepEnds.push(stepLocalEnd);
-  return { start, lines, steps: step, stepEnds, exit: exits(slide, clicks, start, stepOf, step, stepEnds) };
+  // Auto-play times a step from its click: count the hand-off wait in it.
+  handoff.forEach((h, k) => { if (h && k < stepEnds.length) stepEnds[k] += h; });
+  return { sched: { start, lines, steps: step, stepEnds, exit: exits(slide, clicks, start, stepOf, step, stepEnds) }, stepOf };
 }
 
 /**

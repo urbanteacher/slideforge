@@ -136,3 +136,20 @@ test('ambient loops grow in once the entrance has landed; breathing keeps text r
   const r = layerState(shape({ loop: 'sway', loopAmount: 2 }), 0, 5, 5, true);
   assert.equal(r.rot, 0);
 });
+
+test('hand-off: what arrives on a click waits until what leaves on it is most of the way out, so they never share the space', () => {
+  const a = shape({ duration: 0.8, exit: { type: 'sink', when: 'next', delay: 0 } }); // leaves over 0.4 s
+  const b = shape({ trigger: 'onClick', duration: 0.8 });
+  const c = shape({ trigger: 'withSlide', duration: 0.5 }); // arrives with b's step
+  const sch = schedule(createSlide('S', [a, b, c]), [3]);
+  assert.equal(sch.exit.get(a.id), 3, 'the old one leaves on the click');
+  assert.ok(Math.abs(sch.start.get(b.id)! - (3 + 0.4 * MOTION.overlapAt)) < 1e-9, 'the new one waits for 60% of the exit');
+  assert.equal(sch.start.get(c.id), sch.start.get(b.id), 'and so does everything arriving with it');
+  const out = layerState(a, 0, sch.start.get(b.id)!, 0, false, sch.exit.get(a.id));
+  assert.ok(out.opacity < 0.8, `the old one is mostly gone when the new one starts (${out.opacity})`);
+  assert.ok(sch.stepEnds[1] >= 0.4 * MOTION.overlapAt + 0.8 - 1e-9, `auto-play waits for the whole hand-off (${sch.stepEnds[1]})`);
+  // No exit, no wait.
+  const plain = schedule(createSlide('S', [shape(), shape({ trigger: 'onClick' })]), [3]);
+  assert.equal(plain.start.get(plain.start.keys().next().value!) , 0);
+  assert.equal([...plain.start.values()][1], 3);
+});
