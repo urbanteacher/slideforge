@@ -1,5 +1,6 @@
 import type { Deck, Layer, Slide } from '../core';
 import { EASE, animTotal, schedule } from './anim';
+import { MOTION } from './curves';
 import { ALL_KINDS } from './registry';
 import { MODEL_PLOT } from './raster';
 import { showMedia, toggleMedia, fileClip, mediaPlaying } from './media';
@@ -466,7 +467,7 @@ export class DeckPlayer {
       else {
         const tr = this.trans;
         const from = this.frameOpts(tr.from, tr.fromStart, tr.fromClicks, tr.fromBuilt, time);
-        this.renderer.drawTransition(this.flowed(tr.from), from, this.onScreen, to, tr.type, EASE.cubicInOut(raw), tr.dir);
+        this.renderer.drawTransition(this.flowed(tr.from), from, this.onScreen, to, tr.type, EASE[MOTION.move](raw), tr.dir); // a slide transition is a move: ease-in-out-quart
         return;
       }
     }

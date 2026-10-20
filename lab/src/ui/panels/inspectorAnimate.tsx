@@ -1,6 +1,6 @@
 // The Animate tab: a layer's entrance, emphasis, build and timing, the slide's transition and build order.
-import type { Easing, EntranceType, Layer, LoopType, TransitionType, Trigger } from '../../core';
-import { animTotal, isTextUnit, presetOf, presetTiming, schedule, kind, type Spacing, type Speed } from '../../engine';
+import type { Easing, EntranceType, ExitType, Layer, LoopType, TransitionType, Trigger } from '../../core';
+import { animTotal, exitDuration, isTextUnit, presetOf, presetTiming, schedule, kind, type Spacing, type Speed } from '../../engine';
 import { backdropOf, setBackdrop, type BackdropMode } from '../../layouts';
 import { slideOf, useStore } from '../../store';
 import { Row, Scrub, Section, Select, Toggle } from '../controls/controls';
@@ -23,15 +23,24 @@ const TEXT_ENTRANCES: { value: EntranceType; label: string }[] = [
 const EASINGS: { value: Easing; label: string }[] = [
   { value: 'easyEase', label: 'Easy Ease — SlideForge’s words' },
   { value: 'expoOut', label: 'Expo out — crisp' }, { value: 'quintOut', label: 'Quint out' }, { value: 'cubicOut', label: 'Cubic out' },
-  { value: 'cubicInOut', label: 'Cubic in-out' }, { value: 'backOut', label: 'Back out — overshoot' }, { value: 'spring', label: 'Spring' },
-  { value: 'linear', label: 'Linear' },
+  { value: 'cubicInOut', label: 'Cubic in-out' }, { value: 'quartInOut', label: 'Quart in-out — moves across the slide' },
+  { value: 'backOut', label: 'Back out — overshoot' },
+  { value: 'springPremium', label: 'Spring, premium — a hint of settle (ζ 0.8)' }, { value: 'springPlayful', label: 'Spring, playful — one bounce (ζ 0.5)' },
+  { value: 'springBouncy', label: 'Spring, bouncy — a few bounces (ζ 0.35)' }, { value: 'spring', label: 'Spring (classic)' },
+  { value: 'cubicIn', label: 'Cubic in — for exits' }, { value: 'expoIn', label: 'Expo in — fast exits' },
+  { value: 'linear', label: 'Linear — spin and progress only' },
 ];
 const TRIGGERS: { value: Trigger; label: string }[] = [
-  { value: 'withSlide', label: 'With previous' }, { value: 'afterPrev', label: 'After previous' }, { value: 'onClick', label: 'On click' },
+  { value: 'withSlide', label: 'With previous' }, { value: 'overlapPrev', label: 'Overlapping previous — as it settles' },
+  { value: 'afterPrev', label: 'After previous' }, { value: 'onClick', label: 'On click' },
 ];
 const LOOPS: { value: LoopType; label: string }[] = [
   { value: 'none', label: 'None' }, { value: 'float', label: 'Float' }, { value: 'pulse', label: 'Pulse' },
   { value: 'sway', label: 'Sway' }, { value: 'spin', label: 'Spin' }, { value: 'breathe', label: 'Breathe' },
+];
+const EXITS: { value: ExitType | 'none'; label: string }[] = [
+  { value: 'none', label: 'Stays' }, { value: 'fade', label: 'Fade out' }, { value: 'sink', label: 'Sink' }, { value: 'lift', label: 'Lift away' },
+  { value: 'slideLeft', label: 'Slide out left' }, { value: 'slideRight', label: 'Slide out right' }, { value: 'shrink', label: 'Shrink' }, { value: 'blur', label: 'Blur out' },
 ];
 const TRANSITIONS: { value: TransitionType; label: string }[] = [
   { value: 'none', label: 'Cut' }, { value: 'fade', label: 'Crossfade' }, { value: 'push', label: 'Push' }, { value: 'zoom', label: 'Zoom' },
@@ -138,10 +147,27 @@ export function LayerAnimate({ layer }: { layer: Layer }) {
           </>
         )}
       </Section>
+      <Section title="Exit">
+        <Row label="Leave" info="How it leaves the slide. Exits ease in and take half the entrance's time, as motion design does: the eye has already moved on.">
+          <Select value={a.exit?.type ?? 'none'} options={EXITS} onChange={(v) => up((x) => {
+            if (v === 'none') delete x.exit; else x.exit = { when: 'next', delay: 0, ...x.exit, type: v };
+          })} />
+        </Row>
+        {a.exit && (
+          <>
+            <Row label="When" info="With the next click: it leaves as the next build step arrives, so one point replaces another. After a time: it leaves on its own once it has been up that long.">
+              <Select value={a.exit.when} options={[{ value: 'next', label: 'With the next click' }, { value: 'after', label: 'After a time' }]} onChange={(v) => up((x) => { if (x.exit) x.exit.when = v; })} />
+            </Row>
+            <Row label={a.exit.when === 'after' ? 'Stays up' : 'Delay'}><Scrub value={a.exit.delay} min={0} max={a.exit.when === 'after' ? 30 : 5} step={0.05} unit=" s" onChange={(v, m) => up((x) => { if (x.exit) x.exit.delay = v; }, m)} /></Row>
+            <Row label="Duration" info="Leave at 0 for half the entrance."><Scrub value={a.exit.duration ?? 0} min={0} max={2} step={0.05} unit=" s" onChange={(v, m) => up((x) => { if (x.exit) { if (v > 0) x.exit.duration = v; else delete x.exit.duration; } }, m)} /></Row>
+            <div className="desc">Leaves over {exitDuration(layer).toFixed(2)} s on an ease-in.</div>
+          </>
+        )}
+      </Section>
       {(a.type === 'words' || a.type === 'letters') && !(a.build && a.build !== 'none') && <Choreography layer={layer} />}
       {k.content && (
         <Section title="Ambient loop">
-          <Row label="Motion" info="Continuous, subtle motion after the entrance."><Select value={a.loop} options={LOOPS} onChange={(v) => up((x) => { x.loop = v; })} /></Row>
+          <Row label="Motion" info="Continuous, subtle motion. It grows in once the entrance has settled, and holds still under reduced motion."><Select value={a.loop} options={LOOPS} onChange={(v) => up((x) => { x.loop = v; })} /></Row>
           {a.loop !== 'none' && (
             <>
               <Row label="Speed"><Scrub value={a.loopSpeed} min={0.05} max={4} step={0.05} onChange={(v, m) => up((x) => { x.loopSpeed = v; }, m)} /></Row>
@@ -239,7 +265,7 @@ function Sequence() {
             <div key={l.id} className={`seq-row${l.id === selectedId ? ' sel' : ''}`} onClick={() => selectLayer(l.id)}>
               <span className={`seq-step${s ? ' click' : ''}`}>{s ? `C${s}` : 'In'}</span>
               <span>{l.name}</span>
-              <small>{l.anim.trigger === 'afterPrev' ? 'after' : ''} {l.anim.type}</small>
+              <small>{l.anim.trigger === 'afterPrev' ? 'after' : l.anim.trigger === 'overlapPrev' ? 'overlaps' : ''} {l.anim.type}{l.anim.exit ? ` · leaves ${l.anim.exit.when === 'next' ? 'next click' : 'after ' + l.anim.exit.delay + ' s'}` : ''}</small>
             </div>
           ))}
         </div>

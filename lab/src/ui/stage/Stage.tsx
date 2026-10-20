@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, GripVertical, Plus } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { EASE, schedule, hitLayer, reducesMotion, autoHeight, fontString, measureTextHeight, textSize, ALL_KINDS, kind, Renderer } from '../../engine';
+import { EASE, MOTION, schedule, hitLayer, reducesMotion, autoHeight, fontString, measureTextHeight, textSize, ALL_KINDS, kind, Renderer } from '../../engine';
 import { ChartEditor, FieldsEditor, editsOnCanvas } from './CanvasEditors';
 import { addAnother, canAddAnother, editIntent, groupOf, nextDirection, unitFrame } from './snap';
 import { slideOf, useStore } from '../../store';
@@ -158,7 +158,7 @@ export function Stage() {
         } else {
           const opts = { time, mouse: m.cur, t, clicks: p.clicks, hidden, reduce };
           if (p.from && t < p.trans.duration && p.trans.type !== 'none') {
-            r.drawTransition(p.from, { time, mouse: m.cur, t: Infinity, clicks: [], reduce }, s, opts, p.trans.type, EASE.cubicInOut(Math.max(0, t) / p.trans.duration), 1);
+            r.drawTransition(p.from, { time, mouse: m.cur, t: Infinity, clicks: [], reduce }, s, opts, p.trans.type, EASE[MOTION.move](Math.max(0, t) / p.trans.duration), 1);
           } else {
             r.drawSlide(s, opts, null);
           }

@@ -33,8 +33,13 @@ export type EntranceType =
   // chart-only: bars rise from the axis, a line draws along, wedges sweep round
   | 'draw';
 
-export type Easing = 'easyEase' | 'expoOut' | 'quintOut' | 'cubicOut' | 'cubicInOut' | 'backOut' | 'spring' | 'linear';
-export type Trigger = 'withSlide' | 'onClick' | 'afterPrev';
+export type Easing = 'easyEase' | 'expoOut' | 'quintOut' | 'cubicOut' | 'cubicInOut' | 'backOut' | 'spring' | 'linear'
+  // named for the move (engine/curves.ts MOTION): moves, exits, and springs by damping ratio
+  | 'quartInOut' | 'cubicIn' | 'expoIn' | 'springPremium' | 'springPlayful' | 'springBouncy';
+/** overlapPrev: starts while the previous animation is still finishing (MOTION.overlapAt of the way through). */
+export type Trigger = 'withSlide' | 'onClick' | 'afterPrev' | 'overlapPrev';
+/** How a layer leaves. */
+export type ExitType = 'fade' | 'sink' | 'lift' | 'slideLeft' | 'slideRight' | 'shrink' | 'blur';
 export type LoopType = 'none' | 'float' | 'pulse' | 'sway' | 'spin' | 'breathe';
 
 /** How a planned word lands: eases to rest, goes past it and back (bounce), or arrives soft and condenses (mist). */
@@ -74,6 +79,9 @@ export interface Anim {
   plan?: PlanStep[];
   /** Fade away this many seconds after arriving — SlideForge's "Caption clears itself". 0 stays. */
   clearAfter?: number;
+  /** Leave the slide: when the next build step begins (`next`), or `delay` seconds after arriving
+   *  (`after`). Ease-in and quicker than the entrance: half its duration unless `duration` says. */
+  exit?: { type: ExitType; when: 'next' | 'after'; delay: number; duration?: number; easing?: Easing };
 }
 
 export type HoverType = 'none' | 'lift' | 'grow' | 'glow' | 'tilt';

@@ -515,7 +515,7 @@ export class Renderer {
       const liveState = stepped ? opts.live?.get(`${raw.id}:state`) : undefined;
       const layer = liveState !== undefined ? this.withLiveSteps(this.withPage(toned, slide.id), liveState, opts) : starts ? (stepped ? this.withSteps(this.withPage(toned, slide.id), starts, opts.t, reduce) : this.withLines(this.withPage(toned, slide.id), starts, opts.t, reduce)) : this.withPage(toned, slide.id);
       const k = kind(layer.kind);
-      const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time, reduce);
+      const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time, reduce, sched.exit.get(layer.id));
       st.opacity *= light.dim.get(layer.id) ?? 1;
       const piled = light.pile.get(layer.id);
       if (piled) { st.dx += piled.dx; st.dy += piled.dy; st.scale *= piled.scale; st.rot += piled.rot; }

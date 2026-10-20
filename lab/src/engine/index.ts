@@ -1,6 +1,7 @@
 // engine/: its public interface. Code outside engine/ imports from here, never from its files (lab-engine-plan hard rule 13).
 export { animTotal, defaultAnim, defaultInteract, DIM_TO, EASE, isTextUnit, presetOf, presetTiming, schedule, textUnitCount, unitProgress } from './anim';
 export type { Spacing, Speed } from './anim';
+export { exitDuration, kick, MOTION, spring, SPRING_ZETA } from './curves';
 export { reducesMotion } from './motion';
 export { DeckPlayer, hitLayer } from './player';
 export { autoHeight, canFilter, contentHeight, fitted, fontString, getAssetVersion, getImage, groupSizes, imageSettled, layoutText, makeCanvas, MAX_TEX, mctx, measureTextHeight, MODEL_PLOT, refreshAssets, setupFont, shrinks, textSize } from './raster';

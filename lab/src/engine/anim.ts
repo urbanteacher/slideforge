@@ -1,37 +1,12 @@
-import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../core';
+import type { Anim, EntranceType, Interact, Layer, Slide } from '../core';
 import { experimentStates, sceneSteps } from '../experiments';
 import { beatsOf, isTableKind } from '../charts';
 import { diagramBeats } from '../diagrams';
 import { isWordMotion, shuffledRank, wordsTotal } from './words';
+import { EASE, MOTION, exitDuration, exitPose, loopEnvelope } from './curves';
 
-/** A CSS cubic-bezier(x1, y1, x2, y2) as a function of progress: solve x for t, return y. */
-function bezier(x1: number, y1: number, x2: number, y2: number) {
-  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
-  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
-  const X = (t: number) => ((ax * t + bx) * t + cx) * t, Y = (t: number) => ((ay * t + by) * t + cy) * t;
-  return (x: number) => {
-    if (x <= 0) return 0;
-    if (x >= 1) return 1;
-    let lo = 0, hi = 1, t = x;
-    for (let i = 0; i < 24; i++) { const v = X(t); if (Math.abs(v - x) < 1e-5) break; if (v < x) lo = t; else hi = t; t = (lo + hi) / 2; }
-    return Y(t);
-  };
-}
-
-export const EASE: Record<Easing, (t: number) => number> = {
-  // After Effects' Easy Ease, 33% influence each side — what SlideForge's words move on.
-  easyEase: bezier(0.33, 0, 0.67, 1),
-  linear: (t) => t,
-  cubicOut: (t) => 1 - Math.pow(1 - t, 3),
-  quintOut: (t) => 1 - Math.pow(1 - t, 5),
-  expoOut: (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t)),
-  cubicInOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
-  backOut: (t) => {
-    const c1 = 1.70158, c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-  },
-  spring: (t) => (t >= 1 ? 1 : 1 - Math.exp(-6.5 * t) * Math.cos(t * 11)),
-};
+// The curves live in curves.ts, named for the move they make; EASE stays importable from here.
+export { EASE };
 
 export const TEXT_UNIT_TYPES: EntranceType[] = ['letters', 'words', 'lines', 'typewriter', 'scramble', 'count'];
 export const isTextUnit = (t: EntranceType) => TEXT_UNIT_TYPES.includes(t);
@@ -128,6 +103,7 @@ export interface Schedule {
   lines: Map<string, number[]>; // text built a line per click → each line's start
   steps: number; // number of click builds on the slide
   stepEnds: number[]; // (relative) duration of each step, for auto-play
+  exit: Map<string, number>; // layer id → when it starts to leave (s, slide clock); absent = it stays
 }
 
 /**
@@ -140,8 +116,10 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
   let step = 0;
   let stepBase = 0;
   let prevEnd = 0;
+  let prevStart = 0;
   let stepLocalEnd = 0;
   const stepEnds: number[] = [];
+  const stepOf = new Map<string, number>(); // the build step each layer has finished arriving in
   for (const l of slide.layers) {
     if (!l.visible || l.anim.type === 'none') continue;
     const a = l.anim;
@@ -154,10 +132,14 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
       s = stepBase + a.delay;
     } else if (a.trigger === 'afterPrev') {
       s = prevEnd + a.delay;
+    } else if (a.trigger === 'overlapPrev') {
+      // Start while the previous is still settling, as hand animation overlaps its actions.
+      s = Number.isFinite(prevStart) ? prevStart + (prevEnd - prevStart) * MOTION.overlapAt + a.delay : prevStart; // previous still waits for its click
     } else {
       s = stepBase + a.delay;
     }
     start.set(l.id, s);
+    prevStart = s;
     prevEnd = s + animTotal(l);
     if (Number.isFinite(stepBase)) stepLocalEnd = Math.max(stepLocalEnd, prevEnd - stepBase);
     else stepLocalEnd = Math.max(stepLocalEnd, a.delay + animTotal(l));
@@ -176,9 +158,32 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
       }
       lines.set(l.id, starts);
     }
+    stepOf.set(l.id, step);
   }
   stepEnds.push(stepLocalEnd);
-  return { start, lines, steps: step, stepEnds };
+  return { start, lines, steps: step, stepEnds, exit: exits(slide, clicks, start, stepOf, step, stepEnds) };
+}
+
+/**
+ * When each leaving layer goes: with the next build step after its own, or a set time after it has
+ * arrived. A layer that leaves with a step makes that step at least as long as its exit, for auto-play.
+ */
+function exits(slide: Slide, clicks: number[], start: Map<string, number>, stepOf: Map<string, number>, steps: number, stepEnds: number[]) {
+  const out = new Map<string, number>();
+  for (const l of slide.layers) {
+    const x = l.anim.exit;
+    if (!x || !l.visible) continue;
+    const s = start.get(l.id) ?? 0;
+    if (x.when === 'after') {
+      out.set(l.id, s + (l.anim.type === 'none' ? 0 : animTotal(l)) + Math.max(0, x.delay));
+    } else {
+      const k = (stepOf.get(l.id) ?? 0) + 1;
+      if (k > steps) continue; // no step after it: it stays
+      out.set(l.id, (clicks[k - 1] ?? Infinity) + Math.max(0, x.delay));
+      stepEnds[k] = Math.max(stepEnds[k] ?? 0, Math.max(0, x.delay) + exitDuration(l));
+    }
+  }
+  return out;
 }
 
 /** How far a dimmed point falls back: dim keeps it readable; spotlight takes it further back. */
@@ -334,7 +339,7 @@ function imageView(layer: Layer, local: number): [number, number, number] {
  *   picture's slow zoom or travel holds its first frame (a zoom to a detail is already there), and
  *   loops hold still.
  */
-export function layerState(layer: Layer, start: number | undefined, t: number, time: number, reduce = false): LayerState {
+export function layerState(layer: Layer, start: number | undefined, t: number, time: number, reduce = false, exitAt?: number): LayerState {
   const st = IDLE_STATE();
   const a = layer.anim;
   const h = layer.box?.h ?? 200;
@@ -366,7 +371,7 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
         case 'zoomIn': st.opacity = fade; st.scale = 0.82 + 0.18 * e; break;
         case 'zoomOut': st.opacity = fade; st.scale = 1.25 - 0.25 * e; break;
         case 'pop': st.opacity = Math.min(1, raw * 3); st.scale = Math.max(0.001, e); break;
-        case 'blur': st.opacity = fade; st.blur = inv * 6; st.scale = 1.04 - 0.04 * e; break;
+        case 'blur': st.opacity = fade; st.blur = Math.max(0, inv) * 6; st.scale = 1.04 - 0.04 * e; break; // a spring's overshoot never sharpens past nothing
         case 'wipeUp': st.clip = [-9, 1 - e * 1.02, 9, 9]; break;
         case 'wipeRight': st.clip = [-9, -9, e * 1.02, 9]; break;
         case 'spin': st.opacity = fade; st.rot = -inv * 120; st.scale = 0.6 + 0.4 * e; break;
@@ -390,14 +395,30 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
   }
 
   if (a.loop !== 'none' && !reduce) {
-    const s = a.loopSpeed, amt = a.loopAmount;
+    const s = a.loopSpeed;
+    // A swing grows in once the entrance has settled, so the layer never lands mid-swing.
+    const settled = start !== undefined && Number.isFinite(start) && a.type !== 'none' ? start + animTotal(layer) : -Infinity;
+    const amt = a.loopAmount * (a.loop === 'spin' ? 1 : loopEnvelope(Number.isFinite(t) ? t - settled : Infinity));
     switch (a.loop) {
       case 'float': st.dy += Math.sin(time * s * 1.6 + hashId(layer.id)) * 10 * amt; break;
       case 'pulse': st.scale *= 1 + Math.sin(time * s * 2.4) * 0.025 * amt; break;
       case 'sway': st.rot += Math.sin(time * s * 1.4 + hashId(layer.id)) * 4 * amt; break;
       case 'spin': st.rot += time * s * 30 * amt; break;
-      case 'breathe': st.opacity *= 1 - (0.5 + 0.5 * Math.sin(time * s * 1.8)) * 0.45 * amt; break;
+      // Breathing is mostly size (1.2%, as the motion studio's) with a light dip in opacity, never below
+      // 55%, so text that breathes stays readable.
+      case 'breathe': {
+        const b = 0.5 + 0.5 * Math.sin(time * s * 1.8);
+        st.scale *= 1 + 0.012 * amt * (b - 0.5) * 2;
+        st.opacity *= 1 - Math.min(0.45, 0.15 * amt) * b;
+        break;
+      }
     }
+  }
+
+  if (exitAt !== undefined && layer.anim.exit && Number.isFinite(t) && t >= exitAt) {
+    const x = exitPose(layer, layer.anim.exit.type, t - exitAt, reduce);
+    if (x.gone) { st.visible = false; st.opacity = 0; return st; }
+    st.opacity *= x.opacity; st.dx += x.dx; st.dy += x.dy; st.scale *= x.scale; st.blur = Math.max(st.blur, x.blur);
   }
   return st;
 }
