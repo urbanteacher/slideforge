@@ -1,5 +1,5 @@
 import { cloneLayer, createLayer, hasFlagshipFrame, isFlagshipFrameLayer, setFramePage, type Layer } from '../../core';
-import { LAYOUT_STYLES, themeOf } from '../../layouts';
+import { DEFAULT_THEME, LAYOUT_STYLES, themeOf } from '../../layouts';
 import { slideOf, useStore } from '../../store';
 import { kind } from '../../engine';
 
@@ -162,7 +162,7 @@ export function insertBlock(mode: BlockMode) {
   // The deck's theme when it has one; otherwise whichever reads on this slide's ground.
   const bg = Number.parseInt(slide.background.replace('#', ''), 16);
   const darkGround = Number.isFinite(bg) && (0.299 * ((bg >> 16) & 255) + 0.587 * ((bg >> 8) & 255) + 0.114 * (bg & 255)) < 110;
-  const theme = themeOf(st.deck) ?? LAYOUT_STYLES.find((s) => s.id === (darkGround ? 'midnight' : 'paper'))!;
+  const theme = themeOf(st.deck) ?? (darkGround ? LAYOUT_STYLES.find((s) => s.id === 'midnight')! : DEFAULT_THEME);
   const look: BlockStyle = { display: theme.display, body: theme.body, accent: theme.accent };
   let layers: Layer[];
   if (mode === 'numbered') {
@@ -176,7 +176,7 @@ export function insertBlock(mode: BlockMode) {
     const hex = slide.background.replace('#', '');
     const n = Number.parseInt(hex, 16);
     const dark = Number.isFinite(n) && (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 110;
-    const style = themeOf(st.deck) ?? LAYOUT_STYLES.find((s) => s.id === (dark ? 'midnight' : 'paper'))!;
+    const style = themeOf(st.deck) ?? (dark ? LAYOUT_STYLES.find((s) => s.id === 'midnight')! : DEFAULT_THEME);
     const gap = 36, margin = 78;
     const width = (st.deck.width - margin * 2 - gap * (count - 1)) / count;
     layers = Array.from({ length: count }, (_, i) => createLayer('note', {

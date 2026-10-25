@@ -1,11 +1,10 @@
 import { aiad27Slide, themeLook } from './aiad27';
-import { deckFromSlideForge, type SFSlide, type SlideDesign } from './fromSlideForge';
+import { convert, type SFSlide, type SlideDesign } from './fromSlideForge';
 import type { LayoutStyle } from '../layouts';
 
-// The campaign designs in the left panel. Each is SlideForge's own slide for the campaign, built by the
-// converter as a lesson of the campaign would be (so it carries the campaign's frame, labels and type),
-// with the words its Safe lesson has, ready to be written over. The nine 2027 structures are also
-// Layouts: the same composition, in the deck's own theme (compositionLayouts).
+// The campaign designs in the left panel: the campaigns' slides with the words their Safe lessons have,
+// ready to be written over, in the deck's own theme like every other layout and design. The nine 2027
+// structures are also Layouts (compositionLayouts).
 
 /** AI Awareness Day 2027's compositions, with Safe's words (AiAd27/starters27.js). */
 const SLIDES_2027: (SFSlide & { name: string; blurb: string })[] = [
@@ -29,25 +28,22 @@ const SLIDES_2026: (SFSlide & { name: string; blurb: string })[] = [
   { name: 'Answer', blurb: 'The answers as cards, labelled ANSWER after the question.', type: 'cards', title: 'So what do you actually do?', bullets: ['Don’t share it\tSharing spreads potential harm even if you are trying to warn people.', 'Check the source\tIs it from an official or verified account? Where did it originally come from?', 'Reverse image search\tSee whether the content appears elsewhere, or has been flagged as fake.', 'Look for the tells\tUnnatural blinking, strange lighting, blurry edges around face and hair.'] },
 ];
 
-/** A lesson's slides built as the converter builds them in the campaign's strand, one design each. */
 /** The composition SlideForge sets each 2027 slide type in (AiAd27/starters27.js COMPOSITION_DEFAULTS). */
 const COMPOSITION: Record<string, string> = { title: 'poster-art', quote: 'voice', cards: 'ballot', statement: 'prompt', iceberg: 'reveal-map', compare: 'comparison', sourcecheck: 'credits', spectrum: 'lanes', journey: 'rules', keyfact: 'commitment' };
 for (const s of SLIDES_2027) s.design = { composition: COMPOSITION[s.type] };
 
-function built(theme: string, palette: string, slides: (SFSlide & { name: string; blurb: string })[], group: string): SlideDesign[] {
-  // Two slides where a label needs the slide before it (the ANSWER after THINK & DISCUSS): built in order.
-  const deck = deckFromSlideForge({ title: 'AI Awareness Day', theme, slides: slides.map(({ name, blurb, ...s }, i) => ({ ...s, id: `${palette}-${i}` })), images: new Proxy({}, { get: (_, k) => `../${String(k)}` }) } as never, palette, { frame: false, set: '1' });
-  return slides.map((s, i) => {
-    const slide = deck.slides.find((x) => x.sourceSlideId === `${palette}-${i}`);
-    return slide ? { id: `${palette}-${s.type}-${i}`, name: s.name, group, blurb: s.blurb, slide } : null;
-  }).filter((x): x is SlideDesign => !!x);
-}
-
 export const CAMPAIGN_GROUPS = ['AI Awareness Day 2027', 'AI Awareness Day 2026'];
 
-/** The campaigns' own slides, in their own look, for the Slide designs panel. */
-export function campaignDesigns(): SlideDesign[] {
-  return [...built('aiad27-safe', 'aiad27', SLIDES_2027, CAMPAIGN_GROUPS[0]), ...built('aiad26-safe', 'aiad26', SLIDES_2026, CAMPAIGN_GROUPS[1])];
+/** The campaigns' slides for the Slide designs panel, in the deck's theme like every other design:
+ *  the 2027 compositions as the Layouts have them, and 2026's slides as the converter sets any slide. */
+export function campaignDesigns(st: LayoutStyle): SlideDesign[] {
+  const img = (p?: string) => (p ? `../${p}` : '');
+  const y27 = compositionLayouts(st).map((x) => ({ id: `aiad27-${x.id}`, name: x.name, group: CAMPAIGN_GROUPS[0], blurb: x.blurb, slide: x.make() }));
+  const y26 = SLIDES_2026.map(({ name, blurb, ...s }, i) => {
+    const made = convert(s, () => st, img, '');
+    return made ? { id: `aiad26-${s.type}-${i}`, name, group: CAMPAIGN_GROUPS[1], blurb, slide: made.slide } : null;
+  }).filter((x): x is SlideDesign => !!x);
+  return [...y27, ...y26];
 }
 
 /** The 2027 compositions as layouts: the same structure, in the deck's theme, for any lesson. */

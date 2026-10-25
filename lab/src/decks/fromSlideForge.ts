@@ -201,7 +201,7 @@ function datedTitle(slide: Slide, date: string | undefined, st: LayoutStyle, the
 const QUIET = new Set(['title', 'section', 'quote']);
 
 /** One SlideForge slide as a lab slide, or null for what the lab leaves out (games). */
-function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) => string, mark: string, theme = ''): { slide: Slide; ground: Ground; note?: string } | null {
+export function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) => string, mark: string, theme = ''): { slide: Slide; ground: Ground; note?: string } | null {
   // The theme's own ground for the type where it has one (NU London's red section breaks), else the rule.
   const g: Ground = themeGround(theme, s.type) ?? (QUIET.has(s.type) && s.design?.composition !== 'sidecar' ? 'quiet' : 'working');
   const st = on(g);

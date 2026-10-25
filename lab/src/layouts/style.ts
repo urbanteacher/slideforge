@@ -1,6 +1,7 @@
 // The layout grid and the layout styles: where every region sits, and the looks a layout is built in.
 import { aspectOf, setAspect, type Box, type Deck, type Slide, type StyleGuide } from '../core';
 import { resolveGround } from '../theme';
+import { DEFAULT_THEME } from './defaultTheme';
 
 // SlideForge's layouts, built out of the lab's own items.
 //
@@ -60,7 +61,8 @@ export interface LayoutStyle {
 }
 
 export const LAYOUT_STYLES: LayoutStyle[] = [
-  { id: 'paper', name: 'Paper', ground: '#f7f4ee', ink: '#1a1a1a', muted: '#5f5a52', accent: '#d94f2b', panel: '#ffffff', display: 'Fraunces', displayWeight: '500', body: 'Inter' },
+  // The default leads the list; it is set in defaultTheme.ts.
+  DEFAULT_THEME,
   { id: 'navy', name: 'Navy', ground: '#0c3354', ink: '#ffffff', muted: '#bccada', accent: '#ef4760', panel: '#154673', display: 'Instrument Serif', displayWeight: '400', body: 'Inter' },
   { id: 'midnight', name: 'Midnight', ground: '#0e0d1c', ink: '#f3f0ff', muted: '#aaa4ca', accent: '#8e7dff', panel: '#1c1a36', display: 'Space Grotesk', displayWeight: '600', body: 'Inter' },
   // SlideForge's Cinematic · Dark pitch: near-black, heavy Avenir Next, a hot pink-red accent.

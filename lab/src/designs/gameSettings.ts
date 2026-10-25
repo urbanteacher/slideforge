@@ -1,4 +1,4 @@
-import { isBackdrop, LAYOUT_STYLES, slideStyle, themeOf } from '../layouts';
+import { DEFAULT_THEME, isBackdrop, slideStyle, themeOf } from '../layouts';
 import { centreGame } from './engage/games';
 import { headingClock, setFrame } from './engage/kit';
 import { DAMAGE, dripWord, emojiSupport, mindRevealSlides, relayBoss, scoringBand } from './engage/formats';
@@ -31,7 +31,7 @@ function setClock(d: Deck, s: Slide, seconds: number) {
   if (seconds <= 0 || round) return;
   const eb = s.layers.findIndex((l) => l.name === 'Eyebrow' && l.kind === 'text' && l.box);
   if (eb < 0) return;
-  const st = slideStyle(themeOf(d) ?? LAYOUT_STYLES[0], s);
+  const st = slideStyle(themeOf(d) ?? DEFAULT_THEME, s);
   s.layers.splice(eb + 1, 0, headingClock(st, seconds / 60, s.layers[eb].box!, String(s.layers[eb].params.color ?? st.accent), d.width));
 }
 
@@ -75,7 +75,7 @@ function remakeMindReveal(d: Deck, s: Slide, words: string[]) {
   const mine = d.slides.filter((x) => x.game?.id === s.game!.id && x.game.role !== 'cover');
   if (!mine.length) return;
   setFrame(!!d.headerFooter?.enabled || d.slides.some((x) => x.layers.some((l) => typeof l.params.hfSlot === 'string')));
-  const st = slideStyle(themeOf(d) ?? LAYOUT_STYLES[0], mine[0]);
+  const st = slideStyle(themeOf(d) ?? DEFAULT_THEME, mine[0]);
   const secs = (key: string) => mine.find((x) => x.game!.key === key)?.game!.settings.seconds;
   const made = centreGame(mindRevealSlides(st, s.game!.label, { words, studySeconds: secs('study'), recallSeconds: secs('recall') }));
   for (const x of mine) {

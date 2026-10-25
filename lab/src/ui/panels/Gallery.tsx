@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { renderStill } from '../../export';
 import { TEMPLATES, cloneSlide, rosetteSvg, type Slide } from '../../core';
-import { LAYOUTS, LAYOUT_GROUPS, LAYOUT_STYLES, layoutFor } from '../../layouts';
+import { DEFAULT_THEME, LAYOUTS, LAYOUT_GROUPS, LAYOUT_STYLES, layoutFor } from '../../layouts';
 import { getImage } from '../../engine';
 import { useStore } from '../../store';
 
@@ -33,7 +33,7 @@ export function useThumbs(entries: { id: string; slide: Slide }[], ready: () => 
 
 function Layouts() {
   const { set, addSlide, showToast } = useStore.getState();
-  const [styleId, setStyleId] = useState(LAYOUT_STYLES[0].id);
+  const [styleId, setStyleId] = useState(DEFAULT_THEME.id);
   const st = LAYOUT_STYLES.find((s) => s.id === styleId)!;
   const entries = useMemo(() => LAYOUTS.map((l) => ({ id: l.id, layout: l, slide: l.make(st) })), [st]);
   const thumbs = useThumbs(entries);

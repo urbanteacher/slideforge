@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, Copy, Eye, EyeOff, LayoutGrid, ListOrdered, Lock, Rows2, SquareSplitHorizontal, Trash2, Unlock } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { LAYOUTS, LAYOUT_STYLES, guideStyle, layoutFor, themeOf, applyTheme } from '../../layouts';
+import { DEFAULT_THEME, LAYOUTS, LAYOUT_STYLES, guideStyle, layoutFor, themeOf, applyTheme } from '../../layouts';
 import { useThumbs } from './Gallery';
 import { addTextImage } from '../stage/insert';
 import { DeckSettings } from './DeckSettings';
@@ -91,7 +91,7 @@ function LayoutsPanel() {
   const guide = useStore((s) => s.deck.styleGuide);
   // Once per theme: a style guide's style is a new object each time it is read, and the thumbnails
   // below start again whenever the entries change, so an unmemoised style never let one finish.
-  const st = useMemo(() => themeOf({ theme: themeId, styleGuide: guide }) ?? LAYOUT_STYLES[0], [themeId, guide]);
+  const st = useMemo(() => themeOf({ theme: themeId, styleGuide: guide }) ?? DEFAULT_THEME, [themeId, guide]);
   const entries = useMemo(() => LAYOUTS.map((l) => ({ id: l.id, layout: l, slide: l.make(st) })), [st]);
   const thumbs = useThumbs(entries);
   // The campaign's structures (aiad27.ts), in the deck's theme: the ballot, the discussion, the tables.

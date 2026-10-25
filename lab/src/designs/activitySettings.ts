@@ -1,6 +1,6 @@
 import { JOB_BY_NAME, rebuildActivity, type ActivityEntry } from './engage';
 import { CY, JOBS, LEFT, PAD, W, box, clock, fmtMin, headingClock, setFrame } from './engage/kit';
-import { isBackdrop, LAYOUT_STYLES, slideStyle, themeOf } from '../layouts';
+import { DEFAULT_THEME, isBackdrop, slideStyle, themeOf } from '../layouts';
 import type { ActivitySettings, ActivityStage, Deck, Layer, Slide, StageJob } from '../core';
 
 /*
@@ -60,7 +60,7 @@ function slideClock(d: Deck, s: Slide, st: ReturnType<typeof styleOf>, seconds: 
   } else s.layers.push(clock(st, 'Clock', seconds / 60, box(W - LEFT - 170, CY, 170, 170), { type: 'fade', duration: 0.5 }, true));
 }
 
-const styleOf = (d: Deck, s: Slide) => slideStyle(themeOf(d) ?? LAYOUT_STYLES[0], s);
+const styleOf = (d: Deck, s: Slide) => slideStyle(themeOf(d) ?? DEFAULT_THEME, s);
 const framed = (d: Deck) => !!d.headerFooter?.enabled || d.slides.some((s) => s.layers.some((l) => typeof l.params.hfSlot === 'string'));
 
 /** Apply a change to an activity slide's settings, and to what the slide shows of it. */

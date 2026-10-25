@@ -2,7 +2,7 @@ import { syncFrameCounters, type Deck, type GameLook, type Slide } from '../core
 import { gameSlides, HAS_LOOKS } from './engage/formats';
 import type { GameQuestion, ReasonAt, ShowcaseGame } from './engage/games';
 import { setFrame } from './engage/kit';
-import { syncHeaderFooter, LAYOUT_STYLES, themeOf } from '../layouts';
+import { DEFAULT_THEME, syncHeaderFooter, themeOf } from '../layouts';
 
 // Multiple choice, or true or false, in its other look (types.ts GameLook): the game built again from its own questions,
 // in place, as a new game is built. What the lesson hangs on it comes across slide by slide: which
@@ -35,7 +35,7 @@ export function relookGame(d: Deck, gameId: string, look: GameLook, reason?: Rea
   const tf = g0.format !== 'choice';
   const game: ShowcaseGame = { format: g0.format, style: tf ? 'truefalse' : 'choice', label: g0.label, styleLabel: tf ? 'True or false' : 'Multiple choice', aim: '', howToPlay: [], title: g0.label, slides: questions, look, reason: reasonAt };
   setFrame(!!d.headerFooter?.enabled || d.slides.some((s) => s.layers.some((l) => typeof l.params.hfSlot === 'string')));
-  let made = gameSlides(game, themeOf(d) ?? LAYOUT_STYLES[0]);
+  let made = gameSlides(game, themeOf(d) ?? DEFAULT_THEME);
   if (!old.some((s) => s.game?.role === 'cover')) made = made.filter((s) => s.game?.role !== 'cover');
   // The settings each question was given (its time, its points) and what the lesson hangs on it.
   const byKey = new Map(old.map((s) => [`${s.game?.role}|${s.game?.key ?? ''}`, s]));

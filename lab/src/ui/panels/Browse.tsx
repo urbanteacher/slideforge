@@ -1,7 +1,7 @@
 import { Gamepad2, Network, Plus, Search, Timer } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ActivityData, ActivityEntry, ActivityOption, ShowcaseGame } from '../../designs';
-import { LAYOUT_STYLES, themeOf } from '../../layouts';
+import { DEFAULT_THEME, themeOf } from '../../layouts';
 import { fontString } from '../../engine';
 import { renderStill } from '../../export';
 import { useStore } from '../../store';
@@ -38,7 +38,7 @@ const framed = (deck: Deck) => !!deck.headerFooter?.enabled || deck.slides.some(
 
 /** The designs measure their words to size them, so the theme's faces are loaded first. */
 async function faces(deck: Deck) {
-  const st = themeOf(deck) ?? LAYOUT_STYLES[0];
+  const st = themeOf(deck) ?? DEFAULT_THEME;
   const load = (font: string, weight: string | number) => document.fonts?.load(fontString({ font, weight }, 100)).catch(() => []);
   await Promise.all([load(st.display, st.displayWeight), load(st.body, 400), load(st.body, 600), load(st.body, 700)]);
 }
@@ -202,7 +202,7 @@ export async function quickAdd(kind: BrowseKind, id: string): Promise<void> {
   const deck = useStore.getState().deck;
   await faces(deck);
   lib.m.setFrame(framed(deck));
-  const st = themeOf(deck) ?? LAYOUT_STYLES[0];
+  const st = themeOf(deck) ?? DEFAULT_THEME;
   const card = kind === 'games'
     ? lib.games.filter((g) => 'g:' + g.format === id).map((g) => gameCard(lib, g, st))[0]
     : kind === 'nodes' ? lib.nodes.filter((f) => 'n:' + f.id === id).map((f) => nodesCard(f, st))[0]
@@ -240,7 +240,7 @@ function Browse({ kind }: { kind: BrowseKind }) {
   useEffect(() => { let live = true; setFonts(false); faces(deck).then(() => { if (live) setFonts(true); }); return () => { live = false; }; }, [style]);
   useEffect(() => { setFilter('all'); setPhase('all'); setOpen(null); }, [kind]);
 
-  const st = themeOf(deck) ?? LAYOUT_STYLES[0];
+  const st = themeOf(deck) ?? DEFAULT_THEME;
   const frame = framed(deck);
   // The deck's style and frame decide the designs; its other edits do not.
   const all = useMemo(() => {

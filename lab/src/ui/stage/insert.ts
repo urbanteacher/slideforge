@@ -1,7 +1,7 @@
 import { kind } from '../../engine';
 import { createLayer, hasFlagshipTextImage, textImageForSlide, type Slide } from '../../core';
 import { headingClock } from '../../designs';
-import { LAYOUT_STYLES, cell, gridFor, itemStyle, slideStyle, themeOf } from '../../layouts';
+import { DEFAULT_THEME, cell, gridFor, itemStyle, slideStyle, themeOf } from '../../layouts';
 import { useStore } from '../../store';
 import { fileToDataUrl, readDataUrl } from '../controls/files';
 
@@ -115,7 +115,7 @@ export function addTextImage() {
   }
   const source = st.deck.slides.find(hasFlagshipTextImage);
   const ink = luminance(slide.background) < 0.45 ? '#f6f4ed' : '#231f20';
-  const face = slideStyle(themeOf(useStore.getState().deck) ?? LAYOUT_STYLES[0], slide);
+  const face = slideStyle(themeOf(useStore.getState().deck) ?? DEFAULT_THEME, slide);
   const layers = source ? textImageForSlide(source, slide) : [
     createLayer('text', { name: 'Eyebrow', params: { blockRole: 'text-image', blockField: 'eyebrow', text: 'YOUR TOPIC', size: 28, font: face.body, weight: '700', color: face.accent, uppercase: true, tracking: 0.14 }, box: { x: 78, y: 348, w: 1007, h: 36 } }),
     // In the lesson's faces, as the layouts set a heading and its line (itemStyle).
@@ -178,7 +178,7 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
   const dark = luminance(slide.background || '#ffffff') < 0.45;
   const ink = dark ? '#f5f4f2' : '#161616';
   // The words in the lesson's own faces: a heading in its display face, the rest in its body face.
-  const face = slideStyle(themeOf(st.deck) ?? LAYOUT_STYLES[0], slide);
+  const face = slideStyle(themeOf(st.deck) ?? DEFAULT_THEME, slide);
   // What Add puts on a slide is set as the demo slides set it (the layouts' itemStyle): the same face,
   // size, colour, spacing and entrance, in this slide's colours, so it reads as one the layouts drew.
   const kit = itemStyle(face);
@@ -220,7 +220,7 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
       if (eyebrowRow?.box) {
         if (slide.layers.some((l) => l.kind === 'timer')) { st.showToast('This slide already has its clock, in the heading row. Set its minutes in the panel.'); return; }
         // In the heading's own type and colour, at the end of its line.
-        const theme = slideStyle(themeOf(st.deck) ?? LAYOUT_STYLES[0], slide);
+        const theme = slideStyle(themeOf(st.deck) ?? DEFAULT_THEME, slide);
         const layer = headingClock(theme, 5, eyebrowRow.box, String(eyebrowRow.params.color ?? theme.accent), st.deck.width);
         st.insertLayer(layer);
         st.showToast('The clock sits at the end of the heading row and starts when this slide comes up while presenting. Set its minutes in the panel.');

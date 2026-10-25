@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { FONTS } from '../../engine';
 import { readablePairs, wadaCombinations, blankGuide, chooseSet, fontChoices, fromPreset, paletteOf, paletteGroups, type PalettePreset } from '../../theme';
 import { createLayer, type Deck, type GuideTheme, type StyleGuide } from '../../core';
-import { LAYOUT_STYLES, guideStyle, themeOf, applyTheme, setSlideGround, varyGrounds } from '../../layouts';
+import { DEFAULT_THEME, guideStyle, themeOf, applyTheme, setSlideGround, varyGrounds } from '../../layouts';
 import { layerOf, slideOf, useStore } from '../../store';
 import { ColorField, Row, Select } from '../controls/controls';
 import { fileToDataUrl, readDataUrl } from '../controls/files';
@@ -53,7 +53,7 @@ function Gallery({ onDone, onCancel }: { onDone: () => void; onCancel?: () => vo
     onDone();
   };
   const own = () => {
-    mutate((d) => { d.styleGuide = blankGuide(themeOf(d) ?? LAYOUT_STYLES[0]); applyTheme(d, guideStyle(d.styleGuide)); });
+    mutate((d) => { d.styleGuide = blankGuide(themeOf(d) ?? DEFAULT_THEME); applyTheme(d, guideStyle(d.styleGuide)); });
     onDone();
   };
   return (

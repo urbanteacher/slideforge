@@ -1,4 +1,4 @@
-import { isBackdrop, chartCalloutSlide, exploreSlide, framedPictureSlide, gallerySlide, slideStyle, themeOf, LAYOUT_STYLES } from '../layouts';
+import { DEFAULT_THEME, isBackdrop, chartCalloutSlide, exploreSlide, framedPictureSlide, gallerySlide, slideStyle, themeOf } from '../layouts';
 import type { Deck, Slide } from '../core';
 import { barsSlide, closingSlide, coverSlide, heroSlide, logosSlide, mosaicSlide, numbersSlide, routesSlide, showcaseSlide, stepsSlide, wallSlide, whySlide, type BarsArgs, type ClosingArgs, type CoverArgs, type HeroArgs, type LogosArgs, type MosaicArgs, type NumbersArgs, type RoutesArgs, type ShowcaseArgs, type StepsArgs, type WallArgs, type WhyArgs } from './storyDesigns';
 
@@ -33,7 +33,7 @@ export const RECIPE_NAMES: Record<string, string> = { explore: 'Explore', flip: 
 export function rebuildSlide(d: Deck, slideId: string, args: Args) {
   const s = d.slides.find((x) => x.id === slideId);
   if (!s?.recipe || !BUILD[s.recipe.kind]) return;
-  const st = slideStyle(themeOf(d) ?? LAYOUT_STYLES[0], s);
+  const st = slideStyle(themeOf(d) ?? DEFAULT_THEME, s);
   const made = BUILD[s.recipe.kind](st, args);
   // The ground first, the backdrop just above it, the design, then the header and footer on top.
   const own = made.layers.filter((l) => !isBackdrop(l)), back = s.layers.filter(isBackdrop), chrome = s.layers.filter((l) => l.params.hfSlot);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { LAYOUT_STYLES, themeOf } from '../../layouts';
+import { DEFAULT_THEME, LAYOUT_STYLES, themeOf } from '../../layouts';
 import type { SFDeck, SlideDesign, MotionLabData } from '../../decks';
 import { useStore } from '../../store';
 import { useThumbs } from './Gallery';
@@ -31,7 +31,7 @@ export function SlideDesignsPanel() {
   const themeId = useStore((s) => s.deck.theme);
   const guide = useStore((s) => s.deck.styleGuide);
   // One style per theme, so the designs (and their thumbnails) are built once, not on every render.
-  const st = useMemo(() => themeOf({ theme: themeId, styleGuide: guide }) ?? LAYOUT_STYLES[0], [themeId, guide]);
+  const st = useMemo(() => themeOf({ theme: themeId, styleGuide: guide }) ?? DEFAULT_THEME, [themeId, guide]);
   const [lib, setLib] = useState<{ make: (st: typeof LAYOUT_STYLES[number]) => SlideDesign[]; groups: string[] } | null>(null);
   useEffect(() => {
     let live = true;
@@ -40,10 +40,10 @@ export function SlideDesignsPanel() {
       const bank = (data as { default: SFDeck }).default ?? (data as unknown as SFDeck);
       const motion = (mdata as { default: MotionLabData }).default ?? (mdata as unknown as MotionLabData);
       const groups = [...m.SLIDE_DESIGN_GROUPS.slice(0, 1), 'Charts that move', ...m.SLIDE_DESIGN_GROUPS.slice(1), ...ml.MOTION_DESIGN_GROUPS.filter((g) => g !== 'Charts that move')];
-      // The campaigns' own slides come after the originals, in their own look whatever the deck's theme.
+      // The campaigns' slides come after the originals, in the deck's theme like the rest.
       // (Games and activities are not here: they are chosen in Browse, in the Quiz studio and Activities.)
       // The Story designs (docs/story-designs-plan.md) lead: editorial slides, in the deck's own style.
-      if (live) setLib({ make: (s) => [...sd.storyDesigns(s), ...cd.campaignDesigns(), ...m.slideDesigns(bank, s), ...ml.motionDesigns(motion, s)], groups: [...new Set([sd.STORY_GROUP, ...cd.CAMPAIGN_GROUPS, ...groups])] });
+      if (live) setLib({ make: (s) => [...sd.storyDesigns(s), ...cd.campaignDesigns(s), ...m.slideDesigns(bank, s), ...ml.motionDesigns(motion, s)], groups: [...new Set([sd.STORY_GROUP, ...cd.CAMPAIGN_GROUPS, ...groups])] });
     });
     return () => { live = false; };
   }, []);

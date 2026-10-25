@@ -2,7 +2,7 @@ import { syncFrameCounters, type Deck, type Slide } from '../core';
 import { gameSlides, LAB_GAMES } from './engage/formats';
 import type { ShowcaseGame } from './engage/games';
 import { setFrame } from './engage/kit';
-import { LAYOUT_STYLES, themeOf } from '../layouts';
+import { DEFAULT_THEME, themeOf } from '../layouts';
 
 /*
  * A game written from a topic, as SlideForge's Quiz studio writes one.
@@ -72,7 +72,7 @@ export function replaceGame(d: Deck, gameId: string, game: ShowcaseGame): Slide[
   const at = d.slides.findIndex((s) => s.game?.id === gameId);
   if (at < 0) return [];
   setFrame(!!d.headerFooter?.enabled || d.slides.some((s) => s.layers.some((l) => typeof l.params.hfSlot === 'string')));
-  const made = gameSlides(game, themeOf(d) ?? LAYOUT_STYLES[0]);
+  const made = gameSlides(game, themeOf(d) ?? DEFAULT_THEME);
   d.slides = [...d.slides.slice(0, at).filter((s) => s.game?.id !== gameId), ...made, ...d.slides.slice(at).filter((s) => s.game?.id !== gameId)];
   syncFrameCounters(d.slides, d.width);
   return made;

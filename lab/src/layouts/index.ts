@@ -15,6 +15,7 @@ export { groundParams, itemStyle } from './blocks';
 export { icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide } from './infographics';
 export { blankSlide, explainSlide, resultsSlide, spotfakeSlide } from './leftovers';
 export type { LayoutStyle } from './style';
+export { DEFAULT_THEME } from './defaultTheme';
 
 // Transitions' edges (the burn, the iris ring, the shape's outline) in the theme's accent, slide by slide.
 setEdgeResolver((deck, slide) => { const st = themeOfDeck(deck); return st ? styleOfSlide(st, slide).accent : undefined; });

@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { CONSTRAINTS, NODES, canWriteNodes, writeNodes, type Audience, type NodesBrief } from '../../designs';
-import { LAYOUT_STYLES, themeOf } from '../../layouts';
+import { DEFAULT_THEME, themeOf } from '../../layouts';
 import type { Deck, Slide } from '../../core';
 import { slideOf, useStore } from '../../store';
 import { Row, Section, Select } from '../controls/controls';
@@ -23,7 +23,7 @@ async function redraw(id: string, format: string, content: unknown) {
   const { setFrame } = await import('../../designs/engage/kit');
   const deck = useStore.getState().deck;
   setFrame(framed(deck));
-  const fresh: Slide[] = f.slides(themeOf(deck) ?? LAYOUT_STYLES[0], content);
+  const fresh: Slide[] = f.slides(themeOf(deck) ?? DEFAULT_THEME, content);
   useStore.getState().mutate((d) => {
     const at = d.slides.findIndex((s) => s.nodes?.id === id);
     if (at < 0) return;

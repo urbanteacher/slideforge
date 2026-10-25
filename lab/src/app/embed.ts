@@ -265,7 +265,7 @@ async function checkDecks(): Promise<Deck[]> {
   const b = ((bank as { default?: SFDeck }).default ?? bank) as SFDeck;
   const m = ((motion as { default?: unknown }).default ?? motion) as Parameters<typeof ml.motionDesigns>[0];
   for (const st of L.LAYOUT_STYLES.slice(0, 3)) {
-    out.push(deck(`designs-${st.id}`, [...sd.storyDesigns(st), ...cd.campaignDesigns(), ...fsf.slideDesigns(b, st), ...ml.motionDesigns(m, st)].map((x) => x.slide)));
+    out.push(deck(`designs-${st.id}`, [...sd.storyDesigns(st), ...cd.campaignDesigns(st), ...fsf.slideDesigns(b, st), ...ml.motionDesigns(m, st)].map((x) => x.slide)));
   }
   return out;
 }
