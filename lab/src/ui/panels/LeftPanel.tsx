@@ -46,6 +46,8 @@ function Sections() {
   const [open, toggle] = useFolds();
   const leftTab = useStore((s) => s.leftTab);
   const set = useStore((s) => s.set);
+  // Which slide the Layers list is of, said in its heading.
+  const n = useStore((s) => s.deck.slides.indexOf(slideOf(s)) + 1);
   // The toolbar's Backgrounds & effects button and the A key ask for the effects section: open it,
   // bring it into view, and clear the request so the next press asks again.
   useEffect(() => {
@@ -56,7 +58,7 @@ function Sections() {
   }, [leftTab]);
   return (
     <>
-      <Fold title="Layers" className="fold-layers" open={open.layers} onToggle={() => toggle('layers')}>
+      <Fold title={`Layers · slide ${n}`} className="fold-layers" open={open.layers} onToggle={() => toggle('layers')}>
         <LayersPanel />
       </Fold>
       <Fold title="Layouts" className="fold-layouts" open={open.layouts} onToggle={() => toggle('layouts')}>

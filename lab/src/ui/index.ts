@@ -7,7 +7,7 @@ export { Filmstrip } from './panels/Filmstrip';
 export { Gallery } from './panels/Gallery';
 export { Inspector } from './panels/Inspector';
 export { LeftPanel } from './panels/LeftPanel';
-export { CanvasBar } from './stage/CanvasBar';
+export { CanvasBar, stepZoom, toggleSide } from './stage/CanvasBar';
 export { Stage } from './stage/Stage';
 export { toggleFormat } from './stage/format';
 export { addMediaFile } from './stage/insert';

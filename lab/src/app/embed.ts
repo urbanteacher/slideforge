@@ -7,6 +7,7 @@ import { canHostInStudio, openStudioShow, roomRunning, roomWatchOn, whyNotPresen
 import { shareCopy } from '../viewer';
 import { saveSlide } from '../ui';
 import { SIZES } from '../rehearse';
+import { allCommands } from '../shell';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
 // over its workspace and drives it through this: the shell keeps the title, File, Library, Save and
@@ -288,6 +289,8 @@ async function checkStills(width = 960): Promise<string[]> {
 /** What the shell can ask of the lab. */
 export const labApi = {
   getDeck: (): Deck => useStore.getState().deck,
+  /** The lab's commands for the shell's ⌘K palette: the same list, and the same handlers, as the lab's own keys (keys/). */
+  commands: () => allCommands().map(({ id, label, group, keys, words, run }) => ({ id: `lab.${id}`, label, group, keys, words, run })),
   saveState: () => useStore.getState().saveState,
   isLabDeck,
   blank: (): Deck => blankDeck(),

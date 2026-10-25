@@ -715,6 +715,8 @@
       SF.toast('Theme, colours, header and footer are in the lab’s left panel.');
     },
     flush: function () { if (api) api.flush(); },
+    /* ⌘K: the lab's own commands (its shortcut registry, lab/src/keys), run by the same handlers as its keys. */
+    commands: function () { return api && api.commands ? api.commands() : []; },
     keydown: function () {}
   };
 

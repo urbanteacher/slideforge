@@ -1,4 +1,5 @@
 import { ChevronRight, Copy, Plus, Trash2, Eye, EyeOff, LayoutGrid, LayoutTemplate, X } from 'lucide-react';
+import { is, keyProps } from '../../keys';
 import { toggleHidden, useSlideContextMenu } from '../controls/SlideMenu';
 import { FEEDBACK } from './Engagement';
 import { useEffect, useRef, useState } from 'react';
@@ -53,7 +54,7 @@ export function Filmstrip() {
   // ⌘G, as in SlideForge: the whole deck at once.
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g') { e.preventDefault(); setSorter((v) => !v); }
+      if (is('slide.sorter', e)) { e.preventDefault(); setSorter((v) => !v); }
     };
     addEventListener('keydown', on);
     return () => removeEventListener('keydown', on);
@@ -80,7 +81,7 @@ export function Filmstrip() {
         {/* Under the count, the two ways to see many slides at once: the Gallery of starting slides, and Block view. */}
         <div className="strip-tools">
           <button className="strip-sorter" title="Gallery — starting slides and layouts" aria-label="Gallery" onClick={() => useStore.setState({ galleryOpen: true })}><LayoutTemplate size={15} /></button>
-          <button className="strip-sorter" title="Block view — the whole deck at once, to rearrange it (⌘G)" aria-label="Block view of all slides" onClick={() => setSorter(true)}><LayoutGrid size={15} /></button>
+          <button className="strip-sorter" {...keyProps('Block view — the whole deck at once, to rearrange it', 'slide.sorter')} aria-label="Block view of all slides" onClick={() => setSorter(true)}><LayoutGrid size={15} /></button>
         </div>
       </div>
       {sorter && <SlideSorter close={() => setSorter(false)} thumb={thumb} />}

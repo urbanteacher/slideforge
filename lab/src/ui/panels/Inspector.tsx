@@ -4,13 +4,16 @@ import { KindIcon } from '../controls/icons';
 import { EngagementPanel } from './Engagement';
 import { SPECIAL_TABS, SpecialPanel } from './special';
 import { Image as ImageIcon, MonitorPlay } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { LayerAnimate, SlideAnimate } from './inspectorAnimate';
 import { LayerDesign } from './inspectorDesign';
 import { LayerInteract } from './inspectorInteract';
 import { PicturePanel, VideoPanel } from './inspectorMedia';
 import { SlideDesign } from './inspectorSlide';
 
-export function Inspector() {
+/** The inspector's body. Its column (shell/RightColumn) puts it beside the Status tab and hands it `banner`: what is
+ *  selected, where a change is kept, and why one can't be, under the head. */
+export function Inspector({ banner }: { banner?: ReactNode }) {
   const layer = useStore(layerOf);
   const chosen = useStore((s) => s.inspectorTab);
   // The Picture tab exists only for a picture; with anything else selected it reads as Design.
@@ -23,7 +26,7 @@ export function Inspector() {
   const k = layer ? kind(layer.kind) : null;
 
   return (
-    <aside className="right">
+    <div className="insp-body">
       <div className="insp-head">
         {layer && k ? (
           <>
@@ -37,6 +40,7 @@ export function Inspector() {
           </>
         )}
       </div>
+      {banner}
       <div className="tabs">
         {(layer?.kind === 'image' ? (['design', 'picture', 'animate', 'interact', 'engage'] as const) : layer?.kind === 'video' ? (['design', 'video', 'animate', 'interact', 'engage'] as const) : layer && SPECIAL_TABS[layer.kind] ? (['design', 'special', 'animate', 'interact', 'engage'] as const) : layer ? (['design', 'animate', 'interact', 'engage'] as const) : (['design', 'animate', 'engage'] as const)).map((t) => (
           <button key={t} className={`tab${tab === t ? ' sel' : ''}${t === 'picture' || t === 'video' || t === 'special' ? ' tab-picture' : ''}`} onClick={() => set({ inspectorTab: t })} title={t === 'engage' ? 'Games, activities and audience feedback for this slide' : undefined}>{(t === 'picture' || t === 'video' || t === 'special') && <ImageIcon size={13} />}{t === 'engage' ? 'Engage' : t === 'special' && layer ? SPECIAL_TABS[layer.kind] : t[0].toUpperCase() + t.slice(1)}</button>
@@ -51,6 +55,6 @@ export function Inspector() {
         {tab === 'interact' && layer && <LayerInteract layer={layer} />}
         {tab === 'engage' && <EngagementPanel />}
       </div>
-    </aside>
+    </div>
   );
 }

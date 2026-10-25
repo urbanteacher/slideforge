@@ -43,6 +43,8 @@ interface State {
   sorterOpen: boolean;
   /** The right-hand panel folded away, so the canvas has the width (the canvas bar's panel button). Remembered in this browser. */
   panelHidden: boolean;
+  /** The left-hand panel folded away the same way (⌘⌥1, or the canvas bar's left button). Remembered in this browser. */
+  leftHidden: boolean;
   /** The slide whose back (its Flip to facts face) the canvas shows, to edit it there; null for the fronts. */
   backOf: string | null;
   /** Which of SlideForge's studios the lab is: the Lesson studio (every slide), the Quiz studio (the
@@ -126,6 +128,7 @@ export const useStore = create<State>((set, get) => ({
   galleryOpen: false,
   sorterOpen: false,
   panelHidden: (() => { try { return localStorage.getItem('sf-lab-panel') === 'hidden'; } catch { return false; } })(),
+  leftHidden: (() => { try { return localStorage.getItem('sf-lab-left') === 'hidden'; } catch { return false; } })(),
   galleryTab: 'layouts',
   clipboard: null,
   toast: null,

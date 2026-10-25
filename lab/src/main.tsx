@@ -20,15 +20,14 @@ if (!embedded && !presenter && import.meta.env.PROD && location.pathname.include
 }
 
 if (embedded) {
-  // The shell's own shortcuts still work with the focus in here: Save, the command palette,
-  // the studio switch and the shortcut list are the shell's, so they go up to it.
+  // The shell's own shortcuts still work with the focus in here: Save, the command palette and
+  // the studio switch are the shell's, so they go up to it. ? stays here: the lab's sheet lists the
+  // lab's keys and the shell's (keys/), where the shell's lists the classic editor's.
   addEventListener('keydown', (e) => {
-    const t = e.target as HTMLElement | null;
-    const typing = !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
     const mod = e.metaKey || e.ctrlKey;
     const k = e.key.toLowerCase();
     // ⌘↵ too: Present is SlideForge's show now, with its HUD, not the lab's own.
-    const shells = (mod && (k === 's' || k === 'k' || k === 'e' || e.key === 'Enter')) || (!mod && !typing && e.key === '?');
+    const shells = mod && !e.altKey && (k === 's' || k === 'k' || k === 'e' || e.key === 'Enter');
     if (!shells || !host) return;
     e.preventDefault();
     e.stopPropagation();
