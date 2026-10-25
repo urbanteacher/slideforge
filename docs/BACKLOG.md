@@ -777,6 +777,7 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-17 | Default slides move plainly: no blurred word motion or Blur in across the layouts, designs and the lab's originals; bullet lists build a point per click with the earlier points dimmed | Done · 26 Sep 2026 · `d8b981e` |
 | LAB-18 | Week 3 · Data Abstraction as a lesson, and ten chart-experiment kinds written once for both engines: a table melted wide to long, grouped and stacked bars into sorted totals, lines with a gap that drops into a derived balance, a 3D default to rescue, the pie's variants, unit charts counted into frequency | Done · 27 Sep 2026 · `39d9e95` `5a7167d` |
 | LAB-20 | Remotion-Studio-style timing in the Lesson studio: a timeline under the canvas (each layer's entrance, line steps, loop and exit as bars, click markers, a frame-accurate playhead) and Export → Video (.mp4, 30 fps, builds clicked on a hold, H.264 encoded in the browser). Open: 1:1 and 9:16 (typed layouts do not reflow), video clips in the video, audio | Done · 25 Oct 2026 · uncommitted |
+| LAB-21 | Motion clips (`tools/motion/`) take three habits from the Remotion motion studio: named cues for every start time, 1:1 and 9:16 as their own compositions (`--format`), and a critic in a fresh context reviewing the sheet | S | Done · 25 Oct 2026 · `c0dbb33b` |
 
 ## Story designs
 
@@ -798,6 +799,15 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M14 deletion done 13 Oct 2026 ([m14-deletions.md](games/m14-deletions.md) section 6) |
 
 ## Change log
+
+### 25 October 2026 — Motion clips: cues, formats and a fresh-eyed critic
+
+From comparing `tools/motion/` with the Remotion studio in `~/Desktop/Engineering CAD/motion-studio` (LAB-21).
+- **Cues.** `window.MOTION.cues` names a clip's start times (`{ title: 0.3, exit: 4.9 }`), and `renderAt` reads them rather than bare numbers, as the studio's `src/animation/timing.ts` does. `--stills` and `--poster` take a cue (`exit+0.2`), `--sheet` labels each cell with the cues that fall in it, and `--check` fails a cue outside the clip.
+- **Formats.** `--format 16x9 | 1x1 | 9x16 | all` draws the page at that size with `window.MOTION_FORMAT` set before it runs. The page must list the shape in `MOTION.formats`, because each is a composition of its own, not a crop, and `--check` fails a layout that spills past the frame. `--format all --out x.mp4` writes `x-16x9.mp4`, `x-1x1.mp4` and `x-9x16.mp4`. The example `title-reveal.html` has a layout record per shape.
+- **Critic.** The `motion-clip` skill saves the brief as `<name>.brief.md` beside the clip, and the sheet is reviewed by a subagent in a fresh context that sees only the brief and the sheets, never the HTML. It scores six areas and returns at most three defects as notes.
+- The tool's server answers `/favicon.ico` with 204, so full Chrome, which asks for it, no longer logs a 404 that fails `--check`. Checked with the installed Chrome (no Playwright browser is cached on this machine): the example passes in all three shapes, a page without `formats` and a page that spills are refused, a 1:1 MP4 encodes, and two `tools/ai-sme/clips/` clips still pass the plain check.
+
 
 ### 25 October 2026 — The Lesson studio's default look, in 2026's palette, set in one place
 

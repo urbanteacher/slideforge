@@ -12,7 +12,7 @@ node tools/motion/render.mjs clip.html --sheet                # 12-frame contact
 node tools/motion/render.mjs clip.html --out assets/lesson/<course>/<week>/clip.mp4 --poster 2
 ```
 
-`--out` also writes `clip-poster.jpg` next to the MP4. Stills, sheets and frames go to a temp folder, which the command prints; `--work <dir>` chooses another.
+`--out` also writes `clip-poster.jpg` next to the MP4. `--stills` and `--poster` take a cue name as well as a time (`title`, `exit+0.2`). Stills, sheets and frames go to a temp folder, which the command prints; `--work <dir>` chooses another.
 Other flags: `--loop`, `--duration`, `--fps` (24), `--size 1920x1080`, `--workers` (4), `--bitrate` (1400000; use about 400000 for a soft background loop, see `tools/video/README.md`).
 
 Start from `examples/title-reveal.html`.
@@ -21,7 +21,7 @@ Start from `examples/title-reveal.html`.
 
 Put this under every prompt that asks Claude for a clip:
 
-> One self-contained HTML file. Set `window.MOTION = { duration, fps, width, height }`. Expose `window.renderAt(t)`, where t is in seconds: it draws the frame for t from scratch, and it may return a promise. No `Date.now`, timers, `requestAnimationFrame` loops or unseeded `Math.random`, and no state carried from the previous frame. A loop's motion is driven by `phase = t / duration` with whole-number cycles, and frame 0 is a finished composition.
+> One self-contained HTML file. Set `window.MOTION = { duration, fps, width, height, cues }`. Every start time is a named cue in `cues` (seconds), and the code reads it from there rather than writing the number. Expose `window.renderAt(t)`, where t is in seconds: it draws the frame for t from scratch, and it may return a promise. No `Date.now`, timers, `requestAnimationFrame` loops or unseeded `Math.random`, and no state carried from the previous frame. A loop's motion is driven by `phase = t / duration` with whole-number cycles, and frame 0 is a finished composition.
 
 A page with no `renderAt` still works if it animates only with CSS animations or the Web Animations API. The tool pauses those and seeks them to t.
 Before the page runs, the tool freezes `Date`, `performance.now` and `Math.random` to t. That covers a stray clock, but `--check` still fails a page that keeps state between frames.
@@ -33,6 +33,30 @@ Frames are `i / fps` for i = 0 … N−1, never N, so a loop joins without a dou
 - **The seam matches.** With `MOTION.loop` (or `--loop`), the frame at `t = duration` matches frame 0 pixel for pixel, so the loop shows no cut.
 - **No errors.** The counters for page errors, console errors, failed requests, HTTP 4xx/5xx responses and lost WebGL contexts all read zero. These errors also stop `--out` before it encodes, because a frame drawn during one may be wrong.
 The page is served over local http from its own folder, so it can import its own modules and assets. A CDN import map, such as three.js from jsDelivr, needs the network while rendering.
+
+## Cues
+
+`window.MOTION.cues` holds the clip's start times in seconds, by name: `{ title: 0.3, rule: 0.9, exit: 4.9 }`. Nested names read with a dot (`title.in`).
+`renderAt` reads its timing from `MOTION.cues`, so a beat is named the same way in the brief, the code, the sheet and a review note.
+
+- `--sheet` labels each cell with the cues that fall in it.
+- `--stills title,exit+0.2` draws named moments.
+- `--check` fails a cue that is not a time inside the clip.
+
+Cues are start times only. How long a move takes stays with the move.
+
+## Formats
+
+One clip can be drawn in three shapes: `16x9` (1920×1080), `1x1` (1080×1080) and `9x16` (1080×1920).
+Each shape is the page's own composition, not a crop. Name the shapes the page supports in `window.MOTION.formats`. Then keep one layout record per shape, and read which one to use from `window.MOTION_FORMAT.name`, which the tool sets before the page runs. The example does this. In a browser, `?format=9x16` does the same.
+
+```bash
+node tools/motion/render.mjs clip.html --format all --check                  # each shape: contract, and the layout fits its frame
+node tools/motion/render.mjs clip.html --format 9x16 --sheet
+node tools/motion/render.mjs clip.html --format all --out out/clip.mp4       # clip-16x9.mp4, clip-1x1.mp4, clip-9x16.mp4
+```
+
+`--format` refuses a shape the page doesn't list. With `--format`, `--check` also fails a layout that spills past the frame.
 
 ## Springs
 
@@ -46,7 +70,7 @@ The page is served over local http from its own folder, so it can import its own
 The `motion-clip` project skill (`.claude/skills/motion-clip/`) runs this loop with a stop rule and an abort rule.
 
 1. Run `--check` and fix anything that differs.
-2. Run `--sheet`, and write notes against frame numbers ("the rule at f24 overshoots too far").
+2. Run `--sheet`. A critic in a fresh context reviews it, given only the clip's brief and the sheet, never the HTML. It writes notes against frame numbers or cues ("rule, f24: it overshoots too far").
 3. Fix only what the notes name, then re-check with `--stills` at those frames.
 4. Two to four rounds is normal. Then run `--out`.
 
