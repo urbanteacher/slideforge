@@ -34,6 +34,9 @@ export interface KindDef {
 export const FONTS = [
   'Inter', 'Instrument Serif', 'Playfair Display', 'DM Serif Display', 'Fraunces',
   'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia', 'Uncut Sans',
+  // 2026's free favourites (Google Fonts): sans for text and screens, Instrument Sans to pair with
+  // Instrument Serif, Bricolage Grotesque for headings with character.
+  'DM Sans', 'Geist', 'Plus Jakarta Sans', 'Instrument Sans', 'Bricolage Grotesque',
   // Installed on every Mac and iPhone: SlideForge's Cinematic theme sets its type in it.
   'Avenir Next',
   // UK Black Tech's hero face (served from public/fonts, SIL OFL).

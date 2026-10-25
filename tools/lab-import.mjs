@@ -43,7 +43,8 @@ const W = 1920, H = 1080;
    will not exist on the lab's page, so it is swapped for the nearest of these;
    a family installed on the machine is kept, because canvas can use it. */
 const LAB_FONTS = ['Inter', 'Instrument Serif', 'Playfair Display', 'DM Serif Display', 'Fraunces',
-  'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia'];
+  'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia',
+  'DM Sans', 'Geist', 'Plus Jakarta Sans', 'Instrument Sans', 'Bricolage Grotesque'];
 
 const CHART_KINDS = { bar: 'column', hbar: 'bar', line: 'line', pie: 'pie', donut: 'donut' };
 const TRANSITIONS = { none: 'none', fade: 'fade', push: 'push', zoom: 'zoom', wipe: 'wipe', morph: 'morph' };
