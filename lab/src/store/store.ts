@@ -26,6 +26,15 @@ interface State {
   lastMerge: { key: string; t: number } | null;
   saveState: 'saved' | 'saving' | 'unsaved';
   playToken: number;
+  /** The timeline under the canvas is open (the canvas bar's timeline button). Remembered in this browser. */
+  timelineOpen: boolean;
+  /** Where the timeline's playhead is, on the slide's clock (s): the canvas shows that moment. Null is
+   *  the built slide, as the canvas shows it for editing. */
+  scrub: number | null;
+  /** Seconds a build step is held before the next is clicked, on the timeline and in the video. */
+  hold: number;
+  /** Export → Video is open: for the deck, or for the slide on the canvas. */
+  videoOpen: 'deck' | 'slide' | null;
   editingTextId: string | null;
   /** A layer inside a group that was double-clicked into: it is selected on its own, not with its group. */
   partId: string | null;
@@ -108,6 +117,10 @@ export const useStore = create<State>((set, get) => ({
   backOf: null,
   view: 'lesson',
   playToken: 0,
+  timelineOpen: (() => { try { return localStorage.getItem('sf-lab-timeline') === 'open'; } catch { return false; } })(),
+  scrub: null,
+  hold: 1.5,
+  videoOpen: null,
   editingTextId: null,
   partId: null,
   galleryOpen: false,
@@ -161,7 +174,7 @@ export const useStore = create<State>((set, get) => ({
     refitAllText(); // a deck saved before a box type measured itself gets its heights now
   },
 
-  selectSlide: (id) => set({ slideId: id, selectedId: null, editingTextId: null, partId: null }),
+  selectSlide: (id) => set({ slideId: id, selectedId: null, editingTextId: null, partId: null, scrub: null }),
 
   selectLayer: (id) => set({ selectedId: id, editingTextId: get().editingTextId === id ? id : null, partId: get().partId === id ? id : null }),
 

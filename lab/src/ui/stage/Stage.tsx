@@ -4,7 +4,8 @@ import { BLURRED, EASE, MOTION, transitionEdge, transitionSpread, schedule, hitL
 import { ChartEditor, FieldsEditor, editsOnCanvas } from './CanvasEditors';
 import { addAnother, canAddAnother, editIntent, groupOf, nextDirection, unitFrame } from './snap';
 import { slideOf, useStore } from '../../store';
-import type { Box, Layer, Slide } from '../../core';
+import type { Box, Deck, Layer, Slide } from '../../core';
+import { scrubFrame } from './Timeline';
 import { newGesture } from '../controls/controls';
 import { toggleFormat } from './format';
 import { addMediaFile, choosePicture } from './insert';
@@ -48,6 +49,14 @@ function hitFace(slide: Slide, x: number, y: number) {
 interface PlayState { start: number; clicks: number[]; end: number; from: Slide | null; trans: Slide['transition'] }
 
 const capture = (el: HTMLElement | null, id: number) => { try { el?.setPointerCapture(id); } catch { /* synthetic or stale pointer */ } };
+
+/** A slide arriving by its transition from the slide before, p of the way (0–1); the one before is built. */
+function drawIn(r: Renderer, deck: Deck, from: Slide, s: Slide, opts: Parameters<Renderer['drawSlide']>[1], p: number) {
+  r.drawTransition(from, { ...opts, t: Infinity, clicks: [] }, s, opts, s.transition.type, EASE[MOTION.move](p), 1, {
+    edge: transitionEdge(deck, s),
+    spread: BLURRED.includes(s.transition.type) ? transitionSpread(EASE[MOTION.move], p, s.transition.duration) : 0,
+  });
+}
 
 const rot = (x: number, y: number, deg: number): [number, number] => {
   const a = (deg * Math.PI) / 180;
@@ -157,16 +166,18 @@ export function Stage() {
           setPlaying(false);
         } else {
           const opts = { time, mouse: m.cur, t, clicks: p.clicks, hidden, reduce };
-          if (p.from && t < p.trans.duration && p.trans.type !== 'none') {
-            r.drawTransition(p.from, { time, mouse: m.cur, t: Infinity, clicks: [], reduce }, s, opts, p.trans.type, EASE[MOTION.move](Math.max(0, t) / p.trans.duration), 1, {
-              edge: transitionEdge(st.deck, s),
-              spread: BLURRED.includes(p.trans.type) ? transitionSpread(EASE[MOTION.move], Math.max(0, t) / p.trans.duration, p.trans.duration) : 0,
-            });
-          } else {
-            r.drawSlide(s, opts, null);
-          }
+          if (p.from && t < p.trans.duration && p.trans.type !== 'none') drawIn(r, st.deck, p.from, s, opts, Math.max(0, t) / p.trans.duration);
+          else r.drawSlide(s, opts, null);
           return;
         }
+      }
+      // The timeline's playhead: the slide at that moment, its builds clicked as the timeline shows them.
+      if (st.timelineOpen && st.scrub !== null) {
+        const f = scrubFrame(st.deck, s, st.scrub, st.hold);
+        const opts = { time: st.scrub, mouse: m.cur, t: f.t, clicks: f.clicks, hidden, reduce };
+        if (f.from && f.p !== null) drawIn(r, st.deck, f.from, s, opts, f.p);
+        else r.drawSlide(s, opts, null);
+        return;
       }
       // The back of a flip slide shows when the Slide panel turns it over (Front | Back), or while one
       // of its layers is selected, so it can be edited on the canvas.
@@ -211,7 +222,7 @@ export function Stage() {
   }, [playToken]);
 
   // Stop playing when the slide changes.
-  useEffect(() => { play.current = null; setPlaying(false); }, [slide.id]);
+  useEffect(() => { play.current = null; setPlaying(false); set({ scrub: null }); }, [slide.id]);
 
   const toSlide = (e: { clientX: number; clientY: number }): [number, number] => {
     const r = overlayRef.current!.getBoundingClientRect();

@@ -1,4 +1,4 @@
-import { Minus, PanelRightClose, PanelRightOpen, Plus } from 'lucide-react';
+import { ChartGantt, Minus, PanelRightClose, PanelRightOpen, Plus } from 'lucide-react';
 import { useStore } from '../../store';
 import { AddMenu, AnimateButton } from '../controls/AddMenu';
 import { focusBrowse } from '../panels/Browse';
@@ -11,12 +11,19 @@ export function CanvasBar() {
   const fitZoom = useStore((s) => s.fitZoom);
   const panelHidden = useStore((s) => s.panelHidden);
   const view = useStore((s) => s.view);
+  const timelineOpen = useStore((s) => s.timelineOpen);
   const { set } = useStore.getState();
   // The old studio's "◨ Panel": fold the right-hand panel away for the whole width, and back.
   const togglePanel = () => {
     const next = !panelHidden;
     set({ panelHidden: next });
     try { localStorage.setItem('sf-lab-panel', next ? 'hidden' : 'shown'); } catch { /* storage off: it still toggles */ }
+  };
+  // The timeline under the canvas: the slide's clock, its layers' bars and a playhead to drag.
+  const toggleTimeline = () => {
+    const next = !timelineOpen;
+    set(next ? { timelineOpen: true } : { timelineOpen: false, scrub: null });
+    try { localStorage.setItem('sf-lab-timeline', next ? 'open' : 'closed'); } catch { /* storage off: it still toggles */ }
   };
   const zoom = zoomSetting === 'fit' ? fitZoom : zoomSetting;
   const stepZoom = (k: number) => set({ zoom: Math.max(0.1, Math.min(4, Math.round(zoom * k * 20) / 20)) });
@@ -28,6 +35,7 @@ export function CanvasBar() {
       )}
       <div className="spacer" />
       <AnimateButton />
+      <button className={`tb-btn icon${timelineOpen ? ' active' : ''}`} title={timelineOpen ? 'Hide the timeline' : 'Timeline: scrub through the slide frame by frame'} aria-label="Timeline" aria-pressed={timelineOpen} onClick={toggleTimeline}><ChartGantt size={16} /></button>
       <span className="fmt-sep" />
       <button className="tb-btn icon" title="Zoom out" aria-label="Zoom out" onClick={() => stepZoom(1 / 1.25)}><Minus size={15} /></button>
       <button className={`zoom-val${zoomSetting === 'fit' ? ' fit' : ''}`} title="Fit to window" onClick={() => set({ zoom: 'fit' })}>{Math.round(zoom * 100)}%</button>

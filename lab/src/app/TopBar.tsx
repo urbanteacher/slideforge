@@ -1,4 +1,4 @@
-import { ChevronDown, FileCode, FileJson, FilePlus, FolderOpen, ImageDown, Play, Presentation, Sparkles } from 'lucide-react';
+import { ChevronDown, Clapperboard, FileCode, FileJson, FilePlus, FolderOpen, ImageDown, Play, Presentation, Sparkles } from 'lucide-react';
 import { useRef } from 'react';
 import { exportHtml, exportJson, exportPng, renderStill, editableSlides, exportPptx } from '../export';
 import { blankDeck, demoDeck, type Deck } from '../core';
@@ -74,6 +74,7 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
               showToast('Exported a PowerPoint with editable text');
             }}><Presentation size={15} />Export PowerPoint (editable text)<small>.pptx</small></button>
             <button onClick={() => { const st = useStore.getState(); exportPng(slideOf(st), deck, deck.slides.indexOf(slideOf(st))); close(); }}><ImageDown size={15} />Export this slide as an image<small>.png</small></button>
+            <button onClick={() => { useStore.getState().set({ videoOpen: 'deck' }); close(); }}><Clapperboard size={15} />Export video…<small>.mp4</small></button>
             <div className="menu-note">Your work also autosaves in this browser. HTML decks keep every animation, transition and interaction.</div>
           </>
         )}

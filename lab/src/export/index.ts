@@ -4,3 +4,7 @@ export { handoutHtml, handoutPages } from './handout';
 export type { HandoutPage } from './handout';
 export { editableSlides, exportPptx, exportSlide } from './pptx';
 export type { SlideFormat } from './pptx';
+export { canExportVideo, exportVideo, makeVideo, videoLength, VIDEO_FPS } from './video';
+export type { VideoOptions } from './video';
+export { mp4Parts } from './mp4';
+export type { Mp4Sample, Mp4Track } from './mp4';

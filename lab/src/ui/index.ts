@@ -16,3 +16,5 @@ export { groupOf } from './stage/snap';
 // The controls the kinds’ own inspectors are built from (kinds/<kind>/Inspector.tsx).
 export { ColorField, Row, Scrub, Section, Select } from './controls/controls';
 export { Area, Chips, Input, List, PictureTile, useLayerParams } from './controls/fields';
+export { Timeline } from './stage/Timeline';
+export { VideoExport } from './panels/VideoExport';

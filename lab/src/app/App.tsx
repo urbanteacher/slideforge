@@ -4,7 +4,7 @@ import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '
 import { isLabDeck, saveCurrent } from './embed';
 import { ShowLayer } from '../show';
 import { registerGuideFonts } from '../theme';
-import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS } from '../ui';
+import { CanvasBar, Filmstrip, Gallery, Inspector, LeftPanel, Stage, Timeline, VideoExport, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS } from '../ui';
 import { present } from './showInSlideForge';
 import { TopBar } from './TopBar';
 import { ColumnHandle, useColumns } from './columns';
@@ -17,6 +17,7 @@ const isTyping = (t: EventTarget | null) => {
 /** `embedded`: SlideForge's shell owns the document row (name, File, Save), so the lab shows its tools only. */
 export function App({ embedded = false, onReady }: { embedded?: boolean; onReady?: () => void }) {
   const galleryOpen = useStore((s) => s.galleryOpen);
+  const videoOpen = useStore((s) => s.videoOpen);
   const toast = useStore((s) => s.toast);
   const panelHidden = useStore((s) => s.panelHidden);
   const guide = useStore((s) => s.deck.styleGuide);
@@ -159,6 +160,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       {view === 'lesson' ? <LeftPanel /> : <BrowsePanel kind={view === 'quiz' ? 'games' : view === 'nodes' ? 'nodes' : 'activities'} />}
       <main className="center">
         <Stage />
+        <Timeline />
         {view !== 'lesson' && !anyInView && <EmptyView view={view} />}
         <CanvasBar />
         <Filmstrip />
@@ -167,6 +169,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       <ColumnHandle side="left" cols={cols} />
       {!panelHidden && <ColumnHandle side="right" cols={cols} />}
       {galleryOpen && <Gallery />}
+      {videoOpen && <VideoExport />}
       {toast && <div className="toast">{toast}</div>}
       <ShowLayer />
     </div>

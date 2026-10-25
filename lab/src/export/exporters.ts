@@ -1,5 +1,5 @@
 import playerSrc from '../generated/player.iife.js?raw';
-import { Renderer } from '../engine';
+import { BLURRED, EASE, MOTION, Renderer, transitionEdge, transitionSpread } from '../engine';
 import type { Deck, Slide } from '../core';
 import { guideFontCss } from '../theme';
 
@@ -71,21 +71,44 @@ function still(): { canvas: HTMLCanvasElement; r: Renderer } {
   return offscreen;
 }
 
-/** Render a fully built slide to an image data URL. */
-/** `flip` 1 draws the slide turned over to its back face (Flip to facts), as the handout prints it. */
-export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2, quality = 0.9, hidden?: Set<string>, flip = 0): string {
+/** One moment of a slide: its own clock `t` (Infinity, fully built) with its builds clicked at
+ *  `clicks`, and `time` for what moves on its own. `from` and `p` draw its transition in from the
+ *  slide before, p of the way (0–1). The video export's frames. */
+export interface Moment { t: number; clicks: number[]; time: number; from?: Slide | null; p?: number; hidden?: Set<string>; flip?: number; reduce?: boolean }
+
+/** Draw a moment of a slide on the shared offscreen canvas, `width` pixels wide, and hand back the canvas. */
+export function drawMoment(slide: Slide, deck: Deck, width: number, m: Moment): HTMLCanvasElement {
   const { canvas, r } = still();
   r.deckW = deck.width;
   // A thumbnail can be drawn against a bare size with no slides; it simply has no page number.
   r.order = (deck.slides ?? []).filter((s) => !s.hidden).map((s) => s.id);
   r.deckH = deck.height;
   r.setSize(width, Math.round((width * deck.height) / deck.width));
+  const opts = { time: m.time, mouse: [0.5, 0.5] as [number, number], t: m.t, clicks: m.clicks, hidden: m.hidden, flip: m.flip ?? 0, reduce: m.reduce };
+  if (m.from && m.p !== undefined && slide.transition.type !== 'none') {
+    const tr = slide.transition, raw = Math.max(0, Math.min(1, m.p));
+    r.drawTransition(m.from, { ...opts, t: Infinity, clicks: [] }, slide, opts, tr.type, EASE[MOTION.move](raw), 1, {
+      edge: transitionEdge(deck, slide),
+      spread: BLURRED.includes(tr.type) ? transitionSpread(EASE[MOTION.move], raw, tr.duration) : 0,
+    });
+  } else r.drawSlide(slide, opts, null);
+  return canvas;
+}
+
+/** Keep only these slides' textures on the offscreen renderer. */
+export function pruneMoments(slides: Slide[]) {
+  still().r.prune(new Set(slides.flatMap((s) => s.layers.map((l) => l.id))));
+}
+
+/** Render a fully built slide to an image data URL. */
+/** `flip` 1 draws the slide turned over to its back face (Flip to facts), as the handout prints it. */
+export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2, quality = 0.9, hidden?: Set<string>, flip = 0): string {
   // `hidden`: layers left out of the picture, as the editable PowerPoint does with the words it sets as text.
-  r.drawSlide(slide, { time, mouse: [0.5, 0.5], t: Infinity, clicks: [], hidden, flip }, null);
+  const canvas = drawMoment(slide, deck, width, { t: Infinity, clicks: [], time, hidden, flip });
   const url = canvas.toDataURL(type, quality);
   // Thumbnails are drawn for every slide in turn; keeping each one's textures would hold the whole
   // deck on the GPU (93 slides of pictures and type was enough to crash it), so only this slide's stay.
-  r.prune(new Set(slide.layers.map((l) => l.id)));
+  pruneMoments([slide]);
   return url;
 }
 
