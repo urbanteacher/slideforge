@@ -26,6 +26,8 @@ Requires a browser with WebGL2 (current Chrome, Edge, Safari, Firefox).
 | **Animate** | Entrances: fade, rise, drop, slide, zoom, pop, blur-in, wipes, spin, plus text-only letter / word / masked-line / typewriter reveals with stagger. Easings incl. expo, back and spring. Triggers: *with previous*, *after previous*, *on click* (build steps). Ambient loops: float, pulse, sway, spin, breathe. The **Sequence** panel shows the build order. **Animate** plays the slide in the editor. |
 | **Transitions** | Cut, crossfade, push, zoom, ripple, burn dissolve, soft wipe, pixelate, blur — all GPU shaders. |
 | **Interact** | Follow-mouse origins (Ripple, Lens, Swirl, Spotlight, Blur), parallax depth, hover states (lift, grow, glow, tilt-to-pointer), click actions (next, previous, go to slide, open link). |
+| **Timeline** | The canvas bar's timeline button opens a scrubber under the canvas: every moving layer's entrance, line steps, loop and exit as bars, numbered click markers, and a playhead you drag to any frame at 30 fps (← → a frame, Shift a second, space plays). It shows timing; the Animate panel edits it. |
+| **Video** | File → Export video… (or Video on the timeline): the deck or this slide as an .mp4, 1080p or 720p, 30 fps, builds clicked after a set hold, transitions between slides. It is encoded in the browser with WebCodecs, so it needs current Chrome, Edge or Safari 17+. It uses the deck's own shape only. |
 | **Present** | Preview (⌘↵) — click / → to build and advance, ← back, N speaker notes, F fullscreen, Esc exit. |
 | **Files** | Autosaves to the browser (IndexedDB). Export: interactive **HTML deck**, **PNG** of the current slide, editable **.json** deck (re-open via the logo menu). **Gallery** has 7 art-directed starting slides. |
 

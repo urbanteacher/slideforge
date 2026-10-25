@@ -776,6 +776,7 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-16 | Text effects and a text block: outline, outline only, gradient fill, shadows, glow, highlighter, word spacing; Scramble and Count up entrances, a typewriter cursor, random order; Safari draws the blur and white logos | Done · 26 Sep 2026 · `2885d4f` |
 | LAB-17 | Default slides move plainly: no blurred word motion or Blur in across the layouts, designs and the lab's originals; bullet lists build a point per click with the earlier points dimmed | Done · 26 Sep 2026 · `d8b981e` |
 | LAB-18 | Week 3 · Data Abstraction as a lesson, and ten chart-experiment kinds written once for both engines: a table melted wide to long, grouped and stacked bars into sorted totals, lines with a gap that drops into a derived balance, a 3D default to rescue, the pie's variants, unit charts counted into frequency | Done · 27 Sep 2026 · `39d9e95` `5a7167d` |
+| LAB-20 | Remotion-Studio-style timing in the Lesson studio: a timeline under the canvas (each layer's entrance, line steps, loop and exit as bars, click markers, a frame-accurate playhead) and Export → Video (.mp4, 30 fps, builds clicked on a hold, H.264 encoded in the browser). Open: 1:1 and 9:16 (typed layouts do not reflow), video clips in the video, audio | Done · 25 Oct 2026 · uncommitted |
 
 ## Story designs
 
@@ -797,6 +798,13 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M14 deletion done 13 Oct 2026 ([m14-deletions.md](games/m14-deletions.md) section 6) |
 
 ## Change log
+
+### 25 October 2026 — The Lesson studio gets a timeline and exports video
+
+- **Timeline** (the canvas bar's timeline button; `lab/src/ui/stage/Timeline.tsx`, `lab/src/engine/timeline.ts`). The slide's clock from its arrival to a hold after its last build. Each moving layer has a row: its entrance, any line or state steps, its loop and its exit, read from the Animate settings, which stay the only place timing is edited. Clicks are numbered markers, and a transition in is a band at the start. Drag or click to move the playhead to any frame. ← and → step a frame (Shift steps a second), space plays, Home and End jump, and Built shows the slide for editing. The canvas draws the moment under the playhead with the same renderer and schedule as the show.
+- **Export → Video** (File → Export video…, or Video on the timeline; `lab/src/export/video.ts`, `mp4.ts`). Exports the deck or one slide at 30 fps, 1080p or 720p, in the deck's own shape. Each build is clicked a set *hold* after the step before has arrived, and the transitions run between slides. It is encoded with WebCodecs H.264 and written by a small MP4 writer, index first. Checked: a 7-slide demo deck (31.7 s, 951 frames) plays in QuickTime and every frame decodes. Rendering and encoding took about 14 s.
+- **Not done:** square (1:1) and upright (9:16) video. The lab's typed layouts are placed at 1920 × 1080 (the lattice regions live in the classic `src/render/lattice.js`, not in the lab), so a reframed video would only be the slide with bands. Video clips are not played in the export, there is no audio, and a room's live results are not shown.
+- `renderStill` keeps its signature. It now draws through `drawMoment`, which takes the slide clock and clicks as well as the loop clock. `lab/tests/timeline-video.test.ts` covers the auto-clicks, the bars, the reel and the MP4 boxes.
 
 ### 20 October 2026 — The Lesson studio draws diagrams: loop, flowchart and timeline
 
