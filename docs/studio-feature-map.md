@@ -86,8 +86,7 @@ it:
    - logo on dark slides;
    - finish on the final scores;
    - the AI assistance status;
-   - the Ready to teach checklist;
-   - the ? shortcut sheet.
+   - the Ready to teach checklist.
 
 The lab also adds things the studio does not have. They are listed in §8.
 
@@ -266,7 +265,7 @@ title. It applies to the deck or to one slide, and can hide on covers.
 | Header/footer ✥ handles | Move items between slots. | `canvas-regions.js:44` | Missing |
 | Paste an image | Onto the slide, or converts the slide. | `editor.js:358` | Slide (also drop a file) |
 | Zoom (50–200%, Fit) | | `shell.js:117` | Slide (top bar) |
-| Panel toggle ⌘\\ | Hides or shows the inspector. | `shell.js:138` | Slide (panel button, ⌘\\) |
+| Panel toggle ⌘\\ | Hides or shows the inspector. | `shell.js:138` | Slide (panel button, ⌘⌥2 or ⌘\\; the left side folds too, ⌘⌥1) |
 | + Add activity | Activity catalogue. | `studio.js:815` | **Missing** |
 | Speaker notes strip | Notes, with a dot when there are some. | `shell.js:565` | Chip (Notes) |
 
@@ -294,7 +293,7 @@ picture; reset to the theme; arrow-key nudging.
 | Share | Practice, own pace, live follow-along. | Shell (the bridge) |
 | History | Restore points. | Shell |
 | Command palette ⌘K | Every command. | ⌘K (the lab's own) |
-| Shortcut sheet ? | Every key. | Missing (keys are listed in `lab/README.md`) |
+| Shortcut sheet ? | Every key. | Slide (`?`, from the lab's one key registry; `docs/editor-shell.md`) |
 | Host live lobby | QR, PIN, teams, start. | Shell (the bridge) |
 | Changed in another tab | Load theirs or keep yours. | Missing |
 
@@ -330,8 +329,8 @@ picture; reset to the theme; arrow-key nudging.
 | ⌘↵ / F5 present | ✓ | P |
 | ⌘E switch studio | ✓ | Missing |
 | ⌘K palette · ⌘\\ panel | ✓ | ✓ |
-| ⌘⌥= / ⌘⌥− zoom | ✓ | Missing (buttons only) |
-| ? shortcuts | ✓ | Missing |
+| ⌘⌥= / ⌘⌥− zoom | ✓ | ✓ (and ⌘⌥0 fits) |
+| ? shortcuts | ✓ | ✓ |
 
 ## 8. In the lab and not in the studio
 
@@ -392,3 +391,8 @@ picture; reset to the theme; arrow-key nudging.
   "Read this first" now ranks the feedback settings, the phone preview and
   native games and activities as the biggest gap, then the lab's own live
   host and one library.
+- **2026-10-25.** The editor shell (`docs/editor-shell.md`): both sides fold (⌘⌥1, ⌘⌥2),
+  the place is kept in the address, a Status tab lists saves, exports and failures, the
+  inspector says where a change is kept and why one can't be, one key registry drives the
+  keys, tooltips, the ? sheet and ⌘K, and the editor has its own settings (⌘⌥P). §5 and §7
+  updated: the ? sheet and the zoom keys are done.
