@@ -1,29 +1,49 @@
 <!doctype html>
 <!-- A six-second title loop, written to the render contract: every frame is
      renderAt(t) and nothing else. Copy it as the start of a new clip.
-       node tools/motion/render.mjs tools/motion/examples/title-reveal.html --sheet -->
+       node tools/motion/render.mjs tools/motion/examples/title-reveal.html --sheet
+       node tools/motion/render.mjs tools/motion/examples/title-reveal.html --format all --check
+     In a browser, ?t=2.5&format=9x16 shows one moment in one shape. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>Title reveal</title>
 <style>
-  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0f1222; }
+  html, body { margin: 0; width: 100vw; height: 100vh; overflow: hidden; background: #0f1222; }
   canvas { position: absolute; inset: 0; }
-  .words { position: absolute; left: 160px; top: 380px; font: 800 132px/1.05 system-ui, sans-serif;
+  .words { position: absolute; font-weight: 800; line-height: 1.05; font-family: system-ui, sans-serif;
     color: #f4f1ea; letter-spacing: -0.02em; }
   .words span { display: inline-block; margin-right: 0.24em; will-change: transform, opacity; }
-  .rule { position: absolute; left: 160px; top: 690px; height: 8px; width: 760px; background: #8b7cf6;
-    transform-origin: left center; }
-  .sub { position: absolute; left: 160px; top: 730px; font: 500 44px system-ui, sans-serif; color: #b9b6cc; }
+  .rule { position: absolute; height: 8px; background: #8b7cf6; transform-origin: left center; }
+  .sub { position: absolute; font: 500 44px system-ui, sans-serif; color: #b9b6cc; }
 </style>
 </head>
 <body>
-<canvas id="bg" width="1920" height="1080"></canvas>
+<canvas id="bg"></canvas>
 <div class="words" id="words"><span>See</span><span>it,</span><span>then</span><br><span>build</span><span>it.</span></div>
 <div class="rule" id="rule"></div>
 <div class="sub" id="sub">Week 5 · audience, interaction, animation</div>
 <script>
-window.MOTION = { duration: 6, fps: 24, width: 1920, height: 1080, loop: true };
+/* Every moment something starts lives in cues (seconds), never as a number in
+   renderAt, so the storyboard, the sheet's labels and --stills words,exit all
+   name one beat. Cues are times; how long a move takes stays with the move. */
+window.MOTION = {
+  duration: 6, fps: 24, width: 1920, height: 1080, loop: true,
+  formats: ['16x9', '1x1', '9x16'],
+  cues: { words: 0.3, rule: 0.9, sub: 1.2, exit: 4.9 },
+};
+
+/* One layout per shape. Each is composed for its frame, not cropped from 16:9:
+   the title leads on the left in 16:9 and sits higher and larger in tall frames,
+   and the ambient dots move to the space the text leaves. */
+const LAYOUT = {
+  '16x9': { w: 1920, h: 1080, text: { x: 160, y: 380, size: 132, width: 1100 }, dots: { x: 1500, y: 540, k: 1 } },
+  '1x1': { w: 1080, h: 1080, text: { x: 96, y: 300, size: 120, width: 888 }, dots: { x: 760, y: 860, k: 0.7 } },
+  '9x16': { w: 1080, h: 1920, text: { x: 88, y: 560, size: 140, width: 904 }, dots: { x: 540, y: 1460, k: 1 } },
+};
+const query = new URLSearchParams(location.search);
+const F = window.MOTION_FORMAT?.name in LAYOUT ? window.MOTION_FORMAT.name : (query.get('format') in LAYOUT ? query.get('format') : '16x9');
+const L = LAYOUT[F];
 
 /* The cheat sheet's curves (cubic-bezier x1, y1, x2, y2), solved for y at x. */
 function bezier(x1, y1, x2, y2) {
@@ -52,33 +72,42 @@ function spring(s, damping = 0.75, hz = 1.6) {
 }
 
 const words = [...document.querySelectorAll('#words span')];
+const wordsBox = document.getElementById('words');
 const rule = document.getElementById('rule'), sub = document.getElementById('sub');
-const ctx = document.getElementById('bg').getContext('2d');
+const canvas = document.getElementById('bg');
+canvas.width = L.w; canvas.height = L.h;
+const ctx = canvas.getContext('2d');
+
+/* Placed once: the layout does not move, only what renderAt animates. */
+Object.assign(wordsBox.style, { left: L.text.x + 'px', top: L.text.y + 'px', fontSize: L.text.size + 'px', width: L.text.width + 'px' });
+const below = L.text.y + wordsBox.offsetHeight;
+Object.assign(rule.style, { left: L.text.x + 'px', top: below + 34 + 'px', width: Math.min(760, L.text.width) + 'px' });
+Object.assign(sub.style, { left: L.text.x + 'px', top: below + 74 + 'px', width: L.text.width + 'px' });
 
 window.renderAt = function (t) {
-  const T = window.MOTION.duration, phase = t / T;
-  /* Enter 0.7 s each, words 90 ms apart; exit from 4.9 s, about half as long. */
-  const exit = inExpo(span(t, 4.9, 0.4));
+  const T = window.MOTION.duration, phase = t / T, C = window.MOTION.cues;
+  /* Enter 0.7 s each, words 90 ms apart; exit about half as long. */
+  const exit = inExpo(span(t, C.exit, 0.4));
   words.forEach((w, i) => {
-    const k = outExpo(span(t, 0.3 + i * 0.09, 0.7));
+    const k = outExpo(span(t, C.words + i * 0.09, 0.7));
     w.style.opacity = k * (1 - exit);
     w.style.transform = `translateY(${(1 - k) * 60 - exit * 30}px)`;
   });
-  rule.style.transform = `scaleX(${spring(t - 0.9, 0.6, 1.4) * (1 - exit)})`;
-  const s = outExpo(span(t, 1.2, 0.7));
+  rule.style.transform = `scaleX(${spring(t - C.rule, 0.6, 1.4) * (1 - exit)})`;
+  const s = outExpo(span(t, C.sub, 0.7));
   sub.style.opacity = s * (1 - exit);
   sub.style.transform = `translateX(${(1 - s) * -24}px)`;
 
   /* Ambient: dots on closed paths, one whole cycle per loop, so frame N is frame 0. */
-  ctx.clearRect(0, 0, 1920, 1080);
+  ctx.clearRect(0, 0, L.w, L.h);
   for (let i = 0; i < 40; i++) {
     const a = phase * Math.PI * 2 * (1 + (i % 3)) + i * 2.4;
-    const x = 1500 + Math.cos(a) * (120 + i * 7), y = 540 + Math.sin(a * 1) * (80 + i * 5);
+    const x = L.dots.x + Math.cos(a) * (120 + i * 7) * L.dots.k, y = L.dots.y + Math.sin(a * 1) * (80 + i * 5) * L.dots.k;
     ctx.fillStyle = `rgba(139,124,246,${0.08 + (i % 5) * 0.03})`;
     ctx.beginPath(); ctx.arc(x, y, 6 + (i % 4) * 3, 0, Math.PI * 2); ctx.fill();
   }
 };
-window.renderAt(new URLSearchParams(location.search).has('t') ? Number(new URLSearchParams(location.search).get('t')) : 1.6);
+window.renderAt(query.has('t') ? Number(query.get('t')) : 1.6);
 </script>
 </body>
 </html>

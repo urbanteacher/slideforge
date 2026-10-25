@@ -3,8 +3,21 @@
 //   node tools/motion/render.mjs <anim.html> --stills 0.5,2,3.75
 //   node tools/motion/render.mjs <anim.html> --sheet
 //   node tools/motion/render.mjs <anim.html> --out assets/lesson/x/clip.mp4 [--poster 2.5]
+//   node tools/motion/render.mjs <anim.html> --format all --out x.mp4   # x-16x9.mp4, x-1x1.mp4, x-9x16.mp4
 // Other flags: --duration s, --fps 24, --size 1920x1080, --workers 4, --loop,
 //   --bitrate 1400000, --work <dir> (frames and stills; default a temp folder).
+//
+// Cues: window.MOTION.cues names the clip's event times in seconds
+// ({ title: { in: 0.3 }, exit: 4.9 }), so the page reads its timing from one
+// place. --stills takes a cue as well as a time (title.in, exit+0.2), --sheet
+// labels the cell each cue falls in, and --check proves every cue lies inside
+// the clip.
+//
+// Formats: --format 16x9 | 1x1 | 9x16 | all draws the page at that size, with
+// window.MOTION_FORMAT = { name, width, height } set before it runs. Each is
+// the page's own composition, not a crop, so it must list the format in
+// window.MOTION.formats. With --format, --check also fails a page whose layout
+// spills past the frame.
 //
 // The page is drawn at exact times, never played. It either exposes
 // window.renderAt(t) (seconds; may return a promise), or animates with CSS /
@@ -37,6 +50,15 @@ const opt = (k, d) => { const i = args.indexOf('--' + k); return i < 0 ? d : arg
 const has = k => args.includes('--' + k);
 const work = path.resolve(opt('work', path.join(os.tmpdir(), 'slideforge-motion', path.basename(file, '.html'))));
 
+/* The social shapes. A page opts into each by listing it in MOTION.formats. */
+const FORMATS = { '16x9': { width: 1920, height: 1080 }, '1x1': { width: 1080, height: 1080 }, '9x16': { width: 1080, height: 1920 } };
+const format = opt('format', null);
+if (format && format !== 'all' && !FORMATS[format]) {
+  console.error(`--format ${format}: use ${Object.keys(FORMATS).join(', ')} or all`);
+  process.exit(2);
+}
+if (format && has('size')) { console.error('--format and --size both set the frame: pass one'); process.exit(2); }
+
 /* Served over http rather than file:// so the page can import its own
    modules and fetch its own assets; the folder it sits in is the root. */
 const root = path.dirname(file);
@@ -44,6 +66,8 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
   '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.glsl': 'text/plain' };
 const server = http.createServer((req, res) => {
+  /* Full Chrome asks for an icon the headless shell does not; its 404 is not the page's error. */
+  if (req.url === '/favicon.ico') { res.writeHead(204); res.end(); return; }
   const p = path.join(root, decodeURIComponent(new URL(req.url, 'http://x').pathname));
   if (!p.startsWith(root) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'content-type': TYPES[path.extname(p)] || 'application/octet-stream' });
@@ -69,7 +93,7 @@ function freeze() {
 }
 
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-let size = null, meta = null;
+let size = format && format !== 'all' ? FORMATS[format] : null, meta = null;
 /* Every one of these is a frame that may be wrong, so each must read zero. */
 const errors = { page: 0, console: 0, request: 0, http: 0, webgl: 0 };
 const firstSeen = [];
@@ -88,15 +112,46 @@ async function newPage() {
   page.on('requestfailed', r => count('request', `${r.url()} ${r.failure()?.errorText || ''}`));
   page.on('response', r => { if (r.status() >= 400) count('http', `${r.status()} ${r.url()}`); });
   await page.addInitScript(freeze);
+  if (size && format !== 'all') await page.addInitScript(f => { window.MOTION_FORMAT = f; }, { name: format || 'custom', ...size });
   await page.goto(url, { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
   if (!meta) {
     meta = await page.evaluate(() => ({ ...(window.MOTION || {}), renderAt: typeof window.renderAt === 'function' }));
-    const [w, h] = String(opt('size', `${meta.width || 1920}x${meta.height || 1080}`)).split('x').map(Number);
-    size = { width: w, height: h };
-    if (w !== probe.width || h !== probe.height) await page.setViewportSize(size);
+    if (!size) {
+      const [w, h] = String(opt('size', `${meta.width || 1920}x${meta.height || 1080}`)).split('x').map(Number);
+      size = { width: w, height: h };
+      if (w !== probe.width || h !== probe.height) await page.setViewportSize(size);
+    }
   }
   return page;
+}
+
+/* Cues flattened to dotted names: { title: { in: 0.3 } } reads as title.in. */
+function flatCues(o, pre = '', out = {}) {
+  for (const [k, v] of Object.entries(o || {})) {
+    if (v && typeof v === 'object') flatCues(v, pre + k + '.', out);
+    else out[pre + k] = v;
+  }
+  return out;
+}
+/* A moment: seconds ("2.5"), a cue ("title.in"), or a cue and an offset ("exit+0.2"). */
+function moment(s, cues) {
+  const str = String(s).trim();
+  if (str !== '' && Number.isFinite(Number(str))) return { t: Number(str), name: '' };
+  const m = str.match(/^([A-Za-z_][\w.]*?)\s*([+-]\s*\d*\.?\d+)?$/);
+  if (!m || !(m[1] in cues)) {
+    throw new Error(`"${str}" is not a time or a cue; the cues are ${Object.keys(cues).join(', ') || 'none (set window.MOTION.cues)'}`);
+  }
+  return { t: Number(cues[m[1]]) + Number((m[2] || '0').replace(/\s/g, '')), name: str.replace(/\s/g, '') };
+}
+
+/* Spill: a layout that does not reflow overflows a frame it was not written for. */
+async function spill(page) {
+  return page.evaluate(({ width, height }) => {
+    const r = document.documentElement, b = document.body;
+    const w = Math.max(r.scrollWidth, b ? b.scrollWidth : 0), h = Math.max(r.scrollHeight, b ? b.scrollHeight : 0);
+    return w > width || h > height ? `${w}x${h}` : '';
+  }, size);
 }
 async function seek(page, t) {
   await page.evaluate(async t => {
@@ -120,13 +175,42 @@ async function shot(page, t, dest) {
 }
 
 const first = await newPage();
+const declared = Array.isArray(meta.formats) ? meta.formats : [];
+if (format === 'all') {
+  /* One run per format, each in a process of its own, with its own size,
+     output (x-1x1.mp4) and work folder. */
+  if (!declared.length) {
+    console.error('--format all: the page lists no formats; set window.MOTION.formats, e.g. [\'16x9\', \'1x1\', \'9x16\']');
+    await browser.close(); server.close();
+    process.exit(2);
+  }
+  const set = (list, k, v) => { const i = list.indexOf('--' + k); if (i < 0) list.push('--' + k, v); else list[i + 1] = v; return list; };
+  let failed = 0;
+  for (const f of declared) {
+    const child = set(args.slice(1), 'format', f);
+    set(child, 'work', path.join(work, f));
+    if (opt('out')) set(child, 'out', path.resolve(opt('out')).replace(/(\.mp4)?$/i, `-${f}.mp4`));
+    console.log(`\n${f}`);
+    try { execFileSync(process.execPath, [fileURLToPath(import.meta.url), file, ...child], { stdio: 'inherit' }); }
+    catch { failed++; }
+  }
+  await browser.close(); server.close();
+  process.exit(failed ? 1 : 0);
+}
+if (format && !declared.includes(format)) {
+  console.error(`--format ${format}: the page lists ${declared.length ? declared.join(', ') : 'no formats'} in window.MOTION.formats. ` +
+    'Lay it out for this shape first: a format is its own composition, not a crop.');
+  await browser.close(); server.close();
+  process.exit(2);
+}
+const cues = flatCues(meta.cues);
 const fps = Number(opt('fps', meta.fps || 24));
 const duration = Number(opt('duration', meta.duration || 0));
 const n = Math.round(duration * fps);
 const loop = has('loop') || meta.loop === true;
 const stamp = t => t.toFixed(2).padStart(7, '0');
 fs.mkdirSync(work, { recursive: true });
-console.log(`${path.basename(file)}: ${size.width}x${size.height}, ${duration || '?'} s at ${fps} fps` +
+console.log(`${path.basename(file)}: ${format ? format + ' ' : ''}${size.width}x${size.height}, ${duration || '?'} s at ${fps} fps` +
   (meta.renderAt ? ', window.renderAt' : ', CSS/WAAPI seek'));
 
 if (has('check')) {
@@ -150,14 +234,27 @@ if (has('check')) {
     console.log(`  seam: t=0 and t=${duration}s ${a.equals(b) ? 'are the same picture' : 'DIFFER, so the loop shows a cut'}`);
     if (!a.equals(b)) bad++;
   }
+  /* Cues: every named moment is a time inside the clip. */
+  const names = Object.keys(cues);
+  if (names.length) {
+    const out = names.filter(k => !Number.isFinite(cues[k]) || cues[k] < 0 || (duration && cues[k] > duration));
+    out.forEach(k => console.log(`  cue ${k} = ${cues[k]} is not a time inside 0–${duration} s`));
+    if (out.length) bad++;
+    else console.log(`  cues: ${names.length}, all inside the clip`);
+  }
+  if (format) {
+    const over = await spill(first);
+    console.log(over ? `  layout spills to ${over}, past the ${size.width}x${size.height} frame` : '  layout fits the frame');
+    if (over) bad++;
+  }
   if (reportErrors()) bad++;
   console.log(bad ? 'fails the render contract' : 'passes the render contract');
   process.exitCode = bad ? 1 : 0;
 } else if (opt('stills')) {
   const dir = path.join(work, 'stills');
   fs.mkdirSync(dir, { recursive: true });
-  for (const t of opt('stills').split(',').map(Number)) {
-    const dest = path.join(dir, `${stamp(t)}s-f${Math.round(t * fps)}.png`);
+  for (const { t, name } of opt('stills').split(',').map(s => moment(s, cues))) {
+    const dest = path.join(dir, `${stamp(t)}s-f${Math.round(t * fps)}${name ? '-' + name.replace(/[^\w.+-]/g, '_') : ''}.png`);
     await shot(first, t, dest);
     console.log('  ' + dest);
   }
@@ -169,14 +266,17 @@ if (has('check')) {
   const cells = [];
   for (let i = 0; i < n; i += step) {
     const png = await shot(first, i / fps);
-    cells.push({ i, t: i / fps, src: 'data:image/png;base64,' + png.toString('base64') });
+    /* The cues that fall in this cell's span, so a note can name the beat. */
+    const at = Object.keys(cues).filter(k => Math.round(cues[k] * fps) >= i && Math.round(cues[k] * fps) < i + step);
+    cells.push({ i, t: i / fps, at, src: 'data:image/png;base64,' + png.toString('base64') });
   }
   const cols = 4, cw = 480, ch = Math.round(cw * size.height / size.width);
   const sheet = await browser.newPage({ viewport: { width: cols * (cw + 8) + 8, height: 200 } });
   await sheet.setContent(`<body style="margin:0;padding:8px;background:#111;font:600 13px system-ui;color:#ddd;
     display:grid;grid-template-columns:repeat(${cols},${cw}px);gap:8px">${cells.map(c =>
     `<figure style="margin:0"><img src="${c.src}" style="width:${cw}px;height:${ch}px;display:block">
-     <figcaption style="padding:3px 0">f${c.i} · ${c.t.toFixed(2)}s</figcaption></figure>`).join('')}</body>`);
+     <figcaption style="padding:3px 0">f${c.i} · ${c.t.toFixed(2)}s${c.at.length
+       ? ` <span style="color:#a99cff">· ${c.at.join(', ')}</span>` : ''}</figcaption></figure>`).join('')}</body>`);
   const dest = path.join(work, 'sheet.png');
   await sheet.screenshot({ path: dest, fullPage: true });
   console.log(`  ${dest} (${cells.length} frames, every ${step})`);
@@ -214,7 +314,7 @@ if (has('check')) {
 
   /* The poster is what shows before the clip plays, and what prints. */
   const poster = out.replace(/\.mp4$/i, '') + '-poster.jpg';
-  await seek(first, Number(opt('poster', 0)));
+  await seek(first, moment(opt('poster', '0'), cues).t);
   await first.screenshot({ path: poster, type: 'jpeg', quality: 85 });
   console.log(`  ${poster}\n  ${(fs.statSync(out).size / 1024).toFixed(0)} KB, ${n} frames`);
 } else {
