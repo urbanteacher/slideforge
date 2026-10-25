@@ -799,6 +799,13 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 ## Change log
 
+### 25 October 2026 — The Lesson studio's default look, in 2026's palette, set in one place
+
+- **One default** (`lab/src/layouts/defaultTheme.ts`). The default theme is now set in its own file, `DEFAULT_THEME`, and leads `LAYOUT_STYLES`. The twenty places that fell back to "the first theme" or named `'paper'` (Layouts, Slide designs, Browse, games, activities, inserted blocks, the style guide) all read it. Its id stays `paper`, so decks already on it take the new look.
+- **2026's look.** The year's "Future Earth" palette: Pantone's Cloud Dancer ground (`#f0eee9`), Wax Paper panels, WGSN's Transformative Teal accent (`#14706e`), Cocoa Powder as the second colour and, deepened, the text in place of cool greys. Headings in Instrument Serif over Inter; the paid faces of the year (GT America, Söhne, Graphik, Aeonik) cannot be served to a class. Every colour is AA on the ground: text 14:1, muted 6:1, teal 5:1, cocoa 6:1.
+- **Slide designs in the deck's theme.** The AI Awareness Day 2027 and 2026 designs no longer keep the campaign's own look: 2027's are built as the Layouts build them (`compositionLayouts`), 2026's as the converter sets any slide, both in the deck's theme. 2027's Poster cover is left out, as it needs the campaign's poster.
+- **Still open:** the 2027 group in Slide designs now repeats the nine 2027 structures in Layouts, and could be dropped from one of them.
+
 ### 25 October 2026 — The Lesson studio gets a timeline and exports video
 
 - **Timeline** (the canvas bar's timeline button; `lab/src/ui/stage/Timeline.tsx`, `lab/src/engine/timeline.ts`). The slide's clock from its arrival to a hold after its last build. Each moving layer has a row: its entrance, any line or state steps, its loop and its exit, read from the Animate settings, which stay the only place timing is edited. Clicks are numbered markers, and a transition in is a band at the start. Drag or click to move the playhead to any frame. ← and → step a frame (Shift steps a second), space plays, Home and End jump, and Built shows the slide for editing. The canvas draws the moment under the playhead with the same renderer and schedule as the show.
