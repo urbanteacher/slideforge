@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">NAME IT</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">The words for a tree, on one tree</text>
+<rect x="496" y="402" width="248" height="232" rx="14" fill="#f3e3e6" stroke="#c8102e" stroke-width="2" stroke-dasharray="8 6"/>
+<line x1="890" y1="176" x2="720" y2="306" stroke="#5a6572" stroke-width="3"/>
+<line x1="890" y1="176" x2="1060" y2="306" stroke="#5a6572" stroke-width="3"/>
+<line x1="720" y1="306" x2="620" y2="436" stroke="#5a6572" stroke-width="3"/>
+<line x1="720" y1="306" x2="850" y2="436" stroke="#5a6572" stroke-width="3"/>
+<line x1="1060" y1="306" x2="1000" y2="436" stroke="#5a6572" stroke-width="3"/>
+<line x1="1060" y1="306" x2="1130" y2="436" stroke="#5a6572" stroke-width="3"/>
+<line x1="620" y1="436" x2="540" y2="566" stroke="#5a6572" stroke-width="3"/>
+<line x1="620" y1="436" x2="620" y2="566" stroke="#5a6572" stroke-width="3"/>
+<line x1="620" y1="436" x2="700" y2="566" stroke="#5a6572" stroke-width="3"/>
+<line x1="850" y1="436" x2="810" y2="566" stroke="#5a6572" stroke-width="3"/>
+<line x1="850" y1="436" x2="890" y2="566" stroke="#5a6572" stroke-width="3"/>
+<circle cx="890" cy="176" r="40" fill="#c8102e" stroke="#c8102e" stroke-width="3"/>
+<text x="890" y="181" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">London</text>
+<circle cx="720" cy="306" r="30" fill="#0c3354" stroke="#0c3354" stroke-width="3"/>
+<text x="720" y="311" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#fff">Inner</text>
+<circle cx="1060" cy="306" r="30" fill="#0c3354" stroke="#0c3354" stroke-width="3"/>
+<text x="1060" y="311" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#fff">Outer</text>
+<circle cx="620" cy="436" r="30" fill="#0c3354" stroke="#0c3354" stroke-width="3"/>
+<text x="620" y="441" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#fff">West</text>
+<circle cx="850" cy="436" r="30" fill="#0c3354" stroke="#0c3354" stroke-width="3"/>
+<text x="850" y="441" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#fff">East</text>
+<circle cx="1000" cy="436" r="16" fill="#fff" stroke="#0c3354" stroke-width="3"/>
+<text x="1000" y="474" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#14181f">South</text>
+<circle cx="1130" cy="436" r="16" fill="#fff" stroke="#0c3354" stroke-width="3"/>
+<text x="1130" y="474" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#14181f">NE</text>
+<circle cx="540" cy="566" r="16" fill="#fff" stroke="#0c3354" stroke-width="3"/>
+<text x="540" y="604" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#14181f">Camden</text>
+<circle cx="620" cy="566" r="16" fill="#fff" stroke="#0c3354" stroke-width="3"/>
+<text x="620" y="604" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#14181f">K&amp;C</text>
+<circle cx="700" cy="566" r="16" fill="#fff" stroke="#0c3354" stroke-width="3"/>
+<text x="700" y="604" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#14181f">H&amp;F</text>
+<circle cx="810" cy="566" r="16" fill="#fff" stroke="#0c3354" stroke-width="3"/>
+<text x="810" y="604" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#14181f">Tower H.</text>
+<circle cx="890" cy="566" r="16" fill="#fff" stroke="#0c3354" stroke-width="3"/>
+<text x="890" y="604" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#14181f">Islington</text>
+<text x="1240" y="182" text-anchor="end" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#5a6572">Level 0</text>
+<text x="1240" y="312" text-anchor="end" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#5a6572">Level 1</text>
+<text x="1240" y="442" text-anchor="end" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#5a6572">Level 2</text>
+<text x="1240" y="572" text-anchor="end" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#5a6572">Level 3</text>
+<text x="64" y="168" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="700" fill="#c8102e">Root</text>
+<text x="64" y="194" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">The one node with no parent: London.</text>
+<text x="64" y="294" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="700" fill="#c8102e">Parent and children</text>
+<text x="64" y="320" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">Inner and Outer are London’s children;</text>
+<text x="64" y="342" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">London is their parent.</text>
+<text x="64" y="412" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="700" fill="#c8102e">Siblings</text>
+<text x="64" y="438" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">Nodes with the same parent, like West and</text>
+<text x="64" y="460" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">East.</text>
+<text x="64" y="520" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="700" fill="#c8102e">Subtree (the pink box)</text>
+<text x="64" y="546" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">A node and everything below it.</text>
+<text x="64" y="616" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" font-weight="700" fill="#c8102e">Leaves</text>
+<text x="64" y="642" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">Nodes with no children: the boroughs,</text>
+<text x="64" y="664" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#14181f">South and NE.</text>
+</svg>

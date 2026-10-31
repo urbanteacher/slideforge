@@ -1,0 +1,131 @@
+source,target,line,colour
+Elephant & Castle,Lambeth North,bakerloo,#B36305
+Lambeth North,Waterloo,bakerloo,#B36305
+Embankment,Waterloo,bakerloo,#B36305
+Charing Cross,Embankment,bakerloo,#B36305
+Charing Cross,Piccadilly Circus,bakerloo,#B36305
+Oxford Circus,Piccadilly Circus,bakerloo,#B36305
+Oxford Circus,Regent's Park,bakerloo,#B36305
+Baker Street,Regent's Park,bakerloo,#B36305
+Baker Street,Marylebone,bakerloo,#B36305
+Edgware Road,Marylebone,bakerloo,#B36305
+Edgware Road,Paddington,bakerloo,#B36305
+Notting Hill Gate,Queensway,central,#E32017
+Lancaster Gate,Queensway,central,#E32017
+Lancaster Gate,Marble Arch,central,#E32017
+Bond Street,Marble Arch,central,#E32017
+Bond Street,Oxford Circus,central,#E32017
+Oxford Circus,Tottenham Court Road,central,#E32017
+Holborn,Tottenham Court Road,central,#E32017
+Chancery Lane,Holborn,central,#E32017
+Chancery Lane,St. Paul's,central,#E32017
+Bank,St. Paul's,central,#E32017
+Bank,Liverpool Street,central,#E32017
+Edgware Road,Paddington,circle,#FFD300
+Bayswater,Paddington,circle,#FFD300
+Bayswater,Notting Hill Gate,circle,#FFD300
+High Street Kensington,Notting Hill Gate,circle,#FFD300
+Gloucester Road,High Street Kensington,circle,#FFD300
+Gloucester Road,South Kensington,circle,#FFD300
+Sloane Square,South Kensington,circle,#FFD300
+Sloane Square,Victoria,circle,#FFD300
+St. James's Park,Victoria,circle,#FFD300
+St. James's Park,Westminster,circle,#FFD300
+Embankment,Westminster,circle,#FFD300
+Embankment,Temple,circle,#FFD300
+Blackfriars,Temple,circle,#FFD300
+Blackfriars,Mansion House,circle,#FFD300
+Cannon Street,Mansion House,circle,#FFD300
+Cannon Street,Monument,circle,#FFD300
+Monument,Tower Hill,circle,#FFD300
+Aldgate,Tower Hill,circle,#FFD300
+Aldgate,Liverpool Street,circle,#FFD300
+Liverpool Street,Moorgate,circle,#FFD300
+Barbican,Moorgate,circle,#FFD300
+Barbican,Farringdon,circle,#FFD300
+Farringdon,King's Cross St. Pancras,circle,#FFD300
+Euston Square,King's Cross St. Pancras,circle,#FFD300
+Euston Square,Great Portland Street,circle,#FFD300
+Baker Street,Great Portland Street,circle,#FFD300
+Baker Street,Edgware Road,circle,#FFD300
+Earl's Court,Gloucester Road,district,#00782A
+Gloucester Road,South Kensington,district,#00782A
+Sloane Square,South Kensington,district,#00782A
+Sloane Square,Victoria,district,#00782A
+St. James's Park,Victoria,district,#00782A
+St. James's Park,Westminster,district,#00782A
+Embankment,Westminster,district,#00782A
+Embankment,Temple,district,#00782A
+Blackfriars,Temple,district,#00782A
+Blackfriars,Mansion House,district,#00782A
+Cannon Street,Mansion House,district,#00782A
+Cannon Street,Monument,district,#00782A
+Monument,Tower Hill,district,#00782A
+Aldgate East,Tower Hill,district,#00782A
+Earl's Court,High Street Kensington,district,#00782A
+High Street Kensington,Notting Hill Gate,district,#00782A
+Bayswater,Notting Hill Gate,district,#00782A
+Bayswater,Paddington,district,#00782A
+Edgware Road,Paddington,district,#00782A
+Aldgate East,Liverpool Street,hammersmith-city,#F3A9BB
+Liverpool Street,Moorgate,hammersmith-city,#F3A9BB
+Barbican,Moorgate,hammersmith-city,#F3A9BB
+Barbican,Farringdon,hammersmith-city,#F3A9BB
+Farringdon,King's Cross St. Pancras,hammersmith-city,#F3A9BB
+Euston Square,King's Cross St. Pancras,hammersmith-city,#F3A9BB
+Euston Square,Great Portland Street,hammersmith-city,#F3A9BB
+Baker Street,Great Portland Street,hammersmith-city,#F3A9BB
+Baker Street,Edgware Road,hammersmith-city,#F3A9BB
+Edgware Road,Paddington,hammersmith-city,#F3A9BB
+Baker Street,Bond Street,jubilee,#A0A5A9
+Bond Street,Green Park,jubilee,#A0A5A9
+Green Park,Westminster,jubilee,#A0A5A9
+Waterloo,Westminster,jubilee,#A0A5A9
+Southwark,Waterloo,jubilee,#A0A5A9
+London Bridge,Southwark,jubilee,#A0A5A9
+Aldgate,Liverpool Street,metropolitan,#9B0056
+Liverpool Street,Moorgate,metropolitan,#9B0056
+Barbican,Moorgate,metropolitan,#9B0056
+Barbican,Farringdon,metropolitan,#9B0056
+Farringdon,King's Cross St. Pancras,metropolitan,#9B0056
+Euston Square,King's Cross St. Pancras,metropolitan,#9B0056
+Euston Square,Great Portland Street,metropolitan,#9B0056
+Baker Street,Great Portland Street,metropolitan,#9B0056
+Battersea Power Station,Nine Elms,northern,#000000
+Kennington,Nine Elms,northern,#000000
+Kennington,Waterloo,northern,#000000
+Embankment,Waterloo,northern,#000000
+Charing Cross,Embankment,northern,#000000
+Charing Cross,Leicester Square,northern,#000000
+Leicester Square,Tottenham Court Road,northern,#000000
+Goodge Street,Tottenham Court Road,northern,#000000
+Goodge Street,Warren Street,northern,#000000
+Euston,Warren Street,northern,#000000
+Euston,King's Cross St. Pancras,northern,#000000
+Angel,King's Cross St. Pancras,northern,#000000
+Angel,Old Street,northern,#000000
+Moorgate,Old Street,northern,#000000
+Bank,Moorgate,northern,#000000
+Bank,London Bridge,northern,#000000
+Borough,London Bridge,northern,#000000
+Borough,Elephant & Castle,northern,#000000
+Elephant & Castle,Kennington,northern,#000000
+King's Cross St. Pancras,Russell Square,piccadilly,#003688
+Holborn,Russell Square,piccadilly,#003688
+Covent Garden,Holborn,piccadilly,#003688
+Covent Garden,Leicester Square,piccadilly,#003688
+Leicester Square,Piccadilly Circus,piccadilly,#003688
+Green Park,Piccadilly Circus,piccadilly,#003688
+Green Park,Hyde Park Corner,piccadilly,#003688
+Hyde Park Corner,Knightsbridge,piccadilly,#003688
+Knightsbridge,South Kensington,piccadilly,#003688
+Gloucester Road,South Kensington,piccadilly,#003688
+Earl's Court,Gloucester Road,piccadilly,#003688
+Pimlico,Vauxhall,victoria,#0098D4
+Pimlico,Victoria,victoria,#0098D4
+Green Park,Victoria,victoria,#0098D4
+Green Park,Oxford Circus,victoria,#0098D4
+Oxford Circus,Warren Street,victoria,#0098D4
+Euston,Warren Street,victoria,#0098D4
+Euston,King's Cross St. Pancras,victoria,#0098D4
+Bank,Waterloo,waterloo-city,#95CDBA

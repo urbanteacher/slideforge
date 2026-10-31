@@ -206,7 +206,14 @@ export function stage(svg, o) {
   return {
     ink: ink, soft: soft, dark: dark, title: title,
     /** @param {string} text */
-    caption: function (text) { caption.textContent = text || ''; },
+    /* One line when it fits beside the step pips; a longer caption wraps to two lines, the first raised, so it never runs into them. */
+    caption: function (text) {
+      caption.textContent = '';
+      var lines = wrap(text || '', 22, W - 64 - 64 - 140);
+      if (lines.length < 2) { caption.textContent = text || ''; set(caption, { y: H - 34 }); return; }
+      set(caption, { y: H - 60 });
+      lines.slice(0, 2).forEach(function (l, i) { el('tspan', { x: 64, dy: i ? 27 : 0 }, caption, l); });
+    },
     /** @param {number} at @param {number} of */
     pips: function (at, of) {
       pips.textContent = '';
@@ -214,6 +221,33 @@ export function stage(svg, o) {
       for (var i = 0; i < of; i++) el('circle', { cx: -(of - 1 - i) * 18, cy: 0, r: i === at ? 5 : 3.5, fill: i === at ? NU.red : soft, opacity: i === at ? 1 : 0.55 }, pips);
     }
   };
+}
+
+/* ------------------------------------------------------------ how to read this: a key in one row
+
+   For a room new to the picture: what a dot, a line or a box stands for, in a row of plain words above
+   the figure (under the title, right-aligned). items: [{ mark: 'dot' | 'line' | 'box' | 'none', colour?, text }]. */
+/**
+ * @param {Element} g  a group the key is drawn into (emptied first)
+ * @param {{mark?: string, colour?: string, text: string}[]|undefined} items
+ * @param {{ink: string, soft: string, dark: boolean}} st
+ */
+export function keyRow(g, items, st) {
+  g.textContent = '';
+  if (!items || !items.length) return;
+  var size = 16, y = 124, gap = 26, sym = 22;
+  var widths = items.map(function (it) { return (it.mark && it.mark !== 'none' ? sym + 8 : 0) + textWidth(it.text, size, true); });
+  var x = W - 64 - widths.reduce(function (a, b) { return a + b; }, 0) - gap * (items.length - 1);
+  el('text', { x: x - 14, y: y, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 1.5, fill: NU.red }, g, 'HOW TO READ IT');
+  items.forEach(function (it, i) {
+    var c = it.colour || (st.dark ? NU.paper : NU.navy), cx = x;
+    if (it.mark === 'dot') el('circle', { cx: cx + 8, cy: y - 5, r: 7, fill: it.colour || '#fff', stroke: st.dark ? NU.paper : NU.ink, 'stroke-width': 2 }, g);
+    else if (it.mark === 'line') el('line', { x1: cx, y1: y - 5, x2: cx + sym, y2: y - 5, stroke: c, 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+    else if (it.mark === 'box') el('rect', { x: cx, y: y - 14, width: sym, height: 16, rx: 2, fill: c }, g);
+    if (it.mark && it.mark !== 'none') cx += sym + 8;
+    el('text', { x: cx, y: y, 'font-family': NU.sans, 'font-size': size, fill: st.ink }, g, it.text);
+    x += widths[i] + gap;
+  });
 }
 
 /* ------------------------------------------------------------ why? an explanation over the figure

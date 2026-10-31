@@ -1,0 +1,57 @@
+{
+ "steps": [
+  {
+   "id": "nodes",
+   "code": "import altair as alt\nimport pandas as pd\n\n# A network is a list of pairs: one row for each edge\nedges = pd.DataFrame({\n    'source': ['A', 'A', 'A', 'A', 'B', 'B', 'C', 'D', 'E'],\n    'target': ['B', 'C', 'G', 'H', 'C', 'F', 'D', 'E', 'F'],\n})\n\n# Where to draw each node: we chose these numbers\nnodes = pd.DataFrame({\n    'id': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],\n    'x':  [2, 4, 3, 3, 5, 5, 0, 1],\n    'y':  [3, 3, 2, 0, 0, 2, 4, 1],\n})\n\ndots = alt.Chart(nodes).mark_circle(size=900, opacity=1).encode(\n    x=alt.X('x:Q', axis=None), y=alt.Y('y:Q', axis=None))\nnames = dots.mark_text(color='white', fontWeight='bold').encode(\n    text='id:N')\n\n(dots + names).configure_view(stroke=None)   # no frame round the chart\n",
+   "new": [
+    "mark_circle",
+    "mark_text"
+   ]
+  },
+  {
+   "id": "links",
+   "code": "import altair as alt\nimport pandas as pd\n\n# A network is a list of pairs: one row for each edge\nedges = pd.DataFrame({\n    'source': ['A', 'A', 'A', 'A', 'B', 'B', 'C', 'D', 'E'],\n    'target': ['B', 'C', 'G', 'H', 'C', 'F', 'D', 'E', 'F'],\n})\n\n# Where to draw each node: we chose these numbers\nnodes = pd.DataFrame({\n    'id': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],\n    'x':  [2, 4, 3, 3, 5, 5, 0, 1],\n    'y':  [3, 3, 2, 0, 0, 2, 4, 1],\n})\n\n# Give every edge the position of both of its ends\nlines = (edges\n    .merge(nodes, left_on='source', right_on='id')\n    .merge(nodes, left_on='target', right_on='id', suffixes=('', '2')))\n\nlinks = alt.Chart(lines).mark_rule(color='grey', strokeWidth=3).encode(\n    x=alt.X('x:Q', axis=None), y=alt.Y('y:Q', axis=None),\n    x2='x2:Q', y2='y2:Q')\ndots = alt.Chart(nodes).mark_circle(size=900, opacity=1).encode(\n    x='x:Q', y='y:Q')\nnames = dots.mark_text(color='white', fontWeight='bold').encode(\n    text='id:N')\n\nlinks + dots + names\n",
+   "new": [
+    ".merge(",
+    "mark_rule",
+    "x2=",
+    "links +"
+   ]
+  },
+  {
+   "id": "tube",
+   "code": "import altair as alt\nimport pandas as pd\n\nstations = pd.read_csv('tube_stations.csv')   # name, lon, lat\nedges = pd.read_csv('tube_links.csv')         # source, target, line, colour\n\n# The same join as before: each edge gets both of its ends\nlines = (edges\n    .merge(stations, left_on='source', right_on='name')\n    .merge(stations, left_on='target', right_on='name', suffixes=('', '2')))\n\nwhere = dict(x=alt.X('lon:Q', scale=alt.Scale(zero=False), axis=None),\n             y=alt.Y('lat:Q', scale=alt.Scale(zero=False), axis=None))\n\n# TfL's own colours, straight from the data: colour is the line\nlinks = alt.Chart(lines).mark_rule(strokeWidth=4).encode(\n    **where, x2='lon2:Q', y2='lat2:Q',\n    color=alt.Color('colour:N', scale=None))\ndots = alt.Chart(stations).mark_circle(size=60, color='white',\n    stroke='black', opacity=1).encode(**where, tooltip='name:N')\n\n(links + dots).properties(width=640, height=420).configure_view(stroke=None)\n",
+   "new": [
+    "read_csv",
+    "scale=None"
+   ]
+  },
+  {
+   "id": "matrix",
+   "code": "import altair as alt\nimport pandas as pd\nfrom vega_datasets import data\n\n# Les Miserables: who appears in a scene with whom (Knuth, 1993)\nnodes, links = data.miserables()\nname = nodes['name']\npairs = pd.DataFrame({'a': name[links['source']].values,\n                      'b': name[links['target']].values,\n                      'scenes': links['value']})\n# A matrix shows each pair twice: row a, column b and row b, column a\npairs = pd.concat([pairs, pairs.rename(columns={'a': 'b', 'b': 'a'})])\n\norder = sorted(name)\nalt.Chart(pairs).mark_rect().encode(\n    x=alt.X('a:N', sort=order, axis=None),\n    y=alt.Y('b:N', sort=order, axis=None),\n    color=alt.Color('scenes:Q', scale=alt.Scale(scheme='blues')),\n    tooltip=['a:N', 'b:N', 'scenes:Q'],\n).properties(width=420, height=420)\n",
+   "new": [
+    "mark_rect",
+    "pd.concat",
+    "x=alt.X('a:N'",
+    "y=alt.Y('b:N'"
+   ]
+  },
+  {
+   "id": "matrix-grouped",
+   "code": "import altair as alt\nimport pandas as pd\nfrom vega_datasets import data\n\n# Les Miserables: who appears in a scene with whom (Knuth, 1993)\nnodes, links = data.miserables()\nname = nodes['name']\npairs = pd.DataFrame({'a': name[links['source']].values,\n                      'b': name[links['target']].values,\n                      'scenes': links['value']})\n# A matrix shows each pair twice: row a, column b and row b, column a\npairs = pd.concat([pairs, pairs.rename(columns={'a': 'b', 'b': 'a'})])\n\n# The only change: sort by group (who belongs together), not by name\norder = nodes.sort_values(['group', 'name'])['name'].tolist()\nalt.Chart(pairs).mark_rect().encode(\n    x=alt.X('a:N', sort=order, axis=None),\n    y=alt.Y('b:N', sort=order, axis=None),\n    color=alt.Color('scenes:Q', scale=alt.Scale(scheme='blues')),\n    tooltip=['a:N', 'b:N', 'scenes:Q'],\n).properties(width=420, height=420)\n",
+   "new": [
+    "sort_values"
+   ]
+  },
+  {
+   "id": "icicle",
+   "code": "import altair as alt\nimport pandas as pd\n\nb = pd.read_csv('london_boroughs.csv')   # borough, area, half, population\n\n# Four levels of one tree. Each level is the same 33 boroughs,\n# grouped differently, so every level adds up to all of London.\nrows = pd.concat([\n    b.assign(level='1 London',         name='London'),\n    b.assign(level='2 Inner or Outer', name=b['half']),\n    b.assign(level='3 Area',           name=b['area']),\n    b.assign(level='4 Borough',        name=b['borough']),\n])\n# Keep children under their parents: sort by the path from the root\nrows['path'] = rows['half'] + rows['area'] + rows['borough']\n\nalt.Chart(rows).mark_bar(stroke='white').encode(\n    y=alt.Y('level:O', title=None),\n    x=alt.X('sum(population):Q', title='People'),\n    detail='name:N',\n    order=alt.Order('min(path):N'),\n    color=alt.Color('half:N', title=None),\n    tooltip=['name:N', alt.Tooltip('sum(population):Q', format=',')],\n).properties(width=640, height=260)\n",
+   "new": [
+    "pd.concat",
+    "assign",
+    "sum(population)",
+    "alt.Order"
+   ]
+  }
+ ]
+}

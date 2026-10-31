@@ -29,9 +29,12 @@ import { motion } from './motion.js';
 import { linked } from './linked.js';
 import { rowtable } from './rowtable.js';
 import { stadium } from './stadium.js';
+import { bridges } from './bridges.js';
+import { network } from './network.js';
+import { tree } from './tree.js';
 
 /** @type {Record<string, {mount: (fig: any) => {update: (step: any, animate: boolean) => void, destroy?: () => void}}>} */
-var FIGURES = { bubbles: bubbles, codechart: codechart, worldmap: worldmap, motion: motion, linked: linked, rowtable: rowtable, stadium: stadium };
+var FIGURES = { bubbles: bubbles, codechart: codechart, worldmap: worldmap, motion: motion, linked: linked, rowtable: rowtable, stadium: stadium, bridges: bridges, network: network, tree: tree };
 
 var CSS = '.figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}' +
   '.figure-slide .pad{visibility:hidden}' +

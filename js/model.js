@@ -89,7 +89,7 @@
       parent.append(b);
       return b;
     };
-    const range = (parent, label, key, action) => {
+    const range = (parent, label, key2, action) => {
       const wrap3 = el2("label", "ml-range", label), input = document.createElement("input");
       input.type = "range";
       input.min = "0";
@@ -97,7 +97,7 @@
       input.step = "1";
       input.disabled = !enabled;
       input.setAttribute("aria-label", label);
-      input.value = String(view[key]);
+      input.value = String(view[key2]);
       input.oninput = () => send(action, Number(input.value));
       wrap3.append(input);
       parent.append(wrap3);
@@ -409,9 +409,9 @@
     const issues = [];
     const seen = /* @__PURE__ */ new Set();
     const add = (element, direction, px, text2) => {
-      const key = `${element}|${direction}`;
-      if (seen.has(key)) return;
-      seen.add(key);
+      const key2 = `${element}|${direction}`;
+      if (seen.has(key2)) return;
+      seen.add(key2);
       issues.push({ element, direction, px: Math.round(px * 10) / 10, text: text2 });
     };
     let smallest = null;
@@ -578,20 +578,20 @@
   }
   function chromePositions(design = {}) {
     const result = { ...DEFAULTS }, used = /* @__PURE__ */ new Set();
-    for (const key of Object.keys(DEFAULTS)) {
-      const wanted = CHROME_SLOTS.includes(design[key]) ? design[key] : DEFAULTS[key];
+    for (const key2 of Object.keys(DEFAULTS)) {
+      const wanted = CHROME_SLOTS.includes(design[key2]) ? design[key2] : DEFAULTS[key2];
       const slot = !used.has(wanted) ? wanted : CHROME_SLOTS.find((s) => !used.has(s));
-      result[key] = slot;
+      result[key2] = slot;
       used.add(slot);
     }
     return result;
   }
-  function setChromeSlot(slide, key, slot) {
-    if (!Object.hasOwn(DEFAULTS, key) || !CHROME_SLOTS.includes(slot)) return false;
-    const design = slide.design || (slide.design = {}), positions = chromePositions(design), previous = positions[key];
-    const occupant = Object.keys(positions).find((k) => k !== key && positions[k] === slot);
+  function setChromeSlot(slide, key2, slot) {
+    if (!Object.hasOwn(DEFAULTS, key2) || !CHROME_SLOTS.includes(slot)) return false;
+    const design = slide.design || (slide.design = {}), positions = chromePositions(design), previous = positions[key2];
+    const occupant = Object.keys(positions).find((k) => k !== key2 && positions[k] === slot);
     if (occupant) positions[occupant] = previous;
-    positions[key] = slot;
+    positions[key2] = slot;
     Object.assign(design, positions, { chromeLayout: "regions" });
     return true;
   }
@@ -621,9 +621,9 @@
       slots[name] = slot;
     }
     const positions = chromePositions(slide.design);
-    for (const [key, node] of Object.entries(nodes)) if (node) {
-      node.dataset.chromeItem = key;
-      slots[positions[key]].appendChild(node);
+    for (const [key2, node] of Object.entries(nodes)) if (node) {
+      node.dataset.chromeItem = key2;
+      slots[positions[key2]].appendChild(node);
     }
     for (const region2 of [header, footer]) region2.classList.toggle("region-empty", !region2.querySelector("[data-chrome-item]"));
   }
@@ -643,22 +643,22 @@
       }
       active2 = null;
     }
-    function commit(key, slot) {
-      if (chromePositions(slide.design)[key] === slot) {
+    function commit(key2, slot) {
+      if (chromePositions(slide.design)[key2] === slot) {
         dismiss();
         return;
       }
       dismiss(false);
-      if (setChromeSlot(slide, key, slot)) onChange(key);
+      if (setChromeSlot(slide, key2, slot)) onChange(key2);
     }
-    function show(handle, key, keyboard) {
+    function show(handle, key2, keyboard) {
       dismiss(false);
       active2 = handle;
       handle.setAttribute("aria-expanded", "true");
       overlay = document.createElement("div");
       overlay.className = "canvas-region-targets";
       overlay.setAttribute("role", "group");
-      overlay.setAttribute("aria-label", "Choose a position for " + LABELS[key]);
+      overlay.setAttribute("aria-label", "Choose a position for " + LABELS[key2]);
       const positions = chromePositions(slide.design);
       for (const [i, slot] of CHROME_SLOTS.entries()) {
         const button = document.createElement("button");
@@ -666,12 +666,12 @@
         button.dataset.snapSlot = slot;
         button.style.gridColumn = String(i % 3 + 1);
         button.style.gridRow = i < 3 ? "1" : "3";
-        const occupant = Object.keys(positions).find((k) => k !== key && positions[k] === slot && root.querySelector("[data-chrome-item=" + k + "]"));
+        const occupant = Object.keys(positions).find((k) => k !== key2 && positions[k] === slot && root.querySelector("[data-chrome-item=" + k + "]"));
         button.textContent = slotLabel(slot) + (occupant ? " · swap " + LABELS[occupant] : "");
-        button.setAttribute("aria-label", "Move " + LABELS[key] + " to " + slotLabel(slot) + (occupant ? ", swap with " + LABELS[occupant] : ""));
+        button.setAttribute("aria-label", "Move " + LABELS[key2] + " to " + slotLabel(slot) + (occupant ? ", swap with " + LABELS[occupant] : ""));
         button.onclick = (e) => {
           e.stopPropagation();
-          commit(key, slot);
+          commit(key2, slot);
         };
         button.onkeydown = (e) => {
           if (e.metaKey || e.ctrlKey) return;
@@ -695,16 +695,16 @@
       hint.setAttribute("role", "status");
       overlay.appendChild(hint);
       root.appendChild(overlay);
-      if (keyboard) overlay.querySelector('button[data-snap-slot="' + positions[key] + '"]')?.focus();
+      if (keyboard) overlay.querySelector('button[data-snap-slot="' + positions[key2] + '"]')?.focus();
     }
     root.querySelectorAll("[data-chrome-item]").forEach((item) => {
-      const key = item.dataset.chromeItem, handle = document.createElement("button");
+      const key2 = item.dataset.chromeItem, handle = document.createElement("button");
       handle.type = "button";
       handle.className = "canvas-region-handle";
-      handle.dataset.moveItem = key;
+      handle.dataset.moveItem = key2;
       handle.textContent = "✥";
-      handle.title = "Drag " + LABELS[key] + " to a slot, or click to choose";
-      handle.setAttribute("aria-label", "Move " + LABELS[key]);
+      handle.title = "Drag " + LABELS[key2] + " to a slot, or click to choose";
+      handle.setAttribute("aria-label", "Move " + LABELS[key2]);
       handle.setAttribute("aria-expanded", "false");
       item.parentElement.appendChild(handle);
       let start = null, dragging = false, suppressClick = false;
@@ -728,7 +728,7 @@
         if (!start) return;
         if (!dragging && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 5) {
           dragging = true;
-          show(handle, key, false);
+          show(handle, key2, false);
         }
         if (!dragging) return;
         const target = hit(e);
@@ -741,7 +741,7 @@
         dragging = false;
         suppressClick = true;
         const target = hit(e);
-        if (target && overlay?.contains(target)) commit(key, target.getAttribute("data-snap-slot"));
+        if (target && overlay?.contains(target)) commit(key2, target.getAttribute("data-snap-slot"));
         else dismiss();
       };
       handle.onpointercancel = cancel;
@@ -762,7 +762,7 @@
           suppressClick = false;
           return;
         }
-        show(handle, key, true);
+        show(handle, key2, true);
       };
     });
   }
@@ -776,8 +776,8 @@
         const line = SF.parseKeywordLine(read(slide, half[1]) || "");
         return half[2] === "term" ? line.term : line.def;
       }
-      return String(path).split(".").reduce(function(at, key) {
-        return at == null ? void 0 : at[key];
+      return String(path).split(".").reduce(function(at, key2) {
+        return at == null ? void 0 : at[key2];
       }, slide);
     }
     function write(slide, path, value) {
@@ -790,8 +790,8 @@
       const parts = String(path).split(".");
       const last = parts.pop();
       if (last === void 0) return;
-      const at = parts.reduce(function(node, key) {
-        return node[key];
+      const at = parts.reduce(function(node, key2) {
+        return node[key2];
       }, slide);
       if (Array.isArray(at)) {
         const i = Number(last);
@@ -840,8 +840,8 @@
       var closing = deck.closingNote || deck.org;
       if (closing) footer.appendChild(el2("span", "cp-footer-note", closing));
       pad.appendChild(footer);
-      function field(tag, cls, key) {
-        return rich(tag, cls, slide, key, slide[key] || "");
+      function field(tag, cls, key2) {
+        return rich(tag, cls, slide, key2, slide[key2] || "");
       }
       function heading() {
         body.appendChild(field("h2", "cp-heading", "title"));
@@ -1522,9 +1522,9 @@
         g.appendChild(vlab);
         svg.appendChild(g);
       });
-      var key = svgEl("text", { x: labelRoom, y: H2 - 10, class: "ch-tick" });
-      key.textContent = (icons.length > 1 ? "Each icon" : icons[0]) + " = " + fmt(unit) + (data.series[0] && data.series[0].name ? " " + data.series[0].name.toLowerCase() : "");
-      svg.appendChild(key);
+      var key2 = svgEl("text", { x: labelRoom, y: H2 - 10, class: "ch-tick" });
+      key2.textContent = (icons.length > 1 ? "Each icon" : icons[0]) + " = " + fmt(unit) + (data.series[0] && data.series[0].name ? " " + data.series[0].name.toLowerCase() : "");
+      svg.appendChild(key2);
       return svg;
     }
     function radarChart(data, slide) {
@@ -2748,22 +2748,22 @@
         slide.exploration = c;
         (then || changed)();
       }
-      function text2(label, key, object) {
+      function text2(label, key2, object) {
         var o = object || c;
-        parent.appendChild(UI.field(label, UI.text(o[key] || "", function(v) {
-          if (key === "prompt" && slide.feedback && slide.feedback.prompt === o[key]) slide.feedback.prompt = v;
-          o[key] = v;
+        parent.appendChild(UI.field(label, UI.text(o[key2] || "", function(v) {
+          if (key2 === "prompt" && slide.feedback && slide.feedback.prompt === o[key2]) slide.feedback.prompt = v;
+          o[key2] = v;
           commit();
         })));
       }
-      function number(label, key, object) {
+      function number(label, key2, object) {
         var o = object || c;
         var input = node("input");
         input.type = "number";
-        input.value = String(o[key]);
+        input.value = String(o[key2]);
         input.oninput = function() {
           if (Number.isFinite(input.valueAsNumber)) {
-            o[key] = input.valueAsNumber;
+            o[key2] = input.valueAsNumber;
             commit();
           }
         };
@@ -2773,9 +2773,9 @@
         };
         parent.appendChild(UI.field(label, input));
       }
-      function image(label, key, object) {
+      function image(label, key2, object) {
         var o = object || c;
-        text2(label + " URL", key, o);
+        text2(label + " URL", key2, o);
         var file = node("input");
         file.type = "file";
         file.accept = "image/*";
@@ -2789,15 +2789,15 @@
           }
           var reader = new FileReader();
           reader.onload = function() {
-            o[key] = String(reader.result);
+            o[key2] = String(reader.result);
             commit(redraw);
           };
           reader.readAsDataURL(f);
         };
         parent.appendChild(UI.field("Upload " + label, file));
-        if (String(o[key] || "").trim()) {
+        if (String(o[key2] || "").trim()) {
           parent.appendChild(UI.button("Remove " + label.toLowerCase(), "ghost", function() {
-            o[key] = "";
+            o[key2] = "";
             commit(redraw);
           }));
         }
@@ -3039,19 +3039,19 @@
 
   // lab/src/experiments/experimentKinds.ts
   var KINDS = ["grid", "long", "groups", "lines", "balance", "oblique", "donut", "exploded", "rose", "units", "nested", "stream", "area", "heatmap", "channels", "scales", "network"];
-  function resolveExperimentPreset(key, data = "", prompt = "") {
-    if (key !== "channels") return key;
+  function resolveExperimentPreset(key2, data = "", prompt = "") {
+    if (key2 !== "channels") return key2;
     const header = String(data).split(/\r?\n/, 1)[0].split(/\t|\|/).map((s) => s.trim().toLowerCase());
     if (header[0] === "channel" && header[1] === "a" && header[2] === "b") return "perception";
     if (/each pair asks the same question:\s*b is what percentage of a\?/i.test(String(prompt))) return "perception";
-    return key;
+    return key2;
   }
   function kindPicture(data, st, ink) {
     if (!KINDS.includes(st.kind)) return null;
     const t = parseTable(data), els = [];
-    const text2 = (x, y, v2, size = 20, anchor = "start", key, more = {}) => els.push({ tag: "text", x, y, text: String(v2), size, anchor, key, num: typeof v2 === "number", fill: ink, ...more });
-    const poly = (key, pts, fill2, more = {}) => els.push({ tag: "poly", key, pts, fill: fill2, fo: 1, ...more });
-    const line = (key, x, y, x2, y2, stroke, sw = 1, so = 1) => els.push({ tag: "line", key, x, y, x2, y2, stroke, sw, so });
+    const text2 = (x, y, v2, size = 20, anchor = "start", key2, more = {}) => els.push({ tag: "text", x, y, text: String(v2), size, anchor, key: key2, num: typeof v2 === "number", fill: ink, ...more });
+    const poly = (key2, pts, fill2, more = {}) => els.push({ tag: "poly", key: key2, pts, fill: fill2, fo: 1, ...more });
+    const line = (key2, x, y, x2, y2, stroke, sw = 1, so = 1) => els.push({ tag: "line", key: key2, x, y, x2, y2, stroke, sw, so });
     const cats = t.categories.slice(0, 12), ser = t.series.slice(0, 6);
     if (!cats.length || !ser.length) {
       text2(500, 180, "Add a table with category labels and numeric values.", 24, "middle");
@@ -3696,11 +3696,11 @@
     });
     function config(s) {
       var raw = s.experiment || {}, resolved = resolveExperimentPreset(raw.preset || "", s.body || "", raw.prompt || "");
-      var key = Object.prototype.hasOwnProperty.call(presets, resolved) ? resolved : "polling", preset2 = presets[key];
+      var key2 = Object.prototype.hasOwnProperty.call(presets, resolved) ? resolved : "polling", preset2 = presets[key2];
       var states = Array.isArray(raw.states) ? raw.states.filter(function(x) {
         return x && typeof x === "object" && !Array.isArray(x);
       }) : [];
-      return { prompt: String(raw.prompt || preset2.prompt), states: (states.length ? states : preset2.states).slice(0, 8), preset: key, duration: Math.max(200, Math.min(4e3, Number(raw.duration) || 1600)) };
+      return { prompt: String(raw.prompt || preset2.prompt), states: (states.length ? states : preset2.states).slice(0, 8), preset: key2, duration: Math.max(200, Math.min(4e3, Number(raw.duration) || 1600)) };
     }
     function node(tag, text2, parent) {
       var n = document.createElement(tag);
@@ -3717,7 +3717,7 @@
       if (parent) parent.appendChild(n);
       return n;
     }
-    function mark(parent, key, kind, a) {
+    function mark(parent, key2, kind, a) {
       var points = [], vertices;
       if (kind === "rect") vertices = [[a.x, a.y], [a.x + a.width, a.y], [a.x + a.width, a.y + a.height], [a.x, a.y + a.height]];
       if (kind === "polygon") vertices = a.vertices;
@@ -3736,7 +3736,7 @@
           points.push([u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t]);
         }
       }
-      return svg("polygon", { "data-motion": key, points: points.map(function(p2) {
+      return svg("polygon", { "data-motion": key2, points: points.map(function(p2) {
         return p2.join(",");
       }).join(" "), fill: a.fill, stroke: a.stroke || "none", "stroke-width": a.stroke ? 2 : 0 }, parent);
     }
@@ -3805,9 +3805,9 @@
         paintKinds(chart, drawn);
         return;
       }
-      function text2(x, y2, value2, size, anchor, key) {
+      function text2(x, y2, value2, size, anchor, key2) {
         var attrs = { x, y: y2, fill: ink, "font-size": size || 22, "text-anchor": anchor || "start" };
-        if (key) attrs["data-motion"] = key;
+        if (key2) attrs["data-motion"] = key2;
         if (typeof value2 === "number") attrs["data-number"] = "true";
         return svg("text", attrs, chart, String(value2));
       }
@@ -4106,19 +4106,19 @@
         s.chartSource = v;
         changed();
       })));
-      ["changes", "constants", "takeaway", "caveat"].forEach(function(key) {
+      ["changes", "constants", "takeaway", "caveat"].forEach(function(key2) {
         var labels = { changes: "PDF: what changes", constants: "PDF: what stays fixed", takeaway: "PDF: key takeaway", caveat: "PDF: limitations / caution" };
-        parent.appendChild(UI.field(labels[key], UI.text(((s.experiment || {}).print || {})[key] || "", function(v) {
-          s.experiment = Object.assign({}, s.experiment, { print: Object.assign({}, (s.experiment || {}).print, { [key]: v }) });
+        parent.appendChild(UI.field(labels[key2], UI.text(((s.experiment || {}).print || {})[key2] || "", function(v) {
+          s.experiment = Object.assign({}, s.experiment, { print: Object.assign({}, (s.experiment || {}).print, { [key2]: v }) });
           changed();
         })));
       });
       c.states.forEach(function(st, i) {
-        function save(key, v) {
+        function save(key2, v) {
           var states = c.states.map(function(x) {
             return Object.assign({}, x);
           });
-          states[i][key] = v;
+          states[i][key2] = v;
           c.states = states;
           s.experiment = Object.assign({}, s.experiment, { states });
           changed();
@@ -4391,8 +4391,19 @@
       dark,
       title,
       /** @param {string} text */
+      /* One line when it fits beside the step pips; a longer caption wraps to two lines, the first raised, so it never runs into them. */
       caption: function(text2) {
-        caption.textContent = text2 || "";
+        caption.textContent = "";
+        var lines = wrap(text2 || "", 22, W - 64 - 64 - 140);
+        if (lines.length < 2) {
+          caption.textContent = text2 || "";
+          set(caption, { y: H - 34 });
+          return;
+        }
+        set(caption, { y: H - 60 });
+        lines.slice(0, 2).forEach(function(l, i) {
+          el("tspan", { x: 64, dy: i ? 27 : 0 }, caption, l);
+        });
       },
       /** @param {number} at @param {number} of */
       pips: function(at, of) {
@@ -4401,6 +4412,27 @@
         for (var i = 0; i < of; i++) el("circle", { cx: -(of - 1 - i) * 18, cy: 0, r: i === at ? 5 : 3.5, fill: i === at ? NU.red : soft, opacity: i === at ? 1 : 0.55 }, pips);
       }
     };
+  }
+  function keyRow(g, items2, st) {
+    g.textContent = "";
+    if (!items2 || !items2.length) return;
+    var size = 16, y = 124, gap = 26, sym = 22;
+    var widths = items2.map(function(it) {
+      return (it.mark && it.mark !== "none" ? sym + 8 : 0) + textWidth(it.text, size, true);
+    });
+    var x = W - 64 - widths.reduce(function(a, b) {
+      return a + b;
+    }, 0) - gap * (items2.length - 1);
+    el("text", { x: x - 14, y, "text-anchor": "end", "font-family": NU.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 1.5, fill: NU.red }, g, "HOW TO READ IT");
+    items2.forEach(function(it, i) {
+      var c = it.colour || (st.dark ? NU.paper : NU.navy), cx = x;
+      if (it.mark === "dot") el("circle", { cx: cx + 8, cy: y - 5, r: 7, fill: it.colour || "#fff", stroke: st.dark ? NU.paper : NU.ink, "stroke-width": 2 }, g);
+      else if (it.mark === "line") el("line", { x1: cx, y1: y - 5, x2: cx + sym, y2: y - 5, stroke: c, "stroke-width": 4, "stroke-linecap": "round" }, g);
+      else if (it.mark === "box") el("rect", { x: cx, y: y - 14, width: sym, height: 16, rx: 2, fill: c }, g);
+      if (it.mark && it.mark !== "none") cx += sym + 8;
+      el("text", { x: cx, y, "font-family": NU.sans, "font-size": size, fill: st.ink }, g, it.text);
+      x += widths[i] + gap;
+    });
   }
   function wrap(text2, size, width) {
     var words = String(text2).split(/\s+/), lines = [], line = "";
@@ -4714,10 +4746,10 @@
           cancel();
           st.caption(step.caption);
           plot.paint({ colour: !!step.colour, lit: step.lit, fade: 0.4 });
-          var f = step.focus || {}, xd = f.x || d.x.domain, yd = f.y || d.y.domain, key = xd.join() + "|" + yd.join();
-          if (key !== zoomed) {
+          var f = step.focus || {}, xd = f.x || d.x.domain, yd = f.y || d.y.domain, key2 = xd.join() + "|" + yd.join();
+          if (key2 !== zoomed) {
             plot.rescale(xd, yd, animate);
-            zoomed = key;
+            zoomed = key2;
           }
           plot.filter(step.only ? function(r) {
             return r.group === step.only;
@@ -6189,8 +6221,986 @@
     }
   };
 
+  // src/figures/bridges.js
+  var LAND = {
+    N: { name: "North bank", at: [400, 196], dot: [560, 196] },
+    S: { name: "South bank", at: [400, 572], dot: [560, 560] },
+    I: { name: "The island (Kneiphof)", at: [560, 384], dot: [560, 378] },
+    E: { name: "The east", at: [1060, 384], dot: [960, 378] }
+  };
+  var BRIDGES = [
+    { a: "I", b: "N", x: 480, y: 286, rot: 90 },
+    { a: "I", b: "N", x: 640, y: 286, rot: 90 },
+    { a: "I", b: "S", x: 480, y: 470, rot: 90 },
+    { a: "I", b: "S", x: 640, y: 470, rot: 90 },
+    { a: "I", b: "E", x: 742, y: 378, rot: 0 },
+    { a: "N", b: "E", x: 900, y: 270, rot: 80 },
+    { a: "S", b: "E", x: 900, y: 488, rot: 100 }
+  ];
+  var EIGHTH = { a: "N", b: "S", x: 200, y: 384, rot: 90 };
+  var WATER = "#5b8db8";
+  var GROUND = "#e9e1cf";
+  var ISLAND = "#efe8d8";
+  var bridges = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var svg = fig.svg, st = fig.stage;
+      var city = el("g", {}, svg);
+      el("rect", { x: 0, y: 118, width: W, height: 538, fill: GROUND }, city);
+      var river = el("g", { fill: "none", stroke: WATER, "stroke-linecap": "round", "stroke-linejoin": "round" }, city);
+      el("path", { d: "M-20 384 L560 384", "stroke-width": 96 }, river);
+      el("ellipse", { cx: 560, cy: 378, rx: 200, ry: 118, fill: WATER, stroke: "none" }, river);
+      el("path", { d: "M700 340 C820 300 900 266 1300 236", "stroke-width": 74 }, river);
+      el("path", { d: "M700 416 C820 456 900 492 1300 524", "stroke-width": 74 }, river);
+      el("ellipse", { cx: 560, cy: 378, rx: 128, ry: 52, fill: ISLAND, stroke: "#cbbf9f", "stroke-width": 2 }, city);
+      var landText = Object.keys(LAND).map(function(k) {
+        var l = (
+          /** @type {any} */
+          LAND[k]
+        );
+        return el("text", { x: l.at[0], y: l.at[1] + (k === "I" ? 6 : 0), "text-anchor": "middle", "font-family": NU.sans, "font-size": k === "I" ? 17 : 20, "font-weight": 700, fill: "#5a4a2a", "pointer-events": "none" }, city, l.name);
+      });
+      var zones = {
+        N: el("rect", { x: 0, y: 118, width: W, height: 120, fill: "transparent" }, city),
+        S: el("rect", { x: 0, y: 530, width: W, height: 126, fill: "transparent" }, city),
+        I: el("ellipse", { cx: 560, cy: 378, rx: 128, ry: 52, fill: "transparent" }, city),
+        E: el("path", { d: "M780 378 L1280 300 L1280 460 Z", fill: "transparent" }, city)
+      };
+      var deck = el("g", {}, svg);
+      function bridgeShape(b, i, parent) {
+        var g = el("g", { transform: "translate(" + b.x + " " + b.y + ") rotate(" + b.rot + ")", cursor: fig.interactive ? "pointer" : null }, parent);
+        var plank = el("rect", { x: -52, y: -15, width: 104, height: 30, rx: 5, fill: "#8a6a43", stroke: "#5b4426", "stroke-width": 2 }, g);
+        var num = el("text", { x: 0, y: 7, "text-anchor": "middle", "font-family": NU.sans, "font-size": 19, "font-weight": 700, fill: "#fff", transform: "rotate(" + -b.rot + ")" }, g, String(i + 1));
+        return { g, plank, num };
+      }
+      var planks = BRIDGES.map(function(b, i) {
+        return bridgeShape(b, i, deck);
+      });
+      var extra = bridgeShape(EIGHTH, 7, deck);
+      var walker = el("circle", { r: 13, fill: NU.red, stroke: "#fff", "stroke-width": 3, opacity: 0, "pointer-events": "none" }, svg);
+      var status = el("text", { x: W - 64, y: 100, "text-anchor": "end", "font-family": NU.sans, "font-size": 22, "font-weight": 700, fill: st.ink }, svg);
+      var again = el("g", { cursor: "pointer", display: "none" }, svg);
+      el("rect", { x: W - 64 - 150, y: 128, width: 150, height: 38, rx: 19, fill: NU.red }, again);
+      el("text", { x: W - 64 - 75, y: 153, "text-anchor": "middle", "font-family": NU.sans, "font-size": 17, "font-weight": 700, fill: "#fff" }, again, "Start again");
+      var graph = el("g", { opacity: 0, "pointer-events": "none" }, svg);
+      function edgePath(b, bow) {
+        var p = (
+          /** @type {any} */
+          LAND[b.a].dot
+        ), q = (
+          /** @type {any} */
+          LAND[b.b].dot
+        ), mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+        var dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy);
+        return "M" + p[0] + " " + p[1] + " Q" + (mx - dy / len * bow) + " " + (my + dx / len * bow) + " " + q[0] + " " + q[1];
+      }
+      var bows = [-60, 60, 60, -60, 0, -40, 40];
+      var edges = BRIDGES.map(function(b, i) {
+        return el("path", { d: edgePath(b, bows[i]), fill: "none", stroke: st.ink, "stroke-width": 5 }, graph);
+      });
+      var eighthEdge = el("path", { d: "M560 196 C 140 250, 140 506, 560 560", fill: "none", stroke: NU.red, "stroke-width": 5, "stroke-dasharray": "12 9", opacity: 0 }, graph);
+      var dots = Object.keys(LAND).map(function(k) {
+        var l = (
+          /** @type {any} */
+          LAND[k]
+        );
+        return {
+          k,
+          dot: el("circle", { cx: l.dot[0], cy: l.dot[1], r: 26, fill: NU.navy, stroke: "#fff", "stroke-width": 3 }, graph),
+          deg: el("text", { x: l.dot[0], y: l.dot[1] + 9, "text-anchor": "middle", "font-family": NU.sans, "font-size": 26, "font-weight": 700, fill: "#fff", opacity: 0 }, graph, ""),
+          name: el("text", { x: l.dot[0] + (k === "E" ? 0 : k === "I" ? -46 : 0), y: l.dot[1] + (k === "N" ? -40 : k === "S" ? 56 : k === "E" ? -40 : 8), "text-anchor": k === "I" ? "end" : "middle", "font-family": NU.sans, "font-size": 17, fill: st.soft }, graph, l.name)
+        };
+      });
+      var here = (
+        /** @type {string|null} */
+        null
+      ), used = (
+        /** @type {number[]} */
+        []
+      ), show = "city", cancel = function() {
+      };
+      function moveWalker(to, animate) {
+        var fx = Number(walker.getAttribute("cx") || to[0]), fy = Number(walker.getAttribute("cy") || to[1]);
+        cancel();
+        cancel = tween(animate ? 450 : 0, function(k) {
+          set(walker, { cx: lerp(fx, to[0], k), cy: lerp(fy, to[1], k) });
+        });
+      }
+      function paint() {
+        planks.forEach(function(p, i) {
+          set(p.plank, { fill: used.indexOf(i) >= 0 ? NU.red : "#8a6a43", stroke: used.indexOf(i) >= 0 ? "#7a0a1c" : "#5b4426" });
+        });
+        set(walker, { opacity: here ? 1 : 0 });
+        if (show !== "city") {
+          status.textContent = "";
+          again.setAttribute("display", "none");
+          return;
+        }
+        var left = here ? BRIDGES.map(function(b, i) {
+          return i;
+        }).filter(function(i) {
+          return used.indexOf(i) < 0 && (BRIDGES[i].a === here || BRIDGES[i].b === here);
+        }) : [];
+        status.textContent = !here ? "Click a piece of land to start" : used.length === 7 ? "All seven! (Check again…)" : !left.length ? "Stuck: " + used.length + " of 7 crossed, no bridge left from here" : used.length + " of 7 crossed";
+        set(status, { fill: here && !left.length ? NU.red : st.ink });
+        again.setAttribute("display", fig.interactive && here ? "inline" : "none");
+      }
+      function cross(i, animate) {
+        var b = BRIDGES[i];
+        if (!here || used.indexOf(i) >= 0 || b.a !== here && b.b !== here) return false;
+        here = b.a === here ? b.b : b.a;
+        used.push(i);
+        moveWalker(
+          /** @type {any} */
+          LAND[here].at.map(function(v, j) {
+            return j ? v + 26 : v;
+          }),
+          animate
+        );
+        return true;
+      }
+      function start(land) {
+        here = land;
+        used = [];
+        var at = (
+          /** @type {any} */
+          LAND[land].at
+        );
+        set(walker, { cx: at[0], cy: at[1] + 26 });
+      }
+      if (fig.interactive) {
+        Object.keys(zones).forEach(function(k) {
+          zones[k].addEventListener("click", function() {
+            if (show === "city" && !here) {
+              start(k);
+              paint();
+            }
+          });
+        });
+        planks.forEach(function(p, i) {
+          p.g.addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (show === "city" && cross(i, true)) paint();
+          });
+        });
+        again.addEventListener("click", function(e) {
+          e.stopPropagation();
+          here = null;
+          used = [];
+          paint();
+        });
+      }
+      var fade = function() {
+      };
+      return {
+        /** @param {any} step @param {boolean} animate */
+        update: function(step, animate) {
+          st.caption(step.caption);
+          var was = show;
+          show = step.show || "city";
+          if (step.walk && step.from) {
+            start(step.from);
+            step.walk.forEach(function(n) {
+              cross(n - 1, false);
+            });
+          } else if (show !== "city") {
+            here = null;
+            used = [];
+          }
+          var toGraph = show !== "city" ? 1 : 0, fromGraph = was !== "city" ? 1 : 0;
+          fade();
+          fade = tween(animate && toGraph !== fromGraph ? 1300 : 0, function(k) {
+            var g = lerp(fromGraph, toGraph, k);
+            set(city, { opacity: 1 - g * 0.85 });
+            set(deck, { opacity: 1 - g });
+            set(graph, { opacity: g });
+            landText.forEach(function(t) {
+              set(t, { opacity: 1 - g });
+            });
+          });
+          var degree = show === "degree" || show === "eighth";
+          var count = (
+            /** @type {Record<string, number>} */
+            { N: 0, S: 0, I: 0, E: 0 }
+          );
+          BRIDGES.forEach(function(b) {
+            count[b.a]++;
+            count[b.b]++;
+          });
+          if (show === "eighth") {
+            count.N++;
+            count.S++;
+          }
+          dots.forEach(function(o) {
+            var odd = count[o.k] % 2 === 1;
+            o.deg.textContent = String(count[o.k]);
+            set(o.deg, { opacity: degree ? 1 : 0 });
+            set(o.dot, { fill: degree && odd ? NU.red : NU.navy });
+          });
+          set(eighthEdge, { opacity: show === "eighth" ? 1 : 0 });
+          set(extra.g, { display: "none" });
+          edges.forEach(function(e) {
+            set(e, { stroke: st.ink });
+          });
+          paint();
+        },
+        destroy: function() {
+          cancel();
+          fade();
+        }
+      };
+    }
+  };
+
+  // src/figures/network.js
+  var PLOT4 = { x0: 70, y0: 140, x1: W - 70, y1: H - 80 };
+  function key(l) {
+    return l.source < l.target ? l.source + "-" + l.target : l.target + "-" + l.source;
+  }
+  var network = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage;
+      var nodes = (d.nodes || []).map(function(n) {
+        return Object.assign({}, n);
+      }), links = d.links || [];
+      var byId = (
+        /** @type {Record<string, any>} */
+        {}
+      );
+      nodes.forEach(function(n) {
+        byId[n.id] = n;
+        n.links = [];
+        n.near = {};
+      });
+      links.forEach(function(l) {
+        if (!byId[l.source] || !byId[l.target]) return;
+        byId[l.source].links.push(l);
+        byId[l.target].links.push(l);
+        byId[l.source].near[l.target] = true;
+        byId[l.target].near[l.source] = true;
+      });
+      nodes.forEach(function(n) {
+        n.degree = Object.keys(n.near).length;
+      });
+      var hubs = nodes.slice().sort(function(a, b) {
+        return b.degree - a.degree;
+      }).slice(0, 8).map(function(n) {
+        return n.id;
+      });
+      var r = d.r || 9, ink = st.ink, soft = st.soft;
+      var paper = !st.dark;
+      var nodeFill = function(n) {
+        return d.colours && n.group != null && d.colours[n.group] || d.nodeColour || (paper ? NU.navy : NU.paper);
+      };
+      var linkStroke = function(l) {
+        return d.colours && l.line && d.colours[l.line] || d.linkColour || (paper ? "#8a96a3" : "rgba(255,255,255,.45)");
+      };
+      var layer = el("g", {}, svg), keyG = el("g", { "pointer-events": "none" }, svg), cards = el("g", { "pointer-events": "none" }, svg);
+      var view = "", step = (
+        /** @type {any} */
+        {}
+      ), pos = (
+        /** @type {Record<string, number[]>} */
+        {}
+      ), cancel = function() {
+      };
+      var draw = (
+        /** @type {any} */
+        {}
+      ), hovered = (
+        /** @type {string|null} */
+        null
+      );
+      function linkView(box2) {
+        var g = el("g", {}, layer);
+        if (step.geo) el("text", { x: PLOT4.x1, y: PLOT4.y0 - 6, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: soft }, g, "Each station drawn where it really is");
+        var pairCount = (
+          /** @type {Record<string, number>} */
+          {}
+        ), pairSeen = (
+          /** @type {Record<string, number>} */
+          {}
+        );
+        links.forEach(function(l) {
+          pairCount[key(l)] = (pairCount[key(l)] || 0) + 1;
+        });
+        var lines = links.map(function(l) {
+          var k = key(l), i = (pairSeen[k] = (pairSeen[k] || 0) + 1) - 1;
+          return { l, off: (i - (pairCount[k] - 1) / 2) * (box2 ? 3 : 4.2), node: el("line", { stroke: linkStroke(l), "stroke-width": box2 ? 3 : d.colours && l.line ? 4 : 2.2, "stroke-linecap": "round" }, g) };
+        });
+        var dots = nodes.map(function(n) {
+          return { n, node: el("circle", { r: box2 ? r * 1.6 : r, fill: d.colours && l0(n) ? "#fff" : nodeFill(n), stroke: d.colours && l0(n) ? "#14181f" : paper ? "#fff" : NU.stage, "stroke-width": 2, cursor: fig.interactive ? "grab" : null }, g) };
+        });
+        function l0(n) {
+          return n.group == null;
+        }
+        var names = nodes.map(function(n) {
+          return el("text", {
+            "font-family": NU.sans,
+            "font-size": box2 ? 22 : 13,
+            "font-weight": box2 ? 700 : 600,
+            fill: box2 ? "#fff" : ink,
+            "text-anchor": box2 ? "middle" : "start",
+            "pointer-events": "none",
+            stroke: box2 ? null : paper ? NU.paper : NU.stage,
+            "stroke-width": box2 ? null : 3.5,
+            "paint-order": "stroke"
+          }, g, n.label || n.id);
+        });
+        function place() {
+          lines.forEach(function(o) {
+            var a = pos[o.l.source], b = pos[o.l.target];
+            if (!a || !b) return;
+            var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, ox = -dy / len * o.off, oy = dx / len * o.off;
+            set(o.node, { x1: a[0] + ox, y1: a[1] + oy, x2: b[0] + ox, y2: b[1] + oy });
+          });
+          dots.forEach(function(o) {
+            var p = pos[o.n.id];
+            if (p) set(o.node, { cx: p[0], cy: p[1] });
+          });
+          names.forEach(function(t, i) {
+            var p = pos[nodes[i].id];
+            if (p) set(t, box2 ? { x: p[0], y: p[1] + 8 } : { x: p[0] + r + 4, y: p[1] - r + 2 });
+          });
+        }
+        function light(id) {
+          var lit = id && byId[id] ? byId[id] : null, edge = id && !lit ? id : null;
+          var labels = step.labels || (nodes.length > 30 ? "hubs" : "all");
+          lines.forEach(function(o) {
+            var on = lit ? o.l.source === lit.id || o.l.target === lit.id : edge ? key(o.l) === edge : true;
+            set(o.node, { opacity: on ? 1 : 0.12, stroke: edge && on ? NU.red : linkStroke(o.l), "stroke-width": edge && on ? 6 : box2 ? 3 : d.colours && o.l.line ? 4 : 2.2 });
+          });
+          dots.forEach(function(o) {
+            var on = lit ? o.n === lit || lit.near[o.n.id] : edge ? edge.split("-").indexOf(o.n.id) >= 0 : true;
+            set(o.node, { opacity: on ? 1 : 0.18, fill: lit && o.n === lit ? NU.red : edge && on ? NU.red : d.colours && l0(o.n) ? "#fff" : nodeFill(o.n) });
+          });
+          var want = names.map(function(_, i) {
+            var n = nodes[i], on = lit ? n === lit || lit.near[n.id] : box2 || labels === "all" || labels === "hubs" && hubs.indexOf(n.id) >= 0;
+            if (edge) on = box2 || edge.split("-").indexOf(n.id) >= 0;
+            return on;
+          });
+          var rank = nodes.map(function(_, i) {
+            return i;
+          }).sort(function(a, b) {
+            return (nodes[b] === lit ? 1 : 0) - (nodes[a] === lit ? 1 : 0) || nodes[b].degree - nodes[a].degree;
+          });
+          var placed = (
+            /** @type {number[][]} */
+            []
+          );
+          rank.forEach(function(i) {
+            var t = names[i], p2 = pos[nodes[i].id], show = want[i] && !!p2;
+            if (show && !box2) {
+              var x0 = p2[0] + r + 2, y0 = p2[1] - r - 10, b = [x0, y0, x0 + textWidth(String(nodes[i].label || nodes[i].id), 13, false) + 4, y0 + 16];
+              show = !placed.some(function(q) {
+                return b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3];
+              });
+              if (show) placed.push(b);
+            }
+            set(t, { opacity: show ? 1 : 0 });
+          });
+          cards.textContent = "";
+          if (lit && !box2) {
+            var p = pos[lit.id], rows2 = (
+              /** @type {[string, string][]} */
+              [["Name", lit.label || lit.id], ["Neighbours", String(lit.degree)]]
+            );
+            var lineNames = Array.from(new Set(lit.links.map(function(l) {
+              return l.line;
+            }).filter(Boolean)));
+            if (lineNames.length) rows2.push(["Lines", String(lineNames.length)]);
+            if (p) tooltipCard(cards, rows2, p[0], p[1], { avoid: r + 8 });
+          }
+        }
+        return { place, light, dots };
+      }
+      function matrixView(box2) {
+        var g = el("g", {}, layer), n = nodes.length;
+        var size = box2 ? box2.size : Math.min(PLOT4.y1 - PLOT4.y0 - 10, 540), x0 = box2 ? box2.x : (W - size) / 2 + 60, y0 = box2 ? box2.y : PLOT4.y0 + 6, cell = size / n;
+        var labelled = n <= 20;
+        el("rect", { x: x0, y: y0, width: size, height: size, fill: paper ? "#fff" : "rgba(255,255,255,.03)", stroke: paper ? "#d9d4ca" : NU.line }, g);
+        var heads = labelled ? nodes.map(function(m) {
+          return {
+            row: el("text", { "font-family": NU.mono, "font-size": Math.min(20, cell * 0.5), "text-anchor": "end", fill: ink }, g, m.label || m.id),
+            col: el("text", { "font-family": NU.mono, "font-size": Math.min(20, cell * 0.5), "text-anchor": "middle", fill: ink }, g, m.label || m.id)
+          };
+        }) : [];
+        var zeros = box2 ? nodes.map(function() {
+          return nodes.map(function() {
+            return el("text", { "font-family": NU.mono, "font-size": cell * 0.38, "text-anchor": "middle", fill: soft, opacity: 0.6 }, g, "0");
+          });
+        }) : [];
+        var band = el("g", {}, g);
+        var rowBand = el("rect", { x: x0, height: cell, width: size, fill: NU.red, opacity: 0 }, band);
+        var colBand = el("rect", { y: y0, width: cell, height: size, fill: NU.red, opacity: 0 }, band);
+        var maxV = Math.max(1, Math.max.apply(null, links.map(function(l) {
+          return l.value || 1;
+        })));
+        var cells = (
+          /** @type {any[]} */
+          []
+        );
+        links.forEach(function(l) {
+          if (!byId[l.source] || !byId[l.target]) return;
+          [[l.source, l.target], [l.target, l.source]].forEach(function(p) {
+            var a = byId[p[0]], b = byId[p[1]], same = a.group != null && a.group === b.group;
+            var fill2 = box2 ? paper ? NU.navy : NU.paper : same && d.colours && d.colours[a.group] ? d.colours[a.group] : paper ? NU.navy : NU.mist;
+            cells.push({ a, b, l, node: el("rect", { width: Math.max(1, cell - (n > 40 ? 0.6 : 2)), height: Math.max(1, cell - (n > 40 ? 0.6 : 2)), rx: n > 40 ? 0 : 3, fill: fill2, opacity: box2 ? 1 : 0.62 + 0.38 * Math.sqrt((l.value || maxV) / maxV) }, g) });
+            if (box2) cells[cells.length - 1].one = el("text", { "font-family": NU.mono, "font-size": cell * 0.38, "font-weight": 700, "text-anchor": "middle", fill: "#fff", "pointer-events": "none" }, g, "1");
+          });
+        });
+        var at = (
+          /** @type {Record<string, number>} */
+          {}
+        );
+        function order2(how) {
+          var list = nodes.slice();
+          if (how === "degree") list.sort(function(a, b) {
+            return b.degree - a.degree || String(a.label || a.id).localeCompare(String(b.label || b.id));
+          });
+          else if (how === "group") list.sort(function(a, b) {
+            return a.group - b.group || String(a.label || a.id).localeCompare(String(b.label || b.id));
+          });
+          else if (how === "name") list.sort(function(a, b) {
+            return String(a.label || a.id).localeCompare(String(b.label || b.id));
+          });
+          var next = (
+            /** @type {Record<string, number>} */
+            {}
+          );
+          list.forEach(function(m, i) {
+            next[m.id] = i;
+          });
+          return next;
+        }
+        function place(from, to, k) {
+          var p = function(id) {
+            return lerp(from[id], to[id], k);
+          };
+          var pad = n > 40 ? 0.3 : 1;
+          cells.forEach(function(c) {
+            set(c.node, { x: x0 + p(c.b.id) * cell + pad, y: y0 + p(c.a.id) * cell + pad });
+            if (c.one) set(c.one, { x: x0 + (p(c.b.id) + 0.5) * cell, y: y0 + (p(c.a.id) + 0.5) * cell + cell * 0.13 });
+          });
+          heads.forEach(function(h, i) {
+            var id = nodes[i].id;
+            set(h.row, { x: x0 - 10, y: y0 + (p(id) + 0.5) * cell + cell * 0.17 });
+            set(h.col, { x: x0 + (p(id) + 0.5) * cell, y: y0 - 10 });
+          });
+          zeros.forEach(function(row, i) {
+            row.forEach(function(t, j) {
+              set(t, { x: x0 + (p(nodes[j].id) + 0.5) * cell, y: y0 + (p(nodes[i].id) + 0.5) * cell + cell * 0.13 });
+            });
+          });
+        }
+        function arrange(how, animate) {
+          var to = order2(how), from = Object.keys(at).length ? at : to;
+          cancel();
+          at = to;
+          cancel = tween(animate ? 1100 : 0, function(k) {
+            place(from, to, k);
+          });
+        }
+        function light(id, cellHit) {
+          cards.textContent = "";
+          var lit = id && byId[id] ? byId[id] : null, edge = id && !lit ? id : null;
+          set(rowBand, { opacity: 0 });
+          set(colBand, { opacity: 0 });
+          cells.forEach(function(c) {
+            var on = lit ? c.a === lit || c.b === lit : edge ? key(c.l) === edge : true;
+            set(c.node, { opacity: on ? box2 ? 1 : 0.62 + 0.38 * Math.sqrt((c.l.value || maxV) / maxV) : 0.12, fill: edge && on ? NU.red : c.node.getAttribute("data-fill") || c.node.getAttribute("fill") });
+            if (!c.node.getAttribute("data-fill")) c.node.setAttribute("data-fill", c.node.getAttribute("fill"));
+            if (!(edge && on)) set(c.node, { fill: c.node.getAttribute("data-fill") });
+          });
+          if (lit) {
+            set(rowBand, { y: y0 + at[lit.id] * cell, opacity: 0.16 });
+            set(colBand, { x: x0 + at[lit.id] * cell, opacity: 0.16 });
+          }
+          if (cellHit && !box2) {
+            var rows2 = (
+              /** @type {[string, string][]} */
+              [["Row", cellHit.a.label || cellHit.a.id], ["Column", cellHit.b.label || cellHit.b.id]]
+            );
+            if (cellHit.l.value != null) rows2.push([d.valueTitle || "Value", String(cellHit.l.value)]);
+            set(rowBand, { y: y0 + at[cellHit.a.id] * cell, opacity: 0.16 });
+            set(colBand, { x: x0 + at[cellHit.b.id] * cell, opacity: 0.16 });
+            tooltipCard(cards, rows2, x0 + (at[cellHit.b.id] + 1) * cell, y0 + (at[cellHit.a.id] + 1) * cell);
+          }
+        }
+        function hit(p) {
+          var i = Math.floor((p.y - y0) / cell), j = Math.floor((p.x - x0) / cell);
+          if (i < 0 || j < 0 || i >= n || j >= n) return null;
+          return cells.find(function(c) {
+            return at[c.a.id] === i && at[c.b.id] === j;
+          }) || null;
+        }
+        return { arrange, light, hit };
+      }
+      function storeView() {
+        var g = el("g", { "font-family": NU.sans }, layer);
+        var heads = [["The picture", 70], ["The edge list", 548], ["The matrix", 812]];
+        heads.forEach(function(h) {
+          el("text", { x: h[1], y: 150, "font-size": 20, "font-weight": 700, fill: NU.red }, g, String(h[0]));
+        });
+        el("text", { x: 548, y: 176, "font-size": 15, fill: soft }, g, "one row per edge");
+        el("text", { x: 812, y: 176, "font-size": 15, fill: soft }, g, "1 = joined, 0 = not");
+        var pic = linkView(true);
+        var list = el("g", { "font-family": NU.mono, "font-size": 19 }, g);
+        el("text", { x: 560, y: 214, fill: soft, "font-weight": 700 }, list, "source  target");
+        var rows2 = links.map(function(l, i) {
+          var y = 246 + i * 34;
+          return { k: key(l), bg: el("rect", { x: 548, y: y - 24, width: 214, height: 32, rx: 4, fill: NU.red, opacity: 0 }, list), text: el("text", { x: 560, y, fill: ink }, list, "  " + l.source + "       " + l.target) };
+        });
+        var grid = matrixView({ x: 852, y: 216, size: 360 });
+        grid.arrange("name", false);
+        function light(id) {
+          pic.light(id);
+          grid.light(id, null);
+          rows2.forEach(function(o) {
+            var on = id && byId[id] ? o.k.split("-").indexOf(id) >= 0 : o.k === id;
+            set(o.bg, { opacity: on ? 0.22 : 0 });
+          });
+        }
+        function hitRow(p) {
+          if (p.x < 548 || p.x > 762) return null;
+          var o = rows2.find(function(_, i) {
+            var y = 246 + i * 34;
+            return p.y >= y - 24 && p.y <= y + 8;
+          });
+          return o ? o.k : null;
+        }
+        return { place: pic.place, light, hitRow, grid };
+      }
+      var dragging = (
+        /** @type {string|null} */
+        null
+      );
+      function nearest(p, within) {
+        var best = null, bd = within * within;
+        nodes.forEach(function(n) {
+          var q = pos[n.id];
+          if (!q) return;
+          var dd = (q[0] - p.x) * (q[0] - p.x) + (q[1] - p.y) * (q[1] - p.y);
+          if (dd < bd) {
+            bd = dd;
+            best = n.id;
+          }
+        });
+        return best;
+      }
+      function point(p) {
+        if (view === "link") return nearest(p, 22);
+        if (view === "store") {
+          var n = nearest(p, 34);
+          if (n) return n;
+          var row = draw.hitRow(p);
+          if (row) return row;
+          var c = draw.grid.hit(p);
+          return c ? key(c.l) : null;
+        }
+        return null;
+      }
+      if (fig.interactive) {
+        svg.addEventListener("pointerdown", function(e) {
+          if (view !== "link") return;
+          var id = nearest(fig.toSlide(e), 22);
+          if (!id) return;
+          dragging = id;
+          cancel();
+          try {
+            svg.setPointerCapture(e.pointerId);
+          } catch (err) {
+          }
+        });
+        svg.addEventListener("pointermove", function(e) {
+          var p = fig.toSlide(e);
+          if (dragging) {
+            pos[dragging] = [Math.max(PLOT4.x0, Math.min(PLOT4.x1, p.x)), Math.max(PLOT4.y0, Math.min(PLOT4.y1, p.y))];
+            draw.place();
+            draw.light(dragging);
+            return;
+          }
+          if (view === "matrix") {
+            var c = draw.hit(p);
+            draw.light(null, c);
+            return;
+          }
+          var id = point(p);
+          if (id !== hovered) {
+            hovered = id;
+            draw.light(id || step.lit || null, null);
+          }
+        });
+        var drop = function() {
+          dragging = null;
+        };
+        svg.addEventListener("pointerup", drop);
+        svg.addEventListener("pointercancel", drop);
+        svg.addEventListener("pointerleave", function() {
+          dragging = null;
+          hovered = null;
+          if (draw.light) draw.light(step.lit || null, null);
+        });
+      }
+      return {
+        /** @param {any} next @param {boolean} animate */
+        update: function(next, animate) {
+          var was = step;
+          step = next;
+          st.caption(step.caption);
+          keyRow(keyG, step.key || d.key, st);
+          var v = step.view || "link";
+          var layouts = d.layouts || {}, target = layouts[step.layout || Object.keys(layouts)[0]] || {};
+          if (v !== view || v === "store") {
+            cancel();
+            layer.textContent = "";
+            cards.textContent = "";
+            view = v;
+            if (v === "store") {
+              pos = JSON.parse(JSON.stringify(layouts.store || target));
+              draw = storeView();
+              draw.place();
+            } else if (v === "matrix") {
+              draw = matrixView(null);
+              draw.arrange(step.order || "name", false);
+            } else {
+              pos = JSON.parse(JSON.stringify(target));
+              draw = linkView(null);
+              draw.place();
+            }
+            if (animate) {
+              set(layer, { opacity: 0 });
+              cancel = tween(500, function(k) {
+                set(layer, { opacity: k });
+              });
+            }
+            draw.light(step.lit || null, null);
+            return;
+          }
+          if (v === "matrix") {
+            if (was.order !== step.order) draw.arrange(step.order || "name", animate);
+            draw.light(step.lit || null, null);
+            return;
+          }
+          var from = JSON.parse(JSON.stringify(pos));
+          cancel();
+          layer.textContent = "";
+          draw = linkView(null);
+          cancel = tween(animate ? 1400 : 0, function(k) {
+            Object.keys(target).forEach(function(id) {
+              var a = from[id] || target[id], b = target[id];
+              pos[id] = [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
+            });
+            draw.place();
+          });
+          draw.light(step.lit || null, null);
+        },
+        destroy: function() {
+          cancel();
+        }
+      };
+    }
+  };
+
+  // src/figures/tree.js
+  var BOX = { x0: 70, y0: 150, x1: W - 70, y1: H - 78 };
+  function flatten(node, parent, depth, out) {
+    var n = { name: node.name, parent, depth, kids: (
+      /** @type {any[]} */
+      []
+    ), value: node.value || 0, branch: parent ? depth === 1 ? node.name : parent.branch : null };
+    out.push(n);
+    (node.children || []).forEach(function(c) {
+      var k = flatten(c, n, depth + 1, out);
+      n.kids.push(k);
+    });
+    if (n.kids.length) n.value = n.kids.reduce(function(s, k) {
+      return s + k.value;
+    }, 0);
+    return n;
+  }
+  function squarify(kids, r, put) {
+    var items2 = kids.slice().sort(function(a, b) {
+      return b.value - a.value;
+    });
+    var total = items2.reduce(function(s, k) {
+      return s + k.value;
+    }, 0) || 1;
+    var x = r.x, y = r.y, w = r.w, h = r.h, scale2 = w * h / total;
+    var row = (
+      /** @type {any[]} */
+      []
+    );
+    function worst(list, side) {
+      var s = list.reduce(function(a, k) {
+        return a + k.value * scale2;
+      }, 0), mx = 0, mn = Infinity;
+      list.forEach(function(k) {
+        mx = Math.max(mx, k.value * scale2);
+        mn = Math.min(mn, k.value * scale2);
+      });
+      return Math.max(side * side * mx / (s * s), s * s / (side * side * mn));
+    }
+    function lay(list) {
+      var s = list.reduce(function(a, k) {
+        return a + k.value * scale2;
+      }, 0);
+      if (w >= h) {
+        var cw = s / h, cy = y;
+        list.forEach(function(k) {
+          var kh = k.value * scale2 / cw;
+          put(k, { x, y: cy, w: cw, h: kh });
+          cy += kh;
+        });
+        x += cw;
+        w -= cw;
+      } else {
+        var ch = s / w, cx = x;
+        list.forEach(function(k) {
+          var kw = k.value * scale2 / ch;
+          put(k, { x: cx, y, w: kw, h: ch });
+          cx += kw;
+        });
+        y += ch;
+        h -= ch;
+      }
+    }
+    items2.forEach(function(k) {
+      var side = Math.min(w, h);
+      if (!row.length || worst(row.concat([k]), side) <= worst(row, side)) row.push(k);
+      else {
+        lay(row);
+        row = [k];
+      }
+    });
+    if (row.length) lay(row);
+  }
+  var tree = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage, ink = st.ink, soft = st.soft;
+      var all = (
+        /** @type {any[]} */
+        []
+      );
+      var root = flatten(d.root || { name: "root" }, null, 0, all);
+      var leaves = all.filter(function(n) {
+        return !n.kids.length;
+      });
+      var depthMax = Math.max.apply(null, all.map(function(n) {
+        return n.depth;
+      }));
+      var fmt = d.format || ",d";
+      var colour2 = function(n) {
+        return d.colours && n.branch && d.colours[n.branch] || (st.dark ? NU.mist : NU.navy);
+      };
+      var L = (
+        /** @type {Record<string, Record<string, any>>} */
+        { link: {}, indent: {}, icicle: {}, treemap: {} }
+      );
+      var colW = (BOX.x1 - BOX.x0 - 260) / Math.max(1, depthMax), gap = (BOX.y1 - BOX.y0) / leaves.length;
+      leaves.forEach(function(n, i) {
+        n.ly = BOX.y0 + gap * (i + 0.5);
+      });
+      (function up(n) {
+        if (n.kids.length) {
+          n.kids.forEach(up);
+          n.ly = (n.kids[0].ly + n.kids[n.kids.length - 1].ly) / 2;
+        }
+      })(root);
+      all.forEach(function(n) {
+        var s = n.kids.length ? 14 : 10;
+        L.link[n.name] = { x: BOX.x0 + 10 + n.depth * colW - s / 2, y: n.ly - s / 2, w: s, h: s, rx: s / 2 };
+      });
+      var rowH = (BOX.y1 - BOX.y0) / all.length, barX = 470, barW = BOX.x1 - barX;
+      all.forEach(function(n, i) {
+        L.indent[n.name] = { x: barX, y: BOX.y0 + i * rowH + 1.5, w: Math.max(2, barW * n.value / root.value), h: rowH - 3, rx: 2 };
+      });
+      var bandH = (BOX.y1 - BOX.y0) / (depthMax + 1), iw = BOX.x1 - BOX.x0;
+      (function across(n, x) {
+        L.icicle[n.name] = { x, y: BOX.y0 + n.depth * bandH, w: iw * n.value / root.value, h: bandH - 4, rx: 2 };
+        var cx = x;
+        n.kids.forEach(function(k) {
+          across(k, cx);
+          cx += iw * k.value / root.value;
+        });
+      })(root, BOX.x0);
+      (function nest(n, r) {
+        L.treemap[n.name] = { x: r.x, y: r.y, w: r.w, h: r.h, rx: 2 };
+        if (!n.kids.length) return;
+        var pad = n.depth === 0 ? 0 : 4, head = n.depth === 0 ? 0 : 22;
+        squarify(n.kids, { x: r.x + pad, y: r.y + head + pad, w: Math.max(1, r.w - pad * 2), h: Math.max(1, r.h - head - pad * 2) }, function(k, rect) {
+          nest(k, rect);
+        });
+      })(root, { x: BOX.x0, y: BOX.y0, w: BOX.x1 - BOX.x0, h: BOX.y1 - BOX.y0 });
+      var keyG = el("g", { "pointer-events": "none" }, svg), links = el("g", {}, svg), boxes = el("g", {}, svg), labels = el("g", { "font-family": NU.sans, "pointer-events": "none" }, svg), cards = el("g", { "pointer-events": "none" }, svg);
+      var paths = all.filter(function(n) {
+        return n.parent;
+      }).map(function(n) {
+        return { n, node: el("path", { fill: "none", stroke: soft, "stroke-width": 1.5 }, links) };
+      });
+      var rects = all.map(function(n) {
+        var fill2 = n.depth === 0 ? st.dark ? "#2b5a85" : "#dfe6ee" : colour2(n);
+        return { n, node: el("rect", { fill: fill2, stroke: st.dark ? NU.stage : "#fff", "stroke-width": 1 }, boxes) };
+      });
+      var names = all.map(function(n) {
+        return el("text", { "font-size": 13, fill: ink }, labels, n.name);
+      });
+      var nums = all.map(function(n) {
+        return el("text", { "font-size": 12, fill: soft, "text-anchor": "end" }, labels, format(fmt, n.value));
+      });
+      var at = (
+        /** @type {Record<string, any>} */
+        {}
+      ), layout = "", cancel = function() {
+      }, lit = (
+        /** @type {string|null} */
+        null
+      );
+      function place(from, to, k) {
+        rects.forEach(function(o) {
+          var a = L[from][o.n.name], b = L[to][o.n.name], r = { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), w: lerp(a.w, b.w, k), h: lerp(a.h, b.h, k), rx: lerp(a.rx, b.rx, k) };
+          at[o.n.name] = r;
+          set(o.node, { x: r.x, y: r.y, width: Math.max(0.5, r.w), height: Math.max(0.5, r.h), rx: Math.min(r.rx, r.w / 2, r.h / 2) });
+          var o2 = to === "treemap" || to === "icicle" ? o.n.depth === 0 ? 0.55 : o.n.kids.length ? 0.45 + 0.15 * o.n.depth : 0.92 : o.n.depth === 0 ? 1 : 0.95;
+          set(o.node, { "fill-opacity": lerp(Number(o.node.getAttribute("data-op") || o2), o2, k) });
+          if (k >= 1) o.node.setAttribute("data-op", String(o2));
+        });
+        var linkOn = to === "link" ? k : from === "link" ? 1 - k : 0;
+        paths.forEach(function(o) {
+          var p = at[o.n.parent.name], c = at[o.n.name], x1 = p.x + p.w / 2, y1 = p.y + p.h / 2, x2 = c.x + c.w / 2, y2 = c.y + c.h / 2, mx = (x1 + x2) / 2;
+          set(o.node, { d: "M" + x1 + " " + y1 + " C" + mx + " " + y1 + " " + mx + " " + y2 + " " + x2 + " " + y2, opacity: linkOn });
+        });
+        if (k >= 1) writeLabels(to);
+      }
+      function writeLabels(to) {
+        all.forEach(function(n, i) {
+          var r = at[n.name], t = names[i], v = nums[i], show = true, vshow = false, size = 13;
+          if (to === "link") {
+            size = n.kids.length ? 15 : 12.5;
+            if (n.kids.length) set(t, { x: r.x + r.w / 2, y: r.y - 8, "text-anchor": "middle", transform: null });
+            else set(t, { x: r.x + r.w + 8, y: r.y + r.h / 2 + 4.5, "text-anchor": "start", transform: null });
+          } else if (to === "indent") {
+            size = Math.min(13, rowH * 0.82);
+            set(t, { x: BOX.x0 + 14 + n.depth * 30, y: r.y + r.h * 0.78, "text-anchor": "start", transform: null });
+            set(v, { x: barX - 14, y: r.y + r.h * 0.78 });
+            vshow = true;
+            set(v, { "font-size": size });
+          } else {
+            var head = to === "treemap" && n.kids.length;
+            size = to === "icicle" ? n.depth < 2 ? 16 : 12.5 : n.depth === 0 ? 0 : head ? 13 : r.w > 120 && r.h > 50 ? 14 : 11.5;
+            var upright = to === "icicle" && !n.kids.length;
+            if (upright) set(t, { x: r.x + r.w / 2 + 4.5, y: r.y + r.h - 8, "text-anchor": "start", transform: "rotate(-90 " + (r.x + r.w / 2 + 4.5) + " " + (r.y + r.h - 8) + ")" });
+            else set(t, { x: r.x + 6, y: r.y + (head ? 16 : to === "icicle" ? r.h / 2 + 5 : 17), "text-anchor": "start", transform: null });
+            show = size > 0 && (upright ? textWidth(n.name, size, false) < r.h - 14 && r.w > 14 : textWidth(n.name, size, false) < r.w - 10 && r.h > 18);
+            if (!head && to === "treemap" && show && r.h > 40) {
+              set(v, { x: r.x + r.w - 6, y: r.y + r.h - 7 });
+              set(v, { "font-size": 11.5 });
+              vshow = true;
+            }
+            if (to === "icicle" && n.depth < 3 && show && r.w > textWidth(n.name, size, false) + 110) {
+              set(v, { x: r.x + r.w - 8, y: r.y + r.h / 2 + 5 });
+              set(v, { "font-size": 13 });
+              vshow = true;
+            }
+          }
+          var dark = st.dark || to !== "link" && to !== "indent";
+          var halo = to === "link" || to === "indent";
+          set(t, {
+            "font-size": size,
+            "font-weight": n.kids.length ? 700 : 500,
+            fill: halo ? ink : dark && n.depth > 0 ? "#fff" : ink,
+            opacity: show ? 1 : 0,
+            stroke: halo ? st.dark ? NU.stage : NU.paper : null,
+            "stroke-width": halo ? 4 : null,
+            "paint-order": halo ? "stroke" : null
+          });
+          set(v, { fill: to === "link" || to === "indent" ? soft : "rgba(255,255,255,.85)", opacity: vshow ? 1 : 0 });
+        });
+      }
+      function light(name) {
+        cards.textContent = "";
+        var n = all.find(function(m2) {
+          return m2.name === name;
+        });
+        var chain = (
+          /** @type {any[]} */
+          []
+        );
+        for (var m = n; m; m = m.parent) chain.push(m);
+        rects.forEach(function(o) {
+          set(o.node, { stroke: chain.indexOf(o.n) >= 0 ? NU.red : st.dark ? NU.stage : "#fff", "stroke-width": chain.indexOf(o.n) >= 0 ? 3 : 1 });
+        });
+        paths.forEach(function(o) {
+          set(o.node, { stroke: chain.indexOf(o.n) >= 0 ? NU.red : soft, "stroke-width": chain.indexOf(o.n) >= 0 ? 3 : 1.5 });
+        });
+        if (!n) return;
+        var r = at[n.name], path = chain.slice().reverse().map(function(x) {
+          return x.name;
+        }).join(" › ");
+        var rows2 = (
+          /** @type {[string, string][]} */
+          [["Name", n.name], [d.valueTitle || "Value", format(fmt, n.value)], ["Share", format(".1%", n.value / root.value)]]
+        );
+        if (path.length > 46) path = "… › " + chain.slice(0, 2).reverse().map(function(x) {
+          return x.name;
+        }).join(" › ");
+        rows2.push(["Path", path]);
+        tooltipCard(cards, rows2, r.x + Math.min(r.w, 40), r.y + Math.min(r.h, 30));
+      }
+      if (fig.interactive) {
+        svg.addEventListener("pointermove", function(e) {
+          var p = fig.toSlide(e), best = (
+            /** @type {any} */
+            null
+          );
+          all.forEach(function(n) {
+            var r = at[n.name];
+            if (!r) return;
+            var pad = layout === "link" ? 8 : 0;
+            if (p.x >= r.x - pad && p.x <= r.x + r.w + pad && p.y >= r.y - pad && p.y <= r.y + r.h + pad && (!best || n.depth > best.depth)) best = n;
+          });
+          var name = best ? best.name : null;
+          if (name !== lit) {
+            lit = name;
+            light(name);
+          }
+        });
+        svg.addEventListener("pointerleave", function() {
+          lit = null;
+          light(stepLit);
+        });
+      }
+      var stepLit = (
+        /** @type {string|null} */
+        null
+      );
+      return {
+        /** @param {any} step @param {boolean} animate */
+        update: function(step, animate) {
+          st.caption(step.caption);
+          keyRow(keyG, step.key || d.key, st);
+          var to = L[step.layout] ? step.layout : "link", from = layout || to;
+          stepLit = step.lit || null;
+          cancel();
+          labels.setAttribute("opacity", "0");
+          cancel = tween(animate && from !== to ? 1500 : 0, function(k) {
+            place(from, to, k);
+            if (k >= 1) labels.setAttribute("opacity", "1");
+          });
+          layout = to;
+          light(lit || stepLit);
+        },
+        destroy: function() {
+          cancel();
+        }
+      };
+    }
+  };
+
   // src/figures/index.js
-  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium };
+  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium, bridges, network, tree };
   var CSS = ".figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}.figure-slide .pad{visibility:hidden}.figure-slide .fig-svg text{font-kerning:normal}";
   function installFigures(SF) {
     var styled = false;
@@ -6475,9 +7485,9 @@
     SF.applyArtPoses = function(layer, poses) {
       if (!layer) return;
       Array.prototype.forEach.call(layer.children, function(node, i) {
-        var key = artKeyOf(node, i);
-        node.setAttribute("data-art-key", key);
-        var pose = poses && poses[key];
+        var key2 = artKeyOf(node, i);
+        node.setAttribute("data-art-key", key2);
+        var pose = poses && poses[key2];
         if (!pose) return;
         if (pose.x != null && pose.y != null) {
           node.style.left = pose.x + "px";
@@ -6503,8 +7513,8 @@
     SF.artBlockKey = function(id) {
       return "picture." + id;
     };
-    SF.artBlockId = function(key) {
-      var m = /^picture\.(.+)$/.exec(String(key || ""));
+    SF.artBlockId = function(key2) {
+      var m = /^picture\.(.+)$/.exec(String(key2 || ""));
       return m ? m[1] : null;
     };
     SF.placedArtLayers = function(pictures) {
@@ -6563,8 +7573,8 @@
       if (named) return named;
       var kept = node.getAttribute("data-lattice-key");
       if (kept) return kept;
-      var key = node.getAttribute("data-content-key");
-      if (key) return key;
+      var key2 = node.getAttribute("data-content-key");
+      if (key2) return key2;
       var raw = node.className;
       if (raw && typeof raw === "object" && "baseVal" in raw) raw = raw.baseVal;
       var cls = String(raw || "").split(/\s+/).filter(Boolean)[0];
@@ -6627,8 +7637,8 @@
       }
       return best ? { ...best, moved: true } : null;
     };
-    SF.resolvePlacement = function(regions, key, want, grid, fixed) {
-      if (!regions || !key || !want) return null;
+    SF.resolvePlacement = function(regions, key2, want, grid, fixed) {
+      if (!regions || !key2 || !want) return null;
       var cols = grid && grid.cols || 12;
       var rows2 = grid && grid.rows || 16;
       if (want.col < 1 || want.row < 1 || want.col + want.cols - 1 > cols || want.row + want.rows - 1 > rows2) return null;
@@ -6640,7 +7650,7 @@
       Object.keys(regions).forEach(function(k) {
         next[k] = { ...regions[k] };
       });
-      next[key] = { col: want.col, row: want.row, cols: want.cols, rows: want.rows };
+      next[key2] = { col: want.col, row: want.row, cols: want.cols, rows: want.rows };
       var settled = Object.keys(next).length + 4;
       for (var pass = 0; pass < settled; pass++) {
         var clash = [];
@@ -6653,7 +7663,7 @@
         });
         if (!clash.length) return next;
         var shove = clash.filter(function(k) {
-          return k !== key && !immovable[k];
+          return k !== key2 && !immovable[k];
         })[0];
         if (!shove) return null;
         var others = Object.keys(next).filter(function(k) {
@@ -6671,8 +7681,8 @@
       var list = slide && slide.design && slide.design.hidden;
       return Array.isArray(list) ? list.filter(Boolean).map(String) : [];
     };
-    SF.isBlockHidden = function(slide, key) {
-      return !!key && SF.hiddenBlocksOf(slide).indexOf(String(key)) >= 0;
+    SF.isBlockHidden = function(slide, key2) {
+      return !!key2 && SF.hiddenBlocksOf(slide).indexOf(String(key2)) >= 0;
     };
     SF.dropHiddenBlocks = function(root, slide) {
       var hidden = SF.hiddenBlocksOf(slide);
@@ -6705,10 +7715,10 @@
       if (!kids.length) return false;
       var grid = el2("div", "sf-lattice");
       kids.forEach(function(node, i) {
-        var key = blockKeyOf(node, i);
-        var r = regions[key] && SF.anchorRegion(regions[key]);
+        var key2 = blockKeyOf(node, i);
+        var r = regions[key2] && SF.anchorRegion(regions[key2]);
         var slot = el2("div", "sf-slot");
-        slot.setAttribute("data-block-key", key);
+        slot.setAttribute("data-block-key", key2);
         if (r) {
           slot.style.gridArea = r.row + " / " + r.col + " / span " + r.rows + " / span " + r.cols;
           slot.setAttribute("data-region", r.row + "," + r.col + "," + r.rows + "," + r.cols);
@@ -6891,8 +7901,8 @@
     SF.freeBlockKey = function(id) {
       return "blocks." + id;
     };
-    SF.freeBlockId = function(key) {
-      var m = /^blocks\.(.+)$/.exec(String(key || ""));
+    SF.freeBlockId = function(key2) {
+      var m = /^blocks\.(.+)$/.exec(String(key2 || ""));
       return m ? m[1] : null;
     };
     SF.freeBlocksOf = function(slide, make) {
@@ -6908,40 +7918,40 @@
         return String(b.id) === String(id);
       }) || null;
     };
-    SF.canRemoveBlock = function(slide, key) {
-      var id = SF.freeBlockId(key);
+    SF.canRemoveBlock = function(slide, key2) {
+      var id = SF.freeBlockId(key2);
       return !!(slide && id && SF.freeBlockById(slide, id));
     };
-    SF.removeFreeBlock = function(slide, key) {
-      if (!SF.canRemoveBlock(slide, key)) return false;
-      var id = SF.freeBlockId(key);
+    SF.removeFreeBlock = function(slide, key2) {
+      if (!SF.canRemoveBlock(slide, key2)) return false;
+      var id = SF.freeBlockId(key2);
       slide.blocks = SF.freeBlocksOf(slide).filter(function(b) {
         return String(b.id) !== String(id);
       });
-      if (slide.design && slide.design.regions) delete slide.design.regions[key];
-      if (slide.formatting) delete slide.formatting[key];
+      if (slide.design && slide.design.regions) delete slide.design.regions[key2];
+      if (slide.formatting) delete slide.formatting[key2];
       return true;
     };
-    SF.canDeleteBlock = function(slide, key) {
-      if (!slide || !key) return false;
-      if (SF.canRemoveBlock(slide, key)) return true;
-      return !SF.freeBlockId(key) && !SF.isBlockHidden(slide, key);
+    SF.canDeleteBlock = function(slide, key2) {
+      if (!slide || !key2) return false;
+      if (SF.canRemoveBlock(slide, key2)) return true;
+      return !SF.freeBlockId(key2) && !SF.isBlockHidden(slide, key2);
     };
-    SF.deleteBlock = function(slide, key) {
-      if (!SF.canDeleteBlock(slide, key)) return null;
-      if (SF.canRemoveBlock(slide, key)) {
-        SF.removeFreeBlock(slide, key);
+    SF.deleteBlock = function(slide, key2) {
+      if (!SF.canDeleteBlock(slide, key2)) return null;
+      if (SF.canRemoveBlock(slide, key2)) {
+        SF.removeFreeBlock(slide, key2);
         return "item";
       }
       if (!slide.design) slide.design = {};
       if (!Array.isArray(slide.design.hidden)) slide.design.hidden = [];
-      slide.design.hidden.push(String(key));
+      slide.design.hidden.push(String(key2));
       return "layout";
     };
-    SF.restoreBlock = function(slide, key) {
-      if (!SF.isBlockHidden(slide, key)) return false;
+    SF.restoreBlock = function(slide, key2) {
+      if (!SF.isBlockHidden(slide, key2)) return false;
       slide.design.hidden = SF.hiddenBlocksOf(slide).filter(function(k) {
-        return k !== String(key);
+        return k !== String(key2);
       });
       if (!slide.design.hidden.length) delete slide.design.hidden;
       return true;
@@ -6976,13 +7986,13 @@
       });
       list.forEach(function(block) {
         var spec = FREE_KINDS[block.kind] || FREE_KINDS.text;
-        var key = SF.freeBlockKey(block.id);
+        var key2 = SF.freeBlockKey(block.id);
         var composed = !!(root.getAttribute && root.getAttribute("data-composition")) || !!root.querySelector("[data-composition]");
         var AS_TAG = { title: ["h2", ""], subtitle: ["div", composed ? "cp-eyebrow" : "sub"] };
         var asSlot = block.as && AS_TAG[block.as];
         var size = block.size || spec.size;
         var node = asSlot ? el2(asSlot[0], "free-block " + spec.cls + (asSlot[1] ? " " + asSlot[1] : "")) : el2(spec.tag, "free-block " + spec.cls + (size ? " free-size-" + size : ""));
-        node.dataset.contentKey = key;
+        node.dataset.contentKey = key2;
         if (block.as) node.dataset.as = String(block.as);
         node.dataset.freeBlock = String(block.id);
         var text2 = String(block.text == null ? "" : block.text);
@@ -6994,13 +8004,13 @@
           return;
         }
         node.textContent = text2;
-        if (SF.Custom) SF.Custom.paint(node, slide, key, text2);
+        if (SF.Custom) SF.Custom.paint(node, slide, key2, text2);
         host.appendChild(node);
       });
       return list.length + pictures.length;
     };
-    SF.regionColumnGroup = function(regions, key) {
-      var subject = regions && regions[key];
+    SF.regionColumnGroup = function(regions, key2) {
+      var subject = regions && regions[key2];
       if (!subject) return [];
       var lo = subject.col, hi = subject.col + subject.cols - 1;
       return Object.keys(regions).filter(function(k) {
@@ -7012,15 +8022,15 @@
         return a.region.row - b.region.row || (a.key < b.key ? -1 : 1);
       });
     };
-    SF.restackRegions = function(regions, key, rows2) {
-      var group = SF.regionColumnGroup(regions, key);
+    SF.restackRegions = function(regions, key2, rows2) {
+      var group = SF.regionColumnGroup(regions, key2);
       if (!group.length) return null;
       var cursor = 1;
       group.forEach(function(entry) {
         entry.gap = Math.max(0, entry.region.row - cursor);
         cursor = entry.region.row + entry.region.rows;
       });
-      if (rows2 != null) regions[key].rows = Math.max(1, Math.round(rows2));
+      if (rows2 != null) regions[key2].rows = Math.max(1, Math.round(rows2));
       var row = 1;
       group.forEach(function(entry) {
         row += entry.gap;
@@ -7676,24 +8686,24 @@
     var color = function(v) {
       return /^#[0-9a-f]{6}$/i.test(v || "") ? v : "";
     };
-    function value(s, key) {
-      if (key.indexOf("bullets.") === 0) return String(s.bullets[Number(key.split(".")[1])] || "");
-      if (key.indexOf("blocks.") === 0) {
-        var block = SF.freeBlockById && SF.freeBlockById(s, key.slice(7));
+    function value(s, key2) {
+      if (key2.indexOf("bullets.") === 0) return String(s.bullets[Number(key2.split(".")[1])] || "");
+      if (key2.indexOf("blocks.") === 0) {
+        var block = SF.freeBlockById && SF.freeBlockById(s, key2.slice(7));
         return String(block && block.text || "");
       }
-      return String(s[key] || "");
+      return String(s[key2] || "");
     }
-    function entry(s, key) {
-      var e = s.formatting && s.formatting[key];
-      return e && e.text === value(s, key) && Array.isArray(e.marks) ? e : { text: value(s, key), marks: [] };
+    function entry(s, key2) {
+      var e = s.formatting && s.formatting[key2];
+      return e && e.text === value(s, key2) && Array.isArray(e.marks) ? e : { text: value(s, key2), marks: [] };
     }
-    function save(s, key, e) {
+    function save(s, key2, e) {
       if (!s.formatting) s.formatting = {};
-      s.formatting[key] = e;
+      s.formatting[key2] = e;
     }
-    function rebase(s, key, old, next) {
-      var e = entry(s, key), a = 0, b = 0;
+    function rebase(s, key2, old, next) {
+      var e = entry(s, key2), a = 0, b = 0;
       while (a < old.length && a < next.length && old[a] === next[a]) a++;
       while (b < old.length - a && b < next.length - a && old[old.length - 1 - b] === next[next.length - 1 - b]) b++;
       var end = old.length - b, delta = next.length - old.length;
@@ -7712,11 +8722,11 @@
         return m.end > m.start;
       });
       e.text = next;
-      save(s, key, e);
+      save(s, key2, e);
     }
-    function apply(s, key, start, end, kind, v) {
+    function apply(s, key2, start, end, kind, v) {
       if (!(end > start)) return false;
-      var e = entry(s, key);
+      var e = entry(s, key2);
       if (kind === "clear") {
         e.marks = e.marks.flatMap(function(m) {
           if (m.end <= start || m.start >= end) return [m];
@@ -7729,11 +8739,11 @@
         e.marks.push({ start, end, kind, value: v });
         e.marks = e.marks.slice(-300);
       }
-      save(s, key, e);
+      save(s, key2, e);
       return true;
     }
-    function paint(node, s, key, text2) {
-      var raw = value(s, key), offset = raw.indexOf(String(text2)), marks = entry(s, key).marks;
+    function paint(node, s, key2, text2) {
+      var raw = value(s, key2), offset = raw.indexOf(String(text2)), marks = entry(s, key2).marks;
       if (offset < 0 || !marks.length) return;
       var parts = /* @__PURE__ */ new Set([0, text2.length]);
       marks.forEach(function(m) {
@@ -7851,12 +8861,12 @@
       });
     }
     function chooser(UI, box2, d, change) {
-      return function choose(label, key, opts, fallback) {
-        var meta = SF.DESIGN_CONTROLS && SF.DESIGN_CONTROLS[key];
+      return function choose(label, key2, opts, fallback) {
+        var meta = SF.DESIGN_CONTROLS && SF.DESIGN_CONTROLS[key2];
         box2.appendChild(UI.field(meta && meta.label || label, UI.select(opts.map(function(x) {
           return { value: String(x[0]), label: x[1] };
-        }), String(d[key] || fallback), function(v) {
-          d[key] = key === "imageShare" || key === "capFade" ? Number(v) : v;
+        }), String(d[key2] || fallback), function(v) {
+          d[key2] = key2 === "imageShare" || key2 === "capFade" ? Number(v) : v;
           change();
         })));
       };
@@ -7989,9 +8999,9 @@
       var need = size * size;
       var seen = {}, distinct = [];
       board5.pool.forEach(function(pair) {
-        var key = String(pair.term || "").trim().toLowerCase();
-        if (!key || seen[key]) return;
-        seen[key] = 1;
+        var key2 = String(pair.term || "").trim().toLowerCase();
+        if (!key2 || seen[key2]) return;
+        seen[key2] = 1;
         distinct.push(pair);
       });
       return board5.participants.map(function() {
@@ -8106,9 +9116,9 @@
       pad.replaceChildren();
       var seenTerms = {}, unique = 0;
       b.pool.forEach(function(pair) {
-        var key = String(pair.term || "").trim().toLowerCase();
-        if (key && !seenTerms[key]) {
-          seenTerms[key] = 1;
+        var key2 = String(pair.term || "").trim().toLowerCase();
+        if (key2 && !seenTerms[key2]) {
+          seenTerms[key2] = 1;
           unique++;
         }
       });
@@ -9165,20 +10175,20 @@
     var fights = {};
     function forDeck(deck, questions, participants, seconds) {
       if (!deck) return null;
-      var key = deck.presenterGameId || deck.id || "deck";
-      if (!questions || !questions.length) return fights[key] || null;
-      var fight = fights[key];
+      var key2 = deck.presenterGameId || deck.id || "deck";
+      if (!questions || !questions.length) return fights[key2] || null;
+      var fight = fights[key2];
       if (!fight || fight.questions.length !== questions.length) {
-        fight = fights[key] = create(questions, participants, seconds);
+        fight = fights[key2] = create(questions, participants, seconds);
       }
       return fight;
     }
     function command(deck, action, arg) {
-      var key = deck && (deck.presenterGameId || deck.id || "deck");
-      if (!key || !fights[key]) return null;
-      var before = fights[key];
+      var key2 = deck && (deck.presenterGameId || deck.id || "deck");
+      if (!key2 || !fights[key2]) return null;
+      var before = fights[key2];
       var after = transition(before, action, arg);
-      fights[key] = after;
+      fights[key2] = after;
       if ((action === "hit" || action === "miss") && after.log.length > before.log.length && SF.Boss.onVerdict) {
         var entry = after.log[after.log.length - 1];
         SF.Boss.onVerdict({
@@ -9196,13 +10206,13 @@
       return after;
     }
     function focus(deck, index) {
-      var key = deck && (deck.presenterGameId || deck.id || "deck");
-      var f = key && fights[key];
+      var key2 = deck && (deck.presenterGameId || deck.id || "deck");
+      var f = key2 && fights[key2];
       if (!f || !Number.isInteger(index) || index === f.index) return f || null;
       if (index < 0 || index >= f.questions.length) return f;
       var q = f.questions[index];
       var done = !!(q && (f.marked || []).indexOf(q.id) > -1);
-      fights[key] = Object.assign({}, f, {
+      fights[key2] = Object.assign({}, f, {
         index,
         /* A different unmarked question is a fresh ask. A marked one stays
            read-only — reveal/hit/miss are ignored and the UI hides them. */
@@ -9211,7 +10221,7 @@
         remaining: f.seconds,
         phase: f.phase === "complete" ? "complete" : "asking"
       });
-      return fights[key];
+      return fights[key2];
     }
     function clear() {
       fights = {};
@@ -9251,31 +10261,31 @@
         })
       };
     }
-    function advance(state2, key) {
+    function advance(state2, key2) {
       var s = Object.assign({}, state2, {
         pos: Object.assign({}, state2.pos),
         winners: state2.winners.slice(),
         moved: []
       });
       if (!s.field.some(function(l) {
-        return l.key === key;
+        return l.key === key2;
       })) return state2;
-      var at = s.pos[key] || 0;
+      var at = s.pos[key2] || 0;
       if (at >= s.length) return s;
-      s.pos[key] = at + 1;
-      s.moved = [key];
-      if (s.pos[key] >= s.length && s.winners.indexOf(key) === -1) s.winners.push(key);
+      s.pos[key2] = at + 1;
+      s.moved = [key2];
+      if (s.pos[key2] >= s.length && s.winners.indexOf(key2) === -1) s.winners.push(key2);
       return s;
     }
-    function back(state2, key) {
+    function back(state2, key2) {
       var s = Object.assign({}, state2, {
         pos: Object.assign({}, state2.pos),
         winners: state2.winners.filter(function(k) {
-          return k !== key;
+          return k !== key2;
         }),
         moved: []
       });
-      s.pos[key] = Math.max(0, (s.pos[key] || 0) - 1);
+      s.pos[key2] = Math.max(0, (s.pos[key2] || 0) - 1);
       return s;
     }
     function reset(state2) {
@@ -9309,21 +10319,21 @@
     var tracks = {};
     function forDeck(deck, field) {
       if (!deck || !field || !field.length) return null;
-      var key = deck.presenterGameId || deck.id || "deck";
-      var track = tracks[key];
+      var key2 = deck.presenterGameId || deck.id || "deck";
+      var track = tracks[key2];
       var sameField = track && track.field.length === field.length && track.field.every(function(l, i) {
         return l.key === field[i].key;
       });
       if (!sameField || track.length !== clampLength(deck.trackLength)) {
-        track = tracks[key] = create(field, deck.trackLength);
+        track = tracks[key2] = create(field, deck.trackLength);
       }
       return track;
     }
-    function command(deck, action, key) {
+    function command(deck, action, key2) {
       var track = deck && tracks[deck.presenterGameId || deck.id || "deck"];
       if (!track) return null;
-      if (action === "advance") track = advance(track, key);
-      else if (action === "back") track = back(track, key);
+      if (action === "advance") track = advance(track, key2);
+      else if (action === "back") track = back(track, key2);
       else if (action === "reset") track = reset(track);
       tracks[deck.presenterGameId || deck.id || "deck"] = track;
       return track;
@@ -9347,7 +10357,7 @@
 
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
-  var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
+  var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key2, value2]) => [key2, { ...value2 }]));
   var TITLE = {
     "accent-bar": region(1, 3, 2, 1),
     title: region(1, 5, 10, 5),
@@ -9665,8 +10675,8 @@
     const clear = (r) => !busy.some((b) => r.col < b.col + b.cols && b.col < r.col + r.cols && r.row < b.row + b.rows && b.row < r.row + r.rows);
     if (wanted.length) {
       const slots = layoutRegionsFor(slide, composition);
-      for (const key of wanted) {
-        if (slots[key] && clear(slots[key])) return { ...slots[key], slot: key };
+      for (const key2 of wanted) {
+        if (slots[key2] && clear(slots[key2])) return { ...slots[key2], slot: key2 };
       }
     }
     const template = TYPES[slide && slide.type];
@@ -9722,8 +10732,8 @@
     wordsLoop: { label: "And leave again", pane: "Motion", types: ["statement"], when: "Word animation enabled", description: "Repeat the arrival, hold and exit." },
     wordPlan: { label: "AI choreography", pane: "Motion", types: ["statement"], when: "Word animation enabled", description: "Request a movement plan for these words or letters. Editing the text retires the old plan; Clear choreography removes it." }
   };
-  function designApplies(key, type2) {
-    const control = DESIGN_CONTROLS[key];
+  function designApplies(key2, type2) {
+    const control = DESIGN_CONTROLS[key2];
     return !!control && (control.types === "*" ? !["quiz", "game"].includes(type2) : control.types.includes(type2));
   }
 
@@ -9835,8 +10845,8 @@
       }
       return options;
     }
-    function command(key, action, card) {
-      const board5 = definitions().find((board6) => board6.key === key);
+    function command(key2, action, card) {
+      const board5 = definitions().find((board6) => board6.key === key2);
       const engine = board5 && namespace()[board5.runtime];
       if (!engine) return false;
       engine.command(action, card);
@@ -9867,8 +10877,8 @@
           engine[board5.reportEvent || "onVerdict"] = board5.reportValue ? (value) => report(board5.reportValue(value)) : report;
       }
     }
-    function createSession(key, { player, slide, node, create, render: render3, command: command2, tick, interval = 1e3 }) {
-      const board5 = definitions().find((board6) => board6.key === key);
+    function createSession(key2, { player, slide, node, create, render: render3, command: command2, tick, interval = 1e3 }) {
+      const board5 = definitions().find((board6) => board6.key === key2);
       player[board5.states] = player[board5.states] || {};
       if (!player[board5.states][slide.id])
         player[board5.states][slide.id] = create(slide[board5.field]);
@@ -10235,7 +11245,7 @@
     ]
   };
   for (const [view, keys] of Object.entries(PRESENTATIONS)) {
-    for (const key of keys) PRESETS[key].presentation = view;
+    for (const key2 of keys) PRESETS[key2].presentation = view;
   }
 
   // src/activities/game-presets.js
@@ -12300,8 +13310,8 @@
       ];
     }
   }
-  function activity(key) {
-    return ACTIVITIES.find((a) => a.key === key) || null;
+  function activity(key2) {
+    return ACTIVITIES.find((a) => a.key === key2) || null;
   }
   function activitiesInPhase(phase) {
     return ACTIVITIES.filter((a) => a.phase === phase && a.enabled !== false);
@@ -12310,7 +13320,7 @@
     return Object.fromEntries(PHASES.map((p) => [p.key, activitiesInPhase(p.key).length]));
   }
   function totalMinutes(keys) {
-    return keys.reduce((sum2, key) => sum2 + ((activity(key) || {}).minutes || 0), 0);
+    return keys.reduce((sum2, key2) => sum2 + ((activity(key2) || {}).minutes || 0), 0);
   }
 
   // src/activities/stages.js
@@ -12716,12 +13726,12 @@
     var people = [];
     (lines || []).map(parsePerson).forEach(function(p) {
       if (!p.name) return;
-      var key = p.name.toLowerCase();
-      if (seen[key]) {
+      var key2 = p.name.toLowerCase();
+      if (seen[key2]) {
         warnings.push("Two people are both named “" + p.name + "”. Only the first is kept.");
         return;
       }
-      seen[key] = 1;
+      seen[key2] = 1;
       people.push(p);
     });
     var byName = {};
@@ -15965,9 +16975,9 @@
       var need = size * size;
       var seen = {}, n = 0;
       game.questions.forEach(function(q) {
-        var key = String(q.term || "").trim().toLowerCase();
-        if (key && !seen[key]) {
-          seen[key] = 1;
+        var key2 = String(q.term || "").trim().toLowerCase();
+        if (key2 && !seen[key2]) {
+          seen[key2] = 1;
           n++;
         }
       });
@@ -16298,9 +17308,9 @@
       var size = Number((game.questions[0] || {}).gridSize) || 3;
       var seen = {}, n = 0;
       game.questions.forEach(function(q) {
-        var key = String(q.term || "").trim().toLowerCase();
-        if (key && !seen[key]) {
-          seen[key] = 1;
+        var key2 = String(q.term || "").trim().toLowerCase();
+        if (key2 && !seen[key2]) {
+          seen[key2] = 1;
           n++;
         }
       });
@@ -16868,8 +17878,8 @@
       if (!name || !String(q.question || "").trim()) return;
       if (categories.indexOf(name) === -1) categories.push(name);
       if (values.indexOf(value) === -1) values.push(value);
-      var key = name + "\0" + value;
-      (byKey[key] || (byKey[key] = [])).push({
+      var key2 = name + "\0" + value;
+      (byKey[key2] || (byKey[key2] = [])).push({
         id: q.id,
         question: q.question,
         answer: String(q.answer || "").trim(),
@@ -17217,8 +18227,8 @@
     if (typeof style.describe === "function") return style.describe(slide, response);
     return String(response == null ? "" : response);
   }
-  function gameStyle(key) {
-    return GAME_STYLES[key] || GAME_STYLES.choice;
+  function gameStyle(key2) {
+    return GAME_STYLES[key2] || GAME_STYLES.choice;
   }
   var GAME_STYLES = { choice: choice2, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl, spot, fill };
 
@@ -17882,8 +18892,8 @@
       answersHint: "One question per face — Define, Compare, Why, Example, What if, Benefits and limits. The cube rolls a fresh face each time; answers are spoken."
     }
   };
-  function gameFormat(key) {
-    return FORMATS[key] || null;
+  function gameFormat(key2) {
+    return FORMATS[key2] || null;
   }
   var FORMAT_STYLE = {
     "choice": "choice",
@@ -18108,10 +19118,10 @@
     };
   }
   function createStores({ normalizeDeck: normalizeDeck2, normalizeGame: normalizeGame2, storage, warn = console.warn }) {
-    function documents(kind, key, lastKey, normalize) {
+    function documents(kind, key2, lastKey, normalize) {
       function read() {
         try {
-          const raw = JSON.parse(storage().getItem(key) || "[]");
+          const raw = JSON.parse(storage().getItem(key2) || "[]");
           return Array.isArray(raw) ? raw.map(normalize).filter(Boolean) : [];
         } catch (error) {
           warn("Could not read saved " + kind + ":", error);
@@ -18120,7 +19130,7 @@
       }
       function write(items2) {
         try {
-          storage().setItem(key, JSON.stringify(items2));
+          storage().setItem(key2, JSON.stringify(items2));
           return true;
         } catch (error) {
           warn("Could not save " + kind + ":", error);
@@ -18750,16 +19760,16 @@
     lanes: { label: "Decision lanes · below / at least 50", types: ["spectrum"], structured: true }
   };
   function compositionOptions(slide, _theme) {
-    return Object.keys(COMPOSITIONS).filter(function(key) {
-      return COMPOSITIONS[key].types.includes(slide.type);
+    return Object.keys(COMPOSITIONS).filter(function(key2) {
+      return COMPOSITIONS[key2].types.includes(slide.type);
     });
   }
   function slideComposition(deck, slide) {
     var explicit = (slide.design || {}).composition;
     if (explicit === "none") return "";
     var defaults = (THEMES[deck && deck.theme] || {}).defaults || {};
-    var key = explicit || defaults[slide.type] || "";
-    return compositionOptions(slide).includes(key) ? key : "";
+    var key2 = explicit || defaults[slide.type] || "";
+    return compositionOptions(slide).includes(key2) ? key2 : "";
   }
   var TRANSITIONS = (
     /** @type {const} */
@@ -19617,12 +20627,12 @@
       if (s.type === "game") {
         var game = lookupGame ? lookupGame(s.gameId) : null;
         if (game) {
-          var key = game.id + ":" + (game.modified || 0) + ":" + (deck.theme || "");
-          if (!gameStepCache.has(key)) {
+          var key2 = game.id + ":" + (game.modified || 0) + ":" + (deck.theme || "");
+          if (!gameStepCache.has(key2)) {
             if (gameStepCache.size > 200) gameStepCache.clear();
-            gameStepCache.set(key, compileGame(game, { theme: deck.theme }).length);
+            gameStepCache.set(key2, compileGame(game, { theme: deck.theme }).length);
           }
-          steps = gameStepCache.get(key);
+          steps = gameStepCache.get(key2);
           games++;
         }
       }
@@ -19750,9 +20760,9 @@
     function media(index, label, url, what) {
       var kind = externalMedia(url);
       if (!kind) return;
-      var key = kind + "|" + url;
-      if (seenExternal[key]) return;
-      seenExternal[key] = 1;
+      var key2 = kind + "|" + url;
+      if (seenExternal[key2]) return;
+      seenExternal[key2] = 1;
       add(
         "check",
         index,

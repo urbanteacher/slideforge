@@ -1,0 +1,385 @@
+'use strict';
+/* Week 8 · Who's connected to whom? Networks and trees: every slide, in teaching order.
+ * The plan is docs/ipdv-week8-plan.md; the live figures are src/figures/
+ * (bridges, network, tree). Every technique runs See it → Name it → Build it,
+ * and every Build it shows its code beside the picture that code drew.
+ * The data spine is London: the Tube's Zone 1 (a network) and the 33
+ * boroughs (a tree). */
+const L = require('./layouts.js');
+
+const DIR = 'assets/lesson/ipdv/week8';
+const asset = name => `${DIR}/${name}`;
+/* A drawn slide carries its own heading; an outside picture gets the red title above it and facts on its back. */
+const drawn = (title, file, notes, extra) => Object.assign({ type: 'image', title, image: asset(file), imageFit: 'contain', design: { capStyle: 'none' }, notes }, extra || {});
+const photo = (title, file, facts, notes) => ({ type: 'image', title, image: asset(file), imageFit: 'contain', design: { capStyle: 'top' }, body: facts.join('\n'), notes });
+const section = (title, part, notes) => ({ type: 'section', title, subtitle: part, notes });
+const statement = (title, notes) => ({ type: 'statement', title, body: title, notes });
+
+function lesson() {
+  const abc = L.abc(), tube = L.tube(), mis = L.miserables(), london = L.london();
+  const TUBE = { nodes: tube.nodes, links: tube.links, colours: tube.colours, layouts: tube.layouts, r: 6 };
+  const KX = "King's Cross St. Pancras";
+  const credit = 'Powered by TfL Open Data · Zone 1';
+  return [
+  /* ======================================================== Opening */
+  { type: 'title', title: 'Who’s connected to whom?',
+    subtitle: 'LDSCI6253 Advanced Information Presentation & Visualisation · Week 8 · Networks and trees',
+    notes: 'Up as they arrive. Same promise as Weeks 5 and 7: every idea seen in a real picture, named, then built in Altair. Rebuilt from the 2025 networks deck (01_Lecture_IPDV_7.pptx) and Dimitris Mylonas\'s LDSCI5209 deck (09_Lecture_IPDV_Networks_Trees.pdf).' },
+
+  { type: 'content', title: 'Before we start',
+    bullets: [
+      'Reading\tMunzner, Visualization Analysis and Design: Chapter 9, Arrange Networks and Trees',
+      'Worksheets\tOn Canvas by midday on the Friday after the lab',
+      'Data for the lab\ttube_stations.csv, tube_links.csv and london_boroughs.csv, beside these slides',
+      'Stuck?\tAsk early. Don’t wait until the last minute'
+    ],
+    notes: '1 min. Fixes carried over from the 2025 deck: it said "Week 7 / Lecture 7" throughout, its slide 6 said "Analysis Farmwork", and its recap slide recapped maps under the networks title. This is a real recap, next.' },
+
+  { type: 'content', title: 'Last lecture: where in the world?',
+    bullets: [
+      'Place\tA map spends position, your best channel, on where. Use it when where adds meaning',
+      'Flatten\tEvery flat map distorts: choose what it keeps (Equal Earth for areas)',
+      'Fill\tMap rates, not counts; say how you cut the colour classes',
+      'Build\tmark_geoshape, a join with transform_lookup, .project()'
+    ],
+    notes: '1 min. Keep the word "position" in their heads: today, position stops meaning anything.' },
+
+  drawn('Eight weeks in, one more kind of data', 'route.svg',
+    '1 min. The route: seven weeks behind them, all of it on tables, one row per thing. Today the data is the connections between things. A network or a tree can be one panel of the final page.'),
+
+  { type: 'figure', figure: 'network', title: 'The Tube: where things are, or what connects?', figureGround: 'paper',
+    figureEyebrow: 'Hook', figureCredit: credit, figureAlt: 'Zone 1 of the London Underground: stations as dots, track as lines in each line\'s colour, first at their real positions, then evenly spaced.',
+    figureData: Object.assign({ key: [{ mark: 'dot', text: 'a station' }, { mark: 'line', colour: '#E32017', text: 'track between two stations (colour = which Tube line)' }] }, TUBE),
+    figureSteps: [
+      { caption: 'Each dot is a Tube station in Zone 1, drawn where it really is. Each coloured line is a Tube line.', layout: 'geo', labels: 'none', geo: true,
+        explain: 'This is central London\'s Tube, drawn from TfL\'s own data.\nEach white dot is a station, in its real place. Each coloured line is the track between two stations next to each other. The colour tells you which Tube line it is: red is the Central line, black is the Northern line.\nLook at the middle: it is a crowded knot, hard to read.' },
+      { caption: 'Point at a station and the lines through it light up. King\'s Cross St. Pancras is on six lines.', layout: 'geo', lit: KX, labels: 'hubs', geo: true,
+        explain: 'Point at any station. The lines that touch it stay bright and everything else fades.\nThe card says how many stations are next door (neighbours) and how many Tube lines pass through.\nThis is the whole idea of a network: things (stations) and the connections between them (track).' },
+      { caption: 'The same stations and lines, with the crowded middle drawn bigger, as Harry Beck did for the Tube map.', layout: 'even', labels: 'hubs',
+        explain: 'Nothing is added or taken away: the same stations, joined the same way.\nOnly the drawing changed. The crowded middle is stretched out and the edges are pulled in, so the centre is easier to read.\nHarry Beck did this for the Tube map in 1931 (published 1933), and also made every line straight. A passenger does not need true distances. They need to know what connects to what.' }
+    ],
+    notes: '4 min. ASK first, on step 1: "Which picture would you use to get from Brixton to Euston? Which would you use to walk it?" (The geography walks; the even one rides.) ' +
+      'Step 2 is Beck\'s first move, done by a computer: a fisheye that enlarges the centre (each station keeps its direction from the middle; distance is shrunk by a power of 0.6). Beck also straightened every line to horizontals, verticals and 45°: show TfL\'s current map (tfl.gov.uk/maps/track/tube) beside it. Beck sketched his in 1931 and it was published as a pocket map in 1933. ' +
+      'Step 3: hover live. Then: "Beck threw away geography. Today you will throw away position altogether." Data: TfL Open Data, the regular service pattern of each line, Zone 1 (and 1/2 boundary) stations only. Edgware Road\'s two stations are drawn as one.' },
+
+  { type: 'content', title: 'By the end of today you can',
+    bullets: [
+      'Tell\ta network from a tree, and name nodes, edges, degree, paths, roots and leaves',
+      'Store\ta network as a list of pairs, and read the same network as a grid (a matrix)',
+      'Choose\tbetween dots and lines, a grid, or boxes inside boxes, by the question the reader asks',
+      'Build\ta dots-and-lines chart, a grid and an icicle in Altair',
+      'Explain\twhy Beck\'s Tube map is a better network picture than an accurate one'
+    ], progressive: true,
+    notes: '1 min. Rewritten from the 2025 deck\'s overview (slide 5), which listed "what is a network, what is a tree, common encodings".' },
+
+  { type: 'journey', title: 'Today’s route', subtitle: 'Five stops, one question each', progressive: false,
+    bullets: [
+      'Name\tIs it a network or a tree?',
+      'Store\tHow does a computer hold a network?',
+      'Connect\tHow do you draw the connections?',
+      'Matrix\tWhat if there are too many lines to read?',
+      'Nest\tHow do you draw a family-tree shape (a hierarchy)?'
+    ],
+    notes: '30 s.' },
+
+  /* ======================================================== ① Name */
+  section('Is it a network or a tree?', 'Part 1 · Name', '20 s. A new kind of data: connections.'),
+
+  photo('Where networks sit: a new What', 'orig-munzner-what.jpg', [
+    'Munzner\'s What, Why, How, from Week 3. This is the What: the kinds of data.',
+    'Until now every dataset was a table: rows of items, columns of attributes.',
+    'Networks are a different kind: items (nodes) and the links between them. A tree is a network with a hierarchy.',
+    'Source: Tamara Munzner, Visualization Analysis and Design (2014), Chapter 2. Slide from the 2025 deck.'
+  ], '1 min. From the 2025 deck (slides 6–9). Point at "Networks & Trees" under dataset types. Week 3 taught What/Why/How; today is a new What.'),
+
+  { type: 'figure', figure: 'bridges', title: 'Cross every bridge once', figureGround: 'paper',
+    figureEyebrow: 'Try it', figureCredit: 'Königsberg, 1736 · after Euler', figureAlt: 'A stylised map of Königsberg: a river around an island, four pieces of land and seven bridges; then the same as four dots and seven lines.',
+    figureSteps: [
+      { caption: 'Königsberg, 1736: a river, an island and seven bridges. Click some land, then try to cross every bridge once.', show: 'city',
+        explain: 'The city of Königsberg sat on a river, with an island in the middle and seven bridges.\nPeople asked: can you take a walk that crosses every bridge exactly once, never twice?\nTry it: click a piece of land to stand on it, then click bridges to cross them. A bridge turns red once you have used it.' },
+      { caption: 'One try: six bridges crossed, then stuck on the east side. Every try ends stuck like this.', show: 'city', from: 'N', walk: [1, 3, 7, 6, 2, 5],
+        explain: 'This walk starts on the north bank and crosses bridges 1, 3, 7, 6, 2 and 5. Bridge 4 is left, but the walker is on the east side, and no unused bridge leaves it.\nEvery order anyone tries ends stuck. In 1736 the mathematician Leonhard Euler explained why.' },
+      { caption: 'Euler\'s idea: draw each piece of land as a dot, and each bridge as a line between two dots.', show: 'graph',
+        explain: 'Euler saw that the shapes of the land and the lengths of the bridges do not matter. Only which land each bridge joins matters.\nSo he drew each piece of land as a dot and each bridge as a line. Dots joined by lines are called a graph, or a network. This was the start of graph theory.' },
+      { caption: 'Count the lines touching each dot: 5, 3, 3 and 3. All four are odd numbers, so the walk is impossible.', show: 'degree',
+        explain: 'The number of lines touching a dot is called its degree.\nOn a walk, every time you arrive at a piece of land you also leave it again: that uses two lines, an even number.\nOnly the place you start and the place you finish can have an odd number. Here all four dots are odd, so no walk can cross every bridge once.' },
+      { caption: 'Add an eighth bridge: now only two dots are odd. Start at one of them and you finish at the other.', show: 'eighth',
+        explain: 'The rule: a walk that uses every line exactly once is possible when zero or two dots have an odd number of lines.\nWith an extra bridge between the north and south banks, only the island (5) and the east (3) are odd. Start on one of them and the walk ends on the other.' }
+    ],
+    notes: '6 min. Let the room try first (or a volunteer at the wall): click land, then bridges. When someone is stuck, step to the failed walk, then Euler\'s move. ' +
+      'CORRECTION carried from Dimitris\'s deck: it says a graph has an Euler path "if and only if there are exactly two vertices with odd degree". It is zero or two (zero gives a circuit that ends where it began), and the graph must be connected. Euler, Solutio problematis ad geometriam situs pertinentis (1736).' },
+
+  statement('A walk over every edge needs zero or two odd nodes', '30 s. Euler\'s rule, in one line. The bigger idea: drop everything but the connections, and the question becomes easy.'),
+
+  drawn('Three kinds of edge', 'edge-types.svg',
+    '2 min. Redrawn from the 2025 deck\'s slide 15. ASK for a real example of each before showing the captions: undirected (track, Facebook friends), directed (Instagram follows, a web link, who-cites-whom), weighted (minutes between stations, scenes shared, money sent).'),
+
+  { type: 'cards', title: 'Network or tree?', progressive: true,
+    bullets: [
+      'The Tube\tA network: you can go round the Circle line and come back, a loop.',
+      'Folders on your laptop\tA tree: each folder sits in exactly one parent folder.',
+      'Instagram follows\tA directed network: you can follow someone who does not follow you.',
+      'A company org chart\tA tree: everyone has one manager, up to one CEO.',
+      'Premier League fixtures\tA network: every club plays every other, twice.',
+      'Your family tree\tUsually a tree, going down from one ancestor. Cousins who marry make a loop.'
+    ],
+    notes: '3 min. Hands up for each before revealing: network or tree? The family tree is the trap: it is called a tree, and down one line it is one, but two parents per person and cousin marriages make it a network.' },
+
+  statement('A tree is a network with no loops and one root', '30 s. Card 1. Equivalent, from Dimitris\'s deck: a connected graph with N nodes and N − 1 edges.'),
+
+  drawn('The words for a tree, on one tree', 'terms.svg',
+    '1 min. Redrawn from the 2025 deck\'s slide 13, on London: root, parent, child, siblings, leaf, subtree, level. Part 5 draws this same tree four ways.'),
+
+  photo('See it: a family tree', 'orig-royal-tree.jpg', [
+    'A family tree of the British royal family, with the line of succession to the throne marked.',
+    'Each person hangs below their parents. Reading down a branch, it is a tree: one root at the top, leaves at the bottom.',
+    'A real family is not quite a tree: everyone has two parents, so lines can join up again.',
+    'Image from the 2025 deck (Getty Images / PA Media), used for teaching.'
+  ], '1 min. From the 2025 deck (slide 14). The line of succession is a path from the root down. Ask: where are the leaves?'),
+
+  /* ======================================================== ② Store */
+  section('How does a computer hold a network?', 'Part 2 · Store', '20 s.'),
+
+  { type: 'figure', figure: 'network', title: 'One network, written three ways', figureGround: 'paper',
+    figureEyebrow: 'Store it', figureCredit: 'After Dimitris Mylonas, LDSCI5209', figureAlt: 'An eight-node network A–H drawn as a picture, written as an edge list, and as an 8 by 8 adjacency matrix.',
+    figureData: { nodes: abc.nodes, links: abc.links, layouts: abc.layouts, r: 16, key: [{ mark: 'dot', colour: '#0c3354', text: 'a node: one thing' }, { mark: 'line', colour: '#8a96a3', text: 'an edge: two things are connected' }] },
+    figureSteps: [
+      { caption: 'The same 8 dots and 9 lines, written 3 ways: a picture, a list of pairs, and a grid of 0s and 1s.', view: 'store',
+        explain: 'Left: the picture. 8 dots (A to H) and 9 lines.\nMiddle: the same thing as a list. Each row is one line, and names the two dots it joins.\nRight: the same thing as a grid. Each dot has a row and a column. A 1 means "these two are joined", a 0 means they are not.\nPoint at a dot, a row of the list or a square of the grid: the same connection lights up in all three.' },
+      { caption: 'Dot A has 4 lines, so A is in 4 rows of the list, and A\'s row in the grid has four 1s.', view: 'store', lit: 'A',
+        explain: 'A is joined to B, C, G and H. That is 4 lines.\nIn the list, A appears in 4 rows. In the grid, A\'s row has four 1s, and so does A\'s column.\nThe number of lines touching a dot is called its degree. A\'s degree is 4.' },
+      { caption: 'One line, from C to D: one row of the list, and two squares of the grid (row C and row D).', view: 'store', lit: 'C-D',
+        explain: 'The line C–D is written once in the list. In the grid it shows twice: in row C, column D, and in row D, column C, because the line goes both ways.\nMost squares are 0. 8 dots make a grid of 64 squares for only 9 lines. Lists stay short; grids get big.' }
+    ],
+    notes: '5 min. Dimitris\'s eight-node example (A–H), credited. Live: point at nodes, list rows and cells. ' +
+      'The 2025 slide also had an adjacency list ([A] => [C, G, H, B]...). Mention it: one line per node, listing its neighbours. Same information again.' },
+
+  { type: 'table', title: 'Three ways to write one network', tableHeader: true,
+    body: 'Way\tWhat it is\tSize for this one\tGood for\n' +
+      'Edge list\tone row per edge: source, target\t9 rows\tstoring and loading: it is just a table\n' +
+      'Adjacency list\tone line per node: its neighbours\t8 lines\tfinding a node\'s neighbours fast\n' +
+      'Matrix\ta row and a column per node, 1 if joined\t64 cells\tchecking any pair at a glance',
+    notes: '1 min. The edge list is the one they will use: it is a pandas DataFrame with two columns. Everything in Altair starts from it.' },
+
+  statement('Every network can be written as a list of pairs', '30 s. Card 2. A network fits in a table after all: one row per connection. That is how they will load it in Altair.'),
+
+  drawn('Build it: the nodes', 'build-nodes.svg',
+    '2 min. The edges and the node positions are two small tables. The positions are numbers we chose: nothing in the data says where A goes. The dots and the names are two layers of the same chart.'),
+
+  drawn('Build it: the edges', 'build-links.svg',
+    '2 min. Before and after: the same code plus one join and one layer. Each edge needs the position of both ends, so the edge list is joined to the node table twice (merge, merge). mark_rule draws a line from (x, y) to (x2, y2). Layers stack with +: the lines first, so the dots sit on top.', { transition: 'none' }),
+
+  { type: 'table', title: 'The words, now that you’ve used them', tableHeader: true,
+    body: 'Word\tMeans\tOn the Tube\n' +
+      'Node (vertex)\ta thing\ta station\n' +
+      'Edge (link)\ta connection between two things\tthe track between two stations\n' +
+      'Degree\thow many edges touch a node\tKing\'s Cross: the most in Zone 1\n' +
+      'Path\ta route from node to node along edges\tBrixton to Euston on the Victoria line\n' +
+      'Cluster (community)\ta group with many edges inside it\tthe City\'s tangle of lines\n' +
+      'Directed / weighted\tedges with a direction / a number\tone-way escalators / minutes between stations',
+    notes: '1 min. The terms slide comes after they have used each idea (Dimitris\'s deck, "Terminology"). Graph = network; nodes = vertices = actors; edges = links = relations; clusters = communities.' },
+
+  /* ======================================================== ③ Connect */
+  section('How do you draw the links?', 'Part 3 · Connect', '20 s. The node-link diagram.'),
+
+  { type: 'figure', figure: 'network', title: 'Drag a node. Nothing changes.', figureGround: 'paper',
+    figureEyebrow: 'Try it', figureAlt: 'The eight-node network, first in the chosen positions, then shuffled.',
+    figureData: { nodes: abc.nodes, links: abc.links, layouts: abc.layouts, r: 22, key: [{ mark: 'dot', colour: '#0c3354', text: 'a node: one thing' }, { mark: 'line', colour: '#8a96a3', text: 'an edge: two things are connected' }] },
+    figureSteps: [
+      { caption: 'We chose where to draw each dot. Grab one and drag it somewhere else: its lines follow it.', layout: 'chosen',
+        explain: 'Grab a dot and move it. Its lines follow, because a line belongs to two dots, not to a place on the screen.\nA is still joined to B, C, G and H, wherever you put it.' },
+      { caption: 'Every dot has moved, but each is joined to exactly the same dots as before. Nothing that matters has changed.', layout: 'shuffled',
+        explain: 'Every dot is somewhere new, so the picture looks different. But the connections are identical.\nIn a scatter plot, where a dot sits is the data. In a network picture it is not: only the lines carry the data. Someone, or a computer, chose the positions.' }
+    ],
+    notes: '2 min. Hand the clicker or the mouse to a student: drag nodes. Then step. SAY: "In Week 2 position was the strongest channel. Here it carries nothing, so somebody, or some program, chooses it. That choice is the layout."' },
+
+  { type: 'figure', figure: 'network', title: 'Let the computer choose the positions', figureGround: 'paper',
+    figureEyebrow: 'Name it', figureCredit: credit, figureAlt: 'The Tube\'s Zone 1 at its real positions, then rearranged by a force-directed layout.',
+    figureData: Object.assign({ key: [{ mark: 'dot', text: 'a station' }, { mark: 'line', colour: '#E32017', text: 'track between two stations (colour = which Tube line)' }] }, TUBE),
+    figureSteps: [
+      { caption: 'The Tube\'s Zone 1 again, every station where it really is.', layout: 'geo', labels: 'hubs', geo: true,
+        explain: 'The same Tube as at the start of the lecture, with the busiest stations named. Here a station\'s position comes from the real map.' },
+      { caption: 'Now a computer places the stations: joined stations pulled close, the others pushed apart. The real map is gone.', layout: 'force', labels: 'hubs',
+        explain: 'Imagine each line is a spring pulling two stations together, and every station pushes the others away like a magnet. A computer lets them settle.\nThe result keeps only the connections. Stations that are close on the real map can end up far apart if they are not joined.\nThis is how most network software draws a network unless you tell it otherwise. Its name is a force-directed layout.' }
+    ],
+    notes: '2 min. The layout is computed at build time (tools/ipdv-week8/layouts.js, Fruchterman–Reingold, seeded so it is the same every time). Hover a hub. ASK: "Which is more useful for a passenger?" Neither as much as Beck\'s, which keeps a little geography and a lot of tidiness.' },
+
+  photo('See it: who trades with whom', 'orig-gupta-network.jpg', [
+    'A node-link chart of companies and people around Sanjeev Gupta\'s Liberty Commodities.',
+    'Nodes are people (photos) and companies (buildings). A solid line means owner, shareholder or director; a dotted line means an associate or former employee.',
+    'The rings around nodes are categories: same registered address, a loan from Wyelands Bank, or the same auditor.',
+    'Here the drawing is the story: who is connected to whom. In 2020 the Financial Times reported on companies run by Gupta\'s associates.',
+    'Image from the 2025 deck; its source is to be confirmed.'
+  ], '2 min. From the 2025 deck (slide 12). SOURCE TO CHECK: the 2025 slide gives none; it looks like an FT graphic from the 2020 Gupta/Wyelands reporting, but a search did not find it. Hide this slide in the student copy until the source is confirmed. ' +
+    'Point out the encodings: node shape (person or company), line style (relation type), ring colour (shared address, lender, auditor).'),
+
+  { type: 'figure', figure: 'network', title: 'The hairball',
+    figureEyebrow: 'See it', figureCredit: 'Les Misérables co-occurrence · Knuth (1993)', figureAlt: 'A force-directed drawing of 77 Les Misérables characters and 254 links: a dense tangle.',
+    figureData: { nodes: mis.nodes, links: mis.links, colours: mis.colours, layouts: mis.layouts, valueTitle: mis.valueTitle, r: 7, key: [{ mark: 'dot', colour: '#e45756', text: 'a character (colour = their group)' }, { mark: 'line', colour: '#9fb3c8', text: 'the two are in a scene together' }] },
+    figureSteps: [
+      { caption: 'Each dot is a character in Les Misérables. A line joins two characters who are in a scene together.', layout: 'force', labels: 'hubs',
+        explain: 'Each dot is a character from Victor Hugo\'s novel Les Misérables. A line joins two characters who appear in the same scene.\nThe colours are groups of characters who mostly appear together.' },
+      { caption: 'Point at Valjean: he shares a scene with 36 characters. Try to follow his lines.', layout: 'force', lit: 'Valjean', labels: 'hubs',
+        explain: 'Pointing helps: Valjean\'s lines stay bright and the rest fade.\nNow try a harder question from the picture: does Javert share a scene with Fantine? The lines cross so often that you cannot follow one.' },
+      { caption: '77 characters and 254 lines: too many to follow by eye. People call this a hairball.', layout: 'force', labels: 'hubs',
+        explain: 'When a network has many lines, the middle turns into a tangle that nobody can read. Network designers call it a hairball.\nThe next part shows a way out: draw the same data as a grid.' }
+    ],
+    notes: '2 min. Data: Knuth, The Stanford GraphBase (1993), as in vega_datasets (data.miserables). The same data the next part turns into a matrix.' },
+
+  photo('See it: books bought together', 'orig-touchgraph-books.jpg', [
+    'TouchGraph\'s Amazon browser: each node is a book, and a line joins two books that customers often bought together.',
+    'The coloured clouds are clusters, groups of books with many links inside them (here, topics such as social networks and complexity).',
+    'Node-link works here because it is small and the clusters are what you want to see.',
+    'Image from the 2025 deck (touchgraph.com).'
+  ], '1 min. From the 2025 deck (slides 18–21). Clusters: the word from the terms slide, seen in the wild.'),
+
+  photo('See it: a network on a map', 'orig-munich-geo.jpg', [
+    'Munich\'s U-Bahn and S-Bahn drawn on the city\'s real geography.',
+    'Here position is geography, as in Week 7, so distances are true but the centre is crowded.',
+    'Compare the Tube hook: a schematic gives up true distance to make the connections readable.',
+    'Map by M. Dörrbecker (June 2014), Wikimedia Commons, CC BY-SA. From the 2025 deck.'
+  ], '1 min. From the 2025 deck (slide 22, "Graphs on maps"). The caption there said 2013; the map itself says June 2014. Ties back to Week 7: here the layout is a projection again.'),
+
+  drawn('Build it: the Tube in Altair', 'build-tube.svg',
+    '3 min. Same three layers as A–H, on real data. Position is longitude and latitude this time. Colour is data: TfL\'s line colours, through a scale with a domain (the line names) and a range (the hexes). ' +
+      'Altair has no layout of its own: the positions come with the data, here from geography. For a computed layout, students can use networkx (nx.spring_layout) to make the x and y columns. That is the next step, not today\'s.'),
+
+  { type: 'cards', title: 'When dots and lines stop working', progressive: true,
+    bullets: [
+      'Too many lines\tPast a few hundred edges the middle turns to a hairball.',
+      'Crossings\tEvery crossing is a place the eye can follow the wrong line.',
+      'Labels\tNames collide; most charts can only label the hubs.',
+      'Position is made up\tReaders read closeness as meaning. In a computed layout it often isn\'t.'
+    ],
+    notes: '1 min. From the 2025 deck\'s "Challenges of graph visualisations", rewritten for networks (it said "large trees").' },
+
+  statement('In a dots-and-lines picture, where a dot sits means nothing: only the lines carry the data', '30 s. Card 3.'),
+
+  /* ======================================================== ④ Matrix */
+  section('What do you do when it’s too dense?', 'Part 4 · Matrix', '20 s.'),
+
+  { type: 'figure', figure: 'network', title: 'Untangle it into a grid',
+    figureEyebrow: 'See it', figureCredit: 'Les Misérables co-occurrence · Knuth (1993)', figureAlt: 'The Les Misérables network, first as a tangle of lines, then as a 77 by 77 matrix reordered by name, by number of links and by group.',
+    figureData: { nodes: mis.nodes, links: mis.links, colours: mis.colours, layouts: mis.layouts, valueTitle: mis.valueTitle, r: 7, key: [{ mark: 'dot', colour: '#e45756', text: 'a character (colour = their group)' }, { mark: 'line', colour: '#9fb3c8', text: 'the two are in a scene together' }] },
+    figureSteps: [
+      { caption: 'The hairball again: 77 characters and 254 lines.', layout: 'force', labels: 'hubs',
+        explain: 'The same 77 characters and 254 lines as before.' },
+      { caption: 'The same data as a grid. Each character has a row and a column; a square means those two share a scene.', view: 'matrix', order: 'name', key: [{ mark: 'box', colour: '#9fb3c8', text: 'a square: these two share a scene (darker = more scenes)' }],
+        explain: 'Every character gets one row and one column, in A to Z order. Where a row and a column meet, a square means those two share at least one scene. A darker square means more scenes together.\nNo lines cross, ever. Point at a square to read the two names. This kind of grid is called a matrix.' },
+      { caption: 'The rows sorted from the busiest character to the quietest: the busy ones gather top left.', view: 'matrix', order: 'degree', key: [{ mark: 'box', colour: '#9fb3c8', text: 'a square: these two share a scene (darker = more scenes)' }],
+        explain: 'Same squares, different order: now the character with the most connections (Valjean) is in the first row and column.\nThe order of the rows is a choice, like where you put the dots in a picture. Different orders show different things.' },
+      { caption: 'The rows sorted by group: each group shows up as a block of squares along the diagonal.', view: 'matrix', order: 'group', key: [{ mark: 'box', colour: '#9fb3c8', text: 'a square: these two share a scene (darker = more scenes)' }],
+        explain: 'Now characters in the same group sit next to each other.\nEach solid block on the diagonal is a group of characters who mostly share scenes with each other. The few squares away from the diagonal are the characters who link one group to another.' }
+    ],
+    notes: '5 min. The set piece: watch the squares travel as the order changes. ASK on step 2: "Does Javert share a scene with Fantine?" Point to the cell: yes. Easy here, near impossible in the hairball. ' +
+      'Evidence: Ghoniem, Fekete & Castagliola (2004) found matrices beat node-link for most reading tasks once a network is dense, except following a path.' },
+
+  drawn('Build it: a matrix in one chart', 'build-matrix.svg',
+    '3 min. Altair needs no layout for a matrix: rows and columns are just two nominal fields. The pairs table is written both ways round (pd.concat) because the grid shows each pair twice. Sorted by name, so the clusters are hidden.'),
+
+  drawn('Build it: one word changes the order', 'build-matrix-grouped.svg',
+    '1 min. Before and after: the only change is the order list. Sort by group and the blocks appear. Same data, same chart, a different story.', { transition: 'none' }),
+
+  { type: 'compare', title: 'Dots and lines, or a grid?', subtitle: 'Dots and lines (node-link)\tA grid (matrix)', progressive: true,
+    bullets: [
+      'Size\tSmall, sparse networks\tLarge or dense networks',
+      'Paths\tFollow a route by eye\tA path is hard to trace',
+      'Pairs\tHard once lines cross\tAny pair: one cell',
+      'Clusters\tShow if the layout is kind\tBlocks, once the order is right',
+      'Readers\tFamiliar: everyone reads it\tNeeds a sentence of explanation'
+    ],
+    notes: '2 min. Ghoniem, Fekete & Castagliola (2004), "A comparison of the readability of graphs using node-link and matrix-based representations", IEEE InfoVis. Munzner ch. 9 makes the same comparison.' },
+
+  statement('When the lines tangle, draw a grid instead', '30 s. Card 4.'),
+
+  /* ======================================================== ⑤ Nest */
+  section('How do you draw a hierarchy?', 'Part 5 · Nest', '20 s. Trees, which have one more way to be drawn.'),
+
+  { type: 'figure', figure: 'tree', title: 'One London, four drawings',
+    figureEyebrow: 'See it', figureCredit: `ONS mid-${london.year} population estimates`, figureAlt: 'London\'s 33 boroughs as a tree, an indented list, an icicle and a treemap, sized by population.',
+    figureData: { root: london.root, colours: london.colours, valueTitle: london.valueTitle, format: london.format, key: [{ mark: 'box', colour: '#4c78a8', text: 'Inner London' }, { mark: 'box', colour: '#f58518', text: 'Outer London' }, { mark: 'none', text: 'bar or box size = number of people' }] },
+    figureSteps: [
+      { caption: 'London splits into Inner and Outer London, then 5 areas, then 33 boroughs. The lines show what belongs to what.', layout: 'link',
+        explain: 'This is a tree: London at the start (the root), splitting into Inner and Outer London, then into 5 areas, then into the 33 boroughs (the leaves).\nEach line joins a part to the bigger part it belongs to. This drawing shows who belongs to whom very clearly. It says nothing about size: tiny City of London gets the same dot as Croydon.' },
+      { caption: 'The same tree as a list, like folders on a laptop. The bar shows how many people live there.', layout: 'indent',
+        explain: 'Each row is one place, pushed to the right the deeper it is, the way your laptop shows folders inside folders.\nThe bar is the number of people. A bigger area\'s bar is all of its boroughs\' bars added up.' },
+      { caption: 'The same tree as bands: each band is all of London, cut into smaller and smaller pieces.', layout: 'icicle',
+        explain: 'The top band is all of London. Each band below cuts it into smaller pieces: Inner and Outer, then the 5 areas, then the 33 boroughs.\nThe width of each piece is its number of people, so now you can see size: Outer London holds more people than Inner London. This drawing is called an icicle.' },
+      { caption: 'Point at any box to see its borough, how many people live there, and where it belongs.', layout: 'treemap', lit: 'Croydon',
+        explain: 'Point at a box. The card shows the borough\'s name, its number of people, its share of London, and its path back to London (lit in red).\nCroydon has the most people of any London borough.' },
+      { caption: 'The same tree as boxes inside boxes. The bigger the box, the more people live there.', layout: 'treemap',
+        explain: 'Each borough is a box, inside its area\'s box, inside Inner or Outer London. The area of each box is its number of people.\nBelonging is shown by being inside a box, not by lines. You see the biggest boroughs at once, but it is harder to see how many levels the tree has. This drawing is called a treemap.' }
+    ],
+    notes: '6 min. Watch every node travel between layouts: the same rectangles each time. ' +
+      `Data: ONS mid-${london.year} estimates via Nomis (NM_2002_1); the five areas are ONS's ITL2 regions (Inner London West and East; Outer London East and North East, South, West and North West). London in all: about 9.1 million. ` +
+      'Croydon is the largest borough in these estimates; check the card live.' },
+
+  { type: 'cards', title: 'Four ways to draw a tree', progressive: true,
+    bullets: [
+      'Node-link tree\tStructure first: who is under whom. Size is invisible.',
+      'Indented list\tReads like folders; easy to label; long.',
+      'Icicle (or sunburst)\tLevels as bands; sizes as widths.',
+      'Treemap\tSizes as areas; fills the space. Depth is harder to read.'
+    ],
+    notes: '1 min. From the 2025 decks\' "Types of trees" and "Why use trees?". Their decision, hierarchical and binary trees are kinds of tree, not drawings: name them, and say a decision tree is drawn as a node-link tree.' },
+
+  statement('Ben Shneiderman invented the treemap to see what was filling his hard disk',
+    '1 min. Shneiderman (1992), "Tree visualization with tree-maps: a 2-d space-filling approach", ACM Transactions on Graphics 11(1). The idea dates from about 1990. Today: disk-space tools and stock-market maps (each box a company, sized by value, coloured by price change).'),
+
+  drawn('Build it: an icicle from four stacked bars', 'build-icicle.svg',
+    '3 min. An icicle is four stacked bars, one per level, each adding up to London. The trick is pd.concat: the same 33 rows four times, grouped by a different column each time. alt.Order keeps children under their parent. ' +
+      'Altair has no treemap mark; the squarify package draws one with matplotlib. Optional.'),
+
+  statement('Boxes inside boxes show size; lines show who belongs to whom', '30 s. Card 5.'),
+
+  /* ======================================================== Arriving */
+  drawn('Connect, matrix, nest', 'three-ways.svg',
+    '1 min. The whole lecture on one slide (Munzner ch. 9: connection, matrix alignment, containment).'),
+
+  { type: 'content', title: 'Which drawing? Hands up', progressive: true,
+    bullets: [
+      '1\tThe fewest stops from Brixton to Bank',
+      '2\tWhich characters share scenes with almost everyone',
+      '3\tWhich borough holds the most people in Outer London',
+      '4\tWhich stations are interchanges between many lines',
+      '5\tHow a company\'s departments sit under its directors'
+    ],
+    notes: '3 min. Read each; hands up for Connect, Matrix or Nest. Answers on the next slide.' },
+
+  { type: 'table', title: 'Which drawing? Answers', tableHeader: true,
+    body: 'Question\tDrawing\tWhy\n' +
+      'Fewest stops, Brixton to Bank\tConnect\ta path: follow the lines\n' +
+      'Who shares scenes with everyone\tMatrix\tdense: rows full of squares\n' +
+      'Most people in Outer London\tNest\tsize inside a hierarchy: the biggest box\n' +
+      'Interchanges\tConnect\tdegree: where many lines meet\n' +
+      'Departments under directors\tConnect (a tree)\tstructure, not size',
+    notes: '1 min.' },
+
+  { type: 'content', title: 'Five cards, one sentence',
+    bullets: [
+      '1\tA tree is a network with no loops and one root.',
+      '2\tEvery network can be written as a list of pairs.',
+      '3\tIn a dots-and-lines picture, where a dot sits means nothing: only the lines carry the data.',
+      '4\tWhen the lines tangle, draw a grid instead.',
+      '5\tBoxes inside boxes show size; lines show who belongs to whom.'
+    ], progressive: true,
+    notes: '1 min. Read as one: name the data, store it as pairs, then pick links, a grid or nesting by the question.' },
+
+  { type: 'content', title: 'In the lab',
+    bullets: [
+      'Draw\tthe Tube\'s Zone 1 from tube_stations.csv and tube_links.csv (the Build-it code)',
+      'Point\tadd a tooltip, then a hover that lights a station\'s edges (Week 5\'s selection)',
+      'Grid\tthe Les Misérables matrix; try three orders and say what each one shows',
+      'Nest\tthe borough icicle from london_boroughs.csv',
+      'Stretch\tnetworkx: nx.spring_layout makes the x and y for any edge list'
+    ],
+    notes: '1 min. The three CSVs are in assets/lesson/ipdv/week8/, written by tools/ipdv-week8/code/steps.py from TfL Open Data and the ONS estimates.' },
+
+  statement('Questions?', 'Open floor.')
+  ];
+}
+
+/* The student copy: room-only slides hidden. */
+const STUDENT = [['Which drawing? Hands up', 'none'], ['See it: who trades with whom', 'none'], ['Questions?', 'none']];
+
+module.exports = { lesson, STUDENT };
