@@ -92,3 +92,10 @@ test('Königsberg: degrees 5, 3, 3, 3, and the walk on the slide gets stuck afte
   const left = bridges.map((_, i) => i).filter((i) => !used.includes(i) && bridges[i].includes(here));
   assert.deepEqual(left, [], 'no bridge left from where the walk ends');
 });
+
+test('no card slide holds more than four cards: the Lesson studio draws four and drops the rest', () => {
+  const { lesson: l } = lesson('ipdv-net-w8');
+  for (const s of l.slides.filter((x) => x.type === 'cards')) {
+    assert.ok(s.bullets.length <= 4, `${s.title}: ${s.bullets.length} cards`);
+  }
+});
