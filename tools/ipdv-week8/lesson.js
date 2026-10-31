@@ -290,7 +290,7 @@ function lesson() {
     'Where does the data come from, and why are some pictures bigger or closer? Not explained either.',
     'A network picture needs a key: what a dot is, what a line is, and where the data came from.',
     'Image from the 2025 deck (liveplasma.com), where it was flagged: mapping and data source unclear.'
-  ], '2 min. Critique, not just admire. ASK in pairs first: "What would you need to know before you trusted this?" Collect three answers, then reveal the facts. Compare TouchGraph two slides back, which says what a line means.'),
+  ], '2 min. Critique, not just admire. ASK in pairs first: "What would you need to know before you trusted this?" Collect three answers, then reveal the facts. Compare TouchGraph (in the student copy), which says what a line means.'),
 
   { type: 'cards', title: 'A line is a claim: draw it with care', progressive: true,
     bullets: [
@@ -299,7 +299,7 @@ function lesson() {
       'Names leak\tRemove a name and a person can still be found from who they are joined to.',
       'Colour alone fails\tSome readers cannot tell the colours apart. Add a label or a shape as well.'
     ],
-    notes: '2 min. Responsible practice. Card 2 is the Gupta network and Liveplasma again: an unexplained line can be defamatory. Card 3: re-identification from connections in "anonymised" social data. Card 4: colour-coded clusters need a second encoding.' },
+    notes: '2 min. Responsible practice. Card 2 is Liveplasma again (and the Gupta graphic in the 2025 deck): an unexplained line can be defamatory. Card 3: re-identification from connections in "anonymised" social data. Card 4: colour-coded clusters need a second encoding.' },
 
   drawn('Build it: the Tube in Altair', 'build-tube.svg',
     '3 min. Same three layers as A–H, on real data. Position is longitude and latitude this time. Colour is data: TfL\'s line colours, through a scale with a domain (the line names) and a range (the hexes). ' +
@@ -499,4 +499,14 @@ function lesson() {
 /* The student copy: room-only slides hidden. */
 const STUDENT = [['Which drawing? Hands up', 'none'], ['See it: who trades with whom', 'none'], ['Questions?', 'none']];
 
-module.exports = { lesson, STUDENT };
+/* Reference slides: hidden in the room so the lecture fits 90 minutes, shown in the student copy for revision
+   (the Gupta slide stays hidden there too, by STUDENT, until its source is confirmed). Unhide one by deleting it here. */
+const REFERENCE = [
+  'See it: a family tree', 'Three ways to write one network', 'Build it: the nodes', 'Build it: the edges',
+  'The words again, plus three more', 'Four layers of every chart, on the Tube map', 'See it: who trades with whom',
+  'See it: books bought together', 'Or make the picture simpler', 'Build it: one word changes the order',
+  'When a tree gets too big', 'Ben Shneiderman invented the treemap to see what was filling his hard disk',
+  'Networks in disguise', 'Trees in disguise', 'Tools people use for networks'
+];
+
+module.exports = { lesson, STUDENT, REFERENCE };
