@@ -51,7 +51,7 @@ shows and hides) → **Build it** (Altair, one line lit at a time, beside the ch
 | Already taught | Where | Week 8 builds on it by… |
 |---|---|---|
 | Munzner's What / Why / How | Week 3 | Networks and trees are a new **What** (dataset type), and link, matrix and nest are three **How**s |
-| Position is the strongest channel | Week 2 | A node-link layout spends position on **nothing**: it is invented by the computer, so distance means nothing. Students find this surprising, and it's the hook |
+| Position is the strongest channel | Week 2 | In a node-link layout position is **chosen, not measured**: a computer pulls joined nodes close, so near usually means linked, but gaps are not distances. Students find this surprising, and it's the hook |
 | Colour as data; navy, red and warm white otherwise | Week 4 | Tube line colours are the only other colours on screen. They are TfL's, and they are data (which line) |
 | Hover, select and highlight | Week 5 | Highlighting a node's neighbours is a Week 5 selection: input → parameter → predicate → response |
 | Maps and projections | Week 7 | "Graphs on maps": the Tube drawn on true geography, then Beck's diagram, which bends geography as a projection does |
@@ -205,3 +205,12 @@ Each fix is recorded in the slide's speaker notes.
 - **31 October 2026, the gaps against the 2025 lecture's outline and Munzner ch. 9 filled.** 68 slides (65 in the student copy).
   - **New slides:** why look at a network (four jobs: follow a path, find the busiest, find the groups, see the shape); Munzner's four layers on the Tube map; five numbers that describe a network (degree, bridge, distance, density, islands), computed with networkx from the Les Misérables data; Liveplasma as a critique, with its picture from the 2025 deck; a line is a claim (closeness, accusation, re-identification, colour alone); zoom, filter, select; make the picture simpler (busiest only, ego network, merge and bundle, fisheye); when a tree gets too big; networks and trees in disguise (Sankey, chord, arc, sunburst, circle packing, dendrogram); tools for networks. A sixth outcome: critique a network picture.
   - **Fixed:** the Lesson studio draws at most four cards, so "Network or tree?" had silently lost its last two since the first build. It is now two slides, and `tests/week8.test.js` fails any card slide with more than four.
+- **31 October 2026, review fixes.**
+  - **Pictures in saved files:** the bundle in `lessons/` always embedded them, but the Lesson studio's Save deck file and HTML export wrote `/assets/…` paths, so a saved copy showed blank pictures elsewhere. Both now write the site's pictures into the file (`lab/src/export/exporters.ts`).
+  - **Gupta slide:** the caption no longer names a publisher; the source is still unconfirmed (a search for the graphic's headline found nothing). Leads are in the notes. Still hidden in the student copy.
+  - **Treemap:** the header strips and padding shrank the boxes in smaller groups, so Croydon looked smaller than Barnet. Parents are now laid out by their value plus that room, repeated until it settles: every borough's area per person is identical.
+  - **Degree:** it counts stations next door, not Tube lines. King's Cross is on 6 Tube lines but has 5 edges in the Zone 1 data; Waterloo, Oxford Circus and Green Park have the most (6). Checked with networkx: 90 distinct edges from the CSV's 130 rows.
+  - **Card 3** is now "where a dot sits is chosen, not measured: trust the edges, not the gaps", with the slides that said position means nothing reworded to match.
+  - **The grid:** the key said darker meant more scenes; squares are coloured by group. A last step names Javert's row and Fantine's column and rings their square, so a still answers the question.
+  - **Small:** station names try four corners and avoid other dots (Bank was under one); the directed-edge example is Instagram follows.
+  - **Length:** the notes' timings add up to about 110 minutes against a 90-minute slot. Not cut yet.
