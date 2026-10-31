@@ -35,14 +35,14 @@ function lesson() {
     ],
     notes: '1 min. Fixes carried over from the 2025 deck: it said "Week 7 / Lecture 7" throughout, its slide 6 said "Analysis Farmwork", and its recap slide recapped maps under the networks title. This is a real recap, next.' },
 
-  { type: 'content', title: 'Last lecture: where in the world?',
+  { type: 'cards', title: 'Recall first: three questions on last week', progressive: true,
     bullets: [
-      'Place\tA map spends position, your best channel, on where. Use it when where adds meaning',
-      'Flatten\tEvery flat map distorts: choose what it keeps (Equal Earth for areas)',
-      'Fill\tMap rates, not counts; say how you cut the colour classes',
-      'Build\tmark_geoshape, a join with transform_lookup, .project()'
+      'When is a map the right picture?\tWhen where a thing is helps the reader. Where a dot sits on the page is the strongest clue we have, so a map spends it on place.',
+      'Why does every flat map lie a little?\tThe Earth is round. Flattening it stretches something: sizes, shapes or distances. You choose what to keep true.',
+      'Why colour a map by rate, not by count?\tBig places have more of everything. A rate (per 1,000 people) makes places fair to compare.'
     ],
-    notes: '1 min. Keep the word "position" in their heads: today, position stops meaning anything.' },
+    notes: '3 min. Recall before new learning (the Nodes routine: retrieve first). Read each question, give 20 seconds, take two answers, then reveal the card. ' +
+      'Keep the word "position" in their heads: today, where a dot sits stops meaning anything.' },
 
   drawn('Eight weeks in, one more kind of data', 'route.svg',
     '1 min. The route: seven weeks behind them, all of it on tables, one row per thing. Today the data is the connections between things. A network or a tree can be one panel of the final page.'),
@@ -62,6 +62,17 @@ function lesson() {
       'Step 2 is Beck\'s first move, done by a computer: a fisheye that enlarges the centre (each station keeps its direction from the middle; distance is shrunk by a power of 0.6). Beck also straightened every line to horizontals, verticals and 45°: show TfL\'s current map (tfl.gov.uk/maps/track/tube) beside it. Beck sketched his in 1931 and it was published as a pocket map in 1933. ' +
       'Step 3: hover live. Then: "Beck threw away geography. Today you will throw away position altogether." Data: TfL Open Data, the regular service pattern of each line, Zone 1 (and 1/2 boundary) stations only. Edgware Road\'s two stations are drawn as one.' },
 
+  { type: 'table', title: 'Six words for today', tableHeader: true,
+    body: 'Word\tWhat it means\tExample\n' +
+      'Node\tone thing (a dot)\ta station\n' +
+      'Edge\ta connection between two things (a line)\tthe track between two stations\n' +
+      'Degree\thow many lines touch a dot\tKing\'s Cross: 6 Tube lines meet there\n' +
+      'Path\ta route from dot to dot along the lines\tBrixton to Euston on the Victoria line\n' +
+      'Root\tthe one thing at the top of a tree\tLondon, above all 33 boroughs\n' +
+      'Leaf\ta thing with nothing below it\tone borough, such as Croydon',
+    notes: '2 min. Define before use (the Nodes routine). Every word is used from the next slide on, so say each one out loud with its Tube example. ' +
+      'Network = a set of nodes and edges. Tree = a network with one root and no loops (Part 1). The full table returns in Part 2, with three more words.' },
+
   { type: 'content', title: 'By the end of today you can',
     bullets: [
       'Tell\ta network from a tree, and name nodes, edges, degree, paths, roots and leaves',
@@ -78,17 +89,17 @@ function lesson() {
       'Store\tHow does a computer hold a network?',
       'Connect\tHow do you draw the connections?',
       'Matrix\tWhat if there are too many lines to read?',
-      'Nest\tHow do you draw a family-tree shape (a hierarchy)?'
+      'Nest\tHow do you draw things inside things, like folders?'
     ],
     notes: '30 s.' },
 
   /* ======================================================== ① Name */
   section('Is it a network or a tree?', 'Part 1 · Name', '20 s. A new kind of data: connections.'),
 
-  photo('Where networks sit: a new What', 'orig-munzner-what.jpg', [
-    'Munzner\'s What, Why, How, from Week 3. This is the What: the kinds of data.',
-    'Until now every dataset was a table: rows of items, columns of attributes.',
-    'Networks are a different kind: items (nodes) and the links between them. A tree is a network with a hierarchy.',
+  photo('A new kind of data', 'orig-munzner-what.jpg', [
+    'In Week 3, Munzner asked three questions of every chart. The first, What, means: what kind of data is it?',
+    'Until now every dataset was a table: one row per thing, one column per fact about it.',
+    'A network is a different kind: things (nodes) and the connections between them (edges). A tree is a network where everything sits under one thing above it.',
     'Source: Tamara Munzner, Visualization Analysis and Design (2014), Chapter 2. Slide from the 2025 deck.'
   ], '1 min. From the 2025 deck (slides 6–9). Point at "Networks & Trees" under dataset types. Week 3 taught What/Why/How; today is a new What.'),
 
@@ -109,7 +120,7 @@ function lesson() {
     notes: '6 min. Let the room try first (or a volunteer at the wall): click land, then bridges. When someone is stuck, step to the failed walk, then Euler\'s move. ' +
       'CORRECTION carried from Dimitris\'s deck: it says a graph has an Euler path "if and only if there are exactly two vertices with odd degree". It is zero or two (zero gives a circuit that ends where it began), and the graph must be connected. Euler, Solutio problematis ad geometriam situs pertinentis (1736).' },
 
-  statement('A walk over every edge needs zero or two odd nodes', '30 s. Euler\'s rule, in one line. The bigger idea: drop everything but the connections, and the question becomes easy.'),
+  statement('To cross every line once, zero or two dots may have an odd number of lines', '30 s. Euler\'s rule, in one line. The bigger idea: drop everything but the connections, and the question becomes easy.'),
 
   drawn('Three kinds of edge', 'edge-types.svg',
     '2 min. Redrawn from the 2025 deck\'s slide 15. ASK for a real example of each before showing the captions: undirected (track, Facebook friends), directed (Instagram follows, a web link, who-cites-whom), weighted (minutes between stations, scenes shared, money sent).'),
@@ -157,8 +168,8 @@ function lesson() {
   { type: 'table', title: 'Three ways to write one network', tableHeader: true,
     body: 'Way\tWhat it is\tSize for this one\tGood for\n' +
       'Edge list\tone row per edge: source, target\t9 rows\tstoring and loading: it is just a table\n' +
-      'Adjacency list\tone line per node: its neighbours\t8 lines\tfinding a node\'s neighbours fast\n' +
-      'Matrix\ta row and a column per node, 1 if joined\t64 cells\tchecking any pair at a glance',
+      'Neighbour list\tone line per node: its neighbours\t8 lines\tfinding a node\'s neighbours fast\n' +
+      'Grid (matrix)\ta row and a column per node, 1 if joined\t64 cells\tchecking any pair at a glance',
     notes: '1 min. The edge list is the one they will use: it is a pandas DataFrame with two columns. Everything in Altair starts from it.' },
 
   statement('Every network can be written as a list of pairs', '30 s. Card 2. A network fits in a table after all: one row per connection. That is how they will load it in Altair.'),
@@ -169,13 +180,13 @@ function lesson() {
   drawn('Build it: the edges', 'build-links.svg',
     '2 min. Before and after: the same code plus one join and one layer. Each edge needs the position of both ends, so the edge list is joined to the node table twice (merge, merge). mark_rule draws a line from (x, y) to (x2, y2). Layers stack with +: the lines first, so the dots sit on top.', { transition: 'none' }),
 
-  { type: 'table', title: 'The words, now that you’ve used them', tableHeader: true,
+  { type: 'table', title: 'The words again, plus three more', tableHeader: true,
     body: 'Word\tMeans\tOn the Tube\n' +
-      'Node (vertex)\ta thing\ta station\n' +
-      'Edge (link)\ta connection between two things\tthe track between two stations\n' +
+      'Node\ta thing\ta station\n' +
+      'Edge (or link)\ta connection between two things\tthe track between two stations\n' +
       'Degree\thow many edges touch a node\tKing\'s Cross: the most in Zone 1\n' +
       'Path\ta route from node to node along edges\tBrixton to Euston on the Victoria line\n' +
-      'Cluster (community)\ta group with many edges inside it\tthe City\'s tangle of lines\n' +
+      'Cluster\ta group with many edges inside it\tthe City\'s tangle of lines\n' +
       'Directed / weighted\tedges with a direction / a number\tone-way escalators / minutes between stations',
     notes: '1 min. The terms slide comes after they have used each idea (Dimitris\'s deck, "Terminology"). Graph = network; nodes = vertices = actors; edges = links = relations; clusters = communities.' },
 
@@ -200,7 +211,7 @@ function lesson() {
       { caption: 'The Tube\'s Zone 1 again, every station where it really is.', layout: 'geo', labels: 'hubs', geo: true,
         explain: 'The same Tube as at the start of the lecture, with the busiest stations named. Here a station\'s position comes from the real map.' },
       { caption: 'Now a computer places the stations: joined stations pulled close, the others pushed apart. The real map is gone.', layout: 'force', labels: 'hubs',
-        explain: 'Imagine each line is a spring pulling two stations together, and every station pushes the others away like a magnet. A computer lets them settle.\nThe result keeps only the connections. Stations that are close on the real map can end up far apart if they are not joined.\nThis is how most network software draws a network unless you tell it otherwise. Its name is a force-directed layout.' }
+        explain: 'Imagine each line is a spring pulling two stations together, and every station pushes the others away like a magnet. A computer lets them settle.\nThe result keeps only the connections. Stations that are close on the real map can end up far apart if they are not joined.\nThis is how most network software draws a network unless you tell it otherwise. Its name is a force-directed layout (force = the pull and push).' }
     ],
     notes: '2 min. The layout is computed at build time (tools/ipdv-week8/layouts.js, Fruchterman–Reingold, seeded so it is the same every time). Hover a hub. ASK: "Which is more useful for a passenger?" Neither as much as Beck\'s, which keeps a little geography and a lot of tidiness.' },
 
@@ -248,15 +259,15 @@ function lesson() {
     bullets: [
       'Too many lines\tPast a few hundred edges the middle turns to a hairball.',
       'Crossings\tEvery crossing is a place the eye can follow the wrong line.',
-      'Labels\tNames collide; most charts can only label the hubs.',
-      'Position is made up\tReaders read closeness as meaning. In a computed layout it often isn\'t.'
+      'Labels\tNames bump into each other; most charts can only name the busiest dots.',
+      'Position is made up\tReaders think close dots are related. When a computer placed them, often they aren\'t.'
     ],
     notes: '1 min. From the 2025 deck\'s "Challenges of graph visualisations", rewritten for networks (it said "large trees").' },
 
   statement('In a dots-and-lines picture, where a dot sits means nothing: only the lines carry the data', '30 s. Card 3.'),
 
   /* ======================================================== ④ Matrix */
-  section('What do you do when it’s too dense?', 'Part 4 · Matrix', '20 s.'),
+  section('What if there are too many lines to read?', 'Part 4 · Matrix', '20 s.'),
 
   { type: 'figure', figure: 'network', title: 'Untangle it into a grid',
     figureEyebrow: 'See it', figureCredit: 'Les Misérables co-occurrence · Knuth (1993)', figureAlt: 'The Les Misérables network, first as a tangle of lines, then as a 77 by 77 matrix reordered by name, by number of links and by group.',
@@ -282,18 +293,43 @@ function lesson() {
 
   { type: 'compare', title: 'Dots and lines, or a grid?', subtitle: 'Dots and lines (node-link)\tA grid (matrix)', progressive: true,
     bullets: [
-      'Size\tSmall, sparse networks\tLarge or dense networks',
+      'Size\tSmall networks, few lines\tBig networks, many lines',
       'Paths\tFollow a route by eye\tA path is hard to trace',
       'Pairs\tHard once lines cross\tAny pair: one cell',
-      'Clusters\tShow if the layout is kind\tBlocks, once the order is right',
+      'Clusters\tShow if the dots land well\tBlocks, once the rows are in a good order',
       'Readers\tFamiliar: everyone reads it\tNeeds a sentence of explanation'
     ],
     notes: '2 min. Ghoniem, Fekete & Castagliola (2004), "A comparison of the readability of graphs using node-link and matrix-based representations", IEEE InfoVis. Munzner ch. 9 makes the same comparison.' },
 
   statement('When the lines tangle, draw a grid instead', '30 s. Card 4.'),
 
+  { type: 'content', title: 'Join it up: why a grid for Les Misérables?', progressive: true,
+    bullets: [
+      'Point\tFor the Les Misérables network, draw a grid, not dots and lines.',
+      'Because\t77 characters and 254 lines cross so often that the eye cannot follow any one line.',
+      'So\tIn a grid every pair has its own square, and no lines cross at all.',
+      'In this case\tDoes Javert share a scene with Fantine? In the tangle you cannot tell. In the grid it is one square.'
+    ],
+    notes: '2 min. The chain a full answer needs (the Nodes "join it up"): a point, the reason, what follows from it, and the evidence from this case. ' +
+      'Reveal one link at a time and ask the room for each before showing it. Most weak answers stop after the point.' },
+
+  { type: 'cards', title: 'Why a grid? Which answer is strongest?', progressive: true,
+    bullets: [
+      'A\t"The grid is better because it looks neater and more organised."',
+      'B\t"The grid is better because the lines in the tangle cross too much, so you can\'t read it."',
+      'C\t"With 254 lines, the dots-and-lines picture is a tangle you cannot follow. A grid gives each pair one square, so no lines cross: whether Javert and Fantine share a scene is one square to check."'
+    ],
+    notes: '2 min. The question: "Why is a grid better than dots and lines for the Les Misérables network?" Hands up for A, B or C before the next slide. Then ask: what does B need to become C?' },
+
+  { type: 'table', title: 'Three answers: what each one has', tableHeader: true,
+    body: 'Answer\tLevel\tWhat it has\tWhat is missing\n' +
+      'A\tWeak\ta point\tno real reason: "neater" is about looks, not reading\n' +
+      'B\tStable\ta point and a reason\twhat the grid does instead, and an example from the data\n' +
+      'C\tExcellent\tpoint, reason, what follows, and the case\tnothing: every link of the chain is there',
+    notes: '1 min. Map each answer onto the chain from two slides back. B to C is the jump students most often miss: saying what the better drawing does, and pointing at the data.' },
+
   /* ======================================================== ⑤ Nest */
-  section('How do you draw a hierarchy?', 'Part 5 · Nest', '20 s. Trees, which have one more way to be drawn.'),
+  section('How do you draw things inside things?', 'Part 5 · Nest', '20 s. Trees, which have one more way to be drawn. Things inside things is a hierarchy.'),
 
   { type: 'figure', figure: 'tree', title: 'One London, four drawings',
     figureEyebrow: 'See it', figureCredit: `ONS mid-${london.year} population estimates`, figureAlt: 'London\'s 33 boroughs as a tree, an indented list, an icicle and a treemap, sized by population.',
@@ -349,11 +385,20 @@ function lesson() {
   { type: 'table', title: 'Which drawing? Answers', tableHeader: true,
     body: 'Question\tDrawing\tWhy\n' +
       'Fewest stops, Brixton to Bank\tConnect\ta path: follow the lines\n' +
-      'Who shares scenes with everyone\tMatrix\tdense: rows full of squares\n' +
-      'Most people in Outer London\tNest\tsize inside a hierarchy: the biggest box\n' +
+      'Who shares scenes with everyone\tMatrix\tmany connections: rows full of squares\n' +
+      'Most people in Outer London\tNest\tsize inside groups: the biggest box\n' +
       'Interchanges\tConnect\tdegree: where many lines meet\n' +
       'Departments under directors\tConnect (a tree)\tstructure, not size',
     notes: '1 min.' },
+
+  { type: 'cards', title: 'Got one wrong? Take the next step', progressive: true,
+    bullets: [
+      '1 · Ask yourself\tWhat does the question want: a route, a pair, or a size?',
+      '2 · Hint\tA route: follow the lines. A pair: check one square in a grid. A size inside groups: boxes inside boxes.',
+      '3 · Example\t"Most people in Outer London" asks for a size, inside a group (Outer London). Size inside groups is boxes inside boxes: Nest.',
+      '4 · Try a new one\tWhich Premier League clubs have played each other so far this season?'
+    ],
+    notes: '2 min. The missing-link ladder: take only the next step you need. Students who got all five right go straight to step 4. Answer to step 4: Matrix, 20 rows and 20 columns, a square when two clubs have played.' },
 
   { type: 'content', title: 'Five cards, one sentence',
     bullets: [
