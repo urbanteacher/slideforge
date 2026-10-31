@@ -196,3 +196,9 @@ Each fix is recorded in the slide's speaker notes.
   - **Plain English for a room new to this:** every live slide has a "How to read it" key, captions that define each word as it arrives, and ends on its clearest picture, because thumbnails, PDFs and the student copy show the last step.
   - **From the 2025 deck:** Munzner's What, the royal family tree, TouchGraph's book network, Munich's network on its map, and the Gupta network (its source still to be confirmed, so it is hidden in the student copy). The tree terms and edge types are redrawn.
   - **Not done:** a lab notebook (D5), and the Lesson-studio copy (`tools/build-lab-lessons.mjs`): `js/lab-lessons.js` has another session's unfinished edits. Until it is built, the browser converts the lesson on opening, which works.
+- **31 October 2026, reworked to the Nodes routine.** 56 slides (53 in the student copy).
+  - **Recall first:** last week's recap is now three questions on cards, asked before each answer is shown.
+  - **Define before use:** "Six words for today" (node, edge, degree, path, root, leaf, each with an example) comes straight after the Tube hook. Part 2's word table is now "The words again, plus three more".
+  - **Join it up:** for "Why a grid for Les Misérables?", a point → because → so → in this case chain, then three answers (weak, stable, excellent) to vote on, then what each one has and lacks.
+  - **Missing-link ladder** after the hands-up quiz: ask yourself, hint, example, a new question (Premier League fixtures; the answer, a grid, is in the notes).
+  - **Jargon out of the slides:** adjacency, dense, sparse, hierarchy and "Munzner's What" are replaced or explained where they first appear. Euler's rule reads "zero or two dots may have an odd number of lines". Teacher notes keep the technical names.
