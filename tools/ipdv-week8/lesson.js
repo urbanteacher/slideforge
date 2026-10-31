@@ -107,13 +107,7 @@ function lesson() {
     'Source: Tamara Munzner, Visualization Analysis and Design (2014), Chapter 2. Slide from the 2025 deck.'
   ], '1 min. From the 2025 deck (slides 6–9). Point at "Networks & Trees" under dataset types. Week 3 taught What/Why/How; today is a new What.'),
 
-  { type: 'cards', title: 'Why look at a network? Four jobs', progressive: true,
-    bullets: [
-      'Follow a path\tHow do I get from here to there? Brixton to Bank, or how a rumour spread from one person to another.',
-      'Find the busiest\tWho has the most connections? Draw their dot bigger. In a fraud case, it is the person every company leads back to.',
-      'Find the groups\tWhich things clump together? Friends from one school, books on one topic, computers that talk only to each other.',
-      'See the shape\tIs it one web, a few separate islands, or one hub with spokes? Experts call the shape the topology.'
-    ],
+  { type: 'image', title: 'Why look at a network? Four jobs', image: asset('jobs.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '2 min. Munzner\'s Why: the tasks a reader brings to a network. Uses to name: social network analysis (who knows whom), cybersecurity (which machines talk to which, spotting an odd one), fraud investigation (the Gupta network, Part 3), transport (the Tube). ' +
       'Size and colour of a dot can carry a fact about it: bigger for more connections (influence), colour for its group.' },
 
@@ -311,31 +305,13 @@ function lesson() {
     '3 min. Same three layers as A–H, on real data. Position is longitude and latitude this time. Colour is data: TfL\'s line colours, through a scale with a domain (the line names) and a range (the hexes). ' +
       'Altair has no layout of its own: the positions come with the data, here from geography. For a computed layout, students can use networkx (nx.spring_layout) to make the x and y columns. That is the next step, not today\'s.'),
 
-  { type: 'cards', title: 'When dots and lines stop working', progressive: true,
-    bullets: [
-      'Too many lines\tPast a few hundred edges the middle turns to a hairball.',
-      'Crossings\tEvery crossing is a place the eye can follow the wrong line.',
-      'Labels\tNames bump into each other; most charts can only name the busiest dots.',
-      'Position is chosen\tA computer pulls joined dots close, so near usually means linked, but not always, and the gaps are not distances.'
-    ],
+  { type: 'image', title: 'When dots and lines stop working', image: asset('breaks.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. From the 2025 deck\'s "Challenges of graph visualisations", rewritten for networks (it said "large trees").' },
 
-  { type: 'cards', title: 'Too big to see at once? Let the reader move', progressive: true,
-    bullets: [
-      'Zoom\tLook closer at one part, as you do on Google Maps.',
-      'Filter\tHide what you do not need: only one Tube line, or only characters who share five scenes or more.',
-      'Select\tPoint at one thing and its lines light up. You did this on the Tube today.',
-      'In that order\tWhole picture first, then zoom and filter, then the detail of one thing.'
-    ],
+  { type: 'image', title: 'Too big to see at once? Let the reader move', image: asset('move.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. Interaction is how big networks are read in practice. The last card is Shneiderman\'s mantra (1996): "Overview first, zoom and filter, then details-on-demand." The lab adds the Select step in Altair.' },
 
-  { type: 'cards', title: 'Or make the picture simpler', progressive: true,
-    bullets: [
-      'The busiest\tShow only dots with many lines, say 10 or more.',
-      'One person\tShow one dot and its neighbours only. Experts call it an ego network.',
-      'Merge and bundle\tDraw a whole group as one big dot, or tie lines going the same way together, like cables.',
-      'Magnify\tEnlarge the crowded part and squeeze the rest, as on the Tube at the start.'
-    ],
+  { type: 'image', title: 'Or make the picture simpler', image: asset('simpler.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. Filtering by degree; the ego network; aggregation into meta-nodes; edge bundling; focus + context (the fisheye on slide 5, and folding a tree).' },
 
   statement('In a dots-and-lines picture, where a dot sits is chosen, not measured: trust the edges, not the gaps', '30 s. Card 3.'),
@@ -435,13 +411,7 @@ function lesson() {
     ],
     notes: '1 min. From the 2025 decks\' "Types of trees" and "Why use trees?". Their decision, hierarchical and binary trees are kinds of tree, not drawings: name them, and say a decision tree is drawn as a node-link tree.' },
 
-  { type: 'cards', title: 'When a tree gets too big', progressive: true,
-    bullets: [
-      'Too deep\tMany levels, one under another: the drawing runs off the page.',
-      'Too wide\tOne parent with hundreds of children: the labels crash into each other.',
-      'Fold it\tShow the top levels only. Click a branch to open it, like folders on a laptop.',
-      'Zoom in\tShow one area\'s boroughs on their own, then step back out to all of London.'
-    ],
+  { type: 'image', title: 'When a tree gets too big', image: asset('big-tree.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. From the 2025 deck: depth versus breadth. Treemaps cope with width (small boxes) but hide depth; node-link trees show depth but run out of width.' },
 
   statement('Ben Shneiderman invented the treemap to see what was filling his hard disk',
@@ -453,20 +423,10 @@ function lesson() {
 
   statement('Boxes inside boxes show size; lines show who belongs to whom', '30 s. Card 5.'),
 
-  { type: 'cards', title: 'Networks in disguise', progressive: true,
-    bullets: [
-      'Sankey\tFlows from left to right; the wider the band, the more moves. Energy, money, voters.',
-      'Chord\tGroups around a circle, with bands between them for what flows.',
-      'Arc diagram\tDots in a row; each line becomes an arch above them.'
-    ],
+  { type: 'image', title: 'Networks in disguise', image: asset('disguise-networks.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. Sankey and chord are weighted networks: the width of a band is the amount. An arc diagram is dots and lines with the dots on one line. Hive plots (dots on axes by a fact about them) are another, for the curious.' },
 
-  { type: 'cards', title: 'Trees in disguise', progressive: true,
-    bullets: [
-      'Sunburst\tAn icicle bent into rings, with the root in the middle.',
-      'Circles\tA treemap made of circles inside circles. Its name: circle packing.',
-      'Dendrogram\tA tree showing how things were grouped, by how alike they are.'
-    ],
+  { type: 'image', title: 'Trees in disguise', image: asset('disguise-trees.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. Sunburst, circle packing and radial trees (root in the centre) are tree layouts; dendrograms show the result of hierarchical clustering. ' +
       'Good layouts aim for few crossings, no overlapping dots, lines of similar length, and symmetry.' },
 

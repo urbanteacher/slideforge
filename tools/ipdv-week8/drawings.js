@@ -8,6 +8,7 @@
  *   termsSvg()          the words for a tree, on one small tree
  *   edgeTypesSvg()      undirected, directed and weighted edges
  *   cardsSvg()          the three ways to draw, side by side
+ *   jobsSvg() … disguiseTreeSvg()   a row of panels, one idea per small picture, where cards had words only
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -212,4 +213,313 @@ function cardsSvg() {
   return out.join('\n');
 }
 
-module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, STEPS };
+
+/* ------------------------------------------------------------ panels: one idea per picture */
+/* A row of panels, each a small drawing with a title and a line or two under it, all flush left.
+   `arrows` puts a red arrow in each gap, for a row that is done in order. */
+const DATA = ['#4c78a8', '#f58518', '#54a24b'];
+const EDGE = '#9aa3ad';
+function panelsSvg(eyebrow, title, items, o = {}) {
+  const out = [open(), heading(eyebrow, title)];
+  if (o.sub) out.push(`<text x="64" y="134" font-family="${NU.sans}" font-size="20" fill="${NU.dim}">${esc(o.sub)}</text>`);
+  const n = items.length, gap = o.arrows ? 44 : 20, w = (1152 - gap * (n - 1)) / n, top = o.sub ? 160 : 140;
+  /* The words take what they need; the drawing gets the rest of the card. */
+  const lines = Math.max(...items.map(it => wrap(it.text, 18, w - 40).length));
+  const dh = 660 - top - 18 - 64 - 34 - lines * 25 - 4;
+  items.forEach((it, i) => {
+    const x = 64 + i * (w + gap), dy = it.h ? Math.max(0, (dh - it.h) / 2) : 0;
+    out.push(`<rect x="${x}" y="${top}" width="${w}" height="${660 - top}" rx="10" fill="#fff" stroke="${NU.rule}"/>`);
+    out.push(`<g transform="translate(${x + 20} ${(top + 18 + dy).toFixed(1)})">${it.draw(w - 40, it.h ? Math.min(it.h, dh) : dh)}</g>`);
+    out.push(`<text x="${x + 20}" y="${top + dh + 64}" font-family="${NU.serif}" font-size="28" fill="${NU.navy}">${esc(it.title)}</text>`);
+    wrap(it.text, 18, w - 40).forEach((l, k) => out.push(`<text x="${x + 20}" y="${top + dh + 98 + k * 25}" font-family="${NU.sans}" font-size="18" fill="${NU.ink}">${esc(l)}</text>`));
+    if (o.arrows && i < n - 1) {
+      const ax = x + w + gap / 2, ay = top + 18 + dh / 2;
+      out.push(`<path d="M${ax - 12} ${ay} L${ax + 8} ${ay} M${ax + 1} ${ay - 8} L${ax + 9} ${ay} L${ax + 1} ${ay + 8}" stroke="${NU.red}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+    }
+  });
+  out.push('</svg>');
+  return out.join('\n');
+}
+
+/* One small network used across the panels: three groups, each a hub and a ring, a few links between groups.
+   Laid out in a 240 x 240 box, scaled to each panel. */
+const NET = (() => {
+  const nodes = [], edges = [], centres = [[62, 64], [180, 62], [122, 182]];
+  centres.forEach(([cx, cy], g) => {
+    const hub = nodes.length;
+    nodes.push({ x: cx, y: cy, g, hub: true });
+    for (let k = 0; k < 6; k++) {
+      const a = (k * 60 + 30 * g) * Math.PI / 180;
+      nodes.push({ x: cx + Math.cos(a) * 44, y: cy + Math.sin(a) * 44, g });
+      edges.push([hub, hub + 1 + k]);
+      if (k % 2 === 0) edges.push([hub + 1 + k, hub + 1 + ((k + 1) % 6)]);
+    }
+  });
+  /* between groups: ring node k of group g is index g * 7 + 1 + k */
+  const r = (g, k) => g * 7 + 1 + k;
+  edges.push([r(0, 0), r(1, 3)], [r(1, 2), r(2, 5)], [r(0, 1), r(2, 4)], [r(1, 1), r(2, 0)]);
+  const deg = nodes.map((_, i) => edges.filter(e => e.includes(i)).length);
+  return { nodes, edges, deg, between: edges.filter(([a, b]) => nodes[a].g !== nodes[b].g) };
+})();
+
+/* Draw nodes and edges in a w x h box. Positions come in NET's 240-box unless `pos` is given. */
+function net(w, h, o = {}) {
+  const N = o.nodes || NET.nodes, E = o.edges || NET.edges, k = Math.min(w, h) / 240, dx = (w - 240 * k) / 2, dy = (h - 240 * k) / 2;
+  const at = i => { const p = o.pos ? o.pos[i] : N[i]; return [dx + p.x * k, dy + p.y * k]; };
+  const show = o.show || (() => true), s = [];
+  E.forEach(([a, b], j) => {
+    if (!show(a) || !show(b)) return;
+    const st = (o.edge && o.edge([a, b], j)) || {};
+    const p = at(a), q = at(b);
+    s.push(`<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" stroke="${st.colour || EDGE}" stroke-width="${st.width || 2.5}" opacity="${st.opacity ?? 1}" stroke-linecap="round"/>`);
+  });
+  N.forEach((n, i) => {
+    if (!show(i)) return;
+    const st = (o.node && o.node(n, i)) || {}, p = at(i);
+    s.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(st.r || (n.hub ? 9 : 7)).toFixed(1)}" fill="${st.colour || NU.navy}" opacity="${st.opacity ?? 1}" stroke="#fff" stroke-width="2"/>`);
+  });
+  return s.join('');
+}
+const label = (x, y, t, o = {}) => `<text x="${x}" y="${y}" font-family="${NU.sans}" font-size="${o.size || 15}" font-weight="${o.weight || 600}" text-anchor="${o.anchor || 'start'}" fill="${o.colour || NU.dim}">${esc(t)}</text>`;
+const ring = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${NU.red}" stroke-width="3"/>`;
+
+/* A tangle: many nodes, many crossing edges, seeded so it is the same every build. */
+function tangle(w, h) {
+  let t = 7;
+  const rnd = () => { t = (t + 0x6D2B79F5) | 0; let x = Math.imul(t ^ (t >>> 15), 1 | t); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+  const R = Math.min(w, h) / 2 - 10, P = Array.from({ length: 34 }, () => { const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * R; return [w / 2 + Math.cos(a) * d, h / 2 + Math.sin(a) * d]; }), s = [];
+  for (let i = 0; i < 90; i++) { const a = P[Math.floor(rnd() * 34)], b = P[Math.floor(rnd() * 34)]; s.push(`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${EDGE}" stroke-width="1.6"/>`); }
+  P.forEach(p => s.push(`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5" fill="${NU.navy}" stroke="#fff" stroke-width="1.5"/>`));
+  return s.join('');
+}
+
+/* Why look at a network: four jobs, on one network. */
+function jobsSvg() {
+  /* A route: a ring node in group 0, its hub, the link out to group 2, and that group's hub. */
+  const route = (() => {
+    const [a, b] = NET.between.find(([x, y]) => NET.nodes[x].g === 0 && NET.nodes[y].g === 2);
+    return [4, 0, a, b, 14];
+  })();
+  const onRoute = new Set(route.slice(1).map((v, i) => [route[i], v].sort().join('-')));
+  const icon = (x, y, kind) => {
+    const s = [], dot = (a, b, r = 5) => s.push(`<circle cx="${x + a}" cy="${y + b}" r="${r}" fill="${NU.navy}"/>`), ln = (a, b, c, d) => s.push(`<line x1="${x + a}" y1="${y + b}" x2="${x + c}" y2="${y + d}" stroke="${EDGE}" stroke-width="2"/>`);
+    if (kind === 'web') { const P = [[10, 10], [50, 6], [30, 30], [8, 52], [52, 50]]; [[0, 1], [0, 2], [1, 2], [2, 3], [2, 4], [3, 4], [1, 4]].forEach(([a, b]) => ln(...P[a], ...P[b])); P.forEach(p => dot(...p)); }
+    if (kind === 'islands') { const P = [[6, 12], [26, 6], [16, 30], [40, 40], [60, 34], [52, 58]]; [[0, 1], [1, 2], [0, 2], [3, 4], [4, 5], [3, 5]].forEach(([a, b]) => ln(...P[a], ...P[b])); P.forEach(p => dot(...p)); }
+    if (kind === 'star') { for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2; ln(30, 30, 30 + Math.cos(a) * 28, 30 + Math.sin(a) * 28); dot(30 + Math.cos(a) * 28, 30 + Math.sin(a) * 28, 4.5); } dot(30, 30, 7); }
+    return s.join('');
+  };
+  return panelsSvg('Why', 'Why look at a network? Four jobs', [
+    { title: 'Follow a path', text: 'How do I get from here to there? Brixton to Bank.', draw: (w, h) => net(w, h, {
+      edge: ([a, b]) => onRoute.has([a, b].sort().join('-')) ? { colour: NU.red, width: 5 } : { opacity: 0.5 },
+      node: (n, i) => route.includes(i) ? { colour: NU.red } : { opacity: 0.5 } }) },
+    { title: 'Find the busiest', text: 'Who has the most links? Draw them bigger.', draw: (w, h) => net(w, h, {
+      node: (n, i) => ({ r: 3 + NET.deg[i] * 1.6, colour: n.hub ? NU.red : NU.navy }) }) },
+    { title: 'Find the groups', text: 'Which things clump together? Colour each group.', draw: (w, h) => net(w, h, {
+      node: n => ({ colour: DATA[n.g] }) }) },
+    { title: 'See the shape', text: 'One web, separate islands, or a hub with spokes?', h: 252, draw: () =>
+      [['web', 'One web'], ['islands', 'Islands'], ['star', 'Hub and spokes']].map(([k, t], i) =>
+        `<g transform="translate(6 ${i * 86}) scale(1.15)">${icon(0, 0, k)}</g>` + label(96, i * 86 + 42, t, { colour: NU.ink, size: 17 })).join('') }
+  ]);
+}
+
+/* When dots and lines stop working. */
+function breaksSvg() {
+  return panelsSvg('Name it', 'When dots and lines stop working', [
+    { title: 'Too many lines', text: 'Past a few hundred, the middle is a tangle: a hairball.', draw: (w, h) => tangle(w, h) },
+    { title: 'Crossings', text: 'At every crossing the eye can follow the wrong line.', h: 240, draw: (w) => {
+      const P = [[30, 60], [w - 30, 70], [30, 190], [w - 30, 180], [w / 2 - 10, 20], [w / 2 + 10, 230]];
+      const L = [[0, 3], [1, 2], [4, 5]].map(([a, b]) => `<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}" stroke="${EDGE}" stroke-width="3"/>`).join('');
+      return L + P.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="${NU.navy}" stroke="#fff" stroke-width="2"/>`).join('') + ring(w / 2, 125, 22);
+    } },
+    { title: 'Names pile up', text: 'Most charts can only name the busiest dots.', h: 220, draw: (w) => {
+      const names = ['Valjean', 'Javert', 'Fantine', 'Marius', 'Cosette', 'Thénardier'], s = [], x0 = w / 2 - 50;
+      names.forEach((t, i) => { const x = x0 + (i % 3) * 18, y = 76 + i * 13; s.push(`<circle cx="${x - 8}" cy="${y - 6}" r="6" fill="${NU.navy}"/>`, label(x, y, t, { colour: NU.ink, size: 19, weight: 500 })); });
+      return s.join('') + ring(w / 2 + 4, 104, 76);
+    } },
+    { title: 'Near is not proof', text: 'Close dots are usually joined, but not always.', h: 230, draw: (w) => {
+      /* Two groups; the left group's right dot sits next to the right group's left dot, with no line between them. */
+      const A = [[20, 60], [70, 20], [80, 110], [30, 160]], B = [[w - 20, 50], [w - 80, 30], [w - 70, 120], [w - 30, 170]];
+      A[2] = [w / 2 - 18, 110]; B[2] = [w / 2 + 18, 120];
+      const E = [[0, 1], [1, 2], [0, 2], [0, 3], [2, 3]], s = [];
+      [A, B].forEach(P => E.forEach(([a, b]) => s.push(`<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}" stroke="${EDGE}" stroke-width="2.5"/>`)));
+      s.push(`<line x1="${A[3][0]}" y1="${A[3][1]}" x2="${B[3][0]}" y2="${B[3][1]}" stroke="${EDGE}" stroke-width="2.5"/>`);
+      [...A, ...B].forEach(p => s.push(`<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="${NU.navy}" stroke="#fff" stroke-width="2"/>`));
+      s.push(`<ellipse cx="${w / 2}" cy="115" rx="44" ry="28" fill="none" stroke="${NU.red}" stroke-width="3" stroke-dasharray="6 5"/>`, label(w / 2, 210, 'close, but not joined', { anchor: 'middle', colour: NU.red, weight: 700 }));
+      return s.join('');
+    } }
+  ]);
+}
+
+/* Let the reader move: zoom, filter, select, in that order. */
+function moveSvg() {
+  const g1 = i => NET.nodes[i].g === 1;
+  return panelsSvg('Interaction', 'Too big to see at once? Let the reader move', [
+    { title: 'Whole picture', text: 'Start with everything, to see the shape.', draw: (w, h) => {
+      const k = Math.min(w, h) / 240, dx = (w - 240 * k) / 2, dy = (h - 240 * k) / 2;
+      return net(w, h) + `<rect x="${(dx + 124 * k).toFixed(1)}" y="${(dy + 6 * k).toFixed(1)}" width="${(112 * k).toFixed(1)}" height="${(112 * k).toFixed(1)}" fill="none" stroke="${NU.red}" stroke-width="3" stroke-dasharray="6 5" rx="6"/>`;
+    } },
+    { title: 'Zoom', text: 'Look closer at one part, as on Google Maps.', draw: (w, h) => {
+      const pos = NET.nodes.map(n => ({ x: (n.x - 180) * 2 + 120, y: (n.y - 62) * 2 + 120 }));
+      return net(w, h, { pos, show: g1, node: n => ({ r: n.hub ? 14 : 11 }), edge: () => ({ width: 4 }) });
+    } },
+    { title: 'Filter', text: 'Hide what you don’t need: here, all but the links between groups.', draw: (w, h) => net(w, h, {
+      edge: ([a, b]) => NET.nodes[a].g !== NET.nodes[b].g ? { colour: NU.navy, width: 4 } : { opacity: 0 },
+      node: (n, i) => NET.between.some(e => e.includes(i)) ? {} : { opacity: 0.2 } }) },
+    { title: 'Select', text: 'Point at one dot: its links light up.', draw: (w, h) => net(w, h, {
+      edge: ([a, b]) => a === 7 || b === 7 ? { colour: NU.red, width: 4 } : { opacity: 0.25 },
+      node: (n, i) => i === 7 ? { colour: NU.red, r: 11 } : NET.edges.some(e => e.includes(7) && e.includes(i)) ? {} : { opacity: 0.25 } }) }
+  ], { arrows: true, sub: 'In that order: the whole picture first, then zoom and filter, then the detail of one thing.' });
+}
+
+/* Make the picture simpler. */
+function simplerSvg() {
+  /* The ego: a dot with a link out of its group. Its neighbourhood is drawn large, filling the panel. */
+  const ego = 2, near = new Set([ego]);
+  NET.edges.forEach(([a, b]) => { if (a === ego) near.add(b); if (b === ego) near.add(a); });
+  const fit = list => {
+    const xs = list.map(i => NET.nodes[i].x), ys = list.map(i => NET.nodes[i].y), x0 = Math.min(...xs), y0 = Math.min(...ys);
+    const k = 200 / Math.max(Math.max(...xs) - x0, Math.max(...ys) - y0, 1), ox = (240 - (Math.max(...xs) - x0) * k) / 2, oy = (240 - (Math.max(...ys) - y0) * k) / 2;
+    return NET.nodes.map(n => ({ x: ox + (n.x - x0) * k, y: oy + (n.y - y0) * k }));
+  };
+  const egoPos = fit([...near]);
+  /* a fisheye on group 0's hub: near things grow, far things squeeze toward the edge */
+  const f = NET.nodes[0], R = 230;
+  const fish = NET.nodes.map(n => {
+    const dx = n.x - f.x, dy = n.y - f.y, d = Math.hypot(dx, dy) || 1, g = (2.2 * d / R) / (1.2 * d / R + 1) * R / d;
+    return { x: f.x + dx * g * 0.95, y: f.y + dy * g * 0.95 };
+  });
+  const lo = fish.reduce((m, p) => [Math.min(m[0], p.x), Math.min(m[1], p.y)], [1e9, 1e9]);
+  const hi = fish.reduce((m, p) => [Math.max(m[0], p.x), Math.max(m[1], p.y)], [-1e9, -1e9]);
+  const sc = 220 / Math.max(hi[0] - lo[0], hi[1] - lo[1]);
+  const fishPos = fish.map(p => ({ x: 10 + (p.x - lo[0]) * sc, y: 10 + (p.y - lo[1]) * sc }));
+  const merged = { nodes: [0, 1, 2].map(g => ({ x: [62, 180, 122][g], y: [64, 62, 182][g], g })), edges: [[0, 1], [1, 2], [0, 2]] };
+  const between = (a, b) => NET.between.filter(([x, y]) => [NET.nodes[x].g, NET.nodes[y].g].sort().join() === [a, b].sort().join()).length;
+  return panelsSvg('Handle scale', 'Or make the picture simpler', [
+    { title: 'The busiest', text: 'Keep only dots with many links; fade the rest.', draw: (w, h) => net(w, h, { node: (n, i) => NET.deg[i] >= 4 ? { r: 11 } : { opacity: 0.15 }, edge: ([a, b]) => NET.deg[a] >= 4 && NET.deg[b] >= 4 ? { width: 3.5 } : { opacity: 0.15 } }) },
+    { title: 'One person', text: 'One dot and its neighbours: an ego network.', draw: (w, h) => net(w, h, { pos: egoPos, show: i => near.has(i), node: (n, i) => i === ego ? { colour: NU.red, r: 13 } : { r: 10 }, edge: () => ({ width: 3.5 }) }) },
+    { title: 'Merge a group', text: 'Each group as one big dot; thicker line, more links.', draw: (w, h) => net(w, h, { nodes: merged.nodes, edges: merged.edges,
+      node: n => ({ colour: DATA[n.g], r: 26 }), edge: ([a, b]) => ({ width: 4 + between(a, b) * 4 }) }) },
+    { title: 'Magnify', text: 'Enlarge one part and squeeze the rest, as on the Tube map.', draw: (w, h) => net(w, h, { pos: fishPos,
+      node: (n, i) => { const d = Math.hypot(fishPos[i].x - fishPos[0].x, fishPos[i].y - fishPos[0].y); return { r: Math.max(4, 13 - d / 18) }; } }) }
+  ]);
+}
+
+/* When a tree gets too big. */
+function bigTreeSvg() {
+  const dot = (x, y, r = 7, c = NU.navy) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+  const ln = (a, b, c, d, o = 1) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${EDGE}" stroke-width="2.5" opacity="${o}"/>`;
+  const South = [['Croydon', 410085], ['Bromley', 336048], ['Merton', 218891], ['Sutton', 213972], ['Kingston upon Thames', 172761]];
+  return panelsSvg('Trees', 'When a tree gets too big', [
+    { title: 'Too deep', text: 'Many levels: the drawing runs off the page.', h: 290, draw: (w, h) => {
+      const s = [];
+      for (let lv = 0; lv < 9; lv++) {
+        const y = 14 + lv * 32, x = 30 + lv * 20, o = lv < 6 ? 1 : 1 - (lv - 5) * 0.3;
+        if (lv) s.push(ln(x - 20, y - 32, x, y, o), ln(x - 20, y - 32, x - 36, y, o));
+        if (lv) s.push(dot(x - 36, y, 5, NU.navy).replace('<circle', `<circle opacity="${o}"`));
+        s.push(dot(x, y, 7).replace('<circle', `<circle opacity="${o}"`));
+      }
+      return s.join('') + `<path d="M${w - 30} ${h - 60} L${w - 30} ${h - 8} M${w - 40} ${h - 20} L${w - 30} ${h - 8} L${w - 20} ${h - 20}" stroke="${NU.red}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+    } },
+    { title: 'Too wide', text: 'One parent, hundreds of children: no room for names.', h: 220, draw: (w) => {
+      const s = [dot(w / 2, 30, 9)], n = 32;
+      for (let i = 0; i < n; i++) { const x = 6 + i * (w - 12) / (n - 1); s.push(ln(w / 2, 30, x, 150)); }
+      for (let i = 0; i < n; i++) { const x = 6 + i * (w - 12) / (n - 1); s.push(dot(x, 150, 4)); }
+      ['Barking', 'Barnet', 'Bexley', 'Brent', 'Bromley', 'Camden'].forEach((t, i) => s.push(label(6 + i * 30, 182 + (i % 2) * 6, t, { colour: NU.ink, size: 15, weight: 500 })));
+      return s.join('') + ring(w / 2, 186, 48).replace('<circle', '<ellipse').replace(/ r="48"/, ` rx="${w / 2}" ry="26"`);
+    } },
+    { title: 'Fold it', text: 'Show the top levels; open a branch when you need it.', h: 230, draw: (w) => {
+      const root = [w / 2, 24], kids = [[w * 0.18, 110], [w / 2, 110], [w * 0.82, 110]], s = [];
+      kids.forEach(k => s.push(ln(...root, ...k)));
+      const leaves = [[w * 0.36, 200], [w / 2, 200], [w * 0.64, 200]];
+      leaves.forEach(l => s.push(ln(...kids[1], ...l)));
+      s.push(dot(...root, 9)); kids.forEach(k => s.push(dot(...k, 9))); leaves.forEach(l => s.push(dot(...l, 7)));
+      [[0, '+ 11'], [2, '+ 19']].forEach(([i, t]) => s.push(`<rect x="${kids[i][0] - 26}" y="${kids[i][1] + 20}" width="52" height="28" rx="14" fill="${NU.paper}" stroke="${NU.red}" stroke-width="2"/>`, label(kids[i][0], kids[i][1] + 40, t, { anchor: 'middle', colour: NU.red, weight: 700 })));
+      return s.join('');
+    } },
+    { title: 'Zoom in', text: 'Show one branch on its own, then step back out.', draw: (w, h) => {
+      const s = [label(0, 16, 'London › Outer › South', { colour: NU.red, size: 14, weight: 700 })], total = South.reduce((a, b) => a + b[1], 0);
+      let y = 32;
+      South.forEach(([t, v]) => { const hh = (h - 36) * v / total; s.push(`<rect x="0" y="${y.toFixed(1)}" width="${w}" height="${(hh - 3).toFixed(1)}" rx="3" fill="#f58518" fill-opacity="${0.45 + 0.55 * v / 410085}"/>`); if (hh > 22) s.push(label(8, y + hh / 2 + 5, t.replace(' upon Thames', ''), { colour: NU.ink, size: 14, weight: 600 })); y += hh; });
+      return s.join('');
+    } }
+  ]);
+}
+
+/* Networks and trees in disguise. */
+function disguiseNetSvg() {
+  return panelsSvg('Related charts', 'Networks in disguise', [
+    { title: 'Sankey', text: 'Flows from left to right: the wider the band, the more moves. Energy, money, voters.', draw: (w, h) => {
+      const L = [['Gas', 90, DATA[0]], ['Wind', 60, DATA[2]], ['Coal', 30, '#7f7f7f']], R = [['Homes', 100], ['Industry', 80]], flows = [[0, 0, 55], [0, 1, 35], [1, 0, 35], [1, 1, 25], [2, 1, 20], [2, 0, 10]];
+      const k = (h - 50) / 180, s = [], lx = 56, rx = w - 86;
+      let y = 10; const ly = L.map(([, v]) => { const a = y; y += v * k + 12; return a; });
+      y = 10; const ry = R.map(([, v]) => { const a = y; y += v * k + 24; return a; });
+      const lo = L.map(() => 0), ro = R.map(() => 0);
+      flows.forEach(([a, b, v]) => {
+        const y0 = ly[a] + lo[a] * k, y1 = ry[b] + ro[b] * k, t = v * k; lo[a] += v; ro[b] += v;
+        s.push(`<path d="M${lx} ${y0.toFixed(1)} C${(lx + rx) / 2} ${y0.toFixed(1)}, ${(lx + rx) / 2} ${y1.toFixed(1)}, ${rx} ${y1.toFixed(1)} L${rx} ${(y1 + t).toFixed(1)} C${(lx + rx) / 2} ${(y1 + t).toFixed(1)}, ${(lx + rx) / 2} ${(y0 + t).toFixed(1)}, ${lx} ${(y0 + t).toFixed(1)} Z" fill="${L[a][2]}" opacity=".45"/>`);
+      });
+      L.forEach(([t, v, c], i) => s.push(`<rect x="${lx - 10}" y="${ly[i]}" width="10" height="${(v * k).toFixed(1)}" fill="${c}"/>`, label(lx - 16, ly[i] + v * k / 2 + 5, t, { anchor: 'end', colour: NU.ink })));
+      R.forEach(([t, v], i) => s.push(`<rect x="${rx}" y="${ry[i]}" width="10" height="${(v * k).toFixed(1)}" fill="${NU.navy}"/>`, label(rx + 16, ry[i] + v * k / 2 + 5, t, { colour: NU.ink })));
+      return s.join('');
+    } },
+    { title: 'Chord', text: 'Groups around a circle, with bands between them for what flows.', draw: (w, h) => {
+      const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 12, s = [], seg = [[0, 80], [95, 175], [190, 265], [280, 350]];
+      const pt = (deg, rr = r) => [cx + Math.cos((deg - 90) * Math.PI / 180) * rr, cy + Math.sin((deg - 90) * Math.PI / 180) * rr].map(v => v.toFixed(1)).join(' ');
+      [[0, 1, DATA[0]], [0, 2, DATA[0]], [1, 3, DATA[1]], [2, 3, DATA[2]]].forEach(([a, b, c], i) => {
+        const a0 = seg[a][0] + 6 + i * 4, a1 = a0 + 26, b0 = seg[b][0] + 8 + i * 3, b1 = b0 + 26;
+        s.push(`<path d="M${pt(a0)} Q${cx} ${cy} ${pt(b1)} A${r} ${r} 0 0 0 ${pt(b0)} Q${cx} ${cy} ${pt(a1)} A${r} ${r} 0 0 0 ${pt(a0)} Z" fill="${c}" opacity=".45"/>`);
+      });
+      seg.forEach(([a, b], i) => s.push(`<path d="M${pt(a, r + 2)} A${r + 2} ${r + 2} 0 0 1 ${pt(b, r + 2)}" stroke="${[DATA[0], DATA[1], DATA[2], '#7f7f7f'][i]}" stroke-width="10" fill="none"/>`));
+      return s.join('');
+    } },
+    { title: 'Arc diagram', text: 'Dots in a row; each line becomes an arch above them.', draw: (w, h) => {
+      const n = 8, y = h - 40, x = i => 14 + i * (w - 28) / (n - 1), s = [];
+      [[0, 1], [0, 3], [1, 2], [2, 5], [3, 4], [4, 7], [5, 6], [1, 6], [6, 7]].forEach(([a, b]) => { const r = (x(b) - x(a)) / 2; s.push(`<path d="M${x(a).toFixed(1)} ${y} A${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${x(b).toFixed(1)} ${y}" stroke="${EDGE}" stroke-width="2.5" fill="none"/>`); });
+      for (let i = 0; i < n; i++) s.push(`<circle cx="${x(i).toFixed(1)}" cy="${y}" r="8" fill="${NU.navy}" stroke="#fff" stroke-width="2"/>`);
+      return s.join('');
+    } }
+  ]);
+}
+
+function disguiseTreeSvg() {
+  const areas = [['Inner', [1120465, 2395493]], ['Outer', [2012352, 1351757, 2242842]]], total = 9122909;
+  return panelsSvg('Related charts', 'Trees in disguise', [
+    { title: 'Sunburst', text: 'An icicle bent into rings, with the root in the middle. London again.', draw: (w, h) => {
+      const cx = w / 2, cy = h / 2, s = [];
+      const arc = (a0, a1, r0, r1, c, o) => {
+        const p = (a, r) => `${(cx + Math.sin(a) * r).toFixed(1)} ${(cy - Math.cos(a) * r).toFixed(1)}`, big = a1 - a0 > Math.PI ? 1 : 0;
+        return `<path d="M${p(a0, r1)} A${r1} ${r1} 0 ${big} 1 ${p(a1, r1)} L${p(a1, r0)} A${r0} ${r0} 0 ${big} 0 ${p(a0, r0)} Z" fill="${c}" fill-opacity="${o}" stroke="#fff" stroke-width="2"/>`;
+      };
+      s.push(`<circle cx="${cx}" cy="${cy}" r="34" fill="${NU.navy}"/>`, label(cx, cy + 5, 'London', { anchor: 'middle', colour: '#fff', size: 13, weight: 700 }));
+      let a = 0;
+      areas.forEach(([, vs], i) => {
+        const sum = vs.reduce((x, y) => x + y, 0), a1 = a + sum / total * Math.PI * 2;
+        s.push(arc(a, a1, 36, 70, DATA[i], 0.9));
+        let b = a; vs.forEach((v, j) => { const b1 = b + v / total * Math.PI * 2; s.push(arc(b, b1, 72, 106, DATA[i], 0.45 + 0.15 * j)); b = b1; });
+        a = a1;
+      });
+      return s.join('');
+    } },
+    { title: 'Circle packing', text: 'A treemap made of circles inside circles.', draw: (w, h) => {
+      const cx = w / 2, cy = h / 2, s = [`<circle cx="${cx}" cy="${cy}" r="108" fill="${NU.navy}" fill-opacity=".08" stroke="${NU.navy}" stroke-width="2"/>`];
+      const groups = [[cx - 50, cy, 50, DATA[0], [[-18, -16, 20], [20, -10, 17], [0, 24, 19]]], [cx + 54, cy, 52, DATA[1], [[-20, -18, 18], [18, -20, 17], [-16, 22, 17], [22, 18, 16]]]];
+      groups.forEach(([x, y, r, c, kids]) => {
+        s.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" fill-opacity=".25" stroke="${c}" stroke-width="2"/>`);
+        kids.forEach(([dx, dy, rr]) => s.push(`<circle cx="${x + dx}" cy="${y + dy}" r="${rr}" fill="${c}" fill-opacity=".8"/>`));
+      });
+      return s.join('');
+    } },
+    { title: 'Dendrogram', text: 'A tree of how things were grouped: alike things join low down.', draw: (w, h) => {
+      const n = 6, x = i => 18 + i * (w - 36) / (n - 1), base = h - 30, s = [];
+      const join = (x0, x1, y0a, y0b, y) => s.push(`<path d="M${x0} ${y0a} V${y} H${x1} V${y0b}" stroke="${NU.navy}" stroke-width="3" fill="none"/>`);
+      join(x(0), x(1), base, base, base - 40); join(x(2), x(3), base, base, base - 60); join(x(4), x(5), base, base, base - 30);
+      const m01 = (x(0) + x(1)) / 2, m23 = (x(2) + x(3)) / 2, m45 = (x(4) + x(5)) / 2;
+      join(m01, m23, base - 40, base - 60, base - 120); const m03 = (m01 + m23) / 2;
+      join(m03, m45, base - 120, base - 30, base - 190);
+      for (let i = 0; i < n; i++) s.push(`<circle cx="${x(i)}" cy="${base}" r="7" fill="${NU.navy}"/>`, label(x(i), base + 26, String.fromCharCode(65 + i), { anchor: 'middle', colour: NU.ink }));
+      return s.join('');
+    } }
+  ]);
+}
+
+module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, jobsSvg, breaksSvg, moveSvg, simplerSvg, bigTreeSvg, disguiseNetSvg, disguiseTreeSvg, STEPS };

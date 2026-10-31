@@ -79,6 +79,13 @@ function drawPictures() {
   writeSvg('terms.svg', D.termsSvg());
   writeSvg('edge-types.svg', D.edgeTypesSvg());
   writeSvg('three-ways.svg', D.cardsSvg());
+  writeSvg('jobs.svg', D.jobsSvg());
+  writeSvg('breaks.svg', D.breaksSvg());
+  writeSvg('move.svg', D.moveSvg());
+  writeSvg('simpler.svg', D.simplerSvg());
+  writeSvg('big-tree.svg', D.bigTreeSvg());
+  writeSvg('disguise-networks.svg', D.disguiseNetSvg());
+  writeSvg('disguise-trees.svg', D.disguiseTreeSvg());
   for (const [id, o] of Object.entries(BUILDS)) writeSvg(`build-${id}.svg`, D.codeSvg(id, o));
 }
 
