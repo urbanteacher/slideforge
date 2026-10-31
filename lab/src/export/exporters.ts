@@ -16,8 +16,32 @@ export function download(name: string, data: Blob | string, type = 'application/
 
 export const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'deck';
 
-export function exportJson(deck: Deck) {
-  download(`${slug(deck.title)}.sfstudio.json`, JSON.stringify(deck), 'application/json');
+const ASSET = /^\/?assets\/[^\s"]+\.(png|jpe?g|gif|svg|webp)$/i;
+
+/** A copy of the deck with this site's own pictures (`/assets/…`) written into it, so a saved
+ *  file shows them anywhere. A picture that can't be fetched keeps its path. */
+export async function inlineAssets(deck: Deck): Promise<Deck> {
+  const found = new Set<string>();
+  JSON.stringify(deck, (_k, v) => { if (typeof v === 'string' && ASSET.test(v)) found.add(v); return v; });
+  const uris = new Map<string, string>();
+  await Promise.all([...found].map(async (path) => {
+    try {
+      const res = await fetch(path.startsWith('/') ? path : `/${path}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      uris.set(path, await new Promise<string>((ok, fail) => {
+        const r = new FileReader();
+        r.onload = () => ok(String(r.result));
+        r.onerror = () => fail(r.error);
+        r.readAsDataURL(blob);
+      }));
+    } catch { /* keep the path */ }
+  }));
+  return uris.size ? JSON.parse(JSON.stringify(deck), (_k, v) => (typeof v === 'string' && uris.has(v) ? uris.get(v) : v)) : deck;
+}
+
+export async function exportJson(deck: Deck) {
+  download(`${slug(deck.title)}.sfstudio.json`, JSON.stringify(await inlineAssets(deck)), 'application/json');
 }
 
 /** A single self-contained .html file: player bundle + deck JSON. Fonts load from Google Fonts. */
@@ -58,8 +82,8 @@ ${guideFontCss(full.styleGuide)}
 </html>`;
 }
 
-export function exportHtml(deck: Deck) {
-  download(`${slug(deck.title)}.html`, buildHtml(deck), 'text/html');
+export async function exportHtml(deck: Deck) {
+  download(`${slug(deck.title)}.html`, buildHtml(await inlineAssets(deck)), 'text/html');
 }
 
 let offscreen: { canvas: HTMLCanvasElement; r: Renderer } | null = null;
