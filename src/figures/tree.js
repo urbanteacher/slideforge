@@ -29,18 +29,20 @@ function flatten(node, parent, depth, out) {
    rows, each row as square as it can be. @param {any[]} kids @param {any} r */
 function squarify(kids, r, /** @type {(k: any, rect: any) => void} */ put) {
   var items = kids.slice().sort(function (a, b) { return b.value - a.value; });
-  var total = items.reduce(function (s, k) { return s + k.value; }, 0) || 1;
+  items.forEach(function (k) { if (!(k.weight > 0)) k.weight = k.value; });
+  items.sort(function (a, b) { return b.weight - a.weight; });
+  var total = items.reduce(function (s, k) { return s + k.weight; }, 0) || 1;
   var x = r.x, y = r.y, w = r.w, h = r.h, scale = (w * h) / total;
   var row = /** @type {any[]} */ ([]);
   function worst(/** @type {any[]} */ list, /** @type {number} */ side) {
-    var s = list.reduce(function (a, k) { return a + k.value * scale; }, 0), mx = 0, mn = Infinity;
-    list.forEach(function (k) { mx = Math.max(mx, k.value * scale); mn = Math.min(mn, k.value * scale); });
+    var s = list.reduce(function (a, k) { return a + k.weight * scale; }, 0), mx = 0, mn = Infinity;
+    list.forEach(function (k) { mx = Math.max(mx, k.weight * scale); mn = Math.min(mn, k.weight * scale); });
     return Math.max(side * side * mx / (s * s), (s * s) / (side * side * mn));
   }
   function lay(/** @type {any[]} */ list) {
-    var s = list.reduce(function (a, k) { return a + k.value * scale; }, 0);
-    if (w >= h) { var cw = s / h, cy = y; list.forEach(function (k) { var kh = k.value * scale / cw; put(k, { x: x, y: cy, w: cw, h: kh }); cy += kh; }); x += cw; w -= cw; }
-    else { var ch = s / w, cx = x; list.forEach(function (k) { var kw = k.value * scale / ch; put(k, { x: cx, y: y, w: kw, h: ch }); cx += kw; }); y += ch; h -= ch; }
+    var s = list.reduce(function (a, k) { return a + k.weight * scale; }, 0);
+    if (w >= h) { var cw = s / h, cy = y; list.forEach(function (k) { var kh = k.weight * scale / cw; put(k, { x: x, y: cy, w: cw, h: kh }); cy += kh; }); x += cw; w -= cw; }
+    else { var ch = s / w, cx = x; list.forEach(function (k) { var kw = k.weight * scale / ch; put(k, { x: cx, y: y, w: kw, h: ch }); cx += kw; }); y += ch; h -= ch; }
   }
   items.forEach(function (k) {
     var side = Math.min(w, h);
@@ -77,13 +79,22 @@ export var tree = {
       L.icicle[n.name] = { x: x, y: BOX.y0 + n.depth * bandH, w: iw * n.value / root.value, h: bandH - 4, rx: 2 };
       var cx = x; n.kids.forEach(function (/** @type {any} */ k) { across(k, cx); cx += iw * k.value / root.value; });
     })(root, BOX.x0);
-    /* Treemap: boxes inside boxes, a header strip on each parent for its name. */
-    (function nest(/** @type {any} */ n, /** @type {any} */ r) {
-      L.treemap[n.name] = { x: r.x, y: r.y, w: r.w, h: r.h, rx: 2 };
-      if (!n.kids.length) return;
-      var pad = n.depth === 0 ? 0 : 4, head = n.depth === 0 ? 0 : 22;
-      squarify(n.kids, { x: r.x + pad, y: r.y + head + pad, w: Math.max(1, r.w - pad * 2), h: Math.max(1, r.h - head - pad * 2) }, function (k, rect) { nest(k, rect); });
-    })(root, { x: BOX.x0, y: BOX.y0, w: BOX.x1 - BOX.x0, h: BOX.y1 - BOX.y0 });
+    /* Treemap: boxes inside boxes, a header strip on each parent for its name. The strips and
+       padding take room, so a parent is laid out by its value plus that room (repeated until it
+       settles): every leaf's area stays in proportion to its value, the point of a treemap. */
+    var frame = { x: BOX.x0, y: BOX.y0, w: BOX.x1 - BOX.x0, h: BOX.y1 - BOX.y0 };
+    for (var pass = 0; pass < 24; pass++) {
+      (function nest(/** @type {any} */ n, /** @type {any} */ r) {
+        L.treemap[n.name] = { x: r.x, y: r.y, w: r.w, h: r.h, rx: 2 };
+        if (!n.kids.length) { n.extra = 0; return; }
+        var pad = n.depth === 0 ? 0 : 4, head = n.depth === 0 ? 0 : 22;
+        var inner = { x: r.x + pad, y: r.y + head + pad, w: Math.max(1, r.w - pad * 2), h: Math.max(1, r.h - head - pad * 2) };
+        squarify(n.kids, inner, function (k, rect) { nest(k, rect); });
+        n.extra = r.w * r.h - inner.w * inner.h + n.kids.reduce(function (s, k) { return s + k.extra; }, 0);
+      })(root, frame);
+      var per = (frame.w * frame.h - root.kids.reduce(function (s, k) { return s + k.extra; }, 0)) / (root.value || 1);
+      all.forEach(function (n) { if (n.depth > 0) n.weight = n.value + n.extra / per; });
+    }
 
     /* ---------------------------------------------- drawing */
     var keyG = el('g', { 'pointer-events': 'none' }, svg), links = el('g', {}, svg), boxes = el('g', {}, svg), labels = el('g', { 'font-family': NU.sans, 'pointer-events': 'none' }, svg), cards = el('g', { 'pointer-events': 'none' }, svg);

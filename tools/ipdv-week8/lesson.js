@@ -20,6 +20,8 @@ function lesson() {
   const TUBE = { nodes: tube.nodes, links: tube.links, colours: tube.colours, layouts: tube.layouts, r: 6 };
   const KX = "King's Cross St. Pancras";
   const credit = 'Powered by TfL Open Data · Zone 1';
+  /* The grid colours a square by group when both characters share one; grey when they don't. */
+  const GRIDKEY = [{ mark: 'box', colour: '#e45756', text: 'a scene together, same group (colour = group)' }, { mark: 'box', colour: '#9fb3c8', text: 'a scene together, different groups' }];
   return [
   /* ======================================================== Opening */
   { type: 'title', title: 'Who’s connected to whom?',
@@ -60,17 +62,18 @@ function lesson() {
     ],
     notes: '4 min. ASK first, on step 1: "Which picture would you use to get from Brixton to Euston? Which would you use to walk it?" (The geography walks; the even one rides.) ' +
       'Step 2 is Beck\'s first move, done by a computer: a fisheye that enlarges the centre (each station keeps its direction from the middle; distance is shrunk by a power of 0.6). Beck also straightened every line to horizontals, verticals and 45°: show TfL\'s current map (tfl.gov.uk/maps/track/tube) beside it. Beck sketched his in 1931 and it was published as a pocket map in 1933. ' +
-      'Step 3: hover live. Then: "Beck threw away geography. Today you will throw away position altogether." Data: TfL Open Data, the regular service pattern of each line, Zone 1 (and 1/2 boundary) stations only. Edgware Road\'s two stations are drawn as one.' },
+      'Step 3: hover live. Then: "Beck threw away geography. Today, position is chosen, not measured." Data: TfL Open Data, the regular service pattern of each line, Zone 1 (and 1/2 boundary) stations only. Edgware Road\'s two stations are drawn as one.' },
 
   { type: 'table', title: 'Six words for today', tableHeader: true,
     body: 'Word\tWhat it means\tExample\n' +
       'Node\tone thing (a dot)\ta station\n' +
-      'Edge\ta connection between two things (a line)\tthe track between two stations\n' +
-      'Degree\thow many lines touch a dot\tKing\'s Cross: 6 Tube lines meet there\n' +
+      'Edge\ta connection between two things\tthe track between two stations next to each other\n' +
+      'Degree\thow many edges touch a dot\tKing\'s Cross: 5 stations next door\n' +
       'Path\ta route from dot to dot along the lines\tBrixton to Euston on the Victoria line\n' +
       'Root\tthe one thing at the top of a tree\tLondon, above all 33 boroughs\n' +
       'Leaf\ta thing with nothing below it\tone borough, such as Croydon',
     notes: '2 min. Define before use (the Nodes routine). Every word is used from the next slide on, so say each one out loud with its Tube example. ' +
+      'Keep "edge" and "Tube line" apart: King\'s Cross is on 6 Tube lines but has 5 edges in the Zone 1 data (Angel, Euston, Euston Square, Farringdon, Russell Square), because the Circle, Hammersmith & City and Metropolitan share one track to Farringdon, one edge. Checked with networkx: 90 distinct edges from tube_links.csv\'s 130 rows. ' +
       'Network = a set of nodes and edges. Tree = a network with one root and no loops (Part 1). The full table returns in Part 2, with three more words.' },
 
   { type: 'content', title: 'By the end of today you can',
@@ -201,15 +204,15 @@ function lesson() {
     body: 'Word\tMeans\tOn the Tube\n' +
       'Node\ta thing\ta station\n' +
       'Edge (or link)\ta connection between two things\tthe track between two stations\n' +
-      'Degree\thow many edges touch a node\tKing\'s Cross: the most in Zone 1\n' +
+      'Degree\thow many edges touch a node\tWaterloo, Oxford Circus, Green Park: 6 each\n' +
       'Path\ta route from node to node along edges\tBrixton to Euston on the Victoria line\n' +
       'Cluster\ta group with many edges inside it\tthe City\'s tangle of lines\n' +
-      'Directed / weighted\tedges with a direction / a number\tone-way escalators / minutes between stations',
+      'Directed / weighted\tedges with a direction / a number\tInstagram follows / minutes between stations',
     notes: '1 min. The terms slide comes after they have used each idea (Dimitris\'s deck, "Terminology"). Graph = network; nodes = vertices = actors; edges = links = relations; clusters = communities.' },
 
   { type: 'table', title: 'Five numbers that describe a network', tableHeader: true,
     body: 'Number\tWhat it tells you\tIn Les Misérables\n' +
-      'Degree\thow many lines a dot has\tValjean: 36, the most\n' +
+      'Degree\thow many edges a dot has\tValjean: 36, the most\n' +
       'Bridge\ta dot on many shortest routes\tMyriel: 7 characters link only to him\n' +
       'Distance\tthe fewest steps between two dots\tNapoleon to Javert: 3 steps\n' +
       'Density\tthe share of possible lines that exist\t254 of 2,926 pairs: about 9%\n' +
@@ -227,9 +230,9 @@ function lesson() {
       { caption: 'We chose where to draw each dot. Grab one and drag it somewhere else: its lines follow it.', layout: 'chosen',
         explain: 'Grab a dot and move it. Its lines follow, because a line belongs to two dots, not to a place on the screen.\nA is still joined to B, C, G and H, wherever you put it.' },
       { caption: 'Every dot has moved, but each is joined to exactly the same dots as before. Nothing that matters has changed.', layout: 'shuffled',
-        explain: 'Every dot is somewhere new, so the picture looks different. But the connections are identical.\nIn a scatter plot, where a dot sits is the data. In a network picture it is not: only the lines carry the data. Someone, or a computer, chose the positions.' }
+        explain: 'Every dot is somewhere new, so the picture looks different. But the connections are identical.\nIn a scatter plot, where a dot sits is measured from the data. In a network picture it is chosen: the edges are the data. Someone, or a computer, chose the positions.' }
     ],
-    notes: '2 min. Hand the clicker or the mouse to a student: drag nodes. Then step. SAY: "In Week 2 position was the strongest channel. Here it carries nothing, so somebody, or some program, chooses it. That choice is the layout."' },
+    notes: '2 min. Hand the clicker or the mouse to a student: drag nodes. Then step. SAY: "In Week 2 position was the strongest channel. Here it is chosen, not measured: somebody, or some program, decides it. That choice is the layout."' },
 
   { type: 'figure', figure: 'network', title: 'Let the computer choose the positions', figureGround: 'paper',
     figureEyebrow: 'Name it', figureCredit: credit, figureAlt: 'The Tube\'s Zone 1 at its real positions, then rearranged by a force-directed layout.',
@@ -255,9 +258,9 @@ function lesson() {
     'A node-link chart of companies and people around Sanjeev Gupta\'s Liberty Commodities.',
     'Nodes are people (photos) and companies (buildings). A solid line means owner, shareholder or director; a dotted line means an associate or former employee.',
     'The rings around nodes are categories: same registered address, a loan from Wyelands Bank, or the same auditor.',
-    'Here the drawing is the story: who is connected to whom. In 2020 the Financial Times reported on companies run by Gupta\'s associates.',
-    'Image from the 2025 deck; its source is to be confirmed.'
-  ], '2 min. From the 2025 deck (slide 12). SOURCE TO CHECK: the 2025 slide gives none; it looks like an FT graphic from the 2020 Gupta/Wyelands reporting, but a search did not find it. Hide this slide in the student copy until the source is confirmed. ' +
+    'Here the drawing is the story: who is connected to whom. That is also its risk: each line is a claim about real people.',
+    'Image from the 2025 deck. Its source is not confirmed, so treat every line as unchecked.'
+  ], '2 min. From the 2025 deck (slide 12). SOURCE NOT CONFIRMED: the 2025 slide gives none, and a search for its headline ("How one Gupta accused of fraud knows another Gupta suspected of fraud") found nothing. Leads: "Friends of Sanjeev", GFG\'s term for associated companies, reported by Argus Media and Global Trade Review, naming UBG and Aartee, both in the graphic. Do not name a publisher out loud until it is found; Gupta faces live criminal proceedings in the UK. Hidden in the student copy. ' +
     'Point out the encodings: node shape (person or company), line style (relation type), ring colour (shared address, lender, auditor).'),
 
   { type: 'figure', figure: 'network', title: 'The hairball',
@@ -297,7 +300,7 @@ function lesson() {
 
   { type: 'cards', title: 'A line is a claim: draw it with care', progressive: true,
     bullets: [
-      'Near is not linked\tReaders think dots near the middle, or near each other, matter more. The layout may not mean that.',
+      'Near is not proof\tReaders think dots near the middle, or near each other, matter more. The layout may not mean that.',
       'A line accuses\tJoining two people suggests they are linked. Say what each line means and where the data came from.',
       'Names leak\tRemove a name and a person can still be found from who they are joined to.',
       'Colour alone fails\tSome readers cannot tell the colours apart. Add a label or a shape as well.'
@@ -313,7 +316,7 @@ function lesson() {
       'Too many lines\tPast a few hundred edges the middle turns to a hairball.',
       'Crossings\tEvery crossing is a place the eye can follow the wrong line.',
       'Labels\tNames bump into each other; most charts can only name the busiest dots.',
-      'Position is made up\tReaders think close dots are related. When a computer placed them, often they aren\'t.'
+      'Position is chosen\tA computer pulls joined dots close, so near usually means linked, but not always, and the gaps are not distances.'
     ],
     notes: '1 min. From the 2025 deck\'s "Challenges of graph visualisations", rewritten for networks (it said "large trees").' },
 
@@ -335,7 +338,7 @@ function lesson() {
     ],
     notes: '1 min. Filtering by degree; the ego network; aggregation into meta-nodes; edge bundling; focus + context (the fisheye on slide 5, and folding a tree).' },
 
-  statement('In a dots-and-lines picture, where a dot sits means nothing: only the lines carry the data', '30 s. Card 3.'),
+  statement('In a dots-and-lines picture, where a dot sits is chosen, not measured: trust the edges, not the gaps', '30 s. Card 3.'),
 
   /* ======================================================== ④ Matrix */
   section('What if there are too many lines to read?', 'Part 4 · Matrix', '20 s.'),
@@ -346,12 +349,14 @@ function lesson() {
     figureSteps: [
       { caption: 'The hairball again: 77 characters and 254 lines.', layout: 'force', labels: 'hubs',
         explain: 'The same 77 characters and 254 lines as before.' },
-      { caption: 'The same data as a grid. Each character has a row and a column; a square means those two share a scene.', view: 'matrix', order: 'name', key: [{ mark: 'box', colour: '#9fb3c8', text: 'a square: these two share a scene (darker = more scenes)' }],
+      { caption: 'The same data as a grid. Each character has a row and a column; a square means those two share a scene.', view: 'matrix', order: 'name', key: GRIDKEY,
         explain: 'Every character gets one row and one column, in A to Z order. Where a row and a column meet, a square means those two share at least one scene. A darker square means more scenes together.\nNo lines cross, ever. Point at a square to read the two names. This kind of grid is called a matrix.' },
-      { caption: 'The rows sorted from the busiest character to the quietest: the busy ones gather top left.', view: 'matrix', order: 'degree', key: [{ mark: 'box', colour: '#9fb3c8', text: 'a square: these two share a scene (darker = more scenes)' }],
+      { caption: 'The rows sorted from the busiest character to the quietest: the busy ones gather top left.', view: 'matrix', order: 'degree', key: GRIDKEY,
         explain: 'Same squares, different order: now the character with the most connections (Valjean) is in the first row and column.\nThe order of the rows is a choice, like where you put the dots in a picture. Different orders show different things.' },
-      { caption: 'The rows sorted by group: each group shows up as a block of squares along the diagonal.', view: 'matrix', order: 'group', key: [{ mark: 'box', colour: '#9fb3c8', text: 'a square: these two share a scene (darker = more scenes)' }],
-        explain: 'Now characters in the same group sit next to each other.\nEach solid block on the diagonal is a group of characters who mostly share scenes with each other. The few squares away from the diagonal are the characters who link one group to another.' }
+      { caption: 'The rows sorted by group: each group shows up as a block of squares along the diagonal.', view: 'matrix', order: 'group', key: GRIDKEY,
+        explain: 'Now characters in the same group sit next to each other.\nEach solid block on the diagonal is a group of characters who mostly share scenes with each other. The few squares away from the diagonal are the characters who link one group to another.' },
+      { caption: 'Does Javert share a scene with Fantine? Where Javert\'s row meets Fantine\'s column, the ringed square says yes.', view: 'matrix', order: 'group', lit: 'Fantine-Javert', key: GRIDKEY,
+        explain: 'Javert\'s row and Fantine\'s column are named and shaded. Where they cross there is a square, ringed in red, so they share at least one scene.\nIn the tangle of lines this question was almost impossible. In the grid it is one square, and the groups still show around it.' }
     ],
     notes: '5 min. The set piece: watch the squares travel as the order changes. ASK on step 2: "Does Javert share a scene with Fantine?" Point to the cell: yes. Easy here, near impossible in the hairball. ' +
       'Evidence: Ghoniem, Fekete & Castagliola (2004) found matrices beat node-link for most reading tasks once a network is dense, except following a path.' },
@@ -484,7 +489,7 @@ function lesson() {
       'Fewest stops, Brixton to Bank\tConnect\ta path: follow the lines\n' +
       'Who shares scenes with everyone\tMatrix\tmany connections: rows full of squares\n' +
       'Most people in Outer London\tNest\tsize inside groups: the biggest box\n' +
-      'Interchanges\tConnect\tdegree: where many lines meet\n' +
+      'Interchanges\tConnect\tdegree: where many edges meet\n' +
       'Departments under directors\tConnect (a tree)\tstructure, not size',
     notes: '1 min.' },
 
@@ -501,7 +506,7 @@ function lesson() {
     bullets: [
       '1\tA tree is a network with no loops and one root.',
       '2\tEvery network can be written as a list of pairs.',
-      '3\tIn a dots-and-lines picture, where a dot sits means nothing: only the lines carry the data.',
+      '3\tIn a dots-and-lines picture, where a dot sits is chosen, not measured: trust the edges, not the gaps.',
       '4\tWhen the lines tangle, draw a grid instead.',
       '5\tBoxes inside boxes show size; lines show who belongs to whom.'
     ], progressive: true,

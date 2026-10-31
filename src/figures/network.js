@@ -51,13 +51,13 @@ export var network = {
     var linkStroke = function (/** @type {any} */ l) { return (d.colours && l.line && d.colours[l.line]) || d.linkColour || (paper ? '#8a96a3' : 'rgba(255,255,255,.45)'); };
 
     var layer = el('g', {}, svg), keyG = el('g', { 'pointer-events': 'none' }, svg), cards = el('g', { 'pointer-events': 'none' }, svg);
-    var view = '', step = /** @type {any} */ ({}), pos = /** @type {Record<string, number[]>} */ ({}), cancel = function () {};
+    var view = '', step = /** @type {any} */ ({}), pos = /** @type {Record<string, number[]>} */ ({}), cancel = function () {}, fade = function () {};
     var draw = /** @type {any} */ ({}), hovered = /** @type {string|null} */ (null);
 
     /* ------------------------------------------------ the picture: dots and lines */
     function linkView(/** @type {any} */ box) {
       var g = el('g', {}, layer);
-      if (step.geo) el('text', { x: PLOT.x1, y: PLOT.y0 - 6, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, fill: soft }, g, 'Each station drawn where it really is');
+      if (step.geo && !(step.key || d.key)) el('text', { x: PLOT.x1, y: PLOT.y0 - 6, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, fill: soft }, g, 'Each station drawn where it really is');
       /* Two lines between one pair (Circle and District) sit side by side, not on top of each other. */
       var pairCount = /** @type {Record<string, number>} */ ({}), pairSeen = /** @type {Record<string, number>} */ ({});
       links.forEach(function (/** @type {any} */ l) { pairCount[key(l)] = (pairCount[key(l)] || 0) + 1; });
@@ -73,6 +73,12 @@ export var network = {
         return el('text', { 'font-family': NU.sans, 'font-size': box ? 22 : 13, 'font-weight': box ? 700 : 600, fill: box ? '#fff' : ink, 'text-anchor': box ? 'middle' : 'start', 'pointer-events': 'none',
           stroke: box ? null : paper ? NU.paper : NU.stage, 'stroke-width': box ? null : 3.5, 'paint-order': 'stroke' }, g, n.label || n.id);
       });
+      /* Which corner of its dot each name sits at: 0 up-right, 1 down-right, 2 up-left, 3 down-left. */
+      var corner = nodes.map(function () { return 0; });
+      function nameAt(/** @type {number[]} */ p, /** @type {number} */ c) {
+        var right = c < 2, up = c % 2 === 0;
+        return { x: right ? p[0] + r + 4 : p[0] - r - 4, y: up ? p[1] - r + 2 : p[1] + r + 12, 'text-anchor': right ? 'start' : 'end' };
+      }
       function place() {
         lines.forEach(function (o) {
           var a = pos[o.l.source], b = pos[o.l.target];
@@ -83,7 +89,7 @@ export var network = {
         dots.forEach(function (o) { var p = pos[o.n.id]; if (p) set(o.node, { cx: p[0], cy: p[1] }); });
         names.forEach(function (t, i) {
           var p = pos[nodes[i].id];
-          if (p) set(t, box ? { x: p[0], y: p[1] + 8 } : { x: p[0] + r + 4, y: p[1] - r + 2 });
+          if (p) set(t, box ? { x: p[0], y: p[1] + 8 } : nameAt(p, corner[i]));
         });
       }
       function light(/** @type {string|null} */ id) {
@@ -106,13 +112,25 @@ export var network = {
         var rank = nodes.map(function (_, i) { return i; }).sort(function (a, b) {
           return (nodes[b] === lit ? 1 : 0) - (nodes[a] === lit ? 1 : 0) || nodes[b].degree - nodes[a].degree;
         });
+        /* Each name tries the four corners of its dot, and takes the first that covers no other name and no other dot. */
         var placed = /** @type {number[][]} */ ([]);
+        var clash = function (/** @type {number[]} */ b, /** @type {number[][]} */ list) { return list.some(function (q) { return b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]; }); };
+        var others = function (/** @type {number} */ i) {
+          return nodes.filter(function (_, k) { return k !== i && pos[nodes[k].id]; }).map(function (m) { var q = pos[m.id]; return [q[0] - r - 1, q[1] - r - 1, q[0] + r + 1, q[1] + r + 1]; });
+        };
         rank.forEach(function (i) {
           var t = names[i], p = pos[nodes[i].id], show = want[i] && !!p;
           if (show && !box) {
-            var x0 = p[0] + r + 2, y0 = p[1] - r - 10, b = [x0, y0, x0 + textWidth(String(nodes[i].label || nodes[i].id), 13, false) + 4, y0 + 16];
-            show = !placed.some(function (q) { return b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3]; });
-            if (show) placed.push(b);
+            var w = textWidth(String(nodes[i].label || nodes[i].id), 13, false) + 4, dotsNear = others(i), got = -1;
+            /* First a corner clear of dots and names; failing that, one clear of names only. */
+            for (var pass = 0; pass < 2 && got < 0; pass++) {
+              for (var c = 0; c < 4 && got < 0; c++) {
+                var at = nameAt(p, c), x0 = at['text-anchor'] === 'start' ? at.x - 2 : at.x - w + 2, b = [x0, at.y - 12, x0 + w, at.y + 4];
+                if (!clash(b, placed) && (pass || !clash(b, dotsNear))) { got = c; placed.push(b); }
+              }
+            }
+            show = got >= 0;
+            if (show) { corner[i] = got; set(t, nameAt(p, got)); }
           }
           set(t, { opacity: show ? 1 : 0 });
         });
@@ -130,7 +148,8 @@ export var network = {
     /* ------------------------------------------------ the grid: a row and a column per node */
     function matrixView(/** @type {any} */ box) {
       var g = el('g', {}, layer), n = nodes.length;
-      var size = box ? box.size : Math.min(PLOT.y1 - PLOT.y0 - 10, 540), x0 = box ? box.x : (W - size) / 2 + 60, y0 = box ? box.y : PLOT.y0 + 6, cell = size / n;
+      var room = !box && n > 20 ? 26 : 0;
+      var size = box ? box.size : Math.min(PLOT.y1 - PLOT.y0 - 10 - room, 540), x0 = box ? box.x : (W - size) / 2 + 60, y0 = box ? box.y : PLOT.y0 + 6 + room, cell = size / n;
       var labelled = n <= 20;
       el('rect', { x: x0, y: y0, width: size, height: size, fill: paper ? '#fff' : 'rgba(255,255,255,.03)', stroke: paper ? '#d9d4ca' : NU.line }, g);
       var heads = labelled ? nodes.map(function (/** @type {any} */ m) {
@@ -188,15 +207,31 @@ export var network = {
         cards.textContent = '';
         var lit = id && byId[id] ? byId[id] : null, edge = id && !lit ? id : null;
         set(rowBand, { opacity: 0 }); set(colBand, { opacity: 0 });
+        /* In a big grid a lit pair keeps the rest at full strength, so the blocks still show around it. */
+        var keepAll = edge && !box && !labelled;
         cells.forEach(function (c) {
           var on = lit ? c.a === lit || c.b === lit : edge ? key(c.l) === edge : true;
-          set(c.node, { opacity: on ? (box ? 1 : 0.62 + 0.38 * Math.sqrt((c.l.value || maxV) / maxV)) : 0.12, fill: (edge && on) ? NU.red : c.node.getAttribute('data-fill') || c.node.getAttribute('fill') });
+          set(c.node, { opacity: on || keepAll ? (box ? 1 : 0.62 + 0.38 * Math.sqrt((c.l.value || maxV) / maxV)) : 0.12, fill: (edge && on) ? NU.red : c.node.getAttribute('data-fill') || c.node.getAttribute('fill') });
           if (!c.node.getAttribute('data-fill')) c.node.setAttribute('data-fill', c.node.getAttribute('fill'));
           if (!(edge && on)) set(c.node, { fill: c.node.getAttribute('data-fill') });
         });
         if (lit) {
           set(rowBand, { y: y0 + at[lit.id] * cell, opacity: 0.16 });
           set(colBand, { x: x0 + at[lit.id] * cell, opacity: 0.16 });
+        }
+        /* A grid too big to name every row names the lit ones, so a still can be read without pointing. */
+        var hit = edge ? cells.find(function (c) { return key(c.l) === edge; }) : null;
+        if (hit && !box) {
+          set(rowBand, { y: y0 + at[hit.a.id] * cell, opacity: 0.22 });
+          set(colBand, { x: x0 + at[hit.b.id] * cell, opacity: 0.22 });
+        }
+        if (!labelled && !box) {
+          var named = lit ? [[lit, lit]] : hit ? [[hit.a, hit.b]] : [];
+          named.forEach(function (pair) {
+            el('text', { x: x0 - 10, y: y0 + (at[pair[0].id] + 0.5) * cell + 5, 'font-family': NU.sans, 'font-size': 15, 'font-weight': 700, 'text-anchor': 'end', fill: NU.red }, cards, pair[0].label || pair[0].id);
+            el('text', { x: x0 + (at[pair[1].id] + 0.5) * cell, y: y0 - 8, 'font-family': NU.sans, 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle', fill: NU.red }, cards, pair[1].label || pair[1].id);
+          });
+          if (hit) el('circle', { cx: x0 + (at[hit.b.id] + 0.5) * cell, cy: y0 + (at[hit.a.id] + 0.5) * cell, r: Math.max(9, cell * 2), fill: 'none', stroke: NU.red, 'stroke-width': 3 }, cards);
         }
         if (cellHit && !box) {
           var rows = /** @type {[string, string][]} */ ([['Row', cellHit.a.label || cellHit.a.id], ['Column', cellHit.b.label || cellHit.b.id]]);
@@ -303,7 +338,9 @@ export var network = {
           if (v === 'store') { pos = JSON.parse(JSON.stringify(layouts.store || target)); draw = storeView(); draw.place(); }
           else if (v === 'matrix') { draw = matrixView(null); draw.arrange(step.order || 'name', false); }
           else { pos = JSON.parse(JSON.stringify(target)); draw = linkView(null); draw.place(); }
-          if (animate) { set(layer, { opacity: 0 }); cancel = tween(500, function (k) { set(layer, { opacity: k }); }); }
+          /* The fade has its own handle: a re-order that cancels the grid's travel must not leave it half faded. */
+          fade();
+          if (animate) { set(layer, { opacity: 0 }); fade = tween(500, function (k) { set(layer, { opacity: k }); }); } else set(layer, { opacity: 1 });
           draw.light(step.lit || null, null);
           return;
         }
@@ -318,7 +355,7 @@ export var network = {
         });
         draw.light(step.lit || null, null);
       },
-      destroy: function () { cancel(); }
+      destroy: function () { cancel(); fade(); }
     };
   }
 };

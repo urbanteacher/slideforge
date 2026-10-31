@@ -6504,6 +6504,7 @@
         /** @type {Record<string, number[]>} */
         {}
       ), cancel = function() {
+      }, fade = function() {
       };
       var draw = (
         /** @type {any} */
@@ -6514,7 +6515,7 @@
       );
       function linkView(box2) {
         var g = el("g", {}, layer);
-        if (step.geo) el("text", { x: PLOT4.x1, y: PLOT4.y0 - 6, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: soft }, g, "Each station drawn where it really is");
+        if (step.geo && !(step.key || d.key)) el("text", { x: PLOT4.x1, y: PLOT4.y0 - 6, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: soft }, g, "Each station drawn where it really is");
         var pairCount = (
           /** @type {Record<string, number>} */
           {}
@@ -6548,6 +6549,13 @@
             "paint-order": "stroke"
           }, g, n.label || n.id);
         });
+        var corner = nodes.map(function() {
+          return 0;
+        });
+        function nameAt(p, c) {
+          var right = c < 2, up = c % 2 === 0;
+          return { x: right ? p[0] + r + 4 : p[0] - r - 4, y: up ? p[1] - r + 2 : p[1] + r + 12, "text-anchor": right ? "start" : "end" };
+        }
         function place() {
           lines.forEach(function(o) {
             var a = pos[o.l.source], b = pos[o.l.target];
@@ -6561,7 +6569,7 @@
           });
           names.forEach(function(t, i) {
             var p = pos[nodes[i].id];
-            if (p) set(t, box2 ? { x: p[0], y: p[1] + 8 } : { x: p[0] + r + 4, y: p[1] - r + 2 });
+            if (p) set(t, box2 ? { x: p[0], y: p[1] + 8 } : nameAt(p, corner[i]));
           });
         }
         function light(id) {
@@ -6589,14 +6597,37 @@
             /** @type {number[][]} */
             []
           );
+          var clash = function(b, list) {
+            return list.some(function(q) {
+              return b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3];
+            });
+          };
+          var others = function(i) {
+            return nodes.filter(function(_, k) {
+              return k !== i && pos[nodes[k].id];
+            }).map(function(m) {
+              var q = pos[m.id];
+              return [q[0] - r - 1, q[1] - r - 1, q[0] + r + 1, q[1] + r + 1];
+            });
+          };
           rank.forEach(function(i) {
             var t = names[i], p2 = pos[nodes[i].id], show = want[i] && !!p2;
             if (show && !box2) {
-              var x0 = p2[0] + r + 2, y0 = p2[1] - r - 10, b = [x0, y0, x0 + textWidth(String(nodes[i].label || nodes[i].id), 13, false) + 4, y0 + 16];
-              show = !placed.some(function(q) {
-                return b[0] < q[2] && q[0] < b[2] && b[1] < q[3] && q[1] < b[3];
-              });
-              if (show) placed.push(b);
+              var w = textWidth(String(nodes[i].label || nodes[i].id), 13, false) + 4, dotsNear = others(i), got = -1;
+              for (var pass = 0; pass < 2 && got < 0; pass++) {
+                for (var c = 0; c < 4 && got < 0; c++) {
+                  var at = nameAt(p2, c), x0 = at["text-anchor"] === "start" ? at.x - 2 : at.x - w + 2, b = [x0, at.y - 12, x0 + w, at.y + 4];
+                  if (!clash(b, placed) && (pass || !clash(b, dotsNear))) {
+                    got = c;
+                    placed.push(b);
+                  }
+                }
+              }
+              show = got >= 0;
+              if (show) {
+                corner[i] = got;
+                set(t, nameAt(p2, got));
+              }
             }
             set(t, { opacity: show ? 1 : 0 });
           });
@@ -6617,7 +6648,8 @@
       }
       function matrixView(box2) {
         var g = el("g", {}, layer), n = nodes.length;
-        var size = box2 ? box2.size : Math.min(PLOT4.y1 - PLOT4.y0 - 10, 540), x0 = box2 ? box2.x : (W - size) / 2 + 60, y0 = box2 ? box2.y : PLOT4.y0 + 6, cell = size / n;
+        var room = !box2 && n > 20 ? 26 : 0;
+        var size = box2 ? box2.size : Math.min(PLOT4.y1 - PLOT4.y0 - 10 - room, 540), x0 = box2 ? box2.x : (W - size) / 2 + 60, y0 = box2 ? box2.y : PLOT4.y0 + 6 + room, cell = size / n;
         var labelled = n <= 20;
         el("rect", { x: x0, y: y0, width: size, height: size, fill: paper ? "#fff" : "rgba(255,255,255,.03)", stroke: paper ? "#d9d4ca" : NU.line }, g);
         var heads = labelled ? nodes.map(function(m) {
@@ -6707,15 +6739,31 @@
           var lit = id && byId[id] ? byId[id] : null, edge = id && !lit ? id : null;
           set(rowBand, { opacity: 0 });
           set(colBand, { opacity: 0 });
+          var keepAll = edge && !box2 && !labelled;
           cells.forEach(function(c) {
             var on = lit ? c.a === lit || c.b === lit : edge ? key(c.l) === edge : true;
-            set(c.node, { opacity: on ? box2 ? 1 : 0.62 + 0.38 * Math.sqrt((c.l.value || maxV) / maxV) : 0.12, fill: edge && on ? NU.red : c.node.getAttribute("data-fill") || c.node.getAttribute("fill") });
+            set(c.node, { opacity: on || keepAll ? box2 ? 1 : 0.62 + 0.38 * Math.sqrt((c.l.value || maxV) / maxV) : 0.12, fill: edge && on ? NU.red : c.node.getAttribute("data-fill") || c.node.getAttribute("fill") });
             if (!c.node.getAttribute("data-fill")) c.node.setAttribute("data-fill", c.node.getAttribute("fill"));
             if (!(edge && on)) set(c.node, { fill: c.node.getAttribute("data-fill") });
           });
           if (lit) {
             set(rowBand, { y: y0 + at[lit.id] * cell, opacity: 0.16 });
             set(colBand, { x: x0 + at[lit.id] * cell, opacity: 0.16 });
+          }
+          var hit2 = edge ? cells.find(function(c) {
+            return key(c.l) === edge;
+          }) : null;
+          if (hit2 && !box2) {
+            set(rowBand, { y: y0 + at[hit2.a.id] * cell, opacity: 0.22 });
+            set(colBand, { x: x0 + at[hit2.b.id] * cell, opacity: 0.22 });
+          }
+          if (!labelled && !box2) {
+            var named = lit ? [[lit, lit]] : hit2 ? [[hit2.a, hit2.b]] : [];
+            named.forEach(function(pair) {
+              el("text", { x: x0 - 10, y: y0 + (at[pair[0].id] + 0.5) * cell + 5, "font-family": NU.sans, "font-size": 15, "font-weight": 700, "text-anchor": "end", fill: NU.red }, cards, pair[0].label || pair[0].id);
+              el("text", { x: x0 + (at[pair[1].id] + 0.5) * cell, y: y0 - 8, "font-family": NU.sans, "font-size": 15, "font-weight": 700, "text-anchor": "middle", fill: NU.red }, cards, pair[1].label || pair[1].id);
+            });
+            if (hit2) el("circle", { cx: x0 + (at[hit2.b.id] + 0.5) * cell, cy: y0 + (at[hit2.a.id] + 0.5) * cell, r: Math.max(9, cell * 2), fill: "none", stroke: NU.red, "stroke-width": 3 }, cards);
           }
           if (cellHit && !box2) {
             var rows2 = (
@@ -6869,12 +6917,13 @@
               draw = linkView(null);
               draw.place();
             }
+            fade();
             if (animate) {
               set(layer, { opacity: 0 });
-              cancel = tween(500, function(k) {
+              fade = tween(500, function(k) {
                 set(layer, { opacity: k });
               });
-            }
+            } else set(layer, { opacity: 1 });
             draw.light(step.lit || null, null);
             return;
           }
@@ -6898,6 +6947,7 @@
         },
         destroy: function() {
           cancel();
+          fade();
         }
       };
     }
@@ -6924,8 +6974,14 @@
     var items2 = kids.slice().sort(function(a, b) {
       return b.value - a.value;
     });
+    items2.forEach(function(k) {
+      if (!(k.weight > 0)) k.weight = k.value;
+    });
+    items2.sort(function(a, b) {
+      return b.weight - a.weight;
+    });
     var total = items2.reduce(function(s, k) {
-      return s + k.value;
+      return s + k.weight;
     }, 0) || 1;
     var x = r.x, y = r.y, w = r.w, h = r.h, scale2 = w * h / total;
     var row = (
@@ -6934,22 +6990,22 @@
     );
     function worst(list, side) {
       var s = list.reduce(function(a, k) {
-        return a + k.value * scale2;
+        return a + k.weight * scale2;
       }, 0), mx = 0, mn = Infinity;
       list.forEach(function(k) {
-        mx = Math.max(mx, k.value * scale2);
-        mn = Math.min(mn, k.value * scale2);
+        mx = Math.max(mx, k.weight * scale2);
+        mn = Math.min(mn, k.weight * scale2);
       });
       return Math.max(side * side * mx / (s * s), s * s / (side * side * mn));
     }
     function lay(list) {
       var s = list.reduce(function(a, k) {
-        return a + k.value * scale2;
+        return a + k.weight * scale2;
       }, 0);
       if (w >= h) {
         var cw = s / h, cy = y;
         list.forEach(function(k) {
-          var kh = k.value * scale2 / cw;
+          var kh = k.weight * scale2 / cw;
           put(k, { x, y: cy, w: cw, h: kh });
           cy += kh;
         });
@@ -6958,7 +7014,7 @@
       } else {
         var ch = s / w, cx = x;
         list.forEach(function(k) {
-          var kw = k.value * scale2 / ch;
+          var kw = k.weight * scale2 / ch;
           put(k, { x: cx, y, w: kw, h: ch });
           cx += kw;
         });
@@ -7026,14 +7082,30 @@
           cx += iw * k.value / root.value;
         });
       })(root, BOX.x0);
-      (function nest(n, r) {
-        L.treemap[n.name] = { x: r.x, y: r.y, w: r.w, h: r.h, rx: 2 };
-        if (!n.kids.length) return;
-        var pad = n.depth === 0 ? 0 : 4, head = n.depth === 0 ? 0 : 22;
-        squarify(n.kids, { x: r.x + pad, y: r.y + head + pad, w: Math.max(1, r.w - pad * 2), h: Math.max(1, r.h - head - pad * 2) }, function(k, rect) {
-          nest(k, rect);
+      var frame = { x: BOX.x0, y: BOX.y0, w: BOX.x1 - BOX.x0, h: BOX.y1 - BOX.y0 };
+      for (var pass = 0; pass < 24; pass++) {
+        (function nest(n, r) {
+          L.treemap[n.name] = { x: r.x, y: r.y, w: r.w, h: r.h, rx: 2 };
+          if (!n.kids.length) {
+            n.extra = 0;
+            return;
+          }
+          var pad = n.depth === 0 ? 0 : 4, head = n.depth === 0 ? 0 : 22;
+          var inner = { x: r.x + pad, y: r.y + head + pad, w: Math.max(1, r.w - pad * 2), h: Math.max(1, r.h - head - pad * 2) };
+          squarify(n.kids, inner, function(k, rect) {
+            nest(k, rect);
+          });
+          n.extra = r.w * r.h - inner.w * inner.h + n.kids.reduce(function(s, k) {
+            return s + k.extra;
+          }, 0);
+        })(root, frame);
+        var per = (frame.w * frame.h - root.kids.reduce(function(s, k) {
+          return s + k.extra;
+        }, 0)) / (root.value || 1);
+        all.forEach(function(n) {
+          if (n.depth > 0) n.weight = n.value + n.extra / per;
         });
-      })(root, { x: BOX.x0, y: BOX.y0, w: BOX.x1 - BOX.x0, h: BOX.y1 - BOX.y0 });
+      }
       var keyG = el("g", { "pointer-events": "none" }, svg), links = el("g", {}, svg), boxes = el("g", {}, svg), labels = el("g", { "font-family": NU.sans, "pointer-events": "none" }, svg), cards = el("g", { "pointer-events": "none" }, svg);
       var paths = all.filter(function(n) {
         return n.parent;
