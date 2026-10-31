@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- The motion kit at work: a pointer that travels a smooth path with motion
+     blur, bars sent to new heights mid-flight, a label that wobbles when its
+     bar lands, a shake on the landing, and a doodle drawn on twos.
+       node tools/motion/render.mjs tools/motion/examples/kit-demo.html --check
+       node tools/motion/render.mjs tools/motion/examples/kit-demo.html --sheet -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion kit demo</title>
+<style>
+  html, body { margin: 0; width: 100vw; height: 100vh; overflow: hidden; background: #0f1222; }
+  canvas { position: absolute; inset: 0; }
+  h1 { position: absolute; left: 160px; top: 110px; margin: 0; font: 800 84px system-ui, sans-serif;
+    color: #f4f1ea; letter-spacing: -0.02em; }
+</style>
+<script src="motion-kit.js"></script>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<h1 id="title">Springs that change their mind</h1>
+<script>
+window.MOTION = {
+  duration: 5, fps: 24, width: 1920, height: 1080,
+  palette: ['#0f1222', '#f4f1ea', '#8b7cf6', '#b9b6cc'],
+  cues: { title: 0.2, pointer: 0.4, bars: 0.9, retarget: 1.9, land: 3.0, exit: 4.3 },
+};
+const K = window.MotionKit, C = window.MOTION.cues;
+const ctx = document.getElementById('c').getContext('2d');
+const title = document.getElementById('title');
+const BASE = 860, BAR = 150, GAP = 70, X0 = 220;
+
+/* Each bar is sent up, then re-aimed at its final height while still moving,
+   then the third one drops on land. track() keeps every change smooth. */
+const heights = [
+  [[0, 0], [C.bars, 380], [C.retarget, 240]],
+  [[0, 0], [C.bars + 0.1, 220], [C.retarget + 0.1, 470]],
+  [[0, 0], [C.bars + 0.2, 300], [C.retarget + 0.2, 520], [C.land, 160]],
+];
+const LABELS = ['Old', 'New', 'Next'];
+
+/* The pointer visits four places; path() runs through them without a corner. */
+const route = [[C.pointer, [1700, 300]], [C.pointer + 0.9, [1240, 640]], [C.bars + 1.2, [1500, 420]], [C.land, [900, 640]]];
+
+function scene(c, t) {
+  const exit = K.ease.inExpo(K.span(t, C.exit, 0.4));
+  c.globalAlpha = 1 - exit;
+  heights.forEach((keys, i) => {
+    const h = Math.max(0, K.track(t, keys, 0.62, 1.3)), x = X0 + i * (BAR + GAP);
+    c.fillStyle = i === 2 ? '#8b7cf6' : '#b9b6cc';
+    c.fillRect(x, BASE - h, BAR, h);
+    /* The label above each bar sways when that bar's last change lands. */
+    const last = keys[keys.length - 1][0] + 0.35, sway = K.kick(t, last, 5, 2.2) * 0.18;
+    c.save(); c.translate(x + BAR / 2, BASE - h - 34); c.rotate(sway);
+    c.fillStyle = '#f4f1ea'; c.font = '700 40px system-ui, sans-serif'; c.textAlign = 'center';
+    c.fillText(LABELS[i], 0, 0); c.restore();
+  });
+  c.fillStyle = '#b9b6cc'; c.fillRect(X0 - 40, BASE, 3 * BAR + 2 * GAP + 80, 6);
+}
+
+function pointer(c, t) {
+  if (t < C.pointer) return;
+  const [x, y] = K.path(t, route);
+  c.fillStyle = '#f4f1ea';
+  c.beginPath(); c.arc(x, y, 26, 0, Math.PI * 2); c.fill();
+}
+
+/* A hand-drawn ring round the dropped bar, its wobble drawn on twos. */
+function doodle(c, t) {
+  const d = K.exposure(t, [{ at: 0, on: 2 }]), k = K.ease.outQuint(K.span(t, C.land + 0.2, 0.6));
+  if (k <= 0) return;
+  const cx = X0 + 2 * (BAR + GAP) + BAR / 2, cy = BASE - 78, r = K.rng(Math.floor(d * 24));
+  c.strokeStyle = '#8b7cf6'; c.lineWidth = 7; c.lineCap = 'round';
+  c.beginPath();
+  for (let i = 0; i <= 48 * k; i++) {
+    const a = -Math.PI / 2 + i / 48 * Math.PI * 2.1, w = 1 + (r() - 0.5) * 0.04;
+    const px = cx + Math.cos(a) * 125 * w, py = cy + Math.sin(a) * 88 * w;
+    i ? c.lineTo(px, py) : c.moveTo(px, py);
+  }
+  c.stroke();
+}
+
+window.renderAt = function (t) {
+  const k = K.ease.outExpo(K.span(t, C.title, 0.7)), exit = K.ease.inExpo(K.span(t, C.exit, 0.4));
+  title.style.opacity = k * (1 - exit);
+  title.style.transform = `translateY(${(1 - k) * 40}px)`;
+
+  const [dx, dy] = K.shake(t, [[C.land + 0.35, 10]]);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, 1920, 1080);
+  ctx.setTransform(1, 0, 0, 1, dx, dy);
+  scene(ctx, t);
+  doodle(ctx, t);
+  /* Only the fast pointer is blurred; the bars move slowly enough not to strobe. */
+  K.blur(ctx, t, (c, s) => { c.setTransform(1, 0, 0, 1, dx, dy); c.globalAlpha = 1 - exit; pointer(c, s); }, { samples: 6, shutter: 0.5 });
+};
+const q = new URLSearchParams(location.search);
+window.renderAt(q.has('t') ? Number(q.get('t')) : 3.2);
+</script>
+</body>
+</html>
