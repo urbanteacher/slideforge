@@ -420,12 +420,18 @@ function bigTreeSvg() {
       }
       return s.join('') + `<path d="M${w - 30} ${h - 60} L${w - 30} ${h - 8} M${w - 40} ${h - 20} L${w - 30} ${h - 8} L${w - 20} ${h - 20}" stroke="${NU.red}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
     } },
-    { title: 'Too wide', text: 'One parent, hundreds of children: no room for names.', h: 220, draw: (w) => {
-      const s = [dot(w / 2, 30, 9)], n = 32;
-      for (let i = 0; i < n; i++) { const x = 6 + i * (w - 12) / (n - 1); s.push(ln(w / 2, 30, x, 150)); }
-      for (let i = 0; i < n; i++) { const x = 6 + i * (w - 12) / (n - 1); s.push(dot(x, 150, 4)); }
-      ['Barking', 'Barnet', 'Bexley', 'Brent', 'Bromley', 'Camden'].forEach((t, i) => s.push(label(6 + i * 30, 182 + (i % 2) * 6, t, { colour: NU.ink, size: 15, weight: 500 })));
-      return s.join('') + ring(w / 2, 186, 48).replace('<circle', '<ellipse').replace(/ r="48"/, ` rx="${w / 2}" ry="26"`);
+    { title: 'Too wide', text: 'One parent, hundreds of children: no room for names.', h: 230, draw: (w) => {
+      /* Every child gets its name, and with 32 of them each name is too small to read: that is the point. */
+      const n = 32, x = i => 8 + i * (w - 16) / (n - 1), s = [];
+      const boroughs = ['Barking', 'Barnet', 'Bexley', 'Brent', 'Bromley', 'Camden', 'Croydon', 'Ealing', 'Enfield', 'Greenwich', 'Hackney', 'Harrow', 'Havering', 'Hillingdon', 'Hounslow', 'Islington', 'Lambeth', 'Lewisham', 'Merton', 'Newham', 'Redbridge', 'Richmond', 'Southwark', 'Sutton', 'Haringey', 'Kingston', 'Wandsworth', 'Westminster', 'Camden', 'Bexley', 'Brent', 'Ealing'];
+      for (let i = 0; i < n; i++) s.push(ln(w / 2, 26, x(i), 120));
+      s.push(dot(w / 2, 26, 9));
+      for (let i = 0; i < n; i++) {
+        s.push(dot(x(i), 120, 3.5));
+        s.push(`<text transform="translate(${(x(i) + 2).toFixed(1)} 132) rotate(90)" font-family="${NU.sans}" font-size="6" fill="${NU.dim}">${esc(boroughs[i])}</text>`);
+      }
+      s.push(label(w / 2, 218, '32 names, too small to read', { anchor: 'middle', colour: NU.red, weight: 700, size: 15 }));
+      return s.join('');
     } },
     { title: 'Fold it', text: 'Show the top levels; open a branch when you need it.', h: 230, draw: (w) => {
       const root = [w / 2, 24], kids = [[w * 0.18, 110], [w / 2, 110], [w * 0.82, 110]], s = [];
