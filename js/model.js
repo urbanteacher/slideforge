@@ -949,7 +949,7 @@
         note();
       } else if (slide.type === "iceberg") {
         heading();
-        var reveal = el2("div", "cp-risk-map");
+        var reveal2 = el2("div", "cp-risk-map");
         var risks = el2("div", "cp-risks");
         (slide.bullets || []).forEach(function(line, i) {
           var p = parts(line), row = asStep(el2("div", "cp-risk"), slide);
@@ -958,8 +958,8 @@
           row.appendChild(bullet("p", "", i, p.note));
           risks.appendChild(row);
         });
-        reveal.appendChild(risks);
-        body.appendChild(reveal);
+        reveal2.appendChild(risks);
+        body.appendChild(reveal2);
         note();
       } else if (slide.type === "sourcecheck") {
         heading();
@@ -7336,8 +7336,98 @@
     }
   };
 
+  // src/figures/reveal.js
+  var TOP = 140;
+  var BOTTOM = H - 92;
+  var reveal = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage, rows2 = d.rows || [], build = d.mode === "build";
+      var ink = st.ink, rule = st.dark ? NU.line : "#d9d4ca";
+      var top = TOP;
+      if (d.sub) {
+        el("text", { x: 64, y: 136, "font-family": NU.sans, "font-size": 20, fill: st.soft }, svg, d.sub);
+        top = 160;
+      }
+      var rh = Math.min(d.max || 120, (BOTTOM - top) / Math.max(1, rows2.length));
+      var iconX = 104, nameX = d.nameX || 160, sayX = d.sayX || nameX, tagX = d.tagX || 470;
+      var textX = d.textX || (rows2.some(function(r) {
+        return r.tag;
+      }) ? 712 : 470), size = d.size || 21;
+      var tagW = Math.max.apply(null, [60].concat(rows2.filter(function(r) {
+        return r.tag;
+      }).map(function(r) {
+        return r.tag.text.length * 10.5 + 34;
+      })));
+      if (d.rail && rows2.length > 1) el("line", { x1: iconX, y1: top + rh / 2, x2: iconX, y2: top + rh * (rows2.length - 0.5), stroke: rule, "stroke-width": 6 }, svg);
+      function words(t, x, cy, sz, width, attrs, g) {
+        var lines = wrap(t, sz, width);
+        lines.forEach(function(l, k) {
+          el("text", Object.assign({ x, y: cy + sz * 0.35 - (lines.length - 1) * sz * 0.65 + k * sz * 1.3, "font-family": NU.sans, "font-size": sz, fill: ink }, attrs), g, l);
+        });
+      }
+      var parts = rows2.map(function(r, i) {
+        var y0 = top + i * rh, cy = y0 + rh / 2, rr = Math.min(32, rh * 0.36);
+        var row = el("g", {}, svg);
+        if (i) el("line", { x1: 64, y1: y0, x2: 1216, y2: y0, stroke: rule, "stroke-width": 1.5 }, row);
+        var mark = el("rect", { x: 52, y: y0 + 8, width: 5, height: rh - 16, rx: 2, fill: NU.red, opacity: 0 }, row);
+        el("circle", { cx: iconX, cy, r: rr, fill: r.ring || (st.dark ? "rgba(255,255,255,.1)" : "#eef1f5") }, row);
+        var icon = el("g", { transform: "translate(" + iconX + " " + cy + ") scale(" + (rr / 32).toFixed(3) + ")" }, row);
+        if (r.icon) icon.innerHTML = r.icon;
+        if (r.name) {
+          var nl = wrap(r.name, 26, Math.max(120, (r.say && sayX > nameX ? sayX : r.tag ? tagX : textX) - nameX - 24));
+          nl.forEach(function(l, k) {
+            el("text", { x: nameX, y: cy + 9 - (nl.length - 1) * 15 + k * 30, "font-family": NU.serif, "font-size": 26, fill: ink }, row, l);
+          });
+        }
+        if (r.say) words(r.say, sayX, cy, d.saySize || 19, (r.tag ? tagX : textX) - sayX - 24, { "font-style": "italic" }, row);
+        var answer = el("g", {}, row), ask = el("g", {}, row);
+        if (r.tag) {
+          el("rect", { x: tagX, y: cy - 19, width: tagW, height: 38, rx: 19, fill: r.tag.fill }, answer);
+          el("text", { x: tagX + tagW / 2, y: cy + 6, "text-anchor": "middle", "font-family": NU.sans, "font-size": 15, "font-weight": 700, "letter-spacing": 1.2, fill: "#fff" }, answer, r.tag.text);
+          el("rect", { x: tagX, y: cy - 19, width: 60, height: 38, rx: 19, fill: "none", stroke: rule, "stroke-width": 2, "stroke-dasharray": "5 4" }, ask);
+          el("text", { x: tagX + 30, y: cy + 7, "text-anchor": "middle", "font-family": NU.sans, "font-size": 20, "font-weight": 700, fill: st.soft }, ask, "?");
+        }
+        if (r.text) words(r.text, textX, cy, size, 1216 - textX, {}, answer);
+        return { row, mark, answer, ask, op: 1 };
+      });
+      var cancel = function() {
+      };
+      return {
+        /** @param {any} step @param {boolean} animate */
+        update: function(step, animate) {
+          st.caption(step.caption);
+          var upto = typeof step.upto === "number" ? step.upto : rows2.length - 1;
+          var all = !fig.interactive;
+          var want = parts.map(function(_, i) {
+            var shown = i <= upto;
+            var row = build ? shown ? all || i === upto ? 1 : 0.4 : 0 : all || upto < 0 || i === upto ? 1 : 0.4;
+            return { row, answer: shown ? 1 : 0, ask: shown ? 0 : 1, mark: !all && i === upto ? 1 : 0 };
+          });
+          var from = parts.map(function(p) {
+            return { row: Number(p.row.getAttribute("opacity") || 1), answer: Number(p.answer.getAttribute("opacity") || 1) };
+          });
+          cancel();
+          cancel = tween(animate ? 350 : 0, function(k) {
+            parts.forEach(function(p, i) {
+              set(p.row, { opacity: from[i].row + (want[i].row - from[i].row) * k });
+              set(p.answer, { opacity: from[i].answer + (want[i].answer - from[i].answer) * k });
+            });
+          });
+          parts.forEach(function(p, i) {
+            set(p.ask, { opacity: want[i].ask });
+            set(p.mark, { opacity: want[i].mark });
+          });
+        },
+        destroy: function() {
+          cancel();
+        }
+      };
+    }
+  };
+
   // src/figures/index.js
-  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium, bridges, network, tree };
+  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium, bridges, network, tree, reveal };
   var CSS = ".figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}.figure-slide .pad{visibility:hidden}.figure-slide .fig-svg text{font-kerning:normal}";
   function installFigures(SF) {
     var styled = false;
@@ -9573,10 +9663,10 @@
         qEl.dataset.len = text2.length > 150 ? "xl" : text2.length > 80 ? "lg" : "md";
         ask.appendChild(qEl);
         if (s.revealed) {
-          var reveal = el2("div", "bowl-answer");
-          reveal.appendChild(el2("span", "bowl-eyebrow", "THE ANSWER"));
-          reveal.appendChild(el2("strong", null, q ? q.answer : ""));
-          ask.appendChild(reveal);
+          var reveal2 = el2("div", "bowl-answer");
+          reveal2.appendChild(el2("span", "bowl-eyebrow", "THE ANSWER"));
+          reveal2.appendChild(el2("strong", null, q ? q.answer : ""));
+          ask.appendChild(reveal2);
         } else {
           ask.appendChild(el2("p", "bowl-hint", "Take an answer from the room, then reveal."));
         }
@@ -20277,12 +20367,12 @@
       var lang = String(s.language || "python").trim().toLowerCase();
       s.language = lang === "javascript" || lang === "js" ? "javascript" : lang === "text" || lang === "plain" ? "text" : "python";
       var asked = String(s.codeReveal || "").trim();
-      var reveal = asked === "all" || asked === "type" || asked === "lines" ? (
+      var reveal2 = asked === "all" || asked === "type" || asked === "lines" ? (
         /** @type {'all'|'type'|'lines'} */
         asked
       ) : s.typewrite === false ? "all" : "type";
-      s.codeReveal = reveal;
-      s.typewrite = reveal === "type";
+      s.codeReveal = reveal2;
+      s.typewrite = reveal2 === "type";
       s.typeSpeed = Math.max(8, Math.min(200, Number(s.typeSpeed) || 55));
       if (s.type !== "code") {
       }

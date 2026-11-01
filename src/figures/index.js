@@ -32,9 +32,10 @@ import { stadium } from './stadium.js';
 import { bridges } from './bridges.js';
 import { network } from './network.js';
 import { tree } from './tree.js';
+import { reveal } from './reveal.js';
 
 /** @type {Record<string, {mount: (fig: any) => {update: (step: any, animate: boolean) => void, destroy?: () => void}}>} */
-var FIGURES = { bubbles: bubbles, codechart: codechart, worldmap: worldmap, motion: motion, linked: linked, rowtable: rowtable, stadium: stadium, bridges: bridges, network: network, tree: tree };
+var FIGURES = { bubbles: bubbles, codechart: codechart, worldmap: worldmap, motion: motion, linked: linked, rowtable: rowtable, stadium: stadium, bridges: bridges, network: network, tree: tree, reveal: reveal };
 
 var CSS = '.figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}' +
   '.figure-slide .pad{visibility:hidden}' +

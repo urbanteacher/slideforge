@@ -311,7 +311,7 @@ export function story(svg, st, box) {
    explanation, and pressed again ("Back") it goes. It sits in the top right corner, above any source line. The figure under it keeps its state. Steps
    without one hide the button. */
 /** @param {string} text @param {number} size @param {number} width */
-function wrap(text, size, width) {
+export function wrap(text, size, width) {
   var words = String(text).split(/\s+/), lines = [], line = '';
   for (var i = 0; i < words.length; i++) {
     var next = line ? line + ' ' + words[i] : words[i];

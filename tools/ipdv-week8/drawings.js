@@ -213,7 +213,6 @@ function cardsSvg() {
   return out.join('\n');
 }
 
-
 /* ------------------------------------------------------------ panels: one idea per picture */
 /* A row of panels, each a small drawing with a title and a line or two under it, all flush left.
    `arrows` puts a red arrow in each gap, for a row that is done in order. */
@@ -522,37 +521,7 @@ function disguiseTreeSvg() {
   ]);
 }
 
-/* ------------------------------------------------------------ rows: an icon, a name, a line of words */
-/* A list, not cards: each row has a small drawn icon in a ring, its name, an optional tag, and a line or two,
-   with thin rules between rows. A row's `tag` is { text, fill } (a pill), or '?' for a question still open. */
-function rowsSvg(eyebrow, title, rows, o = {}) {
-  const out = [open(), heading(eyebrow, title)];
-  if (o.sub) out.push(`<text x="64" y="134" font-family="${NU.sans}" font-size="20" fill="${NU.dim}">${esc(o.sub)}</text>`);
-  const top = o.sub ? 160 : 140, bottom = 668, rh = Math.min(o.max || 120, (bottom - top) / rows.length);
-  const iconX = 104, nameX = 160, tagX = o.tagX || 470, textX = o.textX || (rows.some(r => r.tag) ? 712 : 470), size = o.size || 21;
-  /* Every tag one width, so the column lines up. */
-  const tagW = Math.max(60, ...rows.filter(r => r.tag && r.tag !== '?').map(r => r.tag.text.length * 10.5 + 34));
-  if (o.rail) out.push(`<line x1="${iconX}" y1="${top + rh / 2}" x2="${iconX}" y2="${top + rh * (rows.length - 0.5)}" stroke="${NU.rule}" stroke-width="6"/>`);
-  rows.forEach((r, i) => {
-    const y0 = top + i * rh, cy = y0 + rh / 2, rr = Math.min(32, rh * 0.36);
-    if (i) out.push(`<line x1="64" y1="${y0}" x2="1216" y2="${y0}" stroke="${NU.rule}" stroke-width="1.5"/>`);
-    out.push(`<circle cx="${iconX}" cy="${cy}" r="${rr}" fill="${r.ring || '#eef1f5'}"/>`);
-    out.push(`<g transform="translate(${iconX} ${cy}) scale(${(rr / 32).toFixed(3)})">${r.icon || ''}</g>`);
-    const nameLines = wrap(r.name, 26, (r.tag ? tagX : textX) - nameX - 24);
-    nameLines.forEach((l, k) => out.push(`<text x="${nameX}" y="${(cy + 9 - (nameLines.length - 1) * 15 + k * 30).toFixed(1)}" font-family="${NU.serif}" font-size="26" fill="${NU.ink}">${esc(l)}</text>`));
-    if (r.tag) {
-      const open = r.tag === '?', t = open ? '?' : r.tag.text, w = open ? 60 : tagW;
-      out.push(`<rect x="${tagX}" y="${cy - 19}" width="${w}" height="38" rx="19" fill="${open ? '#fff' : r.tag.fill}" stroke="${open ? NU.rule : r.tag.fill}" stroke-width="2" ${open ? 'stroke-dasharray="5 4"' : ''}/>`);
-      out.push(`<text x="${tagX + w / 2}" y="${cy + 6}" text-anchor="middle" font-family="${NU.sans}" font-size="${open ? 20 : 15}" font-weight="700" letter-spacing="${open ? 0 : 1.2}" fill="${open ? NU.dim : '#fff'}">${esc(t)}</text>`);
-    }
-    if (r.text) {
-      const lines = wrap(r.text, size, 1216 - textX);
-      lines.forEach((l, k) => out.push(`<text x="${textX}" y="${(cy + size * 0.35 - (lines.length - 1) * size * 0.65 + k * size * 1.3).toFixed(1)}" font-family="${NU.sans}" font-size="${size}" fill="${r.dim ? NU.dim : NU.ink}"${r.italic ? ' font-style="italic"' : ''}>${esc(l)}</text>`));
-    }
-  });
-  out.push('</svg>');
-  return out.join('\n');
-}
+/* ------------------------------------------------------------ icons for the reveal lists */
 
 /* Icons, drawn round (0, 0) in a 64-wide ring. Navy line work; colour only where it is the point. */
 const st = (w = 3.2) => `fill="none" stroke="${NU.navy}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`;
@@ -585,10 +554,6 @@ const RECALL = [
   { icon: ICON.globe, name: 'Why does every flat map lie a little?', answer: 'The Earth is round. Flattening it stretches sizes, shapes or distances: you choose what to keep true.' },
   { icon: ICON.rate, name: 'Why colour a map by rate, not by count?', answer: 'Big places have more of everything. A rate (per 1,000 people) makes places fair to compare.' }
 ];
-function recallSvg(answers) {
-  return rowsSvg('Recall first', answers ? 'Last week, the answers' : 'Three questions on last week', RECALL.map(r => ({ icon: r.icon, name: r.name, text: answers ? r.answer : 'Talk to the person next to you: 20 seconds.', dim: !answers })),
-    { textX: 640, max: 150, size: 23, sub: answers ? null : 'No notes. Answer from memory, then we check.' });
-}
 
 const SORT = [
   { icon: ICON.tube, name: 'The Tube', tag: NETWORK, text: 'You can go round the Circle line and come back: a loop.' },
@@ -599,45 +564,6 @@ const SORT = [
   { icon: ICON.family, name: 'Your family tree', tag: TREE, text: 'Down one line, yes. But cousins who marry make a loop.' },
   { icon: ICON.page, name: 'Wikipedia links', tag: DIRECTED, text: 'Page A can link to page B without B linking back.' }
 ];
-function sortSvg(answers) {
-  return rowsSvg('Name it', answers ? 'Network or tree? The answers' : 'Network or tree? Hands up', SORT.map(r => ({ icon: r.icon, name: r.name, tag: answers ? r.tag : '?', text: answers ? r.text : '' })), { size: 19, max: 68, sub: 'The test: can you go round in a circle and come back? Then it\u2019s a network.' });
-}
-
-function claimSvg() {
-  return rowsSvg('Care', 'A line is a claim: draw it with care', [
-    { icon: ICON.near, name: 'Near is not proof', text: 'Readers think dots near the middle, or near each other, matter more. The layout may not mean that.' },
-    { icon: ICON.accuse, name: 'A line accuses', text: 'Joining two people suggests they are linked. Say what each line means and where the data came from.' },
-    { icon: ICON.leak, name: 'Names leak', text: 'Remove a name and a person can still be found from who they are joined to.' },
-    { icon: ICON.shape, name: 'Colour alone fails', text: 'Some readers cannot tell the colours apart. Add a label or a shape as well.' }
-  ], { max: 120 });
-}
-
-function answersSvg() {
-  return rowsSvg('Three answers', 'Why a grid? Which answer is strongest?', [
-    { icon: ICON.letter('A'), name: 'Answer A', text: '“The grid is better because it looks neater and more organised.”', italic: true },
-    { icon: ICON.letter('B'), name: 'Answer B', text: '“The grid is better because the lines in the tangle cross too much, so you can’t read it.”', italic: true },
-    { icon: ICON.letter('C'), name: 'Answer C', text: '“With 254 lines, the dots-and-lines picture is a tangle you cannot follow. A grid gives each pair one square, so no lines cross: whether Javert and Fantine share a scene is one square to check.”', italic: true }
-  ], { max: 160, textX: 380, size: 24, sub: 'Why is a grid better than dots and lines for the Les Misérables network? Hands up: A, B or C.' });
-}
-
-function fourTreesSvg() {
-  return rowsSvg('Name it', 'Four ways to draw a tree', [
-    { icon: ICON.nodelink, name: 'Dots and lines', text: 'Who is under whom, very clearly. Size is invisible.' },
-    { icon: ICON.indent, name: 'Indented list', text: 'Reads like folders on a laptop; easy to label; long.' },
-    { icon: ICON.icicle, name: 'Icicle', text: 'Each level a band; each piece as wide as its size.' },
-    { icon: ICON.treemap, name: 'Treemap', text: 'Boxes inside boxes: size as area. How deep it goes is harder to see.' }
-  ], { max: 120 });
-}
-
-function ladderSvg() {
-  const n = t => ({ icon: ICON.number(t), ring: NU.navy });
-  return rowsSvg('Got one wrong?', 'Take the next step, only as far as you need', [
-    { ...n(1), name: 'Ask yourself', text: 'What does the question want: a route, a pair, or a size?' },
-    { ...n(2), name: 'Hint', text: 'A route: follow the lines. A pair: one square in a grid. A size inside groups: boxes inside boxes.' },
-    { ...n(3), name: 'Example', text: '“Most people in Outer London” asks for a size, inside a group. Size inside groups is boxes inside boxes: Nest.' },
-    { ...n(4), name: 'Try a new one', text: 'Which Premier League clubs have played each other so far this season?' }
-  ], { rail: true, max: 120 });
-}
 
 /* ------------------------------------------------------------ for beginners: a picture before a word */
 /* Your contacts as a network: you in the middle, friends around, a line wherever two people message. */
@@ -698,14 +624,53 @@ function pairsSvg() {
 }
 
 /* Which drawing: three questions a reader asks, three drawings. */
-function chooseSvg() {
-  const route = `<path d="M-16 12 L-4 -4 L8 4 L18 -14" ${st(3)}/><circle cx="-16" cy="12" r="4" fill="${NU.red}"/><circle cx="18" cy="-14" r="4" fill="${NU.red}"/>`;
-  const grid = [0, 1, 2].map(i => [0, 1, 2].map(j => `<rect x="${-17 + j * 12}" y="${-17 + i * 12}" width="10" height="10" fill="${i === 1 && j === 2 ? NU.red : '#c9d3dd'}"/>`).join('')).join('');
-  return rowsSvg('Choose', 'Which drawing? Ask what the reader wants to know', [
-    { icon: route, name: '“How do I get from A to B?”', tag: { text: 'DOTS AND LINES', fill: NU.navy }, text: 'Trace the route with your finger.' },
-    { icon: grid, name: '“Are these two connected?”', tag: { text: 'A GRID', fill: NU.navy }, text: 'With lots of lines, look up one square.' },
-    { icon: ICON.treemap, name: '“What’s biggest, and what does it belong to?”', tag: { text: 'BOXES INSIDE BOXES', fill: NU.navy }, text: 'The biggest box, inside its group.' }
-  ], { max: 150, tagX: 560, textX: 800, size: 22 });
-}
 
-module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, jobsSvg, breaksSvg, moveSvg, simplerSvg, bigTreeSvg, disguiseNetSvg, disguiseTreeSvg, recallSvg, sortSvg, claimSvg, answersSvg, fourTreesSvg, ladderSvg, whoSvg, pairsSvg, chooseSvg, STEPS };
+/* ------------------------------------------------------------ the same lists, revealed live (src/figures/reveal.js) */
+/* One slide each: the room answers, then each answer arrives on its own click and the other rows dim. */
+const ROUTE = `<path d="M-16 12 L-4 -4 L8 4 L18 -14" ${st(3)}/><circle cx="-16" cy="12" r="4" fill="${NU.red}"/><circle cx="18" cy="-14" r="4" fill="${NU.red}"/>`;
+const GRID = [0, 1, 2].map(i => [0, 1, 2].map(j => `<rect x="${-17 + j * 12}" y="${-17 + i * 12}" width="10" height="10" fill="${i === 1 && j === 2 ? NU.red : '#c9d3dd'}"/>`).join('')).join('');
+const CONNECT = { text: 'CONNECT', fill: NU.navy }, MATRIX = { text: 'MATRIX', fill: NU.navy }, NEST = { text: 'NEST', fill: NU.navy };
+const num = t => ({ icon: ICON.number(t), ring: NU.navy });
+const REVEAL = {
+  recall: { mode: 'answers', sub: 'No notes. Answer from memory, then we check.', textX: 640, size: 23, max: 150,
+    rows: RECALL.map(r => ({ icon: r.icon, name: r.name, text: r.answer })) },
+  sort: { mode: 'answers', sub: 'The test: can you go round in a circle and come back? Then it’s a network.', size: 19, max: 68,
+    rows: SORT.map(r => ({ icon: r.icon, name: r.name, tag: r.tag, text: r.text })) },
+  three: { mode: 'answers', sub: 'Why is a grid better than dots and lines for the Les Misérables network? Hands up: A, B or C.', sayX: 160, tagX: 770, textX: 940, size: 18, saySize: 19, max: 150,
+    rows: [
+      { icon: ICON.letter('A'), say: '“The grid is better because it looks neater and more organised.”', tag: { text: 'WEAK', fill: '#8a96a3' }, text: 'A point, but no real reason: “neater” is about looks, not reading.' },
+      { icon: ICON.letter('B'), say: '“The grid is better because the lines in the tangle cross too much, so you can’t read it.”', tag: { text: 'STABLE', fill: '#4c78a8' }, text: 'A point and a reason. Missing: what the grid does instead, and an example.' },
+      { icon: ICON.letter('C'), say: '“With 254 lines, the dots-and-lines picture is a tangle you cannot follow. A grid gives each pair one square, so no lines cross: whether Javert and Fantine share a scene is one square to check.”', tag: { text: 'EXCELLENT', fill: NU.navy }, text: 'Point, reason, what follows, and the case: every link of the chain.' }
+    ] },
+  quiz: { mode: 'answers', sub: 'Hands up for each: Connect, Matrix or Nest?', size: 19, max: 90, tagX: 600, textX: 780,
+    rows: [
+      { ...num(1), name: 'The fewest stops from Brixton to Bank', tag: CONNECT, text: 'A path: follow the lines.' },
+      { ...num(2), name: 'Who shares scenes with almost everyone', tag: MATRIX, text: 'Many connections: rows full of squares.' },
+      { ...num(3), name: 'Which borough holds the most people in Outer London', tag: NEST, text: 'A size inside a group: the biggest box.' },
+      { ...num(4), name: 'Which stations are interchanges between many lines', tag: CONNECT, text: 'Degree: where many edges meet.' },
+      { ...num(5), name: 'How a company’s departments sit under its directors', tag: CONNECT, text: 'A tree: who is under whom, not size.' }
+    ] },
+  choose: { mode: 'build', size: 22, max: 150, tagX: 560, textX: 800,
+    rows: [
+      { icon: ROUTE, name: '“How do I get from A to B?”', tag: { text: 'DOTS AND LINES', fill: NU.navy }, text: 'Trace the route with your finger.' },
+      { icon: GRID, name: '“Are these two connected?”', tag: { text: 'A GRID', fill: NU.navy }, text: 'With lots of lines, look up one square.' },
+      { icon: ICON.treemap, name: '“What’s biggest, and what does it belong to?”', tag: { text: 'BOXES INSIDE BOXES', fill: NU.navy }, text: 'The biggest box, inside its group.' }
+    ] },
+  claim: { mode: 'build', max: 120, rows: [
+    { icon: ICON.near, name: 'Near is not proof', text: 'Readers think dots near the middle, or near each other, matter more. The layout may not mean that.' },
+    { icon: ICON.accuse, name: 'A line accuses', text: 'Joining two people suggests they are linked. Say what each line means and where the data came from.' },
+    { icon: ICON.leak, name: 'Names leak', text: 'Remove a name and a person can still be found from who they are joined to.' },
+    { icon: ICON.shape, name: 'Colour alone fails', text: 'Some readers cannot tell the colours apart. Add a label or a shape as well.' }] },
+  trees: { mode: 'build', max: 120, rows: [
+    { icon: ICON.nodelink, name: 'Dots and lines', text: 'Who is under whom, very clearly. Size is invisible.' },
+    { icon: ICON.indent, name: 'Indented list', text: 'Reads like folders on a laptop; easy to label; long.' },
+    { icon: ICON.icicle, name: 'Icicle', text: 'Each level a band; each piece as wide as its size.' },
+    { icon: ICON.treemap, name: 'Treemap', text: 'Boxes inside boxes: size as area. How deep it goes is harder to see.' }] },
+  ladder: { mode: 'build', rail: true, max: 120, rows: [
+    { ...num(1), name: 'Ask yourself', text: 'What does the question want: a route, a pair, or a size?' },
+    { ...num(2), name: 'Hint', text: 'A route: follow the lines. A pair: one square in a grid. A size inside groups: boxes inside boxes.' },
+    { ...num(3), name: 'Example', text: '“Most people in Outer London” asks for a size, inside a group. Size inside groups is boxes inside boxes: Nest.' },
+    { ...num(4), name: 'Try a new one', text: 'Which Premier League clubs have played each other so far this season?' }] }
+};
+
+module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, jobsSvg, breaksSvg, moveSvg, simplerSvg, bigTreeSvg, disguiseNetSvg, disguiseTreeSvg, whoSvg, pairsSvg, REVEAL, STEPS };

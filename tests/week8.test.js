@@ -37,7 +37,8 @@ test('every live figure is one SlideForge draws, and every step says why', () =>
     assert.match(index, new RegExp(`\\b${s.figure}: ${s.figure}\\b`), `${s.figure} is registered`);
     s.figureSteps.forEach((st, i) => {
       assert.ok(String(st.caption || '').trim(), `${s.title} step ${i + 1} has a caption`);
-      assert.ok(String(st.explain || '').trim(), `${s.title} step ${i + 1} has a Why?`);
+      /* A reveal list's words are on the slide itself, so it has no Why?. */
+      if (s.figure !== 'reveal') assert.ok(String(st.explain || '').trim(), `${s.title} step ${i + 1} has a Why?`);
     });
   }
 });

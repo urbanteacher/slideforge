@@ -14,6 +14,15 @@ const drawn = (title, file, notes, extra) => Object.assign({ type: 'image', titl
 const photo = (title, file, facts, notes) => ({ type: 'image', title, image: asset(file), imageFit: 'contain', design: { capStyle: 'top' }, body: facts.join('\n'), notes });
 const section = (title, part, notes) => ({ type: 'section', title, subtitle: part, notes });
 const statement = (title, notes) => ({ type: 'statement', title, body: title, notes });
+/* A list revealed one row at a time on one slide (src/figures/reveal.js): with answers, the first step shows
+   the questions and each click brings the next answer; a build brings one row per click. */
+const D = require('./drawings.js');
+const reveal = (title, eyebrow, key, captions, notes) => {
+  const data = D.REVEAL[key], start = data.mode === 'answers' ? -1 : 0;
+  return { type: 'figure', figure: 'reveal', title, figureGround: 'paper', figureEyebrow: eyebrow, notes,
+    figureAlt: `${title}: ${data.rows.map(r => r.name || r.say).join('; ')}`, figureData: data,
+    figureSteps: captions.map((caption, i) => ({ caption, upto: start + i })) };
+};
 
 function lesson() {
   const abc = L.abc(), tube = L.tube(), mis = L.miserables(), london = L.london();
@@ -41,11 +50,9 @@ function lesson() {
     ],
     notes: '1 min. Fixes carried over from the 2025 deck: it said "Week 7 / Lecture 7" throughout, its slide 6 said "Analysis Farmwork", and its recap slide recapped maps under the networks title. This is a real recap, next.' },
 
-  { type: 'image', title: 'Three questions on last week', image: asset('recall-questions.svg'), imageFit: 'contain', design: { capStyle: 'none' },
-    notes: '2 min. Recall before new learning (the Nodes routine: retrieve first). Read each question, give 20 seconds in pairs, take two answers. The answers are on the next slide. ' +
-      'Keep the word "position" in their heads: today, where a dot sits is chosen, not measured.' },
-
-  drawn('Last week, the answers', 'recall-answers.svg', '1 min. Reveal after the room has answered. If a question drew blanks, give the one-line answer and move on: today needs only the first idea, position.'),
+  reveal('Three questions on last week', 'Recall first', 'recall', ['Talk to the person next to you: 20 seconds a question.', 'A map spends position on place.', 'Every flat map stretches something.', 'Rates make places fair to compare.'],
+    '3 min. Recall before new learning (the Nodes routine: retrieve first). The three questions show first: 20 seconds in pairs for each, take two answers, then click to reveal that answer; the others dim. ' +
+      'Keep the word "position" in their heads: today, where a dot sits is chosen, not measured.'),
 
   drawn('Eight weeks in, one more kind of data', 'route.svg',
     '1 min. The route: seven weeks behind them, all of it on tables, one row per thing. Today the data is the connections between things. A network or a tree can be one panel of the final page.'),
@@ -139,11 +146,8 @@ function lesson() {
   drawn('Three kinds of edge', 'edge-types.svg',
     '2 min. Redrawn from the 2025 deck\'s slide 15. ASK for a real example of each before showing the captions: undirected (track, Facebook friends), directed (Instagram follows, a web link, who-cites-whom), weighted (minutes between stations, scenes shared, money sent).'),
 
-  { type: 'image', title: 'Network or tree? Hands up', image: asset('sort-questions.svg'), imageFit: 'contain', design: { capStyle: 'none' },
-    notes: '3 min. Read each row; hands up: network or tree? The answers are on the next slide.' },
-
-  { type: 'image', title: 'Network or tree? The answers', image: asset('sort-answers.svg'), imageFit: 'contain', design: { capStyle: 'none' },
-    notes: '3 min. Hands up for each before revealing: network or tree? The family tree is the trap: it is called a tree, and down one line it is one, but two parents per person and cousin marriages make it a network.' },
+  reveal('Network or tree?', 'Name it', 'sort', ['Hands up for each: network or tree?', 'The Tube: a network.', 'Your folders: a tree.', 'Instagram: a directed network.', 'An org chart: a tree.', 'The Premier League: a network.', 'Your family tree: usually a tree.', 'Wikipedia: a directed network.'],
+    '4 min. Read each row and take hands up before each click; the answer arrives and the other rows dim. The family tree is the trap: it is called a tree, and down one line it is one, but two parents per person and cousin marriages make it a network.'),
 
   statement('A tree is a network with no loops and one root', '30 s. Card 1. Equivalent, from Dimitris\'s deck: a connected graph with N nodes and N − 1 edges.'),
 
@@ -291,8 +295,8 @@ function lesson() {
     'Image from the 2025 deck (liveplasma.com), where it was flagged: mapping and data source unclear.'
   ], '2 min. Critique, not just admire. ASK in pairs first: "What would you need to know before you trusted this?" Collect three answers, then reveal the facts. Compare TouchGraph (in the student copy), which says what a line means.'),
 
-  { type: 'image', title: 'A line is a claim: draw it with care', image: asset('claim.svg'), imageFit: 'contain', design: { capStyle: 'none' },
-    notes: '2 min. Responsible practice. Card 2 is Liveplasma again (and the Gupta graphic in the 2025 deck): an unexplained line can be defamatory. Card 3: re-identification from connections in "anonymised" social data. Card 4: colour-coded clusters need a second encoding.' },
+  reveal('A line is a claim: draw it with care', 'Care', 'claim', ['Near is not proof.', 'A line accuses.', 'Names leak.', 'Colour alone fails.'],
+    '2 min. Responsible practice, one point per click. Card 2 is Liveplasma again (and the Gupta graphic in the 2025 deck): an unexplained line can be defamatory. Card 3: re-identification from connections in anonymised social data. Card 4: colour-coded clusters need a second encoding.'),
 
   drawn('Build it: the Tube in Altair', 'build-tube.svg',
     '3 min. Same three layers as A–H, on real data. Position is longitude and latitude this time. Colour is data: TfL\'s line colours, through a scale with a domain (the line names) and a range (the hexes). ' +
@@ -358,15 +362,8 @@ function lesson() {
     notes: '2 min. The chain a full answer needs (the Nodes "join it up"): a point, the reason, what follows from it, and the evidence from this case. ' +
       'Reveal one link at a time and ask the room for each before showing it. Most weak answers stop after the point.' },
 
-  { type: 'image', title: 'Why a grid? Which answer is strongest?', image: asset('three-answers.svg'), imageFit: 'contain', design: { capStyle: 'none' },
-    notes: '2 min. The question: "Why is a grid better than dots and lines for the Les Misérables network?" Hands up for A, B or C before the next slide. Then ask: what does B need to become C?' },
-
-  { type: 'table', title: 'Three answers: what each one has', tableHeader: true,
-    body: 'Answer\tLevel\tWhat it has\tWhat is missing\n' +
-      'A\tWeak\ta point\tno real reason: "neater" is about looks, not reading\n' +
-      'B\tStable\ta point and a reason\twhat the grid does instead, and an example from the data\n' +
-      'C\tExcellent\tpoint, reason, what follows, and the case\tnothing: every link of the chain is there',
-    notes: '1 min. Map each answer onto the chain from two slides back. B to C is the jump students most often miss: saying what the better drawing does, and pointing at the data.' },
+  reveal('Why a grid? Which answer is strongest?', 'Three answers', 'three', ['Hands up: A, B or C?', 'A is weak: no real reason.', 'B is stable: a point and a reason.', 'C is excellent: every link of the chain.'],
+    '3 min. The question is on the slide. Hands up for A, B or C before the first click. Each click gives an answer its level and what it has or misses, mapped onto the chain from the last slide. B to C is the jump students most often miss: saying what the better drawing does, and pointing at the data.'),
 
   /* ======================================================== ⑤ Nest */
   section('How do you draw things inside things?', 'Part 5 · Nest', '20 s. Trees, which have one more way to be drawn. Things inside things is a hierarchy.'),
@@ -390,8 +387,8 @@ function lesson() {
       `Data: ONS mid-${london.year} estimates via Nomis (NM_2002_1); the five areas are ONS's ITL2 regions (Inner London West and East; Outer London East and North East, South, West and North West). London in all: about 9.1 million. ` +
       'Croydon is the largest borough in these estimates; check the card live.' },
 
-  { type: 'image', title: 'Four ways to draw a tree', image: asset('four-trees.svg'), imageFit: 'contain', design: { capStyle: 'none' },
-    notes: '1 min. From the 2025 decks\' "Types of trees" and "Why use trees?". Their decision, hierarchical and binary trees are kinds of tree, not drawings: name them, and say a decision tree is drawn as a node-link tree.' },
+  reveal('Four ways to draw a tree', 'Name it', 'trees', ['Dots and lines: who is under whom.', 'An indented list: like folders.', 'An icicle: levels as bands.', 'A treemap: size as area.'],
+    '1 min. One drawing per click, each named after the London figure they just saw.'),
 
   { type: 'image', title: 'When a tree gets too big', image: asset('big-tree.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. From the 2025 deck: depth versus breadth. Treemaps cope with width (small boxes) but hide depth; node-link trees show depth but run out of width.' },
@@ -416,30 +413,14 @@ function lesson() {
   drawn('Connect, matrix, nest', 'three-ways.svg',
     '1 min. The whole lecture on one slide (Munzner ch. 9: connection, matrix alignment, containment).'),
 
-  drawn('Which drawing? Ask what the reader wants to know', 'choose.svg',
-    '1 min. A rule, not a comparison table: the reader\'s question picks the drawing. The quiz next uses exactly these three.'),
+  reveal('Which drawing? Ask what the reader wants to know', 'Choose', 'choose', ['A route: dots and lines.', 'A pair, with lots of lines: a grid.', 'A size inside a group: boxes inside boxes.'],
+    "1 min. A rule, not a comparison table: the reader's question picks the drawing. One click per question. The quiz next uses exactly these three."),
 
-  { type: 'content', title: 'Which drawing? Hands up', progressive: true,
-    bullets: [
-      '1\tThe fewest stops from Brixton to Bank',
-      '2\tWhich characters share scenes with almost everyone',
-      '3\tWhich borough holds the most people in Outer London',
-      '4\tWhich stations are interchanges between many lines',
-      '5\tHow a company\'s departments sit under its directors'
-    ],
-    notes: '3 min. Read each; hands up for Connect, Matrix or Nest. Answers on the next slide.' },
+  reveal('Which drawing? Hands up', 'Check', 'quiz', ['Hands up for each: Connect, Matrix or Nest?', 'A route: Connect.', 'Many connections: Matrix.', 'A size inside a group: Nest.', 'Where many edges meet: Connect.', 'Who is under whom: Connect, as a tree.'],
+    '4 min. Read each question; hands up for Connect, Matrix or Nest; then click for the answer. If a row splits the room, go to the next step slide.'),
 
-  { type: 'table', title: 'Which drawing? Answers', tableHeader: true,
-    body: 'Question\tDrawing\tWhy\n' +
-      'Fewest stops, Brixton to Bank\tConnect\ta path: follow the lines\n' +
-      'Who shares scenes with everyone\tMatrix\tmany connections: rows full of squares\n' +
-      'Most people in Outer London\tNest\tsize inside groups: the biggest box\n' +
-      'Interchanges\tConnect\tdegree: where many edges meet\n' +
-      'Departments under directors\tConnect (a tree)\tstructure, not size',
-    notes: '1 min.' },
-
-  { type: 'image', title: 'Take the next step, only as far as you need', image: asset('ladder.svg'), imageFit: 'contain', design: { capStyle: 'none' },
-    notes: '2 min. The missing-link ladder: take only the next step you need. Students who got all five right go straight to step 4. Answer to step 4: Matrix, 20 rows and 20 columns, a square when two clubs have played.' },
+  reveal('Take the next step, only as far as you need', 'Got one wrong?', 'ladder', ['First, ask yourself what the question wants.', 'Still stuck? A hint.', 'Still stuck? A worked example.', 'Then try a new one.'],
+    '2 min. The missing-link ladder: take only the next step you need. Students who got all five right go straight to step 4. Answer to step 4: a grid, 20 rows and 20 columns, a square when two clubs have played.'),
 
   { type: 'content', title: 'Five cards, one sentence',
     bullets: [
@@ -476,7 +457,7 @@ function lesson() {
 }
 
 /* The student copy: room-only slides hidden. */
-const STUDENT = [['Which drawing? Hands up', 'none'], ['See it: who trades with whom', 'none'], ['Tell your neighbour: why isn\u2019t the Tube map accurate, and why is that a good thing?', 'none']];
+const STUDENT = [['See it: who trades with whom', 'none'], ['Tell your neighbour: why isn\u2019t the Tube map accurate, and why is that a good thing?', 'none']];
 
 /* Reference slides: hidden in the room so the lecture fits 90 minutes, shown in the student copy for revision
    (the Gupta slide stays hidden there too, by STUDENT, until its source is confirmed). Unhide one by deleting it here. */

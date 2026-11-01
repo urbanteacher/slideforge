@@ -86,17 +86,8 @@ function drawPictures() {
   writeSvg('big-tree.svg', D.bigTreeSvg());
   writeSvg('disguise-networks.svg', D.disguiseNetSvg());
   writeSvg('disguise-trees.svg', D.disguiseTreeSvg());
-  writeSvg('recall-questions.svg', D.recallSvg(false));
-  writeSvg('recall-answers.svg', D.recallSvg(true));
-  writeSvg('sort-questions.svg', D.sortSvg(false));
-  writeSvg('sort-answers.svg', D.sortSvg(true));
-  writeSvg('claim.svg', D.claimSvg());
-  writeSvg('three-answers.svg', D.answersSvg());
-  writeSvg('four-trees.svg', D.fourTreesSvg());
-  writeSvg('ladder.svg', D.ladderSvg());
   writeSvg('who.svg', D.whoSvg());
   writeSvg('pairs.svg', D.pairsSvg());
-  writeSvg('choose.svg', D.chooseSvg());
   for (const [id, o] of Object.entries(BUILDS)) writeSvg(`build-${id}.svg`, D.codeSvg(id, o));
 }
 
@@ -142,7 +133,7 @@ function check(spec, deck) {
       if (!SF.Figures || !SF.Figures.kinds.includes(source.figure)) throw new Error(`${where}: no figure "${source.figure}"`);
       if (JSON.stringify(out.figureData || {}) !== JSON.stringify(source.figureData || {})) throw new Error(`${where} changed its figure data`);
       if ((out.figureSteps || []).length !== source.figureSteps.length) throw new Error(`${where} lost figure steps`);
-      source.figureSteps.forEach((st, k) => { if (!st.explain) throw new Error(`${where}: step ${k + 1} has no explain`); });
+      if (source.figure !== 'reveal') source.figureSteps.forEach((st, k) => { if (!st.explain) throw new Error(`${where}: step ${k + 1} has no explain`); });
     }
     const pictures = [source.image].filter(Boolean);
     for (const p of pictures) if (!fs.existsSync(path.join(root, p))) throw new Error(`${where}: missing ${p}`);
