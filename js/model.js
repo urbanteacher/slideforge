@@ -4431,9 +4431,33 @@
       }
     };
   }
-  function keyRow(g, items2, st) {
+  function keyRow(g, items2, st, side) {
     g.textContent = "";
+    st.keyRoom = 0;
     if (!items2 || !items2.length) return;
+    if (side) {
+      var fs = 15, lh = 20, mark = 30, rows2 = items2.map(function(it) {
+        return wrap(it.text, fs, side.w - (it.mark && it.mark !== "none" ? mark : 0));
+      });
+      var tall = 24 + rows2.reduce(function(t, r) {
+        return t + r.length * lh + 8;
+      }, 0), top = H - 94 - tall, yy = top + 14;
+      el("text", { x: side.x, y: yy, "font-family": NU.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 1.5, fill: NU.red }, g, "HOW TO READ IT");
+      yy += 10 + lh;
+      items2.forEach(function(it, i) {
+        var c = it.colour || (st.dark ? NU.paper : NU.navy), tx = side.x + (it.mark && it.mark !== "none" ? mark : 0);
+        if (it.mark === "dot") el("circle", { cx: side.x + 9, cy: yy - 5, r: 7, fill: it.colour || "#fff", stroke: st.dark ? NU.paper : NU.ink, "stroke-width": 2 }, g);
+        else if (it.mark === "line") el("line", { x1: side.x, y1: yy - 5, x2: side.x + 20, y2: yy - 5, stroke: c, "stroke-width": 4, "stroke-linecap": "round" }, g);
+        else if (it.mark === "box") el("rect", { x: side.x + 2, y: yy - 13, width: 16, height: 16, rx: 2, fill: c }, g);
+        rows2[i].forEach(function(l) {
+          el("text", { x: tx, y: yy, "font-family": NU.sans, "font-size": fs, fill: st.ink }, g, l);
+          yy += lh;
+        });
+        yy += 8;
+      });
+      st.keyRoom = tall + 18;
+      return;
+    }
     var size = 16, y = 124, gap = 26, sym = 22;
     var widths = items2.map(function(it) {
       return (it.mark && it.mark !== "none" ? sym + 8 : 0) + textWidth(it.text, size, true);
@@ -4461,7 +4485,7 @@
           return p.trim();
         }).filter(Boolean);
         if (!paras.length) return;
-        var pad = 22, inner = box2.w - pad * 2, room = H - 96 - box2.y, size = 19, lines = [];
+        var pad = 22, inner = box2.w - pad * 2, room = H - 96 - box2.y - (st.keyRoom || 0), size = 19, lines = [];
         for (; size >= 14; size--) {
           lines = paras.map(function(p) {
             return wrap(p, size, inner);
@@ -6983,7 +7007,7 @@
           var was = step;
           step = next;
           st.caption(step.caption);
-          keyRow(keyG, step.key || d.key, st);
+          keyRow(keyG, step.key || d.key, st, fig.story);
           var v = step.view || "link";
           var layouts = d.layouts || {}, target = layouts[step.layout || Object.keys(layouts)[0]] || {};
           if (v !== view || v === "store") {
@@ -7338,7 +7362,7 @@
         /** @param {any} step @param {boolean} animate */
         update: function(step, animate) {
           st.caption(step.caption);
-          keyRow(keyG, step.key || d.key, st);
+          keyRow(keyG, step.key || d.key, st, fig.story);
           var to = L[step.layout] ? step.layout : "link", from = layout || to;
           stepLit = step.lit || null;
           cancel();

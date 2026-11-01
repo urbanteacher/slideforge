@@ -338,7 +338,7 @@ export var network = {
         var was = step;
         step = next;
         st.caption(step.caption);
-        keyRow(keyG, step.key || d.key, st);
+        keyRow(keyG, step.key || d.key, st, fig.story);
         var v = step.view || 'link';
         var layouts = d.layouts || {}, target = layouts[step.layout || Object.keys(layouts)[0]] || {};
         if (v !== view || (v === 'store')) {

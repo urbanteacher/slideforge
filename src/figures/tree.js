@@ -189,7 +189,7 @@ export var tree = {
       /** @param {any} step @param {boolean} animate */
       update: function (step, animate) {
         st.caption(step.caption);
-        keyRow(keyG, step.key || d.key, st);
+        keyRow(keyG, step.key || d.key, st, fig.story);
         var to = L[step.layout] ? step.layout : 'link', from = layout || to;
         stepLit = step.lit || null;
         cancel();

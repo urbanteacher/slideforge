@@ -243,15 +243,35 @@ export function stage(svg, o) {
 /* ------------------------------------------------------------ how to read this: a key in one row
 
    For a room new to the picture: what a dot, a line or a box stands for, in a row of plain words above
-   the figure (under the title, right-aligned). items: [{ mark: 'dot' | 'line' | 'box' | 'none', colour?, text }]. */
+   the figure (under the title, right-aligned). items: [{ mark: 'dot' | 'line' | 'box' | 'none', colour?, text }].
+   Given `side` (the slide's story column), the key stands in that column instead, one item a line,
+   at its foot above the caption, and tells the story panel how much room it took (st.keyRoom). */
 /**
  * @param {Element} g  a group the key is drawn into (emptied first)
  * @param {{mark?: string, colour?: string, text: string}[]|undefined} items
- * @param {{ink: string, soft: string, dark: boolean}} st
+ * @param {any} st
+ * @param {{x: number, y: number, w: number}|null} [side]
  */
-export function keyRow(g, items, st) {
+export function keyRow(g, items, st, side) {
   g.textContent = '';
+  st.keyRoom = 0;
   if (!items || !items.length) return;
+  if (side) {
+    var fs = 15, lh = 20, mark = 30, rows = items.map(function (it) { return wrap(it.text, fs, side.w - (it.mark && it.mark !== 'none' ? mark : 0)); });
+    var tall = 24 + rows.reduce(function (t, r) { return t + r.length * lh + 8; }, 0), top = H - 94 - tall, yy = top + 14;
+    el('text', { x: side.x, y: yy, 'font-family': NU.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 1.5, fill: NU.red }, g, 'HOW TO READ IT');
+    yy += 10 + lh;
+    items.forEach(function (it, i) {
+      var c = it.colour || (st.dark ? NU.paper : NU.navy), tx = side.x + (it.mark && it.mark !== 'none' ? mark : 0);
+      if (it.mark === 'dot') el('circle', { cx: side.x + 9, cy: yy - 5, r: 7, fill: it.colour || '#fff', stroke: st.dark ? NU.paper : NU.ink, 'stroke-width': 2 }, g);
+      else if (it.mark === 'line') el('line', { x1: side.x, y1: yy - 5, x2: side.x + 20, y2: yy - 5, stroke: c, 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+      else if (it.mark === 'box') el('rect', { x: side.x + 2, y: yy - 13, width: 16, height: 16, rx: 2, fill: c }, g);
+      rows[i].forEach(function (l) { el('text', { x: tx, y: yy, 'font-family': NU.sans, 'font-size': fs, fill: st.ink }, g, l); yy += lh; });
+      yy += 8;
+    });
+    st.keyRoom = tall + 18;
+    return;
+  }
   var size = 16, y = 124, gap = 26, sym = 22;
   var widths = items.map(function (it) { return (it.mark && it.mark !== 'none' ? sym + 8 : 0) + textWidth(it.text, size, true); });
   var x = W - 64 - widths.reduce(function (a, b) { return a + b; }, 0) - gap * (items.length - 1);
@@ -273,7 +293,7 @@ export function keyRow(g, items, st) {
    always, in the show and in stills, instead of behind a Why? button: the figure and its words
    are read together, as in a data story. The figure leaves that column free. */
 /**
- * @param {Element} svg @param {{dark: boolean}} st @param {{x: number, y: number, w: number}} box
+ * @param {Element} svg @param {any} st @param {{x: number, y: number, w: number}} box
  * @returns {{set: function(string=, number=, number=): void}}
  */
 export function story(svg, st, box) {
@@ -283,7 +303,7 @@ export function story(svg, st, box) {
       g.textContent = '';
       var paras = String(text || '').split('\n').map(function (p) { return p.trim(); }).filter(Boolean);
       if (!paras.length) return;
-      var pad = 22, inner = box.w - pad * 2, room = H - 96 - box.y, size = 19, lines = [];
+      var pad = 22, inner = box.w - pad * 2, room = H - 96 - box.y - (st.keyRoom || 0), size = 19, lines = [];
       /* The words fit the panel: the type steps down until they do. */
       for (; size >= 14; size--) {
         lines = paras.map(function (p) { return wrap(p, size, inner); });
