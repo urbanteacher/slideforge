@@ -69,9 +69,11 @@ export var network = {
         return { n: n, node: el('circle', { r: box ? r * 1.6 : r, fill: d.colours && l0(n) ? '#fff' : nodeFill(n), stroke: d.colours && l0(n) ? '#14181f' : paper ? '#fff' : NU.stage, 'stroke-width': 2, cursor: fig.interactive ? 'grab' : null }, g) };
       });
       function l0(/** @type {any} */ n) { return n.group == null; }
+      /* Big dots with short names (A to H) carry the name inside, as the side-by-side view does. */
+      var inner = box || (r >= 14 && nodes.every(function (/** @type {any} */ n) { return String(n.label || n.id).length <= 2; }));
       var names = nodes.map(function (/** @type {any} */ n) {
-        return el('text', { 'font-family': NU.sans, 'font-size': box ? 22 : 13, 'font-weight': box ? 700 : 600, fill: box ? '#fff' : ink, 'text-anchor': box ? 'middle' : 'start', 'pointer-events': 'none',
-          stroke: box ? null : paper ? NU.paper : NU.stage, 'stroke-width': box ? null : 3.5, 'paint-order': 'stroke' }, g, n.label || n.id);
+        return el('text', { 'font-family': NU.sans, 'font-size': box ? 22 : inner ? Math.round(r * 0.95) : 13, 'font-weight': inner ? 700 : 600, fill: inner ? '#fff' : ink, 'text-anchor': inner ? 'middle' : 'start', 'pointer-events': 'none',
+          stroke: inner ? null : paper ? NU.paper : NU.stage, 'stroke-width': inner ? null : 3.5, 'paint-order': 'stroke' }, g, n.label || n.id);
       });
       /* Which corner of its dot each name sits at: 0 up-right, 1 down-right, 2 up-left, 3 down-left. */
       var corner = nodes.map(function () { return 0; });
@@ -89,7 +91,7 @@ export var network = {
         dots.forEach(function (o) { var p = pos[o.n.id]; if (p) set(o.node, { cx: p[0], cy: p[1] }); });
         names.forEach(function (t, i) {
           var p = pos[nodes[i].id];
-          if (p) set(t, box ? { x: p[0], y: p[1] + 8 } : nameAt(p, corner[i]));
+          if (p) set(t, inner ? { x: p[0], y: p[1] + (box ? 8 : r * 0.34) } : nameAt(p, corner[i]));
         });
       }
       function light(/** @type {string|null} */ id) {
@@ -101,11 +103,13 @@ export var network = {
         });
         dots.forEach(function (o) {
           var on = lit ? o.n === lit || lit.near[o.n.id] : edge ? edge.split('-').indexOf(o.n.id) >= 0 : true;
+          /* In the side-by-side view a dot that is not lit goes pale but keeps its letter. */
+          if (inner && !on) { set(o.node, { opacity: 1, fill: '#dfe5ec' }); return; }
           set(o.node, { opacity: on ? 1 : 0.18, fill: lit && o.n === lit ? NU.red : edge && on ? NU.red : d.colours && l0(o.n) ? '#fff' : nodeFill(o.n) });
         });
         /* Labels never sit on each other: the lit node first, then the busiest, each only where it fits. */
         var want = names.map(function (_, i) {
-          var n = nodes[i], on = lit ? n === lit || lit.near[n.id] : box || labels === 'all' || (labels === 'hubs' && hubs.indexOf(n.id) >= 0);
+          var n = nodes[i], on = inner || (lit ? n === lit || lit.near[n.id] : labels === 'all' || (labels === 'hubs' && hubs.indexOf(n.id) >= 0));
           if (edge) on = box || edge.split('-').indexOf(n.id) >= 0;
           return on;
         });
@@ -120,7 +124,7 @@ export var network = {
         };
         rank.forEach(function (i) {
           var t = names[i], p = pos[nodes[i].id], show = want[i] && !!p;
-          if (show && !box) {
+          if (show && !inner) {
             var w = textWidth(String(nodes[i].label || nodes[i].id), 13, false) + 4, dotsNear = others(i), got = -1;
             /* First a corner clear of dots and names; failing that, one clear of names only. */
             for (var pass = 0; pass < 2 && got < 0; pass++) {
@@ -133,6 +137,8 @@ export var network = {
             if (show) { corner[i] = got; set(t, nameAt(p, got)); }
           }
           set(t, { opacity: show ? 1 : 0 });
+          /* A pale dot's letter is navy, so it stays readable. */
+          if (inner) { var lit2 = lit ? nodes[i] === lit || lit.near[nodes[i].id] : edge ? edge.split('-').indexOf(nodes[i].id) >= 0 : true; set(t, { fill: lit2 ? '#fff' : NU.navy }); }
         });
         cards.textContent = '';
         if (lit && !box) {
@@ -216,6 +222,8 @@ export var network = {
           set(c.node, { opacity: on || keepAll ? (box ? 1 : 0.62 + 0.38 * Math.sqrt((c.l.value || maxV) / maxV)) : 0.12, fill: (edge && on) ? NU.red : c.node.getAttribute('data-fill') || c.node.getAttribute('fill') });
           if (!c.node.getAttribute('data-fill')) c.node.setAttribute('data-fill', c.node.getAttribute('fill'));
           if (!(edge && on)) set(c.node, { fill: c.node.getAttribute('data-fill') });
+          /* A faded square's 1 fades with it, in navy, so it still reads as a 1. */
+          if (c.one) set(c.one, { fill: on ? '#fff' : NU.navy, opacity: on ? 1 : 0.35 });
         });
         if (lit) {
           set(rowBand, { y: y0 + at[lit.id] * cell, opacity: 0.16 });

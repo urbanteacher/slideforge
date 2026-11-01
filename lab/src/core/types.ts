@@ -8,7 +8,7 @@ export type Params = Record<string, ParamValue>;
 /** A SlideForge live figure (src/types.d.ts: the `figure` slide's fields). */
 export interface LiveFigure {
   figure: string; figureData?: unknown; figureSteps?: unknown[]; title?: string;
-  figureGround?: string; figureEyebrow?: string; figureCredit?: string; figureAlt?: string; figureStory?: { x: number; y: number; w: number };
+  figureGround?: string; figureEyebrow?: string; figureCredit?: string; figureAlt?: string; figureStory?: { x: number; y: number; w: number }; figureWhy?: boolean;
 }
 
 export interface Box {

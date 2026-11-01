@@ -168,7 +168,8 @@ export var tree = {
       var rows = /** @type {[string, string][]} */ ([['Name', n.name], [d.valueTitle || 'Value', format(fmt, n.value)], ['Share', format('.1%', n.value / root.value)]]);
       if (path.length > 46) path = '… › ' + chain.slice(0, 2).reverse().map(function (x) { return x.name; }).join(' › ');
       rows.push(['Path', path]);
-      tooltipCard(cards, rows, r.x + Math.min(r.w, 40), r.y + Math.min(r.h, 30));
+      /* The card keeps off the box it describes, so its size stays in view. */
+      tooltipCard(cards, rows, r.x + r.w / 2, r.y + r.h / 2, { avoid: Math.max(r.w, r.h) / 2 + 8, blocks: [[r.x, r.y, r.x + r.w, r.y + r.h]], minY: 140 });
     }
     if (fig.interactive) {
       svg.addEventListener('pointermove', function (/** @type {PointerEvent} */ e) {

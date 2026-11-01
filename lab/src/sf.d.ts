@@ -230,7 +230,7 @@ declare module '@sf/deck/content.js' {
 }
 
 /** A SlideForge live figure slide (src/figures/): which figure, its data, its steps and its frame. */
-interface SFFigureSlide { type: 'figure'; figure: string; figureData?: unknown; figureSteps?: unknown[]; title?: string; figureGround?: string; figureEyebrow?: string; figureCredit?: string; figureAlt?: string; figureStory?: { x: number; y: number; w: number } }
+interface SFFigureSlide { type: 'figure'; figure: string; figureData?: unknown; figureSteps?: unknown[]; title?: string; figureGround?: string; figureEyebrow?: string; figureCredit?: string; figureAlt?: string; figureStory?: { x: number; y: number; w: number }; figureWhy?: boolean }
 /** What installFigures puts on its namespace (src/figures/index.js). */
 interface SFFigures {
   active(slide: unknown): boolean;

@@ -6604,16 +6604,19 @@
         function l0(n) {
           return n.group == null;
         }
+        var inner = box2 || r >= 14 && nodes.every(function(n) {
+          return String(n.label || n.id).length <= 2;
+        });
         var names = nodes.map(function(n) {
           return el("text", {
             "font-family": NU.sans,
-            "font-size": box2 ? 22 : 13,
-            "font-weight": box2 ? 700 : 600,
-            fill: box2 ? "#fff" : ink,
-            "text-anchor": box2 ? "middle" : "start",
+            "font-size": box2 ? 22 : inner ? Math.round(r * 0.95) : 13,
+            "font-weight": inner ? 700 : 600,
+            fill: inner ? "#fff" : ink,
+            "text-anchor": inner ? "middle" : "start",
             "pointer-events": "none",
-            stroke: box2 ? null : paper ? NU.paper : NU.stage,
-            "stroke-width": box2 ? null : 3.5,
+            stroke: inner ? null : paper ? NU.paper : NU.stage,
+            "stroke-width": inner ? null : 3.5,
             "paint-order": "stroke"
           }, g, n.label || n.id);
         });
@@ -6637,7 +6640,7 @@
           });
           names.forEach(function(t, i) {
             var p = pos[nodes[i].id];
-            if (p) set(t, box2 ? { x: p[0], y: p[1] + 8 } : nameAt(p, corner[i]));
+            if (p) set(t, inner ? { x: p[0], y: p[1] + (box2 ? 8 : r * 0.34) } : nameAt(p, corner[i]));
           });
         }
         function light(id) {
@@ -6649,10 +6652,14 @@
           });
           dots.forEach(function(o) {
             var on = lit ? o.n === lit || lit.near[o.n.id] : edge ? edge.split("-").indexOf(o.n.id) >= 0 : true;
+            if (inner && !on) {
+              set(o.node, { opacity: 1, fill: "#dfe5ec" });
+              return;
+            }
             set(o.node, { opacity: on ? 1 : 0.18, fill: lit && o.n === lit ? NU.red : edge && on ? NU.red : d.colours && l0(o.n) ? "#fff" : nodeFill(o.n) });
           });
           var want = names.map(function(_, i) {
-            var n = nodes[i], on = lit ? n === lit || lit.near[n.id] : box2 || labels === "all" || labels === "hubs" && hubs.indexOf(n.id) >= 0;
+            var n = nodes[i], on = inner || (lit ? n === lit || lit.near[n.id] : labels === "all" || labels === "hubs" && hubs.indexOf(n.id) >= 0);
             if (edge) on = box2 || edge.split("-").indexOf(n.id) >= 0;
             return on;
           });
@@ -6680,7 +6687,7 @@
           };
           rank.forEach(function(i) {
             var t = names[i], p2 = pos[nodes[i].id], show = want[i] && !!p2;
-            if (show && !box2) {
+            if (show && !inner) {
               var w = textWidth(String(nodes[i].label || nodes[i].id), 13, false) + 4, dotsNear = others(i), got = -1;
               for (var pass = 0; pass < 2 && got < 0; pass++) {
                 for (var c = 0; c < 4 && got < 0; c++) {
@@ -6698,6 +6705,10 @@
               }
             }
             set(t, { opacity: show ? 1 : 0 });
+            if (inner) {
+              var lit2 = lit ? nodes[i] === lit || lit.near[nodes[i].id] : edge ? edge.split("-").indexOf(nodes[i].id) >= 0 : true;
+              set(t, { fill: lit2 ? "#fff" : NU.navy });
+            }
           });
           cards.textContent = "";
           if (lit && !box2) {
@@ -6819,6 +6830,7 @@
             set(c.node, { opacity: on || keepAll ? box2 ? 1 : 0.62 + 0.38 * Math.sqrt((c.l.value || maxV) / maxV) : 0.12, fill: edge && on ? NU.red : c.node.getAttribute("data-fill") || c.node.getAttribute("fill") });
             if (!c.node.getAttribute("data-fill")) c.node.setAttribute("data-fill", c.node.getAttribute("fill"));
             if (!(edge && on)) set(c.node, { fill: c.node.getAttribute("data-fill") });
+            if (c.one) set(c.one, { fill: on ? "#fff" : NU.navy, opacity: on ? 1 : 0.35 });
           });
           if (lit) {
             set(rowBand, { y: y0 + at[lit.id] * cell, opacity: 0.16 });
@@ -7293,7 +7305,7 @@
           return x.name;
         }).join(" › ");
         rows2.push(["Path", path]);
-        tooltipCard(cards, rows2, r.x + Math.min(r.w, 40), r.y + Math.min(r.h, 30));
+        tooltipCard(cards, rows2, r.x + r.w / 2, r.y + r.h / 2, { avoid: Math.max(r.w, r.h) / 2 + 8, blocks: [[r.x, r.y, r.x + r.w, r.y + r.h]], minY: 140 });
       }
       if (fig.interactive) {
         svg.addEventListener("pointermove", function(e) {
@@ -7518,7 +7530,7 @@
       }
       var inst = null, shown = -1;
       var told = slide.figureStory ? story(svg, stage2, slide.figureStory) : null;
-      var why = live && !told ? explainer(svg, stage2) : null;
+      var why = live && !told && slide.figureWhy !== false ? explainer(svg, stage2) : null;
       try {
         inst = make.mount(fig);
       } catch (err) {

@@ -106,7 +106,8 @@ export function installFigures(SF) {
     /* Why?: a step's explanation, over the figure, for the room to read (kit.js explainer). Live only. */
     /* A slide with figureStory shows the words beside the figure instead, live and still (kit.js story). */
     var told = slide.figureStory ? story(svg, stage, slide.figureStory) : null;
-    var why = live && !told ? explainer(svg, stage) : null;
+    /* figureWhy: false leaves the button off: the teacher says the words (they are in the notes). */
+    var why = live && !told && slide.figureWhy !== false ? explainer(svg, stage) : null;
     try { inst = make.mount(fig); } catch (err) { failed(err); return; }
     /** @param {number} i @param {boolean} animate */
     function show(i, animate) {

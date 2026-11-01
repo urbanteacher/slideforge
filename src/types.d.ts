@@ -208,6 +208,8 @@ export interface Slide {
   figureAlt?: string;
   /** Show each step's `explain` in a panel at this place, always, instead of behind a Why? button. */
   figureStory?: { x: number; y: number; w: number };
+  /** false: no Why? button (the step's `explain` is for the teacher). */
+  figureWhy?: boolean;
   experiment?: {preset?:string; prompt?:string; duration?:number; print?:{changes?:string; constants?:string; takeaway?:string; caveat?:string}; states?:Array<Record<string, unknown>>};
   headerFooter?: HeaderFooterConfig;
   design?: SlideDesign;

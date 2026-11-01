@@ -72,12 +72,12 @@ function abc() {
   const links = pairs.map(p => ({ source: p[0], target: p[1] }));
   /* The same x and y as the Altair on the Build-it slides. */
   const xy = { A: [2, 3], B: [4, 3], C: [3, 2], D: [3, 0], E: [5, 0], F: [5, 2], G: [0, 4], H: [1, 1] };
-  const shuffled = { A: [4, 0], B: [0, 1], C: [5, 3], D: [1, 4], E: [3, 2], F: [2, 0], G: [5, 0], H: [0, 3] };
+  const shuffled = { A: [5, 1], B: [0, 1], C: [4, 4], D: [1, 4], E: [3, 2], F: [2, 0], G: [0, 3], H: [5, 3] };
   return {
     nodes, links,
     layouts: {
-      chosen: fit(xy, { x0: 300, y0: 180, x1: 980, y1: 610 }, true),
-      shuffled: fit(shuffled, { x0: 300, y0: 180, x1: 980, y1: 610 }, true),
+      chosen: fit(xy, { x0: 300, y0: 180, x1: 980, y1: 590 }, true),
+      shuffled: fit(shuffled, { x0: 300, y0: 180, x1: 980, y1: 590 }, true),
       store: fit(xy, { x0: 90, y0: 230, x1: 470, y1: 600 }, true)
     }
   };

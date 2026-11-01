@@ -24,7 +24,7 @@ const reveal = (title, eyebrow, key, captions, notes) => {
     figureSteps: captions.map((caption, i) => ({ caption, upto: start + i })) };
 };
 
-function lesson() {
+function draft() {
   const abc = L.abc(), tube = L.tube(), mis = L.miserables(), london = L.london();
   const TUBE = { nodes: tube.nodes, links: tube.links, colours: tube.colours, layouts: tube.layouts, r: 6 };
   /* The hook tells its story beside the map: the map keeps to the left, the words take the right-hand column. */
@@ -171,7 +171,7 @@ function lesson() {
 
   { type: 'figure', figure: 'network', title: 'One network, written three ways', figureGround: 'paper',
     figureEyebrow: 'Store it', figureCredit: 'After Dimitris Mylonas, LDSCI5209', figureAlt: 'An eight-node network A–H drawn as a picture, written as an edge list, and as an 8 by 8 adjacency matrix.',
-    figureData: { nodes: abc.nodes, links: abc.links, layouts: abc.layouts, r: 16, key: [{ mark: 'dot', colour: '#0c3354', text: 'a node: one thing' }, { mark: 'line', colour: '#8a96a3', text: 'an edge: two things are connected' }] },
+    figureData: { nodes: abc.nodes, links: abc.links, layouts: abc.layouts, r: 16 },
     figureSteps: [
       { caption: 'The same 8 dots and 9 lines, written 3 ways: a picture, a list of pairs, and a grid of 0s and 1s.', view: 'store',
         explain: 'Left: the picture. 8 dots (A to H) and 9 lines.\nMiddle: the same thing as a list. Each row is one line, and names the two dots it joins.\nRight: the same thing as a grid. Each dot has a row and a column. A 1 means "these two are joined", a 0 means they are not.\nPoint at a dot, a row of the list or a square of the grid: the same connection lights up in all three.' },
@@ -455,6 +455,16 @@ function lesson() {
 
   statement('Tell your neighbour: why isn\u2019t the Tube map accurate, and why is that a good thing?', '2 min. Instead of "any questions?": one sentence each, to the person next to them. Walk the room and listen: you will hear quickly who has it. Then open the floor.')
   ];
+}
+
+/* No Why? buttons: a figure's words are on the slide (a story panel or a reveal list), or the teacher says them.
+   Each step's explanation goes to the end of the notes, so the teacher has them in the presenter view. */
+function lesson() {
+  return draft().map(s => {
+    if (s.type !== 'figure' || s.figure === 'reveal' || s.figureStory) return s;
+    const steps = s.figureSteps.map((st, i) => `${i + 1}. ${String(st.explain || '').replace(/\n/g, ' ')}`).join('\n');
+    return { ...s, figureWhy: false, notes: `${s.notes || ''}\n\nSAY, STEP BY STEP:\n${steps}` };
+  });
 }
 
 /* The student copy: room-only slides hidden. */
