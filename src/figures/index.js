@@ -21,7 +21,7 @@
  * Installed per page, before installExplore (index.html, presenter.html,
  * view.html), like the other teaching interactions.
  */
-import { W, H, NS, stage as makeStage, seek, explainer } from './kit.js';
+import { W, H, NS, stage as makeStage, seek, explainer, story } from './kit.js';
 import { bubbles } from './bubbles.js';
 import { codechart } from './codechart.js';
 import { worldmap } from './worldmap.js';
@@ -83,7 +83,7 @@ export function installFigures(SF) {
     }
     var stage = makeStage(svg, { ground: slide.figureGround, eyebrow: slide.figureEyebrow, title: slide.title, credit: slide.figureCredit });
     var fig = {
-      svg: svg, stage: stage, data: slide.figureData || {}, interactive: live, steps: list,
+      svg: svg, stage: stage, data: slide.figureData || {}, interactive: live, steps: list, story: slide.figureStory || null,
       /** Where a pointer event lands, in slide pixels, whatever scale the slide is drawn at. */
       toSlide: function (/** @type {PointerEvent} */ e) {
         var m = svg.getScreenCTM(), p = svg.createSVGPoint();
@@ -103,7 +103,9 @@ export function installFigures(SF) {
     }
     var inst = null, shown = -1;
     /* Why?: a step's explanation, over the figure, for the room to read (kit.js explainer). Live only. */
-    var why = live ? explainer(svg, stage) : null;
+    /* A slide with figureStory shows the words beside the figure instead, live and still (kit.js story). */
+    var told = slide.figureStory ? story(svg, stage, slide.figureStory) : null;
+    var why = live && !told ? explainer(svg, stage) : null;
     try { inst = make.mount(fig); } catch (err) { failed(err); return; }
     /** @param {number} i @param {boolean} animate */
     function show(i, animate) {
@@ -111,6 +113,7 @@ export function installFigures(SF) {
       stage.pips(k, list.length);
       try { if (inst) inst.update(Object.assign({ index: k }, list[k]), animate && k !== shown); } catch (err) { failed(err); }
       if (why) why.set(list[k] && list[k].explain);
+      if (told) told.set(list[k] && list[k].explain, k, list.length);
       shown = k;
     }
     show(at, false);

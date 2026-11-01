@@ -523,7 +523,7 @@ export function carryDeckExperimentPresets(deck: Deck): number {
 export function figureOf(s: SFSlide): LiveFigure {
   const f = s as SFSlide & Partial<LiveFigure>;
   const out: LiveFigure = { figure: String(f.figure ?? '') };
-  for (const k of ['figureData', 'figureSteps', 'title', 'figureGround', 'figureEyebrow', 'figureCredit', 'figureAlt'] as const) {
+  for (const k of ['figureData', 'figureSteps', 'title', 'figureGround', 'figureEyebrow', 'figureCredit', 'figureAlt', 'figureStory'] as const) {
     if (f[k] !== undefined) (out as unknown as Record<string, unknown>)[k] = structuredClone(f[k]);
   }
   return out;

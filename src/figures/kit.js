@@ -145,7 +145,7 @@ export function format(spec, v) {
  * on the stage. `rows` are [key, value] pairs, as Altair's tooltip list makes
  * them: the title, then the formatted field.
  * @param {Element} parent @param {[string, string][]} rows @param {number} x @param {number} y
- * @param {{size?: number, avoid?: number, maxX?: number}} [o]  maxX: the card stays left of it
+ * @param {{size?: number, avoid?: number, maxX?: number, minY?: number, blocks?: number[][]}} [o]  maxX: the card stays left of it
  */
 export function tooltipCard(parent, rows, x, y, o) {
   var size = (o && o.size) || 19, pad = size * 0.55, lh = size * 1.45;
@@ -158,6 +158,23 @@ export function tooltipCard(parent, rows, x, y, o) {
   if (left + w > maxX) left = x - gap - w;
   if (top + h > H - 12) top = y - gap - h;
   left = Math.max(12, left); top = Math.max(12, top);
+  /* `blocks` ([x0, y0, x1, y1] boxes: names, dots) the card should not cover: it tries the four corners,
+     then further out, and keeps the first that covers none. */
+  var blocks = (o && o.blocks) || [], minY = (o && o.minY) || 12;
+  top = Math.max(minY, top);
+  if (blocks.length) {
+    var hits = function (/** @type {number} */ l, /** @type {number} */ t) {
+      return blocks.filter(function (b) { return l < b[2] && b[0] < l + w && t < b[3] && b[1] < t + h; }).length;
+    };
+    var best = { l: left, t: top, n: hits(left, top) };
+    [gap, gap + 40, gap + 90].forEach(function (g) {
+      [[x + g, y + g], [x + g, y - g - h], [x - g - w, y + g], [x - g - w, y - g - h]].forEach(function (c) {
+        var l = Math.max(12, Math.min(maxX - w, c[0])), t = Math.max(minY, Math.min(H - 12 - h, c[1])), n = hits(l, t);
+        if (n < best.n) best = { l: l, t: t, n: n };
+      });
+    });
+    left = best.l; top = best.t;
+  }
   set(g, { transform: 'translate(' + left + ' ' + top + ')' });
   el('rect', { x: 3, y: 3, width: w, height: h, rx: 4, fill: 'rgba(0,0,0,.28)' }, g);
   el('rect', { width: w, height: h, rx: 4, fill: '#ffffff', stroke: '#d9d9d9', 'stroke-width': 1 }, g);
@@ -248,6 +265,43 @@ export function keyRow(g, items, st) {
     el('text', { x: cx, y: y, 'font-family': NU.sans, 'font-size': size, fill: st.ink }, g, it.text);
     x += widths[i] + gap;
   });
+}
+
+/* ------------------------------------------------------------ the story: a step's words beside the figure
+
+   A slide with `figureStory: { x, y, w }` shows each step's `explain` in a panel at that place,
+   always, in the show and in stills, instead of behind a Why? button: the figure and its words
+   are read together, as in a data story. The figure leaves that column free. */
+/**
+ * @param {Element} svg @param {{dark: boolean}} st @param {{x: number, y: number, w: number}} box
+ * @returns {{set: function(string=, number=, number=): void}}
+ */
+export function story(svg, st, box) {
+  var ink = st.dark ? NU.paper : NU.ink, g = el('g', { class: 'fig-story', 'pointer-events': 'none' }, svg);
+  return {
+    set: function (text, step, of) {
+      g.textContent = '';
+      var paras = String(text || '').split('\n').map(function (p) { return p.trim(); }).filter(Boolean);
+      if (!paras.length) return;
+      var pad = 22, inner = box.w - pad * 2, room = H - 96 - box.y, size = 19, lines = [];
+      /* The words fit the panel: the type steps down until they do. */
+      for (; size >= 14; size--) {
+        lines = paras.map(function (p) { return wrap(p, size, inner); });
+        var tall = 34 + lines.reduce(function (t, l) { return t + l.length * size * 1.4 + size * 0.7; }, 0) + pad;
+        if (tall <= room) break;
+      }
+      var h = 34 + lines.reduce(function (t, l) { return t + l.length * size * 1.4 + size * 0.7; }, 0) + pad;
+      el('rect', { x: box.x, y: box.y, width: box.w, height: h, rx: 10, fill: st.dark ? 'rgba(255,255,255,.06)' : '#fff', stroke: st.dark ? NU.line : '#d9d4ca' }, g);
+      el('rect', { x: box.x, y: box.y, width: box.w, height: 4, fill: NU.red }, g);
+      el('text', { x: box.x + pad, y: box.y + 32, 'font-family': NU.sans, 'font-size': 13, 'font-weight': 700, 'letter-spacing': 2, fill: NU.red }, g,
+        of && of > 1 ? 'WHAT YOU SEE · ' + ((step || 0) + 1) + ' OF ' + of : 'WHAT YOU SEE');
+      var y = box.y + 34 + size * 1.25;
+      lines.forEach(function (para, i) {
+        para.forEach(function (l) { el('text', { x: box.x + pad, y: y, 'font-family': NU.sans, 'font-size': size, 'font-weight': i === 0 ? 600 : 400, fill: ink }, g, l); y += size * 1.4; });
+        y += size * 0.7;
+      });
+    }
+  };
 }
 
 /* ------------------------------------------------------------ why? an explanation over the figure

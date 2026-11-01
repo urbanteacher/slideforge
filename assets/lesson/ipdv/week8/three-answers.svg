@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">THREE ANSWERS</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">Why a grid? Which answer is strongest?</text>
+<text x="64" y="134" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#5a6572">Why is a grid better than dots and lines for the Les Misérables network? Hands up: A, B or C.</text>
+<circle cx="104" cy="240" r="32" fill="#eef1f5"/>
+<g transform="translate(104 240) scale(1.000)"><text y="10" text-anchor="middle" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="30" fill="#0c3354">A</text></g>
+<text x="160" y="249.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Answer A</text>
+<text x="380" y="248.4" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f" font-style="italic">“The grid is better because it looks neater and more organised.”</text>
+<line x1="64" y1="320" x2="1216" y2="320" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="400" r="32" fill="#eef1f5"/>
+<g transform="translate(104 400) scale(1.000)"><text y="10" text-anchor="middle" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="30" fill="#0c3354">B</text></g>
+<text x="160" y="409.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Answer B</text>
+<text x="380" y="392.8" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f" font-style="italic">“The grid is better because the lines in the tangle cross too</text>
+<text x="380" y="424.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f" font-style="italic">much, so you can’t read it.”</text>
+<line x1="64" y1="480" x2="1216" y2="480" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="560" r="32" fill="#eef1f5"/>
+<g transform="translate(104 560) scale(1.000)"><text y="10" text-anchor="middle" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="30" fill="#0c3354">C</text></g>
+<text x="160" y="569.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Answer C</text>
+<text x="380" y="537.2" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f" font-style="italic">“With 254 lines, the dots-and-lines picture is a tangle you cannot</text>
+<text x="380" y="568.4" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f" font-style="italic">follow. A grid gives each pair one square, so no lines cross:</text>
+<text x="380" y="599.6" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#14181f" font-style="italic">whether Javert and Fantine share a scene is one square to check.”</text>
+</svg>

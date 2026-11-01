@@ -4351,6 +4351,24 @@
     if (top + h > H - 12) top = y - gap - h;
     left = Math.max(12, left);
     top = Math.max(12, top);
+    var blocks = o && o.blocks || [], minY = o && o.minY || 12;
+    top = Math.max(minY, top);
+    if (blocks.length) {
+      var hits = function(l, t) {
+        return blocks.filter(function(b) {
+          return l < b[2] && b[0] < l + w && t < b[3] && b[1] < t + h;
+        }).length;
+      };
+      var best = { l: left, t: top, n: hits(left, top) };
+      [gap, gap + 40, gap + 90].forEach(function(g2) {
+        [[x + g2, y + g2], [x + g2, y - g2 - h], [x - g2 - w, y + g2], [x - g2 - w, y - g2 - h]].forEach(function(c) {
+          var l = Math.max(12, Math.min(maxX - w, c[0])), t = Math.max(minY, Math.min(H - 12 - h, c[1])), n = hits(l, t);
+          if (n < best.n) best = { l, t, n };
+        });
+      });
+      left = best.l;
+      top = best.t;
+    }
     set(g, { transform: "translate(" + left + " " + top + ")" });
     el("rect", { x: 3, y: 3, width: w, height: h, rx: 4, fill: "rgba(0,0,0,.28)" }, g);
     el("rect", { width: w, height: h, rx: 4, fill: "#ffffff", stroke: "#d9d9d9", "stroke-width": 1 }, g);
@@ -4433,6 +4451,47 @@
       el("text", { x: cx, y, "font-family": NU.sans, "font-size": size, fill: st.ink }, g, it.text);
       x += widths[i] + gap;
     });
+  }
+  function story(svg, st, box2) {
+    var ink = st.dark ? NU.paper : NU.ink, g = el("g", { class: "fig-story", "pointer-events": "none" }, svg);
+    return {
+      set: function(text2, step, of) {
+        g.textContent = "";
+        var paras = String(text2 || "").split("\n").map(function(p) {
+          return p.trim();
+        }).filter(Boolean);
+        if (!paras.length) return;
+        var pad = 22, inner = box2.w - pad * 2, room = H - 96 - box2.y, size = 19, lines = [];
+        for (; size >= 14; size--) {
+          lines = paras.map(function(p) {
+            return wrap(p, size, inner);
+          });
+          var tall = 34 + lines.reduce(function(t, l) {
+            return t + l.length * size * 1.4 + size * 0.7;
+          }, 0) + pad;
+          if (tall <= room) break;
+        }
+        var h = 34 + lines.reduce(function(t, l) {
+          return t + l.length * size * 1.4 + size * 0.7;
+        }, 0) + pad;
+        el("rect", { x: box2.x, y: box2.y, width: box2.w, height: h, rx: 10, fill: st.dark ? "rgba(255,255,255,.06)" : "#fff", stroke: st.dark ? NU.line : "#d9d4ca" }, g);
+        el("rect", { x: box2.x, y: box2.y, width: box2.w, height: 4, fill: NU.red }, g);
+        el(
+          "text",
+          { x: box2.x + pad, y: box2.y + 32, "font-family": NU.sans, "font-size": 13, "font-weight": 700, "letter-spacing": 2, fill: NU.red },
+          g,
+          of && of > 1 ? "WHAT YOU SEE · " + ((step || 0) + 1) + " OF " + of : "WHAT YOU SEE"
+        );
+        var y = box2.y + 34 + size * 1.25;
+        lines.forEach(function(para, i) {
+          para.forEach(function(l) {
+            el("text", { x: box2.x + pad, y, "font-family": NU.sans, "font-size": size, "font-weight": i === 0 ? 600 : 400, fill: ink }, g, l);
+            y += size * 1.4;
+          });
+          y += size * 0.7;
+        });
+      }
+    };
   }
   function wrap(text2, size, width) {
     var words = String(text2).split(/\s+/), lines = [], line = "";
@@ -6641,7 +6700,13 @@
               return l.line;
             }).filter(Boolean)));
             if (lineNames.length) rows2.push(["Lines", String(lineNames.length)]);
-            if (p) tooltipCard(cards, rows2, p[0], p[1], { avoid: r + 8 });
+            var blocks = placed.concat(nodes.filter(function(m) {
+              return (m === lit || lit.near[m.id]) && pos[m.id];
+            }).map(function(m) {
+              var q = pos[m.id];
+              return [q[0] - r - 4, q[1] - r - 4, q[0] + r + 4, q[1] + r + 4];
+            }));
+            if (p) tooltipCard(cards, rows2, p[0], p[1], { avoid: r + 8, blocks, minY: PLOT4.y0, maxX: fig.story ? fig.story.x - 12 : void 0 });
           }
         }
         return { place, light, dots };
@@ -7330,6 +7395,7 @@
         data: slide.figureData || {},
         interactive: live,
         steps: list,
+        story: slide.figureStory || null,
         /** Where a pointer event lands, in slide pixels, whatever scale the slide is drawn at. */
         toSlide: function(e) {
           var m = svg.getScreenCTM(), p = svg.createSVGPoint();
@@ -7352,7 +7418,8 @@
         if (typeof console !== "undefined") console.error(err);
       }
       var inst = null, shown = -1;
-      var why = live ? explainer(svg, stage2) : null;
+      var told = slide.figureStory ? story(svg, stage2, slide.figureStory) : null;
+      var why = live && !told ? explainer(svg, stage2) : null;
       try {
         inst = make.mount(fig);
       } catch (err) {
@@ -7368,6 +7435,7 @@
           failed(err);
         }
         if (why) why.set(list[k] && list[k].explain);
+        if (told) told.set(list[k] && list[k].explain, k, list.length);
         shown = k;
       }
       show(at, false);

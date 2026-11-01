@@ -18,6 +18,10 @@ const statement = (title, notes) => ({ type: 'statement', title, body: title, no
 function lesson() {
   const abc = L.abc(), tube = L.tube(), mis = L.miserables(), london = L.london();
   const TUBE = { nodes: tube.nodes, links: tube.links, colours: tube.colours, layouts: tube.layouts, r: 6 };
+  /* The hook tells its story beside the map: the map keeps to the left, the words take the right-hand column. */
+  const hook = L.tube({ x0: 64, y0: 158, x1: 850, y1: 640 });
+  const HOOK = { nodes: hook.nodes, links: hook.links, colours: hook.colours, layouts: hook.layouts, r: 6 };
+  const STORY = { x: 880, y: 150, w: 336 };
   const KX = "King's Cross St. Pancras";
   const credit = 'Powered by TfL Open Data · Zone 1';
   /* The grid colours a square by group when both characters share one; grey when they don't. */
@@ -37,21 +41,19 @@ function lesson() {
     ],
     notes: '1 min. Fixes carried over from the 2025 deck: it said "Week 7 / Lecture 7" throughout, its slide 6 said "Analysis Farmwork", and its recap slide recapped maps under the networks title. This is a real recap, next.' },
 
-  { type: 'cards', title: 'Recall first: three questions on last week', progressive: true,
-    bullets: [
-      'When is a map the right picture?\tWhen where a thing is helps the reader. Where a dot sits on the page is the strongest clue we have, so a map spends it on place.',
-      'Why does every flat map lie a little?\tThe Earth is round. Flattening it stretches something: sizes, shapes or distances. You choose what to keep true.',
-      'Why colour a map by rate, not by count?\tBig places have more of everything. A rate (per 1,000 people) makes places fair to compare.'
-    ],
-    notes: '3 min. Recall before new learning (the Nodes routine: retrieve first). Read each question, give 20 seconds, take two answers, then reveal the card. ' +
-      'Keep the word "position" in their heads: today, where a dot sits stops meaning anything.' },
+  { type: 'image', title: 'Three questions on last week', image: asset('recall-questions.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+    notes: '2 min. Recall before new learning (the Nodes routine: retrieve first). Read each question, give 20 seconds in pairs, take two answers. The answers are on the next slide. ' +
+      'Keep the word "position" in their heads: today, where a dot sits is chosen, not measured.' },
+
+  drawn('Last week, the answers', 'recall-answers.svg', '1 min. Reveal after the room has answered. If a question drew blanks, give the one-line answer and move on: today needs only the first idea, position.'),
 
   drawn('Eight weeks in, one more kind of data', 'route.svg',
     '1 min. The route: seven weeks behind them, all of it on tables, one row per thing. Today the data is the connections between things. A network or a tree can be one panel of the final page.'),
 
   { type: 'figure', figure: 'network', title: 'The Tube: where things are, or what connects?', figureGround: 'paper',
     figureEyebrow: 'Hook', figureCredit: credit, figureAlt: 'Zone 1 of the London Underground: stations as dots, track as lines in each line\'s colour, first at their real positions, then evenly spaced.',
-    figureData: Object.assign({ key: [{ mark: 'dot', text: 'a station' }, { mark: 'line', colour: '#E32017', text: 'track between two stations (colour = which Tube line)' }] }, TUBE),
+    figureStory: STORY,
+    figureData: Object.assign({ key: [{ mark: 'dot', text: 'a station' }, { mark: 'line', colour: '#E32017', text: 'track between two stations (colour = which Tube line)' }] }, HOOK),
     figureSteps: [
       { caption: 'Each dot is a Tube station in Zone 1, drawn where it really is. Each coloured line is a Tube line.', layout: 'geo', labels: 'none', geo: true,
         explain: 'This is central London\'s Tube, drawn from TfL\'s own data.\nEach white dot is a station, in its real place. Each coloured line is the track between two stations next to each other. The colour tells you which Tube line it is: red is the Central line, black is the Northern line.\nLook at the middle: it is a crowded knot, hard to read.' },
@@ -133,21 +135,10 @@ function lesson() {
   drawn('Three kinds of edge', 'edge-types.svg',
     '2 min. Redrawn from the 2025 deck\'s slide 15. ASK for a real example of each before showing the captions: undirected (track, Facebook friends), directed (Instagram follows, a web link, who-cites-whom), weighted (minutes between stations, scenes shared, money sent).'),
 
-  { type: 'cards', title: 'Network or tree?', progressive: true,
-    bullets: [
-      'The Tube\tA network: you can go round the Circle line and come back, a loop.',
-      'Your folders\tA tree: each folder sits in exactly one parent folder.',
-      'Instagram\tA directed network: you can follow someone who does not follow you.',
-      'Org chart\tA tree: everyone has one manager, up to one CEO.'
-    ],
-    notes: '2 min. Hands up for each before revealing: network or tree?' },
+  { type: 'image', title: 'Network or tree? Hands up', image: asset('sort-questions.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+    notes: '3 min. Read each row; hands up: network or tree? The answers are on the next slide.' },
 
-  { type: 'cards', title: 'Network or tree? Three more', progressive: true,
-    bullets: [
-      'Premier League fixtures\tA network: every club plays every other, twice.',
-      'Your family tree\tUsually a tree, going down from one ancestor. Cousins who marry make a loop.',
-      'Wikipedia links\tA directed network: page A can link to page B without B linking back.'
-    ],
+  { type: 'image', title: 'Network or tree? The answers', image: asset('sort-answers.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '3 min. Hands up for each before revealing: network or tree? The family tree is the trap: it is called a tree, and down one line it is one, but two parents per person and cousin marriages make it a network.' },
 
   statement('A tree is a network with no loops and one root', '30 s. Card 1. Equivalent, from Dimitris\'s deck: a connected graph with N nodes and N − 1 edges.'),
@@ -292,13 +283,7 @@ function lesson() {
     'Image from the 2025 deck (liveplasma.com), where it was flagged: mapping and data source unclear.'
   ], '2 min. Critique, not just admire. ASK in pairs first: "What would you need to know before you trusted this?" Collect three answers, then reveal the facts. Compare TouchGraph (in the student copy), which says what a line means.'),
 
-  { type: 'cards', title: 'A line is a claim: draw it with care', progressive: true,
-    bullets: [
-      'Near is not proof\tReaders think dots near the middle, or near each other, matter more. The layout may not mean that.',
-      'A line accuses\tJoining two people suggests they are linked. Say what each line means and where the data came from.',
-      'Names leak\tRemove a name and a person can still be found from who they are joined to.',
-      'Colour alone fails\tSome readers cannot tell the colours apart. Add a label or a shape as well.'
-    ],
+  { type: 'image', title: 'A line is a claim: draw it with care', image: asset('claim.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '2 min. Responsible practice. Card 2 is Liveplasma again (and the Gupta graphic in the 2025 deck): an unexplained line can be defamatory. Card 3: re-identification from connections in "anonymised" social data. Card 4: colour-coded clusters need a second encoding.' },
 
   drawn('Build it: the Tube in Altair', 'build-tube.svg',
@@ -365,12 +350,7 @@ function lesson() {
     notes: '2 min. The chain a full answer needs (the Nodes "join it up"): a point, the reason, what follows from it, and the evidence from this case. ' +
       'Reveal one link at a time and ask the room for each before showing it. Most weak answers stop after the point.' },
 
-  { type: 'cards', title: 'Why a grid? Which answer is strongest?', progressive: true,
-    bullets: [
-      'A\t"The grid is better because it looks neater and more organised."',
-      'B\t"The grid is better because the lines in the tangle cross too much, so you can\'t read it."',
-      'C\t"With 254 lines, the dots-and-lines picture is a tangle you cannot follow. A grid gives each pair one square, so no lines cross: whether Javert and Fantine share a scene is one square to check."'
-    ],
+  { type: 'image', title: 'Why a grid? Which answer is strongest?', image: asset('three-answers.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '2 min. The question: "Why is a grid better than dots and lines for the Les Misérables network?" Hands up for A, B or C before the next slide. Then ask: what does B need to become C?' },
 
   { type: 'table', title: 'Three answers: what each one has', tableHeader: true,
@@ -402,13 +382,7 @@ function lesson() {
       `Data: ONS mid-${london.year} estimates via Nomis (NM_2002_1); the five areas are ONS's ITL2 regions (Inner London West and East; Outer London East and North East, South, West and North West). London in all: about 9.1 million. ` +
       'Croydon is the largest borough in these estimates; check the card live.' },
 
-  { type: 'cards', title: 'Four ways to draw a tree', progressive: true,
-    bullets: [
-      'Node-link tree\tStructure first: who is under whom. Size is invisible.',
-      'Indented list\tReads like folders; easy to label; long.',
-      'Icicle (or sunburst)\tLevels as bands; sizes as widths.',
-      'Treemap\tSizes as areas; fills the space. Depth is harder to read.'
-    ],
+  { type: 'image', title: 'Four ways to draw a tree', image: asset('four-trees.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '1 min. From the 2025 decks\' "Types of trees" and "Why use trees?". Their decision, hierarchical and binary trees are kinds of tree, not drawings: name them, and say a decision tree is drawn as a node-link tree.' },
 
   { type: 'image', title: 'When a tree gets too big', image: asset('big-tree.svg'), imageFit: 'contain', design: { capStyle: 'none' },
@@ -453,13 +427,7 @@ function lesson() {
       'Departments under directors\tConnect (a tree)\tstructure, not size',
     notes: '1 min.' },
 
-  { type: 'cards', title: 'Got one wrong? Take the next step', progressive: true,
-    bullets: [
-      '1 · Ask yourself\tWhat does the question want: a route, a pair, or a size?',
-      '2 · Hint\tA route: follow the lines. A pair: check one square in a grid. A size inside groups: boxes inside boxes.',
-      '3 · Example\t"Most people in Outer London" asks for a size, inside a group (Outer London). Size inside groups is boxes inside boxes: Nest.',
-      '4 · Try a new one\tWhich Premier League clubs have played each other so far this season?'
-    ],
+  { type: 'image', title: 'Take the next step, only as far as you need', image: asset('ladder.svg'), imageFit: 'contain', design: { capStyle: 'none' },
     notes: '2 min. The missing-link ladder: take only the next step you need. Students who got all five right go straight to step 4. Answer to step 4: Matrix, 20 rows and 20 columns, a square when two clubs have played.' },
 
   { type: 'content', title: 'Five cards, one sentence',

@@ -206,6 +206,8 @@ export interface Slide {
   figureEyebrow?: string;
   figureCredit?: string;
   figureAlt?: string;
+  /** Show each step's `explain` in a panel at this place, always, instead of behind a Why? button. */
+  figureStory?: { x: number; y: number; w: number };
   experiment?: {preset?:string; prompt?:string; duration?:number; print?:{changes?:string; constants?:string; takeaway?:string; caveat?:string}; states?:Array<Record<string, unknown>>};
   headerFooter?: HeaderFooterConfig;
   design?: SlideDesign;

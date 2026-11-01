@@ -87,7 +87,7 @@ const TFL = {
   bakerloo: '#B36305', central: '#E32017', circle: '#FFD300', district: '#00782A', 'hammersmith-city': '#F3A9BB', jubilee: '#A0A5A9',
   metropolitan: '#9B0056', northern: '#000000', piccadilly: '#003688', victoria: '#0098D4', 'waterloo-city': '#95CDBA'
 };
-function tube() {
+function tube(box = { x0: 80, y0: 158, x1: 1200, y1: 640 }) {
   const t = read('tube.json');
   const inZone = s => s.zone === '1' || s.zone === '1+2';
   const stations = t.stations.filter(inZone);
@@ -108,7 +108,6 @@ function tube() {
     even[i] = [cx + dx * k, cy + dy * k];
   }
   const forced = force(stations.map(s => s.name), links, 8);
-  const box = { x0: 80, y0: 158, x1: 1200, y1: 640 };
   return {
     source: t.source,
     nodes: stations.map(s => ({ id: s.name })),

@@ -86,6 +86,14 @@ function drawPictures() {
   writeSvg('big-tree.svg', D.bigTreeSvg());
   writeSvg('disguise-networks.svg', D.disguiseNetSvg());
   writeSvg('disguise-trees.svg', D.disguiseTreeSvg());
+  writeSvg('recall-questions.svg', D.recallSvg(false));
+  writeSvg('recall-answers.svg', D.recallSvg(true));
+  writeSvg('sort-questions.svg', D.sortSvg(false));
+  writeSvg('sort-answers.svg', D.sortSvg(true));
+  writeSvg('claim.svg', D.claimSvg());
+  writeSvg('three-answers.svg', D.answersSvg());
+  writeSvg('four-trees.svg', D.fourTreesSvg());
+  writeSvg('ladder.svg', D.ladderSvg());
   for (const [id, o] of Object.entries(BUILDS)) writeSvg(`build-${id}.svg`, D.codeSvg(id, o));
 }
 

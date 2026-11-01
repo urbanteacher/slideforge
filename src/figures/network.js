@@ -139,7 +139,9 @@ export var network = {
           var p = pos[lit.id], rows = /** @type {[string, string][]} */ ([['Name', lit.label || lit.id], ['Neighbours', String(lit.degree)]]);
           var lineNames = Array.from(new Set(lit.links.map(function (/** @type {any} */ l) { return l.line; }).filter(Boolean)));
           if (lineNames.length) rows.push(['Lines', String(lineNames.length)]);
-          if (p) tooltipCard(cards, rows, p[0], p[1], { avoid: r + 8 });
+          /* The card keeps off the names and the lit stations, and out of a story panel's column. */
+          var blocks = placed.concat(nodes.filter(function (/** @type {any} */ m) { return (m === lit || lit.near[m.id]) && pos[m.id]; }).map(function (/** @type {any} */ m) { var q = pos[m.id]; return [q[0] - r - 4, q[1] - r - 4, q[0] + r + 4, q[1] + r + 4]; }));
+          if (p) tooltipCard(cards, rows, p[0], p[1], { avoid: r + 8, blocks: blocks, minY: PLOT.y0, maxX: fig.story ? fig.story.x - 12 : undefined });
         }
       }
       return { place: place, light: light, dots: dots };

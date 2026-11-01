@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">CARE</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">A line is a claim: draw it with care</text>
+<circle cx="104" cy="200" r="32" fill="#eef1f5"/>
+<g transform="translate(104 200) scale(1.000)"><circle cx="-6" r="6" fill="#0c3354"/><circle cx="7" r="6" fill="#0c3354"/><path d="M-16 14 L16 -14" stroke="#c8102e" stroke-width="3" stroke-linecap="round"/></g>
+<text x="160" y="209.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Near is not proof</text>
+<text x="470" y="193.7" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">Readers think dots near the middle, or near each other, matter more.</text>
+<text x="470" y="221.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">The layout may not mean that.</text>
+<line x1="64" y1="260" x2="1216" y2="260" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="320" r="32" fill="#eef1f5"/>
+<g transform="translate(104 320) scale(1.000)"><circle cx="-15" cy="6" r="6" fill="#0c3354"/><circle cx="15" cy="6" r="6" fill="#0c3354"/><path d="M-9 6 h18" fill="none" stroke="#0c3354" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 -20 v10" stroke="#c8102e" stroke-width="4" stroke-linecap="round"/><circle cy="-5" r="2.2" fill="#c8102e"/></g>
+<text x="160" y="329.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">A line accuses</text>
+<text x="470" y="313.7" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">Joining two people suggests they are linked. Say what each line</text>
+<text x="470" y="341.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">means and where the data came from.</text>
+<line x1="64" y1="380" x2="1216" y2="380" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="440" r="32" fill="#eef1f5"/>
+<g transform="translate(104 440) scale(1.000)"><circle cy="-8" r="7" fill="none" stroke="#0c3354" stroke-width="3" stroke-dasharray="3 3"/><path d="M-13 14 a13 11 0 0 1 26 0" fill="none" stroke="#0c3354" stroke-width="3" stroke-dasharray="3 3"/><circle cx="-20" cy="-14" r="3.5" fill="#0c3354"/><circle cx="20" cy="-12" r="3.5" fill="#0c3354"/><path d="M-17 -12 l10 3 M17 -11 l-10 2" fill="none" stroke="#0c3354" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="160" y="449.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Names leak</text>
+<text x="470" y="433.7" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">Remove a name and a person can still be found from who they are</text>
+<text x="470" y="461.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">joined to.</text>
+<line x1="64" y1="500" x2="1216" y2="500" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="560" r="32" fill="#eef1f5"/>
+<g transform="translate(104 560) scale(1.000)"><circle cx="-12" cy="-6" r="7" fill="#4c78a8"/><rect x="5" y="-13" width="14" height="14" fill="#f58518"/><path d="M-4 18 l8 -14 l8 14 z" fill="#54a24b"/></g>
+<text x="160" y="569.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Colour alone fails</text>
+<text x="470" y="553.7" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">Some readers cannot tell the colours apart. Add a label or a shape</text>
+<text x="470" y="581.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">as well.</text>
+</svg>

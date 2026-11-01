@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">NAME IT</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">Network or tree? Hands up</text>
+<circle cx="104" cy="177.71428571428572" r="27.154285714285713" fill="#eef1f5"/>
+<g transform="translate(104 177.71428571428572) scale(0.849)"><circle r="15" fill="none" stroke="#c8102e" stroke-width="6"/><rect x="-21" y="-4.5" width="42" height="9" fill="#0c3354"/></g>
+<text x="160" y="186.7" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">The Tube</text>
+<rect x="470" y="158.71428571428572" width="60" height="38" rx="19" fill="#fff" stroke="#d9d4ca" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="500" y="183.71428571428572" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0" fill="#5a6572">?</text>
+<line x1="64" y1="215.42857142857144" x2="1216" y2="215.42857142857144" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="253.14285714285717" r="27.154285714285713" fill="#eef1f5"/>
+<g transform="translate(104 253.14285714285717) scale(0.849)"><path d="M-18 -10 h12 l4 5 h20 v20 h-36 z" fill="none" stroke="#0c3354" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="160" y="262.1" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Your folders</text>
+<rect x="470" y="234.14285714285717" width="60" height="38" rx="19" fill="#fff" stroke="#d9d4ca" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="500" y="259.14285714285717" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0" fill="#5a6572">?</text>
+<line x1="64" y1="290.8571428571429" x2="1216" y2="290.8571428571429" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="328.5714285714286" r="27.154285714285713" fill="#eef1f5"/>
+<g transform="translate(104 328.5714285714286) scale(0.849)"><circle cx="-12" cy="-6" r="5" fill="none" stroke="#0c3354" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M-20 10 a8 8 0 0 1 16 0" fill="none" stroke="#0c3354" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13" cy="-6" r="5" fill="none" stroke="#0c3354" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10 a8 8 0 0 1 16 0" fill="none" stroke="#0c3354" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M-4 -12 h10 m-4 -4 l4 4 l-4 4" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="160" y="337.6" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Instagram</text>
+<rect x="470" y="309.5714285714286" width="60" height="38" rx="19" fill="#fff" stroke="#d9d4ca" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="500" y="334.5714285714286" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0" fill="#5a6572">?</text>
+<line x1="64" y1="366.2857142857143" x2="1216" y2="366.2857142857143" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="404" r="27.154285714285713" fill="#eef1f5"/>
+<g transform="translate(104 404) scale(0.849)"><rect x="-7" y="-19" width="14" height="10" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="-21" y="9" width="14" height="10" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="7" y="9" width="14" height="10" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 -9 v8 M-14 9 v-6 h28 v6" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="160" y="413.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">An org chart</text>
+<rect x="470" y="385" width="60" height="38" rx="19" fill="#fff" stroke="#d9d4ca" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="500" y="410" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0" fill="#5a6572">?</text>
+<line x1="64" y1="441.7142857142857" x2="1216" y2="441.7142857142857" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="479.42857142857144" r="27.154285714285713" fill="#eef1f5"/>
+<g transform="translate(104 479.42857142857144) scale(0.849)"><circle r="17" fill="none" stroke="#0c3354" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 -7 l7 5 l-3 8 h-8 l-3 -8 z" fill="#0c3354"/><path d="M0 -7 v-10 M7 -2 l9 -3 M4 6 l5 8 M-4 6 l-5 8 M-7 -2 l-9 -3" fill="none" stroke="#0c3354" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="160" y="488.4" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Premier League</text>
+<rect x="470" y="460.42857142857144" width="60" height="38" rx="19" fill="#fff" stroke="#d9d4ca" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="500" y="485.42857142857144" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0" fill="#5a6572">?</text>
+<line x1="64" y1="517.1428571428571" x2="1216" y2="517.1428571428571" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="554.8571428571428" r="27.154285714285713" fill="#eef1f5"/>
+<g transform="translate(104 554.8571428571428) scale(0.849)"><circle cx="-11" cy="-13" r="4.5" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="-13" r="4.5" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0" cy="11" r="4.5" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M-11 -8 v6 h22 v-6 M0 -2 v8" fill="none" stroke="#0c3354" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="160" y="563.9" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Your family tree</text>
+<rect x="470" y="535.8571428571428" width="60" height="38" rx="19" fill="#fff" stroke="#d9d4ca" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="500" y="560.8571428571428" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0" fill="#5a6572">?</text>
+<line x1="64" y1="592.5714285714286" x2="1216" y2="592.5714285714286" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="630.2857142857142" r="27.154285714285713" fill="#eef1f5"/>
+<g transform="translate(104 630.2857142857142) scale(0.849)"><path d="M-14 -18 h18 l8 8 v28 h-26 z" fill="none" stroke="#0c3354" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M-8 -4 h14 M-8 3 h14 M-8 10 h9" fill="none" stroke="#0c3354" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="160" y="639.3" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Wikipedia links</text>
+<rect x="470" y="611.2857142857142" width="60" height="38" rx="19" fill="#fff" stroke="#d9d4ca" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="500" y="636.2857142857142" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0" fill="#5a6572">?</text>
+</svg>

@@ -522,4 +522,121 @@ function disguiseTreeSvg() {
   ]);
 }
 
-module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, jobsSvg, breaksSvg, moveSvg, simplerSvg, bigTreeSvg, disguiseNetSvg, disguiseTreeSvg, STEPS };
+/* ------------------------------------------------------------ rows: an icon, a name, a line of words */
+/* A list, not cards: each row has a small drawn icon in a ring, its name, an optional tag, and a line or two,
+   with thin rules between rows. A row's `tag` is { text, fill } (a pill), or '?' for a question still open. */
+function rowsSvg(eyebrow, title, rows, o = {}) {
+  const out = [open(), heading(eyebrow, title)];
+  if (o.sub) out.push(`<text x="64" y="134" font-family="${NU.sans}" font-size="20" fill="${NU.dim}">${esc(o.sub)}</text>`);
+  const top = o.sub ? 160 : 140, bottom = 668, rh = Math.min(o.max || 120, (bottom - top) / rows.length);
+  const iconX = 104, nameX = 160, tagX = o.tagX || 470, textX = o.textX || (rows.some(r => r.tag) ? 712 : 470), size = o.size || 21;
+  /* Every tag one width, so the column lines up. */
+  const tagW = Math.max(60, ...rows.filter(r => r.tag && r.tag !== '?').map(r => r.tag.text.length * 10.5 + 34));
+  if (o.rail) out.push(`<line x1="${iconX}" y1="${top + rh / 2}" x2="${iconX}" y2="${top + rh * (rows.length - 0.5)}" stroke="${NU.rule}" stroke-width="6"/>`);
+  rows.forEach((r, i) => {
+    const y0 = top + i * rh, cy = y0 + rh / 2, rr = Math.min(32, rh * 0.36);
+    if (i) out.push(`<line x1="64" y1="${y0}" x2="1216" y2="${y0}" stroke="${NU.rule}" stroke-width="1.5"/>`);
+    out.push(`<circle cx="${iconX}" cy="${cy}" r="${rr}" fill="${r.ring || '#eef1f5'}"/>`);
+    out.push(`<g transform="translate(${iconX} ${cy}) scale(${(rr / 32).toFixed(3)})">${r.icon || ''}</g>`);
+    const nameLines = wrap(r.name, 26, (r.tag ? tagX : textX) - nameX - 24);
+    nameLines.forEach((l, k) => out.push(`<text x="${nameX}" y="${(cy + 9 - (nameLines.length - 1) * 15 + k * 30).toFixed(1)}" font-family="${NU.serif}" font-size="26" fill="${NU.ink}">${esc(l)}</text>`));
+    if (r.tag) {
+      const open = r.tag === '?', t = open ? '?' : r.tag.text, w = open ? 60 : tagW;
+      out.push(`<rect x="${tagX}" y="${cy - 19}" width="${w}" height="38" rx="19" fill="${open ? '#fff' : r.tag.fill}" stroke="${open ? NU.rule : r.tag.fill}" stroke-width="2" ${open ? 'stroke-dasharray="5 4"' : ''}/>`);
+      out.push(`<text x="${tagX + w / 2}" y="${cy + 6}" text-anchor="middle" font-family="${NU.sans}" font-size="${open ? 20 : 15}" font-weight="700" letter-spacing="${open ? 0 : 1.2}" fill="${open ? NU.dim : '#fff'}">${esc(t)}</text>`);
+    }
+    if (r.text) {
+      const lines = wrap(r.text, size, 1216 - textX);
+      lines.forEach((l, k) => out.push(`<text x="${textX}" y="${(cy + size * 0.35 - (lines.length - 1) * size * 0.65 + k * size * 1.3).toFixed(1)}" font-family="${NU.sans}" font-size="${size}" fill="${r.dim ? NU.dim : NU.ink}"${r.italic ? ' font-style="italic"' : ''}>${esc(l)}</text>`));
+    }
+  });
+  out.push('</svg>');
+  return out.join('\n');
+}
+
+/* Icons, drawn round (0, 0) in a 64-wide ring. Navy line work; colour only where it is the point. */
+const st = (w = 3.2) => `fill="none" stroke="${NU.navy}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`;
+const ICON = {
+  tube: `<circle r="15" fill="none" stroke="${NU.red}" stroke-width="6"/><rect x="-21" y="-4.5" width="42" height="9" fill="${NU.navy}"/>`,
+  folder: `<path d="M-18 -10 h12 l4 5 h20 v20 h-36 z" ${st()}/>`,
+  follow: `<circle cx="-12" cy="-6" r="5" ${st()}/><path d="M-20 10 a8 8 0 0 1 16 0" ${st()}/><circle cx="13" cy="-6" r="5" ${st()}/><path d="M5 10 a8 8 0 0 1 16 0" ${st()}/><path d="M-4 -12 h10 m-4 -4 l4 4 l-4 4" ${st(2.6)}/>`,
+  org: `<rect x="-7" y="-19" width="14" height="10" ${st(2.6)}/><rect x="-21" y="9" width="14" height="10" ${st(2.6)}/><rect x="7" y="9" width="14" height="10" ${st(2.6)}/><path d="M0 -9 v8 M-14 9 v-6 h28 v6" ${st(2.6)}/>`,
+  ball: `<circle r="17" ${st()}/><path d="M0 -7 l7 5 l-3 8 h-8 l-3 -8 z" fill="${NU.navy}"/><path d="M0 -7 v-10 M7 -2 l9 -3 M4 6 l5 8 M-4 6 l-5 8 M-7 -2 l-9 -3" ${st(2)}/>`,
+  family: `<circle cx="-11" cy="-13" r="4.5" ${st(2.6)}/><circle cx="11" cy="-13" r="4.5" ${st(2.6)}/><circle cx="0" cy="11" r="4.5" ${st(2.6)}/><path d="M-11 -8 v6 h22 v-6 M0 -2 v8" ${st(2.6)}/>`,
+  page: `<path d="M-14 -18 h18 l8 8 v28 h-26 z" ${st(2.8)}/><path d="M-8 -4 h14 M-8 3 h14 M-8 10 h9" ${st(2.4)}/>`,
+  pin: `<path d="M0 18 C-10 4 -14 -2 -14 -6 a14 14 0 0 1 28 0 c0 4 -4 10 -14 24 z" ${st()}/><circle cy="-6" r="5" fill="${NU.red}"/>`,
+  globe: `<circle r="17" ${st()}/><ellipse rx="7" ry="17" ${st(2.4)}/><path d="M-17 0 h34" ${st(2.4)}/>`,
+  rate: `<rect x="-18" y="-16" width="10" height="10" fill="#c6dbef"/><rect x="-5" y="-16" width="10" height="10" fill="#6baed6"/><rect x="8" y="-16" width="10" height="10" fill="#2171b5"/><path d="M-16 8 h32 M-16 15 h22" ${st(2.6)}/>`,
+  near: `<circle cx="-6" r="6" fill="${NU.navy}"/><circle cx="7" r="6" fill="${NU.navy}"/><path d="M-16 14 L16 -14" stroke="${NU.red}" stroke-width="3" stroke-linecap="round"/>`,
+  accuse: `<circle cx="-15" cy="6" r="6" fill="${NU.navy}"/><circle cx="15" cy="6" r="6" fill="${NU.navy}"/><path d="M-9 6 h18" ${st(3)}/><path d="M0 -20 v10" stroke="${NU.red}" stroke-width="4" stroke-linecap="round"/><circle cy="-5" r="2.2" fill="${NU.red}"/>`,
+  leak: `<circle cy="-8" r="7" fill="none" stroke="${NU.navy}" stroke-width="3" stroke-dasharray="3 3"/><path d="M-13 14 a13 11 0 0 1 26 0" fill="none" stroke="${NU.navy}" stroke-width="3" stroke-dasharray="3 3"/><circle cx="-20" cy="-14" r="3.5" fill="${NU.navy}"/><circle cx="20" cy="-12" r="3.5" fill="${NU.navy}"/><path d="M-17 -12 l10 3 M17 -11 l-10 2" ${st(2)}/>`,
+  shape: `<circle cx="-12" cy="-6" r="7" fill="#4c78a8"/><rect x="5" y="-13" width="14" height="14" fill="#f58518"/><path d="M-4 18 l8 -14 l8 14 z" fill="#54a24b"/>`,
+  nodelink: `<path d="M0 -14 L-12 4 M0 -14 L12 4 M-12 4 L-18 16 M-12 4 L-6 16" ${st(2.4)}/><circle cy="-14" r="4" fill="${NU.navy}"/><circle cx="-12" cy="4" r="4" fill="${NU.navy}"/><circle cx="12" cy="4" r="4" fill="${NU.navy}"/><circle cx="-18" cy="16" r="3.5" fill="${NU.navy}"/><circle cx="-6" cy="16" r="3.5" fill="${NU.navy}"/>`,
+  indent: `<path d="M-18 -14 h22 M-10 -5 h22 M-10 4 h18 M-2 13 h18" ${st(3.2)}/>`,
+  icicle: `<rect x="-20" y="-18" width="40" height="10" fill="${NU.navy}"/><rect x="-20" y="-6" width="24" height="10" fill="#4c78a8"/><rect x="6" y="-6" width="14" height="10" fill="#f58518"/><rect x="-20" y="6" width="10" height="10" fill="#4c78a8" opacity=".6"/><rect x="-8" y="6" width="12" height="10" fill="#4c78a8" opacity=".8"/><rect x="6" y="6" width="14" height="10" fill="#f58518" opacity=".7"/>`,
+  treemap: `<rect x="-20" y="-18" width="22" height="36" fill="#4c78a8"/><rect x="4" y="-18" width="16" height="20" fill="#f58518"/><rect x="4" y="4" width="16" height="14" fill="#f58518" opacity=".6"/>`,
+  letter: t => `<text y="10" text-anchor="middle" font-family="${NU.serif}" font-size="30" fill="${NU.navy}">${t}</text>`,
+  number: t => `<text y="9" text-anchor="middle" font-family="${NU.sans}" font-size="26" font-weight="700" fill="#fff">${t}</text>`
+};
+const NETWORK = { text: 'NETWORK', fill: NU.navy }, TREE = { text: 'TREE', fill: NU.red }, DIRECTED = { text: 'DIRECTED NETWORK', fill: NU.navy };
+
+const RECALL = [
+  { icon: ICON.pin, name: 'When is a map the right picture?', answer: 'When where a thing is helps the reader. Where a dot sits is the strongest clue we have, so a map spends it on place.' },
+  { icon: ICON.globe, name: 'Why does every flat map lie a little?', answer: 'The Earth is round. Flattening it stretches sizes, shapes or distances: you choose what to keep true.' },
+  { icon: ICON.rate, name: 'Why colour a map by rate, not by count?', answer: 'Big places have more of everything. A rate (per 1,000 people) makes places fair to compare.' }
+];
+function recallSvg(answers) {
+  return rowsSvg('Recall first', answers ? 'Last week, the answers' : 'Three questions on last week', RECALL.map(r => ({ icon: r.icon, name: r.name, text: answers ? r.answer : 'Talk to the person next to you: 20 seconds.', dim: !answers })),
+    { textX: 640, max: 150, size: 23, sub: answers ? null : 'No notes. Answer from memory, then we check.' });
+}
+
+const SORT = [
+  { icon: ICON.tube, name: 'The Tube', tag: NETWORK, text: 'You can go round the Circle line and come back: a loop.' },
+  { icon: ICON.folder, name: 'Your folders', tag: TREE, text: 'Each folder sits in exactly one parent folder.' },
+  { icon: ICON.follow, name: 'Instagram', tag: DIRECTED, text: 'You can follow someone who does not follow you.' },
+  { icon: ICON.org, name: 'An org chart', tag: TREE, text: 'Everyone has one manager, up to one CEO.' },
+  { icon: ICON.ball, name: 'Premier League', tag: NETWORK, text: 'Every club plays every other club, twice.' },
+  { icon: ICON.family, name: 'Your family tree', tag: TREE, text: 'Down one line, yes. But cousins who marry make a loop.' },
+  { icon: ICON.page, name: 'Wikipedia links', tag: DIRECTED, text: 'Page A can link to page B without B linking back.' }
+];
+function sortSvg(answers) {
+  return rowsSvg('Name it', answers ? 'Network or tree? The answers' : 'Network or tree? Hands up', SORT.map(r => ({ icon: r.icon, name: r.name, tag: answers ? r.tag : '?', text: answers ? r.text : '' })), { size: 19 });
+}
+
+function claimSvg() {
+  return rowsSvg('Care', 'A line is a claim: draw it with care', [
+    { icon: ICON.near, name: 'Near is not proof', text: 'Readers think dots near the middle, or near each other, matter more. The layout may not mean that.' },
+    { icon: ICON.accuse, name: 'A line accuses', text: 'Joining two people suggests they are linked. Say what each line means and where the data came from.' },
+    { icon: ICON.leak, name: 'Names leak', text: 'Remove a name and a person can still be found from who they are joined to.' },
+    { icon: ICON.shape, name: 'Colour alone fails', text: 'Some readers cannot tell the colours apart. Add a label or a shape as well.' }
+  ], { max: 120 });
+}
+
+function answersSvg() {
+  return rowsSvg('Three answers', 'Why a grid? Which answer is strongest?', [
+    { icon: ICON.letter('A'), name: 'Answer A', text: '“The grid is better because it looks neater and more organised.”', italic: true },
+    { icon: ICON.letter('B'), name: 'Answer B', text: '“The grid is better because the lines in the tangle cross too much, so you can’t read it.”', italic: true },
+    { icon: ICON.letter('C'), name: 'Answer C', text: '“With 254 lines, the dots-and-lines picture is a tangle you cannot follow. A grid gives each pair one square, so no lines cross: whether Javert and Fantine share a scene is one square to check.”', italic: true }
+  ], { max: 160, textX: 380, size: 24, sub: 'Why is a grid better than dots and lines for the Les Misérables network? Hands up: A, B or C.' });
+}
+
+function fourTreesSvg() {
+  return rowsSvg('Name it', 'Four ways to draw a tree', [
+    { icon: ICON.nodelink, name: 'Dots and lines', text: 'Who is under whom, very clearly. Size is invisible.' },
+    { icon: ICON.indent, name: 'Indented list', text: 'Reads like folders on a laptop; easy to label; long.' },
+    { icon: ICON.icicle, name: 'Icicle', text: 'Each level a band; each piece as wide as its size.' },
+    { icon: ICON.treemap, name: 'Treemap', text: 'Boxes inside boxes: size as area. How deep it goes is harder to see.' }
+  ], { max: 120 });
+}
+
+function ladderSvg() {
+  const n = t => ({ icon: ICON.number(t), ring: NU.navy });
+  return rowsSvg('Got one wrong?', 'Take the next step, only as far as you need', [
+    { ...n(1), name: 'Ask yourself', text: 'What does the question want: a route, a pair, or a size?' },
+    { ...n(2), name: 'Hint', text: 'A route: follow the lines. A pair: one square in a grid. A size inside groups: boxes inside boxes.' },
+    { ...n(3), name: 'Example', text: '“Most people in Outer London” asks for a size, inside a group. Size inside groups is boxes inside boxes: Nest.' },
+    { ...n(4), name: 'Try a new one', text: 'Which Premier League clubs have played each other so far this season?' }
+  ], { rail: true, max: 120 });
+}
+
+module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, jobsSvg, breaksSvg, moveSvg, simplerSvg, bigTreeSvg, disguiseNetSvg, disguiseTreeSvg, recallSvg, sortSvg, claimSvg, answersSvg, fourTreesSvg, ladderSvg, STEPS };

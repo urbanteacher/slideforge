@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">GOT ONE WRONG?</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">Take the next step, only as far as you need</text>
+<line x1="104" y1="200" x2="104" y2="560" stroke="#d9d4ca" stroke-width="6"/>
+<circle cx="104" cy="200" r="32" fill="#0c3354"/>
+<g transform="translate(104 200) scale(1.000)"><text y="9" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" font-weight="700" fill="#fff">1</text></g>
+<text x="160" y="209.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Ask yourself</text>
+<text x="470" y="207.3" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">What does the question want: a route, a pair, or a size?</text>
+<line x1="64" y1="260" x2="1216" y2="260" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="320" r="32" fill="#0c3354"/>
+<g transform="translate(104 320) scale(1.000)"><text y="9" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" font-weight="700" fill="#fff">2</text></g>
+<text x="160" y="329.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Hint</text>
+<text x="470" y="313.7" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">A route: follow the lines. A pair: one square in a grid. A size</text>
+<text x="470" y="341.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">inside groups: boxes inside boxes.</text>
+<line x1="64" y1="380" x2="1216" y2="380" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="440" r="32" fill="#0c3354"/>
+<g transform="translate(104 440) scale(1.000)"><text y="9" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" font-weight="700" fill="#fff">3</text></g>
+<text x="160" y="449.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Example</text>
+<text x="470" y="433.7" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">“Most people in Outer London” asks for a size, inside a group. Size</text>
+<text x="470" y="461.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">inside groups is boxes inside boxes: Nest.</text>
+<line x1="64" y1="500" x2="1216" y2="500" stroke="#d9d4ca" stroke-width="1.5"/>
+<circle cx="104" cy="560" r="32" fill="#0c3354"/>
+<g transform="translate(104 560) scale(1.000)"><text y="9" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" font-weight="700" fill="#fff">4</text></g>
+<text x="160" y="569.0" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="26" fill="#14181f">Try a new one</text>
+<text x="470" y="553.7" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">Which Premier League clubs have played each other so far this</text>
+<text x="470" y="581.0" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="21" fill="#14181f">season?</text>
+</svg>
