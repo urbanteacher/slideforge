@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">START HERE</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">A network is a “who’s connected to whom” picture</text>
+<line x1="380" y1="400" x2="210" y2="250" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="380" y1="400" x2="410" y2="195" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="380" y1="400" x2="580" y2="280" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="380" y1="400" x2="595" y2="495" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="380" y1="400" x2="390" y2="600" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="380" y1="400" x2="175" y2="510" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="210" y1="250" x2="175" y2="510" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="410" y1="195" x2="580" y2="280" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="580" y1="280" x2="595" y2="495" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<line x1="595" y1="495" x2="390" y2="600" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+<circle cx="380" cy="400" r="34" fill="#c8102e" stroke="#fff" stroke-width="3"/>
+<text x="380" y="407" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="700" fill="#fff">You</text>
+<circle cx="210" cy="250" r="26" fill="#0c3354" stroke="#fff" stroke-width="3"/>
+<text x="210" y="256" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">Mum</text>
+<circle cx="410" cy="195" r="26" fill="#0c3354" stroke="#fff" stroke-width="3"/>
+<text x="410" y="201" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">Sam</text>
+<circle cx="580" cy="280" r="26" fill="#0c3354" stroke="#fff" stroke-width="3"/>
+<text x="580" y="286" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">Priya</text>
+<circle cx="595" cy="495" r="26" fill="#0c3354" stroke="#fff" stroke-width="3"/>
+<text x="595" y="501" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">Jo</text>
+<circle cx="390" cy="600" r="26" fill="#0c3354" stroke="#fff" stroke-width="3"/>
+<text x="390" y="606" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">Alex</text>
+<circle cx="175" cy="510" r="26" fill="#0c3354" stroke="#fff" stroke-width="3"/>
+<text x="175" y="516" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">Dad</text>
+<text x="700" y="220" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="30" fill="#14181f">Think of your WhatsApp contacts.</text>
+<text x="700" y="276.5" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#14181f">Each person is a dot.</text>
+<text x="700" y="327.6" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#14181f">When two people message each other,</text>
+<text x="700" y="362.70000000000005" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#14181f">draw a line between them.</text>
+<text x="700" y="413.80000000000007" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#14181f">That’s a network. Everything today is</text>
+<text x="700" y="448.9000000000001" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="26" fill="#14181f">just that.</text>
+<rect x="700" y="510.0000000000001" width="516" height="110" rx="10" fill="#eef1f5"/>
+<text x="722" y="544.0000000000001" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2" fill="#c8102e">EXPERTS SAY</text>
+<text x="722" y="576.0000000000001" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f"><tspan font-weight="700">nodes</tspan> for the dots, <tspan font-weight="700">edges</tspan> for the lines.</text>
+<text x="722" y="604.0000000000001" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" fill="#5a6572">Same thing, fancier words.</text>
+</svg>

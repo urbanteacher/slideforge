@@ -600,7 +600,7 @@ const SORT = [
   { icon: ICON.page, name: 'Wikipedia links', tag: DIRECTED, text: 'Page A can link to page B without B linking back.' }
 ];
 function sortSvg(answers) {
-  return rowsSvg('Name it', answers ? 'Network or tree? The answers' : 'Network or tree? Hands up', SORT.map(r => ({ icon: r.icon, name: r.name, tag: answers ? r.tag : '?', text: answers ? r.text : '' })), { size: 19 });
+  return rowsSvg('Name it', answers ? 'Network or tree? The answers' : 'Network or tree? Hands up', SORT.map(r => ({ icon: r.icon, name: r.name, tag: answers ? r.tag : '?', text: answers ? r.text : '' })), { size: 19, max: 68, sub: 'The test: can you go round in a circle and come back? Then it\u2019s a network.' });
 }
 
 function claimSvg() {
@@ -639,4 +639,73 @@ function ladderSvg() {
   ], { rail: true, max: 120 });
 }
 
-module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, jobsSvg, breaksSvg, moveSvg, simplerSvg, bigTreeSvg, disguiseNetSvg, disguiseTreeSvg, recallSvg, sortSvg, claimSvg, answersSvg, fourTreesSvg, ladderSvg, STEPS };
+/* ------------------------------------------------------------ for beginners: a picture before a word */
+/* Your contacts as a network: you in the middle, friends around, a line wherever two people message. */
+function whoSvg() {
+  const out = [open(), heading('Start here', 'A network is a “who’s connected to whom” picture')];
+  const C = [380, 400], P = [['You', 0, 0], ['Mum', -170, -150], ['Sam', 30, -205], ['Priya', 200, -120], ['Jo', 215, 95], ['Alex', 10, 200], ['Dad', -205, 110]];
+  const at = n => [C[0] + P[n][1], C[1] + P[n][2]];
+  const E = [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [1, 6], [2, 3], [3, 4], [4, 5]];
+  E.forEach(([a, b]) => { const p = at(a), q = at(b); out.push(`<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${EDGE}" stroke-width="4" stroke-linecap="round"/>`); });
+  P.forEach(([t], i) => {
+    const [x, y] = at(i), you = i === 0;
+    out.push(`<circle cx="${x}" cy="${y}" r="${you ? 34 : 26}" fill="${you ? NU.red : NU.navy}" stroke="#fff" stroke-width="3"/>`);
+    out.push(`<text x="${x}" y="${y + (you ? 7 : 6)}" text-anchor="middle" font-family="${NU.sans}" font-size="${you ? 19 : 15}" font-weight="700" fill="#fff">${esc(t)}</text>`);
+  });
+  const tx = 700, lines = [
+    ['Think of your WhatsApp contacts.', 30, NU.ink, 'serif'],
+    ['Each person is a dot.', 26, NU.ink],
+    ['When two people message each other, draw a line between them.', 26, NU.ink],
+    ['That’s a network. Everything today is just that.', 26, NU.ink]];
+  let y = 220;
+  lines.forEach(([t, size, c, f]) => { wrap(t, size, 1216 - tx).forEach(l => { out.push(`<text x="${tx}" y="${y}" font-family="${f === 'serif' ? NU.serif : NU.sans}" font-size="${size}" fill="${c}">${esc(l)}</text>`); y += size * 1.35; }); y += 16; });
+  out.push(`<rect x="${tx}" y="${y + 10}" width="${1216 - tx}" height="110" rx="10" fill="#eef1f5"/>`);
+  out.push(`<text x="${tx + 22}" y="${y + 44}" font-family="${NU.sans}" font-size="14" font-weight="700" letter-spacing="2" fill="${NU.red}">EXPERTS SAY</text>`);
+  out.push(`<text x="${tx + 22}" y="${y + 76}" font-family="${NU.sans}" font-size="22" fill="${NU.ink}"><tspan font-weight="700">nodes</tspan> for the dots, <tspan font-weight="700">edges</tspan> for the lines.</text>`);
+  out.push(`<text x="${tx + 22}" y="${y + 104}" font-family="${NU.sans}" font-size="20" fill="${NU.dim}">Same thing, fancier words.</text>`);
+  out.push('</svg>');
+  return out.join('\n');
+}
+
+/* A network is a list of pairs: the Victoria line's first stops, as a two-column table and as the line it draws. */
+function pairsSvg() {
+  const out = [open(), heading('Store it', 'A network is just a list of pairs')];
+  const stops = ['Brixton', 'Stockwell', 'Vauxhall', 'Pimlico', 'Victoria', 'Green Park'], lit = 1, VIC = '#0098D4';
+  const tx = 64, ty = 170, rw = 200, rh = 64;
+  out.push(`<text x="${tx}" y="${ty - 14}" font-family="${NU.sans}" font-size="15" font-weight="700" letter-spacing="2" fill="${NU.dim}">THE SPREADSHEET</text>`);
+  [['From', 'To'], ...stops.slice(0, -1).map((s, i) => [s, stops[i + 1]])].forEach((r, i) => {
+    const y = ty + i * rh, head = i === 0, on = i - 1 === lit;
+    out.push(`<rect x="${tx}" y="${y}" width="${rw * 2}" height="${rh}" fill="${head ? NU.navy : on ? '#fbe5e8' : i % 2 ? '#fff' : '#f4f2ee'}" stroke="${NU.rule}"/>`);
+    out.push(`<line x1="${tx + rw}" y1="${y}" x2="${tx + rw}" y2="${y + rh}" stroke="${NU.rule}"/>`);
+    r.forEach((t, k) => out.push(`<text x="${tx + k * rw + 18}" y="${y + 40}" font-family="${NU.sans}" font-size="22" font-weight="${head || on ? 700 : 400}" fill="${head ? '#fff' : on ? NU.red : NU.ink}">${esc(t)}</text>`));
+  });
+  /* the line it draws, top to bottom */
+  const lx = 930, ly = 180, step = 86;
+  out.push(`<text x="${lx - 30}" y="${ty - 14}" font-family="${NU.sans}" font-size="15" font-weight="700" letter-spacing="2" fill="${NU.dim}">THE DRAWING</text>`);
+  stops.slice(0, -1).forEach((_, i) => out.push(`<line x1="${lx}" y1="${ly + i * step}" x2="${lx}" y2="${ly + (i + 1) * step}" stroke="${i === lit ? NU.red : VIC}" stroke-width="${i === lit ? 10 : 8}" stroke-linecap="round"/>`));
+  stops.forEach((t, i) => {
+    out.push(`<circle cx="${lx}" cy="${ly + i * step}" r="12" fill="#fff" stroke="${NU.ink}" stroke-width="4"/>`);
+    out.push(`<text x="${lx + 28}" y="${ly + i * step + 8}" font-family="${NU.sans}" font-size="22" fill="${NU.ink}">${esc(t)}</text>`);
+  });
+  /* one row, one line: an arrow from the lit row to its line */
+  const ry = ty + (lit + 1) * rh + rh / 2, my = ly + (lit + 0.5) * step;
+  out.push(`<path d="M${tx + rw * 2 + 14} ${ry} C ${tx + rw * 2 + 200} ${ry}, ${lx - 200} ${my}, ${lx - 22} ${my}" fill="none" stroke="${NU.red}" stroke-width="3" stroke-dasharray="7 6"/>`);
+  out.push(`<path d="M${lx - 34} ${my - 8} L${lx - 20} ${my} L${lx - 34} ${my + 8}" fill="none" stroke="${NU.red}" stroke-width="3" stroke-linecap="round"/>`);
+  out.push(`<text x="${(tx + rw * 2 + lx) / 2}" y="${Math.min(ry, my) - 30}" text-anchor="middle" font-family="${NU.sans}" font-size="18" font-weight="700" fill="${NU.red}">one row = one line</text>`);
+  out.push(`<text x="${tx}" y="${ty + 6 * rh + 52}" font-family="${NU.sans}" font-size="22" fill="${NU.dim}">If you can write a shopping list, you can store a network.</text>`);
+  out.push('</svg>');
+  return out.join('\n');
+}
+
+/* Which drawing: three questions a reader asks, three drawings. */
+function chooseSvg() {
+  const route = `<path d="M-16 12 L-4 -4 L8 4 L18 -14" ${st(3)}/><circle cx="-16" cy="12" r="4" fill="${NU.red}"/><circle cx="18" cy="-14" r="4" fill="${NU.red}"/>`;
+  const grid = [0, 1, 2].map(i => [0, 1, 2].map(j => `<rect x="${-17 + j * 12}" y="${-17 + i * 12}" width="10" height="10" fill="${i === 1 && j === 2 ? NU.red : '#c9d3dd'}"/>`).join('')).join('');
+  return rowsSvg('Choose', 'Which drawing? Ask what the reader wants to know', [
+    { icon: route, name: '“How do I get from A to B?”', tag: { text: 'DOTS AND LINES', fill: NU.navy }, text: 'Trace the route with your finger.' },
+    { icon: grid, name: '“Are these two connected?”', tag: { text: 'A GRID', fill: NU.navy }, text: 'With lots of lines, look up one square.' },
+    { icon: ICON.treemap, name: '“What’s biggest, and what does it belong to?”', tag: { text: 'BOXES INSIDE BOXES', fill: NU.navy }, text: 'The biggest box, inside its group.' }
+  ], { max: 150, tagX: 560, textX: 800, size: 22 });
+}
+
+module.exports = { routeSvg, codeSvg, termsSvg, edgeTypesSvg, cardsSvg, jobsSvg, breaksSvg, moveSvg, simplerSvg, bigTreeSvg, disguiseNetSvg, disguiseTreeSvg, recallSvg, sortSvg, claimSvg, answersSvg, fourTreesSvg, ladderSvg, whoSvg, pairsSvg, chooseSvg, STEPS };

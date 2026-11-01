@@ -66,15 +66,19 @@ function lesson() {
       'Step 2 is Beck\'s first move, done by a computer: a fisheye that enlarges the centre (each station keeps its direction from the middle; distance is shrunk by a power of 0.6). Beck also straightened every line to horizontals, verticals and 45°: show TfL\'s current map (tfl.gov.uk/maps/track/tube) beside it. Beck sketched his in 1931 and it was published as a pocket map in 1933. ' +
       'Step 3: hover live. Then: "Beck threw away geography. Today, position is chosen, not measured." Data: TfL Open Data, the regular service pattern of each line, Zone 1 (and 1/2 boundary) stations only. Edgware Road\'s two stations are drawn as one.' },
 
+  drawn('A network is a “who’s connected to whom” picture', 'who.svg',
+    '2 min. Before any diagram or word: their own contacts. ASK: "Who in your contacts messages someone else in your contacts?" That is a line that does not go through you. ' +
+      'Then the jargon as a translation, not a definition: nodes and edges are the fancier words for dots and lines. Use "dots and lines" out loud for the rest of the lecture; say the technical word once, in passing.'),
+
   { type: 'table', title: 'Six words for today', tableHeader: true,
     body: 'Word\tWhat it means\tExample\n' +
       'Node\tone thing (a dot)\ta station\n' +
       'Edge\ta connection between two things\tthe track between two stations next to each other\n' +
-      'Degree\thow many edges touch a dot\tKing\'s Cross: 5 stations next door\n' +
+      'Degree\thow popular a dot is: how many edges touch it\tKing\'s Cross: 5 stations next door (not its 6 Tube lines)\n' +
       'Path\ta route from dot to dot along the lines\tBrixton to Euston on the Victoria line\n' +
       'Root\tthe one thing at the top of a tree\tLondon, above all 33 boroughs\n' +
       'Leaf\ta thing with nothing below it\tone borough, such as Croydon',
-    notes: '2 min. Define before use (the Nodes routine). Every word is used from the next slide on, so say each one out loud with its Tube example. ' +
+    notes: '2 min. Define before use (the Nodes routine). Every word is used from the next slide on, so say each one out loud with its Tube example. Degree: "at a party, the person talking to the most people has the highest degree". SAY: "We\'re counting stations next door, not Tube lines." ' +
       'Keep "edge" and "Tube line" apart: King\'s Cross is on 6 Tube lines but has 5 edges in the Zone 1 data (Angel, Euston, Euston Square, Farringdon, Russell Square), because the Circle, Hammersmith & City and Metropolitan share one track to Farringdon, one edge. Checked with networkx: 90 distinct edges from tube_links.csv\'s 130 rows. ' +
       'Network = a set of nodes and edges. Tree = a network with one root and no loops (Part 1). The full table returns in Part 2, with three more words.' },
 
@@ -156,6 +160,10 @@ function lesson() {
   /* ======================================================== ② Store */
   section('How does a computer hold a network?', 'Part 2 · Store', '20 s.'),
 
+  drawn('A network is just a list of pairs', 'pairs.svg',
+    '1 min. The surprising, reassuring part: a two-column spreadsheet. Point at the red row, then the red stretch of line it becomes. Brixton to Green Park on the Victoria line, from TfL\'s data. ' +
+      'The order in a pair does not matter for track (it runs both ways): Stockwell, Brixton is the same edge.'),
+
   { type: 'figure', figure: 'network', title: 'One network, written three ways', figureGround: 'paper',
     figureEyebrow: 'Store it', figureCredit: 'After Dimitris Mylonas, LDSCI5209', figureAlt: 'An eight-node network A–H drawn as a picture, written as an edge list, and as an 8 by 8 adjacency matrix.',
     figureData: { nodes: abc.nodes, links: abc.links, layouts: abc.layouts, r: 16, key: [{ mark: 'dot', colour: '#0c3354', text: 'a node: one thing' }, { mark: 'line', colour: '#8a96a3', text: 'an edge: two things are connected' }] },
@@ -213,11 +221,11 @@ function lesson() {
     figureData: { nodes: abc.nodes, links: abc.links, layouts: abc.layouts, r: 22, key: [{ mark: 'dot', colour: '#0c3354', text: 'a node: one thing' }, { mark: 'line', colour: '#8a96a3', text: 'an edge: two things are connected' }] },
     figureSteps: [
       { caption: 'We chose where to draw each dot. Grab one and drag it somewhere else: its lines follow it.', layout: 'chosen',
-        explain: 'Grab a dot and move it. Its lines follow, because a line belongs to two dots, not to a place on the screen.\nA is still joined to B, C, G and H, wherever you put it.' },
+        explain: 'Here\'s the weird part: in this picture, where a dot sits does not matter. That is different from every chart so far.\nGrab a dot and move it. Its lines follow, because a line belongs to two dots, not to a place on the screen. A is still joined to B, C, G and H, wherever you put it.' },
       { caption: 'Every dot has moved, but each is joined to exactly the same dots as before. Nothing that matters has changed.', layout: 'shuffled',
-        explain: 'Every dot is somewhere new, so the picture looks different. But the connections are identical.\nIn a scatter plot, where a dot sits is measured from the data. In a network picture it is chosen: the edges are the data. Someone, or a computer, chose the positions.' }
+        explain: 'Think of people holding pieces of string to their friends. If everyone walks to a new spot in the room, has any friendship changed? No: the strings are the same. Only the arrangement changed.\nIn a scatter plot, where a dot sits is measured from the data. In a network picture it is chosen: the edges are the data. Someone, or a computer, chose the positions.' }
     ],
-    notes: '2 min. Hand the clicker or the mouse to a student: drag nodes. Then step. SAY: "In Week 2 position was the strongest channel. Here it is chosen, not measured: somebody, or some program, decides it. That choice is the layout."' },
+    notes: '3 min. If the room allows: five volunteers, each holding string or ribbon to two others. Ask them to walk to new spots, then ask the room what changed. Then hand the mouse to a student: drag nodes, and step. SAY: "In Week 2 position was the strongest channel. Here it is chosen, not measured: somebody, or some program, decides it. That choice is the layout."' },
 
   { type: 'figure', figure: 'network', title: 'Let the computer choose the positions', figureGround: 'paper',
     figureEyebrow: 'Name it', figureCredit: credit, figureAlt: 'The Tube\'s Zone 1 at its real positions, then rearranged by a force-directed layout.',
@@ -311,7 +319,7 @@ function lesson() {
       { caption: 'The hairball again: 77 characters and 254 lines.', layout: 'force', labels: 'hubs',
         explain: 'The same 77 characters and 254 lines as before.' },
       { caption: 'The same data as a grid. Each character has a row and a column; a square means those two share a scene.', view: 'matrix', order: 'name', key: GRIDKEY,
-        explain: 'Every character gets one row and one column, in A to Z order. Where a row and a column meet, a square means those two share at least one scene. A darker square means more scenes together.\nNo lines cross, ever. Point at a square to read the two names. This kind of grid is called a matrix.' },
+        explain: 'It works like the mileage chart in a road atlas: every place along the top and down the side, and the square where two meet tells you about that pair.\nEvery character gets one row and one column, in A to Z order. Where a row and a column meet, a square means those two share at least one scene. A darker square means more scenes together.\nNo lines cross, ever. Point at a square to read the two names. This kind of grid is called a matrix.' },
       { caption: 'The rows sorted from the busiest character to the quietest: the busy ones gather top left.', view: 'matrix', order: 'degree', key: GRIDKEY,
         explain: 'Same squares, different order: now the character with the most connections (Valjean) is in the first row and column.\nThe order of the rows is a choice, like where you put the dots in a picture. Different orders show different things.' },
       { caption: 'The rows sorted by group: each group shows up as a block of squares along the diagonal.', view: 'matrix', order: 'group', key: GRIDKEY,
@@ -376,7 +384,7 @@ function lesson() {
       { caption: 'Point at any box to see its borough, how many people live there, and where it belongs.', layout: 'treemap', lit: 'Croydon',
         explain: 'Point at a box. The card shows the borough\'s name, its number of people, its share of London, and its path back to London (lit in red).\nCroydon has the most people of any London borough.' },
       { caption: 'The same tree as boxes inside boxes. The bigger the box, the more people live there.', layout: 'treemap',
-        explain: 'Each borough is a box, inside its area\'s box, inside Inner or Outer London. The area of each box is its number of people.\nBelonging is shown by being inside a box, not by lines. You see the biggest boroughs at once, but it is harder to see how many levels the tree has. This drawing is called a treemap.' }
+        explain: 'Think of a cupboard: one big box with smaller boxes inside, and smaller ones inside those. Bigger population, bigger box.\nEach borough is a box, inside its area\'s box, inside Inner or Outer London. The area of each box is its number of people.\nBelonging is shown by being inside a box, not by lines. You see the biggest boroughs at once, but it is harder to see how many levels the tree has. This drawing is called a treemap.' }
     ],
     notes: '6 min. Watch every node travel between layouts: the same rectangles each time. ' +
       `Data: ONS mid-${london.year} estimates via Nomis (NM_2002_1); the five areas are ONS's ITL2 regions (Inner London West and East; Outer London East and North East, South, West and North West). London in all: about 9.1 million. ` +
@@ -407,6 +415,9 @@ function lesson() {
   /* ======================================================== Arriving */
   drawn('Connect, matrix, nest', 'three-ways.svg',
     '1 min. The whole lecture on one slide (Munzner ch. 9: connection, matrix alignment, containment).'),
+
+  drawn('Which drawing? Ask what the reader wants to know', 'choose.svg',
+    '1 min. A rule, not a comparison table: the reader\'s question picks the drawing. The quiz next uses exactly these three.'),
 
   { type: 'content', title: 'Which drawing? Hands up', progressive: true,
     bullets: [
@@ -460,12 +471,12 @@ function lesson() {
     ],
     notes: '1 min. The three CSVs are in assets/lesson/ipdv/week8/, written by tools/ipdv-week8/code/steps.py from TfL Open Data and the ONS estimates.' },
 
-  statement('Questions?', 'Open floor.')
+  statement('Tell your neighbour: why isn\u2019t the Tube map accurate, and why is that a good thing?', '2 min. Instead of "any questions?": one sentence each, to the person next to them. Walk the room and listen: you will hear quickly who has it. Then open the floor.')
   ];
 }
 
 /* The student copy: room-only slides hidden. */
-const STUDENT = [['Which drawing? Hands up', 'none'], ['See it: who trades with whom', 'none'], ['Questions?', 'none']];
+const STUDENT = [['Which drawing? Hands up', 'none'], ['See it: who trades with whom', 'none'], ['Tell your neighbour: why isn\u2019t the Tube map accurate, and why is that a good thing?', 'none']];
 
 /* Reference slides: hidden in the room so the lecture fits 90 minutes, shown in the student copy for revision
    (the Gupta slide stays hidden there too, by STUDENT, until its source is confirmed). Unhide one by deleting it here. */
@@ -474,7 +485,8 @@ const REFERENCE = [
   'The words again, plus three more', 'Four layers of every chart, on the Tube map', 'See it: who trades with whom',
   'See it: books bought together', 'Or make the picture simpler', 'Build it: one word changes the order',
   'When a tree gets too big', 'Ben Shneiderman invented the treemap to see what was filling his hard disk',
-  'Networks in disguise', 'Trees in disguise', 'Tools people use for networks'
+  'Networks in disguise', 'Trees in disguise', 'Tools people use for networks',
+  'Three kinds of edge', 'Five numbers that describe a network', 'See it: a network on a map', 'Dots and lines, or a grid?', 'Connect, matrix, nest'
 ];
 
 module.exports = { lesson, STUDENT, REFERENCE };

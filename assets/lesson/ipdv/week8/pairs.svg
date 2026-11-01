@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">STORE IT</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">A network is just a list of pairs</text>
+<text x="64" y="156" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#5a6572">THE SPREADSHEET</text>
+<rect x="64" y="170" width="400" height="64" fill="#0c3354" stroke="#d9d4ca"/>
+<line x1="264" y1="170" x2="264" y2="234" stroke="#d9d4ca"/>
+<text x="82" y="210" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#fff">From</text>
+<text x="282" y="210" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#fff">To</text>
+<rect x="64" y="234" width="400" height="64" fill="#fff" stroke="#d9d4ca"/>
+<line x1="264" y1="234" x2="264" y2="298" stroke="#d9d4ca"/>
+<text x="82" y="274" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Brixton</text>
+<text x="282" y="274" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Stockwell</text>
+<rect x="64" y="298" width="400" height="64" fill="#fbe5e8" stroke="#d9d4ca"/>
+<line x1="264" y1="298" x2="264" y2="362" stroke="#d9d4ca"/>
+<text x="82" y="338" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#c8102e">Stockwell</text>
+<text x="282" y="338" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#c8102e">Vauxhall</text>
+<rect x="64" y="362" width="400" height="64" fill="#fff" stroke="#d9d4ca"/>
+<line x1="264" y1="362" x2="264" y2="426" stroke="#d9d4ca"/>
+<text x="82" y="402" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Vauxhall</text>
+<text x="282" y="402" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Pimlico</text>
+<rect x="64" y="426" width="400" height="64" fill="#f4f2ee" stroke="#d9d4ca"/>
+<line x1="264" y1="426" x2="264" y2="490" stroke="#d9d4ca"/>
+<text x="82" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Pimlico</text>
+<text x="282" y="466" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Victoria</text>
+<rect x="64" y="490" width="400" height="64" fill="#fff" stroke="#d9d4ca"/>
+<line x1="264" y1="490" x2="264" y2="554" stroke="#d9d4ca"/>
+<text x="82" y="530" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Victoria</text>
+<text x="282" y="530" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" fill="#14181f">Green Park</text>
+<text x="900" y="156" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#5a6572">THE DRAWING</text>
+<line x1="930" y1="180" x2="930" y2="266" stroke="#0098D4" stroke-width="8" stroke-linecap="round"/>
+<line x1="930" y1="266" x2="930" y2="352" stroke="#c8102e" stroke-width="10" stroke-linecap="round"/>
+<line x1="930" y1="352" x2="930" y2="438" stroke="#0098D4" stroke-width="8" stroke-linecap="round"/>
+<line x1="930" y1="438" x2="930" y2="524" stroke="#0098D4" stroke-width="8" stroke-linecap="round"/>
+<line x1="930" y1="524" x2="930" y2="610" stroke="#0098D4" stroke-width="8" stroke-linecap="round"/>
+<circle cx="930" cy="180" r="12" fill="#fff" stroke="#14181f" stroke-width="4"/>
+<text x="958" y="188" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f">Brixton</text>
+<circle cx="930" cy="266" r="12" fill="#fff" stroke="#14181f" stroke-width="4"/>
+<text x="958" y="274" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f">Stockwell</text>
+<circle cx="930" cy="352" r="12" fill="#fff" stroke="#14181f" stroke-width="4"/>
+<text x="958" y="360" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f">Vauxhall</text>
+<circle cx="930" cy="438" r="12" fill="#fff" stroke="#14181f" stroke-width="4"/>
+<text x="958" y="446" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f">Pimlico</text>
+<circle cx="930" cy="524" r="12" fill="#fff" stroke="#14181f" stroke-width="4"/>
+<text x="958" y="532" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f">Victoria</text>
+<circle cx="930" cy="610" r="12" fill="#fff" stroke="#14181f" stroke-width="4"/>
+<text x="958" y="618" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#14181f">Green Park</text>
+<path d="M478 330 C 664 330, 730 309, 908 309" fill="none" stroke="#c8102e" stroke-width="3" stroke-dasharray="7 6"/>
+<path d="M896 301 L910 309 L896 317" fill="none" stroke="#c8102e" stroke-width="3" stroke-linecap="round"/>
+<text x="697" y="279" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="700" fill="#c8102e">one row = one line</text>
+<text x="64" y="606" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#5a6572">If you can write a shopping list, you can store a network.</text>
+</svg>

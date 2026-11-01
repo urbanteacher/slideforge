@@ -94,6 +94,9 @@ function drawPictures() {
   writeSvg('three-answers.svg', D.answersSvg());
   writeSvg('four-trees.svg', D.fourTreesSvg());
   writeSvg('ladder.svg', D.ladderSvg());
+  writeSvg('who.svg', D.whoSvg());
+  writeSvg('pairs.svg', D.pairsSvg());
+  writeSvg('choose.svg', D.chooseSvg());
   for (const [id, o] of Object.entries(BUILDS)) writeSvg(`build-${id}.svg`, D.codeSvg(id, o));
 }
 
