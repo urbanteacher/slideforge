@@ -120,14 +120,14 @@ function tube(box = { x0: 80, y0: 158, x1: 1200, y1: 640 }) {
 
 /* Tableau 10, as Altair's default categories: the groups are data. */
 const GROUPS = ['#4c78a8', '#f58518', '#e45756', '#72b7b2', '#54a24b', '#eeca3b', '#b279a2', '#ff9da6', '#9d755d', '#bab0ac', '#79706e'];
-function miserables() {
+function miserables(box = { x0: 120, y0: 158, x1: 1160, y1: 640 }) {
   const m = read('miserables.json');
   const nodes = m.nodes.map(n => ({ id: n.name, group: n.group }));
   const links = m.links.map(l => ({ source: m.nodes[l.source].name, target: m.nodes[l.target].name, value: l.value }));
   const at = force(nodes.map(n => n.id), links, 3, 700);
   const colours = {};
   GROUPS.forEach((c, i) => { colours[i] = c; });
-  return { nodes, links, colours, valueTitle: 'Scenes together', layouts: { force: fit(at, { x0: 120, y0: 158, x1: 1160, y1: 640 }, false) } };
+  return { nodes, links, colours, valueTitle: 'Scenes together', layouts: { force: fit(at, box, false) } };
 }
 
 function london() {

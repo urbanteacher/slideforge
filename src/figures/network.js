@@ -157,7 +157,7 @@ export var network = {
     function matrixView(/** @type {any} */ box) {
       var g = el('g', {}, layer), n = nodes.length;
       var room = !box && n > 20 ? 26 : 0;
-      var size = box ? box.size : Math.min(PLOT.y1 - PLOT.y0 - 10 - room, 540), x0 = box ? box.x : (W - size) / 2 + 60, y0 = box ? box.y : PLOT.y0 + 6 + room, cell = size / n;
+      var size = box ? box.size : Math.min(PLOT.y1 - PLOT.y0 - 10 - room, 540), x0 = box ? box.x : fig.story ? 200 + (fig.story.x - 24 - 200 - size) / 2 : (W - size) / 2 + 60, y0 = box ? box.y : PLOT.y0 + 6 + room, cell = size / n;
       var labelled = n <= 20;
       el('rect', { x: x0, y: y0, width: size, height: size, fill: paper ? '#fff' : 'rgba(255,255,255,.03)', stroke: paper ? '#d9d4ca' : NU.line }, g);
       var heads = labelled ? nodes.map(function (/** @type {any} */ m) {
@@ -248,7 +248,7 @@ export var network = {
           if (cellHit.l.value != null) rows.push([d.valueTitle || 'Value', String(cellHit.l.value)]);
           set(rowBand, { y: y0 + at[cellHit.a.id] * cell, opacity: 0.16 });
           set(colBand, { x: x0 + at[cellHit.b.id] * cell, opacity: 0.16 });
-          tooltipCard(cards, rows, x0 + (at[cellHit.b.id] + 1) * cell, y0 + (at[cellHit.a.id] + 1) * cell);
+          tooltipCard(cards, rows, x0 + (at[cellHit.b.id] + 1) * cell, y0 + (at[cellHit.a.id] + 1) * cell, { maxX: fig.story ? fig.story.x - 12 : undefined });
         }
       }
       function hit(/** @type {any} */ p) {
@@ -318,7 +318,7 @@ export var network = {
       svg.addEventListener('pointermove', function (/** @type {PointerEvent} */ e) {
         var p = fig.toSlide(e);
         if (dragging) {
-          pos[dragging] = [Math.max(PLOT.x0, Math.min(PLOT.x1, p.x)), Math.max(PLOT.y0, Math.min(PLOT.y1, p.y))];
+          pos[dragging] = [Math.max(PLOT.x0, Math.min(fig.story ? fig.story.x - 24 : PLOT.x1, p.x)), Math.max(PLOT.y0, Math.min(PLOT.y1, p.y))];
           draw.place(); draw.light(dragging);
           return;
         }

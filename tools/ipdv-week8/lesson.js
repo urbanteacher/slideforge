@@ -44,6 +44,8 @@ function draft() {
   const hook = L.tube({ x0: 64, y0: 158, x1: 850, y1: 640 });
   const HOOK = { nodes: hook.nodes, links: hook.links, colours: hook.colours, layouts: hook.layouts, r: 6 };
   const STORY = { x: 880, y: 150, w: 336 };
+  /* Les Misérables, laid out in the left part of the slide for the slides that tell their story beside it. */
+  const misL = L.miserables({ x0: 80, y0: 170, x1: 850, y1: 630 });
   const KX = "King's Cross St. Pancras";
   const credit = 'Powered by TfL Open Data · Zone 1';
   /* The grid colours a square by group when both characters share one; grey when they don't. */
@@ -275,8 +277,9 @@ function draft() {
     'Point out the encodings: node shape (person or company), line style (relation type), ring colour (shared address, lender, auditor).'),
 
   { type: 'figure', figure: 'network', title: 'The hairball',
+    figureStory: STORY,
     figureEyebrow: 'See it', figureCredit: 'Les Misérables co-occurrence · Knuth (1993)', figureAlt: 'A force-directed drawing of 77 Les Misérables characters and 254 links: a dense tangle.',
-    figureData: { nodes: mis.nodes, links: mis.links, colours: mis.colours, layouts: mis.layouts, valueTitle: mis.valueTitle, r: 7, key: [{ mark: 'dot', colour: '#e45756', text: 'a character (colour = their group)' }, { mark: 'line', colour: '#9fb3c8', text: 'the two are in a scene together' }] },
+    figureData: { nodes: mis.nodes, links: mis.links, colours: mis.colours, layouts: misL.layouts, valueTitle: mis.valueTitle, r: 7, key: [{ mark: 'dot', colour: '#e45756', text: 'a character (colour = their group)' }, { mark: 'line', colour: '#9fb3c8', text: 'the two are in a scene together' }] },
     figureSteps: [
       { caption: 'Each dot is a character in Les Misérables. A line joins two characters who are in a scene together.', layout: 'force', labels: 'hubs',
         explain: 'Each dot is a character from Victor Hugo\'s novel Les Misérables. A line joins two characters who appear in the same scene.\nThe colours are groups of characters who mostly appear together.' },
@@ -331,8 +334,9 @@ function draft() {
   section('What if there are too many lines to read?', 'Part 4 · Matrix', '20 s.'),
 
   { type: 'figure', figure: 'network', title: 'Untangle it into a grid',
+    figureStory: STORY,
     figureEyebrow: 'See it', figureCredit: 'Les Misérables co-occurrence · Knuth (1993)', figureAlt: 'The Les Misérables network, first as a tangle of lines, then as a 77 by 77 matrix reordered by name, by number of links and by group.',
-    figureData: { nodes: mis.nodes, links: mis.links, colours: mis.colours, layouts: mis.layouts, valueTitle: mis.valueTitle, r: 7, key: [{ mark: 'dot', colour: '#e45756', text: 'a character (colour = their group)' }, { mark: 'line', colour: '#9fb3c8', text: 'the two are in a scene together' }] },
+    figureData: { nodes: mis.nodes, links: mis.links, colours: mis.colours, layouts: misL.layouts, valueTitle: mis.valueTitle, r: 7, key: [{ mark: 'dot', colour: '#e45756', text: 'a character (colour = their group)' }, { mark: 'line', colour: '#9fb3c8', text: 'the two are in a scene together' }] },
     figureSteps: [
       { caption: 'The hairball again: 77 characters and 254 lines.', layout: 'force', labels: 'hubs',
         explain: 'The same 77 characters and 254 lines as before.' },
