@@ -333,7 +333,8 @@ function breaksSvg() {
     { title: 'Names pile up', text: 'Most charts can only name the busiest dots.', h: 220, draw: (w) => {
       const names = ['Valjean', 'Javert', 'Fantine', 'Marius', 'Cosette', 'Thénardier'], s = [], x0 = w / 2 - 50;
       names.forEach((t, i) => { const x = x0 + (i % 3) * 18, y = 76 + i * 13; s.push(`<circle cx="${x - 8}" cy="${y - 6}" r="6" fill="${NU.navy}"/>`, label(x, y, t, { colour: NU.ink, size: 19, weight: 500 })); });
-      return s.join('') + ring(w / 2 + 4, 104, 76);
+      /* The ring takes in the whole pile, every name inside it. */
+      return s.join('') + ring(w / 2 + 13, 102, Math.min(w / 2 - 4, 104));
     } },
     { title: 'Near is not proof', text: 'Close dots are usually joined, but not always.', h: 230, draw: (w) => {
       /* Two groups; the left group's right dot sits next to the right group's left dot, with no line between them. */
