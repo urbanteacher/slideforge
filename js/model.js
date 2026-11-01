@@ -1833,7 +1833,7 @@
     function multiplesChart(data, slide) {
       var W2 = CHART2.w, H2 = CHART2.h;
       var svg = svgEl("svg", { viewBox: "0 0 " + W2 + " " + H2, class: "chart-svg", role: "img" });
-      var panels = data.categories.map(function(name, i) {
+      var panels2 = data.categories.map(function(name, i) {
         return { name, values: data.series.map(function(sr) {
           return sr.values[i];
         }) };
@@ -1842,20 +1842,20 @@
           return v != null;
         });
       });
-      if (!panels.length || data.series.length < 2) return svg;
+      if (!panels2.length || data.series.length < 2) return svg;
       var all = [];
-      panels.forEach(function(p) {
+      panels2.forEach(function(p) {
         p.values.forEach(function(v) {
           if (v != null) all.push(v);
         });
       });
       var rng = niceRange(Math.min.apply(null, all), Math.max.apply(null, all));
-      var cols = Math.min(panels.length, panels.length <= 4 ? panels.length : Math.ceil(Math.sqrt(panels.length * 1.9)));
-      var rows2 = Math.ceil(panels.length / cols);
+      var cols = Math.min(panels2.length, panels2.length <= 4 ? panels2.length : Math.ceil(Math.sqrt(panels2.length * 1.9)));
+      var rows2 = Math.ceil(panels2.length / cols);
       var padTop = 26, padBottom = 34;
       var cellW = (W2 - 36) / cols, cellH = (H2 - padTop - padBottom) / rows2;
       var plotW = cellW - 30, plotH = Math.max(22, cellH - 48);
-      panels.forEach(function(p, i) {
+      panels2.forEach(function(p, i) {
         var cx = 18 + i % cols * cellW, cy = padTop + Math.floor(i / cols) * cellH;
         var g = svgEl("g", { class: "ch-beat ch-multiple", "data-step": i, "data-series": "0" });
         var n = p.values.length;
@@ -5458,7 +5458,7 @@
       var d = fig.data, svg = fig.svg, st = fig.stage;
       var root = el("g", {}, svg);
       if (d.source) el("text", { x: 64, y: H - 76, "font-family": NU.sans, "font-size": 13, fill: st.soft }, svg, d.source);
-      var panels = (
+      var panels2 = (
         /** @type {any[]} */
         []
       ), layout = "", cancel = function() {
@@ -5468,13 +5468,13 @@
         if (want === layout) return;
         layout = want;
         root.textContent = "";
-        panels = [];
+        panels2 = [];
         if (want === "frames-tweens") {
-          panels.push(panel(root, d, { x0: 120, x1: 600, y0: 190, y1: H - 160 }, st, { keyed: true, fs: 13, labels: true, jump: true, tag: "frames: one picture per 5 years" }));
-          panels.push(panel(root, d, { x0: 760, x1: W - 60, y0: 190, y1: H - 160 }, st, { keyed: true, fs: 13, labels: true, tag: "tweens: the in-between drawn" }));
+          panels2.push(panel(root, d, { x0: 120, x1: 600, y0: 190, y1: H - 160 }, st, { keyed: true, fs: 13, labels: true, jump: true, tag: "frames: one picture per 5 years" }));
+          panels2.push(panel(root, d, { x0: 760, x1: W - 60, y0: 190, y1: H - 160 }, st, { keyed: true, fs: 13, labels: true, tag: "tweens: the in-between drawn" }));
         } else if (want === "pair") {
-          panels.push(panel(root, d, { x0: 120, x1: 600, y0: 190, y1: H - 160 }, st, { keyed: false, fs: 13, labels: true, tag: "no key: marks follow row order" }));
-          panels.push(panel(root, d, { x0: 760, x1: W - 60, y0: 190, y1: H - 160 }, st, { keyed: true, fs: 13, labels: true, tag: "key='country:N'" }));
+          panels2.push(panel(root, d, { x0: 120, x1: 600, y0: 190, y1: H - 160 }, st, { keyed: false, fs: 13, labels: true, tag: "no key: marks follow row order" }));
+          panels2.push(panel(root, d, { x0: 760, x1: W - 60, y0: 190, y1: H - 160 }, st, { keyed: true, fs: 13, labels: true, tag: "key='country:N'" }));
         } else if (want === "multiples") {
           var cols = 6, gw = (W - 140) / cols, gh = (H - 300) / 2;
           d.years.forEach(function(y, i) {
@@ -5482,9 +5482,9 @@
             var p = panel(root, d, { x0: x0 + 10, x1: x0 + gw - 14, y0, y1: y0 + gh - 10 }, st, { keyed: true, fs: 10, labels: false });
             p.show(y, true);
             p.__year = y;
-            panels.push(p);
+            panels2.push(p);
           });
-        } else panels.push(panel(root, d, { x0: 150, x1: W - 90, y0: 160, y1: H - 140 }, st, { keyed: want === "one", fs: 15, labels: true }));
+        } else panels2.push(panel(root, d, { x0: 150, x1: W - 90, y0: 160, y1: H - 140 }, st, { keyed: want === "one", fs: 15, labels: true }));
       }
       return {
         /** @param {any} step @param {boolean} animate */
@@ -5493,13 +5493,13 @@
           st.caption(step.caption);
           build(step);
           if (layout === "multiples") {
-            panels.forEach(function(p) {
+            panels2.forEach(function(p) {
               p.follow(step.trail || null);
               p.show(p.__year, true);
             });
             return;
           }
-          panels.forEach(function(p, n) {
+          panels2.forEach(function(p, n) {
             p.follow(step.trail || null);
             if (p.setView) p.setView({ label: step.label, ends: !step.play, dim: step.dim, measured: step.measured });
             var ex = step.explain;
@@ -5511,7 +5511,7 @@
           }
           if (!play && step.trace) {
             var a = step.trace.from, b = step.trace.to;
-            panels.forEach(function(p) {
+            panels2.forEach(function(p) {
               for (var n = 0; n <= 100; n++) p.show(timeFor(p, a + (b - a) * n / 100, a, b), n === 0);
             });
             now2 = b;
@@ -5519,20 +5519,20 @@
           }
           if (!play) {
             now2 = step.year || d.years[0];
-            panels.forEach(function(p) {
+            panels2.forEach(function(p) {
               p.show(now2, true);
             });
             return;
           }
           var from = play.from, to = play.to;
-          panels.forEach(function(p) {
+          panels2.forEach(function(p) {
             p.show(from, true);
           });
           var span = to - from;
           cancel = tween(animate && fig.interactive ? (play.seconds || 10) * 1e3 : 0, function(k) {
             var t = from + span * k;
             now2 = t;
-            panels.forEach(function(p) {
+            panels2.forEach(function(p) {
               p.show(timeFor(p, t, from, to), false);
             });
           }, function(t) {
@@ -7447,8 +7447,45 @@
     }
   };
 
+  // src/figures/panels.js
+  var panels = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage, boxes = d.boxes || [], ground = d.ground || "#fbfaf8";
+      var pic = el("g", {}, svg);
+      pic.innerHTML = String(d.svg || "");
+      var covers = boxes.map(function(b) {
+        return el("rect", { x: b[0], y: b[1], width: b[2], height: b[3], fill: ground, opacity: 0, "pointer-events": "none" }, svg);
+      });
+      var cancel = function() {
+      };
+      return {
+        /** @param {any} step @param {boolean} animate */
+        update: function(step, animate) {
+          st.caption(step.caption);
+          var upto = typeof step.upto === "number" ? step.upto : boxes.length - 1, all = !fig.interactive;
+          var want = covers.map(function(_, i) {
+            return all || i === upto ? 0 : i < upto ? 0.62 : 1;
+          });
+          var from = covers.map(function(c) {
+            return Number(c.getAttribute("opacity") || 0);
+          });
+          cancel();
+          cancel = tween(animate ? 350 : 0, function(k) {
+            covers.forEach(function(c, i) {
+              set(c, { opacity: from[i] + (want[i] - from[i]) * k });
+            });
+          });
+        },
+        destroy: function() {
+          cancel();
+        }
+      };
+    }
+  };
+
   // src/figures/index.js
-  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium, bridges, network, tree, reveal };
+  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium, bridges, network, tree, reveal, panels };
   var CSS = ".figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}.figure-slide .pad{visibility:hidden}.figure-slide .fig-svg text{font-kerning:normal}";
   function installFigures(SF) {
     var styled = false;

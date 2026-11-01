@@ -120,7 +120,7 @@ function dataUri(file) {
 function embed(value) {
   if (Array.isArray(value)) return value.map(embed);
   if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, embed(v)]));
-  if (typeof value === 'string' && /^assets\/.*\.(png|jpe?g|gif|svg|webp)$/i.test(value)) return dataUri(value);
+  if (typeof value === 'string' && /^\/?assets\/.*\.(png|jpe?g|gif|svg|webp)$/i.test(value)) return dataUri(value.replace(/^\//, ''));
   return value;
 }
 function check(spec, deck) {
@@ -133,7 +133,7 @@ function check(spec, deck) {
       if (!SF.Figures || !SF.Figures.kinds.includes(source.figure)) throw new Error(`${where}: no figure "${source.figure}"`);
       if (JSON.stringify(out.figureData || {}) !== JSON.stringify(source.figureData || {})) throw new Error(`${where} changed its figure data`);
       if ((out.figureSteps || []).length !== source.figureSteps.length) throw new Error(`${where} lost figure steps`);
-      if (source.figure !== 'reveal') source.figureSteps.forEach((st, k) => { if (!st.explain) throw new Error(`${where}: step ${k + 1} has no explain`); });
+      if (!['reveal', 'panels'].includes(source.figure)) source.figureSteps.forEach((st, k) => { if (!st.explain) throw new Error(`${where}: step ${k + 1} has no explain`); });
     }
     const pictures = [source.image].filter(Boolean);
     for (const p of pictures) if (!fs.existsSync(path.join(root, p))) throw new Error(`${where}: missing ${p}`);

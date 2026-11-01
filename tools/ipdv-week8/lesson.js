@@ -17,6 +17,19 @@ const statement = (title, notes) => ({ type: 'statement', title, body: title, no
 /* A list revealed one row at a time on one slide (src/figures/reveal.js): with answers, the first step shows
    the questions and each click brings the next answer; a build brings one row per click. */
 const D = require('./drawings.js');
+/* A picture of panels, shown one panel per click with the earlier ones dimmed (src/figures/panels.js). The boxes
+   follow drawings.js panelsSvg: four or three panels across, a wider gap where arrows sit between them. */
+const PANEL_SVG = {"jobs.svg": "jobsSvg", "breaks.svg": "breaksSvg", "move.svg": "moveSvg", "simpler.svg": "simplerSvg", "big-tree.svg": "bigTreeSvg", "disguise-networks.svg": "disguiseNetSvg", "disguise-trees.svg": "disguiseTreeSvg"};
+const panelFig = (title, file, n, o, captions) => {
+  const gap = o.arrows ? 44 : 20, w = (1152 - gap * (n - 1)) / n, top = o.sub ? 160 : 140;
+  const boxes = Array.from({ length: n }, (_, i) => {
+    const x = 64 + i * (w + gap), lead = i ? gap - 2 : 6;
+    return [x - lead, top - 6, w + lead + 4, 660 - top + 12];
+  });
+  return { type: 'figure', figure: 'panels', title, figureGround: 'paper', figureWhy: false,
+    figureAlt: `${title}: ${captions.join(' ')}`, figureData: { svg: D[PANEL_SVG[file]]().replace(/^<svg[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">'), boxes, ground: '#fbfaf8' },
+    figureSteps: captions.map((caption, i) => ({ caption, upto: i })) };
+};
 const reveal = (title, eyebrow, key, captions, notes) => {
   const data = D.REVEAL[key], start = data.mode === 'answers' ? -1 : 0;
   return { type: 'figure', figure: 'reveal', title, figureGround: 'paper', figureEyebrow: eyebrow, notes,
@@ -120,7 +133,7 @@ function draft() {
     'Source: Tamara Munzner, Visualization Analysis and Design (2014), Chapter 2. Slide from the 2025 deck.'
   ], '1 min. From the 2025 deck (slides 6–9). Point at "Networks & Trees" under dataset types. Week 3 taught What/Why/How; today is a new What.'),
 
-  { type: 'image', title: 'Why look at a network? Four jobs', image: asset('jobs.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+  { ...panelFig('Why look at a network? Four jobs', 'jobs.svg', 4, { arrows: false, sub: false }, ['Follow a path.', 'Find the busiest.', 'Find the groups.', 'See the shape.']),
     notes: '2 min. Munzner\'s Why: the tasks a reader brings to a network. Uses to name: social network analysis (who knows whom), cybersecurity (which machines talk to which, spotting an odd one), fraud investigation (the Gupta network, Part 3), transport (the Tube). ' +
       'Size and colour of a dot can carry a fact about it: bigger for more connections (influence), colour for its group.' },
 
@@ -303,13 +316,13 @@ function draft() {
     '3 min. Same three layers as A–H, on real data. Position is longitude and latitude this time. Colour is data: TfL\'s line colours, through a scale with a domain (the line names) and a range (the hexes). ' +
       'Altair has no layout of its own: the positions come with the data, here from geography. For a computed layout, students can use networkx (nx.spring_layout) to make the x and y columns. That is the next step, not today\'s.'),
 
-  { type: 'image', title: 'When dots and lines stop working', image: asset('breaks.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+  { ...panelFig('When dots and lines stop working', 'breaks.svg', 4, { arrows: false, sub: false }, ['Too many lines.', 'Crossings.', 'Names pile up.', 'Near is not proof.']),
     notes: '1 min. From the 2025 deck\'s "Challenges of graph visualisations", rewritten for networks (it said "large trees").' },
 
-  { type: 'image', title: 'Too big to see at once? Let the reader move', image: asset('move.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+  { ...panelFig('Too big to see at once? Let the reader move', 'move.svg', 4, { arrows: true, sub: true }, ['The whole picture.', 'Zoom.', 'Filter.', 'Select.']),
     notes: '1 min. Interaction is how big networks are read in practice. The last card is Shneiderman\'s mantra (1996): "Overview first, zoom and filter, then details-on-demand." The lab adds the Select step in Altair.' },
 
-  { type: 'image', title: 'Or make the picture simpler', image: asset('simpler.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+  { ...panelFig('Or make the picture simpler', 'simpler.svg', 4, { arrows: false, sub: false }, ['The busiest.', 'One person.', 'Merge a group.', 'Magnify.']),
     notes: '1 min. Filtering by degree; the ego network; aggregation into meta-nodes; edge bundling; focus + context (the fisheye on slide 5, and folding a tree).' },
 
   statement('In a dots-and-lines picture, where a dot sits is chosen, not measured: trust the edges, not the gaps', '30 s. Card 3.'),
@@ -391,7 +404,7 @@ function draft() {
   reveal('Four ways to draw a tree', 'Name it', 'trees', ['Dots and lines: who is under whom.', 'An indented list: like folders.', 'An icicle: levels as bands.', 'A treemap: size as area.'],
     '1 min. One drawing per click, each named after the London figure they just saw.'),
 
-  { type: 'image', title: 'When a tree gets too big', image: asset('big-tree.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+  { ...panelFig('When a tree gets too big', 'big-tree.svg', 4, { arrows: false, sub: false }, ['Too deep.', 'Too wide.', 'Fold it.', 'Zoom in.']),
     notes: '1 min. From the 2025 deck: depth versus breadth. Treemaps cope with width (small boxes) but hide depth; node-link trees show depth but run out of width.' },
 
   statement('Ben Shneiderman invented the treemap to see what was filling his hard disk',
@@ -403,10 +416,10 @@ function draft() {
 
   statement('Boxes inside boxes show size; lines show who belongs to whom', '30 s. Card 5.'),
 
-  { type: 'image', title: 'Networks in disguise', image: asset('disguise-networks.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+  { ...panelFig('Networks in disguise', 'disguise-networks.svg', 3, { arrows: false, sub: false }, ['A Sankey.', 'A chord diagram.', 'An arc diagram.']),
     notes: '1 min. Sankey and chord are weighted networks: the width of a band is the amount. An arc diagram is dots and lines with the dots on one line. Hive plots (dots on axes by a fact about them) are another, for the curious.' },
 
-  { type: 'image', title: 'Trees in disguise', image: asset('disguise-trees.svg'), imageFit: 'contain', design: { capStyle: 'none' },
+  { ...panelFig('Trees in disguise', 'disguise-trees.svg', 3, { arrows: false, sub: false }, ['A sunburst.', 'Circle packing.', 'A dendrogram.']),
     notes: '1 min. Sunburst, circle packing and radial trees (root in the centre) are tree layouts; dendrograms show the result of hierarchical clustering. ' +
       'Good layouts aim for few crossings, no overlapping dots, lines of similar length, and symmetry.' },
 
@@ -461,7 +474,7 @@ function draft() {
    Each step's explanation goes to the end of the notes, so the teacher has them in the presenter view. */
 function lesson() {
   return draft().map(s => {
-    if (s.type !== 'figure' || s.figure === 'reveal' || s.figureStory) return s;
+    if (s.type !== 'figure' || s.figure === 'reveal' || s.figure === 'panels' || s.figureStory) return s;
     const steps = s.figureSteps.map((st, i) => `${i + 1}. ${String(st.explain || '').replace(/\n/g, ' ')}`).join('\n');
     return { ...s, figureWhy: false, notes: `${s.notes || ''}\n\nSAY, STEP BY STEP:\n${steps}` };
   });
