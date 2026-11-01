@@ -101,14 +101,14 @@ test('no card slide holds more than four cards: the Lesson studio draws four and
   }
 });
 
-test('the lecture as shown fits a 90-minute slot; the student copy keeps the reference slides', () => {
-  const minutes = (l) => l.slides.filter((s) => !s.hidden).reduce((t, s) => {
-    const m = String(s.notes || '').replace(/^REFERENCE[^.]*\. /, '').match(/^(\d+(?:\.\d+)?) ?(min|s)\b/);
+test('the teacher sees every slide; skipping the optional ones fits a 90-minute slot', () => {
+  const minutes = (slides) => slides.reduce((t, s) => {
+    const m = String(s.notes || '').match(/^(\d+(?:\.\d+)?) ?(min|s)\b/);
     return t + (m ? (m[2] === 's' ? +m[1] / 60 : +m[1]) : 0);
   }, 0);
   const { lesson: room } = lesson('ipdv-net-w8');
-  const { lesson: student } = lesson('ipdv-net-w8-student');
-  assert.ok(minutes(room) <= 95, `the lecture runs ${minutes(room).toFixed(0)} minutes`);
-  const shown = new Set(student.slides.filter((s) => !s.hidden).map((s) => s.title));
-  for (const s of room.slides.filter((x) => x.hidden && x.title !== 'See it: who trades with whom')) assert.ok(shown.has(s.title), `${s.title} is in the student copy`);
+  const hidden = room.slides.filter((s) => s.hidden).map((s) => s.title);
+  assert.equal(hidden.length, 0, `hidden from the teacher: ${hidden.join(', ')}`);
+  const core = room.slides.filter((s) => !/^OPTIONAL/.test(String(s.notes || '')));
+  assert.ok(minutes(core) <= 95, `without the optional slides the lecture runs ${minutes(core).toFixed(0)} minutes`);
 });

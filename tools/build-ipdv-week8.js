@@ -92,11 +92,11 @@ function drawPictures() {
 }
 
 const withWords = slides => slides.map(s => (s.type === 'statement' && !String(s.body || '').trim() ? { ...s, body: s.title } : s));
-/* Reference slides are hidden in the room and say so in their notes; the student copy shows them. */
+/* The teacher sees every slide. Reference slides say in their notes that they can be skipped when time is short. */
 const reference = slides => {
   const missing = REFERENCE.filter(t => !slides.some(s => s.title === t));
   if (missing.length) throw new Error(`REFERENCE names no slide: ${missing.join(', ')}`);
-  return slides.map(s => (REFERENCE.includes(s.title) ? { ...s, hidden: true, notes: `REFERENCE: hidden in the lecture, shown in the student copy. ${s.notes || ''}` } : s));
+  return slides.map(s => (REFERENCE.includes(s.title) ? { ...s, notes: `OPTIONAL: skip if short of time. ${s.notes || ''}` } : s));
 };
 const SPEC = {
   theme: 'northeastern', org: 'Northeastern University London', logo: 'assets/brand/nu-london-logo.png', logoOn: 'all', logoSize: 'small',

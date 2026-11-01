@@ -459,8 +459,8 @@ function lesson() {
 /* The student copy: room-only slides hidden. */
 const STUDENT = [['See it: who trades with whom', 'none'], ['Tell your neighbour: why isn\u2019t the Tube map accurate, and why is that a good thing?', 'none']];
 
-/* Reference slides: hidden in the room so the lecture fits 90 minutes, shown in the student copy for revision
-   (the Gupta slide stays hidden there too, by STUDENT, until its source is confirmed). Unhide one by deleting it here. */
+/* Optional slides: shown to the teacher like every other, with "OPTIONAL: skip if short of time" in their notes.
+   Without them the lecture fits 90 minutes; with them it runs about 110. */
 const REFERENCE = [
   'See it: a family tree', 'Three ways to write one network', 'Build it: the nodes', 'Build it: the edges',
   'The words again, plus three more', 'Four layers of every chart, on the Tube map', 'See it: who trades with whom',
