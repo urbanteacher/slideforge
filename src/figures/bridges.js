@@ -12,8 +12,9 @@
  *   show   'city' | 'graph' | 'degree' | 'eighth'
  *   walk   [bridge numbers, 1–7]   a walk already made (from the land the first bridge leaves)
  *   from   'N' | 'S' | 'I' | 'E'    where that walk starts
+ * With a story panel (figureStory) the city is drawn smaller, in the space to its left.
  */
-import { NU, W, el, set, tween, lerp } from './kit.js';
+import { NU, W, H, el, set, tween, lerp } from './kit.js';
 
 /* The city, stylised: the Pregel runs in from the west, wraps round the
    Kneiphof island, and splits into two arms that cut off the east. */
@@ -41,7 +42,16 @@ export var bridges = {
   /** @param {any} fig */
   mount: function (fig) {
     var svg = fig.svg, st = fig.stage;
-    var city = el('g', {}, svg);
+    /* The city is drawn in its own 1280-wide space. It is cropped to the part that matters and fitted into a box:
+       the whole slide's middle, or, beside a story panel, the space to its left. Either way it stays clear of the caption. */
+    var CROP = { x: 100, y: 122, w: 1050, h: 500 };
+    var box = fig.story ? { x: 48, y: 196, w: fig.story.x - 48 - 24 } : { x: 64, y: 150, w: W - 128 };
+    var k = Math.min(box.w / CROP.w, (H - 96 - box.y) / CROP.h), clip = 'fig-bridges-' + Math.random().toString(36).slice(2);
+    var defs = el('defs', {}, svg), cp = el('clipPath', { id: clip }, defs);
+    el('rect', { x: CROP.x, y: CROP.y, width: CROP.w, height: CROP.h, rx: 8 / k }, cp);
+    var world = el('g', { transform: 'translate(' + (box.x - CROP.x * k) + ' ' + (box.y - CROP.y * k) + ') scale(' + k + ')' }, svg);
+    var inside = el('g', { 'clip-path': 'url(#' + clip + ')' }, world);
+    var city = el('g', {}, inside);
     el('rect', { x: 0, y: 118, width: W, height: 538, fill: GROUND }, city);
     var river = el('g', { fill: 'none', stroke: WATER, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, city);
     el('path', { d: 'M-20 384 L560 384', 'stroke-width': 96 }, river);
@@ -60,7 +70,7 @@ export var bridges = {
       I: el('ellipse', { cx: 560, cy: 378, rx: 128, ry: 52, fill: 'transparent' }, city),
       E: el('path', { d: 'M780 378 L1280 300 L1280 460 Z', fill: 'transparent' }, city)
     };
-    var deck = el('g', {}, svg);
+    var deck = el('g', {}, inside);
     function bridgeShape(/** @type {any} */ b, /** @type {number} */ i, /** @type {any} */ parent) {
       var g = el('g', { transform: 'translate(' + b.x + ' ' + b.y + ') rotate(' + b.rot + ')', cursor: fig.interactive ? 'pointer' : null }, parent);
       var plank = el('rect', { x: -52, y: -15, width: 104, height: 30, rx: 5, fill: '#8a6a43', stroke: '#5b4426', 'stroke-width': 2 }, g);
@@ -69,14 +79,16 @@ export var bridges = {
     }
     var planks = BRIDGES.map(function (b, i) { return bridgeShape(b, i, deck); });
     var extra = bridgeShape(EIGHTH, 7, deck);
-    var walker = el('circle', { r: 13, fill: NU.red, stroke: '#fff', 'stroke-width': 3, opacity: 0, 'pointer-events': 'none' }, svg);
-    var status = el('text', { x: W - 64, y: 100, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 22, 'font-weight': 700, fill: st.ink }, svg);
+    var walker = el('circle', { r: 13, fill: NU.red, stroke: '#fff', 'stroke-width': 3, opacity: 0, 'pointer-events': 'none' }, inside);
+    /* Where the walk stands, above the map on the left; Start again above it on the right. */
+    var right = box.x + CROP.w * k;
+    var status = el('text', { x: box.x, y: box.y - 16, 'font-family': NU.sans, 'font-size': 20, 'font-weight': 700, fill: st.ink }, svg);
     var again = el('g', { cursor: 'pointer', display: 'none' }, svg);
-    el('rect', { x: W - 64 - 150, y: 128, width: 150, height: 38, rx: 19, fill: NU.red }, again);
-    el('text', { x: W - 64 - 75, y: 153, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 17, 'font-weight': 700, fill: '#fff' }, again, 'Start again');
+    el('rect', { x: right - 140, y: box.y - 46, width: 140, height: 36, rx: 18, fill: NU.red }, again);
+    el('text', { x: right - 70, y: box.y - 22, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 16, 'font-weight': 700, fill: '#fff' }, again, 'Start again');
 
     /* The graph: four dots and the bridges as lines (two lines between one pair bow apart). */
-    var graph = el('g', { opacity: 0, 'pointer-events': 'none' }, svg);
+    var graph = el('g', { opacity: 0, 'pointer-events': 'none' }, inside);
     function edgePath(/** @type {any} */ b, /** @type {number} */ bow) {
       var p = /** @type {any} */ (LAND)[b.a].dot, q = /** @type {any} */ (LAND)[b.b].dot, mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
       var dx = q[0] - p[0], dy = q[1] - p[1], len = Math.hypot(dx, dy);
@@ -91,7 +103,8 @@ export var bridges = {
         k: k,
         dot: el('circle', { cx: l.dot[0], cy: l.dot[1], r: 26, fill: NU.navy, stroke: '#fff', 'stroke-width': 3 }, graph),
         deg: el('text', { x: l.dot[0], y: l.dot[1] + 9, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 26, 'font-weight': 700, fill: '#fff', opacity: 0 }, graph, ''),
-        name: el('text', { x: l.dot[0] + (k === 'E' ? 0 : k === 'I' ? -46 : 0), y: l.dot[1] + (k === 'N' ? -40 : k === 'S' ? 56 : k === 'E' ? -40 : 8), 'text-anchor': k === 'I' ? 'end' : 'middle', 'font-family': NU.sans, 'font-size': 17, fill: st.soft }, graph, l.name)
+        /* Each name sits clear of the lines: the banks above and below their dots, the island and the east beside theirs. */
+        name: el('text', { x: l.dot[0] + (k === 'E' ? 40 : k === 'I' ? -40 : 0), y: l.dot[1] + (k === 'N' ? -38 : k === 'S' ? 54 : 8), 'text-anchor': k === 'E' ? 'start' : k === 'I' ? 'end' : 'middle', 'font-family': NU.sans, 'font-size': 22, 'font-weight': 600, fill: st.soft }, graph, l.name)
       };
     });
 

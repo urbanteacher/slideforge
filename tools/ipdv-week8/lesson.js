@@ -125,6 +125,7 @@ function lesson() {
       'Size and colour of a dot can carry a fact about it: bigger for more connections (influence), colour for its group.' },
 
   { type: 'figure', figure: 'bridges', title: 'Cross every bridge once', figureGround: 'paper',
+    figureStory: STORY,
     figureEyebrow: 'Try it', figureCredit: 'Königsberg, 1736 · after Euler', figureAlt: 'A stylised map of Königsberg: a river around an island, four pieces of land and seven bridges; then the same as four dots and seven lines.',
     figureSteps: [
       { caption: 'Königsberg, 1736: a river, an island and seven bridges. Click some land, then try to cross every bridge once.', show: 'city',

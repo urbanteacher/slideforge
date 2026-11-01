@@ -6304,7 +6304,14 @@
     /** @param {any} fig */
     mount: function(fig) {
       var svg = fig.svg, st = fig.stage;
-      var city = el("g", {}, svg);
+      var CROP = { x: 100, y: 122, w: 1050, h: 500 };
+      var box2 = fig.story ? { x: 48, y: 196, w: fig.story.x - 48 - 24 } : { x: 64, y: 150, w: W - 128 };
+      var k = Math.min(box2.w / CROP.w, (H - 96 - box2.y) / CROP.h), clip = "fig-bridges-" + Math.random().toString(36).slice(2);
+      var defs = el("defs", {}, svg), cp = el("clipPath", { id: clip }, defs);
+      el("rect", { x: CROP.x, y: CROP.y, width: CROP.w, height: CROP.h, rx: 8 / k }, cp);
+      var world = el("g", { transform: "translate(" + (box2.x - CROP.x * k) + " " + (box2.y - CROP.y * k) + ") scale(" + k + ")" }, svg);
+      var inside = el("g", { "clip-path": "url(#" + clip + ")" }, world);
+      var city = el("g", {}, inside);
       el("rect", { x: 0, y: 118, width: W, height: 538, fill: GROUND }, city);
       var river = el("g", { fill: "none", stroke: WATER, "stroke-linecap": "round", "stroke-linejoin": "round" }, city);
       el("path", { d: "M-20 384 L560 384", "stroke-width": 96 }, river);
@@ -6312,12 +6319,12 @@
       el("path", { d: "M700 340 C820 300 900 266 1300 236", "stroke-width": 74 }, river);
       el("path", { d: "M700 416 C820 456 900 492 1300 524", "stroke-width": 74 }, river);
       el("ellipse", { cx: 560, cy: 378, rx: 128, ry: 52, fill: ISLAND, stroke: "#cbbf9f", "stroke-width": 2 }, city);
-      var landText = Object.keys(LAND).map(function(k) {
+      var landText = Object.keys(LAND).map(function(k2) {
         var l = (
           /** @type {any} */
-          LAND[k]
+          LAND[k2]
         );
-        return el("text", { x: l.at[0], y: l.at[1] + (k === "I" ? 6 : 0), "text-anchor": "middle", "font-family": NU.sans, "font-size": k === "I" ? 17 : 20, "font-weight": 700, fill: "#5a4a2a", "pointer-events": "none" }, city, l.name);
+        return el("text", { x: l.at[0], y: l.at[1] + (k2 === "I" ? 6 : 0), "text-anchor": "middle", "font-family": NU.sans, "font-size": k2 === "I" ? 17 : 20, "font-weight": 700, fill: "#5a4a2a", "pointer-events": "none" }, city, l.name);
       });
       var zones = {
         N: el("rect", { x: 0, y: 118, width: W, height: 120, fill: "transparent" }, city),
@@ -6325,7 +6332,7 @@
         I: el("ellipse", { cx: 560, cy: 378, rx: 128, ry: 52, fill: "transparent" }, city),
         E: el("path", { d: "M780 378 L1280 300 L1280 460 Z", fill: "transparent" }, city)
       };
-      var deck = el("g", {}, svg);
+      var deck = el("g", {}, inside);
       function bridgeShape(b, i, parent) {
         var g = el("g", { transform: "translate(" + b.x + " " + b.y + ") rotate(" + b.rot + ")", cursor: fig.interactive ? "pointer" : null }, parent);
         var plank = el("rect", { x: -52, y: -15, width: 104, height: 30, rx: 5, fill: "#8a6a43", stroke: "#5b4426", "stroke-width": 2 }, g);
@@ -6336,12 +6343,13 @@
         return bridgeShape(b, i, deck);
       });
       var extra = bridgeShape(EIGHTH, 7, deck);
-      var walker = el("circle", { r: 13, fill: NU.red, stroke: "#fff", "stroke-width": 3, opacity: 0, "pointer-events": "none" }, svg);
-      var status = el("text", { x: W - 64, y: 100, "text-anchor": "end", "font-family": NU.sans, "font-size": 22, "font-weight": 700, fill: st.ink }, svg);
+      var walker = el("circle", { r: 13, fill: NU.red, stroke: "#fff", "stroke-width": 3, opacity: 0, "pointer-events": "none" }, inside);
+      var right = box2.x + CROP.w * k;
+      var status = el("text", { x: box2.x, y: box2.y - 16, "font-family": NU.sans, "font-size": 20, "font-weight": 700, fill: st.ink }, svg);
       var again = el("g", { cursor: "pointer", display: "none" }, svg);
-      el("rect", { x: W - 64 - 150, y: 128, width: 150, height: 38, rx: 19, fill: NU.red }, again);
-      el("text", { x: W - 64 - 75, y: 153, "text-anchor": "middle", "font-family": NU.sans, "font-size": 17, "font-weight": 700, fill: "#fff" }, again, "Start again");
-      var graph = el("g", { opacity: 0, "pointer-events": "none" }, svg);
+      el("rect", { x: right - 140, y: box2.y - 46, width: 140, height: 36, rx: 18, fill: NU.red }, again);
+      el("text", { x: right - 70, y: box2.y - 22, "text-anchor": "middle", "font-family": NU.sans, "font-size": 16, "font-weight": 700, fill: "#fff" }, again, "Start again");
+      var graph = el("g", { opacity: 0, "pointer-events": "none" }, inside);
       function edgePath(b, bow) {
         var p = (
           /** @type {any} */
@@ -6358,16 +6366,17 @@
         return el("path", { d: edgePath(b, bows[i]), fill: "none", stroke: st.ink, "stroke-width": 5 }, graph);
       });
       var eighthEdge = el("path", { d: "M560 196 C 140 250, 140 506, 560 560", fill: "none", stroke: NU.red, "stroke-width": 5, "stroke-dasharray": "12 9", opacity: 0 }, graph);
-      var dots = Object.keys(LAND).map(function(k) {
+      var dots = Object.keys(LAND).map(function(k2) {
         var l = (
           /** @type {any} */
-          LAND[k]
+          LAND[k2]
         );
         return {
-          k,
+          k: k2,
           dot: el("circle", { cx: l.dot[0], cy: l.dot[1], r: 26, fill: NU.navy, stroke: "#fff", "stroke-width": 3 }, graph),
           deg: el("text", { x: l.dot[0], y: l.dot[1] + 9, "text-anchor": "middle", "font-family": NU.sans, "font-size": 26, "font-weight": 700, fill: "#fff", opacity: 0 }, graph, ""),
-          name: el("text", { x: l.dot[0] + (k === "E" ? 0 : k === "I" ? -46 : 0), y: l.dot[1] + (k === "N" ? -40 : k === "S" ? 56 : k === "E" ? -40 : 8), "text-anchor": k === "I" ? "end" : "middle", "font-family": NU.sans, "font-size": 17, fill: st.soft }, graph, l.name)
+          /* Each name sits clear of the lines: the banks above and below their dots, the island and the east beside theirs. */
+          name: el("text", { x: l.dot[0] + (k2 === "E" ? 40 : k2 === "I" ? -40 : 0), y: l.dot[1] + (k2 === "N" ? -38 : k2 === "S" ? 54 : 8), "text-anchor": k2 === "E" ? "start" : k2 === "I" ? "end" : "middle", "font-family": NU.sans, "font-size": 22, "font-weight": 600, fill: st.soft }, graph, l.name)
         };
       });
       var here = (
@@ -6381,8 +6390,8 @@
       function moveWalker(to, animate) {
         var fx = Number(walker.getAttribute("cx") || to[0]), fy = Number(walker.getAttribute("cy") || to[1]);
         cancel();
-        cancel = tween(animate ? 450 : 0, function(k) {
-          set(walker, { cx: lerp(fx, to[0], k), cy: lerp(fy, to[1], k) });
+        cancel = tween(animate ? 450 : 0, function(k2) {
+          set(walker, { cx: lerp(fx, to[0], k2), cy: lerp(fy, to[1], k2) });
         });
       }
       function paint() {
@@ -6428,10 +6437,10 @@
         set(walker, { cx: at[0], cy: at[1] + 26 });
       }
       if (fig.interactive) {
-        Object.keys(zones).forEach(function(k) {
-          zones[k].addEventListener("click", function() {
+        Object.keys(zones).forEach(function(k2) {
+          zones[k2].addEventListener("click", function() {
             if (show === "city" && !here) {
-              start(k);
+              start(k2);
               paint();
             }
           });
@@ -6468,8 +6477,8 @@
           }
           var toGraph = show !== "city" ? 1 : 0, fromGraph = was !== "city" ? 1 : 0;
           fade();
-          fade = tween(animate && toGraph !== fromGraph ? 1300 : 0, function(k) {
-            var g = lerp(fromGraph, toGraph, k);
+          fade = tween(animate && toGraph !== fromGraph ? 1300 : 0, function(k2) {
+            var g = lerp(fromGraph, toGraph, k2);
             set(city, { opacity: 1 - g * 0.85 });
             set(deck, { opacity: 1 - g });
             set(graph, { opacity: g });
