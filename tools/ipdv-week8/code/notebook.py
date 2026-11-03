@@ -14,6 +14,7 @@ run it themselves. To check it runs end to end:
 """
 import json
 import pathlib
+import re
 import sys
 
 import nbformat as nbf
@@ -38,7 +39,20 @@ def step(key):
     body = STEPS[key]
     for f in ("tube_stations", "tube_links", "london_boroughs"):
         body = body.replace(f"pd.read_csv('{f}.csv')", f"load('{f}')")
+    # Every finished chart says what to see and where the data came from (the slides carry these as captions).
+    if key in TITLES:
+        title, source = TITLES[key]
+        body = re.sub(r"\.properties\(width=(\d+), height=(\d+)\)",
+                      lambda m: f".properties(width={m.group(1)}, height={m.group(2)},\n    title=alt.Title({title!r}, subtitle={source!r}))", body)
     return body
+
+
+TITLES = {
+    "tube": ("Zone 1 of the Tube, drawn where the stations really are", "Source: TfL Open Data"),
+    "matrix": ("Sorted by name: no pattern", "Source: Knuth (1993), Les Misérables"),
+    "matrix-grouped": ("Sorted by group: each group is a block on the diagonal", "Source: Knuth (1993), Les Misérables"),
+    "icicle": ("Each level adds up to all of London", "Source: ONS mid-2025 population estimates"),
+}
 
 
 md(r"""
@@ -109,6 +123,21 @@ degree = pd.concat([edges['source'], edges['target']]).value_counts()
 degree
 """)
 md("""
+**Is any pair listed twice?** Real edge lists often repeat a pair. `duplicated` marks each row `True` if an
+earlier row has the same values in the columns you name, and `drop_duplicates` keeps only the first of each.
+The columns go in a **list of names, each in quotes**: `subset=['source', 'target']`.
+
+Adding up `True`/`False` counts the `True`s (Python treats `True` as 1 and `False` as 0).
+""")
+code("""
+twice = pd.concat([edges, edges.head(1)], ignore_index=True)   # A-B typed in a second time, by mistake
+print(len(twice), 'rows')
+print(twice.duplicated(subset=['source', 'target']).sum(), 'row repeats an earlier pair')
+
+once = twice.drop_duplicates(subset=['source', 'target'])
+print(len(once), 'rows once the repeat is dropped')
+""")
+md("""
 ### Try it
 
 1. Which node has the highest degree? Which nodes have degree 1? What would you call those in a friendship network?
@@ -149,13 +178,19 @@ code("""
 lines[['source', 'target', 'x', 'y', 'x2', 'y2']]
 """)
 md("""
-### Try it
+### Build it: size each dot by its degree
 
-Size each dot by its **degree**, so the busiest node is the biggest. Hint: merge `degree` onto `nodes`, then
-use `size=` in the encoding instead of a fixed `size=900`.
-""" + "\n\n" + answer("""
+Now let the data choose the size: the busiest node gets the biggest dot. Three new pieces:
+
+- `.rename('degree')` gives the counted column a **name**, so the chart can ask for it by name;
+- `right_index=True` joins on the **row names** of `deg` (the letters A to H), because that is where the
+  letters are after `value_counts`;
+- `alt.Size('degree:Q')` maps the number to the dot's size, as `alt.X` maps a number to a position.
+""")
+code("""
 deg = pd.concat([edges['source'], edges['target']]).value_counts().rename('degree')
 sized = nodes.merge(deg, left_on='id', right_index=True)
+print(sized)
 
 links = alt.Chart(lines).mark_rule(color='grey', strokeWidth=3).encode(
     x=alt.X('x:Q', axis=None), y=alt.Y('y:Q', axis=None), x2='x2:Q', y2='y2:Q')
@@ -163,8 +198,14 @@ dots = alt.Chart(sized).mark_circle(opacity=1).encode(
     x='x:Q', y='y:Q', size=alt.Size('degree:Q', scale=alt.Scale(range=[300, 1500])),
     tooltip=['id:N', 'degree:Q'])
 names = alt.Chart(sized).mark_text(color='white', fontWeight='bold').encode(x='x:Q', y='y:Q', text='id:N')
-links + dots + names
-"""))
+(links + dots + names).properties(title=alt.Title('A has the most connections', subtitle='Size = degree'))
+""")
+md("""
+### Try it
+
+Change the size range from `[300, 1500]` to `[100, 3000]`. Does the *data* change? Which range makes the
+difference between A and H easiest to see without hiding the letters?
+""")
 
 md("""
 ## 4 · Build it: the Tube, with the same three layers
@@ -178,13 +219,14 @@ md("""
 ### Try it
 
 1. Hover a station: the tooltip shows its name. Add `'zone:N'` to the tooltip.
-2. Which stations have the most lines through them? Count the degree of each station from `edges`, as in
-   section 1, and show the top 5.
+2. Count the degree of each station from `edges`, as in section 1, and show the top 5. Look at King's Cross
+   St. Pancras: six lines stop there, and five stations are one stop away. Does its degree match either?
 """ + "\n\n" + answer("""
 deg = pd.concat([edges['source'], edges['target']]).value_counts()
 deg.head(5)
-# A station's degree counts track to its neighbours. Interchanges such as King's Cross St. Pancras
-# and Baker Street come out on top.
+# King's Cross gets 10: neither its 6 lines nor its 5 neighbours. Look at what a row of edges is:
+# one LINE's track between two stations. Where several lines share track, the same pair is counted once
+# per line. Degree counts rows, so it depends on what a row is. Hold that thought: the activity asks why.
 """))
 
 md("""
@@ -202,19 +244,82 @@ Sorted by name, the grid looks like noise. The order of the rows is a choice, li
 """)
 code(step("matrix-grouped"))
 md("""
-### Try it
-
-Sort the rows by **degree** (busiest character first) instead of by group. Where do the busy characters end up?
-""" + "\n\n" + answer("""
-busy = pd.concat([pairs['a']]).value_counts()          # pairs holds each edge both ways round
-order = busy.index.tolist()                            # busiest first
+A third order: **busiest first**. `value_counts()` sorts from most to fewest, and `.index.tolist()` takes
+the names in that order, ready for `sort=`. (`pairs` holds each pair both ways round, so counting column `a`
+counts every character's links.)
+""")
+code("""
+order = pairs['a'].value_counts().index.tolist()   # busiest first
 alt.Chart(pairs).mark_rect().encode(
     x=alt.X('a:N', sort=order, axis=None),
     y=alt.Y('b:N', sort=order, axis=None),
     color=alt.Color('scenes:Q', scale=alt.Scale(scheme='blues')),
     tooltip=['a:N', 'b:N', 'scenes:Q'],
-).properties(width=420, height=420)
-# The busy characters (Valjean first) gather in the top-left corner.
+).properties(width=420, height=420,
+    title=alt.Title('Sorted busiest first: the busy characters gather top left', subtitle='Source: Knuth (1993), Les Misérables'))
+""")
+md("""
+### Try it
+
+Hover the top-left square. Who is the busiest character? Who shares the most scenes with them?
+
+### When does the grid win?
+
+- **Weighted links.** Here each link has a number: how many scenes two characters share. A link with a
+  number is a **weighted** link. A grid shows the weight as a shade (or writes it in the square); dots and
+  lines would need line widths, which are hard to compare.
+- **Nothing crosses.** Every pair has its own square, however many links there are.
+- **Look up one thing by reading one row.** Everyone Javert meets is in Javert's row.
+- **But a grid is bad at paths.** "How do I get from Fantine to Gavroche?" means hopping from row to row.
+  For routes, dots and lines win (Ghoniem, Fekete & Castagliola, 2004).
+""")
+
+md("""
+## 5b · From belonging to links
+
+Often the data does not list links at all. It lists **who belongs to what**: people in clubs, stations on
+lines. Two people are linked when they **share** a club. To find every pair, merge the table **with itself**
+on the shared column: pandas pairs every row with every other row that has the same club.
+""")
+code("""
+members = pd.DataFrame({'person': ['Ana', 'Ben', 'Cal', 'Ana', 'Dev'],
+                        'club':   ['Chess', 'Chess', 'Chess', 'Film', 'Film']})
+both = members.merge(members, on='club')   # every two members of the same club, side by side
+both
+""")
+md("""
+Read one row: `person_x` and `person_y` are in the same `club`. Both copies of the table had a column called
+`person`, so pandas adds `_x` (the left copy) and `_y` (the right copy) to tell them apart. Notice two things:
+everyone is paired with **themself** (Ana–Ana), and every pair appears **both ways round** (Ana–Ben and
+Ben–Ana), just like the matrix above.
+
+Drop the self-pairs with `!=` (*is not equal to*), then count how many clubs each pair shares. `.size()`
+counts the rows in each group; `reset_index(name='clubs')` turns the result back into a table with that
+column name. The count is the link's **weight**.
+""")
+code("""
+both = both[both['person_x'] != both['person_y']]
+links = both.groupby(['person_x', 'person_y']).size().reset_index(name='clubs')
+links
+""")
+md("""
+To count **rows** in a chart, Altair has `count()`, just as it has `sum(population)` for adding up a
+column. Use `count()` when each row is one thing (one membership, one station on one line).
+""")
+code("""
+alt.Chart(members).mark_bar().encode(
+    x=alt.X('count():Q', title='Members'),
+    y=alt.Y('club:N', title=None),
+).properties(title='Chess has the most members')
+""")
+md("""
+### Try it
+
+Add `'Film'` for Ben (a new row in `members`) and run the three cells again. Which pair now shares two clubs?
+""" + "\n\n" + answer("""
+members = pd.DataFrame({'person': ['Ana', 'Ben', 'Cal', 'Ana', 'Dev', 'Ben'],
+                        'club':   ['Chess', 'Chess', 'Chess', 'Film', 'Film', 'Film']})
+# Ana and Ben now share Chess and Film: their link has weight 2.
 """))
 
 md("""
@@ -271,7 +376,16 @@ dots = alt.Chart(tree).mark_circle(size=80, opacity=1).encode(
 leaf_names = dots.mark_text(align='left', dx=8, fontSize=10).encode(text='name:N').transform_filter('datum.level == 3')
 parent_names = dots.mark_text(dy=-12, fontWeight='bold').encode(text='name:N').transform_filter('datum.level < 3')
 
-(links + dots + leaf_names + parent_names).properties(width=640, height=560).configure_view(stroke=None)
+(links + dots + leaf_names + parent_names).properties(width=640, height=560,
+    title=alt.Title('Who belongs to whom: London in four levels', subtitle='Source: ONS mid-2025 population estimates')
+).configure_view(stroke=None)
+""")
+md("""
+**How `transform_filter` reads.** `transform_filter('datum.level == 3')` keeps only the rows where `level` is
+3. `datum` means *this row*, so `datum.level` is this row's `level`. The text in quotes is not pandas: it is
+worked out when the chart is drawn, so write the column name exactly as it is in the table, use `==` to
+compare, and `&&` for *and*, `||` for *or*. A misspelt column name gives no error: the filter just keeps
+nothing, so if your labels vanish, check the spelling.
 """)
 md("""
 #### Try it
@@ -394,7 +508,9 @@ labels = alt.Chart(boxes).mark_text(fontSize=10, color='white').encode(
     xm='(datum.x0 + datum.x1) / 2', ym='(datum.y0 + datum.y1) / 2', px='(datum.x1 - datum.x0) * 640'
 ).transform_filter('datum.level == 3 && datum.px > length(datum.name) * 6')
 
-(rects + area_edges + labels).properties(width=640, height=440).configure_view(stroke=None)
+(rects + area_edges + labels).properties(width=640, height=440,
+    title=alt.Title('Croydon and Barnet are the biggest boxes', subtitle='Source: ONS mid-2025 population estimates')
+).configure_view(stroke=None)
 """)
 md("""
 #### Try it
@@ -407,6 +523,15 @@ boxes[boxes['level'] == 3].sort_values('population')[['name', 'population']].ilo
 # With across=False the first cut is down instead of across: every box is still the same size,
 # but the shapes change. In a treemap, size is data; the shape is a choice.
 """))
+
+md("""
+### When does a tree lie?
+
+Every drawing in this section works because **each borough is inside exactly one area**, and each area inside
+one half. If a child had **two parents** (a station on two Tube lines, a person in two clubs), it would be drawn
+twice: once under each parent. The boxes would then add up to more than there really is, and the picture would
+overstate the data. Before you draw a tree, check that every child has one parent.
+""")
 
 md("""
 ## 7 · Your turn: your own network
