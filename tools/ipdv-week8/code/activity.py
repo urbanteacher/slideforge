@@ -86,7 +86,7 @@ look back at.
 | **B** | count **degree** two ways | §1, §4 | 10 min |
 | **C** | draw the Tube as **dots and lines**, sized by how many lines stop there | §3, §4, §6a | 15 min |
 | **D** | turn the Tube into a network of **lines**, drawn as a **grid** | §5, §5b | 25 min |
-| **F** | choose the right picture for three readers | §0, §6 | 10 min |
+| **F** | choose the right picture for three readers | top table, §6 | 10 min |
 | **E** | test whether the Tube is a **tree** (if you have time, or at home) | §6c, §6 | 10 min |
 
 **How to work, in pairs.** One of you types, the other is the checker. Before each Run, the checker says what
@@ -98,8 +98,10 @@ they expect to see; after it, compare. Swap at each new letter.
 - Write your answers in the ✏️ cells (double-click to type, Shift + Enter to finish).
 
 **If you get an error**
-- `NameError: name '…' is not defined`: a cell above was not run. Run the cells above, in order.
-- `SyntaxError` pointing at `___`: a blank is still empty.
+- `NameError: name '…' is not defined`: a cell above was not run (run the cells above, in order), **or** a
+  column name is missing its quotes (`source` should be `'source'`).
+- `SyntaxError`: a blank is still empty (`___`), or you typed a word that is already there (look either side of
+  the blank).
 - `KeyError: '…'`: a column name is misspelt. Check it against the table's `.head()`.
 - A chart that is empty, or has no labels: a name inside quotes is misspelt (`'lines:Q'`, `'datum.lines'`).
 """)
@@ -134,6 +136,7 @@ Google Colab). The two CSVs should sit beside the notebook; if not, `load()` fet
 | They see | It means | Say |
 |---|---|---|
 | `NameError: name 'served' is not defined` | A cell above was skipped | "Run the cells above, in order (or Run All Above)." |
+| `NameError: name 'source' is not defined` | A column name without quotes | "Column names go in quotes: `'source'`." |
 | `SyntaxError` at `___` | A blank is still empty | "Which blank is left? Open the hint." |
 | `KeyError: 'line_x'` (in D1) | The merge in D1a used the wrong column | "What do two lines have in common? Merge on that column." |
 | `KeyError` with a column name | A misspelt column | "Compare with `.head()` of the table." |
@@ -198,6 +201,7 @@ md("""
 code("""
 print(len(stations), 'stations')
 print(len(⟦edges⟧), 'rows in edges')
+check(len(edges) == 130, 'right: 130 rows', 'count the rows of the table called edges (no quotes: it is a table, not a column)')
 """)
 see("`65 stations` and `130 rows in edges`.")
 
@@ -253,8 +257,12 @@ by_neighbours = pd.concat([⟦pairs['source'], pairs['target']⟧]).value_counts
 
 degree = pd.DataFrame({'edges': by_edges, 'neighbours': by_neighbours})
 check(degree.loc["King's Cross St. Pancras", 'neighbours'] == 5, "right: King's Cross has 5 neighbours",
-      "count in pairs (from A2), not in edges")
+      "stack BOTH columns of pairs, the way by_edges stacks both columns of edges")
 degree.sort_values('neighbours', ascending=False).head(8)
+""")
+hint("""
+Copy the `by_edges` line and change the table: `pairs['source'], pairs['target']`. Both columns, because a station
+can be either end of a pair.
 """)
 see("✅, then a table of 8 stations: Oxford Circus, Green Park and Waterloo with 6 neighbours at the top; King's Cross with 10 edges but 5 neighbours.")
 
@@ -332,7 +340,8 @@ names = alt.Chart(dots_table).mark_text(dy=-14, fontWeight='bold', fontSize=11).
 ).configure_view(stroke=None)
 """)
 hint("""
-- Size, as in tutorial §3's *size each dot by its degree*: the column's **name in quotes** with its type, `'lines:Q'`.
+- Size, as in tutorial §3's *size each dot by its degree*: the column's **name in quotes** with its type. Here the
+  column is called `lines` (from C1), not `degree`: `'degree:Q'` makes every dot vanish.
 - The filter, as in tutorial §6a: `'datum.lines >= 5'`. `datum` means *this row*. Not `dots_table['lines'] >= 5`
   (that is pandas, not a chart filter), and not `'lines >= 5'` (it needs `datum.`).
 """)
@@ -376,8 +385,8 @@ md("""
 **D1b.** Drop each line paired with itself, then count the stations each pair of lines shares.
 """)
 code("""
-both = both[both['line_x'] ⟦!=⟧ both['line_y']]
-shared = both.groupby(['line_x', 'line_y']).size().reset_index(name='stations')
+different = both[both['line_x'] ⟦!=⟧ both['line_y']]
+shared = different.groupby(['line_x', 'line_y']).size().reset_index(name='stations')
 check(shared['stations'].max() == 18, 'right: the most shared is 18 stations', "keep the rows where the two lines are NOT the same")
 shared.sort_values('stations', ascending=False).head(6)
 """)
@@ -449,7 +458,7 @@ looks neater."
 
 # ------------------------------------------------------------------ F (before E: it is the outcome)
 md("""
-## F · Choose and justify (10 min · tutorial §0, §6)
+## F · Choose and justify (10 min · the tutorial's three-questions table at the top, and §6)
 
 For each reader, choose **dots and lines**, **a grid**, or **boxes / bars inside each other**. Give one reason,
 and say why **not** one of the other two. Use the pictures you made (the council's question is about tutorial §6).
@@ -487,7 +496,9 @@ A **tree** needs every child to have exactly **one** parent. Suppose we try Tube
 **E1.** How many stations have more than one line? (Use `lines_at` from C1. Tutorial §1: adding up `True`s counts them.)
 """)
 code("""
-print((lines_at ⟦> 1⟧).sum(), 'of', len(lines_at), 'stations are on more than one line')
+many = (lines_at ⟦> 1⟧).sum()
+print(many, 'of', len(lines_at), 'stations are on more than one line')
+check(many == 43, 'right: 43 stations', "'more than one' is > 1")
 lines_at.value_counts().sort_index().rename('stations')   # how many stations have 1, 2, 3 ... lines
 """)
 see("`43 of 65 stations are on more than one line`, then a small table: 22 stations with 1 line, 23 with 2, 12 with 3, 6 with 4, 1 with 5, 1 with 6.")
