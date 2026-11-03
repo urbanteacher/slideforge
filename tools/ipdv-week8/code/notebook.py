@@ -534,12 +534,153 @@ overstate the data. Before you draw a tree, check that every child has one paren
 """)
 
 md("""
-## 7 · Your turn: your own network
+## 7 · Other tools, beside Altair
+
+Altair draws; it does not lay out networks or measure them. Three other libraries do the jobs it leaves out.
+You keep Altair for the picture you hand in, and use these for what they are best at.
+
+| Tool | Use it to… | In this section |
+|---|---|---|
+| **networkx** | lay out a network, measure it (degree), find routes | 7a: layout and a route, drawn in Altair |
+| **plotly express** | a treemap, sunburst or icicle in one line | 7b |
+| **pyvis** | a network you can drag about in the browser | 7c |
+| **Gephi** (a desktop app, not Python) | big networks, thousands of nodes | 7d |
+""")
+
+md("""
+### 7a · networkx: the layout and the route, then Altair draws
+
+networkx turns an edge list into a **graph** object `G` that knows its nodes and edges. Then it can do the
+work we did by hand: count degree, place the nodes (a *spring layout*: linked nodes pull together, every pair
+pushes apart, as in the lecture), and find the **shortest path** between two nodes.
+""")
+code("""
+import networkx as nx
+from vega_datasets import data
+
+people, scenes = data.miserables()
+name = people['name']
+mis = pd.DataFrame({'a': name[scenes['source']].values, 'b': name[scenes['target']].values,
+                    'scenes': scenes['value']})
+
+G = nx.from_pandas_edgelist(mis, 'a', 'b', edge_attr='scenes')   # the edge list becomes a graph
+print(G.number_of_nodes(), 'characters,', G.number_of_edges(), 'links')
+
+# Degree in one line: the same numbers as stacking the two columns (section 1)
+pd.Series(dict(G.degree()), name='degree').sort_values(ascending=False).head(5)
+""")
+md("""
+Now let networkx choose the positions, and draw them with the **same Altair recipe as section 3**: dots, and a
+`.merge` to give each line both its ends. `seed=3` makes the layout the same every time you run it.
+""")
+code("""
+at = nx.spring_layout(G, seed=3)                       # {name: (x, y)}
+spots = pd.DataFrame([{'name': k, 'x': x, 'y': y} for k, (x, y) in at.items()]).merge(
+    people[['name', 'group']], on='name')
+
+lines = (mis.merge(spots, left_on='a', right_on='name')
+            .merge(spots, left_on='b', right_on='name', suffixes=('', '2')))
+place = dict(x=alt.X('x:Q', axis=None), y=alt.Y('y:Q', axis=None))
+
+web = alt.Chart(lines).mark_rule(color='lightgrey').encode(**place, x2='x2:Q', y2='y2:Q')
+dots = alt.Chart(spots).mark_circle(size=70, opacity=1).encode(
+    **place, color=alt.Color('group:N', legend=None), tooltip=['name:N', 'group:N'])
+(web + dots).properties(width=560, height=440,
+    title=alt.Title('Positions chosen by networkx, drawn by Altair', subtitle='Source: Knuth (1993), Les Misérables')
+).configure_view(stroke=None)
+""")
+md("""
+**A route.** `nx.shortest_path` hops from node to node along links, fewest hops first. Draw the route on top in
+red: the legs are pairs of neighbouring names in the route, joined to their positions exactly like the lines.
+""")
+code("""
+route = nx.shortest_path(G, 'Fantine', 'Gavroche')
+print(' → '.join(route))
+
+legs = (pd.DataFrame({'a': route[:-1], 'b': route[1:]})
+          .merge(spots, left_on='a', right_on='name')
+          .merge(spots, left_on='b', right_on='name', suffixes=('', '2')))
+path = alt.Chart(legs).mark_rule(color='#c8102e', strokeWidth=5).encode(**place, x2='x2:Q', y2='y2:Q')
+ends = alt.Chart(spots[spots['name'].isin(route)]).mark_text(dy=-12, fontWeight='bold').encode(**place, text='name:N')
+(web + dots + path + ends).properties(width=560, height=440,
+    title=alt.Title('Fantine reaches Gavroche in two hops', subtitle='Source: Knuth (1993), Les Misérables')
+).configure_view(stroke=None)
+""")
+md("""
+#### Try it
+
+Find the route from `'Javert'` to `'Cosette'`. How many hops? This is the job the lecture said a grid is bad at.
+""" + "\n\n" + answer("""
+route = nx.shortest_path(G, 'Javert', 'Cosette')
+print(len(route) - 1, 'hops:', ' → '.join(route))
+"""))
+
+md("""
+### 7b · plotly express: tree pictures in one line
+
+plotly draws a treemap, a sunburst (rings) or an icicle from the boroughs table in **one line each**: you name
+the levels from the root down (`path=`) and the size (`values=`). Hover any box. The catch: plotly decides how
+to cut the boxes, so you cannot see or change it, which is why section 6 built them by hand first.
+""")
+code("""
+import plotly.express as px
+
+b = load('london_boroughs')
+levels = [px.Constant('London'), 'half', 'area', 'borough']
+colours = {'Inner London': '#4c78a8', 'Outer London': '#f58518', '(?)': '#888888'}
+
+px.treemap(b, path=levels, values='population', color='half', color_discrete_map=colours,
+           title='London by population: a treemap (plotly)')
+""")
+code("""
+px.sunburst(b, path=levels, values='population', color='half', color_discrete_map=colours,
+            title='The same tree as rings: a sunburst (plotly)')
+""")
+md("""
+#### Try it
+
+Change `px.sunburst` to `px.icicle`. Compare it with your Altair icicle in 6c: which is easier to read, and which
+one could you change?
+""")
+
+md("""
+### 7c · pyvis: a network you can drag
+
+pyvis draws `G` with a physics engine you can play with: drag a character and the others follow; scroll to zoom.
+It is great for exploring and for showing a class, but not for a report: the picture moves every time.
+""")
+code("""
+from pyvis.network import Network
+from IPython.display import HTML
+import html
+
+net = Network(height='480px', width='100%', cdn_resources='in_line')
+net.from_nx(G)
+for node in net.nodes:                      # colour each character by its group, as in the grid
+    node['group'] = int(people.loc[people['name'] == node['id'], 'group'].iloc[0])
+net.write_html('miserables_network.html')   # also saved as a file: open it in your browser
+HTML(f'<iframe srcdoc="{html.escape(net.generate_html())}" width="100%" height="500" style="border:0"></iframe>')
+""")
+
+md("""
+### 7d · Gephi: when the network is big
+
+For networks with thousands of nodes (a whole social network, every Tube and rail station in Britain) data
+designers often leave code and use **Gephi** (gephi.org, free). You load an edge list CSV like ours, choose a
+layout, colour by group, size by degree, and export a picture. networkx can write a file Gephi opens:
+`nx.write_gexf(G, 'miserables.gexf')`.
+
+**Which tool when?** Explore with pyvis or Gephi; measure and find routes with networkx; draw the picture you
+explain, with a title and a source, in Altair.
+""")
+
+md("""
+## 8 · Your turn: your own network
 
 Make an edge list of **six to ten people** you know (first names or initials only), one row per pair who
 know each other. Then:
 
-1. Draw it as dots and lines (sections 2 and 3). Choose positions that keep friends close.
+1. Draw it as dots and lines (sections 2 and 3). Choose positions that keep friends close, or let networkx choose them (7a).
 2. Find the person with the highest degree.
 3. Write one sentence: *which of the three questions does your picture answer best, and why?*
 """)
@@ -566,8 +707,11 @@ if "--run" in sys.argv:
     from nbclient import NotebookClient
     import copy
     ran = copy.deepcopy(nb)
-    NotebookClient(ran, timeout=120, kernel_name="python3",
-                   resources={"metadata": {"path": str(ROOT / "assets/lesson/ipdv/week8")}}).execute()
+    import shutil, tempfile
+    work = tempfile.mkdtemp()
+    for f in (ROOT / "assets/lesson/ipdv/week8").glob("*.csv"):
+        shutil.copy(f, work)
+    NotebookClient(ran, timeout=180, kernel_name="python3", resources={"metadata": {"path": work}}).execute()
     errors = [o for c in ran.cells if c.cell_type == "code" for o in c.get("outputs", []) if o.get("output_type") == "error"]
     print("ran", sum(c.cell_type == "code" for c in ran.cells), "code cells,", len(errors), "errors")
     if len(sys.argv) > 2:

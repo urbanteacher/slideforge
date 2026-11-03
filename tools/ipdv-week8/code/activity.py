@@ -469,20 +469,42 @@ and say why **not** one of the other two. Use the pictures you made (the council
 """)
 write_here("1: … because … , not … because …  2: …  3: …")
 md("""
-**F2 (extension).** Improve one of your pictures for the visitor or the planner and explain your change in one
-sentence. A starter, which draws the Central line thick on top of the map from C2, is below.
-""", "student")
+**F2 (extension) · find the visitor's route with networkx** (tutorial §7a). networkx finds the route with the
+fewest stops; Altair draws it on your map from C2. Fill in the two station names.
+""")
 code("""
-central = track[track['line'] == 'Central']
-thick = alt.Chart(central).mark_rule(strokeWidth=8, color='#E32017').encode(**where, x2='lon2:Q', y2='lat2:Q')
-(rails + thick + dots + names).properties(width=640, height=440, title='Change your title to say what to see')
-""", "student")
+import networkx as nx
+
+G = nx.from_pandas_edgelist(edges, 'source', 'target')      # the Tube as a graph
+route = nx.shortest_path(G, ⟦'Paddington', 'Bank'⟧)
+print(len(route) - 1, 'stops:', ' → '.join(route))
+
+legs = (pd.DataFrame({'source': route[:-1], 'target': route[1:]})
+          .merge(stations, left_on='source', right_on='name')
+          .merge(stations, left_on='target', right_on='name', suffixes=('', '2')))
+path = alt.Chart(legs).mark_rule(strokeWidth=10, color='black', opacity=0.35).encode(**where, x2='lon2:Q', y2='lat2:Q')
+stops = alt.Chart(stations[stations['name'].isin(route)]).mark_text(dy=-12, fontSize=10).encode(**where, text='name:N')
+
+(rails + path + dots + stops).properties(width=640, height=440,
+    title=alt.Title(f'Paddington to Bank in {len(route) - 1} stops', subtitle='Source: TfL Open Data')
+).configure_view(stroke=None)
+""")
+hint("""
+The two station names, in quotes and spelt exactly as in the data: `'Paddington', 'Bank'`.
+""")
+see("`7 stops: Paddington → Edgware Road → Baker Street → Bond Street → Green Park → Westminster → Waterloo → Bank`, and the map with that route drawn as a thick grey band.")
+planb("F2")
+write_here("Look at the colours under the route: how many times would the visitor change line? Is the fewest stops the best route? What would you tell networkx to count instead?")
 teacher("""
 **Expected:** (1) **dots and lines**: a route is a path to follow by eye, which a grid is bad at (Ghoniem et al.,
 2004) and boxes cannot show; a schematic Tube map is also node-link, so accept it. (2) **a grid**: read the Circle
 row; District shares 18. Accept dots and lines if the student argues from line widths, but ask them to read the
 number. (3) **boxes or bars inside each other**: boroughs sit inside one area each, so it is a tree and size is the
 question; the indented list with bars (tutorial §6b) is equally good for ranking areas.
+**F2:** 7 stops on three lines, so **2 changes**: Circle or Hammersmith & City to Baker Street, Jubilee to
+Waterloo, Waterloo & City to Bank. networkx counted stops only; it knows nothing about changing trains, which is
+what a visitor minds most. A good answer says to make each change of line "cost" something (a weight) and ask
+for the cheapest route instead of the shortest.
 **Sample answer (full marks):** "1: dots and lines, because she needs to follow a route; not a grid, which
 shows pairs but not paths." **Low:** "1: dots and lines." (choice, no reason.)
 """)
