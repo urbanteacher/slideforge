@@ -78,6 +78,7 @@ then do the **Try it** task under it.
 - **edge** (or link): two things are connected. Drawn as a line.
 - **edge list**: a table with one row per edge: `source`, `target`.
 - **degree**: how many edges a node has. *Valjean has many; most characters have few.*
+- **directed** link: it has a direction (an arrow); **weighted** link: it carries a number (a thickness).
 - **tree**: a network with no loops, where every child has one parent (London → Inner London → Camden).
 """)
 
@@ -395,6 +396,181 @@ Add `'Film'` for Ben (a new row in `members`) and run the three cells again. Whi
 members = pd.DataFrame({'person': ['Ana', 'Ben', 'Cal', 'Ana', 'Dev', 'Ben'],
                         'club':   ['Chess', 'Chess', 'Chess', 'Film', 'Film', 'Film']})
 # Ana and Ben now share Chess and Film: their link has weight 2.
+"""))
+
+md("""
+## 5c · Arrows and weights
+
+So far every link has been the same both ways and the same strength. Two more kinds of link:
+
+- **Directed**: the link has a direction. *Ana follows Ben* does not mean Ben follows Ana. A flight goes
+  **from** one airport **to** another. Drawn as an **arrow**.
+- **Weighted**: the link carries a number. Les Mis counted scenes; flights count planes. Drawn as a
+  **thicker line** or a **darker square**.
+
+| | Same both ways? | Has a number? |
+|---|---|---|
+| The Tube (section 4) | yes: track runs both ways | no |
+| Les Misérables (section 5) | yes | yes: scenes together |
+| Who follows whom | **no** | no |
+| Flights | **no** | yes: flights |
+
+### Arrows: who follows whom
+
+Altair has no arrowheads, so make one: a **triangle** three-quarters of the way along each line, turned to
+face along it. `math.atan2` gives the turn from the line's two lengths, across and up.
+""")
+code("""
+import math
+
+people = pd.DataFrame({'name': ['Ana', 'Ben', 'Cat', 'Dev', 'Eli'],
+                       'x': [0, 2, 2, 4, 4], 'y': [2, 4, 0, 4, 0]})
+follows = pd.DataFrame({'source': ['Ana', 'Ana', 'Ben', 'Cat', 'Ben', 'Dev', 'Eli'],   # source follows target
+                        'target': ['Ben', 'Cat', 'Cat', 'Ben', 'Dev', 'Eli', 'Cat']})
+
+# The same join as section 3: each link gets both of its ends
+arrows = (follows
+    .merge(people, left_on='source', right_on='name')
+    .merge(people, left_on='target', right_on='name', suffixes=('', '2')))
+
+# The arrowhead: three-quarters of the way along, turned to face along the line
+arrows['tip_x'] = arrows['x'] + 0.75 * (arrows['x2'] - arrows['x'])
+arrows['tip_y'] = arrows['y'] + 0.75 * (arrows['y2'] - arrows['y'])
+arrows['turn'] = [math.degrees(math.atan2(across, up))
+                  for across, up in zip(arrows['x2'] - arrows['x'], arrows['y2'] - arrows['y'])]
+
+box = alt.Scale(domain=[-0.5, 4.5])      # the same scale across and up, so the turns come out right
+at = dict(x=alt.X('x:Q', axis=None, scale=box), y=alt.Y('y:Q', axis=None, scale=box))
+
+lines = alt.Chart(arrows).mark_rule(color='grey', strokeWidth=2).encode(**at, x2='x2:Q', y2='y2:Q')
+heads = alt.Chart(arrows).mark_point(shape='triangle', size=180, filled=True, color='grey', opacity=1).encode(
+    x=alt.X('tip_x:Q', axis=None, scale=box), y=alt.Y('tip_y:Q', axis=None, scale=box),
+    angle=alt.Angle('turn:Q', scale=None))
+dots = alt.Chart(people).mark_circle(size=900, color='#4c78a8', opacity=1).encode(**at)
+names = alt.Chart(people).mark_text(color='white', fontWeight='bold').encode(**at, text='name:N')
+
+(lines + heads + dots + names).properties(width=320, height=320,
+    title=alt.Title('Who follows whom: each arrow points at the one being followed', subtitle='Invented data'))
+""")
+md("""
+With direction, degree splits in two: **out** (how many you follow: count `source`) and **in** (how many
+follow you: count `target`).
+""")
+code("""
+pd.DataFrame({'follows': follows['source'].value_counts(),
+              'followers': follows['target'].value_counts()}).fillna(0).astype(int)
+""")
+md("""
+### Try it
+
+1. Who has the most followers? Who follows people but has no followers at all? Find both on the picture.
+2. Ben and Cat follow each other. How does the picture show that?
+3. Add a row so that Eli follows Ana. Where does the new arrowhead appear?
+
+### Weights: US flights
+
+Real data: a sample of 5,000 US flights from 2001 (`vega_datasets`). Keep the ten busiest airports and count
+the flights on each route. `groupby([...]).size()` counts rows per group, as in section 5b.
+""")
+code("""
+from vega_datasets import data
+
+flights = data.flights_5k()      # one row per flight: date, delay, distance, origin, destination
+airports = data.airports()       # one row per airport: iata code, name, ..., latitude, longitude
+
+top = flights['origin'].value_counts().head(10).index      # the ten busiest airports
+routes = (flights[flights['origin'].isin(top) & flights['destination'].isin(top)]
+    .groupby(['origin', 'destination']).size().reset_index(name='flights'))
+routes.sort_values('flights', ascending=False).head(6)
+""")
+md("""
+**Direction in a grid.** In section 5 the grid was a mirror: row a, column b was the same as row b, column a.
+With direction it does not have to be. Read along a row for flights **from** that airport.
+""")
+code("""
+order = list(top)
+squares = alt.Chart(routes).mark_rect().encode(
+    x=alt.X('destination:N', sort=order, title='To'),
+    y=alt.Y('origin:N', sort=order, title='From'),
+    color=alt.Color('flights:Q', scale=alt.Scale(scheme='blues'), title='Flights'),
+    tooltip=['origin:N', 'destination:N', 'flights:Q'])
+counts = alt.Chart(routes).mark_text(fontSize=10).encode(
+    x=alt.X('destination:N', sort=order), y=alt.Y('origin:N', sort=order), text='flights:Q',
+    color=alt.condition('datum.flights > 30', alt.value('white'), alt.value('black')))
+
+(squares + counts).properties(width=330, height=330,
+    title=alt.Title('Read along a row: flights FROM that airport', subtitle='Source: vega_datasets flights_5k (2001)'))
+""")
+md("""
+**Weight as thickness, on a map.** On a map the two directions would sit on top of each other, so add them
+up: one line per pair of airports, as thick as its flights both ways. `min` and `max` of the two codes name
+each pair the same way round, whichever way the plane flew. `alt.StrokeWidth` turns the number into
+thickness. The map uses `longitude` and `latitude` with a **projection** (`albersUsa`) instead of `x` and `y`.
+""")
+code("""
+pair = routes.assign(a=routes[['origin', 'destination']].min(axis=1),
+                     b=routes[['origin', 'destination']].max(axis=1))
+pair = pair.groupby(['a', 'b'], as_index=False)['flights'].sum()      # both directions added up
+
+where = airports[['iata', 'latitude', 'longitude']]
+pair = (pair.merge(where, left_on='a', right_on='iata')
+            .merge(where, left_on='b', right_on='iata', suffixes=('', '2')))
+
+states = alt.topo_feature(data.us_10m.url, 'states')
+land = alt.Chart(states).mark_geoshape(fill='#eeeeee', stroke='white')
+flown = alt.Chart(pair).mark_rule(color='#4c78a8', opacity=0.7).encode(
+    longitude='longitude:Q', latitude='latitude:Q', longitude2='longitude2:Q', latitude2='latitude2:Q',
+    strokeWidth=alt.StrokeWidth('flights:Q', scale=alt.Scale(range=[0.5, 10]), title='Flights, both ways'),
+    tooltip=['a:N', 'b:N', 'flights:Q'])
+ten = where[where['iata'].isin(top)]
+stops = alt.Chart(ten).mark_circle(size=60, color='black', opacity=1).encode(
+    longitude='longitude:Q', latitude='latitude:Q', tooltip='iata:N')
+codes = alt.Chart(ten).mark_text(dy=-10, fontSize=11, fontWeight='bold').encode(
+    longitude='longitude:Q', latitude='latitude:Q', text='iata:N')
+
+(land + flown + stops + codes).project('albersUsa').properties(width=620, height=380,
+    title=alt.Title('Thicker line, more flights: Dallas–Houston is the busiest route',
+                    subtitle='Source: vega_datasets flights_5k (2001)'))
+""")
+md("""
+### Challenge: which airport is the hub?
+
+A **hub** is the best-connected node. That is a measure of **centrality**, and there is more than one. Count two:
+
+- **links**: how many different airports it flies to (degree, as in section 1);
+- **flights**: the total weight on those links (the **weighted** degree).
+""")
+code("""
+hubs = pd.DataFrame({
+    'links': pd.concat([pair['a'], pair['b']]).value_counts(),
+    'flights': pd.concat([pair.set_index('a')['flights'], pair.set_index('b')['flights']]).groupby(level=0).sum(),
+}).rename_axis('iata').reset_index().merge(where, on='iata')
+
+plot = alt.Chart(hubs).encode(
+    x=alt.X('links:Q', title='Links: how many of the other nine it flies to', scale=alt.Scale(domain=[0, 9])),
+    y=alt.Y('flights:Q', title='Flights on those links'))
+(plot.mark_circle(size=120, color='#4c78a8', opacity=1) + plot.mark_text(dx=16, fontSize=11).encode(text='iata:N')
+).properties(width=420, height=300,
+    title=alt.Title('Most links, or most flights? "Hub" depends on what you count',
+                    subtitle='Source: vega_datasets flights_5k (2001), routes between the ten busiest airports'))
+""")
+md("""
+1. Which airport has the most **links**? Which has the most **flights**? Are they the same airport?
+2. Dallas (DAL) has one link but more flights than St Louis with five. Find that one link on the map. What kind
+   of airport is it?
+3. **Build it:** add the hubs to the map, each circle sized by its flights (or its links). Give it a title that
+   states your finding.
+""" + "\n\n" + answer("""
+hub_dots = alt.Chart(hubs).mark_circle(color='#e45756', opacity=0.85).encode(
+    longitude='longitude:Q', latitude='latitude:Q',
+    size=alt.Size('flights:Q', scale=alt.Scale(range=[50, 900]), title='Flights'),
+    tooltip=['iata:N', 'links:Q', 'flights:Q'])
+(land + flown + hub_dots + codes).project('albersUsa').properties(width=620, height=380,
+    title=alt.Title('LAX has the most flights; Phoenix and Las Vegas the most links',
+                    subtitle='Source: vega_datasets flights_5k (2001)'))
+# 1. Most links: PHX and LAS (8 each). Most flights: LAX (232), just ahead of PHX (229). Not the same.
+# 2. DAL flies only to Houston (HOU): 113 flights on one short, busy shuttle route. A busy node is not
+#    always a well-connected one.
 """))
 
 md("""
