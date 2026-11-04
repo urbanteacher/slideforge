@@ -545,6 +545,10 @@ You keep Altair for the picture you hand in, and use these for what they are bes
 | **plotly express** | a treemap, sunburst or icicle in one line | 7b |
 | **pyvis** | a network you can drag about in the browser | 7c |
 | **Gephi** (a desktop app, not Python) | big networks, thousands of nodes | 7d |
+
+**Before you start:** if a cell below says `No module named 'networkx'` (or `plotly`, `pyvis`), install them once,
+then restart the kernel. In a notebook cell: `%pip install networkx plotly pyvis nbformat`
+(plotly needs `nbformat` to draw inside the notebook).
 """)
 
 md("""
