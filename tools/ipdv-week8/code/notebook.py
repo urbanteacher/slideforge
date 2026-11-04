@@ -231,9 +231,74 @@ deg.head(5)
 """))
 
 md("""
+### 4a · The same Tube as a diagram
+
+The map above is **true**: every station sits where it really is. But it is hard to **read**: the middle is
+crowded, the edges are empty, lines that share a track sit on top of each other, and nothing is named.
+
+In 1933 Harry Beck drew the Tube as a **diagram** instead: straight lines, bends of 45°, stations spaced out
+evenly. Distances are no longer true, but routes are easy to follow. `tube_stations.csv` has both layouts:
+
+- `lon`, `lat`: where the station really is;
+- `x`, `y`: where a diagram puts it (screen units, so **y runs down** the page: `reverse=True` flips it);
+- `label`, `label_x`, `label_y`, `align`: where the designer put its name, so names miss the lines.
+
+Two more steps make it read like the real thing. Where lines share a track, each gets its own **lane** and is
+shifted sideways, so every colour shows. And each name is placed at its own spot, lined up left, centre or
+right (`align`), with `\\n` breaking long names over two lines.
+""")
+code("""
+stations.head(3)
+""")
+code("""
+lines = (edges
+    .merge(stations, left_on='source', right_on='name')
+    .merge(stations, left_on='target', right_on='name', suffixes=('', '2')))
+
+# Where lines share a track, draw them side by side: give each line a lane, then shift it sideways.
+# (You don't need to write this part; read what each line does.)
+pair = [' – '.join(sorted(p)) for p in zip(lines['source'], lines['target'])]
+lines['lane'] = lines.groupby(pair).cumcount() - (lines.groupby(pair)['line'].transform('count') - 1) / 2
+backwards = lines['source'] > lines['target']             # measure every pair the same way round
+across = (lines['x2'] - lines['x']).where(~backwards, lines['x'] - lines['x2'])
+down = (lines['y2'] - lines['y']).where(~backwards, lines['y'] - lines['y2'])
+step = 6 * lines['lane'] / (across ** 2 + down ** 2) ** 0.5
+for end in ['', '2']:
+    lines['x' + end] = lines['x' + end] - step * down
+    lines['y' + end] = lines['y' + end] + step * across
+
+across_page = alt.Scale(domain=[20, 1230])
+down_page = alt.Scale(domain=[100, 1010], reverse=True)      # y runs down the page
+where = dict(x=alt.X('x:Q', axis=None, scale=across_page), y=alt.Y('y:Q', axis=None, scale=down_page))
+name_at = dict(x=alt.X('label_x:Q', scale=across_page), y=alt.Y('label_y:Q', scale=down_page))
+
+links = alt.Chart(lines).mark_rule(strokeWidth=4).encode(
+    **where, x2='x2:Q', y2='y2:Q', color=alt.Color('colour:N', scale=None),
+    tooltip=['source:N', 'target:N', 'line:N'])
+dots = alt.Chart(stations).mark_circle(size=45, color='white', stroke='black', strokeWidth=1.5,
+                                       opacity=1).encode(**where, tooltip='name:N')
+# One layer of names for each alignment: left, centre, right
+names = alt.layer(*[alt.Chart(stations[stations['align'] == side]).mark_text(align=side, fontSize=9, lineBreak='\\n')
+                    .encode(**name_at, text='label:N') for side in ['left', 'center', 'right']])
+
+(links + dots + names).properties(width=900, height=677,
+    title=alt.Title('Zone 1 of the Tube, drawn as a diagram',
+                    subtitle='Source: TfL Open Data · layout after the TfL pollution map, not to scale')
+).configure_view(stroke=None)
+""")
+md("""
+### Try it
+
+1. Find King's Cross St. Pancras on both pictures. Which helps a visitor plan a route? Which shows how far
+   apart two stations really are?
+2. Find a station the diagram moves a long way from where it really is. Why might the designer have moved it?
+3. Change the `6` in `step = 6 * ...` to `0`. What happens where lines share a track?
+""")
+
+md("""
 ### 4b · Hover a station: light up its links
 
-A map this busy hides who is linked to whom. Let the reader ask: **point at a station, and only its track
+Even a clear diagram is busy. Let the reader ask: **point at a station, and only its track
 lights up**. Two new ideas:
 
 - `alt.selection_point(...)` remembers which dot the pointer is over (`on='pointerover'`), and forgets it when
@@ -249,26 +314,27 @@ touches = pd.concat([lines, lines.assign(name=lines['target'])])
 
 pick = alt.selection_point(fields=['name'], on='pointerover', clear='pointerout', empty=False)
 
-faded = alt.Chart(lines).mark_rule(strokeWidth=3, opacity=0.25).encode(       # the whole map, faded
-    **where, x2='lon2:Q', y2='lat2:Q', color=alt.Color('colour:N', scale=None))
-lit = alt.Chart(touches).mark_rule(strokeWidth=6).encode(
-    **where, x2='lon2:Q', y2='lat2:Q',
+faded = alt.Chart(lines).mark_rule(strokeWidth=4, opacity=0.2).encode(       # the whole diagram, faded
+    **where, x2='x2:Q', y2='y2:Q', color=alt.Color('colour:N', scale=None))
+lit = alt.Chart(touches).mark_rule(strokeWidth=4).encode(
+    **where, x2='x2:Q', y2='y2:Q',
     color=alt.Color('colour:N', scale=None),
     tooltip=['source:N', 'target:N', 'line:N'],
 ).transform_filter(pick)
-dots = alt.Chart(stations).mark_circle(size=70, color='white', stroke='black', opacity=1).encode(
+dots = alt.Chart(stations).mark_circle(size=60, color='white', stroke='black', strokeWidth=1.5, opacity=1).encode(
     **where, tooltip='name:N').add_params(pick)
 
-hover_map = (faded + lit + dots).properties(width=640, height=420,
-    title=alt.Title('Point at a station to light up its track', subtitle='Source: TfL Open Data')
+hover_map = (faded + lit + dots + names).properties(width=900, height=677,
+    title=alt.Title('Point at a station to light up its track',
+                    subtitle='Source: TfL Open Data · layout after the TfL pollution map, not to scale')
 ).configure_view(stroke=None)
 hover_map
 """)
 md("""
 ### Try it
 
-1. Point at **King's Cross St. Pancras**. How many tracks light up? Section 4 counted a degree of 10 for it.
-   Where did the rest go? *(Hint: two lines on the same track are drawn on top of each other. The activity
+1. Point at **King's Cross St. Pancras**. Count the coloured lines that light up, then the stations at their
+   other ends. Section 4 counted a degree of 10 for it. Which of your two counts is that? *(The activity
    comes back to this.)*
 2. Change `on='pointerover'` to `on='click'` and delete `clear='pointerout'`. Which suits a reader on a
    phone better?
@@ -962,8 +1028,8 @@ One picture, ready for your infographic. Work through it in order:
 5. **Save it.** HTML keeps the hover; PNG is a still picture for a slide or a page.
 
 **A worked caption:** *"King's Cross St. Pancras serves more lines than any other Zone 1 station: six. Point
-at it to see the track to its five neighbouring stations. Dots are stations, lines are track; positions are
-real. Source: TfL Open Data."* (Checked: section 4b shows the five neighbours; the activity counts the six lines.)
+at it to see the track to its five neighbouring stations. Dots are stations, lines are track; a diagram,
+not to scale. Source: TfL Open Data."* (Checked: section 4b shows the five neighbours; the activity counts the six lines.)
 """)
 code("""
 panel = hover_map        # or any chart above: give it a name first, e.g. treemap = alt.Chart(...)

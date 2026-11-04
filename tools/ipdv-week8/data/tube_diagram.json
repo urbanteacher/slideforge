@@ -1,0 +1,673 @@
+{
+ "source": "Diagram layout from Mark Martin's Air Pollution on TfL app (tube-pollution-map.html, 51 central stations), extended on the same grid for the 14 Zone 1 stations it leaves out. Units are screen pixels; y runs down. Label offsets (from the station, in the same units), alignment and line breaks also from the app.",
+ "added": [
+  "Aldgate East",
+  "Angel",
+  "Battersea Power Station",
+  "Borough",
+  "Elephant & Castle",
+  "Kennington",
+  "Lambeth North",
+  "London Bridge",
+  "Nine Elms",
+  "Old Street",
+  "Pimlico",
+  "Southwark",
+  "Vauxhall",
+  "Waterloo"
+ ],
+ "stations": {
+  "Aldgate": [
+   1103,
+   396
+  ],
+  "Aldgate East": [
+   1150,
+   490
+  ],
+  "Angel": [
+   790,
+   110
+  ],
+  "Baker Street": [
+   342,
+   214
+  ],
+  "Bank": [
+   882,
+   419
+  ],
+  "Barbican": [
+   846,
+   276
+  ],
+  "Battersea Power Station": [
+   500,
+   980
+  ],
+  "Bayswater": [
+   99,
+   304
+  ],
+  "Blackfriars": [
+   788,
+   574
+  ],
+  "Bond Street": [
+   342,
+   354
+  ],
+  "Borough": [
+   860,
+   760
+  ],
+  "Cannon Street": [
+   858,
+   503
+  ],
+  "Chancery Lane": [
+   766,
+   382
+  ],
+  "Charing Cross": [
+   585,
+   531
+  ],
+  "Covent Garden": [
+   624,
+   396
+  ],
+  "Earl's Court": [
+   71,
+   617
+  ],
+  "Edgware Road": [
+   188,
+   184
+  ],
+  "Elephant & Castle": [
+   790,
+   830
+  ],
+  "Embankment": [
+   608,
+   617
+  ],
+  "Euston": [
+   624,
+   143
+  ],
+  "Euston Square": [
+   547,
+   184
+  ],
+  "Farringdon": [
+   799,
+   230
+  ],
+  "Gloucester Road": [
+   156,
+   617
+  ],
+  "Goodge Street": [
+   585,
+   284
+  ],
+  "Great Portland Street": [
+   437,
+   184
+  ],
+  "Green Park": [
+   383,
+   460
+  ],
+  "High Street Kensington": [
+   99,
+   498
+  ],
+  "Holborn": [
+   665,
+   354
+  ],
+  "Hyde Park Corner": [
+   344,
+   479
+  ],
+  "Kennington": [
+   720,
+   900
+  ],
+  "King's Cross St. Pancras": [
+   722,
+   184
+  ],
+  "Knightsbridge": [
+   277,
+   545
+  ],
+  "Lambeth North": [
+   700,
+   760
+  ],
+  "Lancaster Gate": [
+   249,
+   409
+  ],
+  "Leicester Square": [
+   585,
+   435
+  ],
+  "Liverpool Street": [
+   1003,
+   322
+  ],
+  "London Bridge": [
+   860,
+   690
+  ],
+  "Mansion House": [
+   822,
+   539
+  ],
+  "Marble Arch": [
+   276,
+   382
+  ],
+  "Marylebone": [
+   244,
+   159
+  ],
+  "Monument": [
+   940,
+   475
+  ],
+  "Moorgate": [
+   916,
+   322
+  ],
+  "Nine Elms": [
+   640,
+   980
+  ],
+  "Notting Hill Gate": [
+   99,
+   418
+  ],
+  "Old Street": [
+   916,
+   190
+  ],
+  "Oxford Circus": [
+   450,
+   354
+  ],
+  "Paddington": [
+   99,
+   206
+  ],
+  "Piccadilly Circus": [
+   515,
+   460
+  ],
+  "Pimlico": [
+   382,
+   700
+  ],
+  "Queensway": [
+   183,
+   418
+  ],
+  "Regent's Park": [
+   405,
+   277
+  ],
+  "Russell Square": [
+   686,
+   288
+  ],
+  "Sloane Square": [
+   294,
+   617
+  ],
+  "South Kensington": [
+   205,
+   617
+  ],
+  "Southwark": [
+   720,
+   690
+  ],
+  "St. James's Park": [
+   449,
+   617
+  ],
+  "St. Paul's": [
+   822,
+   419
+  ],
+  "Temple": [
+   712,
+   617
+  ],
+  "Tottenham Court Road": [
+   584,
+   354
+  ],
+  "Tower Hill": [
+   1066,
+   475
+  ],
+  "Vauxhall": [
+   452,
+   770
+  ],
+  "Victoria": [
+   382,
+   617
+  ],
+  "Warren Street": [
+   585,
+   218
+  ],
+  "Waterloo": [
+   608,
+   690
+  ],
+  "Westminster": [
+   516,
+   617
+  ]
+ },
+ "labels": {
+  "Aldgate": [
+   -15,
+   2,
+   "right",
+   "Aldgate"
+  ],
+  "Aldgate East": [
+   0,
+   24,
+   "center",
+   "Aldgate\nEast"
+  ],
+  "Angel": [
+   14,
+   4,
+   "left",
+   "Angel"
+  ],
+  "Baker Street": [
+   30,
+   2,
+   "left",
+   "Baker\nStreet"
+  ],
+  "Bank": [
+   14,
+   22,
+   "left",
+   "Bank"
+  ],
+  "Barbican": [
+   15,
+   -4,
+   "left",
+   "Barbican"
+  ],
+  "Battersea Power Station": [
+   0,
+   24,
+   "center",
+   "Battersea\nPower Station"
+  ],
+  "Bayswater": [
+   14,
+   4,
+   "left",
+   "Bayswater"
+  ],
+  "Blackfriars": [
+   -15,
+   -2,
+   "right",
+   "Blackfriars"
+  ],
+  "Bond Street": [
+   -16,
+   -12,
+   "right",
+   "Bond Street"
+  ],
+  "Borough": [
+   14,
+   4,
+   "left",
+   "Borough"
+  ],
+  "Cannon Street": [
+   -15,
+   -2,
+   "right",
+   "Cannon Street"
+  ],
+  "Chancery Lane": [
+   15,
+   -2,
+   "left",
+   "Chancery Lane"
+  ],
+  "Charing Cross": [
+   15,
+   -4,
+   "left",
+   "Charing Cross"
+  ],
+  "Covent Garden": [
+   15,
+   -2,
+   "left",
+   "Covent Garden"
+  ],
+  "Earl's Court": [
+   -2,
+   32,
+   "center",
+   "Earl's\nCourt"
+  ],
+  "Edgware Road": [
+   14,
+   22,
+   "left",
+   "Edgware\nRoad"
+  ],
+  "Elephant & Castle": [
+   14,
+   8,
+   "left",
+   "Elephant\n& Castle"
+  ],
+  "Embankment": [
+   -12,
+   -16,
+   "right",
+   "Embankment"
+  ],
+  "Euston": [
+   0,
+   -16,
+   "center",
+   "Euston"
+  ],
+  "Euston Square": [
+   -8,
+   26,
+   "center",
+   "Euston\nSquare"
+  ],
+  "Farringdon": [
+   15,
+   -4,
+   "left",
+   "Farringdon"
+  ],
+  "Gloucester Road": [
+   -8,
+   -36,
+   "center",
+   "Gloucester\nRoad"
+  ],
+  "Goodge Street": [
+   14,
+   0,
+   "left",
+   "Goodge\nStreet"
+  ],
+  "Great Portland Street": [
+   0,
+   -30,
+   "center",
+   "Great Portland\nStreet"
+  ],
+  "Green Park": [
+   14,
+   -10,
+   "left",
+   "Green Park"
+  ],
+  "High Street Kensington": [
+   14,
+   4,
+   "left",
+   "High Street Kensington"
+  ],
+  "Holborn": [
+   15,
+   20,
+   "left",
+   "Holborn"
+  ],
+  "Hyde Park Corner": [
+   -14,
+   -4,
+   "right",
+   "Hyde Park Corner"
+  ],
+  "Kennington": [
+   14,
+   6,
+   "left",
+   "Kennington"
+  ],
+  "King's Cross St. Pancras": [
+   40,
+   -24,
+   "left",
+   "King's Cross\nSt. Pancras"
+  ],
+  "Knightsbridge": [
+   -15,
+   -4,
+   "right",
+   "Knightsbridge"
+  ],
+  "Lambeth North": [
+   14,
+   -6,
+   "left",
+   "Lambeth\nNorth"
+  ],
+  "Lancaster Gate": [
+   14,
+   14,
+   "left",
+   "Lancaster\nGate"
+  ],
+  "Leicester Square": [
+   15,
+   4,
+   "left",
+   "Leicester Square"
+  ],
+  "Liverpool Street": [
+   14,
+   -10,
+   "left",
+   "Liverpool St"
+  ],
+  "London Bridge": [
+   14,
+   4,
+   "left",
+   "London Bridge"
+  ],
+  "Mansion House": [
+   -15,
+   -2,
+   "right",
+   "Mansion House"
+  ],
+  "Marble Arch": [
+   -14,
+   -6,
+   "right",
+   "Marble Arch"
+  ],
+  "Marylebone": [
+   0,
+   -14,
+   "center",
+   "Marylebone"
+  ],
+  "Monument": [
+   0,
+   26,
+   "center",
+   "Monument"
+  ],
+  "Moorgate": [
+   -12,
+   22,
+   "right",
+   "Moorgate"
+  ],
+  "Nine Elms": [
+   0,
+   24,
+   "center",
+   "Nine Elms"
+  ],
+  "Notting Hill Gate": [
+   14,
+   -24,
+   "left",
+   "Notting\nHill Gate"
+  ],
+  "Old Street": [
+   14,
+   4,
+   "left",
+   "Old Street"
+  ],
+  "Oxford Circus": [
+   -16,
+   -30,
+   "right",
+   "Oxford\nCircus"
+  ],
+  "Paddington": [
+   14,
+   20,
+   "left",
+   "Paddington"
+  ],
+  "Piccadilly Circus": [
+   -6,
+   24,
+   "center",
+   "Piccadilly\nCircus"
+  ],
+  "Pimlico": [
+   14,
+   4,
+   "left",
+   "Pimlico"
+  ],
+  "Queensway": [
+   -4,
+   22,
+   "center",
+   "Queensway"
+  ],
+  "Regent's Park": [
+   14,
+   4,
+   "left",
+   "Regent's Park"
+  ],
+  "Russell Square": [
+   14,
+   4,
+   "left",
+   "Russell Square"
+  ],
+  "Sloane Square": [
+   -2,
+   32,
+   "center",
+   "Sloane\nSquare"
+  ],
+  "South Kensington": [
+   -2,
+   32,
+   "center",
+   "South\nKensington"
+  ],
+  "Southwark": [
+   0,
+   24,
+   "center",
+   "Southwark"
+  ],
+  "St. James's Park": [
+   -4,
+   -34,
+   "center",
+   "St. James's\nPark"
+  ],
+  "St. Paul's": [
+   -4,
+   26,
+   "center",
+   "St. Paul's"
+  ],
+  "Temple": [
+   -2,
+   32,
+   "center",
+   "Temple"
+  ],
+  "Tottenham Court Road": [
+   -14,
+   18,
+   "right",
+   "Tottenham\nCourt Road"
+  ],
+  "Tower Hill": [
+   -8,
+   -14,
+   "center",
+   "Tower Hill"
+  ],
+  "Vauxhall": [
+   14,
+   4,
+   "left",
+   "Vauxhall"
+  ],
+  "Victoria": [
+   -2,
+   32,
+   "center",
+   "Victoria"
+  ],
+  "Warren Street": [
+   17,
+   16,
+   "left",
+   "Warren\nStreet"
+  ],
+  "Waterloo": [
+   -14,
+   18,
+   "right",
+   "Waterloo"
+  ],
+  "Westminster": [
+   -2,
+   32,
+   "center",
+   "Westminster"
+  ]
+ }
+}

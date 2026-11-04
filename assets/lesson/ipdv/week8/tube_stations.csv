@@ -1,66 +1,87 @@
-name,lon,lat,zone
-Aldgate,-0.075689,51.514246,1
-Aldgate East,-0.072384,51.515037,1
-Angel,-0.10635,51.53184,1
-Baker Street,-0.15713,51.522883,1
-Bank,-0.090047,51.513132,1
-Barbican,-0.097993,51.520275,1
-Battersea Power Station,-0.142142,51.479932,1
-Bayswater,-0.187938,51.512284,1
-Blackfriars,-0.103659,51.511581,1
-Bond Street,-0.149723,51.514304,1
-Borough,-0.09337,51.501199,1
-Cannon Street,-0.090432,51.51151,1
-Chancery Lane,-0.111583,51.518247,1
-Charing Cross,-0.127277,51.50741,1
-Covent Garden,-0.124436,51.513093,1
-Earl's Court,-0.193378,51.492063,1+2
-Edgware Road,-0.167832,51.519858,1
-Elephant & Castle,-0.100606,51.494536,1+2
-Embankment,-0.122666,51.507058,1
-Euston,-0.133785,51.527999,1
-Euston Square,-0.135829,51.525604,1
-Farringdon,-0.104913,51.520252,1
-Gloucester Road,-0.182658,51.494316,1
-Goodge Street,-0.134361,51.520599,1
-Great Portland Street,-0.144262,51.52384,1
-Green Park,-0.142787,51.506947,1
-High Street Kensington,-0.192792,51.501055,1
-Holborn,-0.120475,51.51758,1
-Hyde Park Corner,-0.152441,51.503035,1
-Kennington,-0.105963,51.488337,1+2
-King's Cross St. Pancras,-0.123194,51.530663,1
-Knightsbridge,-0.160508,51.501669,1
-Lambeth North,-0.112315,51.498808,1
-Lancaster Gate,-0.175494,51.511723,1
-Leicester Square,-0.128426,51.511386,1
-Liverpool Street,-0.083182,51.517372,1
-London Bridge,-0.088873,51.505721,1
-Mansion House,-0.094009,51.512117,1
-Marble Arch,-0.158953,51.513424,1
-Marylebone,-0.163207,51.522322,1
-Monument,-0.085969,51.5107,1
-Moorgate,-0.088322,51.518176,1
-Nine Elms,-0.128476,51.479912,1
-Notting Hill Gate,-0.196104,51.509128,1+2
-Old Street,-0.08777,51.525864,1
-Oxford Circus,-0.141903,51.515224,1
-Paddington,-0.178306,51.518187,1
-Piccadilly Circus,-0.133798,51.51005,1
-Pimlico,-0.133761,51.489097,1
-Queensway,-0.187152,51.510312,1
-Regent's Park,-0.146444,51.523344,1
-Russell Square,-0.124285,51.523073,1
-Sloane Square,-0.156377,51.49227,1
-South Kensington,-0.174138,51.494094,1
-Southwark,-0.105331,51.50427,1
-St. James's Park,-0.133608,51.499544,1
-St. Paul's,-0.097567,51.514936,1
-Temple,-0.11426,51.511006,1
-Tottenham Court Road,-0.13041,51.516426,1
-Tower Hill,-0.076546,51.509971,1
-Vauxhall,-0.124204,51.485743,1+2
-Victoria,-0.143102,51.496359,1
-Warren Street,-0.138321,51.524951,1
-Waterloo,-0.11478,51.503299,1
-Westminster,-0.124861,51.50132,1
+name,lon,lat,zone,x,y,label,label_x,label_y,align
+Aldgate,-0.075689,51.514246,1,1103,396,Aldgate,1088,398,right
+Aldgate East,-0.072384,51.515037,1,1150,490,"Aldgate
+East",1150,514,center
+Angel,-0.10635,51.53184,1,790,110,Angel,804,114,left
+Baker Street,-0.15713,51.522883,1,342,214,"Baker
+Street",372,216,left
+Bank,-0.090047,51.513132,1,882,419,Bank,896,441,left
+Barbican,-0.097993,51.520275,1,846,276,Barbican,861,272,left
+Battersea Power Station,-0.142142,51.479932,1,500,980,"Battersea
+Power Station",500,1004,center
+Bayswater,-0.187938,51.512284,1,99,304,Bayswater,113,308,left
+Blackfriars,-0.103659,51.511581,1,788,574,Blackfriars,773,572,right
+Bond Street,-0.149723,51.514304,1,342,354,Bond Street,326,342,right
+Borough,-0.09337,51.501199,1,860,760,Borough,874,764,left
+Cannon Street,-0.090432,51.51151,1,858,503,Cannon Street,843,501,right
+Chancery Lane,-0.111583,51.518247,1,766,382,Chancery Lane,781,380,left
+Charing Cross,-0.127277,51.50741,1,585,531,Charing Cross,600,527,left
+Covent Garden,-0.124436,51.513093,1,624,396,Covent Garden,639,394,left
+Earl's Court,-0.193378,51.492063,1+2,71,617,"Earl's
+Court",69,649,center
+Edgware Road,-0.167832,51.519858,1,188,184,"Edgware
+Road",202,206,left
+Elephant & Castle,-0.100606,51.494536,1+2,790,830,"Elephant
+& Castle",804,838,left
+Embankment,-0.122666,51.507058,1,608,617,Embankment,596,601,right
+Euston,-0.133785,51.527999,1,624,143,Euston,624,127,center
+Euston Square,-0.135829,51.525604,1,547,184,"Euston
+Square",539,210,center
+Farringdon,-0.104913,51.520252,1,799,230,Farringdon,814,226,left
+Gloucester Road,-0.182658,51.494316,1,156,617,"Gloucester
+Road",148,581,center
+Goodge Street,-0.134361,51.520599,1,585,284,"Goodge
+Street",599,284,left
+Great Portland Street,-0.144262,51.52384,1,437,184,"Great Portland
+Street",437,154,center
+Green Park,-0.142787,51.506947,1,383,460,Green Park,397,450,left
+High Street Kensington,-0.192792,51.501055,1,99,498,High Street Kensington,113,502,left
+Holborn,-0.120475,51.51758,1,665,354,Holborn,680,374,left
+Hyde Park Corner,-0.152441,51.503035,1,344,479,Hyde Park Corner,330,475,right
+Kennington,-0.105963,51.488337,1+2,720,900,Kennington,734,906,left
+King's Cross St. Pancras,-0.123194,51.530663,1,722,184,"King's Cross
+St. Pancras",762,160,left
+Knightsbridge,-0.160508,51.501669,1,277,545,Knightsbridge,262,541,right
+Lambeth North,-0.112315,51.498808,1,700,760,"Lambeth
+North",714,754,left
+Lancaster Gate,-0.175494,51.511723,1,249,409,"Lancaster
+Gate",263,423,left
+Leicester Square,-0.128426,51.511386,1,585,435,Leicester Square,600,439,left
+Liverpool Street,-0.083182,51.517372,1,1003,322,Liverpool St,1017,312,left
+London Bridge,-0.088873,51.505721,1,860,690,London Bridge,874,694,left
+Mansion House,-0.094009,51.512117,1,822,539,Mansion House,807,537,right
+Marble Arch,-0.158953,51.513424,1,276,382,Marble Arch,262,376,right
+Marylebone,-0.163207,51.522322,1,244,159,Marylebone,244,145,center
+Monument,-0.085969,51.5107,1,940,475,Monument,940,501,center
+Moorgate,-0.088322,51.518176,1,916,322,Moorgate,904,344,right
+Nine Elms,-0.128476,51.479912,1,640,980,Nine Elms,640,1004,center
+Notting Hill Gate,-0.196104,51.509128,1+2,99,418,"Notting
+Hill Gate",113,394,left
+Old Street,-0.08777,51.525864,1,916,190,Old Street,930,194,left
+Oxford Circus,-0.141903,51.515224,1,450,354,"Oxford
+Circus",434,324,right
+Paddington,-0.178306,51.518187,1,99,206,Paddington,113,226,left
+Piccadilly Circus,-0.133798,51.51005,1,515,460,"Piccadilly
+Circus",509,484,center
+Pimlico,-0.133761,51.489097,1,382,700,Pimlico,396,704,left
+Queensway,-0.187152,51.510312,1,183,418,Queensway,179,440,center
+Regent's Park,-0.146444,51.523344,1,405,277,Regent's Park,419,281,left
+Russell Square,-0.124285,51.523073,1,686,288,Russell Square,700,292,left
+Sloane Square,-0.156377,51.49227,1,294,617,"Sloane
+Square",292,649,center
+South Kensington,-0.174138,51.494094,1,205,617,"South
+Kensington",203,649,center
+Southwark,-0.105331,51.50427,1,720,690,Southwark,720,714,center
+St. James's Park,-0.133608,51.499544,1,449,617,"St. James's
+Park",445,583,center
+St. Paul's,-0.097567,51.514936,1,822,419,St. Paul's,818,445,center
+Temple,-0.11426,51.511006,1,712,617,Temple,710,649,center
+Tottenham Court Road,-0.13041,51.516426,1,584,354,"Tottenham
+Court Road",570,372,right
+Tower Hill,-0.076546,51.509971,1,1066,475,Tower Hill,1058,461,center
+Vauxhall,-0.124204,51.485743,1+2,452,770,Vauxhall,466,774,left
+Victoria,-0.143102,51.496359,1,382,617,Victoria,380,649,center
+Warren Street,-0.138321,51.524951,1,585,218,"Warren
+Street",602,234,left
+Waterloo,-0.11478,51.503299,1,608,690,Waterloo,594,708,right
+Westminster,-0.124861,51.50132,1,516,617,Westminster,514,649,center

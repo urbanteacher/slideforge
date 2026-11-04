@@ -120,7 +120,7 @@ run, put the pictures on screen and run C–F as a discussion). The student copy
 | Setup + warm-up | Open, run the first cell; recall degree, tree, the three questions | 5 min | Retrieval before new work |
 | A | Read the two tables; drop repeated track | 10 min | A row is one *line's* track between two stations, so 130 rows are only 90 pairs |
 | B | Degree two ways | 10 min | "Busiest" depends on what you count: King's Cross by edges, Oxford Circus, Green Park and Waterloo by neighbours |
-| C | Node-link map sized by lines | 15 min | Position is geography here; size is data (number of lines) |
+| C | Node-link map sized by lines | 15 min | Position is a diagram here, not geography; size is data (number of lines) |
 | D | Lines that share stations, as a grid | 25 min | 11 lines, 48 linked pairs, each with a weight: a grid beats dots and lines |
 | F | Choose and justify | 10 min | The reader's question picks the picture |
 | E | Is it a tree? (if time, or homework) | 10 min | 43 of 65 stations have more than one parent line; forcing a tree counts 139 stations for 65 |
@@ -170,7 +170,7 @@ def check(ok, good, hint):
 
 ___ = 'BLANK: replace ___ with your code'   # an empty blank names itself in the error
 
-stations = load('tube_stations')   # name, lon, lat, zone: one row per station
+stations = load('tube_stations')   # name, lon, lat, zone, and x, y for the diagram: one row per station
 edges = load('tube_links')         # source, target, line, colour: one row per ...? (Part A finds out)
 
 # Readers should see 'Hammersmith & City', not the data's code 'hammersmith-city'
@@ -310,7 +310,7 @@ lines_at.sort_values(ascending=False).head(6)
 see("✅, then King's Cross St. Pancras 6, Baker Street 5, then stations with 4 (Embankment, Edgware Road, Liverpool Street…).")
 
 md("""
-**C2.** Draw the Tube as in tutorial §4, but **size each station by how many lines stop there**, and name the
+**C2.** Draw the Tube as a diagram, as in tutorial §4a, but **size each station by how many lines stop there**, and name the
 stations with **five or more** lines (more names would pile up in the middle). The colours now have a key.
 """)
 code("""
@@ -321,15 +321,16 @@ track = (edges
     .merge(stations, left_on='source', right_on='name')
     .merge(stations, left_on='target', right_on='name', suffixes=('', '2')))
 
-where = dict(x=alt.X('lon:Q', scale=alt.Scale(zero=False), axis=None),
-             y=alt.Y('lat:Q', scale=alt.Scale(zero=False), axis=None))
+# The diagram layout from tutorial §4a: x across, y down the page (reverse=True flips it)
+where = dict(x=alt.X('x:Q', scale=alt.Scale(domain=[20, 1230]), axis=None),
+             y=alt.Y('y:Q', scale=alt.Scale(domain=[100, 1010], reverse=True), axis=None))
 
 # TfL's own colour for each line, with a key (scale=None would use the colours but give no key)
 key = edges[['line', 'colour']].drop_duplicates()
 line_colours = alt.Scale(domain=key['line'].tolist(), range=key['colour'].tolist())
 
 rails = alt.Chart(track).mark_rule(strokeWidth=3).encode(
-    **where, x2='lon2:Q', y2='lat2:Q', color=alt.Color('line:N', scale=line_colours, title='Line'))
+    **where, x2='x2:Q', y2='y2:Q', color=alt.Color('line:N', scale=line_colours, title='Line'))
 dots = alt.Chart(dots_table).mark_circle(color='white', stroke='black', opacity=1).encode(
     **where, size=alt.Size(⟦'lines:Q'⟧, title='Lines stopping here', scale=alt.Scale(domain=[1, 6]),
                            legend=alt.Legend(values=[1, 2, 3, 4, 5, 6])),
@@ -338,7 +339,7 @@ names = alt.Chart(dots_table).mark_text(dy=-14, fontWeight='bold', fontSize=11).
     **where, text='name:N').transform_filter(⟦'datum.lines >= 5'⟧)
 
 (rails + dots + names).properties(
-    width=640, height=440,
+    width=680, height=512,
     title=alt.Title("King's Cross and Baker Street are where most lines meet", subtitle='Source: TfL Open Data')
 ).configure_view(stroke=None)
 """)
@@ -352,12 +353,13 @@ see("the Tube map in TfL colours with a Line key, white station dots sized 1 to 
 planb("C2")
 write_here("What does position mean in this picture? What does size mean? Name one thing this picture is bad at showing.")
 teacher("""
-**Expected:** position is **geography** (longitude, latitude), not a computed layout; size is the **number of
-lines** (King's Cross 6, Baker Street 5). It is bad at showing how strongly lines share stations (shared track is
-drawn on top of itself, so one line hides another), and labels crowd in the centre.
-**Sample answers.** *Full marks:* "Position is where the station really is; size is how many lines stop; you
-can't see which lines run on the same track, because they're drawn on top of each other." *Low:* "It shows the
-Tube."
+**Expected:** position is a **diagram** (x, y): straight lines, stations spaced out, not where they really are
+and not to scale; size is the **number of lines** (King's Cross 6, Baker Street 5). It is bad at showing true
+distances, and at showing lines that share a track: they are drawn on top of each other, so one line hides
+another (tutorial §4a's lanes fix that).
+**Sample answers.** *Full marks:* "Position is a tidy diagram, not real distance; size is how many lines stop;
+you can't see which lines run on the same track, because they're drawn on top of each other." *Low:* "It shows
+the Tube."
 """)
 
 # ------------------------------------------------------------------ D
@@ -485,10 +487,10 @@ print(len(route) - 1, 'stops:', ' → '.join(route))
 legs = (pd.DataFrame({'source': route[:-1], 'target': route[1:]})
           .merge(stations, left_on='source', right_on='name')
           .merge(stations, left_on='target', right_on='name', suffixes=('', '2')))
-path = alt.Chart(legs).mark_rule(strokeWidth=10, color='black', opacity=0.35).encode(**where, x2='lon2:Q', y2='lat2:Q')
+path = alt.Chart(legs).mark_rule(strokeWidth=10, color='black', opacity=0.35).encode(**where, x2='x2:Q', y2='y2:Q')
 stops = alt.Chart(stations[stations['name'].isin(route)]).mark_text(dy=-12, fontSize=10).encode(**where, text='name:N')
 
-(rails + path + dots + stops).properties(width=640, height=440,
+(rails + path + dots + stops).properties(width=680, height=512,
     title=alt.Title(f'Paddington to Bank in {len(route) - 1} stops', subtitle='Source: TfL Open Data')
 ).configure_view(stroke=None)
 """)

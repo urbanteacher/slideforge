@@ -26,7 +26,15 @@ OUT.mkdir(parents=True, exist_ok=True)
 # The data files students download, written from the lecture's own data.
 tube = json.loads((DATA / "tube.json").read_text())
 zone1 = {s["name"] for s in tube["stations"] if s["zone"] in ("1", "1+2")}
-pd.DataFrame([{"name": s["name"], "lon": s["lon"], "lat": s["lat"], "zone": s["zone"]}
+# Two layouts for each station: where it really is (lon, lat) and where a Tube diagram puts it (x, y: screen
+# units, y runs down). The diagram, and where each name sits (label_x, label_y, align), come from the layout in
+# tube_diagram.json.
+diagram = json.loads((DATA / "tube_diagram.json").read_text())
+def place(name):
+    x, y = diagram["stations"][name]
+    dx, dy, align, label = diagram["labels"][name]
+    return {"x": x, "y": y, "label": label, "label_x": x + dx, "label_y": y + dy, "align": align}
+pd.DataFrame([{"name": s["name"], "lon": s["lon"], "lat": s["lat"], "zone": s["zone"], **place(s["name"])}
               for s in tube["stations"] if s["name"] in zone1]).to_csv(OUT / "tube_stations.csv", index=False)
 boroughs = json.loads((DATA / "boroughs.json").read_text())["boroughs"]
 pd.DataFrame(boroughs)[["borough", "area", "half", "population"]].to_csv(OUT / "london_boroughs.csv", index=False)
