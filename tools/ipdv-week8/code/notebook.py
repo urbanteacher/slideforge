@@ -10,7 +10,8 @@ writes lessons/08_Notebook_IPDV_Networks_Trees.ipynb, without outputs: students
 run it themselves. To check it runs end to end:
 
     uv run --with nbformat --with nbclient --with ipykernel --with altair --with pandas \
-        --with vega_datasets python tools/ipdv-week8/code/notebook.py --run
+        --with vega_datasets --with networkx --with plotly --with pyvis --with scipy --with circlify \
+        python tools/ipdv-week8/code/notebook.py --run
 """
 import json
 import pathlib
@@ -863,8 +864,8 @@ You keep Altair for the picture you hand in, and use these for what they are bes
 | **pyvis** | a network you can drag about in the browser | 7c |
 | **Gephi** (a desktop app, not Python) | big networks, thousands of nodes | 7d |
 
-**Before you start:** if a cell below says `No module named 'networkx'` (or `plotly`, `pyvis`), install them once,
-then restart the kernel. In a notebook cell: `%pip install networkx plotly pyvis nbformat`
+**Before you start:** if a cell below says `No module named 'networkx'` (or `plotly`, `pyvis`, `scipy`, `circlify`), install them once,
+then restart the kernel. In a notebook cell: `%pip install networkx plotly pyvis nbformat scipy circlify`
 (plotly needs `nbformat` to draw inside the notebook).
 """)
 
@@ -996,7 +997,240 @@ explain, with a title and a source, in Altair.
 """)
 
 md("""
-## 8 · Your turn: your own network
+## 8 · A taste of the rest of the lecture
+
+The lecture showed more pictures than sections 1–7 build. Here is a cell or two of each, on data you already
+have loaded, so you know where to start if one suits your infographic. Read the code, run it, change one thing.
+
+| Lecture slide | Here |
+|---|---|
+| Five numbers that describe a network; Cross every bridge once | 8a: density, bridges, islands, odd dots |
+| Or make the picture simpler | 8b: the busiest, one person, merge a group |
+| Networks in disguise | 8c: a Sankey, an arc diagram (and where to find a chord diagram) |
+| Trees in disguise | 8d: circle packing, a dendrogram (the sunburst is in 7b) |
+
+These cells use `G`, `mis`, `people`, `spots`, `lines` and `place` from section 7a, and `routes` from 5c:
+run those sections first.
+""")
+
+md("""
+### 8a · The other numbers
+
+networkx measures the network in one line each. Check each answer against the lecture's table.
+
+- **density**: the share of all possible lines that exist;
+- **islands** (*connected components*): parts with no line between them;
+- **bridge** (*betweenness*): how often a character sits on the shortest route between two others;
+- **odd dots**: Euler's rule says a walk along every line once needs zero or two dots with an odd degree.
+""")
+code("""
+print(f'Density: {nx.density(G):.0%} of the possible lines exist')
+print('Islands:', nx.number_connected_components(G))
+
+bridge = pd.Series(nx.betweenness_centrality(G), name='bridge score').sort_values(ascending=False)
+odd = sum(d % 2 == 1 for _, d in G.degree())
+print('Odd dots:', odd, '- so no walk can use every line exactly once')
+bridge.head(5).round(2)
+""")
+md("""
+#### Try it
+
+Valjean is the biggest bridge, as you might guess. Why is **Myriel** second, though he has only 10 lines?
+Look at who his neighbours are: `[n for n in G['Myriel'] if G.degree(n) == 1]`.
+""" + "\n\n" + answer("""
+print([n for n in G['Myriel'] if G.degree(n) == 1])
+# Seven characters link only to Myriel. Every route from them to anyone else passes through him,
+# so he sits on many shortest routes: a bridge.
+"""))
+
+md("""
+### 8b · Make the picture simpler
+
+A hairball of 77 characters hides its story. The lecture gave four ways to cut it down; three take a few lines.
+`sketch` draws any set of names with the 7a positions, keeping only the lines between them.
+""")
+code("""
+hue = alt.Color('group:N', legend=None, scale=alt.Scale(domain=sorted(people['group'].unique())))   # same colours in every picture
+
+def sketch(keep, title):
+    few = spots[spots['name'].isin(keep)]
+    ties = lines[lines['a'].isin(keep) & lines['b'].isin(keep)]
+    web = alt.Chart(ties).mark_rule(color='lightgrey').encode(**place, x2='x2:Q', y2='y2:Q')
+    dots = alt.Chart(few).mark_circle(size=90, opacity=1).encode(**place, color=hue)
+    names = alt.Chart(few).mark_text(dy=-10, fontSize=10).encode(**place, text='name:N')
+    return (web + dots + names).properties(width=420, height=340,
+        title=alt.Title(title, subtitle='Source: Knuth (1993), Les Misérables'))
+
+busy = [n for n, d in G.degree() if d >= 10]                     # 1. the busiest: degree 10 or more
+sketch(busy, f'Only the {len(busy)} busiest characters')
+""")
+code("""
+javert = list(nx.ego_graph(G, 'Javert').nodes)                    # 2. one person: Javert and his neighbours
+sketch(javert, f'Javert\\'s world: {len(javert) - 1} characters he shares a scene with')
+""")
+md("""
+**3. Merge a group.** Replace each group with one big dot at the middle of its members, as big as the group, and
+add up the lines between groups. Same `min`/`max` trick as the flights map, so a pair of groups is named one way.
+""")
+code("""
+group_of = dict(zip(people['name'], people['group']))
+pairs = mis.assign(g=mis['a'].map(group_of), h=mis['b'].map(group_of))
+pairs = pairs[pairs['g'] != pairs['h']]                                     # lines inside a group disappear
+pairs = pairs.assign(g=pairs[['g', 'h']].min(axis=1), h=pairs[['g', 'h']].max(axis=1))
+pairs = pairs.groupby(['g', 'h']).size().reset_index(name='lines')
+
+middle = spots.groupby('group').agg(x=('x', 'mean'), y=('y', 'mean'), people=('name', 'size')).reset_index()
+ends = (pairs.merge(middle, left_on='g', right_on='group')
+             .merge(middle, left_on='h', right_on='group', suffixes=('', '2')))
+
+ties = alt.Chart(ends).mark_rule(color='grey').encode(
+    **place, x2='x2:Q', y2='y2:Q', strokeWidth=alt.StrokeWidth('lines:Q', title='Lines between'))
+blobs = alt.Chart(middle).mark_circle(opacity=1).encode(
+    **place, size=alt.Size('people:Q', scale=alt.Scale(range=[80, 1200]), title='Characters'),
+    color=hue, tooltip=['group:N', 'people:Q'])
+(ties + blobs).properties(width=420, height=340,
+    title=alt.Title('77 characters become 11 groups', subtitle='Source: Knuth (1993), Les Misérables'))
+""")
+md("""
+**4. Magnify** (a *fisheye*) enlarges one part and squeezes the rest, as Beck did for central London. It needs
+interaction that Altair does not do well; the lecture's Tube slides show it, and Gephi has a fisheye tool.
+
+#### Try it
+
+Change the busiest to degree 15 or more. Then draw Cosette's world instead of Javert's. Which picture would
+you hand a reader who has never read the book?
+""")
+
+md(f"""
+### 8c · Networks in disguise
+
+![Networks in disguise: a Sankey, a chord diagram and an arc diagram]({LIVE}disguise-networks.svg)
+
+**A Sankey** is a weighted, directed network where the width of each band is the amount. Here: flights from
+the three busiest airports in 5c. plotly draws it; you list the nodes, then each link as *from*, *to* and *how much*.
+""")
+code("""
+import plotly.graph_objects as go
+
+three = routes[routes['origin'].isin(top[:3])]
+left = list(three['origin'].unique())                 # the airports flights leave from
+right = list(three['destination'].unique())           # the airports they land at
+go.Figure(go.Sankey(
+    node=dict(label=[f'From {a}' for a in left] + [f'To {b}' for b in right], pad=14),
+    link=dict(source=[left.index(a) for a in three['origin']],
+              target=[len(left) + right.index(b) for b in three['destination']],
+              value=three['flights']))
+).update_layout(title='Where flights from the three busiest airports go (flights_5k, 2001)', height=420)
+""")
+md("""
+**An arc diagram** is dots and lines with every dot on one line, and each link drawn as a half circle above it.
+Put the dots in group order and the groups show as tight bundles of small arcs. Altair has no arc mark, so the
+cell works out 16 points around each half circle and joins them with `mark_line`.
+""")
+code("""
+import numpy as np
+
+row = people.sort_values(['group', 'name']).reset_index(drop=True)
+at = dict(zip(row['name'], row.index))                       # each character's place along the line
+
+turn = np.linspace(0, np.pi, 16)                             # 16 steps round a half circle
+arcs = []
+for k, (a, b) in enumerate(zip(mis['a'], mis['b'])):
+    mid, r = (at[a] + at[b]) / 2, abs(at[a] - at[b]) / 2
+    arcs += [{'link': k, 'step': i, 'x': mid + r * np.cos(t), 'y': r * np.sin(t)} for i, t in enumerate(turn)]
+
+curves = alt.Chart(pd.DataFrame(arcs)).mark_line(color='grey', opacity=0.35, strokeWidth=1).encode(
+    x=alt.X('x:Q', axis=None), y=alt.Y('y:Q', axis=None), detail='link:N', order='step:Q')
+beads = alt.Chart(row.reset_index()).mark_circle(size=40, opacity=1).encode(
+    x=alt.X('index:Q', axis=None), y=alt.value(300), color=alt.Color('group:N', legend=None), tooltip=['name:N', 'group:N'])
+(curves + beads).properties(width=720, height=300,
+    title=alt.Title('Small arcs inside a group, long arcs between groups', subtitle='Source: Knuth (1993), Les Misérables'))
+""")
+md("""
+**A chord diagram** puts the dots round a circle and draws each weighted link as a band across it. Altair and
+plotly do not draw one; the `holoviews` library does (`hv.Chord`), or D3 on the web. It looks striking, but
+the bands are hard to compare: use it when the shape of the flows matters more than the exact amounts.
+
+#### Try it
+
+In the arc diagram, sort the dots by `'name'` only. What happens to the bundles?
+""")
+
+md(f"""
+### 8d · Trees in disguise
+
+![Trees in disguise: a sunburst, circle packing and a dendrogram]({LIVE}disguise-trees.svg)
+
+**Circle packing** is a treemap with circles: each borough is a circle as big as its population, packed inside
+its area, inside its half, inside London. The small `circlify` library works out the circles; Altair draws them.
+The gaps between circles waste space, which is why the sizes are harder to compare than in a treemap.
+""")
+code("""
+import circlify   # if it says No module named 'circlify': %pip install circlify, then restart the kernel
+
+b = load('london_boroughs')
+# The tree as nested lists: London, its two halves, their areas, their boroughs (level 1 to 4)
+nest = [{'id': 'London', 'datum': b['population'].sum(), 'children': [
+           {'id': half, 'datum': h['population'].sum(), 'children': [
+               {'id': area, 'datum': a['population'].sum(), 'children': [
+                   {'id': r['borough'], 'datum': r['population']} for _, r in a.iterrows()]}
+               for area, a in h.groupby('area')]}
+           for half, h in b.groupby('half')]}]
+
+rings = pd.DataFrame([{'name': c.ex['id'], 'level': c.level,
+                       'x': c.x, 'y': c.y, 'r': c.r} for c in circlify.circlify(nest)])
+side = 520                                                   # the chart is side x side pixels, from -1 to 1
+rings['size'] = (rings['r'] * side) ** 2                     # Altair's size is the square round the circle: width x width
+rings['half'] = rings['name'].map(dict(zip(b['borough'], b['half'])))
+on_page = dict(x=alt.X('x:Q', scale=alt.Scale(domain=[-1, 1]), axis=None),
+               y=alt.Y('y:Q', scale=alt.Scale(domain=[-1, 1]), axis=None))
+
+outer = alt.Chart(rings[rings['level'] < 4]).mark_circle(fill='#f2f2f2', stroke='#999999', opacity=1).encode(
+    **on_page, size=alt.Size('size:Q', scale=None), tooltip='name:N')
+boroughs = alt.Chart(rings[rings['level'] == 4]).mark_circle(opacity=0.9).encode(
+    **on_page, size=alt.Size('size:Q', scale=None), color=alt.Color('half:N', title=None),
+    tooltip=['name:N'])
+(outer + boroughs).properties(width=side, height=side,
+    title=alt.Title('London packed: boroughs inside areas inside halves', subtitle='Source: ONS mid-2025 population estimates'))
+""")
+md("""
+**A dendrogram** is the tree that *clustering* builds: join the two most alike things, then the next two, and so
+on. Here the things are Tube lines, and two lines are alike when they stop at the same stations. scipy builds
+the tree (`linkage`) and works out where each bracket goes (`dendrogram(..., no_plot=True)`); Altair draws them.
+""")
+code("""
+from scipy.cluster.hierarchy import linkage, dendrogram
+
+tl = load('tube_links')
+stops_on = pd.concat([tl[['line', 'source']].rename(columns={'source': 'station'}),
+                      tl[['line', 'target']].rename(columns={'target': 'station'})]).drop_duplicates()
+calls = pd.crosstab(stops_on['line'], stops_on['station']) > 0      # one row per line: True where it stops
+
+joins = linkage(calls.values, method='average', metric='jaccard')   # 0 = same stations, 1 = none shared
+tree = dendrogram(joins, labels=list(calls.index), no_plot=True)
+
+brackets = pd.DataFrame([{'bracket': k, 'step': i, 'apart': d, 'down': y}
+                         for k, (ys, ds) in enumerate(zip(tree['icoord'], tree['dcoord']))
+                         for i, (y, d) in enumerate(zip(ys, ds))])
+leaves = pd.DataFrame({'line': tree['ivl'], 'down': [5 + 10 * i for i in range(len(tree['ivl']))]})
+
+down = alt.Y('down:Q', axis=None, scale=alt.Scale(reverse=True))
+arms = alt.Chart(brackets).mark_line(color='black').encode(
+    x=alt.X('apart:Q', title='How different (0 = the same stations)'), y=down, detail='bracket:N', order='step:Q')
+names = alt.Chart(leaves).mark_text(align='right', dx=-6).encode(x=alt.value(0), y=down, text='line:N')
+(arms + names).properties(width=420, height=300,
+    title=alt.Title('Lines that share stations join first', subtitle='Source: TfL Open Data'))
+""")
+md("""
+#### Try it
+
+1. Which two lines join first (the shortest bracket)? Find a station they both stop at in `calls`.
+2. In the circle packing, which Inner London area is the biggest circle? Check it with
+   `b.groupby('area')['population'].sum()`.
+""")
+
+md("""
+## 9 · Your turn: your own network
 
 Make an edge list of **six to ten people** you know (first names or initials only), one row per pair who
 know each other. Then:
@@ -1014,7 +1248,7 @@ mine
 """)
 
 md("""
-## 9 · Publish one panel for your infographic
+## 10 · Publish one panel for your infographic
 
 One picture, ready for your infographic. Work through it in order:
 
