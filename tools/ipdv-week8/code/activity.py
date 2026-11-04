@@ -100,8 +100,9 @@ they expect to see; after it, compare. Swap at each new letter.
 **If you get an error**
 - `NameError: name '…' is not defined`: a cell above was not run (run the cells above, in order), **or** a
   column name is missing its quotes (`source` should be `'source'`).
-- `SyntaxError`: a blank is still empty (`___`), or you typed a word that is already there (look either side of
-  the blank).
+- An error that mentions **`BLANK`**, `___` or `str`: a blank is still empty (`___`). Replace it and run again.
+- `SyntaxError`: you typed a word that is already there (look either side of the blank), or a bracket or quote
+  is missing.
 - `KeyError: '…'`: a column name is misspelt. Check it against the table's `.head()`.
 - A chart that is empty, or has no labels: a name inside quotes is misspelt (`'lines:Q'`, `'datum.lines'`).
 """)
@@ -137,7 +138,7 @@ Google Colab). The two CSVs should sit beside the notebook; if not, `load()` fet
 |---|---|---|
 | `NameError: name 'served' is not defined` | A cell above was skipped | "Run the cells above, in order (or Run All Above)." |
 | `NameError: name 'source' is not defined` | A column name without quotes | "Column names go in quotes: `'source'`." |
-| `SyntaxError` at `___` | A blank is still empty | "Which blank is left? Open the hint." |
+| Error mentioning `BLANK` | A blank is still empty | "Which blank is left? Open the hint." |
 | `KeyError: 'line_x'` (in D1) | The merge in D1a used the wrong column | "What do two lines have in common? Merge on that column." |
 | `KeyError` with a column name | A misspelt column | "Compare with `.head()` of the table." |
 | A chart with no labels, or empty | A misspelt name inside quotes | "Check the spelling of the name inside the quotes." |
@@ -166,6 +167,8 @@ def load(name):
 def check(ok, good, hint):
     \"\"\"Print ✅ and what you found, or ❌ and what to look at.\"\"\"
     print('✅ ' + good if ok else '❌ Not yet: ' + hint)
+
+___ = 'BLANK: replace ___ with your code'   # an empty blank names itself in the error
 
 stations = load('tube_stations')   # name, lon, lat, zone: one row per station
 edges = load('tube_links')         # source, target, line, colour: one row per ...? (Part A finds out)
