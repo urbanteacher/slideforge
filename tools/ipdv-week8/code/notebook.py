@@ -230,6 +230,50 @@ deg.head(5)
 """))
 
 md("""
+### 4b · Hover a station: light up its links
+
+A map this busy hides who is linked to whom. Let the reader ask: **point at a station, and only its track
+lights up**. Two new ideas:
+
+- `alt.selection_point(...)` remembers which dot the pointer is over (`on='pointerover'`), and forgets it when
+  the pointer leaves (`clear='pointerout'`). `.add_params(pick)` puts it on the dots.
+- `.transform_filter(pick)` keeps only the rows whose `name` matches the picked dot.
+
+A track touches **two** stations, so it has to be found from either end. In `lines`, `name` is already the
+`source` end (that was the first join). One extra copy, with `name` set to the `target` end, covers the other.
+""")
+code("""
+# Every track twice: once found from its source end, once from its target end
+touches = pd.concat([lines, lines.assign(name=lines['target'])])
+
+pick = alt.selection_point(fields=['name'], on='pointerover', clear='pointerout', empty=False)
+
+faded = alt.Chart(lines).mark_rule(strokeWidth=3, opacity=0.25).encode(       # the whole map, faded
+    **where, x2='lon2:Q', y2='lat2:Q', color=alt.Color('colour:N', scale=None))
+lit = alt.Chart(touches).mark_rule(strokeWidth=6).encode(
+    **where, x2='lon2:Q', y2='lat2:Q',
+    color=alt.Color('colour:N', scale=None),
+    tooltip=['source:N', 'target:N', 'line:N'],
+).transform_filter(pick)
+dots = alt.Chart(stations).mark_circle(size=70, color='white', stroke='black', opacity=1).encode(
+    **where, tooltip='name:N').add_params(pick)
+
+hover_map = (faded + lit + dots).properties(width=640, height=420,
+    title=alt.Title('Point at a station to light up its track', subtitle='Source: TfL Open Data')
+).configure_view(stroke=None)
+hover_map
+""")
+md("""
+### Try it
+
+1. Point at **King's Cross St. Pancras**. How many tracks light up? Section 4 counted a degree of 10 for it.
+   Where did the rest go? *(Hint: two lines on the same track are drawn on top of each other. The activity
+   comes back to this.)*
+2. Change `on='pointerover'` to `on='click'` and delete `clear='pointerout'`. Which suits a reader on a
+   phone better?
+""")
+
+md("""
 ## 5 · Build it: a matrix in one chart
 
 When there are too many lines (the lecture's *hairball*), draw a **grid** instead. Every character gets a
@@ -259,9 +303,40 @@ alt.Chart(pairs).mark_rect().encode(
     title=alt.Title('Sorted busiest first: the busy characters gather top left', subtitle='Source: Knuth (1993), Les Misérables'))
 """)
 md("""
+### The three orders side by side
+
+Same data, same squares, three orders. A small **function** draws one grid for any order, so the three can sit
+next to each other with `|` (side by side).
+""")
+code("""
+def grid(order, title):
+    return alt.Chart(pairs).mark_rect().encode(
+        x=alt.X('a:N', sort=order, axis=None),
+        y=alt.Y('b:N', sort=order, axis=None),
+        color=alt.Color('scenes:Q', scale=alt.Scale(scheme='blues'), title='Scenes together'),
+        tooltip=['a:N', 'b:N', 'scenes:Q'],
+    ).properties(width=210, height=210, title=title)
+
+by_name = sorted(name)
+by_group = nodes.sort_values(['group', 'name'])['name'].tolist()
+busiest = pairs['a'].value_counts().index.tolist()
+
+(grid(by_name, 'By name') | grid(by_group, 'By group') | grid(busiest, 'Busiest first')).properties(
+    title=alt.Title('Same links, three orders: only the order changes what you see',
+                    subtitle='Source: Knuth (1993), Les Misérables'))
+""")
+md("""
+A grid's best job is **looking up one pair**. That is a filter, not a picture:
+""")
+code("""
+pairs[(pairs['a'] == 'Javert') & (pairs['b'] == 'Fantine')]
+""")
+md("""
 ### Try it
 
-Hover the top-left square. Who is the busiest character? Who shares the most scenes with them?
+1. Hover the top-left square of *Busiest first*. Who is the busiest character? Who shares the most scenes with them?
+2. Which of the three orders would you give a reader who asks *"who belongs together?"* Why that one?
+3. Look up a pair with **no** row: change `'Fantine'` to `'Gavroche'`. What does an empty table tell you?
 
 ### When does the grid win?
 
@@ -694,6 +769,37 @@ mine = pd.DataFrame({
     'target': [],
 })
 mine
+""")
+
+md("""
+## 9 · Publish one panel for your infographic
+
+One picture, ready for your infographic. Work through it in order:
+
+1. **The reader's question.** Do they want to find a route, check a pair, or compare parts of a whole?
+   The table at the top of this notebook picks the picture.
+2. **A title that states the finding**, not the topic: *"King's Cross serves six lines"*, not *"Tube stations"*.
+3. **One checked finding in a caption.** Check the number against the table before you write it. Then say
+   what a dot, line, square or box stands for, and where the data came from.
+4. **Test it on someone.** Can they find your example without you explaining it? Put the main point where it
+   can be read **without** hovering: a printed page cannot hover.
+5. **Save it.** HTML keeps the hover; PNG is a still picture for a slide or a page.
+
+**A worked caption:** *"King's Cross St. Pancras serves more lines than any other Zone 1 station: six. Point
+at it to see the track to its five neighbouring stations. Dots are stations, lines are track; positions are
+real. Source: TfL Open Data."* (Checked: section 4b shows the five neighbours; the activity counts the six lines.)
+""")
+code("""
+panel = hover_map        # or any chart above: give it a name first, e.g. treemap = alt.Chart(...)
+caption = "Write your checked finding here."
+
+SAVE = False             # change to True, then run this cell
+if SAVE:
+    panel.save('week8_panel.html')                    # keeps the hover
+    panel.save('week8_panel.png', scale_factor=2)     # a still picture (needs: %pip install vl-convert-python)
+    print('Saved week8_panel.html and week8_panel.png beside this notebook')
+else:
+    print('Set SAVE = True when your panel is ready.')
 """)
 
 md("""
