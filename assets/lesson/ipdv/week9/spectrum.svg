@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">WHO DRIVES?</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">Every data story sits somewhere on one line</text>
+<line x1="120" y1="330" x2="1160" y2="330" stroke="#0c3354" stroke-width="6" stroke-linecap="round"/>
+<path d="M112 330 l22 -14 v28 z" fill="#0c3354"/><path d="M1168 330 l-22 -14 v28 z" fill="#0c3354"/>
+<text x="100" y="260" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" text-anchor="start" fill="#c8102e" letter-spacing="2">THE AUTHOR DRIVES</text>
+<text x="100" y="288" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="400" text-anchor="start" fill="#5a6572">One message, a fixed order</text>
+<text x="1180" y="260" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" text-anchor="end" fill="#c8102e" letter-spacing="2">THE READER DRIVES</text>
+<text x="1180" y="288" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="400" text-anchor="end" fill="#5a6572">No set path, their own questions</text>
+<circle cx="180" cy="330" r="13" fill="#fff" stroke="#0c3354" stroke-width="4"/>
+<text x="180" y="386" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="27" font-weight="400" text-anchor="middle" fill="#0c3354">Linear story</text>
+<text x="180" y="424" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">slideshow, annotated</text>
+<text x="180" y="449" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">chart,</text>
+<text x="180" y="474" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">scrollytelling</text>
+<text x="180" y="511" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">e.g. a talk, a poster,</text>
+<text x="180" y="533" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">Snow Fall</text>
+<circle cx="410" cy="330" r="13" fill="#fff" stroke="#0c3354" stroke-width="4"/>
+<text x="410" y="386" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="27" font-weight="400" text-anchor="middle" fill="#0c3354">Interactive</text>
+<text x="410" y="418" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="27" font-weight="400" text-anchor="middle" fill="#0c3354">slideshow</text>
+<text x="410" y="456" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">chapters in order,</text>
+<text x="410" y="481" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">explore inside each</text>
+<text x="410" y="518" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">e.g. an explainer in</text>
+<text x="410" y="540" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">parts</text>
+<circle cx="640" cy="330" r="18" fill="#c8102e" stroke="#c8102e" stroke-width="4"/>
+<text x="640" y="386" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="27" font-weight="400" text-anchor="middle" fill="#c8102e">Martini glass</text>
+<text x="640" y="424" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">a short story, then</text>
+<text x="640" y="449" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">it opens up</text>
+<text x="640" y="486" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">e.g. a news chart you</text>
+<text x="640" y="508" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">can then explore</text>
+<circle cx="870" cy="330" r="13" fill="#fff" stroke="#0c3354" stroke-width="4"/>
+<text x="870" y="386" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="27" font-weight="400" text-anchor="middle" fill="#0c3354">Drill-down</text>
+<text x="870" y="418" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="27" font-weight="400" text-anchor="middle" fill="#0c3354">story</text>
+<text x="870" y="456" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">pick a story from an</text>
+<text x="870" y="481" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">overview</text>
+<text x="870" y="518" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">e.g. one story per</text>
+<text x="870" y="540" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">borough</text>
+<circle cx="1100" cy="330" r="13" fill="#fff" stroke="#0c3354" stroke-width="4"/>
+<text x="1100" y="386" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="27" font-weight="400" text-anchor="middle" fill="#0c3354">Dashboard</text>
+<text x="1100" y="424" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">filters and views,</text>
+<text x="1100" y="449" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="middle" fill="#14181f">no story</text>
+<text x="1100" y="486" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">e.g. London Air’s live</text>
+<text x="1100" y="508" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="middle" fill="#5a6572">map</text>
+<text x="64" y="650" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#5a6572">Segel and Heer, Narrative Visualization: Telling Stories with Data (2010). Most good charts blend both ends.</text>
+</svg>

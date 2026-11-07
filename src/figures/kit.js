@@ -201,7 +201,9 @@ export function textWidth(text, size, light) {
 /**
  * The stage every figure stands on: a full-bleed ground, an eyebrow, a title,
  * a caption for the step and step pips. Returns the parts a figure fills in.
- * @param {Element} svg @param {{ground?: string, eyebrow?: string, title?: string, credit?: string}} o
+ * @param {Element} svg @param {{ground?: string, eyebrow?: string, title?: string, credit?: string, captionTop?: {width: number}|null}} o
+ *   captionTop: the step's caption is the question the room answers, so it stands under the title, bold and
+ *   larger with a red marker, kept within `width`; the source line moves to the foot.
  */
 export function stage(svg, o) {
   var ground = o.ground || 'stage', dark = ground !== 'paper', split = ground === 'split';
@@ -217,15 +219,25 @@ export function stage(svg, o) {
   if (split) el('rect', { width: SPLIT.x, height: SPLIT.y, fill: NU.paper }, svg);
   if (o.eyebrow) el('text', { x: 64, y: 58, 'font-family': NU.sans, 'font-size': 15, 'font-weight': 700, 'letter-spacing': 2.6, fill: NU.red }, svg, o.eyebrow.toUpperCase());
   var title = o.title ? el('text', { x: 64, y: 100, 'font-family': NU.serif, 'font-size': split ? 32 : 38, fill: split ? NU.ink : ink }, svg, o.title) : null;
-  var caption = el('text', { x: 64, y: H - 34, 'font-family': NU.sans, 'font-size': 22, fill: ink, class: 'fig-caption' }, svg);
+  var top = o.captionTop || null, CT = { x: 84, y: 150, size: 27, lh: 34 };
+  var marker = top ? el('rect', { x: 64, y: CT.y - 24, width: 6, height: 30, rx: 2, fill: NU.red }, svg) : null;
+  var caption = top ? el('text', { x: CT.x, y: CT.y, 'font-family': NU.sans, 'font-size': CT.size, 'font-weight': 700, fill: ink, class: 'fig-caption' }, svg)
+    : el('text', { x: 64, y: H - 34, 'font-family': NU.sans, 'font-size': 22, fill: ink, class: 'fig-caption' }, svg);
   var pips = el('g', { transform: 'translate(' + (W - 64) + ' ' + (H - 41) + ')' }, svg);
-  if (o.credit) el('text', { x: W - 64, y: 58, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 13, fill: soft }, svg, o.credit);
+  if (o.credit) el('text', top ? { x: 64, y: H - 36, 'font-family': NU.sans, 'font-size': 14, fill: soft } : { x: W - 64, y: 58, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 13, fill: soft }, svg, o.credit);
   return {
     ink: ink, soft: soft, dark: dark, title: title,
     /** @param {string} text */
     /* One line when it fits beside the step pips; a longer caption wraps to two lines, the first raised, so it never runs into them. */
     caption: function (text) {
       caption.textContent = '';
+      if (top) {
+        /* the question, under the title: up to two lines, the marker as tall as the words */
+        var qs = wrap(text || '', CT.size, top.width).slice(0, 2);
+        qs.forEach(function (l, i) { el('tspan', { x: CT.x, dy: i ? CT.lh : 0 }, caption, l); });
+        if (marker) set(marker, { height: 30 + (qs.length - 1) * CT.lh, opacity: qs.length ? 1 : 0 });
+        return;
+      }
       var lines = wrap(text || '', 22, W - 64 - 64 - 140);
       if (lines.length < 2) { caption.textContent = text || ''; set(caption, { y: H - 34 }); return; }
       set(caption, { y: H - 60 });

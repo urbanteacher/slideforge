@@ -1,0 +1,1216 @@
+code,site,borough,type,year,no2
+BG1,Rush Green,Barking and Dagenham,Suburban,2010,26
+BG1,Rush Green,Barking and Dagenham,Suburban,2011,25
+BG1,Rush Green,Barking and Dagenham,Suburban,2012,27
+BG1,Rush Green,Barking and Dagenham,Suburban,2013,27
+BG1,Rush Green,Barking and Dagenham,Suburban,2014,25
+BG1,Rush Green,Barking and Dagenham,Suburban,2015,20
+BG1,Rush Green,Barking and Dagenham,Suburban,2016,21
+BG1,Rush Green,Barking and Dagenham,Suburban,2017,24
+BG1,Rush Green,Barking and Dagenham,Suburban,2020,17
+BG1,Rush Green,Barking and Dagenham,Suburban,2021,17
+BG1,Rush Green,Barking and Dagenham,Suburban,2022,17
+BG1,Rush Green,Barking and Dagenham,Suburban,2023,16
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2010,35
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2014,30
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2015,29
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2016,32
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2017,29
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2018,26
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2019,24
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2020,20
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2021,20
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2022,21
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2023,18
+BG2,Scrattons Farm,Barking and Dagenham,Suburban,2024,18
+BG3,North Street,Barking and Dagenham,Kerbside,2010,50
+BL0,Bloomsbury,Camden,Urban Background,2010,55
+BL0,Bloomsbury,Camden,Urban Background,2011,50
+BL0,Bloomsbury,Camden,Urban Background,2012,55
+BL0,Bloomsbury,Camden,Urban Background,2013,51
+BL0,Bloomsbury,Camden,Urban Background,2015,48
+BL0,Bloomsbury,Camden,Urban Background,2016,42
+BL0,Bloomsbury,Camden,Urban Background,2017,38
+BL0,Bloomsbury,Camden,Urban Background,2018,36
+BL0,Bloomsbury,Camden,Urban Background,2019,32
+BL0,Bloomsbury,Camden,Urban Background,2020,28
+BL0,Bloomsbury,Camden,Urban Background,2021,27
+BL0,Bloomsbury,Camden,Urban Background,2022,26
+BL0,Bloomsbury,Camden,Urban Background,2025,19
+BN1,Tally Ho Corner,Barnet,Kerbside,2010,70
+BN1,Tally Ho Corner,Barnet,Kerbside,2011,69
+BN2,Finchley,Barnet,Urban Background,2010,32
+BN2,Finchley,Barnet,Urban Background,2011,31
+BQ7,Belvedere West,Bexley,Urban Background,2011,24
+BQ7,Belvedere West,Bexley,Urban Background,2012,25
+BQ7,Belvedere West,Bexley,Urban Background,2013,24
+BQ7,Belvedere West,Bexley,Urban Background,2014,23
+BQ7,Belvedere West,Bexley,Urban Background,2015,22
+BQ7,Belvedere West,Bexley,Urban Background,2016,24
+BQ7,Belvedere West,Bexley,Urban Background,2017,21
+BQ7,Belvedere West,Bexley,Urban Background,2018,21
+BQ7,Belvedere West,Bexley,Urban Background,2019,21
+BQ7,Belvedere West,Bexley,Urban Background,2020,17
+BQ7,Belvedere West,Bexley,Urban Background,2021,17
+BQ7,Belvedere West,Bexley,Urban Background,2022,16
+BQ7,Belvedere West,Bexley,Urban Background,2023,14
+BQ7,Belvedere West,Bexley,Urban Background,2024,13
+BQ7,Belvedere West,Bexley,Urban Background,2025,14
+BT1,Kingsbury,Brent,Suburban,2010,29
+BT4,Ikea,Brent,Roadside,2011,75
+BT4,Ikea,Brent,Roadside,2012,76
+BT4,Ikea,Brent,Roadside,2016,76
+BT4,Ikea,Brent,Roadside,2017,72
+BT4,Ikea,Brent,Roadside,2018,71
+BT4,Ikea,Brent,Roadside,2019,63
+BT4,Ikea,Brent,Roadside,2020,49
+BT4,Ikea,Brent,Roadside,2021,46
+BT4,Ikea,Brent,Roadside,2022,43
+BT4,Ikea,Brent,Roadside,2023,39
+BT4,Ikea,Brent,Roadside,2024,31
+BT4,Ikea,Brent,Roadside,2025,34
+BT5,Neasden Lane,Brent,Industrial,2011,41
+BT5,Neasden Lane,Brent,Industrial,2012,44
+BT5,Neasden Lane,Brent,Industrial,2013,39
+BT5,Neasden Lane,Brent,Industrial,2017,45
+BT5,Neasden Lane,Brent,Industrial,2018,39
+BT5,Neasden Lane,Brent,Industrial,2019,38
+BT5,Neasden Lane,Brent,Industrial,2020,29
+BT5,Neasden Lane,Brent,Industrial,2021,30
+BT5,Neasden Lane,Brent,Industrial,2022,28
+BT5,Neasden Lane,Brent,Industrial,2023,25
+BT5,Neasden Lane,Brent,Industrial,2024,23
+BT5,Neasden Lane,Brent,Industrial,2025,21
+BT6,John Keble Primary School,Brent,Roadside,2011,45
+BT6,John Keble Primary School,Brent,Roadside,2012,41
+BT6,John Keble Primary School,Brent,Roadside,2017,45
+BT6,John Keble Primary School,Brent,Roadside,2018,39
+BT6,John Keble Primary School,Brent,Roadside,2019,37
+BT6,John Keble Primary School,Brent,Roadside,2020,29
+BT6,John Keble Primary School,Brent,Roadside,2021,29
+BT6,John Keble Primary School,Brent,Roadside,2022,28
+BT6,John Keble Primary School,Brent,Roadside,2023,25
+BT6,John Keble Primary School,Brent,Roadside,2024,22
+BT6,John Keble Primary School,Brent,Roadside,2025,21
+BT7,St Marys Primary School,Brent,Urban Background,2010,35
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2018,46
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2019,41
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2020,29
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2021,31
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2022,29
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2023,23
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2024,23
+BT8,ARK Franklin Primary Academy,Brent,Roadside,2025,22
+BX1,Slade Green,Bexley,Suburban,2010,31
+BX1,Slade Green,Bexley,Suburban,2011,29
+BX1,Slade Green,Bexley,Suburban,2012,29
+BX1,Slade Green,Bexley,Suburban,2013,28
+BX1,Slade Green,Bexley,Suburban,2014,27
+BX1,Slade Green,Bexley,Suburban,2015,26
+BX1,Slade Green,Bexley,Suburban,2016,25
+BX1,Slade Green,Bexley,Suburban,2017,25
+BX1,Slade Green,Bexley,Suburban,2018,23
+BX1,Slade Green,Bexley,Suburban,2019,22
+BX1,Slade Green,Bexley,Suburban,2020,19
+BX1,Slade Green,Bexley,Suburban,2021,19
+BX1,Slade Green,Bexley,Suburban,2022,18
+BX1,Slade Green,Bexley,Suburban,2023,16
+BX1,Slade Green,Bexley,Suburban,2024,14
+BX1,Slade Green,Bexley,Suburban,2025,16
+BX2,Belvedere,Bexley,Suburban,2010,30
+BX2,Belvedere,Bexley,Suburban,2011,26
+BX2,Belvedere,Bexley,Suburban,2012,27
+BX2,Belvedere,Bexley,Suburban,2013,27
+BX2,Belvedere,Bexley,Suburban,2014,27
+BX2,Belvedere,Bexley,Suburban,2015,24
+BX2,Belvedere,Bexley,Suburban,2016,29
+BX2,Belvedere,Bexley,Suburban,2017,28
+BX2,Belvedere,Bexley,Suburban,2018,28
+BX2,Belvedere,Bexley,Suburban,2019,23
+BX2,Belvedere,Bexley,Suburban,2020,18
+BX2,Belvedere,Bexley,Suburban,2021,16
+BX2,Belvedere,Bexley,Suburban,2022,16
+BX2,Belvedere,Bexley,Suburban,2023,15
+BX2,Belvedere,Bexley,Suburban,2024,15
+BX2,Belvedere,Bexley,Suburban,2025,16
+BX4,Erith,Bexley,Industrial,2010,29
+BX4,Erith,Bexley,Industrial,2013,28
+BX4,Erith,Bexley,Industrial,2014,24
+BY7,Harwood Avenue,Bromley,Roadside,2020,21
+BY7,Harwood Avenue,Bromley,Roadside,2021,22
+BY7,Harwood Avenue,Bromley,Roadside,2022,20
+BY7,Harwood Avenue,Bromley,Roadside,2023,19
+BY7,Harwood Avenue,Bromley,Roadside,2024,20
+BY7,Harwood Avenue,Bromley,Roadside,2025,17
+CD1,Swiss Cottage,Camden,Kerbside,2010,82
+CD1,Swiss Cottage,Camden,Kerbside,2011,72
+CD1,Swiss Cottage,Camden,Kerbside,2012,71
+CD1,Swiss Cottage,Camden,Kerbside,2013,71
+CD1,Swiss Cottage,Camden,Kerbside,2014,66
+CD1,Swiss Cottage,Camden,Kerbside,2015,61
+CD1,Swiss Cottage,Camden,Kerbside,2016,66
+CD1,Swiss Cottage,Camden,Kerbside,2017,53
+CD1,Swiss Cottage,Camden,Kerbside,2018,54
+CD1,Swiss Cottage,Camden,Kerbside,2019,43
+CD1,Swiss Cottage,Camden,Kerbside,2020,33
+CD1,Swiss Cottage,Camden,Kerbside,2024,30
+CD1,Swiss Cottage,Camden,Kerbside,2025,28
+CD3,Shaftesbury Avenue,Camden,Roadside,2011,76
+CD3,Shaftesbury Avenue,Camden,Roadside,2012,71
+CD3,Shaftesbury Avenue,Camden,Roadside,2013,77
+CD5,St Martins College (NOX 2),Camden,Urban Background,2010,59
+CD9,Euston Road,Camden,Roadside,2011,123
+CD9,Euston Road,Camden,Roadside,2012,106
+CD9,Euston Road,Camden,Roadside,2013,111
+CD9,Euston Road,Camden,Roadside,2014,104
+CD9,Euston Road,Camden,Roadside,2015,91
+CD9,Euston Road,Camden,Roadside,2016,88
+CD9,Euston Road,Camden,Roadside,2017,83
+CD9,Euston Road,Camden,Roadside,2018,87
+CD9,Euston Road,Camden,Roadside,2019,70
+CE1,Regent Street facade (The Crown Estate),Regent Street facade (The Crown Estate),Roadside,2015,37
+CE1,Regent Street facade (The Crown Estate),Regent Street facade (The Crown Estate),Roadside,2016,35
+CE1,Regent Street facade (The Crown Estate),Regent Street facade (The Crown Estate),Roadside,2017,35
+CE1,Regent Street facade (The Crown Estate),Regent Street facade (The Crown Estate),Roadside,2018,36
+CE1,Regent Street facade (The Crown Estate),Regent Street facade (The Crown Estate),Roadside,2021,36
+CE1,Regent Street facade (The Crown Estate),Regent Street facade (The Crown Estate),Roadside,2022,39
+CE2,Waterloo Place (The Crown Estate),Waterloo Place (The Crown Estate),Roadside,2021,36
+CE2,Waterloo Place (The Crown Estate),Waterloo Place (The Crown Estate),Roadside,2022,38
+CE2,Waterloo Place (The Crown Estate),Waterloo Place (The Crown Estate),Roadside,2023,36
+CE2,Waterloo Place (The Crown Estate),Waterloo Place (The Crown Estate),Roadside,2025,31
+CE3,Regent Street (The Crown Estate),Regent Street (The Crown Estate),Roadside,2023,39
+CR2,Purley Way,Croydon,Roadside,2010,42
+CR4,George Street,Croydon,Roadside,2010,52
+CR4,George Street,Croydon,Roadside,2011,44
+CR4,George Street,Croydon,Roadside,2012,45
+CR4,George Street,Croydon,Roadside,2013,49
+CR4,George Street,Croydon,Roadside,2014,45
+CR5,Norbury,Croydon,Kerbside,2010,76
+CR5,Norbury,Croydon,Kerbside,2011,63
+CR5,Norbury,Croydon,Kerbside,2012,66
+CR5,Norbury,Croydon,Kerbside,2013,77
+CR5,Norbury,Croydon,Kerbside,2015,58
+CR5,Norbury,Croydon,Kerbside,2016,47
+CR5,Norbury,Croydon,Kerbside,2017,48
+CR5,Norbury,Croydon,Kerbside,2018,49
+CR5,Norbury,Croydon,Kerbside,2019,44
+CR5,Norbury,Croydon,Kerbside,2020,35
+CR5,Norbury,Croydon,Kerbside,2021,39
+CR5,Norbury,Croydon,Kerbside,2022,37
+CR5,Norbury,Croydon,Kerbside,2023,32
+CR5,Norbury,Croydon,Kerbside,2024,27
+CR5,Norbury,Croydon,Kerbside,2025,25
+CR7,Purley Way A23,Croydon,Roadside,2012,36
+CR7,Purley Way A23,Croydon,Roadside,2013,37
+CR7,Purley Way A23,Croydon,Roadside,2014,35
+CR7,Purley Way A23,Croydon,Roadside,2015,32
+CR7,Purley Way A23,Croydon,Roadside,2016,31
+CR7,Purley Way A23,Croydon,Roadside,2017,31
+CR7,Purley Way A23,Croydon,Roadside,2018,31
+CR7,Purley Way A23,Croydon,Roadside,2019,29
+CR7,Purley Way A23,Croydon,Roadside,2020,24
+CR7,Purley Way A23,Croydon,Roadside,2021,26
+CR7,Purley Way A23,Croydon,Roadside,2023,19
+CR7,Purley Way A23,Croydon,Roadside,2024,18
+CR9,Park Lane,Croydon,Roadside,2016,56
+CR9,Park Lane,Croydon,Roadside,2017,45
+CR9,Park Lane,Croydon,Roadside,2018,41
+CR9,Park Lane,Croydon,Roadside,2019,44
+CT1,Senator House,City of London,Urban Background,2010,51
+CT1,Senator House,City of London,Urban Background,2011,51
+CT3,The Aldgate School,City of London,Urban Background,2010,55
+CT3,The Aldgate School,City of London,Urban Background,2011,45
+CT3,The Aldgate School,City of London,Urban Background,2012,47
+CT3,The Aldgate School,City of London,Urban Background,2013,47
+CT3,The Aldgate School,City of London,Urban Background,2014,45
+CT3,The Aldgate School,City of London,Urban Background,2015,42
+CT3,The Aldgate School,City of London,Urban Background,2016,42
+CT3,The Aldgate School,City of London,Urban Background,2017,38
+CT3,The Aldgate School,City of London,Urban Background,2018,32
+CT3,The Aldgate School,City of London,Urban Background,2019,33
+CT3,The Aldgate School,City of London,Urban Background,2020,22
+CT3,The Aldgate School,City of London,Urban Background,2021,23
+CT3,The Aldgate School,City of London,Urban Background,2022,23
+CT4,Beech Street,City of London,Roadside,2013,81
+CT4,Beech Street,City of London,Roadside,2014,80
+CT4,Beech Street,City of London,Roadside,2015,89
+CT4,Beech Street,City of London,Roadside,2016,85
+CT4,Beech Street,City of London,Roadside,2017,80
+CT4,Beech Street,City of London,Roadside,2018,69
+CT4,Beech Street,City of London,Roadside,2019,62
+CT4,Beech Street,City of London,Roadside,2020,29
+CT4,Beech Street,City of London,Roadside,2021,31
+CT4,Beech Street,City of London,Roadside,2022,41
+CT6,Walbrook Wharf,City of London,Roadside,2010,118
+CT6,Walbrook Wharf,City of London,Roadside,2012,115
+CT6,Walbrook Wharf,City of London,Roadside,2013,122
+CT6,Walbrook Wharf,City of London,Roadside,2014,122
+CT6,Walbrook Wharf,City of London,Roadside,2015,98
+CT6,Walbrook Wharf,City of London,Roadside,2016,92
+CT6,Walbrook Wharf,City of London,Roadside,2017,92
+CT6,Walbrook Wharf,City of London,Roadside,2018,87
+CT6,Walbrook Wharf,City of London,Roadside,2019,74
+CT6,Walbrook Wharf,City of London,Roadside,2020,45
+CT6,Walbrook Wharf,City of London,Roadside,2021,46
+CT6,Walbrook Wharf,City of London,Roadside,2022,52
+CW3,Jubilee Park ,Tower Hamlets,Urban Background,2022,20
+CW3,Jubilee Park ,Tower Hamlets,Urban Background,2023,18
+CW3,Jubilee Park ,Tower Hamlets,Urban Background,2024,16
+CW3,Jubilee Park ,Tower Hamlets,Urban Background,2025,16
+EA1,Ealing Town Hall,Ealing,Urban Background,2010,44
+EA1,Ealing Town Hall,Ealing,Urban Background,2011,42
+EA2,Acton Town Hall,Ealing,Roadside,2010,55
+EA2,Acton Town Hall,Ealing,Roadside,2011,54
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2010,90
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2011,79
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2012,95
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2013,74
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2014,78
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2015,85
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2016,76
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2017,72
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2018,68
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2019,65
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2020,51
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2021,49
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2022,52
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2023,41
+EA6,Hanger Lane Gyratory,Ealing,Roadside,2024,36
+EA7,Southall,Ealing,Urban Background,2010,31
+EA7,Southall,Ealing,Urban Background,2011,29
+EA7,Southall,Ealing,Urban Background,2012,35
+EA7,Southall,Ealing,Urban Background,2013,33
+EA7,Southall,Ealing,Urban Background,2014,29
+EA7,Southall,Ealing,Urban Background,2015,25
+EA8,Horn Lane,Ealing,Industrial,2011,57
+EA8,Horn Lane,Ealing,Industrial,2012,53
+EA8,Horn Lane,Ealing,Industrial,2013,57
+EA8,Horn Lane,Ealing,Industrial,2014,48
+EA8,Horn Lane,Ealing,Industrial,2015,48
+EA8,Horn Lane,Ealing,Industrial,2016,48
+EA8,Horn Lane,Ealing,Industrial,2017,45
+EA8,Horn Lane,Ealing,Industrial,2018,44
+EA8,Horn Lane,Ealing,Industrial,2019,42
+EA8,Horn Lane,Ealing,Industrial,2020,33
+EA8,Horn Lane,Ealing,Industrial,2021,32
+EA8,Horn Lane,Ealing,Industrial,2022,29
+EA8,Horn Lane,Ealing,Industrial,2023,29
+EA8,Horn Lane,Ealing,Industrial,2024,26
+EA8,Horn Lane,Ealing,Industrial,2025,24
+EI1,Western Avenue,Ealing,Roadside,2011,64
+EI1,Western Avenue,Ealing,Roadside,2013,65
+EI1,Western Avenue,Ealing,Roadside,2014,66
+EI1,Western Avenue,Ealing,Roadside,2016,60
+EI1,Western Avenue,Ealing,Roadside,2017,51
+EI1,Western Avenue,Ealing,Roadside,2019,49
+EI1,Western Avenue,Ealing,Roadside,2020,35
+EI1,Western Avenue,Ealing,Roadside,2021,36
+EI1,Western Avenue,Ealing,Roadside,2022,35
+EI1,Western Avenue,Ealing,Roadside,2023,30
+EI1,Western Avenue,Ealing,Roadside,2024,28
+EI1,Western Avenue,Ealing,Roadside,2025,28
+EI2,Southall Railway,Ealing,Roadside,2012,35
+EI2,Southall Railway,Ealing,Roadside,2013,35
+EI3,Acton Vale ,Ealing,Urban Background,2018,29
+EI3,Acton Vale ,Ealing,Urban Background,2019,27
+EN1,Bush Hill Park,Enfield,Suburban,2013,30
+EN1,Bush Hill Park,Enfield,Suburban,2014,34
+EN1,Bush Hill Park,Enfield,Suburban,2015,27
+EN1,Bush Hill Park,Enfield,Suburban,2016,28
+EN1,Bush Hill Park,Enfield,Suburban,2017,27
+EN1,Bush Hill Park,Enfield,Suburban,2018,26
+EN1,Bush Hill Park,Enfield,Suburban,2019,22
+EN1,Bush Hill Park,Enfield,Suburban,2020,18
+EN1,Bush Hill Park,Enfield,Suburban,2021,18
+EN1,Bush Hill Park,Enfield,Suburban,2022,19
+EN1,Bush Hill Park,Enfield,Suburban,2023,17
+EN1,Bush Hill Park,Enfield,Suburban,2024,15
+EN1,Bush Hill Park,Enfield,Suburban,2025,16
+EN4,Derby Road,Enfield,Roadside,2010,46
+EN4,Derby Road,Enfield,Roadside,2012,43
+EN4,Derby Road,Enfield,Roadside,2013,44
+EN4,Derby Road,Enfield,Roadside,2014,45
+EN4,Derby Road,Enfield,Roadside,2016,43
+EN4,Derby Road,Enfield,Roadside,2017,38
+EN4,Derby Road,Enfield,Roadside,2018,35
+EN4,Derby Road,Enfield,Roadside,2019,37
+EN4,Derby Road,Enfield,Roadside,2020,28
+EN4,Derby Road,Enfield,Roadside,2021,24
+EN4,Derby Road,Enfield,Roadside,2022,26
+EN4,Derby Road,Enfield,Roadside,2023,26
+EN4,Derby Road,Enfield,Roadside,2024,23
+EN4,Derby Road,Enfield,Roadside,2025,23
+EN5,Bowes Primary School,Enfield,Roadside,2010,54
+EN5,Bowes Primary School,Enfield,Roadside,2011,45
+EN5,Bowes Primary School,Enfield,Roadside,2012,49
+EN5,Bowes Primary School,Enfield,Roadside,2015,46
+EN5,Bowes Primary School,Enfield,Roadside,2016,47
+EN5,Bowes Primary School,Enfield,Roadside,2017,45
+EN5,Bowes Primary School,Enfield,Roadside,2018,44
+EN5,Bowes Primary School,Enfield,Roadside,2019,41
+EN5,Bowes Primary School,Enfield,Roadside,2020,30
+EN5,Bowes Primary School,Enfield,Roadside,2021,30
+EN5,Bowes Primary School,Enfield,Roadside,2022,28
+EN5,Bowes Primary School,Enfield,Roadside,2023,25
+EN5,Bowes Primary School,Enfield,Roadside,2024,24
+EN5,Bowes Primary School,Enfield,Roadside,2025,25
+EN7,Prince of Wales School,Enfield,Urban Background,2013,27
+EN7,Prince of Wales School,Enfield,Urban Background,2014,24
+EN7,Prince of Wales School,Enfield,Urban Background,2015,24
+EN7,Prince of Wales School,Enfield,Urban Background,2016,25
+EN7,Prince of Wales School,Enfield,Urban Background,2017,23
+EN7,Prince of Wales School,Enfield,Urban Background,2018,23
+EN7,Prince of Wales School,Enfield,Urban Background,2019,23
+EN7,Prince of Wales School,Enfield,Urban Background,2020,18
+EN7,Prince of Wales School,Enfield,Urban Background,2021,18
+EN7,Prince of Wales School,Enfield,Urban Background,2022,18
+EN7,Prince of Wales School,Enfield,Urban Background,2023,15
+EN7,Prince of Wales School,Enfield,Urban Background,2024,14
+EN7,Prince of Wales School,Enfield,Urban Background,2025,16
+GB6,Falconwood,Greenwich,Roadside,2010,51
+GB6,Falconwood,Greenwich,Roadside,2011,42
+GB6,Falconwood,Greenwich,Roadside,2012,47
+GB6,Falconwood,Greenwich,Roadside,2013,51
+GB6,Falconwood,Greenwich,Roadside,2014,47
+GB6,Falconwood,Greenwich,Roadside,2015,41
+GB6,Falconwood,Greenwich,Roadside,2016,45
+GB6,Falconwood,Greenwich,Roadside,2017,40
+GB6,Falconwood,Greenwich,Roadside,2018,39
+GB6,Falconwood,Greenwich,Roadside,2019,36
+GB6,Falconwood,Greenwich,Roadside,2020,27
+GB6,Falconwood,Greenwich,Roadside,2021,27
+GB6,Falconwood,Greenwich,Roadside,2022,22
+GB6,Falconwood,Greenwich,Roadside,2024,17
+GB6,Falconwood,Greenwich,Roadside,2025,20
+GN0,A206 Burrage Grove,Greenwich,Roadside,2010,53
+GN0,A206 Burrage Grove,Greenwich,Roadside,2011,43
+GN0,A206 Burrage Grove,Greenwich,Roadside,2012,45
+GN0,A206 Burrage Grove,Greenwich,Roadside,2013,45
+GN0,A206 Burrage Grove,Greenwich,Roadside,2014,39
+GN0,A206 Burrage Grove,Greenwich,Roadside,2015,35
+GN0,A206 Burrage Grove,Greenwich,Roadside,2016,39
+GN0,A206 Burrage Grove,Greenwich,Roadside,2017,35
+GN0,A206 Burrage Grove,Greenwich,Roadside,2018,35
+GN0,A206 Burrage Grove,Greenwich,Roadside,2019,33
+GN0,A206 Burrage Grove,Greenwich,Roadside,2020,26
+GN0,A206 Burrage Grove,Greenwich,Roadside,2021,27
+GN0,A206 Burrage Grove,Greenwich,Roadside,2022,26
+GN0,A206 Burrage Grove,Greenwich,Roadside,2023,23
+GN0,A206 Burrage Grove,Greenwich,Roadside,2024,20
+GN0,A206 Burrage Grove,Greenwich,Roadside,2025,22
+GN2,Millennium Village,Greenwich,Industrial,2010,36
+GN2,Millennium Village,Greenwich,Industrial,2011,33
+GN2,Millennium Village,Greenwich,Industrial,2012,37
+GN2,Millennium Village,Greenwich,Industrial,2013,38
+GN2,Millennium Village,Greenwich,Industrial,2014,37
+GN2,Millennium Village,Greenwich,Industrial,2016,30
+GN3,Plumstead High Street,Greenwich,Roadside,2010,42
+GN3,Plumstead High Street,Greenwich,Roadside,2011,42
+GN3,Plumstead High Street,Greenwich,Roadside,2012,39
+GN3,Plumstead High Street,Greenwich,Roadside,2013,37
+GN3,Plumstead High Street,Greenwich,Roadside,2014,37
+GN3,Plumstead High Street,Greenwich,Roadside,2016,36
+GN3,Plumstead High Street,Greenwich,Roadside,2017,34
+GN3,Plumstead High Street,Greenwich,Roadside,2018,33
+GN3,Plumstead High Street,Greenwich,Roadside,2019,34
+GN3,Plumstead High Street,Greenwich,Roadside,2020,30
+GN3,Plumstead High Street,Greenwich,Roadside,2021,25
+GN3,Plumstead High Street,Greenwich,Roadside,2022,25
+GN3,Plumstead High Street,Greenwich,Roadside,2023,23
+GN3,Plumstead High Street,Greenwich,Roadside,2024,21
+GN3,Plumstead High Street,Greenwich,Roadside,2025,22
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2011,47
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2012,52
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2013,58
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2014,54
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2015,44
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2016,46
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2017,41
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2018,40
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2019,37
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2020,26
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2021,31
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2022,27
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2023,24
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2024,21
+GN4,Fiveways Sidcup Rd A20,Greenwich,Roadside,2025,21
+GN5,Trafalgar Road (Hoskins St),Greenwich,Roadside,2018,43
+GN5,Trafalgar Road (Hoskins St),Greenwich,Roadside,2019,41
+GN5,Trafalgar Road (Hoskins St),Greenwich,Roadside,2020,34
+GN5,Trafalgar Road (Hoskins St),Greenwich,Roadside,2021,33
+GN5,Trafalgar Road (Hoskins St),Greenwich,Roadside,2022,32
+GN5,Trafalgar Road (Hoskins St),Greenwich,Roadside,2024,29
+GN5,Trafalgar Road (Hoskins St),Greenwich,Roadside,2025,26
+GN6,John Harrison Way,Greenwich,Roadside,2019,33
+GN6,John Harrison Way,Greenwich,Roadside,2020,26
+GN6,John Harrison Way,Greenwich,Roadside,2021,25
+GN6,John Harrison Way,Greenwich,Roadside,2022,23
+GN6,John Harrison Way,Greenwich,Roadside,2023,22
+GN6,John Harrison Way,Greenwich,Roadside,2024,20
+GN6,John Harrison Way,Greenwich,Roadside,2025,20
+GR4,Eltham,Greenwich,Suburban,2010,24
+GR4,Eltham,Greenwich,Suburban,2011,23
+GR4,Eltham,Greenwich,Suburban,2012,22
+GR4,Eltham,Greenwich,Suburban,2013,21
+GR4,Eltham,Greenwich,Suburban,2015,19
+GR4,Eltham,Greenwich,Suburban,2016,21
+GR4,Eltham,Greenwich,Suburban,2017,19
+GR4,Eltham,Greenwich,Suburban,2018,16
+GR4,Eltham,Greenwich,Suburban,2019,17
+GR4,Eltham,Greenwich,Suburban,2020,13
+GR4,Eltham,Greenwich,Suburban,2021,15
+GR5,Trafalgar Road,Greenwich,Roadside,2010,47
+GR5,Trafalgar Road,Greenwich,Roadside,2011,42
+GR5,Trafalgar Road,Greenwich,Roadside,2012,44
+GR5,Trafalgar Road,Greenwich,Roadside,2013,41
+GR5,Trafalgar Road,Greenwich,Roadside,2014,38
+GR5,Trafalgar Road,Greenwich,Roadside,2015,36
+GR7,Blackheath,Greenwich,Roadside,2010,43
+GR7,Blackheath,Greenwich,Roadside,2011,48
+GR7,Blackheath,Greenwich,Roadside,2012,48
+GR7,Blackheath,Greenwich,Roadside,2013,48
+GR7,Blackheath,Greenwich,Roadside,2014,44
+GR7,Blackheath,Greenwich,Roadside,2015,39
+GR7,Blackheath,Greenwich,Roadside,2016,46
+GR7,Blackheath,Greenwich,Roadside,2017,38
+GR7,Blackheath,Greenwich,Roadside,2018,35
+GR7,Blackheath,Greenwich,Roadside,2019,38
+GR7,Blackheath,Greenwich,Roadside,2020,29
+GR7,Blackheath,Greenwich,Roadside,2021,30
+GR7,Blackheath,Greenwich,Roadside,2022,27
+GR7,Blackheath,Greenwich,Roadside,2023,28
+GR7,Blackheath,Greenwich,Roadside,2024,26
+GR7,Blackheath,Greenwich,Roadside,2025,27
+GR8,Woolwich Flyover,Greenwich,Roadside,2010,74
+GR8,Woolwich Flyover,Greenwich,Roadside,2011,67
+GR8,Woolwich Flyover,Greenwich,Roadside,2012,71
+GR8,Woolwich Flyover,Greenwich,Roadside,2013,65
+GR8,Woolwich Flyover,Greenwich,Roadside,2014,75
+GR8,Woolwich Flyover,Greenwich,Roadside,2015,66
+GR8,Woolwich Flyover,Greenwich,Roadside,2016,64
+GR8,Woolwich Flyover,Greenwich,Roadside,2017,65
+GR8,Woolwich Flyover,Greenwich,Roadside,2018,57
+GR8,Woolwich Flyover,Greenwich,Roadside,2019,52
+GR8,Woolwich Flyover,Greenwich,Roadside,2020,43
+GR8,Woolwich Flyover,Greenwich,Roadside,2021,40
+GR8,Woolwich Flyover,Greenwich,Roadside,2022,40
+GR8,Woolwich Flyover,Greenwich,Roadside,2024,34
+GR8,Woolwich Flyover,Greenwich,Roadside,2025,28
+GR9,Westhorne Avenue,Greenwich,Roadside,2010,46
+GR9,Westhorne Avenue,Greenwich,Roadside,2011,44
+GR9,Westhorne Avenue,Greenwich,Roadside,2012,44
+GR9,Westhorne Avenue,Greenwich,Roadside,2013,46
+GR9,Westhorne Avenue,Greenwich,Roadside,2014,43
+GR9,Westhorne Avenue,Greenwich,Roadside,2015,40
+GR9,Westhorne Avenue,Greenwich,Roadside,2016,42
+GR9,Westhorne Avenue,Greenwich,Roadside,2017,39
+GR9,Westhorne Avenue,Greenwich,Roadside,2018,38
+GR9,Westhorne Avenue,Greenwich,Roadside,2019,34
+GR9,Westhorne Avenue,Greenwich,Roadside,2020,25
+GR9,Westhorne Avenue,Greenwich,Roadside,2021,26
+GR9,Westhorne Avenue,Greenwich,Roadside,2023,21
+GR9,Westhorne Avenue,Greenwich,Roadside,2024,19
+GR9,Westhorne Avenue,Greenwich,Roadside,2025,19
+GV1,Ebury Street (Grosvenor),Westminster,Roadside,2019,35
+GV1,Ebury Street (Grosvenor),Westminster,Roadside,2020,23
+GV1,Ebury Street (Grosvenor),Westminster,Roadside,2022,25
+GV1,Ebury Street (Grosvenor),Westminster,Roadside,2023,25
+GV2,Duke Street (Grosvenor),Westminster,Roadside,2020,28
+GV2,Duke Street (Grosvenor),Westminster,Roadside,2021,30
+GV2,Duke Street (Grosvenor),Westminster,Roadside,2022,32
+GV2,Duke Street (Grosvenor),Westminster,Roadside,2023,27
+HF4,Shepherds Bush,Hammersmith and Fulham,Roadside,2012,92
+HF4,Shepherds Bush,Hammersmith and Fulham,Roadside,2015,76
+HF4,Shepherds Bush,Hammersmith and Fulham,Roadside,2016,79
+HF4,Shepherds Bush,Hammersmith and Fulham,Roadside,2017,74
+HG1,Haringey Town Hall,Haringey,Roadside,2010,45
+HG1,Haringey Town Hall,Haringey,Roadside,2012,42
+HG1,Haringey Town Hall,Haringey,Roadside,2013,44
+HG1,Haringey Town Hall,Haringey,Roadside,2015,40
+HG1,Haringey Town Hall,Haringey,Roadside,2016,43
+HG1,Haringey Town Hall,Haringey,Roadside,2017,40
+HG1,Haringey Town Hall,Haringey,Roadside,2018,39
+HG1,Haringey Town Hall,Haringey,Roadside,2019,34
+HG1,Haringey Town Hall,Haringey,Roadside,2020,33
+HG1,Haringey Town Hall,Haringey,Roadside,2021,32
+HG1,Haringey Town Hall,Haringey,Roadside,2022,30
+HG1,Haringey Town Hall,Haringey,Roadside,2023,26
+HG1,Haringey Town Hall,Haringey,Roadside,2024,24
+HG1,Haringey Town Hall,Haringey,Roadside,2025,26
+HG2,Priory Park,Haringey,Urban Background,2010,34
+HG4,Priory Park South,Haringey ,Urban Background,2013,25
+HG4,Priory Park South,Haringey ,Urban Background,2015,24
+HG4,Priory Park South,Haringey ,Urban Background,2016,26
+HG4,Priory Park South,Haringey ,Urban Background,2017,24
+HG4,Priory Park South,Haringey ,Urban Background,2018,23
+HG4,Priory Park South,Haringey ,Urban Background,2019,22
+HG4,Priory Park South,Haringey ,Urban Background,2020,16
+HG4,Priory Park South,Haringey ,Urban Background,2021,18
+HG4,Priory Park South,Haringey ,Urban Background,2022,17
+HG4,Priory Park South,Haringey ,Urban Background,2023,15
+HG4,Priory Park South,Haringey ,Urban Background,2024,13
+HG4,Priory Park South,Haringey ,Urban Background,2025,13
+HI0,Keats Way,Hillingdon,Suburban,2010,53
+HI0,Keats Way,Hillingdon,Suburban,2011,55
+HI0,Keats Way,Hillingdon,Suburban,2012,57
+HI0,Keats Way,Hillingdon,Suburban,2013,53
+HI0,Keats Way,Hillingdon,Suburban,2014,58
+HI0,Keats Way,Hillingdon,Suburban,2015,52
+HI0,Keats Way,Hillingdon,Suburban,2016,52
+HI0,Keats Way,Hillingdon,Suburban,2017,53
+HI0,Keats Way,Hillingdon,Suburban,2018,46
+HI0,Keats Way,Hillingdon,Suburban,2019,45
+HI0,Keats Way,Hillingdon,Suburban,2020,28
+HI0,Keats Way,Hillingdon,Suburban,2021,25
+HI0,Keats Way,Hillingdon,Suburban,2022,27
+HI1,South Ruislip,Hillingdon,Roadside,2010,46
+HI2,Hillingdon Hospital,Hillingdon,Roadside,2010,37
+HI3,Oxford Avenue,Hillingdon,Roadside,2010,42
+HK4,Clapton,Hackney,Urban Background,2010,49
+HK6,Old Street,Hackney,Roadside,2010,62
+HK6,Old Street,Hackney,Roadside,2011,60
+HK6,Old Street,Hackney,Roadside,2012,64
+HK6,Old Street,Hackney,Roadside,2013,64
+HK6,Old Street,Hackney,Roadside,2014,67
+HK6,Old Street,Hackney,Roadside,2015,60
+HK6,Old Street,Hackney,Roadside,2016,57
+HK6,Old Street,Hackney,Roadside,2017,57
+HK6,Old Street,Hackney,Roadside,2018,50
+HK6,Old Street,Hackney,Roadside,2019,47
+HK6,Old Street,Hackney,Roadside,2020,37
+HK6,Old Street,Hackney,Roadside,2021,33
+HK6,Old Street,Hackney,Roadside,2022,31
+HP1,Honor Oak Park,Lewisham,Urban Background,2019,23
+HP1,Honor Oak Park,Lewisham,Urban Background,2020,16
+HP1,Honor Oak Park,Lewisham,Urban Background,2021,16
+HP1,Honor Oak Park,Lewisham,Urban Background,2022,17
+HP1,Honor Oak Park,Lewisham,Urban Background,2023,15
+HP1,Honor Oak Park,Lewisham,Urban Background,2024,13
+HP1,Honor Oak Park,Lewisham,Urban Background,2025,15
+HR1,Stanmore,Harrow,Urban Background,2010,27
+HR1,Stanmore,Harrow,Urban Background,2011,25
+HR1,Stanmore,Harrow,Urban Background,2012,25
+HR1,Stanmore,Harrow,Urban Background,2013,24
+HR1,Stanmore,Harrow,Urban Background,2014,25
+HR1,Stanmore,Harrow,Urban Background,2015,22
+HR1,Stanmore,Harrow,Urban Background,2016,26
+HR1,Stanmore,Harrow,Urban Background,2019,20
+HR1,Stanmore,Harrow,Urban Background,2020,15
+HR1,Stanmore,Harrow,Urban Background,2021,16
+HR2,Pinner Road,Harrow,Roadside,2010,54
+HR2,Pinner Road,Harrow,Roadside,2011,47
+HR2,Pinner Road,Harrow,Roadside,2012,47
+HR2,Pinner Road,Harrow,Roadside,2013,42
+HR2,Pinner Road,Harrow,Roadside,2014,48
+HR2,Pinner Road,Harrow,Roadside,2016,44
+HR2,Pinner Road,Harrow,Roadside,2017,41
+HR2,Pinner Road,Harrow,Roadside,2018,39
+HR2,Pinner Road,Harrow,Roadside,2019,36
+HS2,Cranford,Hounslow,Suburban,2011,28
+HS4,Chiswick High Road,Hounslow,Roadside,2011,56
+HS5,Brentford,Hounslow,Roadside,2011,53
+HS6,Heston Road,Hounslow,Roadside,2011,48
+HS7,Hatton Cross,Hounslow,Urban Background,2010,38
+HS7,Hatton Cross,Hounslow,Urban Background,2011,34
+HS8,Gunnersbury Avenue,Hounslow and Ealing,Roadside,2013,56
+HS8,Gunnersbury Avenue,Hounslow and Ealing,Roadside,2014,61
+HV1,Rainham,Havering,Roadside,2010,41
+HV1,Rainham,Havering,Roadside,2013,30
+HV1,Rainham,Havering,Roadside,2014,35
+HV1,Rainham,Havering,Roadside,2015,32
+HV1,Rainham,Havering,Roadside,2016,34
+HV1,Rainham,Havering,Roadside,2017,34
+HV1,Rainham,Havering,Roadside,2018,30
+HV1,Rainham,Havering,Roadside,2019,29
+HV1,Rainham,Havering,Roadside,2020,23
+HV1,Rainham,Havering,Roadside,2021,23
+HV1,Rainham,Havering,Roadside,2022,23
+HV1,Rainham,Havering,Roadside,2023,21
+HV1,Rainham,Havering,Roadside,2024,19
+HV1,Rainham,Havering,Roadside,2025,20
+HV3,Romford,Havering,Roadside,2010,38
+HV3,Romford,Havering,Roadside,2013,33
+HV3,Romford,Havering,Roadside,2015,35
+HV3,Romford,Havering,Roadside,2016,44
+HV3,Romford,Havering,Roadside,2017,40
+HV3,Romford,Havering,Roadside,2018,38
+HV3,Romford,Havering,Roadside,2019,38
+HV3,Romford,Havering,Roadside,2020,29
+HV3,Romford,Havering,Roadside,2021,28
+HV3,Romford,Havering,Roadside,2022,30
+HV3,Romford,Havering,Roadside,2023,26
+HV3,Romford,Havering,Roadside,2024,22
+HV3,Romford,Havering,Roadside,2025,23
+IM1,Holborn (Bee Midtown),Camden,Kerbside,2014,94
+IM1,Holborn (Bee Midtown),Camden,Kerbside,2015,83
+IM1,Holborn (Bee Midtown),Camden,Kerbside,2016,84
+IM1,Holborn (Bee Midtown),Camden,Kerbside,2017,74
+IM1,Holborn (Bee Midtown),Camden,Kerbside,2019,55
+IM1,Holborn (Bee Midtown),Camden,Kerbside,2021,36
+IS2,Holloway Road,Islington,Roadside,2010,59
+IS2,Holloway Road,Islington,Roadside,2011,60
+IS2,Holloway Road,Islington,Roadside,2012,55
+IS2,Holloway Road,Islington,Roadside,2013,54
+IS2,Holloway Road,Islington,Roadside,2014,56
+IS2,Holloway Road,Islington,Roadside,2015,61
+IS2,Holloway Road,Islington,Roadside,2016,60
+IS2,Holloway Road,Islington,Roadside,2017,49
+IS2,Holloway Road,Islington,Roadside,2018,47
+IS2,Holloway Road,Islington,Roadside,2019,40
+IS2,Holloway Road,Islington,Roadside,2020,31
+IS2,Holloway Road,Islington,Roadside,2021,29
+IS2,Holloway Road,Islington,Roadside,2022,28
+IS2,Holloway Road,Islington,Roadside,2023,25
+IS2,Holloway Road,Islington,Roadside,2024,23
+IS2,Holloway Road,Islington,Roadside,2025,25
+IS6,Arsenal,Islington,Urban Background,2010,37
+IS6,Arsenal,Islington,Urban Background,2011,37
+IS6,Arsenal,Islington,Urban Background,2012,37
+IS6,Arsenal,Islington,Urban Background,2013,40
+IS6,Arsenal,Islington,Urban Background,2014,35
+IS6,Arsenal,Islington,Urban Background,2015,29
+IS6,Arsenal,Islington,Urban Background,2016,33
+IS6,Arsenal,Islington,Urban Background,2017,31
+IS6,Arsenal,Islington,Urban Background,2018,27
+IS6,Arsenal,Islington,Urban Background,2019,25
+IS6,Arsenal,Islington,Urban Background,2020,20
+IS6,Arsenal,Islington,Urban Background,2021,20
+IS6,Arsenal,Islington,Urban Background,2022,20
+IS6,Arsenal,Islington,Urban Background,2023,17
+IS6,Arsenal,Islington,Urban Background,2024,15
+IS6,Arsenal,Islington,Urban Background,2025,16
+KC1,North Ken,Kensington and Chelsea,Urban Background,2010,37
+KC1,North Ken,Kensington and Chelsea,Urban Background,2011,36
+KC1,North Ken,Kensington and Chelsea,Urban Background,2012,37
+KC1,North Ken,Kensington and Chelsea,Urban Background,2013,37
+KC1,North Ken,Kensington and Chelsea,Urban Background,2014,34
+KC1,North Ken,Kensington and Chelsea,Urban Background,2015,32
+KC1,North Ken,Kensington and Chelsea,Urban Background,2016,35
+KC1,North Ken,Kensington and Chelsea,Urban Background,2017,33
+KC1,North Ken,Kensington and Chelsea,Urban Background,2018,27
+KC1,North Ken,Kensington and Chelsea,Urban Background,2019,27
+KC1,North Ken,Kensington and Chelsea,Urban Background,2020,21
+KC1,North Ken,Kensington and Chelsea,Urban Background,2021,20
+KC1,North Ken,Kensington and Chelsea,Urban Background,2022,15
+KC1,North Ken,Kensington and Chelsea,Urban Background,2023,16
+KC1,North Ken,Kensington and Chelsea,Urban Background,2024,14
+KC1,North Ken,Kensington and Chelsea,Urban Background,2025,15
+KC2,Cromwell Road,Kensington and Chelsea,Roadside,2011,66
+KC2,Cromwell Road,Kensington and Chelsea,Roadside,2012,69
+KC2,Cromwell Road,Kensington and Chelsea,Roadside,2016,58
+KC2,Cromwell Road,Kensington and Chelsea,Roadside,2017,50
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2010,91
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2011,81
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2012,92
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2013,90
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2014,72
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2015,71
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2016,80
+KC3,Knightsbridge,Kensington and Chelsea,Roadside,2017,66
+KC4,Kings Road,Kensington and Chelsea,Roadside,2010,91
+KC4,Kings Road,Kensington and Chelsea,Roadside,2011,91
+KC4,Kings Road,Kensington and Chelsea,Roadside,2012,93
+KC4,Kings Road,Kensington and Chelsea,Roadside,2013,84
+KC4,Kings Road,Kensington and Chelsea,Roadside,2014,76
+KC4,Kings Road,Kensington and Chelsea,Roadside,2015,73
+KC4,Kings Road,Kensington and Chelsea,Roadside,2016,78
+KC4,Kings Road,Kensington and Chelsea,Roadside,2017,63
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2010,113
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2011,101
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2012,101
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2013,95
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2014,93
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2015,91
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2016,86
+KC5,Earls Court Rd,Kensington and Chelsea,Kerbside,2017,77
+KT4,Tolworth Broadway,Kingston Upon Thames,Roadside,2017,49
+KT4,Tolworth Broadway,Kingston Upon Thames,Roadside,2018,44
+KT4,Tolworth Broadway,Kingston Upon Thames,Roadside,2019,41
+KT4,Tolworth Broadway,Kingston Upon Thames,Roadside,2021,31
+KT4,Tolworth Broadway,Kingston Upon Thames,Roadside,2023,28
+KT5,Cromwell Road,Kingston Upon Thames,Roadside,2019,57
+KT5,Cromwell Road,Kingston Upon Thames,Roadside,2020,45
+KT5,Cromwell Road,Kingston Upon Thames,Roadside,2021,51
+KT5,Cromwell Road,Kingston Upon Thames,Roadside,2022,43
+KT5,Cromwell Road,Kingston Upon Thames,Roadside,2023,35
+KT6,Kingston Vale,Kingston Upon Thames,Roadside,2018,36
+KT6,Kingston Vale,Kingston Upon Thames,Roadside,2019,33
+KT6,Kingston Vale,Kingston Upon Thames,Roadside,2020,25
+KT6,Kingston Vale,Kingston Upon Thames,Roadside,2021,26
+KT6,Kingston Vale,Kingston Upon Thames,Roadside,2022,25
+KT6,Kingston Vale,Kingston Upon Thames,Roadside,2023,19
+LB1,Christchurch Road,Lambeth,Roadside,2010,55
+LB3,Loughborough Junct,Lambeth,Urban Background,2010,34
+LB4,Brixton Road,Lambeth,Kerbside,2010,174
+LB4,Brixton Road,Lambeth,Kerbside,2014,153
+LB4,Brixton Road,Lambeth,Kerbside,2015,128
+LB4,Brixton Road,Lambeth,Kerbside,2016,118
+LB4,Brixton Road,Lambeth,Kerbside,2017,95
+LB4,Brixton Road,Lambeth,Kerbside,2019,75
+LB4,Brixton Road,Lambeth,Kerbside,2020,60
+LB4,Brixton Road,Lambeth,Kerbside,2021,62
+LB4,Brixton Road,Lambeth,Kerbside,2022,65
+LB4,Brixton Road,Lambeth,Kerbside,2023,58
+LB4,Brixton Road,Lambeth,Kerbside,2024,48
+LB4,Brixton Road,Lambeth,Kerbside,2025,48
+LB5,Bondway Interchange,Lambeth,Industrial,2010,77
+LB5,Bondway Interchange,Lambeth,Industrial,2011,77
+LB5,Bondway Interchange,Lambeth,Industrial,2014,74
+LB5,Bondway Interchange,Lambeth,Industrial,2015,75
+LB5,Bondway Interchange,Lambeth,Industrial,2016,68
+LB5,Bondway Interchange,Lambeth,Industrial,2017,65
+LB5,Bondway Interchange,Lambeth,Industrial,2018,54
+LB5,Bondway Interchange,Lambeth,Industrial,2019,48
+LB5,Bondway Interchange,Lambeth,Industrial,2020,36
+LB5,Bondway Interchange,Lambeth,Industrial,2021,36
+LB5,Bondway Interchange,Lambeth,Industrial,2022,29
+LB6,Streatham Green,Lambeth,Urban Background,2010,47
+LB6,Streatham Green,Lambeth,Urban Background,2011,38
+LB6,Streatham Green,Lambeth,Urban Background,2012,40
+LB6,Streatham Green,Lambeth,Urban Background,2014,31
+LB6,Streatham Green,Lambeth,Urban Background,2015,29
+LB6,Streatham Green,Lambeth,Urban Background,2017,30
+LB6,Streatham Green,Lambeth,Urban Background,2018,34
+LB6,Streatham Green,Lambeth,Urban Background,2019,32
+LB6,Streatham Green,Lambeth,Urban Background,2020,26
+LB6,Streatham Green,Lambeth,Urban Background,2022,23
+LB6,Streatham Green,Lambeth,Urban Background,2024,17
+LB6,Streatham Green,Lambeth,Urban Background,2025,17
+LH0,Harlington,Hillingdon,Urban Background,2010,34
+LH0,Harlington,Hillingdon,Urban Background,2011,34
+LH0,Harlington,Hillingdon,Urban Background,2012,34
+LH0,Harlington,Hillingdon,Urban Background,2013,38
+LH0,Harlington,Hillingdon,Urban Background,2014,37
+LH0,Harlington,Hillingdon,Urban Background,2015,32
+LH0,Harlington,Hillingdon,Urban Background,2016,34
+LH0,Harlington,Hillingdon,Urban Background,2017,32
+LH0,Harlington,Hillingdon,Urban Background,2018,30
+LH0,Harlington,Hillingdon,Urban Background,2019,31
+LH0,Harlington,Hillingdon,Urban Background,2020,20
+LH0,Harlington,Hillingdon,Urban Background,2021,20
+LH2,Heathrow Airport,Heathrow Airport,Industrial,2010,52
+LW1,Catford,Lewisham,Urban Background,2010,55
+LW1,Catford,Lewisham,Urban Background,2011,51
+LW1,Catford,Lewisham,Urban Background,2012,51
+LW1,Catford,Lewisham,Urban Background,2013,48
+LW1,Catford,Lewisham,Urban Background,2014,53
+LW1,Catford,Lewisham,Urban Background,2015,43
+LW1,Catford,Lewisham,Urban Background,2016,45
+LW1,Catford,Lewisham,Urban Background,2017,43
+LW1,Catford,Lewisham,Urban Background,2018,37
+LW1,Catford,Lewisham,Urban Background,2019,33
+LW1,Catford,Lewisham,Urban Background,2020,28
+LW1,Catford,Lewisham,Urban Background,2021,25
+LW2,New Cross,Lewisham,Roadside,2010,59
+LW2,New Cross,Lewisham,Roadside,2011,51
+LW2,New Cross,Lewisham,Roadside,2012,50
+LW2,New Cross,Lewisham,Roadside,2013,51
+LW2,New Cross,Lewisham,Roadside,2014,42
+LW2,New Cross,Lewisham,Roadside,2015,48
+LW2,New Cross,Lewisham,Roadside,2016,46
+LW2,New Cross,Lewisham,Roadside,2017,49
+LW2,New Cross,Lewisham,Roadside,2018,42
+LW2,New Cross,Lewisham,Roadside,2019,38
+LW2,New Cross,Lewisham,Roadside,2020,29
+LW2,New Cross,Lewisham,Roadside,2022,27
+LW2,New Cross,Lewisham,Roadside,2023,26
+LW2,New Cross,Lewisham,Roadside,2024,25
+LW4,Loampit Vale,Lewisham,Roadside,2013,57
+LW4,Loampit Vale,Lewisham,Roadside,2014,56
+LW4,Loampit Vale,Lewisham,Roadside,2015,51
+LW4,Loampit Vale,Lewisham,Roadside,2017,54
+LW4,Loampit Vale,Lewisham,Roadside,2018,46
+LW4,Loampit Vale,Lewisham,Roadside,2019,43
+LW4,Loampit Vale,Lewisham,Roadside,2020,36
+LW4,Loampit Vale,Lewisham,Roadside,2021,35
+LW4,Loampit Vale,Lewisham,Roadside,2022,38
+LW4,Loampit Vale,Lewisham,Roadside,2023,43
+LW4,Loampit Vale,Lewisham,Roadside,2024,46
+LW5,Deptford,Lewisham,Urban Background,2020,19
+LW5,Deptford,Lewisham,Urban Background,2021,20
+LW5,Deptford,Lewisham,Urban Background,2022,19
+LW5,Deptford,Lewisham,Urban Background,2023,17
+LW5,Deptford,Lewisham,Urban Background,2024,15
+LW6,Lewisham -Laurence House Catford,Lewisham -Laurence House Catford,Roadside,2022,25
+LW6,Lewisham -Laurence House Catford,Lewisham -Laurence House Catford,Roadside,2023,24
+LW6,Lewisham -Laurence House Catford,Lewisham -Laurence House Catford,Roadside,2024,18
+ME1,Morden Civic Centre,Merton,Roadside,2013,40
+ME9,Morden Civic Centre 2,Merton,Roadside,2018,48
+ME9,Morden Civic Centre 2,Merton,Roadside,2019,51
+ME9,Morden Civic Centre 2,Merton,Roadside,2023,31
+ME9,Morden Civic Centre 2,Merton,Roadside,2024,21
+ME9,Morden Civic Centre 2,Merton,Roadside,2025,22
+MY1,Marylebone Road,Westminster,Kerbside,2010,98
+MY1,Marylebone Road,Westminster,Kerbside,2011,97
+MY1,Marylebone Road,Westminster,Kerbside,2012,94
+MY1,Marylebone Road,Westminster,Kerbside,2013,85
+MY1,Marylebone Road,Westminster,Kerbside,2014,94
+MY1,Marylebone Road,Westminster,Kerbside,2015,88
+MY1,Marylebone Road,Westminster,Kerbside,2016,89
+MY1,Marylebone Road,Westminster,Kerbside,2017,84
+MY1,Marylebone Road,Westminster,Kerbside,2018,85
+MY1,Marylebone Road,Westminster,Kerbside,2019,63
+MY1,Marylebone Road,Westminster,Kerbside,2020,44
+MY1,Marylebone Road,Westminster,Kerbside,2021,43
+MY1,Marylebone Road,Westminster,Kerbside,2022,42
+MY1,Marylebone Road,Westminster,Kerbside,2023,42
+MY1,Marylebone Road,Westminster,Kerbside,2024,32
+MY1,Marylebone Road,Westminster,Kerbside,2025,31
+NB1,Strand (Northbank BID),Westminster,Roadside,2016,101
+NB1,Strand (Northbank BID),Westminster,Roadside,2017,92
+NB1,Strand (Northbank BID),Westminster,Roadside,2018,88
+NB1,Strand (Northbank BID),Westminster,Roadside,2019,76
+NB1,Strand (Northbank BID),Westminster,Roadside,2020,44
+NB1,Strand (Northbank BID),Westminster,Roadside,2021,43
+NB1,Strand (Northbank BID),Westminster,Roadside,2022,35
+NB1,Strand (Northbank BID),Westminster,Roadside,2023,27
+NM2,Cam Road,Newham,Roadside,2010,53
+NM2,Cam Road,Newham,Roadside,2011,48
+NM2,Cam Road,Newham,Roadside,2012,43
+NM2,Cam Road,Newham,Roadside,2019,29
+NM2,Cam Road,Newham,Roadside,2020,24
+NM2,Cam Road,Newham,Roadside,2021,23
+NM2,Cam Road,Newham,Roadside,2022,24
+NM2,Cam Road,Newham,Roadside,2023,22
+NM3,Wren Close,Newham,Urban Background,2010,39
+NM3,Wren Close,Newham,Urban Background,2011,39
+NM3,Wren Close,Newham,Urban Background,2012,39
+NM3,Wren Close,Newham,Urban Background,2019,28
+NM3,Wren Close,Newham,Urban Background,2020,20
+NM3,Wren Close,Newham,Urban Background,2021,21
+NM3,Wren Close,Newham,Urban Background,2022,22
+NM3,Wren Close,Newham,Urban Background,2023,20
+NM4,East Ham Town Hall,Newham,Roadside,2023,33
+RB1,Perth Terrace,Redbridge,Urban Background,2010,33
+RB1,Perth Terrace,Redbridge,Urban Background,2011,33
+RB1,Perth Terrace,Redbridge,Urban Background,2012,37
+RB1,Perth Terrace,Redbridge,Urban Background,2013,35
+RB3,Fullwell Cross,Redbridge,Kerbside,2010,51
+RB3,Fullwell Cross,Redbridge,Kerbside,2011,52
+RB4,Gardner Close,Redbridge,Roadside,2010,48
+RB4,Gardner Close,Redbridge,Roadside,2011,49
+RB4,Gardner Close,Redbridge,Roadside,2012,48
+RB4,Gardner Close,Redbridge,Roadside,2013,45
+RB4,Gardner Close,Redbridge,Roadside,2015,39
+RB4,Gardner Close,Redbridge,Roadside,2016,42
+RB4,Gardner Close,Redbridge,Roadside,2017,39
+RB4,Gardner Close,Redbridge,Roadside,2018,37
+RB4,Gardner Close,Redbridge,Roadside,2019,37
+RB4,Gardner Close,Redbridge,Roadside,2020,27
+RB4,Gardner Close,Redbridge,Roadside,2021,26
+RB4,Gardner Close,Redbridge,Roadside,2022,26
+RB4,Gardner Close,Redbridge,Roadside,2023,24
+RB5,South Woodford,Redbridge,Roadside,2010,55
+RB5,South Woodford,Redbridge,Roadside,2011,54
+RB7,Ley Street,Redbridge,Urban Background,2015,33
+RB7,Ley Street,Redbridge,Urban Background,2016,33
+RB7,Ley Street,Redbridge,Urban Background,2017,30
+RB7,Ley Street,Redbridge,Urban Background,2018,31
+RB7,Ley Street,Redbridge,Urban Background,2019,30
+RB7,Ley Street,Redbridge,Urban Background,2020,21
+RB7,Ley Street,Redbridge,Urban Background,2021,25
+RHG,Chertsey Road,Richmond Upon Thames,Roadside,2017,37
+RHG,Chertsey Road,Richmond Upon Thames,Roadside,2018,34
+RHG,Chertsey Road,Richmond Upon Thames,Roadside,2019,36
+RHI,Richmond,Richmond Upon Thames,Kerbside,2025,25
+RI1,Castelnau,Richmond Upon Thames,Roadside,2010,43
+RI1,Castelnau,Richmond Upon Thames,Roadside,2011,39
+RI1,Castelnau,Richmond Upon Thames,Roadside,2012,37
+RI1,Castelnau,Richmond Upon Thames,Roadside,2013,39
+RI1,Castelnau,Richmond Upon Thames,Roadside,2014,37
+RI1,Castelnau,Richmond Upon Thames,Roadside,2015,34
+RI1,Castelnau,Richmond Upon Thames,Roadside,2016,36
+RI1,Castelnau,Richmond Upon Thames,Roadside,2017,31
+RI1,Castelnau,Richmond Upon Thames,Roadside,2018,31
+RI1,Castelnau,Richmond Upon Thames,Roadside,2019,27
+RI1,Castelnau,Richmond Upon Thames,Roadside,2020,20
+RI1,Castelnau,Richmond Upon Thames,Roadside,2021,21
+RI1,Castelnau,Richmond Upon Thames,Roadside,2022,23
+RI1,Castelnau,Richmond Upon Thames,Roadside,2023,16
+RI1,Castelnau,Richmond Upon Thames,Roadside,2024,19
+RI1,Castelnau,Richmond Upon Thames,Roadside,2025,18
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2010,30
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2011,26
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2012,25
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2013,24
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2014,25
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2015,23
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2016,25
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2017,21
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2018,20
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2019,21
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2020,15
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2021,14
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2024,12
+RI2,Barnes Wetlands,Richmond Upon Thames,Suburban,2025,13
+SK5,A2 Old Kent Road,Southwark,Roadside,2012,53
+SK5,A2 Old Kent Road,Southwark,Roadside,2013,58
+SK5,A2 Old Kent Road,Southwark,Roadside,2016,53
+SK5,A2 Old Kent Road,Southwark,Roadside,2017,42
+SK5,A2 Old Kent Road,Southwark,Roadside,2018,41
+SK5,A2 Old Kent Road,Southwark,Roadside,2019,38
+SK5,A2 Old Kent Road,Southwark,Roadside,2021,29
+SK5,A2 Old Kent Road,Southwark,Roadside,2022,26
+SK5,A2 Old Kent Road,Southwark,Roadside,2023,24
+SK5,A2 Old Kent Road,Southwark,Roadside,2024,21
+SK5,A2 Old Kent Road,Southwark,Roadside,2025,22
+SK6,Elephant and Castle,Southwark,Urban Background,2013,42
+SK6,Elephant and Castle,Southwark,Urban Background,2014,37
+SK6,Elephant and Castle,Southwark,Urban Background,2015,41
+SK6,Elephant and Castle,Southwark,Urban Background,2016,39
+SK6,Elephant and Castle,Southwark,Urban Background,2017,34
+SK6,Elephant and Castle,Southwark,Urban Background,2018,32
+SK6,Elephant and Castle,Southwark,Urban Background,2019,30
+SK6,Elephant and Castle,Southwark,Urban Background,2020,21
+SK6,Elephant and Castle,Southwark,Urban Background,2021,23
+SK6,Elephant and Castle,Southwark,Urban Background,2022,22
+SK6,Elephant and Castle,Southwark,Urban Background,2023,20
+SK6,Elephant and Castle,Southwark,Urban Background,2024,16
+SK7,Heygate,Southwark,Urban Background,2015,50
+SK8,Tower Bridge Road,Southwark,Roadside,2020,30
+SK8,Tower Bridge Road,Southwark,Roadside,2022,30
+SK8,Tower Bridge Road,Southwark,Roadside,2023,29
+SK8,Tower Bridge Road,Southwark,Roadside,2024,26
+SKA,Lower Road,Southwark,Roadside,2021,28
+SKA,Lower Road,Southwark,Roadside,2023,27
+SKA,Lower Road,Southwark,Roadside,2024,22
+SKB,Vicarage Grove,Southwark,Roadside,2021,40
+SKB,Vicarage Grove,Southwark,Roadside,2022,32
+SKB,Vicarage Grove,Southwark,Roadside,2023,31
+SKB,Vicarage Grove,Southwark,Roadside,2024,26
+SKC,South Circular Road,Southwark,Roadside,2022,26
+SKC,South Circular Road,Southwark,Roadside,2023,26
+SKC,South Circular Road,Southwark,Roadside,2024,23
+ST3,Carshalton,Sutton,Suburban,2010,31
+ST3,Carshalton,Sutton,Suburban,2011,27
+ST3,Carshalton,Sutton,Suburban,2012,29
+ST3,Carshalton,Sutton,Suburban,2013,29
+ST3,Carshalton,Sutton,Suburban,2014,27
+ST3,Carshalton,Sutton,Suburban,2015,22
+ST4,Wallington,Sutton,Kerbside,2010,73
+ST4,Wallington,Sutton,Kerbside,2012,72
+ST4,Wallington,Sutton,Kerbside,2016,63
+ST4,Wallington,Sutton,Kerbside,2017,53
+ST4,Wallington,Sutton,Kerbside,2018,47
+ST4,Wallington,Sutton,Kerbside,2019,46
+ST4,Wallington,Sutton,Kerbside,2020,41
+ST4,Wallington,Sutton,Kerbside,2021,43
+ST4,Wallington,Sutton,Kerbside,2022,44
+ST4,Wallington,Sutton,Kerbside,2023,45
+ST5,Beddington Lane north,Sutton,Industrial,2010,45
+ST5,Beddington Lane north,Sutton,Industrial,2011,38
+ST5,Beddington Lane north,Sutton,Industrial,2015,32
+ST5,Beddington Lane north,Sutton,Industrial,2016,36
+ST5,Beddington Lane north,Sutton,Industrial,2017,32
+ST5,Beddington Lane north,Sutton,Industrial,2018,29
+ST5,Beddington Lane north,Sutton,Industrial,2019,29
+ST5,Beddington Lane north,Sutton,Industrial,2020,23
+ST5,Beddington Lane north,Sutton,Industrial,2021,22
+ST5,Beddington Lane north,Sutton,Industrial,2022,24
+ST5,Beddington Lane north,Sutton,Industrial,2023,20
+ST6,Worcester Park,Sutton,Kerbside,2010,58
+ST6,Worcester Park,Sutton,Kerbside,2011,57
+ST6,Worcester Park,Sutton,Kerbside,2012,54
+ST6,Worcester Park,Sutton,Kerbside,2013,49
+ST6,Worcester Park,Sutton,Kerbside,2014,53
+ST6,Worcester Park,Sutton,Kerbside,2015,52
+ST6,Worcester Park,Sutton,Kerbside,2016,57
+ST6,Worcester Park,Sutton,Kerbside,2017,52
+ST6,Worcester Park,Sutton,Kerbside,2018,52
+ST6,Worcester Park,Sutton,Kerbside,2019,51
+ST6,Worcester Park,Sutton,Kerbside,2020,39
+ST6,Worcester Park,Sutton,Kerbside,2021,43
+ST6,Worcester Park,Sutton,Kerbside,2022,40
+ST6,Worcester Park,Sutton,Kerbside,2023,31
+ST7,Therapia Lane,Sutton,Industrial,2010,34
+ST7,Therapia Lane,Sutton,Industrial,2011,31
+ST8,Beddington Lane ,Sutton,Industrial,2013,36
+ST8,Beddington Lane ,Sutton,Industrial,2014,31
+ST8,Beddington Lane ,Sutton,Industrial,2015,27
+ST8,Beddington Lane ,Sutton,Industrial,2016,30
+ST8,Beddington Lane ,Sutton,Industrial,2017,25
+ST8,Beddington Lane ,Sutton,Industrial,2018,25
+ST8,Beddington Lane ,Sutton,Industrial,2019,25
+ST9,Beddington Village,Sutton,Roadside,2021,24
+ST9,Beddington Village,Sutton,Roadside,2022,23
+ST9,Beddington Village,Sutton,Roadside,2023,20
+TD0,- National Physical Laboratory,- National Physical Laboratory,Suburban,2010,24
+TD0,- National Physical Laboratory,- National Physical Laboratory,Suburban,2011,21
+TD0,- National Physical Laboratory,- National Physical Laboratory,Suburban,2012,36
+TD0,- National Physical Laboratory,- National Physical Laboratory,Suburban,2013,21
+TD0,- National Physical Laboratory,- National Physical Laboratory,Suburban,2014,27
+TD0,- National Physical Laboratory,- National Physical Laboratory,Suburban,2015,19
+TH1,Poplar,Tower Hamlets,Urban Background,2011,34
+TH1,Poplar,Tower Hamlets,Urban Background,2012,33
+TH2,Mile End Road,Tower Hamlets,Roadside,2010,65
+TH2,Mile End Road,Tower Hamlets,Roadside,2011,57
+TH2,Mile End Road,Tower Hamlets,Roadside,2012,60
+TH2,Mile End Road,Tower Hamlets,Roadside,2013,61
+TH2,Mile End Road,Tower Hamlets,Roadside,2014,62
+TH2,Mile End Road,Tower Hamlets,Roadside,2015,53
+TH2,Mile End Road,Tower Hamlets,Roadside,2016,52
+TH2,Mile End Road,Tower Hamlets,Roadside,2017,48
+TH2,Mile End Road,Tower Hamlets,Roadside,2018,47
+TH2,Mile End Road,Tower Hamlets,Roadside,2019,35
+TH2,Mile End Road,Tower Hamlets,Roadside,2020,25
+TH2,Mile End Road,Tower Hamlets,Roadside,2021,22
+TH2,Mile End Road,Tower Hamlets,Roadside,2022,22
+TH2,Mile End Road,Tower Hamlets,Roadside,2023,22
+TH2,Mile End Road,Tower Hamlets,Roadside,2024,20
+TH2,Mile End Road,Tower Hamlets,Roadside,2025,20
+TH4,Blackwall,Tower Hamlets,Roadside,2010,73
+TH4,Blackwall,Tower Hamlets,Roadside,2011,63
+TH4,Blackwall,Tower Hamlets,Roadside,2012,62
+TH4,Blackwall,Tower Hamlets,Roadside,2013,58
+TH4,Blackwall,Tower Hamlets,Roadside,2014,59
+TH4,Blackwall,Tower Hamlets,Roadside,2015,58
+TH4,Blackwall,Tower Hamlets,Roadside,2016,59
+TH4,Blackwall,Tower Hamlets,Roadside,2017,56
+TH4,Blackwall,Tower Hamlets,Roadside,2018,51
+TH4,Blackwall,Tower Hamlets,Roadside,2019,47
+TH4,Blackwall,Tower Hamlets,Roadside,2020,39
+TH4,Blackwall,Tower Hamlets,Roadside,2021,37
+TH4,Blackwall,Tower Hamlets,Roadside,2023,28
+TH4,Blackwall,Tower Hamlets,Roadside,2024,30
+TH4,Blackwall,Tower Hamlets,Roadside,2025,28
+TH5,Victoria Park,Tower Hamlets,Urban Background,2013,33
+TH5,Victoria Park,Tower Hamlets,Urban Background,2025,16
+TH6,Millwall Park,Tower Hamlets,Urban Background,2016,25
+TH6,Millwall Park,Tower Hamlets,Urban Background,2025,15
+TH7,Tower Hamlets King Edward Memorial Park,Tower Hamlets King Edward Memorial Park,Urban Background,2025,19
+TL4,Tunnel Avenue,Greenwich,Roadside,2021,34
+TL4,Tunnel Avenue,Greenwich,Roadside,2022,32
+TL4,Tunnel Avenue,Greenwich,Roadside,2023,26
+TL5,Hoola Tower,Newham,Roadside,2021,22
+TL5,Hoola Tower,Newham,Roadside,2022,23
+TL5,Hoola Tower,Newham,Roadside,2023,21
+TL5,Hoola Tower,Newham,Roadside,2024,19
+TL5,Hoola Tower,Newham,Roadside,2025,20
+TL6,Britannia Gate,Newham,Roadside,2021,26
+TL6,Britannia Gate,Newham,Roadside,2022,25
+TL6,Britannia Gate,Newham,Roadside,2023,22
+TL6,Britannia Gate,Newham,Roadside,2024,21
+TL6,Britannia Gate,Newham,Roadside,2025,21
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2010,53
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2012,48
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2013,48
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2014,43
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2015,36
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2016,43
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2017,40
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2018,38
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2019,41
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2020,30
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2021,29
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2022,28
+WA2,Wandsworth Town Hall,Wandsworth,Urban Background,2023,25
+WA7,Putney High Street,Wandsworth,Kerbside,2010,168
+WA7,Putney High Street,Wandsworth,Kerbside,2011,154
+WA7,Putney High Street,Wandsworth,Kerbside,2012,155
+WA7,Putney High Street,Wandsworth,Kerbside,2013,124
+WA7,Putney High Street,Wandsworth,Kerbside,2014,123
+WA7,Putney High Street,Wandsworth,Kerbside,2015,123
+WA7,Putney High Street,Wandsworth,Kerbside,2016,125
+WA7,Putney High Street,Wandsworth,Kerbside,2017,76
+WA7,Putney High Street,Wandsworth,Kerbside,2018,67
+WA7,Putney High Street,Wandsworth,Kerbside,2019,69
+WA7,Putney High Street,Wandsworth,Kerbside,2020,58
+WA7,Putney High Street,Wandsworth,Kerbside,2021,62
+WA7,Putney High Street,Wandsworth,Kerbside,2025,35
+WA8,Putney High Street Facade,Wandsworth,Roadside,2011,128
+WA8,Putney High Street Facade,Wandsworth,Roadside,2012,129
+WA8,Putney High Street Facade,Wandsworth,Roadside,2013,106
+WA8,Putney High Street Facade,Wandsworth,Roadside,2014,95
+WA8,Putney High Street Facade,Wandsworth,Roadside,2015,96
+WA8,Putney High Street Facade,Wandsworth,Roadside,2016,98
+WA8,Putney High Street Facade,Wandsworth,Roadside,2017,60
+WA8,Putney High Street Facade,Wandsworth,Roadside,2018,62
+WA8,Putney High Street Facade,Wandsworth,Roadside,2019,66
+WA8,Putney High Street Facade,Wandsworth,Roadside,2020,53
+WA8,Putney High Street Facade,Wandsworth,Roadside,2021,57
+WA9,Putney,Wandsworth,Urban Background,2011,46
+WA9,Putney,Wandsworth,Urban Background,2012,40
+WA9,Putney,Wandsworth,Urban Background,2013,40
+WA9,Putney,Wandsworth,Urban Background,2014,41
+WA9,Putney,Wandsworth,Urban Background,2016,45
+WA9,Putney,Wandsworth,Urban Background,2017,31
+WA9,Putney,Wandsworth,Urban Background,2018,35
+WA9,Putney,Wandsworth,Urban Background,2019,35
+WA9,Putney,Wandsworth,Urban Background,2020,26
+WA9,Putney,Wandsworth,Urban Background,2021,27
+WA9,Putney,Wandsworth,Urban Background,2024,15
+WA9,Putney,Wandsworth,Urban Background,2025,18
+WAA,Battersea,Wandsworth,Roadside,2013,45
+WAA,Battersea,Wandsworth,Roadside,2014,47
+WAA,Battersea,Wandsworth,Roadside,2016,40
+WAA,Battersea,Wandsworth,Roadside,2017,33
+WAA,Battersea,Wandsworth,Roadside,2019,31
+WAA,Battersea,Wandsworth,Roadside,2020,27
+WAA,Battersea,Wandsworth,Roadside,2021,28
+WAA,Battersea,Wandsworth,Roadside,2022,27
+WAA,Battersea,Wandsworth,Roadside,2023,24
+WAA,Battersea,Wandsworth,Roadside,2025,22
+WAB,Tooting High Street,Wandsworth,Roadside,2016,59
+WAB,Tooting High Street,Wandsworth,Roadside,2017,55
+WAB,Tooting High Street,Wandsworth,Roadside,2018,53
+WAB,Tooting High Street,Wandsworth,Roadside,2019,50
+WAB,Tooting High Street,Wandsworth,Roadside,2024,31
+WAB,Tooting High Street,Wandsworth,Roadside,2025,29
+WAC,Lavender Hill (Clapham Jct),Wandsworth,Roadside,2017,43
+WAC,Lavender Hill (Clapham Jct),Wandsworth,Roadside,2018,42
+WAC,Lavender Hill (Clapham Jct),Wandsworth,Roadside,2020,31
+WAC,Lavender Hill (Clapham Jct),Wandsworth,Roadside,2021,35
+WAC,Lavender Hill (Clapham Jct),Wandsworth,Roadside,2025,22
+WL1,Dawlish Road,Waltham Forest,Urban Background,2010,39
+WL4,Crooked Billet,Waltham Forest,Kerbside,2010,74
+WL5,Leyton,Waltham Forest,Roadside,2010,45
+WM0,Horseferry Road,Westminster,Urban Background,2010,49
+WM0,Horseferry Road,Westminster,Urban Background,2011,41
+WM0,Horseferry Road,Westminster,Urban Background,2012,39
+WM0,Horseferry Road,Westminster,Urban Background,2013,45
+WM0,Horseferry Road,Westminster,Urban Background,2014,46
+WM0,Horseferry Road,Westminster,Urban Background,2015,39
+WM0,Horseferry Road,Westminster,Urban Background,2017,36
+WM0,Horseferry Road,Westminster,Urban Background,2018,31
+WM0,Horseferry Road,Westminster,Urban Background,2019,34
+WM0,Horseferry Road,Westminster,Urban Background,2020,26
+WM0,Horseferry Road,Westminster,Urban Background,2021,24
+WM0,Horseferry Road,Westminster,Urban Background,2022,23
+WM4,Charing Cross Library,Westminster,Roadside,2010,89
+WM5,Covent Garden,Westminster,Urban Background,2010,52
+WM5,Covent Garden,Westminster,Urban Background,2018,39
+WM5,Covent Garden,Westminster,Urban Background,2019,39
+WM5,Covent Garden,Westminster,Urban Background,2020,24
+WM5,Covent Garden,Westminster,Urban Background,2021,24
+WM5,Covent Garden,Westminster,Urban Background,2022,23
+WM5,Covent Garden,Westminster,Urban Background,2023,22
+WM5,Covent Garden,Westminster,Urban Background,2025,22
+WM6,Oxford Street,Westminster,Kerbside,2013,135
+WM6,Oxford Street,Westminster,Kerbside,2015,135
+WM6,Oxford Street,Westminster,Kerbside,2016,87
+WM6,Oxford Street,Westminster,Kerbside,2017,72
+WM6,Oxford Street,Westminster,Kerbside,2018,63
+WM6,Oxford Street,Westminster,Kerbside,2019,55
+WM6,Oxford Street,Westminster,Kerbside,2020,34
+WM6,Oxford Street,Westminster,Kerbside,2021,34
+WM6,Oxford Street,Westminster,Kerbside,2022,37
+WM6,Oxford Street,Westminster,Kerbside,2023,32
+WM6,Oxford Street,Westminster,Kerbside,2024,29
+WM6,Oxford Street,Westminster,Kerbside,2025,28
+WM8,Victoria,Westminster,Urban Background,2014,54
+WM8,Victoria,Westminster,Urban Background,2015,52
+WMA,Buckingham Palace Road,Westminster,Roadside,2018,52
+WMA,Buckingham Palace Road,Westminster,Roadside,2019,51
+WMB,Oxford Street East,Westminster,Roadside,2019,51
+WMB,Oxford Street East,Westminster,Roadside,2020,35
+WMB,Oxford Street East,Westminster,Roadside,2021,37
+WMB,Oxford Street East,Westminster,Roadside,2022,42
+WMC,Cavendish Square,Westminster,Roadside,2019,50
+WMC,Cavendish Square,Westminster,Roadside,2020,32
+WMC,Cavendish Square,Westminster,Roadside,2021,32
+WMC,Cavendish Square,Westminster,Roadside,2022,33
+WMD,Elizabeth Bridge,Westminster,Roadside,2021,30
+WMD,Elizabeth Bridge,Westminster,Roadside,2022,34
+WMD,Elizabeth Bridge,Westminster,Roadside,2023,35
+WMD,Elizabeth Bridge,Westminster,Roadside,2024,30
+WMD,Elizabeth Bridge,Westminster,Roadside,2025,26

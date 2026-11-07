@@ -4400,9 +4400,11 @@
     if (split) el("rect", { width: SPLIT.x, height: SPLIT.y, fill: NU.paper }, svg);
     if (o.eyebrow) el("text", { x: 64, y: 58, "font-family": NU.sans, "font-size": 15, "font-weight": 700, "letter-spacing": 2.6, fill: NU.red }, svg, o.eyebrow.toUpperCase());
     var title = o.title ? el("text", { x: 64, y: 100, "font-family": NU.serif, "font-size": split ? 32 : 38, fill: split ? NU.ink : ink }, svg, o.title) : null;
-    var caption = el("text", { x: 64, y: H - 34, "font-family": NU.sans, "font-size": 22, fill: ink, class: "fig-caption" }, svg);
+    var top = o.captionTop || null, CT = { x: 84, y: 150, size: 27, lh: 34 };
+    var marker = top ? el("rect", { x: 64, y: CT.y - 24, width: 6, height: 30, rx: 2, fill: NU.red }, svg) : null;
+    var caption = top ? el("text", { x: CT.x, y: CT.y, "font-family": NU.sans, "font-size": CT.size, "font-weight": 700, fill: ink, class: "fig-caption" }, svg) : el("text", { x: 64, y: H - 34, "font-family": NU.sans, "font-size": 22, fill: ink, class: "fig-caption" }, svg);
     var pips = el("g", { transform: "translate(" + (W - 64) + " " + (H - 41) + ")" }, svg);
-    if (o.credit) el("text", { x: W - 64, y: 58, "text-anchor": "end", "font-family": NU.sans, "font-size": 13, fill: soft }, svg, o.credit);
+    if (o.credit) el("text", top ? { x: 64, y: H - 36, "font-family": NU.sans, "font-size": 14, fill: soft } : { x: W - 64, y: 58, "text-anchor": "end", "font-family": NU.sans, "font-size": 13, fill: soft }, svg, o.credit);
     return {
       ink,
       soft,
@@ -4412,6 +4414,14 @@
       /* One line when it fits beside the step pips; a longer caption wraps to two lines, the first raised, so it never runs into them. */
       caption: function(text2) {
         caption.textContent = "";
+        if (top) {
+          var qs = wrap(text2 || "", CT.size, top.width).slice(0, 2);
+          qs.forEach(function(l, i) {
+            el("tspan", { x: CT.x, dy: i ? CT.lh : 0 }, caption, l);
+          });
+          if (marker) set(marker, { height: 30 + (qs.length - 1) * CT.lh, opacity: qs.length ? 1 : 0 });
+          return;
+        }
         var lines = wrap(text2 || "", 22, W - 64 - 64 - 140);
         if (lines.length < 2) {
           caption.textContent = text2 || "";
@@ -7508,8 +7518,217 @@
     }
   };
 
+  // src/figures/story.js
+  var GREY2 = "#cfd5dc";
+  var story2 = {
+    /** @param {any} fig */
+    mount: function(fig) {
+      var d = fig.data, svg = fig.svg, st = fig.stage, years = d.years || [], series = d.series || [];
+      var P = d.plot || { x0: 120, x1: fig.story ? fig.story.x - 60 : W - 90, y0: fig.captionTop ? 262 : 214, y1: fig.captionTop ? 636 : 600 };
+      var yMax = d.yMax || 100, first = years[0], last = years[years.length - 1];
+      var x = function(yr) {
+        return P.x0 + (yr - first) / (last - first) * (P.x1 - P.x0);
+      };
+      var y = function(v2) {
+        return P.y1 - v2 / yMax * (P.y1 - P.y0);
+      };
+      var hero = series.find(function(s) {
+        return s.id === d.hero;
+      });
+      var ink = st.ink, soft = st.soft;
+      var axes2 = el("g", {}, svg);
+      for (var v = 0; v <= yMax; v += yMax > 120 ? 40 : 20) {
+        el("line", { x1: P.x0, x2: P.x1, y1: y(v), y2: y(v), stroke: v === 0 ? "#9aa3ad" : "#e6e2da", "stroke-width": v === 0 ? 1.5 : 1 }, axes2);
+        el("text", { x: P.x0 - 12, y: y(v) + 5, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(v));
+      }
+      years.forEach(function(yr, i) {
+        if (years.length > 10 && i % 3 && yr !== last) return;
+        el("text", { x: x(yr), y: P.y1 + 26, "text-anchor": "middle", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(yr));
+      });
+      if (d.unit) el("text", { x: P.x0 - 12, y: P.y0 - 14, "text-anchor": "end", "font-family": NU.sans, "font-size": 14, "font-weight": 600, fill: soft }, axes2, d.unit);
+      var bandsG = el("g", {}, svg), othersG = el("g", {}, svg), refsG = el("g", {}, svg), notesG = el("g", {}, svg);
+      var heroG = el("g", {}, svg), headG = el("g", {}, svg), cardG = el("g", {}, svg), keyG = el("g", {}, svg);
+      if (d.key && d.keyOnChart) {
+        var kx = P.x1;
+        d.key.slice().reverse().forEach(function(it) {
+          var tw = textWidth(it.text, 15, true);
+          el("text", { x: kx, y: P.y0 - 10, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: ink }, keyG, it.text);
+          el("line", { x1: kx - tw - 30, x2: kx - tw - 8, y1: P.y0 - 15, y2: P.y0 - 15, stroke: it.colour || NU.navy, "stroke-width": 4, "stroke-linecap": "round" }, keyG);
+          kx -= tw + 50;
+        });
+      } else keyRow(keyG, d.key, st, fig.story);
+      var heroName = d.heroLabel && hero ? el("text", { x: x(first) + 4, y: y(hero.v[first]) - 14, "font-family": NU.sans, "font-size": 16, "font-weight": 700, fill: NU.red, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke", opacity: 0 }, svg, d.heroLabel) : null;
+      function pathOf2(s, upto) {
+        var pts = [];
+        for (var i = 0; i < years.length; i++) {
+          var yr = years[i], val2 = s.v[yr];
+          if (val2 == null) continue;
+          if (yr <= upto) {
+            pts.push([x(yr), y(val2)]);
+            continue;
+          }
+          var prev = pts.length ? pts[pts.length - 1] : null, k = upto - years[i - 1];
+          if (prev && k > 0 && s.v[years[i - 1]] != null) pts.push([prev[0] + (x(yr) - prev[0]) * k, prev[1] + (y(val2) - prev[1]) * k]);
+          break;
+        }
+        return pts.length ? "M" + pts.map(function(p) {
+          return p[0].toFixed(1) + " " + p[1].toFixed(1);
+        }).join(" L") : "";
+      }
+      var others = series.filter(function(s) {
+        return s !== hero;
+      }).map(function(s) {
+        return { s, node: el("path", { d: pathOf2(s, last), fill: "none", stroke: GREY2, "stroke-width": 1.6, "stroke-linejoin": "round", opacity: 0 }, othersG) };
+      });
+      var heroPath = el("path", { fill: "none", stroke: NU.red, "stroke-width": 5, "stroke-linejoin": "round", "stroke-linecap": "round" }, heroG);
+      var heroDot = el("circle", { r: 7, fill: NU.red, stroke: "#fff", "stroke-width": 2.5, opacity: 0 }, heroG);
+      var heroVal = el("text", { "font-family": NU.sans, "font-size": 22, "font-weight": 700, fill: NU.red, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke", opacity: 0 }, heroG);
+      var shownUpto = 0, mode = "none", cancel = function() {
+      }, step = (
+        /** @type {any} */
+        {}
+      );
+      var litLine = (
+        /** @type {any} */
+        null
+      );
+      function styleOthers(m, k, from) {
+        others.forEach(function(o) {
+          var to = m === "none" ? 0 : m === "type" ? 0.8 : 1, was = from === "none" ? 0 : from === "type" ? 0.8 : 1;
+          set(o.node, { opacity: was + (to - was) * k, stroke: m === "type" ? (d.types || {})[o.s.type] || GREY2 : GREY2, "stroke-width": m === "type" ? 2 : 1.6 });
+        });
+      }
+      function light(s, yr, px, py) {
+        cardG.textContent = "";
+        if (litLine) {
+          litLine.node.parentNode && othersG.insertBefore(litLine.node, othersG.firstChild);
+          styleOthers(mode, 1, mode);
+        }
+        litLine = null;
+        if (!s) return;
+        var o = others.find(function(q) {
+          return q.s === s;
+        });
+        if (o) {
+          litLine = o;
+          set(o.node, { stroke: NU.navy, "stroke-width": 4, opacity: 1 });
+          othersG.appendChild(o.node);
+        }
+        var val2 = s.v[yr];
+        if (val2 == null) return;
+        var cx = px == null ? x(yr) : px, cy = py == null ? y(val2) : py;
+        el("circle", { cx: x(yr), cy: y(val2), r: 6, fill: o ? NU.navy : NU.red, stroke: "#fff", "stroke-width": 2 }, cardG);
+        tooltipCard(
+          cardG,
+          [["site", s.name], ["borough", s.borough], ["type", s.type], ["year", String(yr)], ["no2", String(val2)]],
+          cx,
+          cy,
+          { size: 17, maxX: fig.story ? fig.story.x - 12 : W - 12, minY: 130, blocks: [[0, H - 80, W, H], [cx - 8, cy - 8, cx + 8, cy + 8]] }
+        );
+      }
+      if (fig.interactive) {
+        svg.addEventListener("pointermove", function(e) {
+          if (!step.hover) return;
+          var p = fig.toSlide(e);
+          if (p.x < P.x0 - 10 || p.x > P.x1 + 10 || p.y < P.y0 - 20 || p.y > P.y1 + 10) {
+            light(step.lit ? series.find(function(s) {
+              return s.id === step.lit.id;
+            }) : null, step.lit ? step.lit.year : 0);
+            return;
+          }
+          var yr = Math.round(first + (p.x - P.x0) / (P.x1 - P.x0) * (last - first)), best = null, dist = 26;
+          series.forEach(function(s) {
+            if (s !== hero && mode === "none") return;
+            if (s === hero && !((step.upto == null ? last : step.upto) >= first)) return;
+            var val2 = s.v[yr];
+            if (val2 == null) return;
+            var dd = Math.abs(y(val2) - p.y);
+            if (dd < dist) {
+              dist = dd;
+              best = s;
+            }
+          });
+          light(best, yr);
+        });
+        svg.addEventListener("pointerleave", function() {
+          if (step.hover) light(null, 0);
+        });
+      }
+      return {
+        /** @param {any} next @param {boolean} animate */
+        update: function(next, animate) {
+          step = next;
+          st.caption(next.caption);
+          cancel();
+          refsG.textContent = "";
+          (d.refs || []).slice(0, next.refs || 0).forEach(function(r, i) {
+            el("line", { x1: P.x0, x2: P.x1, y1: y(r.y), y2: y(r.y), stroke: i ? "#54a24b" : NU.navy, "stroke-width": 2.5, "stroke-dasharray": i ? "3 5" : "9 6" }, refsG);
+            el("text", { x: P.x0 + 8, y: y(r.y) - 9, "font-family": NU.sans, "font-size": 16, "font-weight": 700, fill: i ? "#3b7a35" : NU.navy, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, refsG, r.text);
+          });
+          notesG.textContent = "";
+          (d.notes || []).slice(0, next.notes || 0).forEach(function(n) {
+            el("line", { x1: x(n.year), x2: x(n.year), y1: P.y0, y2: P.y1, stroke: "#8a96a3", "stroke-width": 1.5 }, notesG);
+            el("text", { x: x(n.year) - 8, y: y(n.at), "text-anchor": "end", "font-family": NU.sans, "font-size": 17, "font-weight": 600, fill: ink, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, notesG, n.text);
+          });
+          bandsG.textContent = "";
+          if (next.bands) {
+            var bx = x(next.bandsFrom || Math.min(last, (next.upto || first) + 1)) - 8;
+            var ans = next.bandAnswer;
+            next.bands.forEach(function(b, i) {
+              var right = ans === i, faded = ans != null && !right;
+              var g = el("g", { opacity: faded ? 0.28 : 1 }, bandsG);
+              el("rect", { x: bx, y: y(b.to), width: P.x1 - bx, height: y(b.from) - y(b.to) - 3, rx: 6, fill: right ? "#fbe5e8" : i % 2 ? "#eef1f5" : "#e3e8ef", stroke: right ? NU.red : "none", "stroke-width": 2 }, g);
+              el("text", { x: bx + 18, y: (y(b.to) + y(b.from)) / 2 + 9, "font-family": NU.sans, "font-size": 26, "font-weight": 700, fill: right ? NU.red : NU.navy }, g, right ? b.text + "  ✓" : b.text);
+            });
+          }
+          headG.textContent = "";
+          if (next.headline) {
+            el("text", { x: P.x0 - 40, y: P.y0 - 58, "font-family": NU.sans, "font-size": 25, "font-weight": 700, fill: ink }, headG, next.headline);
+            if (next.sub) el("text", { x: P.x0 - 40, y: P.y0 - 32, "font-family": NU.sans, "font-size": 17, fill: soft }, headG, next.sub);
+          }
+          var to = next.upto == null ? last : next.upto, from = animate ? shownUpto : to, was = animate ? mode : next.others || "none";
+          var newMode = next.others || "none";
+          litLine = null;
+          cardG.textContent = "";
+          cancel = tween(animate ? Math.max(500, Math.abs(to - from) * 260) : 0, function(k) {
+            var at = from + (to - from) * k;
+            set(heroPath, { d: hero && at >= first ? pathOf2(hero, at) : "" });
+            styleOthers(newMode, k, was);
+            if (k >= 1 && hero && to >= first) {
+              var lastYr = years.filter(function(yr) {
+                return yr <= to && hero.v[yr] != null;
+              }).pop();
+              set(heroDot, { cx: x(lastYr), cy: y(hero.v[lastYr]), opacity: 1 });
+              var big = next.reveal && next.reveal.year === lastYr;
+              heroVal.textContent = big ? next.reveal.text : String(hero.v[lastYr]);
+              set(heroVal, { x: x(lastYr) + (big ? -16 : 0), y: y(hero.v[lastYr]) + (big ? 46 : 28), "text-anchor": big ? "end" : "middle", "font-size": big ? 34 : 22, opacity: next.lit ? 0 : 1 });
+            } else {
+              set(heroDot, { opacity: 0 });
+              set(heroVal, { opacity: 0 });
+            }
+            if (k >= 1 && next.lit) light(series.find(function(q) {
+              return q.id === next.lit.id;
+            }), next.lit.year);
+          }, function(t) {
+            return t;
+          });
+          shownUpto = to;
+          mode = newMode;
+          if (d.keyOnChart) set(keyG, { opacity: newMode === "none" ? 0 : 1 });
+          if (heroName) {
+            set(heroName, { opacity: to > first ? 1 : 0 });
+            svg.appendChild(heroName);
+          }
+        },
+        destroy: function() {
+          cancel();
+        }
+      };
+    }
+  };
+
   // src/figures/index.js
-  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium, bridges, network, tree, reveal, panels };
+  var FIGURES = { bubbles, codechart, worldmap, motion, linked, rowtable, stadium, bridges, network, tree, reveal, panels, story: story2 };
   var CSS = ".figure-slide .fig-svg{position:absolute;inset:0;width:100%;height:100%;z-index:60;display:block;user-select:none;-webkit-user-select:none;touch-action:none}.figure-slide .pad{visibility:hidden}.figure-slide .fig-svg text{font-kerning:normal}";
   function installFigures(SF) {
     var styled = false;
@@ -7560,7 +7779,8 @@
         svg.appendChild(t);
         return;
       }
-      var stage2 = stage(svg, { ground: slide.figureGround, eyebrow: slide.figureEyebrow, title: slide.title, credit: slide.figureCredit });
+      var captionTop = slide.figureCaptionTop ? { width: (slide.figureStory ? slide.figureStory.x - 28 : W - 64) - 84 } : null;
+      var stage2 = stage(svg, { ground: slide.figureGround, eyebrow: slide.figureEyebrow, title: slide.title, credit: slide.figureCredit, captionTop });
       var fig = {
         svg,
         stage: stage2,
@@ -7568,6 +7788,7 @@
         interactive: live,
         steps: list,
         story: slide.figureStory || null,
+        captionTop: !!captionTop,
         /** Where a pointer event lands, in slide pixels, whatever scale the slide is drawn at. */
         toSlide: function(e) {
           var m = svg.getScreenCTM(), p = svg.createSVGPoint();

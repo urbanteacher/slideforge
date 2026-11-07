@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">THE ROUTE</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">Nine weeks in: from making a chart to telling with it</text>
+<line x1="100" y1="340" x2="1180" y2="340" stroke="#d9d4ca" stroke-width="6"/>
+<line x1="100" y1="340" x2="1060" y2="340" stroke="#0c3354" stroke-width="6"/>
+<circle cx="100" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" />
+<text x="100" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">1</text>
+<text x="100" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Why</text>
+<text x="100" y="425" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">visualise?</text>
+<circle cx="220" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" />
+<text x="220" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">2</text>
+<text x="220" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Building</text>
+<text x="220" y="425" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">charts</text>
+<circle cx="340" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" />
+<text x="340" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">3</text>
+<text x="340" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Encoding</text>
+<circle cx="460" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" />
+<text x="460" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">4</text>
+<text x="460" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Colour</text>
+<circle cx="580" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" />
+<text x="580" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">5</text>
+<text x="580" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Interaction</text>
+<circle cx="700" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" stroke-dasharray="5 5"/>
+<text x="700" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">6</text>
+<text x="700" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Reading week</text>
+<circle cx="820" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" />
+<text x="820" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">7</text>
+<text x="820" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Maps</text>
+<circle cx="940" cy="340" r="22" fill="#0c3354" stroke="#0c3354" stroke-width="4" />
+<text x="940" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">8</text>
+<text x="940" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Networks and</text>
+<text x="940" y="425" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">trees</text>
+<circle cx="1060" cy="340" r="30" fill="#c8102e" stroke="#c8102e" stroke-width="4" />
+<text x="1060" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" fill="#fff">9</text>
+<text x="1060" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#c8102e">Telling the</text>
+<text x="1060" y="425" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#c8102e">story</text>
+<circle cx="1180" cy="340" r="22" fill="#fbfaf8" stroke="#0c3354" stroke-width="4" />
+<text x="1180" y="348" text-anchor="middle" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="#0c3354">★</text>
+<text x="1180" y="404" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">Final piece:</text>
+<text x="1180" y="425" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">the</text>
+<text x="1180" y="446" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle" fill="#14181f">infographic</text>
+<text x="1060" y="288" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#c8102e" letter-spacing="1.5">YOU ARE HERE</text>
+<text x="64" y="560" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" text-anchor="start" fill="#5a6572">Weeks 1–8 taught you to make a chart right. Today: who reads it, in what order, and who is in control.</text>
+<text x="64" y="594" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="400" text-anchor="start" fill="#5a6572">Your final infographic is a story. Every panel needs a headline, a note and a highlight.</text>
+</svg>
