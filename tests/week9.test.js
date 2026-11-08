@@ -88,16 +88,49 @@ test('the teacher sees every slide; skipping the optional ones fits a 90-minute 
   assert.ok(minutes(room.slides) >= 75, `the whole lecture runs ${minutes(room.slides).toFixed(0)} minutes`);
 });
 
-test('Munzner comes back from Week 3, not redrawn: the same slides, tied to today', () => {
+test('Munzner comes back from Week 3, not redrawn: her Why? diagram, and her words on the map', () => {
   const { lesson: l } = lesson('ipdv-story-w9');
-  const nested = l.slides.find((s) => s.type === 'experiment' && s.experiment && s.experiment.preset === 'nested');
-  assert.ok(nested, 'Week 3\'s four-level walk-through is here');
   const why = l.slides.find((s) => s.image === 'assets/lesson/ipdv/munzner-why-tasks.png');
   assert.ok(why, 'Week 3\'s Why? diagram is here');
   for (const word of ['Present', 'Discover', 'Enjoy']) assert.match(why.body, new RegExp(word), `the Why? slide names ${word}`);
-  const src = fs.readFileSync(path.join(ROOT, 'js/lessons.js'), 'utf8');
-  assert.match(src, /'Four levels, three questions'/, 'Week 3 still has the walk-through the lesson borrows');
-  assert.match(src, /munzner-why-tasks\.png/, 'Week 3 still has the Why? diagram');
+  const map = fs.readFileSync(path.join(DIR, 'spectrum.svg'), 'utf8');
+  assert.match(map, /MUNZNER: PRESENT/);
+  assert.match(map, /MUNZNER: DISCOVER/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'js/lessons.js'), 'utf8'), /munzner-why-tasks\.png/, 'Week 3 still has the Why? diagram');
+});
+
+test('the theory is taught, not only shown: what a story is, why, how to judge one, how one misleads', () => {
+  const { lesson: l } = lesson('ipdv-story-w9');
+  const titles = l.slides.map((s) => s.title);
+  const order = ['A chart, or a story?', 'What makes it a story', 'A story has a shape', 'Why tell a story with data?',
+    'Who drives? The line every story sits on', 'Strong or weak? Five tests'];
+  const at = order.map((t) => titles.indexOf(t));
+  at.forEach((i, k) => assert.ok(i > 0, `"${order[k]}" is in the lecture`));
+  assert.deepEqual(at, [...at].sort((a, b) => a - b), 'the foundation runs in order');
+  assert.ok(at[0] < titles.indexOf('How do you make sure they see what you saw?'), 'the foundation comes before Part 1');
+  const tricks = titles.indexOf('Same data, five tricks');
+  assert.ok(tricks > titles.indexOf('Build it: one line in colour, the rest grey') && tricks < titles.indexOf('When should the reader drive?'), 'the tricks end Part 1');
+  /* every reason, layer and test names its evidence */
+  const why = l.slides.find((s) => s.title === 'Why tell a story with data?');
+  why.figureData.rows.slice(0, 4).forEach((r) => assert.match(r.text, /\(\D+,? \d{4}\)/, `${r.name}: a source`));
+  const layers = l.slides.find((s) => s.title === 'Persuade, or mislead? Where the line is');
+  assert.equal(layers.figureData.rows.length, 5, 'one layer per trick');
+});
+
+test('the tricks\' numbers are the data\'s', () => {
+  const air = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/ipdv-week9/data/no2.json'), 'utf8'));
+  const my1 = air.sites.find((s) => s.code === 'MY1').no2;
+  assert.deepEqual([my1[2018], my1[2020]], [85, 44], 'halved in two years: 85 to 44');
+  assert.deepEqual([my1[2021], my1[2022], my1[2023]], [43, 42, 42], 'the flat years after');
+  const fell = (my1[2010] - my1[2025]) / my1[2010], drawn = ((my1[2010] - 30) - (my1[2025] - 30)) / (my1[2010] - 30);
+  assert.equal(Math.round(fell * 100), 68, 'a 68% fall');
+  assert.equal(Math.round(drawn * 1000) / 10, 98.5, 'drawn from 30: a 98.5% fall');
+  assert.equal(Math.round(drawn / fell * 10) / 10, 1.4, 'lie factor 1.4');
+  const { lesson: l } = lesson('ipdv-story-w9');
+  const t = l.slides.find((s) => s.title === 'Same data, five tricks');
+  const filtered = t.figureSteps.find((st) => st.hide);
+  assert.ok(filtered.hide.includes('LB4'), 'the filtered bowl leaves out Brixton Road');
+  assert.ok(t.figureSteps.some((st) => st.range) && t.figureSteps.some((st) => st.yMin), 'a window and a cut axis');
 });
 
 test('a question above a chart headline fits on one line, so the two never touch', () => {

@@ -284,7 +284,7 @@ function feltSvg() {
       });
       return s.join('');
     } }
-  ], { sub: 'Marylebone Road’s NO₂, and London’s monitors, made felt four ways.' });
+  ], { sub: 'Numbers are felt as well as read (Kennedy and Hill, 2018). Four ways to make one land.' });
 }
 
 /* Four published stories, drawn as schematics (not copies): the move each one makes. Links in the notes. */
@@ -361,35 +361,114 @@ function rhythmSvg() {
   ], { sub: 'Marylebone Road, 2025, NO₂ in µg/m³. Drill into one line and it has its own story.' });
 }
 
-/* Segel and Heer's line: author-driven at one end, reader-driven at the other. */
-function spectrumSvg() {
-  const out = [open(), heading('Who drives?', 'Every data story sits somewhere on one line')];
-  const x0 = 120, x1 = 1160, y = 330;
+/* Segel and Heer's line: author-driven at one end, reader-driven at the other. It is the lecture's map:
+   explain and explore (Knaflic), present and discover (Munzner) at the ends, and today's four parts on it.
+   o.lit: the part to light ('Lead', 'Let go', 'Both', 'Make it felt'), for the callbacks later in the lecture. */
+function spectrumSvg(o = {}) {
+  const out = [open(), heading('Who drives?', o.title || 'Every data story sits somewhere on one line')];
+  const x0 = 120, x1 = 1160, y = 360;
   out.push(`<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${NU.navy}" stroke-width="6" stroke-linecap="round"/>`);
   out.push(`<path d="M${x0 - 8} ${y} l22 -14 v28 z" fill="${NU.navy}"/><path d="M${x1 + 8} ${y} l-22 -14 v28 z" fill="${NU.navy}"/>`);
-  out.push(text(x0 - 20, y - 70, 'THE AUTHOR DRIVES', { size: 16, weight: 700, colour: NU.red, spacing: 2 }));
-  out.push(text(x0 - 20, y - 42, 'One message, a fixed order', { size: 20, colour: NU.dim }));
-  out.push(text(x1 + 20, y - 70, 'THE READER DRIVES', { size: 16, weight: 700, colour: NU.red, spacing: 2, anchor: 'end' }));
-  out.push(text(x1 + 20, y - 42, 'No set path, their own questions', { size: 20, colour: NU.dim, anchor: 'end' }));
+  out.push(text(x0 - 20, 182, 'EXPLAIN · MUNZNER: PRESENT', { size: 15, weight: 700, colour: NU.dim, spacing: 1.5 }));
+  out.push(text(x0 - 20, 212, 'THE AUTHOR DRIVES', { size: 17, weight: 700, colour: NU.red, spacing: 2 }));
+  out.push(text(x0 - 20, 240, 'One message, a fixed order', { size: 20, colour: NU.dim }));
+  out.push(text(x1 + 20, 182, 'EXPLORE · MUNZNER: DISCOVER', { size: 15, weight: 700, colour: NU.dim, spacing: 1.5, anchor: 'end' }));
+  out.push(text(x1 + 20, 212, 'THE READER DRIVES', { size: 17, weight: 700, colour: NU.red, spacing: 2, anchor: 'end' }));
+  out.push(text(x1 + 20, 240, 'No set path, their own questions', { size: 20, colour: NU.dim, anchor: 'end' }));
   const stops = [
-    ['Linear story', 'slideshow, annotated chart, scrollytelling', 'a talk, a poster, Snow Fall'],
-    ['Interactive slideshow', 'chapters in order, explore inside each', 'an explainer in parts'],
-    ['Martini glass', 'a short story, then it opens up', 'a news chart you can then explore'],
-    ['Drill-down story', 'pick a story from an overview', 'one story per borough'],
-    ['Dashboard', 'filters and views, no story', 'London Air’s live map']
+    ['Linear story', 'slideshow, annotated chart, scrollytelling', 'a talk, a poster, Snow Fall', 'Part 1 · Lead'],
+    ['Interactive slideshow', 'chapters in order, explore inside each', 'an explainer in parts', 'Part 4 · Make it felt'],
+    ['Martini glass', 'a short story, then it opens up', 'a news chart you can then explore', 'Part 3 · Both'],
+    ['Drill-down story', 'pick a story from an overview', 'one story per borough', ''],
+    ['Dashboard', 'filters and views, no story', 'London Air’s live map', 'Part 2 · Let go']
   ];
-  stops.forEach(([name, how, eg], i) => {
-    const x = x0 + 60 + i * ((x1 - x0 - 120) / 4), mart = i === 2;
-    out.push(`<circle cx="${x}" cy="${y}" r="${mart ? 18 : 13}" fill="${mart ? NU.red : '#fff'}" stroke="${mart ? NU.red : NU.navy}" stroke-width="4"/>`);
+  stops.forEach(([name, how, eg, part], i) => {
+    const x = x0 + 60 + i * ((x1 - x0 - 120) / 4), lit = o.lit && part.endsWith(o.lit), key = o.lit ? lit : i === 2;
+    out.push(`<circle cx="${x}" cy="${y}" r="${key ? 18 : 13}" fill="${key ? NU.red : '#fff'}" stroke="${key ? NU.red : NU.navy}" stroke-width="4"/>`);
+    if (part) {
+      const pw = part.length * 8.6 + 26, on = !o.lit || lit;
+      out.push(`<rect x="${(x - pw / 2).toFixed(1)}" y="${y - 62}" width="${pw.toFixed(1)}" height="30" rx="15" fill="${on ? NU.navy : '#fff'}" stroke="${NU.navy}" stroke-width="2"${on ? '' : ' opacity="0.45"'}/>`);
+      out.push(text(x, y - 41, part, { size: 15, weight: 700, anchor: 'middle', colour: on ? '#fff' : NU.navy }));
+    }
     let ty = y + 56;
-    wrap(name, 26, 210).forEach(l => { out.push(text(x, ty, l, { font: NU.serif, size: 27, anchor: 'middle', colour: mart ? NU.red : NU.navy })); ty += 32; });
+    wrap(name, 26, 210).forEach(l => { out.push(text(x, ty, l, { font: NU.serif, size: 27, anchor: 'middle', colour: key ? NU.red : NU.navy })); ty += 32; });
     wrap(how, 19, 200).forEach(l => { out.push(text(x, ty + 6, l, { size: 19, anchor: 'middle' })); ty += 25; });
     wrap('e.g. ' + eg, 18, 200).forEach(l => { out.push(text(x, ty + 18, l, { size: 18, anchor: 'middle', colour: NU.dim })); ty += 23; });
   });
-  out.push(text(64, 650, 'After Segel and Heer (2010): they name the three in the middle; the two end labels are ours. Most good charts blend both ends.', { size: 18, colour: NU.dim }));
+  out.push(text(64, 672, 'After Segel and Heer (2010): they name the three in the middle; the two end labels are ours. Explain and explore: Knaflic (2015).', { size: 17, colour: NU.dim }));
   out.push('</svg>');
   return out.join('\n');
 }
+
+/* A story has a shape: the hook's own line, cut into Amini et al.'s four parts (establisher, initial, peak,
+   release), with Kosara's point under it: ask first, answer last. */
+function arcSvg() {
+  const out = [open(), heading('A story has a shape', 'The hook you just saw, as a story arc')];
+  const X0 = 110, X1 = 1170, Y0 = 200, Y1 = 500, ymax = 100;
+  const x = yr => X0 + (yr - 2010) / 15 * (X1 - X0), y = v => Y1 - v / ymax * (Y1 - Y0);
+  const parts = [
+    [2010, 2016, 'ESTABLISHER', 'The setting', 'One of London’s busiest roads: 98 in 2010'],
+    [2016, 2018, 'INITIAL', 'The question', '89 in 2016. Where will it be in 2025?'],
+    [2018, 2020, 'PEAK', 'The turn', 'The big drop: 85 to 44'],
+    [2020, 2025, 'RELEASE', 'What follows', 'Under the limit; still three times WHO’s guideline']
+  ];
+  parts.forEach(([a, b, tag, name, words], i) => {
+    out.push(`<rect x="${x(a) + 2}" y="${Y0 - 50}" width="${x(b) - x(a) - 4}" height="${Y1 - Y0 + 50}" fill="${i === 2 ? '#fbe5e8' : i % 2 ? '#eef1f5' : '#f4f2ee'}"/>`);
+    out.push(text(x(a) + 12, Y0 - 24, tag, { size: 15, weight: 700, colour: i === 2 ? NU.red : NU.navy, spacing: 1.5 }));
+  });
+  out.push(`<line x1="${X0}" y1="${y(40)}" x2="${X1}" y2="${y(40)}" stroke="${NU.navy}" stroke-width="2" stroke-dasharray="8 6"/>`);
+  out.push(`<line x1="${X0}" y1="${Y1}" x2="${X1}" y2="${Y1}" stroke="${EDGE}" stroke-width="1.5"/>`);
+  [2010, 2016, 2018, 2020, 2025].forEach(yr => out.push(text(x(yr), Y1 + 22, String(yr), { size: 15, anchor: 'middle', colour: NU.dim })));
+  const pts = YEARS.filter(yr => MY1.no2[yr] != null).map(yr => `${x(yr).toFixed(1)} ${y(MY1.no2[yr]).toFixed(1)}`);
+  out.push(`<path d="M${pts.join(' L')}" fill="none" stroke="${NU.red}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`);
+  /* the words in four equal columns under the chart, each tied to its part by a short coloured bar */
+  parts.forEach(([a, b, , name, words], i) => {
+    const cw = (X1 - X0) / 4, tx = X0 + i * cw, c = i === 2 ? NU.red : NU.navy;
+    out.push(`<path d="M${((x(a) + x(b)) / 2).toFixed(1)} ${Y1 + 34} L${(tx + 40).toFixed(1)} 556" fill="none" stroke="${c}" stroke-width="1.5" opacity="0.5"/>`);
+    out.push(`<rect x="${tx}" y="556" width="${cw - 24}" height="4" fill="${c}"/>`);
+    out.push(text(tx, 588, name, { font: NU.serif, size: 24, colour: c }));
+    wrap(words, 17, cw - 30).forEach((l, k) => out.push(text(tx, 614 + k * 22, l, { size: 17 })));
+  });
+  out.push(text(64, 690, 'Arc: Amini et al. (2015), from 50 professional data videos. Ask first, answer last: Kosara (2017).', { size: 16, colour: NU.dim }));
+  out.push('</svg>');
+  return out.join('\n');
+}
+
+/* Strong or weak: chart A (a topic title, a bare line) and chart B (the author's moves), scored on five tests.
+   The panels figure reveals the charts, then one test per click; scoreBoxes() gives it the rows. */
+const SCORE = [
+  ['1', 'One message', 'Say the point in one sentence, with what is at stake?', '✗', '✓'],
+  ['2', 'Evidence on the chart', 'Can you see the point in the marks, not only read it?', '✗', '✓'],
+  ['3', 'An order', 'An arc: the setting, the question, the turn, what follows?', '✗', '✓'],
+  ['4', 'Honest context', 'The whole range, a reference line, a comparison, a source?', 'half', '✓'],
+  ['5', 'Fits the reader', 'Right for them, even if they stop after the first screen?', '✗', '✓']
+];
+const SCORE_TOP = 404, SCORE_ROW = 50;
+function scoreSvg() {
+  const out = [open(), heading('Strong or weak?', 'Five tests for a data story')];
+  const chart = (bx, label, o) => {
+    out.push(`<rect x="${bx}" y="128" width="540" height="252" rx="8" fill="#fff" stroke="${NU.rule}"/>`);
+    out.push(`<circle cx="${bx + 30}" cy="158" r="17" fill="${NU.navy}"/>` + text(bx + 30, 165, label, { size: 19, weight: 700, anchor: 'middle', colour: '#fff' }));
+    out.push(text(bx + 58, 158, o.title, { size: 18, weight: 700 }) + (o.sub ? text(bx + 58, 180, o.sub, { size: 15, colour: NU.dim }) : ''));
+    const m = mini(500, 170, o.mini);
+    out.push(`<g transform="translate(${bx + 20} 198)">${m.svg}</g>`);
+  };
+  chart(64, 'A', { title: 'NO₂ at Marylebone Road, 2010–2025', mini: { ymax: 180, heroColour: NU.navy, heroWidth: 2.5 } });
+  chart(676, 'B', { title: 'A third of the NO₂ it had in 2010', sub: 'Yearly average at the kerb. Dashed: the legal limit, 40.', mini: { ymax: 180, others: true, limit: true, notes: [[2019, 'ULEZ']] } });
+  out.push(text(1050, SCORE_TOP - 4, 'A', { size: 16, weight: 700, anchor: 'middle', colour: NU.dim }) + text(1150, SCORE_TOP - 4, 'B', { size: 16, weight: 700, anchor: 'middle', colour: NU.dim }));
+  SCORE.forEach(([n, name, ask, a, b], i) => {
+    const ty = SCORE_TOP + 30 + i * SCORE_ROW;
+    out.push(`<line x1="64" y1="${ty - 30}" x2="1216" y2="${ty - 30}" stroke="${NU.rule}"/>`);
+    out.push(`<circle cx="84" cy="${ty - 6}" r="15" fill="${NU.navy}"/>` + text(84, ty, n, { size: 17, weight: 700, anchor: 'middle', colour: '#fff' }));
+    out.push(text(114, ty, name, { size: 20, weight: 700 }) + text(380, ty, ask, { size: 19 }));
+    const mark = (cx, m) => text(cx, ty + 1, m, { size: m === 'half' ? 16 : 24, weight: 700, anchor: 'middle', colour: m === '✓' ? NU.navy : NU.red });
+    out.push(mark(1050, a) + mark(1150, b));
+  });
+  out.push('</svg>');
+  return out.join('\n');
+}
+/* The panels figure's boxes for scoreSvg: the two charts first, then one per test. */
+const scoreBoxes = () => [[40, 118, 1200, 274]].concat(SCORE.map((_, i) => [40, SCORE_TOP + i * SCORE_ROW, 1200, SCORE_ROW]));
 
 /* The martini glass, drawn as one: three steps up the stem, then the bowl full of lines to explore. */
 function martiniSvg() {
@@ -437,11 +516,29 @@ const ICON = {
 const num = t => ({ icon: ICON.number(t), ring: NU.navy });
 const LEAD = { text: 'LEAD', fill: NU.red }, LETGO = { text: 'LET GO', fill: NU.navy }, BOTH = { text: 'BOTH', fill: '#5a6572' };
 const REVEAL = {
-  recall: { mode: 'answers', sub: 'No notes. Answer from memory, then we check.', textX: 640, size: 22, max: 150,
+  recall: { mode: 'answers', sub: 'No notes. Answer from memory, then we check.', textX: 640, size: 22, max: 170,
     rows: [
-      { icon: ICON.network, name: 'What makes a network a tree?', text: 'One root and no loops: you can’t go round in a circle and come back.' },
-      { icon: ICON.grid, name: 'When do you swap dots and lines for a grid?', text: 'When the lines tangle. A grid gives each pair one square, so nothing crosses.' },
       { icon: ICON.tube, name: 'What did Harry Beck’s Tube map give up?', text: 'True distances. He kept what connects to what, the thing a passenger needs.' }] },
+  parts: { mode: 'build', rail: true, max: 112, sub: 'First explore the data and find the point; then make it a story, and tell it (Lee et al., 2015).',
+    rows: [
+      { ...num(1), name: 'Data', text: 'The evidence. Here: Marylebone Road’s yearly NO₂, 2010 to 2025.' },
+      { ...num(2), name: 'A message', text: 'One point. Here: the air has a third of the NO₂ it had in 2010.' },
+      { ...num(3), name: 'An order', text: 'What you see first, then next. Here: the fall, then what happened when.' },
+      { ...num(4), name: 'A reader', text: 'Who it is for, and how long they have. Here: the public, in seconds.' }] },
+  why: { mode: 'build', max: 104, size: 19,
+    rows: [
+      { icon: ICON.eye, name: 'Attention', text: 'Readers glance. A headline and one colour tell them where to look; titles are where eyes go first (Borkin et al., 2016).' },
+      { icon: ICON.question, name: 'Understanding', text: 'An order breaks a hard idea into steps, and the order an author picks changes how readers follow it (Hullman et al., 2013).' },
+      { icon: ICON.clock, name: 'Memory', text: 'You guessed, so 31 sticks (Kim, Reinecke and Hullman, 2017). A title that states the point is the one people recall (Kong et al., 2018).' },
+      { icon: ICON.heart, name: 'Persuasion', text: 'A story can change minds (Pandey et al., 2014). A slanted title shifted what readers concluded, and most still called the chart neutral (Kong et al., 2018).' },
+      { icon: ICON.truth, name: 'So: the risk', text: 'The power to persuade is the power to mislead. Every story chooses what you see.' }] },
+  layers: { mode: 'build', max: 100, size: 19, sub: 'Every story frames (Hullman and Diakopoulos, 2011). It misleads when it hides what the reader needs to disagree.',
+    rows: [
+      { icon: ICON.grid, name: 'The data', text: 'A window that leaves out the years after the drop. Check: the whole range.' },
+      { icon: ICON.axis, name: 'The drawing', text: 'A cut axis: a 68% fall drawn as 98.5%, a lie factor of 1.4 (Tufte, 1983). Check: from zero, or say why not.' },
+      { icon: ICON.question, name: 'The notes', text: '“ULEZ cleaned this road’s air”: a cause, claimed. Check: notes say what happened, not why.' },
+      { icon: ICON.eye, name: 'The interaction', text: 'A bowl that opens filtered: Brixton Road, still over the limit, is not in it. Check: what does the reader see first, and what is hidden?' },
+      { icon: ICON.hidden, name: 'What isn’t drawn', text: 'Uncertainty left out: 2025’s 31 is provisional (Hullman, 2019). Check: say how sure you are.' }] },
   titles: { mode: 'answers', sub: 'Three titles for the same chart of Marylebone Road. Hands up: which one tells?', sayX: 160, tagX: 790, textX: 950, size: 18, saySize: 20, max: 140,
     rows: [
       { icon: ICON.letter('A'), say: '“NO₂ at Marylebone Road, 2010–2025”', tag: { text: 'A LABEL', fill: '#8a96a3' }, text: 'Says what the chart is, not what it shows.' },
@@ -476,4 +573,4 @@ const REVEAL = {
     { ...num(4), name: 'Try a new one', text: 'A school’s website page about its own street’s air, for parents.' }] }
 };
 
-module.exports = { rhythmSvg, PAT, routeSvg, codeSvg, spectrumSvg, martiniSvg, authorSvg, mantraSvg, structuresSvg, feltSvg, famousSvg, panelBoxes, REVEAL, STEPS, AIR, MY1 };
+module.exports = { arcSvg, scoreSvg, scoreBoxes, SCORE, rhythmSvg, PAT, routeSvg, codeSvg, spectrumSvg, martiniSvg, authorSvg, mantraSvg, structuresSvg, feltSvg, famousSvg, panelBoxes, REVEAL, STEPS, AIR, MY1 };

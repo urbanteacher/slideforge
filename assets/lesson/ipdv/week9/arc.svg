@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">A STORY HAS A SHAPE</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">The hook you just saw, as a story arc</text>
+<rect x="112" y="150" width="420" height="350" fill="#f4f2ee"/>
+<text x="122" y="176" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#0c3354" letter-spacing="1.5">ESTABLISHER</text>
+<rect x="536" y="150" width="137.33333333333337" height="350" fill="#eef1f5"/>
+<text x="546" y="176" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#0c3354" letter-spacing="1.5">INITIAL</text>
+<rect x="677.3333333333334" y="150" width="137.33333333333326" height="350" fill="#fbe5e8"/>
+<text x="687.3333333333334" y="176" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#c8102e" letter-spacing="1.5">PEAK</text>
+<rect x="818.6666666666666" y="150" width="349.33333333333337" height="350" fill="#eef1f5"/>
+<text x="828.6666666666666" y="176" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#0c3354" letter-spacing="1.5">RELEASE</text>
+<line x1="110" y1="380" x2="1170" y2="380" stroke="#0c3354" stroke-width="2" stroke-dasharray="8 6"/>
+<line x1="110" y1="500" x2="1170" y2="500" stroke="#9aa3ad" stroke-width="1.5"/>
+<text x="110" y="522" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" text-anchor="middle" fill="#5a6572">2010</text>
+<text x="534" y="522" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" text-anchor="middle" fill="#5a6572">2016</text>
+<text x="675.3333333333334" y="522" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" text-anchor="middle" fill="#5a6572">2018</text>
+<text x="816.6666666666666" y="522" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" text-anchor="middle" fill="#5a6572">2020</text>
+<text x="1170" y="522" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="400" text-anchor="middle" fill="#5a6572">2025</text>
+<path d="M110.0 206.0 L180.7 209.0 L251.3 218.0 L322.0 245.0 L392.7 218.0 L463.3 236.0 L534.0 233.0 L604.7 248.0 L675.3 245.0 L746.0 311.0 L816.7 368.0 L887.3 371.0 L958.0 374.0 L1028.7 374.0 L1099.3 404.0 L1170.0 407.0" fill="none" stroke="#c8102e" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M322.0 534 L150.0 556" fill="none" stroke="#0c3354" stroke-width="1.5" opacity="0.5"/>
+<rect x="110" y="556" width="241" height="4" fill="#0c3354"/>
+<text x="110" y="588" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="24" font-weight="400" text-anchor="start" fill="#0c3354">The setting</text>
+<text x="110" y="614" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">One of London’s busiest</text>
+<text x="110" y="636" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">roads: 98 in 2010</text>
+<path d="M604.7 534 L415.0 556" fill="none" stroke="#0c3354" stroke-width="1.5" opacity="0.5"/>
+<rect x="375" y="556" width="241" height="4" fill="#0c3354"/>
+<text x="375" y="588" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="24" font-weight="400" text-anchor="start" fill="#0c3354">The question</text>
+<text x="375" y="614" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">89 in 2016. Where will it</text>
+<text x="375" y="636" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">be in 2025?</text>
+<path d="M746.0 534 L680.0 556" fill="none" stroke="#c8102e" stroke-width="1.5" opacity="0.5"/>
+<rect x="640" y="556" width="241" height="4" fill="#c8102e"/>
+<text x="640" y="588" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="24" font-weight="400" text-anchor="start" fill="#c8102e">The turn</text>
+<text x="640" y="614" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">The big drop: 85 to 44</text>
+<path d="M993.3 534 L945.0 556" fill="none" stroke="#0c3354" stroke-width="1.5" opacity="0.5"/>
+<rect x="905" y="556" width="241" height="4" fill="#0c3354"/>
+<text x="905" y="588" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="24" font-weight="400" text-anchor="start" fill="#0c3354">What follows</text>
+<text x="905" y="614" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">Under the limit; still</text>
+<text x="905" y="636" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">three times WHO’s</text>
+<text x="905" y="658" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#14181f">guideline</text>
+<text x="64" y="690" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#5a6572">Arc: Amini et al. (2015), from 50 professional data videos. Ask first, answer last: Kosara (2017).</text>
+</svg>

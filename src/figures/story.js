@@ -27,6 +27,12 @@
  *   bands      [{ from, to, text }]: answer ranges to vote on, drawn from the year `bandsFrom` to the end;
  *              bandAnswer (an index) lights the right one and fades the rest
  *   reveal     { year, text }: the hero's value at that year, called out large
+ *   range      [from, to]: only these years on the x axis (a window; the lines outside it are cut)
+ *   yMin       the bottom of the y axis, when it is not zero (a cut axis); the lines below it are cut
+ *   yMax       this step's top of the y axis, instead of the figure's
+ *   noteList   [{ year, text, at }]: this step's own notes, instead of the figure's (`notes` still counts them)
+ *   hide       [id, …]: other lines left out of this step
+ * range, yMin and yMax change the axes at once, without a tween: they are for showing how a chart can mislead.
  */
 import { NU, W, H, el, set, tween, tooltipCard, keyRow, textWidth } from './kit.js';
 
@@ -40,25 +46,37 @@ export var story = {
     /* With the question on top (figureCaptionTop) the chart starts lower and runs to the foot. */
     var P = d.plot || { x0: 120, x1: fig.story ? fig.story.x - 60 : W - 90, y0: fig.captionTop ? 262 : 214, y1: fig.captionTop ? 636 : 600 };
     var yMax = d.yMax || 100, first = years[0], last = years[years.length - 1];
-    var x = function (/** @type {number} */ yr) { return P.x0 + (yr - first) / (last - first) * (P.x1 - P.x0); };
-    var y = function (/** @type {number} */ v) { return P.y1 - v / yMax * (P.y1 - P.y0); };
+    /* the window on show: all the years from zero, unless a step sets range or yMin */
+    var lo = first, hi = last, yLo = 0, yTop = yMax;
+    var x = function (/** @type {number} */ yr) { return P.x0 + (yr - lo) / (hi - lo) * (P.x1 - P.x0); };
+    var y = function (/** @type {number} */ v) { return P.y1 - (v - yLo) / (yMax - yLo) * (P.y1 - P.y0); };
     var hero = series.find(function (/** @type {any} */ s) { return s.id === d.hero; });
     var ink = st.ink, soft = st.soft;
 
-    /* axes: a light grid every 20, the years beneath */
+    /* axes: a light grid, the years beneath; redrawn when a step changes the window */
     var axes = el('g', {}, svg);
-    for (var v = 0; v <= yMax; v += yMax > 120 ? 40 : 20) {
-      el('line', { x1: P.x0, x2: P.x1, y1: y(v), y2: y(v), stroke: v === 0 ? '#9aa3ad' : '#e6e2da', 'stroke-width': v === 0 ? 1.5 : 1 }, axes);
-      el('text', { x: P.x0 - 12, y: y(v) + 5, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, fill: soft }, axes, String(v));
+    function drawAxes() {
+      axes.textContent = '';
+      var gap = yMax - yLo > 120 ? 40 : yMax - yLo > 50 ? 20 : 10;
+      for (var v = yLo; v <= yMax; v += gap) {
+        el('line', { x1: P.x0, x2: P.x1, y1: y(v), y2: y(v), stroke: v === yLo ? '#9aa3ad' : '#e6e2da', 'stroke-width': v === yLo ? 1.5 : 1 }, axes);
+        el('text', { x: P.x0 - 12, y: y(v) + 5, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, fill: soft }, axes, String(v));
+      }
+      var shown = years.filter(function (/** @type {number} */ yr) { return yr >= lo && yr <= hi; });
+      shown.forEach(function (/** @type {number} */ yr, /** @type {number} */ i) {
+        if (shown.length > 10 && i % 3 && yr !== hi) return;
+        el('text', { x: x(yr), y: P.y1 + 26, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 15, fill: soft }, axes, String(yr));
+      });
+      if (d.unit) el('text', { x: P.x0 - 12, y: P.y0 - 14, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, 'font-weight': 600, fill: soft }, axes, d.unit);
     }
-    years.forEach(function (/** @type {number} */ yr, /** @type {number} */ i) {
-      if (years.length > 10 && i % 3 && yr !== last) return;
-      el('text', { x: x(yr), y: P.y1 + 26, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 15, fill: soft }, axes, String(yr));
-    });
-    if (d.unit) el('text', { x: P.x0 - 12, y: P.y0 - 14, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, 'font-weight': 600, fill: soft }, axes, d.unit);
+    drawAxes();
+    /* lines are cut at the plot's edges, so a window or a raised floor never spills a line outside it */
+    var clipId = 'story-clip-' + Math.random().toString(36).slice(2, 8);
+    var clip = el('clipPath', { id: clipId }, el('defs', {}, svg));
+    el('rect', { x: P.x0 - 8, y: P.y0 - 40, width: P.x1 - P.x0 + 16, height: P.y1 - P.y0 + 41 }, clip);
 
     /* drawn in this order: answer bands, the other lines, then reference lines and notes over them */
-    var bandsG = el('g', {}, svg), othersG = el('g', {}, svg), refsG = el('g', {}, svg), notesG = el('g', {}, svg);
+    var bandsG = el('g', {}, svg), othersG = el('g', { 'clip-path': 'url(#' + clipId + ')' }, svg), refsG = el('g', {}, svg), notesG = el('g', {}, svg);
     var heroG = el('g', {}, svg), headG = el('g', {}, svg), cardG = el('g', {}, svg), keyG = el('g', {}, svg);
     if (d.key && d.keyOnChart) {
       /* the key along the chart's top edge, right-aligned, on the row the axis label starts */
@@ -77,7 +95,8 @@ export var story = {
       var pts = [];
       for (var i = 0; i < years.length; i++) {
         var yr = years[i], val = s.v[yr];
-        if (val == null) continue;
+        if (val == null || yr < lo) continue;
+        if (yr > hi) break;
         if (yr <= upto) { pts.push([x(yr), y(val)]); continue; }
         /* the part-way point to the next year, so a line draws itself smoothly */
         var prev = pts.length ? pts[pts.length - 1] : null, k = upto - years[i - 1];
@@ -91,15 +110,17 @@ export var story = {
     var others = series.filter(function (/** @type {any} */ s) { return s !== hero; }).map(function (/** @type {any} */ s) {
       return { s: s, node: el('path', { d: pathOf(s, last), fill: 'none', stroke: GREY, 'stroke-width': 1.6, 'stroke-linejoin': 'round', opacity: 0 }, othersG) };
     });
-    var heroPath = el('path', { fill: 'none', stroke: NU.red, 'stroke-width': 5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, heroG);
+    var heroPath = el('path', { 'clip-path': 'url(#' + clipId + ')', fill: 'none', stroke: NU.red, 'stroke-width': 5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, heroG);
     var heroDot = el('circle', { r: 7, fill: NU.red, stroke: '#fff', 'stroke-width': 2.5, opacity: 0 }, heroG);
     var heroVal = el('text', { 'font-family': NU.sans, 'font-size': 22, 'font-weight': 700, fill: NU.red, stroke: NU.paper, 'stroke-width': 5, 'paint-order': 'stroke', opacity: 0 }, heroG);
     var shownUpto = 0, mode = 'none', cancel = function () {}, step = /** @type {any} */ ({});
+    var hidden = /** @type {Record<string, boolean>} */ ({});
     var litLine = /** @type {any} */ (null);
 
     function styleOthers(/** @type {string} */ m, /** @type {number} */ k, /** @type {string} */ from) {
       others.forEach(function (o) {
         var to = m === 'none' ? 0 : m === 'type' ? 0.8 : 1, was = from === 'none' ? 0 : from === 'type' ? 0.8 : 1;
+        if (hidden[o.s.id]) { set(o.node, { opacity: 0 }); return; }
         set(o.node, { opacity: was + (to - was) * k, stroke: m === 'type' ? ((d.types || {})[o.s.type] || GREY) : GREY, 'stroke-width': m === 'type' ? 2 : 1.6 });
       });
     }
@@ -145,6 +166,17 @@ export var story = {
         step = next;
         st.caption(next.caption);
         cancel();
+        /* the window: a step may narrow the years or raise the floor; the axes and lines follow at once */
+        var nlo = next.range ? next.range[0] : first, nhi = next.range ? next.range[1] : last, nyLo = next.yMin || 0, nyMax = next.yMax || yTop;
+        if (nlo !== lo || nhi !== hi || nyLo !== yLo || nyMax !== yMax) {
+          lo = nlo; hi = nhi; yLo = nyLo; yMax = nyMax;
+          drawAxes();
+          others.forEach(function (o) { set(o.node, { d: pathOf(o.s, last) }); });
+          if (heroName && hero) set(heroName, { x: x(lo) + 4, y: y(hero.v[lo]) - 14 });
+          shownUpto = Math.min(Math.max(shownUpto, lo), hi);
+        }
+        hidden = {};
+        (next.hide || []).forEach(function (/** @type {string} */ id) { hidden[id] = true; });
         /* reference lines and notes: shown up to their counts */
         refsG.textContent = '';
         (d.refs || []).slice(0, next.refs || 0).forEach(function (/** @type {any} */ r, /** @type {number} */ i) {
@@ -152,7 +184,7 @@ export var story = {
           el('text', { x: P.x0 + 8, y: y(r.y) - 9, 'font-family': NU.sans, 'font-size': 16, 'font-weight': 700, fill: i ? '#005a8c' : NU.navy, stroke: NU.paper, 'stroke-width': 5, 'paint-order': 'stroke' }, refsG, r.text);
         });
         notesG.textContent = '';
-        (d.notes || []).slice(0, next.notes || 0).forEach(function (/** @type {any} */ n) {
+        (next.noteList || d.notes || []).slice(0, next.notes || 0).forEach(function (/** @type {any} */ n) {
           /* the rule rises to its own note and stops; the words start just right of its top. Notes are given
              falling heights, so a later note's shorter rule never crosses an earlier note's words */
           el('line', { x1: x(n.year), x2: x(n.year), y1: y(n.at) - 14, y2: P.y1, stroke: '#8a96a3', 'stroke-width': 1.5 }, notesG);
@@ -179,7 +211,7 @@ export var story = {
           if (next.sub) el('text', { x: P.x0 - 40, y: P.y0 - 32, 'font-family': NU.sans, 'font-size': 18, fill: soft }, headG, next.sub);
         }
         /* the hero line draws itself to its year; the other lines fade to their mode */
-        var to = next.upto == null ? last : next.upto, from = animate ? shownUpto : to, was = animate ? mode : next.others || 'none';
+        var to = Math.min(next.upto == null ? last : next.upto, hi), from = animate ? shownUpto : to, was = animate ? mode : next.others || 'none';
         var newMode = next.others || 'none';
         litLine = null; cardG.textContent = '';
         cancel = tween(animate ? Math.max(500, Math.abs(to - from) * 260) : 0, function (/** @type {number} */ k) {

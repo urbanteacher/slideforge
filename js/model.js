@@ -7526,27 +7526,39 @@
       var d = fig.data, svg = fig.svg, st = fig.stage, years = d.years || [], series = d.series || [];
       var P = d.plot || { x0: 120, x1: fig.story ? fig.story.x - 60 : W - 90, y0: fig.captionTop ? 262 : 214, y1: fig.captionTop ? 636 : 600 };
       var yMax = d.yMax || 100, first = years[0], last = years[years.length - 1];
+      var lo = first, hi = last, yLo = 0, yTop = yMax;
       var x = function(yr) {
-        return P.x0 + (yr - first) / (last - first) * (P.x1 - P.x0);
+        return P.x0 + (yr - lo) / (hi - lo) * (P.x1 - P.x0);
       };
-      var y = function(v2) {
-        return P.y1 - v2 / yMax * (P.y1 - P.y0);
+      var y = function(v) {
+        return P.y1 - (v - yLo) / (yMax - yLo) * (P.y1 - P.y0);
       };
       var hero = series.find(function(s) {
         return s.id === d.hero;
       });
       var ink = st.ink, soft = st.soft;
       var axes2 = el("g", {}, svg);
-      for (var v = 0; v <= yMax; v += yMax > 120 ? 40 : 20) {
-        el("line", { x1: P.x0, x2: P.x1, y1: y(v), y2: y(v), stroke: v === 0 ? "#9aa3ad" : "#e6e2da", "stroke-width": v === 0 ? 1.5 : 1 }, axes2);
-        el("text", { x: P.x0 - 12, y: y(v) + 5, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(v));
+      function drawAxes() {
+        axes2.textContent = "";
+        var gap = yMax - yLo > 120 ? 40 : yMax - yLo > 50 ? 20 : 10;
+        for (var v = yLo; v <= yMax; v += gap) {
+          el("line", { x1: P.x0, x2: P.x1, y1: y(v), y2: y(v), stroke: v === yLo ? "#9aa3ad" : "#e6e2da", "stroke-width": v === yLo ? 1.5 : 1 }, axes2);
+          el("text", { x: P.x0 - 12, y: y(v) + 5, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(v));
+        }
+        var shown = years.filter(function(yr) {
+          return yr >= lo && yr <= hi;
+        });
+        shown.forEach(function(yr, i) {
+          if (shown.length > 10 && i % 3 && yr !== hi) return;
+          el("text", { x: x(yr), y: P.y1 + 26, "text-anchor": "middle", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(yr));
+        });
+        if (d.unit) el("text", { x: P.x0 - 12, y: P.y0 - 14, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, "font-weight": 600, fill: soft }, axes2, d.unit);
       }
-      years.forEach(function(yr, i) {
-        if (years.length > 10 && i % 3 && yr !== last) return;
-        el("text", { x: x(yr), y: P.y1 + 26, "text-anchor": "middle", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(yr));
-      });
-      if (d.unit) el("text", { x: P.x0 - 12, y: P.y0 - 14, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, "font-weight": 600, fill: soft }, axes2, d.unit);
-      var bandsG = el("g", {}, svg), othersG = el("g", {}, svg), refsG = el("g", {}, svg), notesG = el("g", {}, svg);
+      drawAxes();
+      var clipId = "story-clip-" + Math.random().toString(36).slice(2, 8);
+      var clip = el("clipPath", { id: clipId }, el("defs", {}, svg));
+      el("rect", { x: P.x0 - 8, y: P.y0 - 40, width: P.x1 - P.x0 + 16, height: P.y1 - P.y0 + 41 }, clip);
+      var bandsG = el("g", {}, svg), othersG = el("g", { "clip-path": "url(#" + clipId + ")" }, svg), refsG = el("g", {}, svg), notesG = el("g", {}, svg);
       var heroG = el("g", {}, svg), headG = el("g", {}, svg), cardG = el("g", {}, svg), keyG = el("g", {}, svg);
       if (d.key && d.keyOnChart) {
         var kx = P.x1;
@@ -7562,7 +7574,8 @@
         var pts = [];
         for (var i = 0; i < years.length; i++) {
           var yr = years[i], val2 = s.v[yr];
-          if (val2 == null) continue;
+          if (val2 == null || yr < lo) continue;
+          if (yr > hi) break;
           if (yr <= upto) {
             pts.push([x(yr), y(val2)]);
             continue;
@@ -7580,12 +7593,16 @@
       }).map(function(s) {
         return { s, node: el("path", { d: pathOf2(s, last), fill: "none", stroke: GREY2, "stroke-width": 1.6, "stroke-linejoin": "round", opacity: 0 }, othersG) };
       });
-      var heroPath = el("path", { fill: "none", stroke: NU.red, "stroke-width": 5, "stroke-linejoin": "round", "stroke-linecap": "round" }, heroG);
+      var heroPath = el("path", { "clip-path": "url(#" + clipId + ")", fill: "none", stroke: NU.red, "stroke-width": 5, "stroke-linejoin": "round", "stroke-linecap": "round" }, heroG);
       var heroDot = el("circle", { r: 7, fill: NU.red, stroke: "#fff", "stroke-width": 2.5, opacity: 0 }, heroG);
       var heroVal = el("text", { "font-family": NU.sans, "font-size": 22, "font-weight": 700, fill: NU.red, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke", opacity: 0 }, heroG);
       var shownUpto = 0, mode = "none", cancel = function() {
       }, step = (
         /** @type {any} */
+        {}
+      );
+      var hidden = (
+        /** @type {Record<string, boolean>} */
         {}
       );
       var litLine = (
@@ -7595,6 +7612,10 @@
       function styleOthers(m, k, from) {
         others.forEach(function(o) {
           var to = m === "none" ? 0 : m === "type" ? 0.8 : 1, was = from === "none" ? 0 : from === "type" ? 0.8 : 1;
+          if (hidden[o.s.id]) {
+            set(o.node, { opacity: 0 });
+            return;
+          }
           set(o.node, { opacity: was + (to - was) * k, stroke: m === "type" ? (d.types || {})[o.s.type] || GREY2 : GREY2, "stroke-width": m === "type" ? 2 : 1.6 });
         });
       }
@@ -7660,13 +7681,30 @@
           step = next;
           st.caption(next.caption);
           cancel();
+          var nlo = next.range ? next.range[0] : first, nhi = next.range ? next.range[1] : last, nyLo = next.yMin || 0, nyMax = next.yMax || yTop;
+          if (nlo !== lo || nhi !== hi || nyLo !== yLo || nyMax !== yMax) {
+            lo = nlo;
+            hi = nhi;
+            yLo = nyLo;
+            yMax = nyMax;
+            drawAxes();
+            others.forEach(function(o) {
+              set(o.node, { d: pathOf2(o.s, last) });
+            });
+            if (heroName && hero) set(heroName, { x: x(lo) + 4, y: y(hero.v[lo]) - 14 });
+            shownUpto = Math.min(Math.max(shownUpto, lo), hi);
+          }
+          hidden = {};
+          (next.hide || []).forEach(function(id) {
+            hidden[id] = true;
+          });
           refsG.textContent = "";
           (d.refs || []).slice(0, next.refs || 0).forEach(function(r, i) {
             el("line", { x1: P.x0, x2: P.x1, y1: y(r.y), y2: y(r.y), stroke: i ? "#0072b2" : NU.navy, "stroke-width": 2.5, "stroke-dasharray": i ? "3 5" : "9 6" }, refsG);
             el("text", { x: P.x0 + 8, y: y(r.y) - 9, "font-family": NU.sans, "font-size": 16, "font-weight": 700, fill: i ? "#005a8c" : NU.navy, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, refsG, r.text);
           });
           notesG.textContent = "";
-          (d.notes || []).slice(0, next.notes || 0).forEach(function(n) {
+          (next.noteList || d.notes || []).slice(0, next.notes || 0).forEach(function(n) {
             el("line", { x1: x(n.year), x2: x(n.year), y1: y(n.at) - 14, y2: P.y1, stroke: "#8a96a3", "stroke-width": 1.5 }, notesG);
             el("text", { x: x(n.year) + 7, y: y(n.at), "font-family": NU.sans, "font-size": 16, "font-weight": 600, fill: ink, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, notesG, n.text);
           });
@@ -7686,7 +7724,7 @@
             el("text", { x: P.x0 - 40, y: P.y0 - 58, "font-family": NU.sans, "font-size": 25, "font-weight": 700, fill: ink }, headG, next.headline);
             if (next.sub) el("text", { x: P.x0 - 40, y: P.y0 - 32, "font-family": NU.sans, "font-size": 18, fill: soft }, headG, next.sub);
           }
-          var to = next.upto == null ? last : next.upto, from = animate ? shownUpto : to, was = animate ? mode : next.others || "none";
+          var to = Math.min(next.upto == null ? last : next.upto, hi), from = animate ? shownUpto : to, was = animate ? mode : next.others || "none";
           var newMode = next.others || "none";
           litLine = null;
           cardG.textContent = "";

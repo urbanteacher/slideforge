@@ -49,6 +49,8 @@ function drawPictures() {
   fs.mkdirSync(path.join(root, DIR), { recursive: true });
   writeSvg('route.svg', D.routeSvg());
   writeSvg('spectrum.svg', D.spectrumSvg());
+  writeSvg('spectrum-both.svg', D.spectrumSvg({ lit: 'Both', title: 'Where are we on the line?' }));
+  writeSvg('arc.svg', D.arcSvg());
   writeSvg('martini.svg', D.martiniSvg());
   for (const [id, o] of Object.entries(BUILDS)) writeSvg(`build-${id}.svg`, D.codeSvg(id, o));
 }

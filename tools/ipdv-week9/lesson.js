@@ -6,20 +6,7 @@
  * monitor, 2010–2025, with Marylebone Road as the line the author tells. */
 const D = require('./drawings.js');
 
-/* Week 3's Munzner slides (lesson ipdv-da in js/lessons.js), brought back as they are rather than
-   redrawn: the four-level walk-through and her Why? diagram. Read from the source each build, so a
-   fix in Week 3 reaches Week 9. The builder has loaded js/model.js (window.SF) before this runs. */
-function fromWeek3(title, change) {
-  const SF = global.window && global.window.SF;
-  if (!SF || !SF.LESSONS || !SF.LESSONS.some(l => l.key === 'ipdv-da')) require('../../js/lessons.js');
-  const week3 = global.window.SF.LESSONS.find(l => l.key === 'ipdv-da');
-  const slide = week3 && week3.slides.find(x => x.title === title);
-  if (!slide) throw new Error(`Week 3 (ipdv-da) has no slide "${title}"`);
-  const copy = JSON.parse(JSON.stringify(slide));
-  delete copy.id;
-  return Object.assign(copy, change);
-}
-
+/* Munzner's Why? diagram is Week 3's own picture (assets/lesson/ipdv/munzner-why-tasks.png), brought back, not redrawn. */
 const DIR = 'assets/lesson/ipdv/week9';
 const asset = name => `${DIR}/${name}`;
 const drawn = (title, file, notes, extra) => Object.assign({ type: 'image', title, image: asset(file), imageFit: 'contain', design: { capStyle: 'none' }, notes }, extra || {});
@@ -55,6 +42,8 @@ const ALL = series(() => true);
 /* Short, because each note's words start at its rule and run right, towards the story panel. */
 const NOTES = [{ year: 2019, text: 'Central ULEZ', at: 172 }, { year: 2020, text: 'Lockdown', at: 157 }, { year: 2021, text: 'ULEZ reaches here', at: 142 }, { year: 2023, text: 'ULEZ: all London', at: 127 }];
 const REFS = [{ y: 40, text: 'Legal limit: 40' }, { y: 10, text: 'WHO guideline: 10' }];
+/* The same four notes on a chart that runs to 100, high above Marylebone Road's line. */
+const NOTES100 = [{ year: 2019, text: 'Central ULEZ', at: 95 }, { year: 2020, text: 'Lockdown', at: 85 }, { year: 2021, text: 'ULEZ reaches here', at: 75 }, { year: 2023, text: 'ULEZ: all London', at: 65 }];
 const STORY = { x: 892, y: 150, w: 330 };
 /* The hero line is named on the chart, beside its start; the other roads get a one-line key inside the chart. */
 const HERO_LABEL = 'Marylebone Road, Westminster (kerbside)';
@@ -67,6 +56,9 @@ const fig = (title, eyebrow, data, steps, notes, extra) => Object.assign({
   figureSteps: steps, notes }, extra || {});
 const HEADLINE = 'Marylebone Road’s air has a third of the NO₂ it had in 2010';
 const SUB = 'Yearly average at the kerb. Legal limit 40 µg/m³.';
+/* The roads still over the legal limit at their last reading (2024 or 2025): the tricks block's filtered bowl
+   leaves them out. Brixton Road (LB4) is one. */
+const STILL_OVER = ROADS.filter(s => Math.max(s.v[2024] || 0, s.v[2025] || 0) > 40).map(s => s.id);
 const BANDS = [{ from: 80, to: 100, text: 'A  above 80' }, { from: 60, to: 80, text: 'B  60 to 80' }, { from: 40, to: 60, text: 'C  40 to 60' }, { from: 0, to: 40, text: 'D  below 40' }];
 
 /* What each Build-it's new parts do, in plain English. */
@@ -122,8 +114,8 @@ function lesson() {
     ],
     notes: '1 min. Fixes carried over from the 2025 deck: it set "Chapter 9" as the reading, which is Munzner\'s networks chapter (last week); Munzner has no chapter on narrative, so the reading is Segel and Heer, with Munzner ch. 1 as the link. Its slide 6 said "Analysis Farmwork", and slides 8–9 carried a "Lecture 7: Network and Trees" footer. The 2025 lab notebook gave a different deadline (Monday 23:59): check which one Canvas shows.' },
 
-  reveal('Three questions on last week', 'Recall first', 'recall', ['Talk to the person next to you: 20 seconds a question.', 'One root, no loops.', 'When the lines tangle.', 'True distances.'],
-    '3 min. Recall before new learning. The questions show first: 20 seconds in pairs for each, take two answers, then click to reveal that answer. Link Beck to today: he decided what the reader should see. Today, that decision has a name: the author drives.'),
+  reveal('One question on last week', 'Recall first', 'recall', ['Talk to the person next to you: 30 seconds.', 'True distances.'],
+    '1.5 min. Recall before new learning: 30 seconds in pairs, take two answers, then click. Cut to one question to make room for today\'s theory; the tree and grid questions are on the Week 8 worksheet. Link Beck to today: he decided what the reader should see. Today, that decision has a name: the author drives.'),
 
   drawn('Nine weeks in: from making a chart to telling with it', 'route.svg',
     '1 min. The route. Eight weeks taught them to make a correct chart. Today is about the reader: what they see first, in what order, and who controls it. The final infographic is author-driven: every panel will need what today teaches.'),
@@ -147,48 +139,49 @@ function lesson() {
       explain: 'The dashed line is the UK legal limit, 40.\nThe dotted line is the World Health Organization’s guideline, 10 (2021); harm is seen even below it.\nSo: much better, not yet safe. (2025 is provisional: 78% of its hours measured.)' }
   ], '5 min. Do not show a title or a number first: the guess is the lesson. Step 1: hands up for A, B, C, D (or fingers against the chest, so guesses stay private); count roughly aloud. Step 2: click and let the line draw; pause before 2019. Step 3: the two lines. ' +
     'ASK: "Will you remember the number tomorrow? Why?" (Because you committed to a guess: Kim, Reinecke and Hullman, CHI 2017, had people draw their prediction before seeing the data, and they recalled the data better.) ' +
-    'WHO 2021 air-quality guideline for NO₂, annual mean: 10 µg/m³. It is a guideline, not a safe level: WHO found health effects at lower levels too. NO₂ is one pollutant; fine particles (PM2.5) are above WHO\'s guideline (5) across London too.' +
+    'WHO 2021 air-quality guideline for NO₂, annual mean: 10 µg/m³. It is a guideline, not a safe level: WHO found health effects at lower levels too. NO₂ is one pollutant; fine particles (PM2.5) are above WHO\'s guideline (5) across London too. ' +
     'Data: London Air Quality Network (Imperial College London\'s Environmental Research Group), site MY1, NO₂ annual mean, 75% data capture or more. 2010: 98, 2016: 89, 2019: 63, 2020: 44, 2023: 42, 2024: 32, 2025: 31. 2025 is provisional: 78% of hours captured, December only 27%; the ratified figure may move. 2020 includes lockdown; it did not bounce back in 2021 (43).'),
 
-  statement('You guessed before you saw. That makes 31 easier to remember.', '30 s. Kim, Reinecke and Hullman (CHI 2017). This is the "experiential" in the week\'s title: the reader takes part, and the number sticks. Part 4 comes back to it. First: the author\'s tools.'),
-
-  { type: 'table', title: 'Six words for today', tableHeader: true,
-    body: 'Word\tWhat it means\tExample\n' +
-      'Narrative\ta chart with an order\tguess first, then see\n' +
-      'Annotation\twords on the chart, at a place\t“Lockdown” at 2020\n' +
-      'Highlight\tone thing in colour, the rest grey\tMarylebone Road in red\n' +
-      'Author-driven\tthe maker picks what you see, and when\ta poster, a talk\n' +
-      'Reader-driven\tthe reader picks where to look\ta dashboard\n' +
-      'Martini glass\tthe author leads, then the reader explores\ta news chart to search',
-    notes: '2 min. Define before use. Each word is used from the next slide on. "Martini glass" gets its picture in Part 3: a thin stem (a few steps in order), then a wide bowl (explore).' },
+  statement('You guessed before you saw. That makes 31 easier to remember.', '30 s. Kim, Reinecke and Hullman (CHI 2017). This is the "experiential" in the week\'s title: the reader takes part, and the number sticks. Part 4 comes back to it. First: what a data story is, and why we tell one.'),
 
   { type: 'content', title: 'By the end of today you can',
     bullets: [
-      'Place\ta chart on the line from author-driven to reader-driven',
-      'Choose\ta structure for an audience: lead, let go, or both',
-      'Build\ta headline, a note and a highlight in Altair',
-      'Build\ta chart that tells in chapters, then opens up',
-      'Make\ta number felt: guess first, count it out, human scale',
-      'Critique\ta published story: who drives, and is it honest?'
+      'Explain\twhat makes a chart a story, and why we tell one',
+      'Place\ta story on the line from author-driven to reader-driven',
+      'Judge\ta story strong or weak, with five tests',
+      'Spot\tfive ways a story can mislead, and say how to fix each',
+      'Build\ta headline, notes and a highlight, then a martini glass, in Altair',
+      'Make\ta number felt, and say what the evidence does and doesn’t show'
     ], progressive: true,
-    notes: '1 min. Rewritten from the 2025 deck\'s overview (slide 5), which had three long outcomes on narrative only.' },
+    notes: '1 min. Rewritten from the 2025 deck\'s overview (slide 5), which had three long outcomes on narrative only. The first four are the theory (the foundation and the tricks); the last two are practice.' },
 
-  { type: 'journey', title: 'Today’s route', subtitle: 'Four stops, one question each', progressive: false,
-    bullets: [
-      'Lead\tHow do you make sure they see what you saw?',
-      'Let go\tWhen should the reader drive?',
-      'Both\tCan you lead first, then let go?',
-      'Make it felt\tHow do you make a number land?'
-    ],
-    notes: '30 s.' },
+  /* ======================================================== Foundation: what a data story is, and why */
+  fig('A chart, or a story?', 'Foundation', { yMax: 100, series: ALL.filter(s => s.id === 'MY1'), heroLabel: HERO_LABEL, notes: NOTES100 }, [
+    { caption: 'A chart: here are the numbers.', upto: 2025, headline: 'NO₂ at Marylebone Road, 2010–2025', sub: 'Yearly average, µg/m³',
+      explain: 'Correct, and complete.\nIt answers: what are the numbers?\nThe reader has to find the point alone, if they look long enough.' },
+    { caption: 'A story: here is the point.', upto: 2025, refs: 1, notes: 4, headline: HEADLINE, sub: SUB,
+      explain: 'The same data, with a point and an order.\nIt answers: so what?\nThe title says it, the limit gives it meaning, the notes say what happened when.' }
+  ], '3 min. The whole lecture in one contrast. ASK after step 1: "What does this chart want you to know?" (Nothing in particular: that is a chart.) After step 2: "And this one?" (A third of 2010\'s NO₂.) ' +
+    'Knaflic (2015) calls the first kind exploratory, what an analyst makes to find the point, and the second explanatory, what you show an audience once you have it. Slide 15 later takes the story apart move by move.'),
 
-  /* ======================================================== Munzner, from Week 3 */
-  fromWeek3('Four levels, three questions', {
-    experiment: Object.assign({}, fromWeek3('Four levels, three questions').experiment, {
-      prompt: 'Marylebone Road’s air, for a bus-stop poster or for a researcher’s tool: which level decides who drives?' }),
-    notes: '2 min. Recall, brought back from Week 3 as it was (lesson ipdv-da). Take answers to the prompt, then step through the levels. ' +
-      'The answer: the top two. Domain (who reads it: a passer-by or an expert) and abstraction, the Why (are they being shown something, or looking for something?). ' +
-      'Who drives is decided there, before any chart is drawn. Idiom is where today\'s tools live (headline, note, highlight, tooltip); algorithm is Altair.' }),
+  reveal('What makes it a story', 'Foundation', 'parts', ['Data: the evidence.', 'A message: one point.', 'An order: first this, then that.', 'A reader: who it is for.'],
+    '2 min. One part per click, each pointed at on the last slide\'s story. The definition to leave them with: a narrative visualisation puts data in an order to bring a reader to a point. That wording is ours, after Segel and Heer (2010), who use "narrative visualization" for visualisations meant to tell a story, and describe the author\'s order as what separates them from a chart the reader explores alone. ' +
+    'Be honest that the field has no agreed definition: recent reviews count dozens, and "data story", "data-driven storytelling" and "narrative visualisation" are often used for the same thing; a common working one is "a sequence of related events, in a meaningful context". ' +
+    'The sub-line is the process (Lee, Riche, Isenberg and Carpendale, IEEE CG&A 2015): explore and find the insight, make it a story, tell it. The story comes after the analysis, never instead of it.'),
+
+  drawn('A story has a shape', 'arc.svg',
+    '2 min. The hook they just answered, as an arc. Amini et al. (CHI 2015) looked at 50 professional data videos and found film\'s four parts: an establisher (the setting), an initial (what sets it moving), a peak (the turn) and a release (what follows). Kosara (EuroVis 2017) describes data stories that ask a question first and hold the answer until the evidence is in: the hook did exactly that. ' +
+    'ASK: "Where was the answer in the hook?" (At the end: the guess came first.) This is what "an order" means in the five tests.'),
+
+  reveal('Why tell a story with data?', 'Foundation', 'why', ['Attention: where to look.', 'Understanding: one step at a time.', 'Memory: it sticks.', 'Persuasion: it changes minds.', 'So: the power to mislead.'],
+    '3 min. One reason per click; each has its evidence on the slide. The turn is the last row: the power to persuade is the power to mislead, which is Part 1\'s tricks. ' +
+    'Sources: Borkin et al. (IEEE TVCG 2016), Beyond Memorability: eye-tracking found titles and text drew attention and were what people recalled. Hullman, Drucker, Henry Riche, Lee, Fisher and Adar (IEEE TVCG 2013), A Deeper Understanding of Sequence in Narrative Visualization. Kim, Reinecke and Hullman (CHI 2017). ' +
+    'Pandey et al. (IEEE TVCG 2014), The Persuasive Power of Data Visualization: charts shifted attitudes, most where views were not strongly held. Kong, Liu and Karahalios (CHI 2018), Frames and Slants in Titles: titles that stated the message were recalled; slanted titles shifted interpretation; most readers still judged the chart neutral (and in a 2019 follow-up, even when title and chart disagreed).'),
+
+  drawn('Who drives? The line every story sits on', 'spectrum.svg',
+    '3 min. Today\'s map: come back to it at the start of each part. The two ends: the author drives (explain, Munzner\'s present) and the reader drives (explore, Munzner\'s discover). Today\'s four parts sit on the line: Lead at the author\'s end, Let go at the reader\'s, Both at the martini glass, and Make it felt as an author who asks the reader to take part. ' +
+    'Segel and Heer (2010) studied 58 published stories and described the space between author-driven and reader-driven. They name the three hybrid structures in the middle (interactive slideshow, martini glass, drill-down story); the two end labels, linear story and dashboard, are ours. They also name seven genres (magazine style, annotated chart, partitioned poster, flow chart, comic strip, slide show, film/video/animation): the final infographic is a partitioned poster. ' +
+    'ASK: "Where is the hook? Where is London Air\'s live map?" (Linear; dashboard.) Fix from the 2025 deck: its slide 13 numbered the structures 1, 3, 2 and said "Example: The uses martini glass structure frequently", with the subject missing.'),
 
   { type: 'image', title: 'Munzner’s Why? names today’s four parts',
     image: 'assets/lesson/ipdv/munzner-why-tasks.png', imageFit: 'contain', design: { capStyle: 'top' },
@@ -201,20 +194,19 @@ function lesson() {
       'Under Produce sits Annotate: that is the reader writing on a chart. Today’s notes are the author’s, part of present.',
       'Source: Tamara Munzner, Visualization Analysis and Design (2014), chapter 3.'
     ].join('\n'),
-    notes: '2 min. The same figure as Week 3\'s "Why? Task abstraction" slide (assets/lesson/ipdv/munzner-why-tasks.png). Point at Consume: Discover, Present, Enjoy. ' +
+    notes: '1.5 min. Munzner from Week 3, brought back, not redrawn: her words sit at the two ends of the line on the last slide. The same figure as Week 3\'s "Why? Task abstraction" slide (assets/lesson/ipdv/munzner-why-tasks.png). Point at Consume: Discover, Present, Enjoy. ' +
       'Munzner 3.4.1.1: present is "for the succinct communication of information, for telling a story with data"; discover is finding something new or confirming a hypothesis; enjoy is casual use driven by curiosity. ' +
       'Today runs in that order with a twist: Part 3 does present then discover in one chart. Then point at Produce → Annotate: in Munzner it is the reader adding notes; today the author adds them, as part of present. ' +
-      'Enjoy is the loosest fit: guess-first is present made memorable, not casual use; say so. The four levels (previous slide) are Munzner (2009), "A nested model for visualization design and validation"; the words Domain, What, Why, How, Idiom are from the 2014 book.' },
+      'Enjoy is the loosest fit: guess-first is present made memorable, not casual use; say so. Her nested model (Munzner 2009) is Week 3\'s four-level walk-through: who reads it (domain) decides who drives, before any chart is drawn.' },
 
-  { type: 'table', title: 'Munzner’s words, today’s words', tableHeader: true,
-    body: 'Munzner asks\tHer word\tToday\tOn Marylebone Road\n' +
-      'Who reads it?\tDomain\tdecides who drives\ta parent at the school gate, or a researcher\n' +
-      'What is the data?\tWhat?\ta table\tone row per monitor per year, NO₂\n' +
-      'Why are they looking?\tPresent\tLead\tthe finding: a third of 2010’s NO₂\n' +
-      '\tDiscover\tLet go\t“where’s my road?”\n' +
-      '\tEnjoy (nearest)\tMake it felt\tguess first, then see\n' +
-      'How is it shown?\tIdiom\tthe author’s tools\theadline, note, highlight, tooltip',
-    notes: '1 min. The bridge: every part of today is a Why? from Week 3, and every Build-it is a How?. Students who missed Week 3 can read this row by row.' },
+  { type: 'figure', figure: 'panels', title: 'Strong or weak? Five tests', figureGround: 'paper', figureWhy: false,
+    figureAlt: 'Two charts of Marylebone Road: A, a topic title and a bare line; B, a headline, the legal limit, notes and every other road in grey. Scored on five tests: one message, evidence on the chart, an order, honest context, fits the reader. B passes all five; A fails four and half-passes honest context.',
+    figureData: { svg: D.scoreSvg().replace(/^<svg[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">'), boxes: D.scoreBoxes(), ground: '#fbfaf8' },
+    figureSteps: ['Two charts, the same data. Which is the stronger story?', 'Test 1: one message.', 'Test 2: evidence on the chart.', 'Test 3: an order.', 'Test 4: honest context.', 'Test 5: fits the reader.'].map((caption, i) => ({ caption, upto: i })),
+    notes: '4 min. Before each tick, the room says A or B. These five tests come back three times: in Part 1\'s tricks (each trick fails test 4 or test 2), as the checklist for every panel of the final infographic, and in the lab\'s critique. ' +
+      'Where they come from. Test 1: Knaflic (2015), the "Big Idea", the point in one complete sentence with what is at stake. Test 2: Segel and Heer\'s messaging and highlighting tactics. Test 3: the arc two slides back (Amini et al., Kosara). Test 4: Tufte (1983) on graphical integrity, and Cairo (2019), How Charts Lie. ' +
+      'Test 5: Boy, Détienne and Fekete (CHI 2015) found in three field experiments that adding a story to an exploratory chart did not make people explore it more; so a story must work for a reader who stops after the first screen. ' +
+      'A is not "wrong": it is an exploratory chart, right for an analyst. It is a weak story for the public.' },
 
   /* ======================================================== ① Lead */
   section('How do you make sure they see what you saw?', 'Part 1 · Lead · Munzner: present', '20 s. The author drives: Munzner\'s present.'),
@@ -233,18 +225,36 @@ function lesson() {
     'Marylebone Road (A501) is part of the Inner Ring Road, the boundary of the central zone (the same as the Congestion Charge\'s), and boundary roads are not charged: so the zone sat at this road\'s edge from 2019 and covered it from October 2021. Check TfL\'s zone map before class. ' +
     'Step 4: Brixton Road (LB4), Lambeth: London\'s worst monitor in 2010 (174), and in 2025 the only one over the legal limit (48). Putney High Street (WA7) was 168 in 2010 and 35 in 2025.'),
 
-  panelFig('The author’s four tools', 'authorSvg', 4, {}, ['A headline that says the finding.', 'Notes on the chart, where it happened.', 'One thing in colour, the rest grey.', 'An order: first this, then that.'],
-    '2 min. One panel per click. These four are what an author adds to a correct chart. The fourth, order, is what makes it a story and not a picture: the hook had an order (guess, then see). Credit: Segel and Heer (2010) call these narrative tactics: messaging (headlines, notes), highlighting, and ordering.'),
-
   reveal('Which title tells?', 'Name it', 'titles', ['Hands up: A, B or C?', 'A labels the chart.', 'B claims, but vaguely.', 'C tells the finding.'],
-    '2 min. Hands up first, then reveal one at a time. C has a place, a measure, a direction, a size and a time. Push them: "Write a C-title for one chart in your Week 7 map." The 2025 deck called this "editorial guidance".'),
+    '2 min. Hands up first, then reveal one at a time. C has a place, a measure, a direction, a size and a time. Kong et al. (CHI 2018): a title that states the message is the one readers recall. Segel and Heer (2010) call a title and notes "messaging", one of their narrative tactics, with highlighting and ordering. Push them: "Write a C-title for one chart in your Week 7 map." The 2025 deck called this "editorial guidance".'),
 
   build('bare', '1 min. The starting point, Week 2\'s chart on this week\'s data. Code: tools/ipdv-week9/code/steps.py; no2_london.csv has one row per monitor per year (code, site, borough, type, year, no2).'),
   build('headline', '2 min. alt.Title takes a subtitle. alt.datum(40) puts a mark at a value rather than a column (Altair 5). The title states the finding, not the topic.'),
   build('annotate', '2 min. It grows from the last slide: the line, the limit and the title stay, and only the new lines are printed. Notes are data: a small DataFrame of your own. Each rule rises only to its own note (y2=alt.datum(0) is the axis) and the words start at its top; "at" sets the height, falling from note to note, so no line crosses an earlier note\'s words (they did, in the first draft). ASK before showing the picture: "Where will \'Lockdown\' sit?"'),
   build('highlight', '2 min. It grows again: add the grey roads underneath, and this is slide 15\'s chart. In a layer, the chart added last is drawn on top, so grey goes first and red after. (alt.Order would not do it: on a line it orders the points along the line, not which line is on top.) detail splits lines without colouring them. ASK: "What happens if you write (line + others)?" (The grey covers the red.)'),
 
-  statement('Say the finding in the title, then point at it on the chart', '30 s. Card 1.'),
+  fig('Same data, five tricks', 'Careful', { yMax: 100, series: [...ALL.filter(s => s.id === 'MY1'), ...ROADS.filter(s => s.id !== 'MY1')], heroLabel: HERO_LABEL, notes: NOTES100 }, [
+    { caption: 'The honest chart: what a reader needs.', upto: 2025, refs: 2, notes: 4, headline: HEADLINE, sub: 'Yearly average at the kerb. Legal limit 40; WHO guideline 10.',
+      explain: 'The whole range, from zero.\nThe legal limit and the WHO guideline, so the number means something.\nNotes that say what happened, not why.' },
+    { caption: 'Trick 1, the data: only the years that fell.', upto: 2025, range: [2018, 2020], refs: 1, headline: 'Marylebone Road’s NO₂ halved in two years', sub: '',
+      explain: '85 to 44: true.\nBut the years before (flat at about 90) and after (44, 43, 42, 42) are gone.\nThe window chose the story.' },
+    { caption: 'Trick 2, the notes: a cause, claimed.', upto: 2025, refs: 1, notes: 1, noteList: [{ year: 2019, text: 'ULEZ cleaned this road’s air', at: 90 }], headline: 'ULEZ cleaned up Marylebone Road', sub: '',
+      explain: 'The note now says why, not what.\nBut the zone stopped at this road until October 2021, and nearly every London road fell too.\nA note can claim a cause the data cannot show.' },
+    { caption: 'Trick 3, the drawing: the axis starts at 30.', upto: 2025, yMin: 30, headline: 'NO₂ on Marylebone Road: almost gone', sub: '',
+      explain: 'The line now falls from the top to the floor.\nIn the data it fell by 68%; on the chart, by 98.5%.\nTufte’s lie factor: 98.5 ÷ 68 = 1.4. The drawing exaggerates by 40%.' },
+    { caption: 'Trick 4, the interaction: the bowl opens filtered.', upto: 2025, yMax: 180, refs: 1, others: 'grey', hide: STILL_OVER, hover: true, headline: 'Every London road is now under the limit', sub: '',
+      explain: 'The bowl opens, but filtered.\nThe roads still over the limit are not in it: Brixton Road, 48 in 2025, is missing.\nWhat a reader sees first is a choice too.' },
+    { caption: 'Trick 5, what isn’t drawn: no WHO line, no doubt.', upto: 2025, refs: 1, headline: 'Under the legal limit: the air is safe now', sub: '', reveal: { year: 2025, text: '31' },
+      explain: 'Nothing here is false.\nBut the WHO guideline is gone, and so is the doubt: 2025’s 31 is provisional.\nLeaving things out is a frame too.' }
+  ], '5 min. ASK at each trick: "What is this chart telling you? What did it leave out?" Then: "Which of the five tests does it fail?" (1: honest context; 2: evidence on the chart; 3: honest context, from zero; 4: honest context, a comparison; 5: honest context, a reference line.) ' +
+    'Trick 2 is one this lecture nearly made: its first draft\'s "ULEZ starts" note invited the same reading. Say so: it is the honest lesson. ' +
+    'Numbers: 2018 85, 2020 44; 2021–2023 43, 42, 42. Lie factor (Tufte 1983): the change drawn ÷ the change in the data. With the axis from 30, 98 is drawn 68 high and 31 is drawn 1 high: a 98.5% fall drawn for a 68% fall, 1.44. Trick 4 hides the road monitors whose last reading (2024 or 2025) is over 40.'),
+
+  reveal('Persuade, or mislead? Where the line is', 'Careful', 'layers', ['The data.', 'The drawing.', 'The notes.', 'The interaction.', 'What isn’t drawn.'],
+    '2 min. One layer per click: the five tricks, named. Every story frames: choosing a headline, a start year and a highlight cannot be avoided. Hullman and Diakopoulos (IEEE TVCG 2011), Visualization Rhetoric: Framing Effects in Narrative Visualization, show that choices at the data, representation, annotation and interaction layers shape what readers conclude, and that they work together. ' +
+    'A story misleads when it hides what the reader would need to disagree. Pandey et al. (CHI 2015), How Deceptive are Deceptive Visualizations?, found a truncated axis and similar distortions changed what people believed. Hullman (IEEE TVCG 2020), Why Authors Don\'t Visualize Uncertainty: authors say they value showing uncertainty but usually leave it out, partly to look confident. Tufte (1983) for the lie factor.'),
+
+  statement('Say the finding, point at it, and show what the reader needs to disagree', '30 s. Card 1: the author\'s tools, and their limit.'),
 
   /* ======================================================== ② Let go */
   section('When should the reader drive?', 'Part 2 · Let go · Munzner: discover', '20 s. The reader drives: Munzner\'s discover.'),
@@ -276,15 +286,15 @@ function lesson() {
   /* ======================================================== ③ Both */
   section('Can you lead first, then let go?', 'Part 3 · Both · present, then discover', '20 s.'),
 
-  drawn('Every data story sits somewhere on one line', 'spectrum.svg',
-    '3 min. Segel and Heer (2010) studied 58 published stories and described the space between author-driven and reader-driven. They name the three hybrid structures in the middle (interactive slideshow, martini glass, drill-down story); the two end labels, linear story and dashboard, are ours, to give the ends an example. They also name seven genres (magazine style, annotated chart, partitioned poster, flow chart, comic strip, slide show, film/video/animation): the final infographic is a partitioned poster. The 2025 deck named three structures (linear, martini glass, interactive slideshow). ASK: "Where is the hook chart? Where is London Air\'s map?" (Linear; dashboard.) Fix from the 2025 deck: its slide 13 numbered the structures 1, 3, 2 and said "Example: The uses martini glass structure frequently", with the subject missing.'),
+  drawn('Where are we on the line?', 'spectrum-both.svg',
+    '30 s. The map from the start, with Both lit: the martini glass sits between the author\'s end and the reader\'s. Two parts done: Lead and Let go.'),
 
   drawn('The martini glass: lead first, then let go', 'martini.svg',
     '2 min. Read it from the bottom up: three steps up the stem, then the bowl. The stem must be short, or nobody reaches the bowl. The 2025 deck linked data.europa.eu\'s guide to the martini glass structure: keep the link on Canvas.'),
 
   fig('A martini glass, live', 'Both', { yMax: 180, series: ROADS, heroLabel: HERO_LABEL, key: [GREY_KEY], keyOnChart: true }, [
     { caption: 'The stem: the author tells the finding first.', upto: 2025, refs: 1, notes: 4, headline: HEADLINE, sub: SUB,
-      explain: 'Marylebone Road fell to a third: no reader can miss it.\nThe notes say what happened when.\nIf they stop here, they still have the story.' },
+      explain: 'Marylebone Road fell to a third: no reader can miss it.\nThe notes say what happened when.\nMost readers stop here: a story first did not make people explore more (Boy et al., 2015). So the stem must carry the message alone.' },
     { caption: 'The bowl: every road appears. Point at any line.', upto: 2025, refs: 1, notes: 4, others: 'grey', hover: true, headline: HEADLINE, sub: SUB,
       explain: 'Now the reader drives: any line answers when you point at it.\nThey can find their own road, already knowing the story.' },
     { caption: 'A reader finds their road: Mile End Road, 20 in 2025.', upto: 2025, refs: 1, notes: 4, others: 'grey', hover: true, lit: { id: 'TH2', year: 2025 }, headline: HEADLINE, sub: SUB,
@@ -298,31 +308,31 @@ function lesson() {
     'Why the points: a tooltip on a bare line answers with the line\'s first row (2010) wherever you point; points give each year its own answer. ASK: "What will chapter 2 add?" Then change value=1 to value=3 and run it again: it opens on the bowl, a dashboard.'),
 
   reveal('Why a martini glass for the public?', 'Three answers', 'martini', ['Hands up: A, B or C?', 'A is weak: about looks.', 'B is stable: a point and a reason.', 'C is excellent: every link of the chain.'],
-    '2 min. The point, because, so, in this case chain, as in Week 8. Ask them to rewrite B into C in pairs before you reveal C.'),
+    '2 min. The point, because, so, in this case chain, as in Week 8. Ask them to rewrite B into C in pairs before you reveal C. Then complicate C: Boy, Détienne and Fekete (CHI 2015) found that adding a story did not make people explore more. The excellent answer survives, because its claim is that most of the public won\'t explore, so the stem must carry the finding; a student who says "the bowl gets everyone exploring" has the evidence against them.'),
 
   statement('Lead first, then let go', '30 s. Card 3.'),
 
   /* ======================================================== ④ Make it felt */
-  section('How do you make a number land?', 'Part 4 · Make it felt · present, made memorable', '20 s. "Experiential": the reader takes part, or feels the size. Nearest to Munzner\'s enjoy in spirit, but the aim is present: a number the reader remembers.'),
+  section('How do you make a number land?', 'Part 4 · Make it felt · present, made memorable', '20 s. "Experiential": the reader takes part, or feels the size. Why it belongs in a data course: Kennedy and Hill (Sociology, 2018), The Feeling of Numbers, found people\'s engagement with everyday visualisations was emotional as well as rational; how numbers feel matters as well as what they say. Nearest to Munzner\'s enjoy in spirit, but the aim is present: a number the reader remembers.'),
 
   panelFig('Four stories that made data felt', 'famousSvg', 4, {}, ['Snow Fall: told by scrolling.', 'You Draw It: you draw, then see.', 'Out of Sight, Out of Mind: one mark per strike.', 'Dear Data: drawn by hand.'],
-    '4 min. Drawn as sketches of the move each one makes, not copies: open the real ones from Canvas. ' +
+    '3 min. Drawn as sketches of the move each one makes, not copies: open the real ones from Canvas. How a reader moves through a story matters: McKenna et al. (Computer Graphics Forum, 2017) looked at 80 published stories and found that scrolling or stepping, and animated transitions, shaped engagement more than how much control the reader had. ' +
     'Snow Fall: The Avalanche at Tunnel Creek, John Branch, New York Times, December 2012; won the 2013 Pulitzer Prize for feature writing; the piece that made "scrollytelling" common. ' +
     'You Draw It: How Family Income Predicts Children\'s College Chances, Gregor Aisch, Amanda Cox and Kevin Quealy, NYT The Upshot, May 2015. ' +
     'Out of Sight, Out of Mind, Pitch Interactive, 2013: every US drone strike in Pakistan since 2004, each falling as a line, with the people killed below. ' +
     'Dear Data, Giorgia Lupi and Stefanie Posavec: a year of weekly hand-drawn postcards (2014–15), book 2016; the postcards are in MoMA\'s collection. Check each fact before class.'),
 
   panelFig('Four ways to make a number land', 'feltSvg', 4, { sub: true }, ['Guess first: then the truth beside it.', 'Count it out: one square per thing.', 'Human scale: in units people know.', 'Make it physical: a thing you can hold.'],
-    '3 min. All four on the hook\'s story. ASK after each: "Which would work on a poster people pass quickly? Which in a museum?" ' +
+    '2 min. All four on the hook\'s story. ASK after each: "Which would work on a poster people pass quickly? Which in a museum?" ' +
     'Count it out needs things you can count: a concentration is not a count, so the squares are monitors, one each, red when over the legal limit (2010: 60 of 87; 2025: 1 of 59, Brixton Road). ' +
     'Human scale: the WHO 2021 guideline for NO₂, annual mean, is 10 µg/m³, so each block is one guideline\'s worth: about ten in 2010, three in 2025. ' +
-    'Making it physical: a bar chart of LEGO or sugar cubes, a printed model; Jansen et al. (CHI 2015) call this data physicalisation.'),
+    'Making it physical: a bar chart of LEGO or sugar cubes, a printed model; Jansen et al. (CHI 2015) call this data physicalisation. Two cautions from the evidence. Boy et al. (CHI 2017), Showing People Behind Data: across seven experiments, human-shaped icons ("anthropographics") gave much the same empathy as plain charts; that is why Human scale uses blocks, not people. Borkin et al. (InfoVis 2013): colour and recognisable objects make a chart more memorable, but memorable is not the same as understood.'),
 
-  build('guess', '3 min. Altair cannot take a hand-drawn line (You Draw It used D3), so a slider stands in for the guess: one point at 2025, where the guess is about. The tick box shows the truth, drawn thicker than anything else. Try it: the picture is how it opens, with only the guess; tick "Show me" and the red line appears from 2016. ' +
+  build('guess', '2 min. Altair cannot take a hand-drawn line (You Draw It used D3), so a slider stands in for the guess: one point at 2025, where the guess is about. The tick box shows the truth, drawn thicker than anything else. Try it: the picture is how it opens, with only the guess; tick "Show me" and the red line appears from 2016. ' +
     'alt.datum(40) on the headline slide was a fixed number; the guess is a parameter that moves, so Altair needs alt.YDatum(guess, type=\'quantitative\') to know what kind of number it is.'),
 
   reveal('An experience can mislead, too', 'Care', 'care', ['Show the truth, clearly.', 'Feeling is not evidence.', 'Keep the scale honest.', 'Never shame a guess.'],
-    '2 min. One row per click. The air data has its own trap: where a monitor stands. In 2025 kerbside monitors averaged 31, roadside 23, urban background (away from busy roads) 17: kerbside is about twice background, roadside about 1.4 times. Never compare them as if they were the same.'),
+    '2 min. One row per click. The air data has its own trap: where a monitor stands. In 2025 kerbside monitors averaged 31, roadside 23, urban background (away from busy roads) 17: kerbside is about twice background, roadside about 1.4 times. Never compare them as if they were the same. On "feeling is not evidence": Borkin et al. (2013) found the features that make a chart memorable are not the ones that make it understood.'),
 
   statement('Ask before you tell: a guess makes the answer stick', '30 s. Card 4.'),
 
@@ -332,17 +342,15 @@ function lesson() {
   reveal('Lead, let go, or both?', 'Check', 'quiz', ['Hands up for each: Lead, Let go or Both?', 'A poster: lead.', 'A researcher: let go.', 'A news story: both.', 'A council meeting: lead.', 'Your infographic: lead.'],
     '3 min. Answer first, then reveal. Question 5 matters for the assessment: a printed page has no buttons, so every panel must lead.'),
 
-  reveal('Take the next step, only as far as you need', 'Got one wrong?', 'ladder', ['First, ask yourself who reads it.', 'Still stuck? A hint.', 'Still stuck? A worked example.', 'Then try a new one.'],
-    '2 min. The missing-link ladder. Answer to step 4: both. Parents want the finding (is the air safe?), then to find their own street.'),
-
-  { type: 'content', title: 'Four cards, one sentence',
+  { type: 'content', title: 'Five tests for any data story',
     bullets: [
-      '1\tSay the finding in the title, then point at it on the chart.',
-      '2\tA dashboard answers the reader’s questions, not yours.',
-      '3\tLead first, then let go.',
-      '4\tAsk before you tell: a guess makes the answer stick.'
+      '1\tOne message: say the point in one sentence, with what is at stake.',
+      '2\tEvidence on the chart: the point is in the marks, not only the title.',
+      '3\tAn order: the setting, the question, the turn, what follows.',
+      '4\tHonest context: the whole range, from zero, a reference, a source.',
+      '5\tFits the reader: works even if they stop after the first screen.'
     ], progressive: true,
-    notes: '1 min. Read as one: decide who drives, lead with the finding, open it up when the reader is ready, and make the number felt.' },
+    notes: '1 min. The summary to keep: the four cards are inside it (1 and 2 are card 1; 5 is cards 2 and 3; card 4\'s guess-first is one way to pass 3). Students score their own final infographic on these.' },
 
   { type: 'content', title: 'On your final infographic',
     bullets: [
@@ -350,17 +358,19 @@ function lesson() {
       'Note\tAt least one note written on a chart, where it happened',
       'Highlight\tOne thing in colour per panel, the rest grey',
       'Order\tRead top to bottom: what comes first, and why?',
-      'Felt\tOne number made human: a count, a scale, a comparison'
+      'Felt\tOne number made human: a count, a scale, a comparison',
+      'Test\tScore each panel on the five tests: which one fails?'
     ], progressive: true,
     notes: '1 min. Ties Week 9 to the final piece. An infographic is author-driven: it cannot let go.' },
 
-  { type: 'content', title: 'In the lab: one air-quality story, five steps',
+  { type: 'content', title: 'In the lab: one air-quality story, six steps',
     bullets: [
       'Concept\tWho is your reader, and what should they know in 3 seconds?',
       'Data\tno2_london.csv, or the WHO air-quality database for world cities',
       'Sketch\tOn paper first: the headline, the highlight, the order',
       'Design\tGrey for context, one colour for the point, notes on the chart',
-      'Build\tIn Altair: a martini glass, chapters, then open'
+      'Build\tIn Altair: a martini glass, chapters, then open',
+      'Critique\tIn pairs: score one published story (Snow Fall, You Draw It…) on the five tests'
     ],
     notes: '1 min. The 2025 lab (10_Lab_IPDV_Experiential_Data_Vis-Live.ipynb) has the same five steps on the WHO data. Its known problems: it geocodes thousands of cities through Nominatim (against its one-request-a-second policy; hours to run), drops most rows with dropna on pm25 and no2 together, and uses seaborn rather than Altair. Point students to no2_london.csv for the Altair build.' },
 
@@ -372,6 +382,6 @@ function lesson() {
 /* The Marylebone Road photo's source is not yet known, so it stays out of the copy that goes on Canvas. */
 const STUDENT = [['Tell your neighbour: when should a chart stop telling and start listening?', 'none'], ['Meet Marylebone Road', 'none']];
 /* Optional slides: "OPTIONAL: skip if short of time" in their notes. */
-const REFERENCE = ['Build it: start with the bare line', 'Three ways to lead, then let go', 'On your final infographic'];
+const REFERENCE = ['Build it: start with the bare line', 'Three ways to lead, then let go', 'On your final infographic', 'What a reader needs to drive', 'One road, three rhythms', 'Why a martini glass for the public?'];
 
 module.exports = { lesson, STUDENT, REFERENCE, BUILDS };
