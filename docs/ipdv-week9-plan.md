@@ -269,3 +269,41 @@ Each fix is recorded in the slide's speaker notes, or in the notebook's teacher 
 - **7 November 2026, the question stands out; the key moves onto the chart.** A new figure option, `figureCaptionTop` (`kit.js stage`, carried by the Lesson studio in `fromSlideForge.ts`): the step's caption, the question the room answers, stands under the title in bold, larger, with a red marker, kept clear of the story panel; the source line moves to the foot. Week 9's four NO₂ chart slides use it; no other week changes. The story figure's chart starts lower to make room. The "How to read it" panel is gone from those slides: Marylebone Road's line is named on the chart beside its start (`heroLabel`), and the other roads' key is one row along the chart's top edge (`keyOnChart`), shown only while those lines are.
 
 - **7 November 2026, the chart slides de-cluttered.** On the hook's answer step the right band (D) is lit with a tick and the other three fade, so the line reads over them. Marylebone Road's end value sits below its point with a halo (it sat on the legal-limit line), and steps back when a reader's road is lit. Questions above a chart headline are kept to one line, and `tests/week9.test.js` checks it. Note for presenting: a browser keeps the copy of a built-in lesson it first filed (`js/builtins.js` seeds a lesson only when its key is missing), so a rebuilt Week 9 reaches a browser only once that copy is deleted from the Library.
+- **8 November 2026, the review's facts and code fixed** (sections A and B of `docs/ipdv-week9-review.md`, ten personas).
+  - **Facts:**
+    - WHO's 10 is a guideline, not "safe": harm is seen below it.
+    - The 2019 ULEZ is noted as stopping at Marylebone Road. The road is the Inner Ring Road, the zone's uncharged boundary; the notes now mark 2019 (central zone, this road its edge), 2020, 2021 (ULEZ reaches this road) and 2023.
+    - The dashboard says 163 monitors have run since 2010 and 59 reported in 2025, and "nearly every line fell".
+    - Brixton Road is added: 174 in 2010, 48 in 2025, the one monitor over the limit.
+    - 2025 is marked provisional.
+    - Segel and Heer's end labels are credited as ours, with their tactics and genres in the notes.
+    - Munzner's Annotate is the reader's. Enjoy is "nearest", and Part 4 is "present, made memorable".
+    - Kim et al. is described as drawn predictions.
+    - "Count it out" now counts monitors over the limit (60 of 87 in 2010, 1 of 59 in 2025). "Human scale" uses blocks of the WHO guideline, not people.
+    - Kerbside is about twice background, not "a park".
+    - The rhythm panels state only what one year shows.
+    - NO₂, µg/m³ and ULEZ are defined where they are first used, with one line on health.
+  - **Code** (`code/steps.py`):
+    - Build-its 19–21 and the martini glass now grow one chart, and each slide prints only its new lines.
+    - Highlight layers grey then red; `alt.Order` was wrong.
+    - The martini glass opens at chapter 1 (headline, then notes, then the bowl) and keeps its axis still. Its bowl has points, so the tooltip answers for the year pointed at.
+    - The guess is one point at 2025, with a thicker truth line.
+    - The dashboard's colours match the live chart.
+    - Each code panel says it runs after the first Build-it's setup.
+  - **Tests:** `tests/week9.test.js` adds two tests, the facts and the code.
+- **8 November 2026, the review's layout and accessibility fixed** (section C).
+  - **Story figure** (`src/figures/story.js`, rebuilt into `js/model.js` and `lab-app/`):
+    - Each note's rule now rises only to its own note, and the words start at its top. Notes fall in height from left to right, so no rule crosses another note's words. The note labels are short ("Central ULEZ", "Lockdown", "ULEZ reaches here", "ULEZ: all London"), and the card gives the detail.
+    - Once the hook is answered, only the right band keeps its words.
+    - The WHO line is blue, not green.
+    - The other lines are a darker grey (#aab4bf), and the key and subtitle are a size larger.
+  - **Story cards:** the bold first lines no longer repeat the question above them.
+  - **Colours:** the monitor types use Okabe and Ito's colour-blind-safe set. Road monitors are warm and the rest cool, dark then light in each pair. The same colours are used on the live chart and in the Altair dashboard code.
+  - **Altair pictures:**
+    - Rendered with larger text and level year labels every five years. This is display only, and the bare Build-it's caption says so.
+    - Every printed code line is 66 characters or fewer, so the code prints larger.
+    - The notes' rules stop at their note (`y2=alt.datum(0)`).
+  - **New file for Canvas:** `assets/lesson/ipdv/week9/week9_build_its.py` has every Build-it as one runnable file (checked by running it). The "Before we start" slide names it.
+  - **Drawings:** text under 15px raised to 15, and the martini and line-slide grey print raised to 18.
+  - **Title slide:** the title is set on two lines, so it stays clear of the theme's red N. Its low contrast in the review was a still caught mid-animation.
+  - **Tests:** `tests/week9.test.js` holds code line length, falling notes and the type colours.
