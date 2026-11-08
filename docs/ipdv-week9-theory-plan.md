@@ -425,3 +425,11 @@ wording.
     - "Make it felt" sits on the map at the interactive slideshow, an author who asks the reader to take part.
   - **Tests:** `tests/week9.test.js` adds three tests (the foundation's order and sources, the tricks' numbers, and
     Munzner on the map). The four-level test is replaced, since that slide is cut.
+- **8 November 2026, presenting fixes, from the teacher's run-through.**
+  - **No dimming:** a row or panel once shown stays full strength; the red marker shows the one in hand. This is a
+    new `dim: false` option on the reveal and panels figures, set on every Week 9 list and panel slide.
+  - **The five tests (slide 15):** charts and tests show from the start; only the A/B ticks are covered, and each
+    click reveals one test's answer after the room has guessed.
+  - **Chart slides:** the chart sits in a white frame with its own, smaller title, so the question is the only
+    slide heading. The axis label steps back while a sub-line names the measure.
+  - Every question above a chart fits on one line (tested), and the last note is now "London-wide".
