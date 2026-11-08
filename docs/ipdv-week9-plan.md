@@ -307,3 +307,16 @@ Each fix is recorded in the slide's speaker notes, or in the notebook's teacher 
   - **Drawings:** text under 15px raised to 15, and the martini and line-slide grey print raised to 18.
   - **Title slide:** the title is set on two lines, so it stays clear of the theme's red N. Its low contrast in the review was a still caught mid-animation.
   - **Tests:** `tests/week9.test.js` holds code line length, falling notes and the type colours.
+- **8 November 2026, the theory gap planned.** The lecture explains how to tell a story with data, but not what a
+  story is, why we tell one, what makes one strong, or how one misleads. The spectrum also comes late. The plan to
+  fix this is in `docs/ipdv-week9-theory-plan.md`:
+  - a foundation block after the hook: chart vs story, what makes a story, why tell one, the spectrum as the map,
+    and five tests for strong vs weak;
+  - a tricks block after Part 1, using the same Marylebone Road data;
+  - cuts to keep the timing.
+
+  Nothing is built yet; its decisions D1–D4 come first.
+- **8 November 2026, the theory added.** A foundation block (what a story is, its parts and shape, why we tell one,
+  the spectrum as the map, five tests) and a tricks block at the end of Part 1, with cuts to keep the time. 52
+  slides, 85.7 minutes by the notes without the optional ones. The details are in
+  `docs/ipdv-week9-theory-plan.md` (its change log).
