@@ -41,7 +41,7 @@ notes = pd.DataFrame({
     'year': [2019, 2020, 2021, 2023],
     'at':   [172, 157, 142, 127],     # how high each sits
     'text': ['Central ULEZ', 'Lockdown',
-             'ULEZ reaches here', 'ULEZ: all London'],
+             'ULEZ reaches here', 'London-wide'],
 })
 rules = alt.Chart(notes).mark_rule(color='grey').encode(
     x='year:O', y='at:Q', y2=alt.datum(0))  # up to its note

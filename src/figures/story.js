@@ -54,7 +54,10 @@ export var story = {
     var ink = st.ink, soft = st.soft;
 
     /* axes: a light grid, the years beneath; redrawn when a step changes the window */
-    var axes = el('g', {}, svg);
+    /* With the question on top, the chart sits in a white frame of its own: its headline reads as the chart's title,
+       part of the picture, not a second heading for the slide. */
+    if (fig.captionTop) el('rect', { x: P.x0 - 70, y: P.y0 - 88, width: (fig.story ? fig.story.x - 14 : P.x1 + 26) - (P.x0 - 70), height: P.y1 - P.y0 + 122, rx: 10, fill: '#fff', stroke: '#e3ded5', 'stroke-width': 1.5 }, svg);
+    var axes = el('g', {}, svg), unitEl = /** @type {any} */ (null), unitOn = 1;
     function drawAxes() {
       axes.textContent = '';
       var gap = yMax - yLo > 120 ? 40 : yMax - yLo > 50 ? 20 : 10;
@@ -67,7 +70,7 @@ export var story = {
         if (shown.length > 10 && i % 3 && yr !== hi) return;
         el('text', { x: x(yr), y: P.y1 + 26, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 15, fill: soft }, axes, String(yr));
       });
-      if (d.unit) el('text', { x: P.x0 - 12, y: P.y0 - 14, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, 'font-weight': 600, fill: soft }, axes, d.unit);
+      if (d.unit) unitEl = el('text', { x: P.x0 - 12, y: P.y0 - 14, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, 'font-weight': 600, fill: soft, opacity: unitOn }, axes, d.unit);
     }
     drawAxes();
     /* lines are cut at the plot's edges, so a window or a raised floor never spills a line outside it */
@@ -204,11 +207,13 @@ export var story = {
             if (!faded) el('text', { x: bx + 18, y: (y(b.to) + y(b.from)) / 2 + 9, 'font-family': NU.sans, 'font-size': 26, 'font-weight': 700, fill: right ? NU.red : NU.navy }, g, right ? b.text + '  ✓' : b.text);
           });
         }
-        /* the author's headline */
+        /* the author's headline; a sub-line names the measure, so the axis label steps back while it shows */
+        unitOn = next.headline && next.sub ? 0 : 1;
+        if (unitEl) set(unitEl, { opacity: unitOn });
         headG.textContent = '';
         if (next.headline) {
-          el('text', { x: P.x0 - 40, y: P.y0 - 58, 'font-family': NU.sans, 'font-size': 25, 'font-weight': 700, fill: ink }, headG, next.headline);
-          if (next.sub) el('text', { x: P.x0 - 40, y: P.y0 - 32, 'font-family': NU.sans, 'font-size': 18, fill: soft }, headG, next.sub);
+          el('text', { x: P.x0 - 44, y: P.y0 - 56, 'font-family': NU.sans, 'font-size': 21, 'font-weight': 700, fill: ink }, headG, next.headline);
+          if (next.sub) el('text', { x: P.x0 - 44, y: P.y0 - 32, 'font-family': NU.sans, 'font-size': 16, fill: soft }, headG, next.sub);
         }
         /* the hero line draws itself to its year; the other lines fade to their mode */
         var to = Math.min(next.upto == null ? last : next.upto, hi), from = animate ? shownUpto : to, was = animate ? mode : next.others || 'none';

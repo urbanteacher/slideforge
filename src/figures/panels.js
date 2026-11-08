@@ -6,7 +6,9 @@
  *           inside the data, not a file, so a still or a PDF never prints before it has loaded
  *   boxes   [[x, y, w, h], …] each panel, left to right; a panel's box takes in the arrow before it
  *   ground  the picture's background colour, which covers a panel not yet shown
- * Each step may set: caption, upto (the last panel shown).
+ *   dim     false: a panel already shown stays clear, not veiled (for a picture whose covers hide answers)
+ * Each step may set: caption, upto (the last panel shown), and all: every panel clear, as a still shows them, so
+ * the row can be read whole before the show moves on.
  */
 import { el, set, tween } from './kit.js';
 
@@ -24,9 +26,10 @@ export var panels = {
       /** @param {any} step @param {boolean} animate */
       update: function (step, animate) {
         st.caption(step.caption);
-        var upto = typeof step.upto === 'number' ? step.upto : boxes.length - 1, all = !fig.interactive;
+        var upto = typeof step.upto === 'number' ? step.upto : boxes.length - 1, all = !fig.interactive || !!step.all;
         /* Not yet: covered. In hand: clear. Before it: a veil, so it reads as done. */
-        var want = covers.map(function (_, /** @type {number} */ i) { return all || i === upto ? 0 : i < upto ? 0.62 : 1; });
+        var veil = d.dim === false ? 0 : 0.62;
+        var want = covers.map(function (_, /** @type {number} */ i) { return all || i === upto ? 0 : i < upto ? veil : 1; });
         var from = covers.map(function (c) { return Number(c.getAttribute('opacity') || 0); });
         cancel();
         cancel = tween(animate ? 350 : 0, function (/** @type {number} */ k) {

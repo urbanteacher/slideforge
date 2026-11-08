@@ -467,8 +467,9 @@ function scoreSvg() {
   out.push('</svg>');
   return out.join('\n');
 }
-/* The panels figure's boxes for scoreSvg: the two charts first, then one per test. */
-const scoreBoxes = () => [[40, 118, 1200, 274]].concat(SCORE.map((_, i) => [40, SCORE_TOP + i * SCORE_ROW, 1200, SCORE_ROW]));
+/* The panels figure's covers for scoreSvg: only each test's A and B marks, so the charts and the tests show from the
+   start and the room guesses before each answer is revealed. */
+const scoreBoxes = () => SCORE.map((_, i) => [1000, SCORE_TOP + i * SCORE_ROW + 2, 200, SCORE_ROW - 4]);
 
 /* The martini glass, drawn as one: three steps up the stem, then the bowl full of lines to explore. */
 function martiniSvg() {

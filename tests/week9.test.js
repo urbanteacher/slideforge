@@ -133,13 +133,13 @@ test('the tricks\' numbers are the data\'s', () => {
   assert.ok(t.figureSteps.some((st) => st.range) && t.figureSteps.some((st) => st.yMin), 'a window and a cut axis');
 });
 
-test('a question above a chart headline fits on one line, so the two never touch', () => {
+test('a question above a chart fits on one line, so it never runs into the chart\'s frame', () => {
   const { lesson: l } = lesson('ipdv-story-w9');
   for (const sl of l.slides.filter((x) => x.figure === 'story' && x.figureCaptionTop)) {
     sl.figureSteps.forEach((st, i) => {
       /* 27px bold Avenir: about 13.5px a character (measured on the slide); the question's column runs from 84 to the story panel */
       const room = sl.figureStory.x - 28 - 84;
-      if (st.headline) assert.ok(st.caption.length * 13.5 <= room, `${sl.title} step ${i + 1}: "${st.caption}" may wrap into the headline`);
+      assert.ok(st.caption.length * 13.5 <= room, `${sl.title} step ${i + 1}: "${st.caption}" may wrap into the chart`);
     });
   }
 });

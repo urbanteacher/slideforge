@@ -8,8 +8,10 @@
  *   mode   'answers': every row shows from the start, its tag and text arrive on its step
  *          'build':   each row arrives on its step
  *   sub    a line under the title          rail   a line joining the icons (numbered steps)
+ *   dim    false: rows already shown stay full strength; only the red marker says which row is in hand
  *   nameX, sayX, tagX, textX, size, max     where the columns sit, the words' size, a row's most height
- * Each step may set: caption, explain, upto (the last row shown or answered; -1 for none).
+ * Each step may set: caption, explain, upto (the last row shown or answered; -1 for none), and all: every row
+ * shown at full strength, as a still shows them, so the list can be read whole before the show moves on.
  */
 import { NU, H, el, set, tween, wrap } from './kit.js';
 
@@ -64,10 +66,11 @@ export var reveal = {
         st.caption(step.caption);
         var upto = typeof step.upto === 'number' ? step.upto : rows.length - 1;
         /* A still shows everything, full strength; live, the row in hand is full and the rest dim. */
-        var all = !fig.interactive;
+        var all = !fig.interactive || !!step.all;
         var want = parts.map(function (_, /** @type {number} */ i) {
           var shown = i <= upto;
-          var row = build ? (shown ? (all || i === upto ? 1 : 0.4) : 0) : (all || upto < 0 || i === upto ? 1 : 0.4);
+          var faint = d.dim === false ? 1 : 0.4;
+          var row = build ? (shown ? (all || i === upto ? 1 : faint) : 0) : (all || upto < 0 || i === upto ? 1 : faint);
           return { row: row, answer: shown ? 1 : 0, ask: shown ? 0 : 1, mark: !all && i === upto ? 1 : 0 };
         });
         var from = parts.map(function (p) { return { row: Number(p.row.getAttribute('opacity') || 1), answer: Number(p.answer.getAttribute('opacity') || 1) }; });

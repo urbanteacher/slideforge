@@ -14,17 +14,19 @@ const drawn = (title, file, notes, extra) => Object.assign({ type: 'image', titl
 const photo = (title, file, facts, notes) => ({ type: 'image', title, image: asset(file), imageFit: 'contain', design: { capStyle: 'top' }, body: facts.join('\n'), notes });
 const section = (title, part, notes) => ({ type: 'section', title, subtitle: part, notes });
 const statement = (title, notes) => ({ type: 'statement', title, body: title, notes });
+/* No dimming: a row or panel once shown stays at full strength until the show moves on; the red marker (or the
+   next panel appearing) says which one is in hand. */
 const reveal = (title, eyebrow, key, captions, notes) => {
   const data = D.REVEAL[key], start = data.mode === 'answers' ? -1 : 0;
   return { type: 'figure', figure: 'reveal', title, figureGround: 'paper', figureEyebrow: eyebrow, notes,
-    figureAlt: `${title}: ${data.rows.map(r => r.name || r.say).join('; ')}`, figureData: data,
+    figureAlt: `${title}: ${data.rows.map(r => r.name || r.say).join('; ')}`, figureData: { ...data, dim: false },
     figureSteps: captions.map((caption, i) => ({ caption, upto: start + i })) };
 };
 /* A row of panels, shown one per click (src/figures/panels.js); the boxes follow drawings.js panelsSvg. */
 const panelFig = (title, fn, n, o, captions, notes) => ({
   type: 'figure', figure: 'panels', title, figureGround: 'paper', figureWhy: false, notes,
   figureAlt: `${title}: ${captions.join(' ')}`,
-  figureData: { svg: D[fn]().replace(/^<svg[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">'), boxes: D.panelBoxes(n, o), ground: '#fbfaf8' },
+  figureData: { svg: D[fn]().replace(/^<svg[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">'), boxes: D.panelBoxes(n, o), ground: '#fbfaf8', dim: false },
   figureSteps: captions.map((caption, i) => ({ caption, upto: i }))
 });
 
@@ -40,10 +42,10 @@ const ALL = series(() => true);
 /* The notes sit high, above the lines, on a chart that runs to 180. Marylebone Road (A501) is part of the
    Inner Ring Road, the edge of the 2019 central zone, so the zone reached the road itself only in Oct 2021. */
 /* Short, because each note's words start at its rule and run right, towards the story panel. */
-const NOTES = [{ year: 2019, text: 'Central ULEZ', at: 172 }, { year: 2020, text: 'Lockdown', at: 157 }, { year: 2021, text: 'ULEZ reaches here', at: 142 }, { year: 2023, text: 'ULEZ: all London', at: 127 }];
+const NOTES = [{ year: 2019, text: 'Central ULEZ', at: 172 }, { year: 2020, text: 'Lockdown', at: 157 }, { year: 2021, text: 'ULEZ reaches here', at: 142 }, { year: 2023, text: 'London-wide', at: 127 }];
 const REFS = [{ y: 40, text: 'Legal limit: 40' }, { y: 10, text: 'WHO guideline: 10' }];
 /* The same four notes on a chart that runs to 100, high above Marylebone Road's line. */
-const NOTES100 = [{ year: 2019, text: 'Central ULEZ', at: 95 }, { year: 2020, text: 'Lockdown', at: 85 }, { year: 2021, text: 'ULEZ reaches here', at: 75 }, { year: 2023, text: 'ULEZ: all London', at: 65 }];
+const NOTES100 = [{ year: 2019, text: 'Central ULEZ', at: 95 }, { year: 2020, text: 'Lockdown', at: 85 }, { year: 2021, text: 'ULEZ reaches here', at: 75 }, { year: 2023, text: 'London-wide', at: 65 }];
 const STORY = { x: 892, y: 150, w: 330 };
 /* The hero line is named on the chart, beside its start; the other roads get a one-line key inside the chart. */
 const HERO_LABEL = 'Marylebone Road, Westminster (kerbside)';
@@ -55,7 +57,7 @@ const fig = (title, eyebrow, data, steps, notes, extra) => Object.assign({
   figureData: Object.assign({ years: D.AIR.years, hero: 'MY1', unit: 'NO₂ (µg/m³)', refs: REFS, notes: NOTES, types: TYPES }, data),
   figureSteps: steps, notes }, extra || {});
 const HEADLINE = 'Marylebone Road’s air has a third of the NO₂ it had in 2010';
-const SUB = 'Yearly average at the kerb. Legal limit 40 µg/m³.';
+const SUB = 'NO₂ in µg/m³, yearly average at the kerb. Legal limit 40.';
 /* The roads still over the legal limit at their last reading (2024 or 2025): the tricks block's filtered bowl
    leaves them out. Brixton Road (LB4) is one. */
 const STILL_OVER = ROADS.filter(s => Math.max(s.v[2024] || 0, s.v[2025] || 0) > 40).map(s => s.id);
@@ -131,11 +133,11 @@ function lesson() {
     'PHOTO SOURCE NOT YET KNOWN: credit it here once found (a news agency picture of the road in traffic), and keep it out of anything shared beyond the room until then. It is hidden in the student copy.'),
 
   fig('Guess first: Marylebone Road', 'Hook', { yMax: 100, series: ALL.filter(s => s.id === 'MY1'), heroLabel: HERO_LABEL }, [
-    { caption: 'Hands up: where is Marylebone Road’s NO₂ in 2025? A, B, C or D?', upto: 2016, bands: BANDS, bandsFrom: 2017,
+    { caption: 'Marylebone Road’s NO₂ in 2025: A, B, C or D?', upto: 2016, bands: BANDS, bandsFrom: 2017,
       explain: 'Marylebone Road is one of London’s busiest roads, and its monitor sits at the kerb.\nThe line is nitrogen dioxide (NO₂) from traffic exhausts, the yearly average in µg/m³ (micrograms per cubic metre of air). It inflames airways, especially children’s.\nIn 2016 it was 89. Pick one band for 2025.' },
     { caption: 'The real line: 31 in 2025. The answer is D.', upto: 2025, bands: BANDS, bandsFrom: 2017, bandAnswer: 3, reveal: { year: 2025, text: '31' },
       explain: 'The big drop came in 2019 and 2020.\nMost students guess B or C.\nGuessing first makes a number easier to remember.' },
-    { caption: 'Under the legal limit since 2024; still three times the WHO guideline.', upto: 2025, refs: 2, reveal: { year: 2025, text: '31' },
+    { caption: 'Under the limit since 2024; 3× the WHO guideline.', upto: 2025, refs: 2, reveal: { year: 2025, text: '31' },
       explain: 'The dashed line is the UK legal limit, 40.\nThe dotted line is the World Health Organization’s guideline, 10 (2021); harm is seen even below it.\nSo: much better, not yet safe. (2025 is provisional: 78% of its hours measured.)' }
   ], '5 min. Do not show a title or a number first: the guess is the lesson. Step 1: hands up for A, B, C, D (or fingers against the chest, so guesses stay private); count roughly aloud. Step 2: click and let the line draw; pause before 2019. Step 3: the two lines. ' +
     'ASK: "Will you remember the number tomorrow? Why?" (Because you committed to a guess: Kim, Reinecke and Hullman, CHI 2017, had people draw their prediction before seeing the data, and they recalled the data better.) ' +
@@ -157,7 +159,7 @@ function lesson() {
 
   /* ======================================================== Foundation: what a data story is, and why */
   fig('A chart, or a story?', 'Foundation', { yMax: 100, series: ALL.filter(s => s.id === 'MY1'), heroLabel: HERO_LABEL, notes: NOTES100 }, [
-    { caption: 'A chart: here are the numbers.', upto: 2025, headline: 'NO₂ at Marylebone Road, 2010–2025', sub: 'Yearly average, µg/m³',
+    { caption: 'A chart: here are the numbers.', upto: 2025, headline: 'NO₂ at Marylebone Road, 2010–2025', sub: 'NO₂ in µg/m³, yearly average',
       explain: 'Correct, and complete.\nIt answers: what are the numbers?\nThe reader has to find the point alone, if they look long enough.' },
     { caption: 'A story: here is the point.', upto: 2025, refs: 1, notes: 4, headline: HEADLINE, sub: SUB,
       explain: 'The same data, with a point and an order.\nIt answers: so what?\nThe title says it, the limit gives it meaning, the notes say what happened when.' }
@@ -201,9 +203,11 @@ function lesson() {
 
   { type: 'figure', figure: 'panels', title: 'Strong or weak? Five tests', figureGround: 'paper', figureWhy: false,
     figureAlt: 'Two charts of Marylebone Road: A, a topic title and a bare line; B, a headline, the legal limit, notes and every other road in grey. Scored on five tests: one message, evidence on the chart, an order, honest context, fits the reader. B passes all five; A fails four and half-passes honest context.',
-    figureData: { svg: D.scoreSvg().replace(/^<svg[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">'), boxes: D.scoreBoxes(), ground: '#fbfaf8' },
-    figureSteps: ['Two charts, the same data. Which is the stronger story?', 'Test 1: one message.', 'Test 2: evidence on the chart.', 'Test 3: an order.', 'Test 4: honest context.', 'Test 5: fits the reader.'].map((caption, i) => ({ caption, upto: i })),
-    notes: '4 min. Before each tick, the room says A or B. These five tests come back three times: in Part 1\'s tricks (each trick fails test 4 or test 2), as the checklist for every panel of the final infographic, and in the lab\'s critique. ' +
+    figureData: { svg: D.scoreSvg().replace(/^<svg[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">'), boxes: D.scoreBoxes(), ground: '#fbfaf8', dim: false },
+    /* Everything shows from the start, full strength; each click reveals one test's answer, after the room has guessed. */
+    figureSteps: [{ caption: 'For each test: does A pass? Does B? Guess, then we check.', upto: -1 },
+      ...['Test 1, one message: B passes, A doesn’t.', 'Test 2, evidence on the chart: B, not A.', 'Test 3, an order: B, not A.', 'Test 4, honest context: B passes; A only half.', 'Test 5, fits the reader: B, not A.'].map((caption, i) => ({ caption, upto: i }))],
+    notes: '4 min. Every test is on the slide from the start; only the ticks are hidden. Read a test, let the room guess A, B or both, then click for the answer. These five tests come back three times: in Part 1\'s tricks (each trick fails test 4 or test 2), as the checklist for every panel of the final infographic, and in the lab\'s critique. ' +
       'Where they come from. Test 1: Knaflic (2015), the "Big Idea", the point in one complete sentence with what is at stake. Test 2: Segel and Heer\'s messaging and highlighting tactics. Test 3: the arc two slides back (Amini et al., Kosara). Test 4: Tufte (1983) on graphical integrity, and Cairo (2019), How Charts Lie. ' +
       'Test 5: Boy, Détienne and Fekete (CHI 2015) found in three field experiments that adding a story to an exploratory chart did not make people explore it more; so a story must work for a reader who stops after the first screen. ' +
       'A is not "wrong": it is an exploratory chart, right for an analyst. It is a weak story for the public.' },
@@ -217,7 +221,7 @@ function lesson() {
     { caption: 'Move 1: a headline that says the finding.', upto: 2025, refs: 1, headline: HEADLINE, sub: SUB,
       explain: 'Read only the title and you still have the point.\nThe dashed line gives the number meaning: the legal limit.\nThe subtitle says how to read it.' },
     { caption: 'Move 2: notes, written where things happened.', upto: 2025, refs: 1, notes: 4, headline: HEADLINE, sub: SUB,
-      explain: 'Four events, at their years: the central ULEZ (2019), whose edge is this road; lockdown (2020); the ULEZ reaching this road (2021); then all London (2023).\nULEZ, the Ultra Low Emission Zone: older, dirtier vehicles pay a daily charge.\nA note says what happened, not that it caused the drop.' },
+      explain: 'Four events, at their years: the central ULEZ (2019), whose edge is this road; lockdown (2020); the ULEZ reaching this road (2021); then London-wide (2023).\nULEZ, the Ultra Low Emission Zone: older, dirtier vehicles pay a daily charge.\nA note says what happened, not that it caused the drop.' },
     { caption: 'Move 3: highlight. Every other road in grey, ours in red.', upto: 2025, refs: 1, notes: 4, others: 'grey', headline: HEADLINE, sub: SUB,
       explain: 'The grey gives context.\nNearly every road fell, and some were worse. Brixton Road: 174 in 2010, still 48 in 2025, the one London monitor over the limit.\nThe colour tells the eye where to look; the grey says “and the rest”.' }
   ], '5 min. Step through slowly. After step 1, ASK: "What should I take from this?" Take two answers; they will differ. That is the problem the author solves. ' +
@@ -234,7 +238,7 @@ function lesson() {
   build('highlight', '2 min. It grows again: add the grey roads underneath, and this is slide 15\'s chart. In a layer, the chart added last is drawn on top, so grey goes first and red after. (alt.Order would not do it: on a line it orders the points along the line, not which line is on top.) detail splits lines without colouring them. ASK: "What happens if you write (line + others)?" (The grey covers the red.)'),
 
   fig('Same data, five tricks', 'Careful', { yMax: 100, series: [...ALL.filter(s => s.id === 'MY1'), ...ROADS.filter(s => s.id !== 'MY1')], heroLabel: HERO_LABEL, notes: NOTES100 }, [
-    { caption: 'The honest chart: what a reader needs.', upto: 2025, refs: 2, notes: 4, headline: HEADLINE, sub: 'Yearly average at the kerb. Legal limit 40; WHO guideline 10.',
+    { caption: 'The honest chart: what a reader needs.', upto: 2025, refs: 2, notes: 4, headline: HEADLINE, sub: 'NO₂ in µg/m³, yearly average at the kerb. Legal limit 40; WHO guideline 10.',
       explain: 'The whole range, from zero.\nThe legal limit and the WHO guideline, so the number means something.\nNotes that say what happened, not why.' },
     { caption: 'Trick 1, the data: only the years that fell.', upto: 2025, range: [2018, 2020], refs: 1, headline: 'Marylebone Road’s NO₂ halved in two years', sub: '',
       explain: '85 to 44: true.\nBut the years before (flat at about 90) and after (44, 43, 42, 42) are gone.\nThe window chose the story.' },
@@ -260,9 +264,9 @@ function lesson() {
   section('When should the reader drive?', 'Part 2 · Let go · Munzner: discover', '20 s. The reader drives: Munzner\'s discover.'),
 
   fig('Every monitor in London: find your road', 'See it', { yMax: 180, series: ALL, keyOnChart: true, key: [{ mark: 'line', colour: TYPES.Kerbside, text: 'kerbside' }, { mark: 'line', colour: TYPES.Roadside, text: 'roadside' }, { mark: 'line', colour: TYPES['Urban Background'], text: 'urban background' }, { mark: 'line', colour: TYPES.Suburban, text: 'suburban' }] }, [
-    { caption: 'No headline, no notes: every monitor, coloured by where it stands. Point at any line.', upto: 0, others: 'type', hover: true,
+    { caption: 'Every monitor, coloured by where it stands. Point at one.', upto: 0, others: 'type', hover: true,
       explain: 'This is the reader-driven end: the 163 monitors that have run since 2010 (59 still reported in 2025).\nColour says where the monitor stands: at the kerb, by a road, or in the background, away from busy roads.\nPoint at a line and it tells you its numbers, as Altair’s tooltip does.' },
-    { caption: 'Mile End Road, Tower Hamlets, near our campus: 65 in 2010, 20 in 2025.', upto: 0, others: 'type', hover: true, lit: { id: 'TH2', year: 2025 },
+    { caption: 'Mile End Road, near our campus: 65 in 2010, 20 in 2025.', upto: 0, others: 'type', hover: true, lit: { id: 'TH2', year: 2025 },
       explain: 'A reader finds the road they know. That is why people stay with a dashboard.\nBut nothing here tells you the finding. You might never notice that nearly every line fell.' }
   ], '4 min. Let a student come up and point, or ask the room to call out a borough. Then step 2. ' +
     'Careful with "every line fell": part of the falling cloud is the worst sites closing (87 monitors reported in 2010, 59 in 2025). Of the 59 still running in 2025, one is over the legal limit: Brixton Road, 48. ' +

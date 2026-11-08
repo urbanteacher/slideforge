@@ -7453,10 +7453,11 @@
         update: function(step, animate) {
           st.caption(step.caption);
           var upto = typeof step.upto === "number" ? step.upto : rows2.length - 1;
-          var all = !fig.interactive;
+          var all = !fig.interactive || !!step.all;
           var want = parts.map(function(_, i) {
             var shown = i <= upto;
-            var row = build ? shown ? all || i === upto ? 1 : 0.4 : 0 : all || upto < 0 || i === upto ? 1 : 0.4;
+            var faint = d.dim === false ? 1 : 0.4;
+            var row = build ? shown ? all || i === upto ? 1 : faint : 0 : all || upto < 0 || i === upto ? 1 : faint;
             return { row, answer: shown ? 1 : 0, ask: shown ? 0 : 1, mark: !all && i === upto ? 1 : 0 };
           });
           var from = parts.map(function(p) {
@@ -7497,9 +7498,10 @@
         /** @param {any} step @param {boolean} animate */
         update: function(step, animate) {
           st.caption(step.caption);
-          var upto = typeof step.upto === "number" ? step.upto : boxes.length - 1, all = !fig.interactive;
+          var upto = typeof step.upto === "number" ? step.upto : boxes.length - 1, all = !fig.interactive || !!step.all;
+          var veil = d.dim === false ? 0 : 0.62;
           var want = covers.map(function(_, i) {
-            return all || i === upto ? 0 : i < upto ? 0.62 : 1;
+            return all || i === upto ? 0 : i < upto ? veil : 1;
           });
           var from = covers.map(function(c) {
             return Number(c.getAttribute("opacity") || 0);
@@ -7537,7 +7539,11 @@
         return s.id === d.hero;
       });
       var ink = st.ink, soft = st.soft;
-      var axes2 = el("g", {}, svg);
+      if (fig.captionTop) el("rect", { x: P.x0 - 70, y: P.y0 - 88, width: (fig.story ? fig.story.x - 14 : P.x1 + 26) - (P.x0 - 70), height: P.y1 - P.y0 + 122, rx: 10, fill: "#fff", stroke: "#e3ded5", "stroke-width": 1.5 }, svg);
+      var axes2 = el("g", {}, svg), unitEl = (
+        /** @type {any} */
+        null
+      ), unitOn = 1;
       function drawAxes() {
         axes2.textContent = "";
         var gap = yMax - yLo > 120 ? 40 : yMax - yLo > 50 ? 20 : 10;
@@ -7552,7 +7558,7 @@
           if (shown.length > 10 && i % 3 && yr !== hi) return;
           el("text", { x: x(yr), y: P.y1 + 26, "text-anchor": "middle", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(yr));
         });
-        if (d.unit) el("text", { x: P.x0 - 12, y: P.y0 - 14, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, "font-weight": 600, fill: soft }, axes2, d.unit);
+        if (d.unit) unitEl = el("text", { x: P.x0 - 12, y: P.y0 - 14, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, "font-weight": 600, fill: soft, opacity: unitOn }, axes2, d.unit);
       }
       drawAxes();
       var clipId = "story-clip-" + Math.random().toString(36).slice(2, 8);
@@ -7719,10 +7725,12 @@
               if (!faded) el("text", { x: bx + 18, y: (y(b.to) + y(b.from)) / 2 + 9, "font-family": NU.sans, "font-size": 26, "font-weight": 700, fill: right ? NU.red : NU.navy }, g, right ? b.text + "  ✓" : b.text);
             });
           }
+          unitOn = next.headline && next.sub ? 0 : 1;
+          if (unitEl) set(unitEl, { opacity: unitOn });
           headG.textContent = "";
           if (next.headline) {
-            el("text", { x: P.x0 - 40, y: P.y0 - 58, "font-family": NU.sans, "font-size": 25, "font-weight": 700, fill: ink }, headG, next.headline);
-            if (next.sub) el("text", { x: P.x0 - 40, y: P.y0 - 32, "font-family": NU.sans, "font-size": 18, fill: soft }, headG, next.sub);
+            el("text", { x: P.x0 - 44, y: P.y0 - 56, "font-family": NU.sans, "font-size": 21, "font-weight": 700, fill: ink }, headG, next.headline);
+            if (next.sub) el("text", { x: P.x0 - 44, y: P.y0 - 32, "font-family": NU.sans, "font-size": 16, fill: soft }, headG, next.sub);
           }
           var to = Math.min(next.upto == null ? last : next.upto, hi), from = animate ? shownUpto : to, was = animate ? mode : next.others || "none";
           var newMode = next.others || "none";
