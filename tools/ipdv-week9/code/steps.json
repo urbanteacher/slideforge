@@ -3,6 +3,7 @@
   {
    "id": "bare",
    "code": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\nalt.Chart(my1).mark_line(point=True).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n).properties(width=560, height=300)\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\nalt.Chart(my1).mark_line(point=True).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n).properties(width=560, height=300)\n",
    "new": [
     "mark_line",
     "x=alt.X",
@@ -11,10 +12,12 @@
   },
   {
    "id": "headline",
-   "code": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\nline = alt.Chart(my1).mark_line(strokeWidth=3, color='#c8102e').encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n)\nlimit = alt.Chart().mark_rule(strokeDash=[6, 4]).encode(y=alt.datum(40))\n\nfinding = 'Marylebone Road’s air has a third of the NO₂ it had in 2010'\nhow = 'Yearly average; the dashed line is the legal limit, 40 µg/m³'\n\n(line + limit).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
+   "code": "red = '#c8102e'\nline = alt.Chart(my1).mark_line(strokeWidth=3, color=red).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n)\nlimit = alt.Chart().mark_rule(strokeDash=[6, 4]).encode(\n    y=alt.datum(40))\n\nfinding = ('Marylebone Road’s air has a third'\n           ' of the NO₂ it had in 2010')\nhow = 'Yearly average; dashed: the legal limit, 40 µg/m³'\n\n(line + limit).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\nred = '#c8102e'\nline = alt.Chart(my1).mark_line(strokeWidth=3, color=red).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n)\nlimit = alt.Chart().mark_rule(strokeDash=[6, 4]).encode(\n    y=alt.datum(40))\n\nfinding = ('Marylebone Road’s air has a third'\n           ' of the NO₂ it had in 2010')\nhow = 'Yearly average; dashed: the legal limit, 40 µg/m³'\n\n(line + limit).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
    "new": [
     "alt.Title",
     "finding =",
+    "' of the NO",
     "how =",
     "limit",
     "alt.datum(40)",
@@ -23,64 +26,81 @@
   },
   {
    "id": "annotate",
-   "code": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\nfinding = 'Marylebone Road’s air has a third of the NO₂ it had in 2010'\nline = alt.Chart(my1).mark_line(strokeWidth=3, color='#c8102e').encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n)\nnotes = pd.DataFrame({\n    'year': [2019, 2020, 2023],\n    'at':   [30, 20, 10],                 # how high each note sits\n    'text': ['ULEZ starts in central London',\n             'Lockdown',\n             'ULEZ covers all London'],\n})\nrules = alt.Chart(notes).mark_rule(color='grey').encode(x='year:O')\nwords = alt.Chart(notes).mark_text(align='right', dx=-5).encode(\n    x='year:O', y='at:Q', text='text:N',\n)\n\n(line + rules + words).properties(\n    width=560, height=300, title=finding)\n",
+   "code": "# line, limit, finding, how: as on the last slide\nnotes = pd.DataFrame({\n    'year': [2019, 2020, 2021, 2023],\n    'at':   [172, 157, 142, 127],     # how high each sits\n    'text': ['Central ULEZ', 'Lockdown',\n             'ULEZ reaches here', 'ULEZ: all London'],\n})\nrules = alt.Chart(notes).mark_rule(color='grey').encode(\n    x='year:O', y='at:Q', y2=alt.datum(0))  # up to its note\nwords = alt.Chart(notes).mark_text(align='left', dx=5).encode(\n    x='year:O', y='at:Q', text='text:N')\n\n(line + limit + rules + words).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\nred = '#c8102e'\nline = alt.Chart(my1).mark_line(strokeWidth=3, color=red).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n)\nlimit = alt.Chart().mark_rule(strokeDash=[6, 4]).encode(\n    y=alt.datum(40))\n\nfinding = ('Marylebone Road’s air has a third'\n           ' of the NO₂ it had in 2010')\nhow = 'Yearly average; dashed: the legal limit, 40 µg/m³'\n# line, limit, finding, how: as on the last slide\nnotes = pd.DataFrame({\n    'year': [2019, 2020, 2021, 2023],\n    'at':   [172, 157, 142, 127],     # how high each sits\n    'text': ['Central ULEZ', 'Lockdown',\n             'ULEZ reaches here', 'ULEZ: all London'],\n})\nrules = alt.Chart(notes).mark_rule(color='grey').encode(\n    x='year:O', y='at:Q', y2=alt.datum(0))  # up to its note\nwords = alt.Chart(notes).mark_text(align='left', dx=5).encode(\n    x='year:O', y='at:Q', text='text:N')\n\n(line + limit + rules + words).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
    "new": [
     "notes",
     "'year': [",
     "'text': [",
+    "'ULEZ reaches",
+    "'at':",
     "rules",
     "words",
     "mark_text",
-    "'at':",
     "text='text:N'",
-    "(line + rules + words)"
+    "(line + limit + rules + words)"
    ]
   },
   {
    "id": "highlight",
-   "code": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\nalt.Chart(road).mark_line().encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n    detail='code:N',\n    color=alt.when(alt.datum.code == 'MY1')\n             .then(alt.value('#c8102e'))\n             .otherwise(alt.value('#d3d3d3')),\n    strokeWidth=alt.when(alt.datum.code == 'MY1')\n             .then(alt.value(4)).otherwise(alt.value(1)),\n    order=alt.Order('is_my1:Q'),\n).transform_calculate(\n    is_my1=\"datum.code == 'MY1' ? 1 : 0\"\n).properties(width=560, height=300,\n    title='Marylebone Road fell with every other London road')\n",
+   "code": "# line, limit, notes, finding, how: as before\ngrey = '#a6a6a6'\nothers = alt.Chart(road).mark_line(color=grey, strokeWidth=1)\nothers = others.encode(\n    x='year:O', y='no2:Q',\n    detail='code:N',                 # one line per monitor\n)\n\n# the layer added last is drawn on top: grey, then red\n(others + line + limit + rules + words).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\nred = '#c8102e'\nline = alt.Chart(my1).mark_line(strokeWidth=3, color=red).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n)\nlimit = alt.Chart().mark_rule(strokeDash=[6, 4]).encode(\n    y=alt.datum(40))\n\nfinding = ('Marylebone Road’s air has a third'\n           ' of the NO₂ it had in 2010')\nhow = 'Yearly average; dashed: the legal limit, 40 µg/m³'\nnotes = pd.DataFrame({\n    'year': [2019, 2020, 2021, 2023],\n    'at':   [172, 157, 142, 127],     # how high each sits\n    'text': ['Central ULEZ', 'Lockdown',\n             'ULEZ reaches here', 'ULEZ: all London'],\n})\nrules = alt.Chart(notes).mark_rule(color='grey').encode(\n    x='year:O', y='at:Q', y2=alt.datum(0))  # up to its note\nwords = alt.Chart(notes).mark_text(align='left', dx=5).encode(\n    x='year:O', y='at:Q', text='text:N')\n# line, limit, notes, finding, how: as before\ngrey = '#a6a6a6'\nothers = alt.Chart(road).mark_line(color=grey, strokeWidth=1)\nothers = others.encode(\n    x='year:O', y='no2:Q',\n    detail='code:N',                 # one line per monitor\n)\n\n# the layer added last is drawn on top: grey, then red\n(others + line + limit + rules + words).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
    "new": [
-    "alt.when",
-    ".then(",
-    ".otherwise(",
+    "others",
+    "grey =",
     "detail=",
-    "strokeWidth"
+    "(others + line"
    ]
   },
   {
    "id": "explore",
-   "code": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\npick = alt.selection_point(fields=['type'], bind='legend')\n\nalt.Chart(air).mark_line(point=True).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n    detail='code:N',\n    color=alt.Color('type:N', title='Monitor'),\n    opacity=alt.when(pick).then(alt.value(0.9))\n                          .otherwise(alt.value(0.05)),\n    tooltip=['site:N', 'borough:N', 'type:N', 'year:O', 'no2:Q'],\n).add_params(pick).properties(width=560, height=300)\n",
+   "code": "# after the setup: air, road and my1\npick = alt.selection_point(fields=['type'], bind='legend')\n# colours a colour-blind reader can tell apart (Okabe-Ito)\ntypes = ['Kerbside', 'Roadside', 'Urban Background',\n         'Suburban', 'Industrial']\ncolours = ['#d55e00', '#e69f00', '#0072b2',\n           '#56b4e9', '#8c8c8c']\n\nalt.Chart(air).mark_line(point=True).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n    detail='code:N',\n    color=alt.Color('type:N', title='Monitor',\n        scale=alt.Scale(domain=types, range=colours)),\n    opacity=alt.when(pick).then(alt.value(0.9))\n                          .otherwise(alt.value(0.05)),\n    tooltip=['site:N', 'borough:N', 'type:N',\n             'year:O', 'no2:Q'],\n).add_params(pick).properties(width=560, height=300)\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n# after the setup: air, road and my1\npick = alt.selection_point(fields=['type'], bind='legend')\n# colours a colour-blind reader can tell apart (Okabe-Ito)\ntypes = ['Kerbside', 'Roadside', 'Urban Background',\n         'Suburban', 'Industrial']\ncolours = ['#d55e00', '#e69f00', '#0072b2',\n           '#56b4e9', '#8c8c8c']\n\nalt.Chart(air).mark_line(point=True).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n    detail='code:N',\n    color=alt.Color('type:N', title='Monitor',\n        scale=alt.Scale(domain=types, range=colours)),\n    opacity=alt.when(pick).then(alt.value(0.9))\n                          .otherwise(alt.value(0.05)),\n    tooltip=['site:N', 'borough:N', 'type:N',\n             'year:O', 'no2:Q'],\n).add_params(pick).properties(width=560, height=300)\n",
    "new": [
     "selection_point",
     "bind='legend'",
     "tooltip=",
+    "'year:O', 'no2:Q'],",
     "add_params",
-    "opacity=alt.when(pick)"
+    "scale=alt.Scale",
+    "types =",
+    "'Suburban', 'Industrial'",
+    "colours =",
+    "'#56b4e9'"
    ]
   },
   {
    "id": "stepper",
-   "code": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\nchapter = alt.param(value=4, bind=alt.binding_radio(\n    options=[1, 2, 3, 4], name='Chapter '))\n\nnotes = pd.DataFrame({\n    'year': [2010, 2019, 2023],\n    'chapter': [1, 2, 3],\n    'text': ['98: over twice the limit',\n             'ULEZ starts',\n             'ULEZ: all London'],\n})\nothers = alt.Chart(road).mark_line(color='#d3d3d3').encode(\n    x=alt.X('year:O', title=None), y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n    detail='code:N', tooltip=['site:N', 'year:O', 'no2:Q'],\n).transform_filter(chapter >= 4)        # the bowl: every monitor\nhero = alt.Chart(my1).mark_line(strokeWidth=3, color='#c8102e').encode(\n    x='year:O', y='no2:Q')\ntold = alt.Chart(notes).mark_text(align='left', dx=6, dy=-14).encode(\n    x='year:O', y=alt.value(20), text='text:N',\n).transform_filter(alt.datum.chapter <= chapter)   # the stem\n\n(others + hero + told).add_params(chapter).properties(width=560, height=300)\n",
+   "code": "# line, limit, rules, words, others, finding, how: as before\nchapter = alt.param(value=1, bind=alt.binding_radio(\n    options=[1, 2, 3], name='Chapter '))\n\ntold = (rules.transform_filter(chapter >= 2)   # the stem\n        + words.transform_filter(chapter >= 2))\ndots = alt.OverlayMarkDef(color=grey, size=15)\nbowl = others.mark_line(color=grey, point=dots).encode(\n    tooltip=['site:N', 'borough:N', 'year:O', 'no2:Q'],\n).transform_filter(chapter >= 3)               # the bowl\n\nstill = alt.Scale(domain=[0, 180])    # the axis stays still\nhero = line.encode(y=alt.Y('no2:Q', scale=still,\n                           title='NO₂ (µg/m³)'))\n\n(bowl + hero + limit + told).add_params(chapter).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\nred = '#c8102e'\nline = alt.Chart(my1).mark_line(strokeWidth=3, color=red).encode(\n    x=alt.X('year:O', title=None),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)'),\n)\nlimit = alt.Chart().mark_rule(strokeDash=[6, 4]).encode(\n    y=alt.datum(40))\n\nfinding = ('Marylebone Road’s air has a third'\n           ' of the NO₂ it had in 2010')\nhow = 'Yearly average; dashed: the legal limit, 40 µg/m³'\nnotes = pd.DataFrame({\n    'year': [2019, 2020, 2021, 2023],\n    'at':   [172, 157, 142, 127],     # how high each sits\n    'text': ['Central ULEZ', 'Lockdown',\n             'ULEZ reaches here', 'ULEZ: all London'],\n})\nrules = alt.Chart(notes).mark_rule(color='grey').encode(\n    x='year:O', y='at:Q', y2=alt.datum(0))  # up to its note\nwords = alt.Chart(notes).mark_text(align='left', dx=5).encode(\n    x='year:O', y='at:Q', text='text:N')\ngrey = '#a6a6a6'\nothers = alt.Chart(road).mark_line(color=grey, strokeWidth=1)\nothers = others.encode(\n    x='year:O', y='no2:Q',\n    detail='code:N',                 # one line per monitor\n)\n# line, limit, rules, words, others, finding, how: as before\nchapter = alt.param(value=1, bind=alt.binding_radio(\n    options=[1, 2, 3], name='Chapter '))\n\ntold = (rules.transform_filter(chapter >= 2)   # the stem\n        + words.transform_filter(chapter >= 2))\ndots = alt.OverlayMarkDef(color=grey, size=15)\nbowl = others.mark_line(color=grey, point=dots).encode(\n    tooltip=['site:N', 'borough:N', 'year:O', 'no2:Q'],\n).transform_filter(chapter >= 3)               # the bowl\n\nstill = alt.Scale(domain=[0, 180])    # the axis stays still\nhero = line.encode(y=alt.Y('no2:Q', scale=still,\n                           title='NO₂ (µg/m³)'))\n\n(bowl + hero + limit + told).add_params(chapter).properties(\n    width=560, height=300,\n    title=alt.Title(finding, subtitle=how),\n)\n",
    "new": [
     "chapter = alt.param",
     "binding_radio",
     "options=",
-    "chapter >= 4",
-    "alt.datum.chapter <= chapter",
+    "chapter >= 2",
+    "chapter >= 3",
+    "dots",
+    "point=dots",
+    "still",
+    "scale=still",
     "add_params(chapter)"
    ]
   },
   {
    "id": "guess",
-   "code": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n\nguess = alt.param(value=60, bind=alt.binding_range(\n    min=0, max=100, step=1, name='Your guess for 2025 '))\nshow = alt.param(value=False, bind=alt.binding_checkbox(name='Show me '))\n\nyears = list(range(2010, 2026))     # keep room for the years to guess\nbase = alt.Chart(my1).encode(\n    x=alt.X('year:O', title=None, scale=alt.Scale(domain=years)),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)', scale=alt.Scale(domain=[0, 100])))\nknown = base.mark_line(strokeWidth=3, color='#0c3354').transform_filter(\n    alt.datum.year <= 2016)\ntruth = base.mark_line(strokeWidth=3, color='#c8102e').transform_filter(\n    (alt.datum.year >= 2016) & show)\nyours = alt.Chart().mark_rule(strokeDash=[6, 4], size=3).encode(\n    y=alt.YDatum(guess, type='quantitative'))\n\n(known + truth + yours).add_params(guess, show).properties(\n    width=560, height=300, title='Marylebone Road, 2016: 89. Guess 2025.')\n",
+   "code": "# after the setup: air, road and my1\nguess = alt.param(value=60, bind=alt.binding_range(\n    min=0, max=100, step=1, name='Your guess for 2025 '))\nshow = alt.param(value=False,\n                 bind=alt.binding_checkbox(name='Show me '))\n\nyears = list(range(2010, 2026))   # room for the years to guess\nbase = alt.Chart(my1).encode(\n    x=alt.X('year:O', title=None,\n            scale=alt.Scale(domain=years)),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)',\n            scale=alt.Scale(domain=[0, 100])))\nknown = base.mark_line(strokeWidth=3, color='#0c3354')\nknown = known.transform_filter(alt.datum.year <= 2016)\ntruth = base.mark_line(strokeWidth=6, color='#c8102e')\ntruth = truth.transform_filter(\n    (alt.datum.year >= 2016) & show)\nyours = alt.Chart().mark_point(size=260, filled=True,\n                               color='#0c3354').encode(\n    x=alt.XDatum(2025, type='ordinal'),\n    y=alt.YDatum(guess, type='quantitative'))\n\n(known + truth + yours).add_params(guess, show).properties(\n    width=560, height=300,\n    title='Marylebone Road, 2016: 89. Guess 2025.')\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nair = pd.read_csv('no2_london.csv')\nroad = air[air['type'].isin(['Roadside', 'Kerbside'])]\nmy1 = air[air['code'] == 'MY1']      # Marylebone Road\n# after the setup: air, road and my1\nguess = alt.param(value=60, bind=alt.binding_range(\n    min=0, max=100, step=1, name='Your guess for 2025 '))\nshow = alt.param(value=False,\n                 bind=alt.binding_checkbox(name='Show me '))\n\nyears = list(range(2010, 2026))   # room for the years to guess\nbase = alt.Chart(my1).encode(\n    x=alt.X('year:O', title=None,\n            scale=alt.Scale(domain=years)),\n    y=alt.Y('no2:Q', title='NO₂ (µg/m³)',\n            scale=alt.Scale(domain=[0, 100])))\nknown = base.mark_line(strokeWidth=3, color='#0c3354')\nknown = known.transform_filter(alt.datum.year <= 2016)\ntruth = base.mark_line(strokeWidth=6, color='#c8102e')\ntruth = truth.transform_filter(\n    (alt.datum.year >= 2016) & show)\nyours = alt.Chart().mark_point(size=260, filled=True,\n                               color='#0c3354').encode(\n    x=alt.XDatum(2025, type='ordinal'),\n    y=alt.YDatum(guess, type='quantitative'))\n\n(known + truth + yours).add_params(guess, show).properties(\n    width=560, height=300,\n    title='Marylebone Road, 2016: 89. Guess 2025.')\n",
    "new": [
     "guess = alt.param",
     "binding_range",
     "show = alt.param",
     "binding_checkbox",
     "& show",
+    "mark_point",
+    "XDatum",
     "alt.YDatum(guess",
-    "add_params(guess, show)"
+    "add_params(guess, show)",
+    "strokeWidth=6"
    ]
   }
  ]

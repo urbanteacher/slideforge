@@ -10,7 +10,7 @@
  *   hero     the id of the line the author tells (drawn red)
  *   yMax     the top of the y axis          unit   the y axis' words ('NO₂ (µg/m³)')
  *   refs     [{ y, text }]  reference lines (a legal limit, a guideline)
- *   notes    [{ year, text, at }]  annotations: a rule at the year, words ending at it, `at` high
+ *   notes    [{ year, text, at }]  annotations: a rule rising from the axis to `at`, the words starting at its top (give later notes lower `at`)
  *   types    { [type]: colour }  the colours when the lines are coloured by type
  *   plot     { x0, x1, y0, y1 }  where the chart sits (default: the left part, beside a story panel)
  *   key      [{ mark, colour, text }]  a how-to-read-it key (kit.js keyRow), in the story column when there is one;
@@ -30,7 +30,8 @@
  */
 import { NU, W, H, el, set, tween, tooltipCard, keyRow, textWidth } from './kit.js';
 
-var GREY = '#cfd5dc';
+/* the other lines: light, but over 2:1 on the paper, so they still read as lines */
+var GREY = '#aab4bf';
 
 export var story = {
   /** @param {any} fig */
@@ -54,7 +55,7 @@ export var story = {
       if (years.length > 10 && i % 3 && yr !== last) return;
       el('text', { x: x(yr), y: P.y1 + 26, 'text-anchor': 'middle', 'font-family': NU.sans, 'font-size': 15, fill: soft }, axes, String(yr));
     });
-    if (d.unit) el('text', { x: P.x0 - 12, y: P.y0 - 14, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 14, 'font-weight': 600, fill: soft }, axes, d.unit);
+    if (d.unit) el('text', { x: P.x0 - 12, y: P.y0 - 14, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, 'font-weight': 600, fill: soft }, axes, d.unit);
 
     /* drawn in this order: answer bands, the other lines, then reference lines and notes over them */
     var bandsG = el('g', {}, svg), othersG = el('g', {}, svg), refsG = el('g', {}, svg), notesG = el('g', {}, svg);
@@ -63,8 +64,8 @@ export var story = {
       /* the key along the chart's top edge, right-aligned, on the row the axis label starts */
       var kx = P.x1;
       d.key.slice().reverse().forEach(function (/** @type {any} */ it) {
-        var tw = textWidth(it.text, 15, true);
-        el('text', { x: kx, y: P.y0 - 10, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 15, fill: ink }, keyG, it.text);
+        var tw = textWidth(it.text, 16, true);
+        el('text', { x: kx, y: P.y0 - 10, 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 16, fill: ink }, keyG, it.text);
         el('line', { x1: kx - tw - 30, x2: kx - tw - 8, y1: P.y0 - 15, y2: P.y0 - 15, stroke: it.colour || NU.navy, 'stroke-width': 4, 'stroke-linecap': 'round' }, keyG);
         kx -= tw + 50;
       });
@@ -147,13 +148,15 @@ export var story = {
         /* reference lines and notes: shown up to their counts */
         refsG.textContent = '';
         (d.refs || []).slice(0, next.refs || 0).forEach(function (/** @type {any} */ r, /** @type {number} */ i) {
-          el('line', { x1: P.x0, x2: P.x1, y1: y(r.y), y2: y(r.y), stroke: i ? '#54a24b' : NU.navy, 'stroke-width': 2.5, 'stroke-dasharray': i ? '3 5' : '9 6' }, refsG);
-          el('text', { x: P.x0 + 8, y: y(r.y) - 9, 'font-family': NU.sans, 'font-size': 16, 'font-weight': 700, fill: i ? '#3b7a35' : NU.navy, stroke: NU.paper, 'stroke-width': 5, 'paint-order': 'stroke' }, refsG, r.text);
+          el('line', { x1: P.x0, x2: P.x1, y1: y(r.y), y2: y(r.y), stroke: i ? '#0072b2' : NU.navy, 'stroke-width': 2.5, 'stroke-dasharray': i ? '3 5' : '9 6' }, refsG);
+          el('text', { x: P.x0 + 8, y: y(r.y) - 9, 'font-family': NU.sans, 'font-size': 16, 'font-weight': 700, fill: i ? '#005a8c' : NU.navy, stroke: NU.paper, 'stroke-width': 5, 'paint-order': 'stroke' }, refsG, r.text);
         });
         notesG.textContent = '';
         (d.notes || []).slice(0, next.notes || 0).forEach(function (/** @type {any} */ n) {
-          el('line', { x1: x(n.year), x2: x(n.year), y1: P.y0, y2: P.y1, stroke: '#8a96a3', 'stroke-width': 1.5 }, notesG);
-          el('text', { x: x(n.year) - 8, y: y(n.at), 'text-anchor': 'end', 'font-family': NU.sans, 'font-size': 17, 'font-weight': 600, fill: ink, stroke: NU.paper, 'stroke-width': 5, 'paint-order': 'stroke' }, notesG, n.text);
+          /* the rule rises to its own note and stops; the words start just right of its top. Notes are given
+             falling heights, so a later note's shorter rule never crosses an earlier note's words */
+          el('line', { x1: x(n.year), x2: x(n.year), y1: y(n.at) - 14, y2: P.y1, stroke: '#8a96a3', 'stroke-width': 1.5 }, notesG);
+          el('text', { x: x(n.year) + 7, y: y(n.at), 'font-family': NU.sans, 'font-size': 16, 'font-weight': 600, fill: ink, stroke: NU.paper, 'stroke-width': 5, 'paint-order': 'stroke' }, notesG, n.text);
         });
         /* answer ranges to vote on, over the years still to come */
         bandsG.textContent = '';
@@ -165,14 +168,15 @@ export var story = {
             var right = ans === i, faded = ans != null && !right;
             var g = el('g', { opacity: faded ? 0.28 : 1 }, bandsG);
             el('rect', { x: bx, y: y(b.to), width: P.x1 - bx, height: y(b.from) - y(b.to) - 3, rx: 6, fill: right ? '#fbe5e8' : i % 2 ? '#eef1f5' : '#e3e8ef', stroke: right ? NU.red : 'none', 'stroke-width': 2 }, g);
-            el('text', { x: bx + 18, y: (y(b.to) + y(b.from)) / 2 + 9, 'font-family': NU.sans, 'font-size': 26, 'font-weight': 700, fill: right ? NU.red : NU.navy }, g, right ? b.text + '  ✓' : b.text);
+            /* once answered, only the right band keeps its words: the line no longer runs through the others' */
+            if (!faded) el('text', { x: bx + 18, y: (y(b.to) + y(b.from)) / 2 + 9, 'font-family': NU.sans, 'font-size': 26, 'font-weight': 700, fill: right ? NU.red : NU.navy }, g, right ? b.text + '  ✓' : b.text);
           });
         }
         /* the author's headline */
         headG.textContent = '';
         if (next.headline) {
           el('text', { x: P.x0 - 40, y: P.y0 - 58, 'font-family': NU.sans, 'font-size': 25, 'font-weight': 700, fill: ink }, headG, next.headline);
-          if (next.sub) el('text', { x: P.x0 - 40, y: P.y0 - 32, 'font-family': NU.sans, 'font-size': 17, fill: soft }, headG, next.sub);
+          if (next.sub) el('text', { x: P.x0 - 40, y: P.y0 - 32, 'font-family': NU.sans, 'font-size': 18, fill: soft }, headG, next.sub);
         }
         /* the hero line draws itself to its year; the other lines fade to their mode */
         var to = next.upto == null ? last : next.upto, from = animate ? shownUpto : to, was = animate ? mode : next.others || 'none';

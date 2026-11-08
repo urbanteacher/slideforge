@@ -111,3 +111,40 @@ test('a question above a chart headline fits on one line, so the two never touch
   }
 });
 
+
+test('the review\'s facts stay fixed: Brixton Road, the monitors still running, the WHO guideline', () => {
+  const air = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/ipdv-week9/data/no2.json'), 'utf8'));
+  const lb4 = air.sites.find((s) => s.code === 'LB4').no2;
+  assert.deepEqual([lb4[2010], lb4[2025]], [174, 48], 'Brixton Road: 174 in 2010, 48 in 2025');
+  const in2025 = air.sites.filter((s) => s.no2[2025] != null);
+  assert.equal(in2025.length, 59, '59 monitors reported in 2025');
+  assert.deepEqual(in2025.filter((s) => s.no2[2025] > 40).map((s) => s.code), ['LB4'], 'Brixton Road is the one over the limit in 2025');
+  const { lesson: l } = lesson('ipdv-story-w9');
+  const words = JSON.stringify(l.slides);
+  assert.doesNotMatch(words, /WHO calls safe|WHO’s safe level/, 'WHO 10 is a guideline, not a safe level');
+  assert.doesNotMatch(words, /ULEZ starts in central London/, 'the 2019 zone stopped at Marylebone Road');
+});
+
+test('the Build-it code does what its slide says: layers stack the red last, tooltips have points', () => {
+  const steps = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/ipdv-week9/code/steps.json'), 'utf8')).steps;
+  const by = (id) => steps.find((s) => s.id === id);
+  assert.doesNotMatch(by('highlight').run, /alt\.Order/, 'order does not put a line on top');
+  assert.match(by('highlight').code, /\(others \+ line/, 'grey first, red last');
+  assert.match(by('stepper').code, /value=1,/, 'the martini glass opens on its stem');
+  assert.match(by('stepper').code, /point=/, 'the bowl\'s tooltip has points to answer from');
+  for (const id of ['annotate', 'highlight', 'stepper']) assert.ok(by(id).run.includes(by('headline').code.split('\n(')[0].trim()), `${id} grows from the headline step`);
+});
+
+test('the layout holds: code prints large, notes never cross, the type colours are colour-blind safe', () => {
+  const steps = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/ipdv-week9/code/steps.json'), 'utf8')).steps;
+  for (const st of steps) for (const line of st.code.split('\n')) assert.ok(line.length <= 66, `${st.id}: "${line}" is too long to print large`);
+  assert.ok(fs.existsSync(path.join(DIR, 'week9_build_its.py')), 'every Build-it, as one file for Canvas');
+  const { lesson: l } = lesson('ipdv-story-w9');
+  for (const s of l.slides.filter((x) => x.figure === 'story')) {
+    const notes = s.figureData.notes || [];
+    /* each note's rule stops at its own height and its words run right, so later notes must sit lower */
+    notes.forEach((n, i) => { if (i) assert.ok(n.year > notes[i - 1].year && n.at < notes[i - 1].at, `${s.title}: notes fall from left to right`); });
+    const types = s.figureData.types || {};
+    assert.equal(types.Kerbside, '#d55e00', `${s.title}: Okabe-Ito colours`);
+  }
+});

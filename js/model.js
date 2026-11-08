@@ -7519,7 +7519,7 @@
   };
 
   // src/figures/story.js
-  var GREY2 = "#cfd5dc";
+  var GREY2 = "#aab4bf";
   var story2 = {
     /** @param {any} fig */
     mount: function(fig) {
@@ -7545,14 +7545,14 @@
         if (years.length > 10 && i % 3 && yr !== last) return;
         el("text", { x: x(yr), y: P.y1 + 26, "text-anchor": "middle", "font-family": NU.sans, "font-size": 15, fill: soft }, axes2, String(yr));
       });
-      if (d.unit) el("text", { x: P.x0 - 12, y: P.y0 - 14, "text-anchor": "end", "font-family": NU.sans, "font-size": 14, "font-weight": 600, fill: soft }, axes2, d.unit);
+      if (d.unit) el("text", { x: P.x0 - 12, y: P.y0 - 14, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, "font-weight": 600, fill: soft }, axes2, d.unit);
       var bandsG = el("g", {}, svg), othersG = el("g", {}, svg), refsG = el("g", {}, svg), notesG = el("g", {}, svg);
       var heroG = el("g", {}, svg), headG = el("g", {}, svg), cardG = el("g", {}, svg), keyG = el("g", {}, svg);
       if (d.key && d.keyOnChart) {
         var kx = P.x1;
         d.key.slice().reverse().forEach(function(it) {
-          var tw = textWidth(it.text, 15, true);
-          el("text", { x: kx, y: P.y0 - 10, "text-anchor": "end", "font-family": NU.sans, "font-size": 15, fill: ink }, keyG, it.text);
+          var tw = textWidth(it.text, 16, true);
+          el("text", { x: kx, y: P.y0 - 10, "text-anchor": "end", "font-family": NU.sans, "font-size": 16, fill: ink }, keyG, it.text);
           el("line", { x1: kx - tw - 30, x2: kx - tw - 8, y1: P.y0 - 15, y2: P.y0 - 15, stroke: it.colour || NU.navy, "stroke-width": 4, "stroke-linecap": "round" }, keyG);
           kx -= tw + 50;
         });
@@ -7662,13 +7662,13 @@
           cancel();
           refsG.textContent = "";
           (d.refs || []).slice(0, next.refs || 0).forEach(function(r, i) {
-            el("line", { x1: P.x0, x2: P.x1, y1: y(r.y), y2: y(r.y), stroke: i ? "#54a24b" : NU.navy, "stroke-width": 2.5, "stroke-dasharray": i ? "3 5" : "9 6" }, refsG);
-            el("text", { x: P.x0 + 8, y: y(r.y) - 9, "font-family": NU.sans, "font-size": 16, "font-weight": 700, fill: i ? "#3b7a35" : NU.navy, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, refsG, r.text);
+            el("line", { x1: P.x0, x2: P.x1, y1: y(r.y), y2: y(r.y), stroke: i ? "#0072b2" : NU.navy, "stroke-width": 2.5, "stroke-dasharray": i ? "3 5" : "9 6" }, refsG);
+            el("text", { x: P.x0 + 8, y: y(r.y) - 9, "font-family": NU.sans, "font-size": 16, "font-weight": 700, fill: i ? "#005a8c" : NU.navy, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, refsG, r.text);
           });
           notesG.textContent = "";
           (d.notes || []).slice(0, next.notes || 0).forEach(function(n) {
-            el("line", { x1: x(n.year), x2: x(n.year), y1: P.y0, y2: P.y1, stroke: "#8a96a3", "stroke-width": 1.5 }, notesG);
-            el("text", { x: x(n.year) - 8, y: y(n.at), "text-anchor": "end", "font-family": NU.sans, "font-size": 17, "font-weight": 600, fill: ink, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, notesG, n.text);
+            el("line", { x1: x(n.year), x2: x(n.year), y1: y(n.at) - 14, y2: P.y1, stroke: "#8a96a3", "stroke-width": 1.5 }, notesG);
+            el("text", { x: x(n.year) + 7, y: y(n.at), "font-family": NU.sans, "font-size": 16, "font-weight": 600, fill: ink, stroke: NU.paper, "stroke-width": 5, "paint-order": "stroke" }, notesG, n.text);
           });
           bandsG.textContent = "";
           if (next.bands) {
@@ -7678,13 +7678,13 @@
               var right = ans === i, faded = ans != null && !right;
               var g = el("g", { opacity: faded ? 0.28 : 1 }, bandsG);
               el("rect", { x: bx, y: y(b.to), width: P.x1 - bx, height: y(b.from) - y(b.to) - 3, rx: 6, fill: right ? "#fbe5e8" : i % 2 ? "#eef1f5" : "#e3e8ef", stroke: right ? NU.red : "none", "stroke-width": 2 }, g);
-              el("text", { x: bx + 18, y: (y(b.to) + y(b.from)) / 2 + 9, "font-family": NU.sans, "font-size": 26, "font-weight": 700, fill: right ? NU.red : NU.navy }, g, right ? b.text + "  ✓" : b.text);
+              if (!faded) el("text", { x: bx + 18, y: (y(b.to) + y(b.from)) / 2 + 9, "font-family": NU.sans, "font-size": 26, "font-weight": 700, fill: right ? NU.red : NU.navy }, g, right ? b.text + "  ✓" : b.text);
             });
           }
           headG.textContent = "";
           if (next.headline) {
             el("text", { x: P.x0 - 40, y: P.y0 - 58, "font-family": NU.sans, "font-size": 25, "font-weight": 700, fill: ink }, headG, next.headline);
-            if (next.sub) el("text", { x: P.x0 - 40, y: P.y0 - 32, "font-family": NU.sans, "font-size": 17, fill: soft }, headG, next.sub);
+            if (next.sub) el("text", { x: P.x0 - 40, y: P.y0 - 32, "font-family": NU.sans, "font-size": 18, fill: soft }, headG, next.sub);
           }
           var to = next.upto == null ? last : next.upto, from = animate ? shownUpto : to, was = animate ? mode : next.others || "none";
           var newMode = next.others || "none";

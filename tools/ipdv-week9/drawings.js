@@ -22,7 +22,8 @@ const NU = {
   sans: "'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif",
   mono: "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace"
 };
-const GREY = '#cfd5dc', EDGE = '#9aa3ad';
+/* GREY: context lines, over 2:1 on the paper so they still read */
+const GREY = '#aab4bf', EDGE = '#9aa3ad';
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const pre = s => esc(s).replace(/ /g, '&#160;');
 const open = (bg = NU.paper) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">\n<rect width="1280" height="720" fill="${bg}"/>`;
@@ -54,7 +55,7 @@ function mini(w, h, o = {}) {
   const s = [`<line x1="${x0}" y1="${h - 6}" x2="${w - 6}" y2="${h - 6}" stroke="${EDGE}" stroke-width="1.5"/>`];
   if (o.others) ROAD.forEach(r => s.push(`<path d="${line(r)}" fill="none" stroke="${o.othersColour || GREY}" stroke-width="1.3" opacity="${o.othersOpacity || 1}"/>`));
   if (o.limit) s.push(`<line x1="${x0}" y1="${y(40)}" x2="${w - 6}" y2="${y(40)}" stroke="${NU.navy}" stroke-width="2" stroke-dasharray="6 5"/>`);
-  if (o.notes) o.notes.forEach(([yr, t]) => { s.push(`<line x1="${x(yr)}" y1="6" x2="${x(yr)}" y2="${h - 6}" stroke="#8a96a3" stroke-width="1.5"/>`); s.push(text(x(yr) - 5, h - 14, t, { size: 13, weight: 700, anchor: 'end' })); });
+  if (o.notes) o.notes.forEach(([yr, t]) => { s.push(`<line x1="${x(yr)}" y1="6" x2="${x(yr)}" y2="${h - 6}" stroke="#8a96a3" stroke-width="1.5"/>`); s.push(text(x(yr) - 5, h - 14, t, { size: 15, weight: 700, anchor: 'end' })); });
   if (o.hero !== false) s.push(`<path d="${line(MY1, o.upto)}" fill="none" stroke="${o.heroColour || NU.red}" stroke-width="${o.heroWidth || 3.5}" stroke-linejoin="round" stroke-linecap="round"/>`);
   if (o.guess != null) s.push(`<line x1="${x(2016)}" y1="${y(o.guess)}" x2="${w - 6}" y2="${y(o.guess)}" stroke="${NU.navy}" stroke-width="3" stroke-dasharray="7 5"/>`);
   return { svg: s.join(''), x, y };
@@ -113,8 +114,9 @@ function codeSvg(id, o) {
   const k = Math.min(bw / p.w, bh / p.h), w = p.w * k, h = p.h * k;
   out.push(`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="#fff" stroke="${NU.rule}"/>`);
   out.push(`<image href="${p.uri}" x="${(bx + (bw - w) / 2).toFixed(1)}" y="${(by + (bh - h) / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/>`);
-  out.push(text(bx, by + bh + 24, o.caption || 'The picture this code drew, run as it is printed', { size: 14, colour: NU.dim }));
-  let wy = by + bh + 56;
+  const cap = wrap(o.caption || 'The picture this code drew, after the setup on the first Build-it', 15, bw);
+  cap.forEach((l, i) => out.push(text(bx, by + bh + 24 + i * 19, l, { size: 15, colour: NU.dim })));
+  let wy = by + bh + 56 + (cap.length - 1) * 19;
   o.words.forEach(line => {
     const [lead, rest] = line.split('\t');
     out.push(`<rect x="${bx}" y="${wy - 15}" width="5" height="18" fill="${NU.red}"/>`);
@@ -140,7 +142,7 @@ function panelsSvg(eyebrow, title, items, o = {}) {
     out.push(`<g transform="translate(${x + 20} ${top + 18})">${it.draw(w - 40, dh)}</g>`);
     let ty = top + dh + 64;
     out.push(text(x + 20, ty, it.title, { font: NU.serif, size: Math.min(26, (w - 40) / (it.title.length * 0.47)), colour: NU.navy }));
-    if (it.by) { ty += 24; out.push(text(x + 20, ty, it.by, { size: 14, weight: 700, colour: NU.red, spacing: 1 })); }
+    if (it.by) { ty += 24; out.push(text(x + 20, ty, it.by, { size: 15, weight: 700, colour: NU.red, spacing: 1 })); }
     wrap(it.text, 18, w - 40).forEach((l, k) => out.push(text(x + 20, ty + 34 + k * 25, l, { size: 18 })));
     if (o.arrows && i < n - 1) {
       const ax = x + w + gap / 2, ay = top + 18 + dh / 2;
@@ -212,7 +214,7 @@ function structuresSvg() {
       const cx = w / 2, s = [`<path d="M${cx - w * 0.42} 20 L${cx + w * 0.42} 20 L${cx} ${h * 0.52} Z" fill="#eef1f5" stroke="${NU.navy}" stroke-width="2.5"/>`];
       s.push(scatterIn(cx, h * 0.2, w * 0.24, h * 0.12, 22, 3));
       s.push(`<line x1="${cx}" y1="${h * 0.52}" x2="${cx}" y2="${h - 18}" stroke="${NU.navy}" stroke-width="2.5"/><line x1="${cx - 50}" y1="${h - 16}" x2="${cx + 50}" y2="${h - 16}" stroke="${NU.navy}" stroke-width="4" stroke-linecap="round"/>`);
-      [0.88, 0.75, 0.62].forEach((k, i) => s.push(dot(cx, h * k, 11, NU.red) + text(cx, h * k + 5, String(i + 1), { size: 13, weight: 700, anchor: 'middle', colour: '#fff' })));
+      [0.88, 0.75, 0.62].forEach((k, i) => s.push(dot(cx, h * k, 11, NU.red) + text(cx, h * k + 5, String(i + 1), { size: 15, weight: 700, anchor: 'middle', colour: '#fff' })));
       return s.join('');
     } },
     { title: 'Interactive slideshow', text: 'Chapters in order, and inside each one the reader may explore.', draw: (w, h) => {
@@ -220,7 +222,7 @@ function structuresSvg() {
       [0, 1, 2].forEach(i => {
         const x = i * (bw + 15);
         s.push(`<rect x="${x}" y="${h * 0.22}" width="${bw}" height="${h * 0.56}" rx="6" fill="#eef1f5" stroke="${NU.navy}" stroke-width="2"/>`);
-        s.push(dot(x + 16, h * 0.22 + 16, 11, NU.red) + text(x + 16, h * 0.22 + 21, String(i + 1), { size: 13, weight: 700, anchor: 'middle', colour: '#fff' }));
+        s.push(dot(x + 16, h * 0.22 + 16, 11, NU.red) + text(x + 16, h * 0.22 + 21, String(i + 1), { size: 15, weight: 700, anchor: 'middle', colour: '#fff' }));
         s.push(scatterIn(x + bw / 2, h * 0.55, bw * 0.32, h * 0.14, 7, 11 + i));
         if (i < 2) s.push(arrow(x + bw + 1, h * 0.5, x + bw + 14, h * 0.5, NU.red));
       });
@@ -241,32 +243,36 @@ function structuresSvg() {
 /* Four ways to make a number felt, all on Marylebone Road. */
 function feltSvg() {
   const v10 = MY1.no2[2010], v25 = MY1.no2[2025];
+  /* monitors that reported in a year, and how many were over the legal limit, 40 */
+  const ran = yr => AIR.sites.filter(x => x.no2[yr] != null).length, over = yr => AIR.sites.filter(x => x.no2[yr] > 40).length;
   return panelsSvg('Make it felt', 'Four ways to make a number land', [
     { title: 'Guess first', text: 'Ask the reader to guess, then show the truth beside their guess.', draw: (w, h) => {
       const m = mini(w, h - 30, { guess: 60, upto: 2025 });
-      return `<g transform="translate(0 20)">${m.svg}</g>` + text(w - 8, m.y(60) + 12, 'your guess', { size: 14, weight: 700, anchor: 'end', colour: NU.navy });
+      return `<g transform="translate(0 20)">${m.svg}</g>` + text(w - 8, m.y(60) + 12, 'your guess', { size: 15, weight: 700, anchor: 'end', colour: NU.navy });
     } },
-    { title: 'Count it out', text: `One square per µg/m³: ${v10} in 2010, ${v25} in 2025. You see the loss.`, draw: (w, h) => {
-      const s = [], cols = 10, sz = Math.min((w / 2 - 20) / cols, (h - 30) / 10) - 2;
-      [[v10, 0, '2010'], [v25, w / 2 + 6, '2025']].forEach(([n, x0, label]) => {
-        for (let i = 0; i < 100; i++) {
-          const c = i % cols, r = 9 - Math.floor(i / cols);
-          s.push(`<rect x="${(x0 + c * (sz + 2)).toFixed(1)}" y="${(r * (sz + 2)).toFixed(1)}" width="${sz.toFixed(1)}" height="${sz.toFixed(1)}" fill="${i < n ? NU.red : '#ece8e1'}"/>`);
+    { title: 'Count it out', text: `One square per monitor; red if over the legal limit. 2010: ${over(2010)} of ${ran(2010)}. 2025: ${over(2025)} of ${ran(2025)}.`, draw: (w, h) => {
+      const s = [], cols = 10, sz = Math.min((w / 2 - 20) / cols, (h - 50) / 10) - 2;
+      [[2010, 0], [2025, w / 2 + 6]].forEach(([yr, x0]) => {
+        const n = ran(yr), red = over(yr);
+        for (let i = 0; i < n; i++) {
+          const c = i % cols, r = Math.floor(i / cols);
+          s.push(`<rect x="${(x0 + c * (sz + 2)).toFixed(1)}" y="${(r * (sz + 2)).toFixed(1)}" width="${sz.toFixed(1)}" height="${sz.toFixed(1)}" fill="${i < red ? NU.red : '#c9d1da'}"/>`);
         }
-        s.push(text(x0, 10 * (sz + 2) + 22, `${label}: ${n}`, { size: 16, weight: 700 }));
+        s.push(text(x0, 10 * (sz + 2) + 20, String(yr), { size: 15, weight: 700 }) + text(x0, 10 * (sz + 2) + 40, `${red} of ${n}`, { size: 15 }));
       });
       return s.join('');
     } },
-    { title: 'Human scale', text: `WHO’s guideline is 10. Marylebone Road breathed ${(v10 / 10).toFixed(0)} times it in 2010; ${(v25 / 10).toFixed(0)} times now.`, draw: (w, h) => {
-      const s = [], row = (n, y, label) => {
+    { title: 'Human scale', text: `WHO’s guideline is 10. Marylebone Road’s air held ${(v10 / 10).toFixed(0)} times it in 2010; ${(v25 / 10).toFixed(0)} times now.`, draw: (w, h) => {
+      const s = [], bw = 22, row = (n, y, label) => {
         s.push(text(0, y - 10, label, { size: 15, weight: 700 }));
         for (let i = 0; i < Math.ceil(n / 10); i++) {
-          const part = Math.min(1, (n - i * 10) / 10), x = i * 25;
-          s.push(`<g transform="translate(${x} ${y})"><circle cx="10" cy="7" r="6" fill="${NU.navy}" opacity="${part < 1 ? 0.35 : 1}"/><path d="M2 32 a8 9 0 0 1 16 0 v10 h-16 z" fill="${NU.navy}" opacity="${part < 1 ? 0.35 : 1}"/></g>`);
+          const part = Math.min(1, (n - i * 10) / 10);
+          s.push(`<rect x="${i * (bw + 4)}" y="${y}" width="${(bw * part).toFixed(1)}" height="40" fill="${NU.navy}"/>`);
+          if (part < 1) s.push(`<rect x="${i * (bw + 4)}" y="${y}" width="${bw}" height="40" fill="none" stroke="${NU.navy}" stroke-dasharray="3 3"/>`);
         }
       };
       row(v10, h * 0.2, `2010: ${v10}`); row(v25, h * 0.6, `2025: ${v25}`);
-      s.push(text(0, h - 4, 'one figure = WHO’s safe level, 10', { size: 13, colour: NU.dim }));
+      s.push(text(0, h - 4, 'one block = the WHO guideline, 10', { size: 15, colour: NU.dim }));
       return s.join('');
     } },
     { title: 'Make it physical', text: 'Stack it, print it, build it: a thing you can hold or walk around.', draw: (w, h) => {
@@ -278,7 +284,7 @@ function feltSvg() {
       });
       return s.join('');
     } }
-  ], { sub: 'One number, Marylebone Road’s NO₂, made felt four ways.' });
+  ], { sub: 'Marylebone Road’s NO₂, and London’s monitors, made felt four ways.' });
 }
 
 /* Four published stories, drawn as schematics (not copies): the move each one makes. Links in the notes. */
@@ -296,7 +302,7 @@ function famousSvg() {
       const s = [`<line x1="6" y1="${h - 10}" x2="${w - 6}" y2="${h - 10}" stroke="${EDGE}" stroke-width="1.5"/>`];
       s.push(`<path d="M10 ${h * 0.75} C ${w * 0.3} ${h * 0.6}, ${w * 0.5} ${h * 0.55}, ${w - 10} ${h * 0.45}" fill="none" stroke="${NU.navy}" stroke-width="3" stroke-dasharray="7 5"/>`);
       s.push(`<path d="M10 ${h * 0.82} C ${w * 0.35} ${h * 0.78}, ${w * 0.6} ${h * 0.4}, ${w - 10} ${h * 0.12}" fill="none" stroke="${NU.red}" stroke-width="4"/>`);
-      s.push(text(w - 10, h * 0.55, 'yours', { size: 14, weight: 700, anchor: 'end', colour: NU.navy }) + text(w - 14, h * 0.1, 'the data', { size: 14, weight: 700, anchor: 'end', colour: NU.red }));
+      s.push(text(w - 10, h * 0.55, 'yours', { size: 15, weight: 700, anchor: 'end', colour: NU.navy }) + text(w - 14, h * 0.1, 'the data', { size: 15, weight: 700, anchor: 'end', colour: NU.red }));
       return s.join('');
     } },
     { title: 'Out of Sight, Out of Mind', by: 'PITCH INTERACTIVE · 2013', text: 'Every US drone strike in Pakistan, one mark each, falling in time.', draw: (w, h) => {
@@ -323,33 +329,33 @@ const PAT = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/my1-patterns.j
 function rhythmSvg() {
   const axis = (w, h, top, labels) => {
     const s = [`<line x1="0" y1="${h}" x2="${w}" y2="${h}" stroke="${EDGE}" stroke-width="1.5"/>`];
-    [0, 20, 40].forEach(v => { const y = h - v / top * h; s.push(`<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#ece8e1"/>` + text(-6, y + 5, String(v), { size: 13, anchor: 'end', colour: NU.dim })); });
-    labels.forEach(([x, t]) => s.push(text(x, h + 20, t, { size: 13, anchor: 'middle', colour: NU.dim })));
+    [0, 20, 40].forEach(v => { const y = h - v / top * h; s.push(`<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#ece8e1"/>` + text(-6, y + 5, String(v), { size: 15, anchor: 'end', colour: NU.dim })); });
+    labels.forEach(([x, t]) => s.push(text(x, h + 20, t, { size: 15, anchor: 'middle', colour: NU.dim })));
     return s.join('');
   };
   const TOP = 45;
   return panelsSvg('Discover', 'One road, three rhythms', [
-    { title: 'By hour', text: `Weekdays climb from ${Math.min(...PAT.hour.weekday)} at 3 am to ${Math.max(...PAT.hour.weekday)} at 5 pm. Weekends stay lower.`, draw: (w, h) => {
+    { title: 'By hour', text: `Weekdays climb from ${Math.min(...PAT.hour.weekday)} at 3 am to a daytime high, worst at 5 pm (${Math.max(...PAT.hour.weekday)}). Weekends stay lower.`, draw: (w, h) => {
       const H = h - 40, x = i => 26 + i / 23 * (w - 34), y = v => H - v / TOP * H;
       const line = (vals, c, sw) => `<path d="${vals.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linejoin="round"/>`;
       return `<g transform="translate(0 6)">` + `<g transform="translate(26 0)">${axis(w - 34, H, TOP, [])}</g>` +
-        [[0, 'midnight'], [8, '8 am'], [17, '5 pm']].map(([i, t]) => text(x(i), H + 20, t, { size: 13, anchor: 'middle', colour: NU.dim })).join('') +
+        [[0, 'midnight'], [8, '8 am'], [17, '5 pm']].map(([i, t]) => text(x(i), H + 20, t, { size: 15, anchor: 'middle', colour: NU.dim })).join('') +
         line(PAT.hour.weekend, '#9aa3ad', 3) + line(PAT.hour.weekday, NU.red, 4) +
-        text(x(17), y(Math.max(...PAT.hour.weekday)) - 10, 'weekdays', { size: 14, weight: 700, anchor: 'middle', colour: NU.red }) +
-        text(x(11), y(PAT.hour.weekend[11]) + 22, 'weekends', { size: 14, weight: 700, anchor: 'middle', colour: '#6b7480' }) + '</g>';
+        text(x(17), y(Math.max(...PAT.hour.weekday)) - 10, 'weekdays', { size: 15, weight: 700, anchor: 'middle', colour: NU.red }) +
+        text(x(11), y(PAT.hour.weekend[11]) + 22, 'weekends', { size: 15, weight: 700, anchor: 'middle', colour: '#6b7480' }) + '</g>';
     } },
-    { title: 'By day', text: `Friday is the worst day (${PAT.day[4].no2}); Sunday the cleanest (${PAT.day[6].no2}).`, draw: (w, h) => {
+    { title: 'By day', text: `Weekdays sit near ${Math.round(PAT.day[0].no2)}–${Math.round(PAT.day[4].no2)}; Sunday is cleanest (${Math.round(PAT.day[6].no2)}). One year can’t rank the weekdays.`, draw: (w, h) => {
       const H = h - 40, n = 7, bw = (w - 40) / n;
       return `<g transform="translate(0 6)"><g transform="translate(26 0)">${axis(w - 34, H, TOP, [])}</g>` + PAT.day.map((d, i) => {
-        const bh = d.no2 / TOP * H, x = 30 + i * bw, c = i === 4 ? NU.red : i === 6 ? '#9aa3ad' : NU.navy;
-        return `<rect x="${x.toFixed(1)}" y="${(H - bh).toFixed(1)}" width="${(bw - 6).toFixed(1)}" height="${bh.toFixed(1)}" fill="${c}"/>` + text(x + (bw - 6) / 2, H + 20, d.day.charAt(0), { size: 13, anchor: 'middle', colour: NU.dim });
+        const bh = d.no2 / TOP * H, x = 30 + i * bw, c = i >= 5 ? '#9aa3ad' : NU.navy;
+        return `<rect x="${x.toFixed(1)}" y="${(H - bh).toFixed(1)}" width="${(bw - 6).toFixed(1)}" height="${bh.toFixed(1)}" fill="${c}"/>` + text(x + (bw - 6) / 2, H + 20, d.day.charAt(0), { size: 15, anchor: 'middle', colour: NU.dim });
       }).join('') + '</g>';
     } },
-    { title: 'By month', text: 'One year is patchy: pale months are missing over a quarter of their hours. The study used ten years: winter is worst.', draw: (w, h) => {
+    { title: 'By month', text: 'One year can’t show the seasons: pale months are missing over a quarter of their hours.', draw: (w, h) => {
       const H = h - 40, n = 12, bw = (w - 40) / n;
       return `<g transform="translate(0 6)"><g transform="translate(26 0)">${axis(w - 34, H, TOP, [])}</g>` + PAT.month.map((m, i) => {
         const bh = m.no2 / TOP * H, x = 30 + i * bw, thin = m.capture < 75;
-        return `<rect x="${x.toFixed(1)}" y="${(H - bh).toFixed(1)}" width="${(bw - 4).toFixed(1)}" height="${bh.toFixed(1)}" fill="${thin ? '#d6dce3' : NU.navy}"${thin ? ` stroke="${NU.navy}" stroke-dasharray="3 3"` : ''}/>` + text(x + (bw - 4) / 2, H + 20, 'JFMAMJJASOND'.charAt(i), { size: 13, anchor: 'middle', colour: NU.dim });
+        return `<rect x="${x.toFixed(1)}" y="${(H - bh).toFixed(1)}" width="${(bw - 4).toFixed(1)}" height="${bh.toFixed(1)}" fill="${thin ? '#d6dce3' : NU.navy}"${thin ? ` stroke="${NU.navy}" stroke-dasharray="3 3"` : ''}/>` + text(x + (bw - 4) / 2, H + 20, 'JFMAMJJASOND'.charAt(i), { size: 15, anchor: 'middle', colour: NU.dim });
       }).join('') + '</g>';
     } }
   ], { sub: 'Marylebone Road, 2025, NO₂ in µg/m³. Drill into one line and it has its own story.' });
@@ -378,9 +384,9 @@ function spectrumSvg() {
     let ty = y + 56;
     wrap(name, 26, 210).forEach(l => { out.push(text(x, ty, l, { font: NU.serif, size: 27, anchor: 'middle', colour: mart ? NU.red : NU.navy })); ty += 32; });
     wrap(how, 19, 200).forEach(l => { out.push(text(x, ty + 6, l, { size: 19, anchor: 'middle' })); ty += 25; });
-    wrap('e.g. ' + eg, 17, 200).forEach(l => { out.push(text(x, ty + 18, l, { size: 17, anchor: 'middle', colour: NU.dim })); ty += 22; });
+    wrap('e.g. ' + eg, 18, 200).forEach(l => { out.push(text(x, ty + 18, l, { size: 18, anchor: 'middle', colour: NU.dim })); ty += 23; });
   });
-  out.push(text(64, 650, 'Segel and Heer, Narrative Visualization: Telling Stories with Data (2010). Most good charts blend both ends.', { size: 17, colour: NU.dim }));
+  out.push(text(64, 650, 'After Segel and Heer (2010): they name the three in the middle; the two end labels are ours. Most good charts blend both ends.', { size: 18, colour: NU.dim }));
   out.push('</svg>');
   return out.join('\n');
 }
@@ -399,14 +405,14 @@ function martiniSvg() {
   steps.forEach(([t, s], i) => {
     const y = foot - 50 - i * 66;
     out.push(`<circle cx="${cx}" cy="${y}" r="20" fill="${NU.red}"/>` + text(cx, y + 7, String(i + 1), { size: 19, weight: 700, anchor: 'middle', colour: '#fff' }));
-    out.push(text(cx + 36, y - 2, t, { size: 19, weight: 700 }) + text(cx + 36, y + 20, s, { size: 16, colour: NU.dim }));
+    out.push(text(cx + 36, y - 2, t, { size: 19, weight: 700 }) + text(cx + 36, y + 22, s, { size: 18, colour: NU.dim }));
   });
   const tx = 760;
   out.push(text(tx, 200, 'THE BOWL · THE READER DRIVES', { size: 15, weight: 700, colour: NU.red, spacing: 2 }));
   ['Every monitor appears.', 'Point at any line for its numbers.', 'Find your own road or borough.'].forEach((l, i) => out.push(text(tx, 236 + i * 32, l, { size: 22 })));
   out.push(text(tx, 420, 'THE STEM · THE AUTHOR DRIVES', { size: 15, weight: 700, colour: NU.red, spacing: 2 }));
   ['Few steps, in order, read upwards.', 'One message the reader cannot miss.', 'Short: or nobody reaches the bowl.'].forEach((l, i) => out.push(text(tx, 456 + i * 32, l, { size: 22 })));
-  out.push(text(tx, 620, 'Named by Segel and Heer (2010).', { size: 17, colour: NU.dim }));
+  out.push(text(tx, 620, 'Named by Segel and Heer (2010).', { size: 18, colour: NU.dim }));
   out.push('</svg>');
   return out.join('\n');
 }
@@ -442,7 +448,7 @@ const REVEAL = {
       { icon: ICON.letter('B'), say: '“Air pollution is changing”', tag: { text: 'VAGUE', fill: '#4c78a8' }, text: 'A claim, but which way, how much, where?' },
       { icon: ICON.letter('C'), say: '“Marylebone Road’s air has a third of the NO₂ it had in 2010”', tag: { text: 'A FINDING', fill: NU.navy }, text: 'Where, what, how much, since when: the point in one sentence.' }] },
   cost: { mode: 'build', max: 118, rows: [
-    { icon: ICON.eye, name: 'They may miss your point', text: 'Nothing tells them where to look. Most people glance, then leave.' },
+    { icon: ICON.eye, name: 'They may miss your point', text: 'Nothing tells them where to look. Many readers glance, then leave.' },
     { icon: ICON.question, name: 'They must know what to ask', text: 'Filters help experts. A newcomer doesn’t know which button matters.' },
     { icon: ICON.clock, name: 'It takes time', text: 'Exploring is slow. A busy reader wants the answer.' },
     { icon: ICON.mirror, name: 'But they find themselves', text: '“Where’s my road?” is the reason people stay. Give them that, and they care.' }] },
@@ -454,8 +460,8 @@ const REVEAL = {
   care: { mode: 'build', max: 118, rows: [
     { icon: ICON.truth, name: 'Show the truth, clearly', text: 'After a guess, the real data must be bigger and bolder than the guess.' },
     { icon: ICON.heart, name: 'Feeling is not evidence', text: 'An image that moves people still needs a source, and a number on it.' },
-    { icon: ICON.axis, name: 'Keep the scale honest', text: 'Count from zero; compare like with like. A roadside is not a park.' },
-    { icon: ICON.hidden, name: 'Never shame a guess', text: 'Guesses are anonymous. Being wrong is the point: it is how you remember.' }] },
+    { icon: ICON.axis, name: 'Keep the scale honest', text: 'Count from zero; compare like with like. A kerbside monitor reads about twice a background one.' },
+    { icon: ICON.hidden, name: 'Never shame a guess', text: 'Keep guesses private. Being wrong is the point: it is how you remember.' }] },
   quiz: { mode: 'answers', sub: 'Hands up for each: Lead, Let go, or Both?', size: 19, max: 92, tagX: 640, textX: 800,
     rows: [
       { ...num(1), name: 'A bus-stop poster about clean air', tag: LEAD, text: 'Seconds to read: one headline, one chart.' },
