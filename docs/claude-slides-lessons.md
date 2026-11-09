@@ -114,7 +114,7 @@ Claude Slides' side comes from its instructions, not a hands-on trial.
 | Practice | None | Rehearse with a simulated class |
 | Sharing | A private link, comments on a slide, links to a slide, Send to | Share links, handouts, PDF, pptx, MP4, HTML |
 | Saving | On claude.ai | In the browser, and in the teacher's account when signed in (live since 15 October, [data-storage-plan.md](data-storage-plan.md)). Shares and reports still go at a deploy (that plan's step 6) |
-| Languages | Ten | English |
+| Languages | English and ten others | English |
 
 **What follows:**
 - **The first ten minutes are SlideForge's weak point.** Claude Slides goes from a sentence to a whole deck. Starting from a brief is now part of CS-05.
