@@ -19,6 +19,7 @@ For any AI agent (Claude, Cursor, Codex) and for people.
 - `npm run audit:render-surface` fails when a name is added to `SF` from the renderer. If the addition is deliberate, re-record with `--update` and note it in `docs/render-split.md` §7.
 - After changing `server/server.js`, restart the local server; it does not reload.
 - The built-in lessons ship as Lesson-studio copies (`assets/lab-lessons/`, `js/lab-lessons.js`). After changing a lesson, or bumping the converter's `CARRIED`, run `node tools/build-lab-lessons.mjs [key…]` (it needs `lab-app/` built). `tests/lab-lessons.test.js` fails until the copies match. A stale copy is never shown: the browser converts that lesson as before.
+- **Never invent a fact on a slide.** Where a figure, name, date or source was not given, write a placeholder: square brackets round two or more underscores, as `[€__]` or `[source __]`. A fact from memory that still needs a source gets the slide's `factCheck: { note }`. The Lesson studio marks both and says so when a show opens (`lab/src/core/facts.ts`).
 
 ## Committing
 

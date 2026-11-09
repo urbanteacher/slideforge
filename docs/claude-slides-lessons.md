@@ -54,6 +54,13 @@ These need no work. They are listed so nobody opens an item for them:
 - A per-slide "unchecked" mark that Review lists.
 - The presenter warns about open placeholders or unchecked marks before the show starts.
 
+**Built (9 November 2026, `b0fa402b`):**
+- **The convention:** square brackets round two or more underscores, on one line: `[€__]`, `[year __]`, `[source __]`. AGENTS.md tells builder scripts and agents to use it.
+- **Where it is found:** `lab/src/core/facts.ts` reads every string in each visible layer of each shown slide. Speaker notes and hidden slides are not read.
+- **The mark:** `slide.factCheck = { note }`, set in the Slide panel's *Facts to check* section. The note says what to check and may be empty.
+- **What the teacher sees:** an orange ? on the filmstrip thumbnail. When Present or Host live opens the show, a line in the show's own toast (the studio's toast sits under the show) and the full list in the Status tab. The show is never stopped.
+- **Still open:** the lab's AI writers are not told yet. Their replies are JSON that a game runs, so a placeholder in a quiz answer needs a rule of its own first.
+
 ### CS-04 · Themes as pinned files — P2 · M
 
 **In Claude Slides:** a design system is a tokens file plus its fonts and pictures. It is copied *into* the deck along with the system's version and the date it was copied, so the deck keeps its look when the system changes.
@@ -95,3 +102,4 @@ CS-03 first: it is small and stops a real risk in teaching. CS-01 next: it chang
 ## Change log
 
 - **9 November 2026:** written from the Claude Slides type's instructions and a check of SlideForge's exports, themes and AI writers. Items CS-01 – CS-07 opened in [BACKLOG.md](BACKLOG.md).
+- **9 November 2026:** CS-03 built (`b0fa402b`); its section records what was built and what is still open.

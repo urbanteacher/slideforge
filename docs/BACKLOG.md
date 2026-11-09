@@ -64,7 +64,7 @@ order.
 | SD-04 | [AI story builder over the Story designs](story-designs-plan.md) | M | To do · after SD-02 |
 | CS-01 | [A slide format an AI can write directly](claude-slides-lessons.md): one text file per slide in the typed layouts, plus an index, imported by the studio, so new decks need no builder script | L | To do · P1 |
 | CS-02 | [Design rules the editor can check](claude-slides-lessons.md): minimum size, contrast, type scale, footer band, vertical budget; split the slide, never shrink | M | To do · P2 · after CS-01 |
-| CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting | S–M | To do · P1 · first |
+| CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting. Open: the lab's AI writers are not yet told to leave placeholders | S–M | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
 | CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: sections, timings, live moments; build with SD-04 | M | To do · P2 |
 | CS-06 | [Links to a slide, and comments on a slide](claude-slides-lessons.md) | S–M | To check first · P3 |
@@ -815,13 +815,19 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 |---|---|---|
 | CS-01 | A documented, text-based lesson format (one file per slide in the typed layouts, plus an index for order, sections and theme) that agents write and the Lesson studio imports | To do |
 | CS-02 | Claude Slides' design rules as checks in Review and the AI writers: 24px minimum, 4.5:1 contrast, four or five type sizes, a footer band, the vertical budget; suggest a split where the fit check would shrink | To do |
-| CS-03 | A placeholder convention for facts nobody supplied, a per-slide "unchecked" mark listed in Review, and a warning in the presenter before the show | To do |
+| CS-03 | A placeholder convention for facts nobody supplied (`[€__]`, `[source __]`), a per-slide "not yet checked" mark, a ? on the filmstrip, and a line in the show's toast when Present or Host live opens, with the list in Status. Open: the lab's AI writers | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | A deck records the theme version it was made with; a theme change is offered, not applied | To do · needs a decision (copy in the deck, or a versioned registry) |
 | CS-05 | An outline step for AI-built lessons (sections, one sentence and a timing each, live moments), edited before filling; with SD-04 | To do |
 | CS-06 | Deep links to a slide and comments on a slide, after checking what the share link and viewer already do | To check |
 | CS-07 | Send a deck to Google Drive and similar apps | To do · only if asked |
 
 ## Change log
+
+### 9 November 2026 — Facts to check before teaching (CS-03)
+
+The Lesson studio now catches facts nobody has checked, the risk the Studio 90 entry (15 October) left in the open. `lab/src/core/facts.ts` finds two signs on each shown slide: a placeholder in its visible words (square brackets round two or more underscores, as `[€__]` or `[source __]`), and the author's own mark, `slide.factCheck`, ticked in the Slide panel's new **Facts to check** section with a note on what to check. A slide with either gets an orange ? on its filmstrip thumbnail. When Present, the shell's Present or Host live opens the show, the show's own toast says which slides (*Facts to check on slides 1 and 3. The list is in Status.*) and the Status tab lists what to check on each. The show is never stopped. Hidden slides and notes are not read. AGENTS.md tells builder scripts and agents to leave placeholders rather than guess.
+- Checked by `lab/tests/facts.test.ts` (4 tests; the lab's 404 pass), the root `npm test` (642 of 643 pass; the one failure is two notebook pages under `output/notebooks/` that load a missing `vis.js`, not this change) and in the lab's dev server: mark, note, reload, badges, and the toast over the show. Not tried through the shell's Present on localhost:8787, where the same `presentInStudio` call carries it.
+- **Open:** the lab's AI writers (`gameAI.ts`, `activityAI.ts`, `nodesAI.ts`) are not yet told to leave placeholders. Their replies are JSON a game runs, so a placeholder in an answer needs thought first.
 
 ### 9 November 2026 — What SlideForge can take from Claude Slides
 
