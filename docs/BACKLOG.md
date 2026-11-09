@@ -66,9 +66,10 @@ order.
 | CS-02 | [Design rules the editor can check](claude-slides-lessons.md): minimum size, contrast, type scale, footer band, vertical budget; split the slide, never shrink | M | To do · P2 · after CS-01 |
 | CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting. Open: the lab's AI writers are not yet told to leave placeholders | S–M | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
-| CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: sections, timings, live moments; build with SD-04 | M | To do · P2 |
+| CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: start from a brief (topic, length, audience), then sections, timings, live moments; build with SD-04 | M | To do · P2 |
 | CS-06 | [Links to a slide, and comments on a slide](claude-slides-lessons.md) | S–M | To check first · P3 |
 | CS-07 | [Send a deck to Google Drive and other apps](claude-slides-lessons.md) | S | To do · P3 · only if asked |
+| CS-08 | [Ask for a change in the studio](claude-slides-lessons.md): "turn slide 7 into a quiz", "split this slide", answered by an edit you can undo; after CS-01 | M–L | To do · P2 |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -820,8 +821,13 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-05 | An outline step for AI-built lessons (sections, one sentence and a timing each, live moments), edited before filling; with SD-04 | To do |
 | CS-06 | Deep links to a slide and comments on a slide, after checking what the share link and viewer already do | To check |
 | CS-07 | Send a deck to Google Drive and similar apps | To do · only if asked |
+| CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 9 November 2026 — The two apps' UX compared; CS-08 opened
+
+Compared how Claude Slides and SlideForge feel to use, from a blank page to sharing ([claude-slides-lessons.md](claude-slides-lessons.md) section 5). Opened CS-08, asking for a change in the studio in words. Starting from a brief is now part of CS-05. Saving to an account is not reopened: sign-in and sync have been live since 15 October ([data-storage-plan.md](data-storage-plan.md)). What is left there is step 6, shares and reports that survive a deploy.
 
 ### 9 November 2026 — Facts to check before teaching (CS-03)
 

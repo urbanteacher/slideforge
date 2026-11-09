@@ -1,6 +1,6 @@
 # What SlideForge can take from Claude Slides
 
-The analysis behind backlog items **CS-01 – CS-07**.
+The analysis behind backlog items **CS-01 – CS-08**.
 
 Claude Slides is the slide-deck Artifact type built into claude.ai: you describe a deck in chat and Claude writes it as 16:9 slides you can present, share as a private link, and download as .pptx or PDF. It makes general presentations. SlideForge is a teaching tool with a live room. Most of what makes SlideForge worth having (phone answers, games, activities, reports) has no equivalent there. But the way Claude Slides is *built for an AI to write* is worth learning from.
 
@@ -97,9 +97,33 @@ These need no work. They are listed so nobody opens an item for them:
 
 ## 4. Order
 
-CS-03 first: it is small and stops a real risk in teaching. CS-01 next: it changes how every future deck is made. Then CS-02 and CS-05, which build on CS-01's format. CS-04, CS-06 and CS-07 when there is room.
+CS-03 first: it is small and stops a real risk in teaching. CS-01 next: it changes how every future deck is made. Then CS-02 and CS-05, which build on CS-01's format. CS-04, CS-06 and CS-07 when there is room. CS-08 after CS-01.
+
+## 5. How the two feel to use
+
+Claude Slides' side comes from its instructions, not a hands-on trial.
+
+| Stage | Claude Slides | SlideForge |
+|---|---|---|
+| Starting | Describe the deck in chat. Claude asks if the brief is thin, then writes the whole deck | Library, Gallery or Browse, then slide by slide. Big decks come from builder scripts |
+| Editing | Mostly by asking ("make slide 7 a table"). Edits made in the page are kept | A full editor: filmstrip, layers, inspector, layouts, slide designs, timeline |
+| Design | A design system sets colours, type and logos once | Themes, palettes, grounds, frames, text effects, motion: more control, more to learn |
+| Feedback | Little: it does not check its own slides | The Status tab, fit warnings, facts to check (CS-03) |
+| Presenting | Page through, with transitions and builds | Builds, the Teacher Presenter window, notes on a phone, drawing, overview, jump |
+| Audience | None | Phones, 7 input kinds, 30 game styles, 54 activities, the wall, the report |
+| Practice | None | Rehearse with a simulated class |
+| Sharing | A private link, comments on a slide, links to a slide, Send to | Share links, handouts, PDF, pptx, MP4, HTML |
+| Saving | On claude.ai | In the browser, and in the teacher's account when signed in (live since 15 October, [data-storage-plan.md](data-storage-plan.md)). Shares and reports still go at a deploy (that plan's step 6) |
+| Languages | Ten | English |
+
+**What follows:**
+- **The first ten minutes are SlideForge's weak point.** Claude Slides goes from a sentence to a whole deck. Starting from a brief is now part of CS-05.
+- **Asking for a change is the other gap.** That is **CS-08**: a request box in the studio, with each answer one undo step. It needs CS-01's text format so the AI can write a slide safely.
+- **Saving is not a gap.** Sign-in and sync are built. What is left is shares and reports that survive a deploy.
+- **Feedback and the room are SlideForge's strengths.** Keep them visible in anything built from this list.
 
 ## Change log
 
 - **9 November 2026:** written from the Claude Slides type's instructions and a check of SlideForge's exports, themes and AI writers. Items CS-01 – CS-07 opened in [BACKLOG.md](BACKLOG.md).
 - **9 November 2026:** CS-03 built (`b0fa402b`); its section records what was built and what is still open.
+- **9 November 2026:** section 5 added, comparing how the two apps feel to use; CS-08 opened.
