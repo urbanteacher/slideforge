@@ -1,6 +1,7 @@
 // The inspector with nothing selected: the slide's ground, its face and its design.
 import { themeOf, setSlideGround } from '../../layouts';
 import { slideOf, useStore } from '../../store';
+import { placeholdersOf } from '../../core';
 import { ColorField, Row, Section, Select, newGesture } from '../controls/controls';
 import { tidySlide } from '../stage/snap';
 import { ActivityPanel } from './activity';
@@ -46,6 +47,26 @@ function GroundRow() {
   );
 }
 
+/** Facts to check before teaching (core/facts.ts): the placeholders left in the slide's words, and the author's
+ *  own mark that a fact here still needs a source. Present says which slides have either. */
+function FactsSection() {
+  const slide = useStore(slideOf);
+  const { updateSlide } = useStore.getState();
+  const g = useRef(newGesture());
+  const found = placeholdersOf(slide);
+  const marked = !!slide.factCheck;
+  return (
+    <Section title="Facts to check">
+      {found.length > 0 && <div className="facts-found">Fill before teaching: {found.map((p) => <code key={p}>{p}</code>)}</div>}
+      <Row label="Not yet checked" info="Tick when a fact, figure or quote on this slide came from memory and still needs a source. Present lists every slide still marked. Untick once it is checked.">
+        <input type="checkbox" checked={marked} onChange={(e) => updateSlide((s) => { if (e.target.checked) s.factCheck = { note: '' }; else delete s.factCheck; }, newGesture())} />
+      </Row>
+      {marked && <textarea className="textarea" placeholder="What to check, and where (e.g. the 2013 date, against the Premier League's site)" value={slide.factCheck?.note ?? ''} onFocus={() => (g.current = newGesture())} onChange={(e) => updateSlide((s) => { s.factCheck = { note: e.target.value }; }, g.current)} onKeyDown={(e) => e.stopPropagation()} />}
+      {!found.length && !marked && <div className="hint">Leave <code>[€__]</code> or <code>[source __]</code> where a figure or source is missing, rather than guessing. Present says which slides still have one.</div>}
+    </Section>
+  );
+}
+
 export function SlideDesign() {
   const slide = useStore(slideOf);
   const { updateSlide } = useStore.getState();
@@ -63,6 +84,7 @@ export function SlideDesign() {
         <FaceRow />
         <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
+      <FactsSection />
       <Section title="Speaker notes">
         <textarea className="textarea" placeholder="What you want to say on this slide… (press N while presenting)" value={slide.notes} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.notes = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} />
       </Section>

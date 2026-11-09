@@ -19,16 +19,18 @@ interface ShowState {
   rehearse: number;
   /** What the shell asked the show to put up first: the Teacher Presenter window ('desk') or the notes card ('notes'). */
   first: ShowFirst | null;
+  /** Words the show puts up as it opens, in its own toast over the slide: the facts still to check (app/factsWarning.ts). */
+  notice: string | null;
 }
 
 /** What a show opens with already up (the shell's Teacher Presenter and Notes on another device, M15). */
 export type ShowFirst = 'desk' | 'notes';
 
-export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null, hooks: null, begun: false, rehearse: 0, first: null }));
+export const useShow = create<ShowState>(() => ({ open: false, room: false, slideId: null, hooks: null, begun: false, rehearse: 0, first: null, notice: null }));
 
 /** Open the studio's own slideshow on the lesson in the studio, from the slide being edited. */
-export function openStudioShow(opts: { room?: boolean; slideId?: string; hooks?: ShowHooks; rehearse?: number; first?: ShowFirst } = {}): void {
-  useShow.setState({ open: true, begun: false, rehearse: opts.rehearse ?? 0, first: opts.first ?? null, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId, hooks: opts.hooks ?? useShow.getState().hooks });
+export function openStudioShow(opts: { room?: boolean; slideId?: string; hooks?: ShowHooks; rehearse?: number; first?: ShowFirst; notice?: string } = {}): void {
+  useShow.setState({ open: true, begun: false, rehearse: opts.rehearse ?? 0, first: opts.first ?? null, notice: opts.notice || null, room: !!opts.room, slideId: opts.slideId ?? useStore.getState().slideId, hooks: opts.hooks ?? useShow.getState().hooks });
 }
 
 export function closeStudioShow(): void {

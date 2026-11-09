@@ -187,6 +187,9 @@ export interface Slide {
   /** What does not fit the slide's standard, said to the author: shown on its filmstrip thumbnail and
    *  in the Game panel (designs/games.ts, a Buttons check's answers at the standard size). */
   warn?: string;
+  /** The author's mark that a fact on this slide still needs checking against a source (core/facts.ts): the
+   *  note says what to check, and may be empty. The filmstrip marks it and Present says so; absent, nothing to check. */
+  factCheck?: { note: string };
   /** Laid out as its design places it: the games' centring (designs/games.ts centreGame) leaves it
    *  where it is and does not count it. A Buttons check's answer, whose answer and reason sit in the
    *  middle of the room under the question by its own measure. */

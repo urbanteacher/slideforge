@@ -2,6 +2,8 @@
 export { ASPECTS, aspectOf, setAspect } from './aspect';
 export type { Aspect } from './aspect';
 export { TEMPLATES, blankDeck, blankSlide, cloneLayer, cloneSlide, createLayer, createSlide, demoDeck, rosetteSvg, uid } from './defaults';
+export { PLACEHOLDER, describeFacts, factsOf, factsToCheck, placeholdersOf, sayNumbers } from './facts';
+export type { FactsToCheck } from './facts';
 export { hasFlagshipFrame, hasFlagshipTextImage, isFlagshipFrameLayer, newSlideWithFrame, setFramePage, syncFrameCounters, textImageForSlide } from './frame';
 export { idbDelete, idbGet, idbKeys, idbSet } from './idb';
 export { packPictures, unpackPictures } from './pictures';

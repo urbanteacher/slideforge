@@ -166,11 +166,14 @@ function Show() {
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const say = (text: string) => {
+  const say = (text: string, ms = 2200) => {
     setToast(text);
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(''), 2200);
+    toastTimer.current = setTimeout(() => setToast(''), ms);
   };
+
+  // What the show was opened with to say (the facts still to check): up long enough to read before the lesson starts.
+  useEffect(() => { const n = useShow.getState().notice; if (n) say(n, 7000); }, []);
 
   // The relay did not answer: the show closes and the shell says why (giveUp).
   const fail = useCallback((reason: string) => {
