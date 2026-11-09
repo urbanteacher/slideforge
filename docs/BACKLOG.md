@@ -19,6 +19,7 @@ list (GA-, RP-, TPS-) and the activities build list (AC-).
   - [ux-deep-dive.md](ux-deep-dive.md)
   - [lab-engine-plan.md](lab-engine-plan.md)
   - [story-designs-plan.md](story-designs-plan.md)
+  - [claude-slides-lessons.md](claude-slides-lessons.md)
 
 **Effort:** S = under half a day · M = one or two days · L = most of a week or more
 **Priority:** P0 fix now · P1 next · P2 worth doing · P3 when there is room
@@ -32,6 +33,7 @@ list (GA-, RP-, TPS-) and the activities build list (AC-).
 - **TPS-** · Think-Pair-Share
 - **ENG-** · the lab as the engine
 - **SD-** · story designs: editorial slides anyone can build
+- **CS-** · what SlideForge can take from Claude Slides
 
 ---
 
@@ -60,6 +62,13 @@ order.
 | SD-02 | [The Story design set](story-designs-plan.md): twelve editorial designs from the Air Pollution deck, theme-aware and rebuilt from `slide.recipe`. All twelve done | M–L | Done · 10 Oct 2026 |
 | SD-03 | [Media library, featured decks and Publish](story-designs-plan.md) | L | To do · needs a hosting decision |
 | SD-04 | [AI story builder over the Story designs](story-designs-plan.md) | M | To do · after SD-02 |
+| CS-01 | [A slide format an AI can write directly](claude-slides-lessons.md): one text file per slide in the typed layouts, plus an index, imported by the studio, so new decks need no builder script | L | To do · P1 |
+| CS-02 | [Design rules the editor can check](claude-slides-lessons.md): minimum size, contrast, type scale, footer band, vertical budget; split the slide, never shrink | M | To do · P2 · after CS-01 |
+| CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting | S–M | To do · P1 · first |
+| CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
+| CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: sections, timings, live moments; build with SD-04 | M | To do · P2 |
+| CS-06 | [Links to a slide, and comments on a slide](claude-slides-lessons.md) | S–M | To check first · P3 |
+| CS-07 | [Send a deck to Google Drive and other apps](claude-slides-lessons.md) | S | To do · P3 · only if asked |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -798,7 +807,25 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 |---|---|---|
 | ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M14 deletion done 13 Oct 2026 ([m14-deletions.md](games/m14-deletions.md) section 6) |
 
+## From Claude Slides
+
+The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the slide-deck Artifact type built into claude.ai does that SlideForge could learn from, mostly how it is built for an AI to write. Order: CS-03, CS-01, then CS-02 and CS-05.
+
+| ID | Item | Status |
+|---|---|---|
+| CS-01 | A documented, text-based lesson format (one file per slide in the typed layouts, plus an index for order, sections and theme) that agents write and the Lesson studio imports | To do |
+| CS-02 | Claude Slides' design rules as checks in Review and the AI writers: 24px minimum, 4.5:1 contrast, four or five type sizes, a footer band, the vertical budget; suggest a split where the fit check would shrink | To do |
+| CS-03 | A placeholder convention for facts nobody supplied, a per-slide "unchecked" mark listed in Review, and a warning in the presenter before the show | To do |
+| CS-04 | A deck records the theme version it was made with; a theme change is offered, not applied | To do · needs a decision (copy in the deck, or a versioned registry) |
+| CS-05 | An outline step for AI-built lessons (sections, one sentence and a timing each, live moments), edited before filling; with SD-04 | To do |
+| CS-06 | Deep links to a slide and comments on a slide, after checking what the share link and viewer already do | To check |
+| CS-07 | Send a deck to Google Drive and similar apps | To do · only if asked |
+
 ## Change log
+
+### 9 November 2026 — What SlideForge can take from Claude Slides
+
+Compared Claude Slides (the slide-deck Artifact type in claude.ai) with SlideForge and wrote [claude-slides-lessons.md](claude-slides-lessons.md). Opened CS-01 – CS-07, listed under *Open now* and in their own table. The doc also lists what SlideForge already has (PowerPoint, video and handout export, themes, the fit check), so nobody opens items for those, and what not to copy: free positioning, speaker notes students can read, and a .pptx round-trip. Docs only; no code changed.
 
 ### 25 October 2026 — Motion clips: cues, formats and a fresh-eyed critic
 
