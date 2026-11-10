@@ -45,6 +45,8 @@ These need no work. They are listed so nobody opens an item for them:
 
 **The change:** run these rules as checks in the studio's Review and in the AI writers, before layout. A slide that breaks one gets a warning naming the rule. Where the fit check would shrink the text, it suggests splitting the slide.
 
+**Built (10 November 2026, `a78cdd3a`):** the Slide panel's *Design check* (`lab/src/designs/designCheck.ts`) says when text is under 24px, under 4.5:1 contrast on the flat colour behind it (3:1 at 44px and up), or shrunk below 80% to fit (split the slide), and once when a lesson uses more than six steps of type size. Still open: the footer band and the vertical budget as rules, and the checks inside the AI writers.
+
 ### CS-03 · Never invent facts; leave placeholders — P1 · S–M
 
 **In Claude Slides:** with no source material, Claude writes concrete draft text, puts bracketed placeholders like `[€__]` where a figure or name was not given, and lists them in its reply. It never invents a statistic or a quote.
@@ -177,3 +179,4 @@ These come from the type's architecture rather than its screens. SlideForge alre
 - **10 November 2026:** CS-15 built: the live widget layer.
 - **10 November 2026:** CS-17 built: icons and connectors. Section 6 is done apart from CS-14's step 2 and CS-16.
 - **10 November 2026:** section 7 added (how each app adds a feature); CS-18 and CS-19 built.
+- **10 November 2026:** CS-02 built: the Slide panel's Design check.

@@ -63,7 +63,7 @@ order.
 | SD-03 | [Media library, featured decks and Publish](story-designs-plan.md) | L | To do · needs a hosting decision |
 | SD-04 | [AI story builder over the Story designs](story-designs-plan.md) | M | To do · after SD-02 |
 | CS-01 | [A lesson written as text](lesson-format.md): one JSON file whose slides name a studio layout and fill its words; Import builds it in the theme, or lists every problem by slide. Version 1: fourteen layouts and a multiple-choice quiz. Open: charts, diagrams, live figures and the other games, so a whole IPDV week can be written this way; writing a deck back out | L | In progress · v1 done 10 Nov 2026 · `770dca4a` |
-| CS-02 | [Design rules the editor can check](claude-slides-lessons.md): minimum size, contrast, type scale, footer band, vertical budget; split the slide, never shrink | M | To do · P2 · after CS-01 |
+| CS-02 | [Design rules the editor checks](claude-slides-lessons.md): text under 24px, contrast under 4.5:1 (3:1 at 44px+), text shrunk to fit (split the slide), and more than six type sizes in a lesson, said in the Slide panel's Design check | M | Done · 10 Nov 2026 · `a78cdd3a` |
 | CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting. Open: the lab's AI writers are not yet told to leave placeholders | S–M | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
 | CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: start from a brief (topic, length, audience), then sections, timings, live moments; build with SD-04 | M | To do · P2 |
@@ -826,7 +826,7 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | ID | Item | Status |
 |---|---|---|
 | CS-01 | The lesson file ([lesson-format.md](lesson-format.md), `lab/src/decks/lessonFormat.ts`, `fromLesson.ts`): title, section, statement, bullets, cards, keyfact, keywords, stats, compare, table, quote, split, timeline and quiz, with notes, hidden, ids and factCheck. Import in SlideForge and the studio. Open: more layouts (charts, diagrams, live figures, other games) and export | In progress · v1 done |
-| CS-02 | Claude Slides' design rules as checks in Review and the AI writers: 24px minimum, 4.5:1 contrast, four or five type sizes, a footer band, the vertical budget; suggest a split where the fit check would shrink | To do |
+| CS-02 | `lab/src/designs/designCheck.ts`, shown in the Slide panel. Not built: the footer band and the vertical budget as rules, and the checks inside the AI writers | Done |
 | CS-03 | A placeholder convention for facts nobody supplied (`[€__]`, `[source __]`), a per-slide "not yet checked" mark, a ? on the filmstrip, and a line in the show's toast when Present or Host live opens, with the list in Status. Open: the lab's AI writers | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | A deck records the theme version it was made with; a theme change is offered, not applied | To do · needs a decision (copy in the deck, or a versioned registry) |
 | CS-05 | An outline step for AI-built lessons (sections, one sentence and a timing each, live moments), edited before filling; with SD-04 | To do |
@@ -846,6 +846,17 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — Design rules the editor checks (CS-02)
+
+Claude Slides' written design rules are now checks in the Slide panel's **Design check** (`lab/src/designs/designCheck.ts`, `a78cdd3a`). Each says what to do; nothing is refused or changed.
+- **Size:** text drawn under 24px on a 1080-high slide, after its fit and fit group. The header and footer are left out.
+- **Contrast:** text under 4.5:1 on the flat colour behind its middle (a solid ground, an opaque shape, or the slide's background), 3:1 at 44px and up. Over a picture, a video, an effect or a gradient nothing is said, since the colour behind cannot be read.
+- **Shrunk to fit:** text drawn below 80% of its set size to fit its box: too much on the slide, so split it rather than shrinking the words.
+- **Type scale:** said once when a lesson's text uses more than six steps of size, sizes within 15% of each other counting as one.
+- **Found on the demo deck:** three labels drawn at 20–22px on slide 1, a grey subtitle at 3.3:1 on slide 3, and eight steps of type in all.
+- **Checked:** `lab/tests/design-check.test.ts` (5 tests; the lab's 446 pass), the root `npm test` (652 of 653, the usual `output/notebooks` failure), and the panel in the studio.
+- **Not built:** the footer band and the vertical budget as rules, and these checks inside the AI writers (`gameAI.ts`, `activityAI.ts`).
 
 ### 10 November 2026 — Two engine paths that make a new layer cheaper (CS-18, CS-19)
 
