@@ -84,9 +84,9 @@ function FactsSection() {
     <Section title="Facts to check">
       {found.length > 0 && <div className="facts-found">Fill before teaching: {found.map((p) => <code key={p}>{p}</code>)}</div>}
       <Row label="Not yet checked" info="Tick when a fact, figure or quote on this slide came from memory and still needs a source. Present lists every slide still marked. Untick once it is checked.">
-        <input type="checkbox" checked={marked} onChange={(e) => updateSlide((s) => { if (e.target.checked) s.factCheck = { note: '' }; else delete s.factCheck; }, newGesture())} />
+        <input type="checkbox" aria-label="Not yet checked" checked={marked} onChange={(e) => updateSlide((s) => { if (e.target.checked) s.factCheck = { note: '' }; else delete s.factCheck; }, newGesture())} />
       </Row>
-      {marked && <textarea className="textarea" placeholder="What to check, and where (e.g. the 2013 date, against the Premier League's site)" value={slide.factCheck?.note ?? ''} onFocus={() => (g.current = newGesture())} onChange={(e) => updateSlide((s) => { s.factCheck = { note: e.target.value }; }, g.current)} onKeyDown={(e) => e.stopPropagation()} />}
+      {marked && <textarea className="textarea" aria-label="What to check" placeholder="What to check, and where (e.g. the 2013 date, against the Premier League's site)" value={slide.factCheck?.note ?? ''} onFocus={() => (g.current = newGesture())} onChange={(e) => updateSlide((s) => { s.factCheck = { note: e.target.value }; }, g.current)} onKeyDown={(e) => e.stopPropagation()} />}
       {!found.length && !marked && <div className="hint">Leave <code>[€__]</code> or <code>[source __]</code> where a figure or source is missing, rather than guessing. Present says which slides still have one.</div>}
     </Section>
   );

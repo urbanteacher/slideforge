@@ -422,6 +422,16 @@ export class DeckPlayer {
     // Pressed mid-turn, it turns back from where it is.
     this.flipAt = now - (1 - k) * 0.5;
     this.flipped = !this.flipped;
+    this.emit();
+  }
+
+  /** Whether a layer of the slide on screen is out as far as its clicks and the flip go: on the face showing, and
+   *  not still waiting for a click. What the show lays over the canvas (a widget, a video) waits as its still does. */
+  showing(l: Layer): boolean {
+    if ((l.face === 'back') !== this.flipped) return false;
+    if (this.built) return true;
+    const at = schedule(this.slide, this.clicks).start.get(l.id);
+    return at === undefined || Number.isFinite(at);
   }
 
   private flipAmount(time: number) {

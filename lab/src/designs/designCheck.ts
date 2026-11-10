@@ -1,7 +1,9 @@
 // Design rules the editor checks (BACKLOG CS-02, from Claude Slides' written rules): what makes a slide hard to read
 // from the back of the room, said in the Slide panel with what to do. Nothing is refused or changed. The rules:
 //   - no text under 24px on a 1080-high slide (the footer band, the header and footer, is left out);
-//   - text holds 4.5:1 contrast on what is behind it, 3:1 at 44px and up (WCAG's large text);
+//   - text holds 4.5:1 contrast on what is behind it, compared unrounded as WCAG says; 3:1 at 44px and up. That
+//     size is a projection rule, stricter than WCAG's large text (24px, or 18.7px bold): words read from the back
+//     of a room need more than words read at a desk;
 //   - text that has had to shrink to fit is a slide with too much on it: split it, rather than shrinking the words;
 //   - a lesson with more than six text sizes no longer reads as one design (four or five is the aim).
 import type { Deck, Layer, Slide } from '../core';
@@ -11,40 +13,74 @@ import { contrast } from '../theme';
 export const DESIGN_RULES = { minPx: 24, contrast: 4.5, largeContrast: 3, largePx: 44, shrunk: 0.8, sizes: 6 };
 
 const HEX = /^#[0-9a-f]{6}$/i;
+
+/** A colour as six-digit hex, or null when it is not one the check can read: #abc, #aabbcc, #aabbccff (opaque only),
+ *  rgb()/rgba() (opaque only), and a few names. Anything else (a gradient, a pattern, transparent) is null. */
+export function hexOf(c: unknown): string | null {
+  const s = String(c ?? '').trim().toLowerCase();
+  if (HEX.test(s)) return s;
+  let m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/.exec(s);
+  if (m) return `#${m[1]}${m[1]}${m[2]}${m[2]}${m[3]}${m[3]}`;
+  m = /^#([0-9a-f]{6})ff$/.exec(s);
+  if (m) return `#${m[1]}`;
+  m = /^rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})\s*(?:[,/]\s*(1|1\.0+|100%)\s*)?\)$/.exec(s);
+  if (m) {
+    const ch = [m[1], m[2], m[3]].map(Number);
+    if (ch.some((v) => v > 255)) return null;
+    return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+  }
+  return ({ white: '#ffffff', black: '#000000' } as Record<string, string>)[s] ?? null;
+}
 const TEXT_KINDS = new Set(['text', 'note', 'quote', 'table']);
 const inside = (b: { x: number; y: number; w: number; h: number }, x: number, y: number) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
 
 /** The words a layer shows, and the colour they are in, when it is a text layer that has some. */
-function textOf(l: Layer): { words: string; colour: string } | null {
+function textOf(l: Layer): { words: string; colour: string | null } | null {
   if (!TEXT_KINDS.has(l.kind) || !l.visible || !l.box || l.face === 'back') return null;
   const p = l.params as Record<string, unknown>;
   if (typeof p.hfSlot === 'string') return null;
   const words = String(p.text ?? p.quote ?? p.data ?? '').trim();
   if (!words) return null;
-  return { words, colour: String(p.color ?? p.textColor ?? '') };
+  return { words, colour: hexOf(p.color ?? p.textColor) };
 }
 
-/** What is behind a layer's middle: the topmost flat colour under it, or null when it is a picture, a video, an
- *  effect or a gradient, which the check cannot read (so it says nothing). */
+/** The panel a layer draws its own words on, when it has one that covers what is behind: a note's panel, a text's
+ *  block. '' when it has none (look below it), null when it has one the check cannot read (say nothing). */
+function ownGround(l: Layer): string | null | '' {
+  const p = l.params as Record<string, unknown>;
+  if (l.kind === 'note' && p.panel !== false) return hexOf(p.fill ?? '#f3efe8');
+  if (l.kind === 'text' && String(p.block ?? 'none') !== 'none') return Number(p.blockOpacity ?? 1) >= 0.9 ? hexOf(p.blockColor ?? '#f1ece4') : null;
+  return '';
+}
+
+/** What is behind a layer's middle: its own panel first, then the topmost flat colour under it on the same face, or
+ *  null when that is a picture, a video, an effect, a gradient, a blend or a see-through layer, which the check
+ *  cannot read (so it says nothing rather than a wrong number). */
 function behind(slide: Slide, l: Layer): string | null {
+  const own = ownGround(l);
+  if (own !== '') return own;
   const b = l.box!, cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+  const face = l.face === 'back' ? 'back' : 'front';
   const below = slide.layers.slice(0, slide.layers.indexOf(l)).reverse();
   for (const u of below) {
-    if (!u.visible || u.opacity < 0.9) continue;
+    if (!u.visible || (u.face === 'back' ? 'back' : 'front') !== face) continue;
     const p = u.params as Record<string, unknown>;
-    if (u.kind === 'solid') return HEX.test(String(p.color)) ? String(p.color) : null;
-    if (!u.box || !inside(u.box, cx, cy)) continue;
+    if (u.kind !== 'solid' && (!u.box || !inside(u.box, cx, cy))) continue;
+    // Mixed with what is under it: not one colour.
+    if (u.opacity < 0.9 || (u.blend && u.blend !== 'normal')) return null;
+    if (u.kind === 'solid') return hexOf(p.color);
     if (u.kind === 'shape') {
-      if (Number(p.fillOpacity ?? 1) < 0.9) continue;
-      if (p.gradient || !HEX.test(String(p.fill))) return null;
       if (p.shape === 'line' || p.shape === 'curve' || p.shape === 'ring' || p.shape === 'arrow') continue;
-      return String(p.fill);
+      // An outline with no fill: look further down.
+      if (p.fill === 'none' || p.fill === 'transparent' || Number(p.fillOpacity ?? 1) === 0) continue;
+      if (Number(p.fillOpacity ?? 1) < 0.9 || p.gradient) return null;
+      return hexOf(p.fill);
     }
     if (TEXT_KINDS.has(u.kind) || u.kind === 'icon' || u.kind === 'connector' || u.kind === 'timer') continue;
     // A picture, a video, a chart, an effect: not a colour the check can read.
     return null;
   }
-  return HEX.test(slide.background) ? slide.background : null;
+  return hexOf(slide.background);
 }
 
 /** The size a text layer is drawn at, on a 1080-high slide, after its fit and its fit group. */
@@ -70,7 +106,7 @@ export function designCheck(slide: Slide, deck: Pick<Deck, 'height'>): string[] 
       out.push(`“${name}” has shrunk to ${Math.round((px / ((set * 1080) / deck.height)) * 100)}% of its size to fit. There is too much on the slide: split it rather than shrinking the words.`);
     }
     const ground = behind(slide, l);
-    if (ground && HEX.test(t.colour)) {
+    if (ground && t.colour) {
       const need = px >= r.largePx ? r.largeContrast : r.contrast;
       const ratio = contrast(t.colour, ground);
       if (ratio < need) out.push(`“${name}” has a contrast of ${ratio.toFixed(1)}:1 on what is behind it; it needs ${need}:1${px >= r.largePx ? ' at this size' : ` (${r.largeContrast}:1 at ${r.largePx}px and up)`}. Darken or lighten the text, or the ground.`);

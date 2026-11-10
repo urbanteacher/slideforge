@@ -8,15 +8,21 @@ import type { Deck, Layer, Slide } from './types';
 // - the author's own mark, `slide.factCheck`: the facts on it came from memory and still need a source.
 // The editor marks both on the filmstrip and in the Slide panel, and Present says which slides have them.
 
-/** A placeholder: square brackets holding two or more underscores, on one line. */
-export const PLACEHOLDER = /\[[^[\]\n]{0,60}?_{2,}[^[\]\n]{0,60}?\]/g;
+/** A placeholder: square brackets holding a blank, two to sixty underscores that touch no letter or digit (`[€__]`,
+ *  `[year __]`, `[source __]`), on one line, with no quotes or backticks inside. So code on a slide is not taken for
+ *  one: `[__init__]`, `df["__x"]` and `[c for c in cols if c.startswith("__")]` are not placeholders. */
+export const PLACEHOLDER = /\[[^[\]\n"'`]{0,60}?(?<![\p{L}\p{N}_])_{2,60}(?![\p{L}\p{N}_])[^[\]\n"'`]{0,60}?\]/gu;
 
-/** Every string in a value, however deep (a layer's params hold lists and nested records). */
-function strings(v: unknown, out: string[], depth = 0): void {
-  if (depth > 6 || v == null) return;
-  if (typeof v === 'string') { out.push(v); return; }
+/** Params that hold code, addresses or data rather than words the class reads. */
+const NOT_WORDS = new Set(['html', 'src', 'href', 'url', 'svg', 'code', 'css', 'js', 'poster', 'font', 'from', 'to']);
+
+/** Every string of words in a value, however deep (a layer's params hold lists and nested records): not code, not an
+ *  address, not a picture's data. */
+function strings(v: unknown, out: string[], depth = 0, key = ''): void {
+  if (depth > 6 || v == null || NOT_WORDS.has(key)) return;
+  if (typeof v === 'string') { if (v.length < 20_000 && !/^(data:|https?:\/\/|blob:)/.test(v)) out.push(v); return; }
   if (Array.isArray(v)) { for (const x of v) strings(x, out, depth + 1); return; }
-  if (typeof v === 'object') for (const x of Object.values(v as Record<string, unknown>)) strings(x, out, depth + 1);
+  if (typeof v === 'object') for (const [k, x] of Object.entries(v as Record<string, unknown>)) strings(x, out, depth + 1, k);
 }
 
 /** The placeholders in a slide's visible words, each once, in the order they appear. Notes are not read: they
@@ -37,7 +43,9 @@ export interface FactsToCheck { slideId: string; number: number; name: string; p
 /** The slide's facts to check, or null when it has none. */
 export function factsOf(slide: Slide, number: number): FactsToCheck | null {
   const placeholders = placeholdersOf(slide);
-  const note = slide.factCheck ? slide.factCheck.note : null;
+  // A mark read from a file may be any shape: only words count as its note ({} is a mark with nothing said).
+  const fc = slide.factCheck as unknown;
+  const note = fc && typeof fc === 'object' ? (typeof (fc as { note?: unknown }).note === 'string' ? (fc as { note: string }).note : '') : null;
   if (!placeholders.length && note === null) return null;
   return { slideId: slide.id, number, name: slide.name, placeholders, note };
 }

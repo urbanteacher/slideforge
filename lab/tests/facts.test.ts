@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Deck, Slide } from '../src/core';
-import { describeFacts, factsToCheck, placeholdersOf, sayNumbers } from '../src/core/facts';
+import { describeFacts, factsOf, factsToCheck, placeholdersOf, sayNumbers } from '../src/core/facts';
 
 const text = (t: string, visible = true) => ({ id: t, kind: 'text', visible, params: { text: t } });
 const slide = (id: string, layers: unknown[], extra: Partial<Slide> = {}) =>
@@ -37,4 +37,26 @@ test('slide numbers read as a sentence', () => {
   assert.equal(sayNumbers([4]), '4');
   assert.equal(sayNumbers([4, 7]), '4 and 7');
   assert.equal(sayNumbers([4, 7, 12]), '4, 7 and 12');
+});
+
+test('code on a slide is not a placeholder, and neither are addresses, pictures or a widget\'s page', () => {
+  const code = text('class A: def [__init__](self): df["__x"]; [c for c in cols if not c.startswith("__")]; [link __text__](http://x)');
+  const widget = { id: 'w', kind: 'widget', visible: true, params: { html: '<p>[year __]</p>' } };
+  const pic = { id: 'p', kind: 'image', visible: true, params: { src: 'https://example.org/[__].png', alt: 'A map [place __]' } };
+  assert.deepEqual(placeholdersOf(slide('a', [code, widget, pic])), ['[place __]']);
+  assert.deepEqual(placeholdersOf(slide('b', [text('Still found: [€__], [year __] and [__].')])), ['[€__]', '[year __]', '[__]']);
+});
+
+test('a long run of underscores is read quickly', () => {
+  const t = Date.now();
+  placeholdersOf(slide('a', [text(`[${'_'.repeat(30_000)}`)]));
+  assert.ok(Date.now() - t < 50);
+});
+
+test('a "not yet checked" mark of the wrong shape, read from a file, is a mark with nothing said, not a crash', () => {
+  for (const fc of [{}, { note: 7 }, { note: null }]) {
+    const f = factsOf(slide('a', [], { factCheck: fc as never }), 1);
+    assert.equal(f?.note, '', JSON.stringify(fc));
+    assert.match(describeFacts([f!]), /marked as not yet checked/);
+  }
 });

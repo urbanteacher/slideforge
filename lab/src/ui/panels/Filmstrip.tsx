@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { renderStill } from '../../export';
 import { getAssetVersion } from '../../engine';
 import { inView, useStore } from '../../store';
-import { factsOf, limitsOf, type Slide } from '../../core';
+import { describeFacts, factsOf, limitsOf, type Slide } from '../../core';
 import { focusBrowse } from './Browse';
 
 /** Slide thumbnails are rendered by the real engine, lazily, only when a slide (or its assets) change. */
@@ -161,8 +161,10 @@ function SlideSorter({ close, thumb }: { close: () => void; thumb: (id: string) 
 function FactsBadge({ slide, n }: { slide: Slide; n: number }) {
   const f = factsOf(slide, n);
   if (!f) return null;
-  const why = [f.placeholders.length ? `Fill ${f.placeholders.join(', ')}` : '', f.note !== null ? (f.note.trim() ? `Check: ${f.note.trim()}` : 'Marked as not yet checked') : ''].filter(Boolean).join('. ');
-  return <span className="thumb-check" title={`Facts to check before teaching. ${why}.`} aria-label="Facts to check">?</span>;
+  // The Status row's own sentence (describeFacts), without its "Slide n:" lead: the thumbnail already says which.
+  const why = describeFacts([f]).replace(/^Slide \d+(?: \([^)]*\))?: /, '');
+  const label = `Facts to check before teaching: ${why}`;
+  return <span className="thumb-check" role="img" title={label} aria-label={label}>?</span>;
 }
 
 /** What does not fit the slide's standard (`slide.warn`, a game's own check) and what makes it too heavy
@@ -170,5 +172,5 @@ function FactsBadge({ slide, n }: { slide: Slide; n: number }) {
 function WarnBadge({ slide }: { slide: Slide }) {
   const all = [slide.warn, ...limitsOf(slide)].filter(Boolean);
   if (!all.length) return null;
-  return <span className="thumb-warn" title={all.join('\n')}>⚠</span>;
+  return <span className="thumb-warn" role="img" title={all.join('\n')} aria-label={`Check this slide: ${all.join(' ')}`}>⚠</span>;
 }

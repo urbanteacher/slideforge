@@ -15,7 +15,7 @@ export type { PlanPreset, UnitLook } from './words';
 export type { Ctx, Line, Measure, Raster, RasterFn } from './raster';
 export { boxCanvas, card, fit, fmtNum, mix, onColour, pill, rgba, setFont, useFont, withAlpha, wrap } from './draw';
 export { getVideo, videoEmbed, videoService, videoStill } from './media';
-export { WIDGET_MAX, WIDGET_SANDBOX, widgetDoc, widgetRuns } from './widget';
+export { WIDGET_KEEP_MAX, WIDGET_MAX, WIDGET_SANDBOX, WIDGET_SHOW_KEYS, trustWidget, widgetDoc, widgetKey, widgetPrint, widgetRuns, widgetTrusted } from './widget';
 export { webContent } from './web';
 export type { WebContent, WebFn } from './web';
 export { autoClicks, deckReel, frameCount, reel, reelAt, slideTimeline } from './timeline';

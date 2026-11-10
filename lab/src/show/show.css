@@ -6,6 +6,11 @@
 .show-embed { position: absolute; border: 0; background: #000; }
 .show-widget { position: absolute; overflow: hidden; }
 .show-widget iframe { display: block; border: 0; background: transparent; transform-origin: 0 0; }
+/* A widget from someone else's lesson, before the teacher lets it run (engine/widget.ts). Sized in slide units. */
+.show-widget-ask { display: grid; place-content: center; justify-items: center; gap: calc(24 * var(--u)); padding: calc(48 * var(--u)); text-align: center; color: #161616; font: calc(30 * var(--u)) / 1.4 system-ui, sans-serif; outline: calc(3 * var(--u)) dashed #8a8174; outline-offset: calc(-12 * var(--u)); }
+.show-widget-ask p { margin: 0; max-width: 32em; }
+.show-widget-ask button { font: inherit; font-weight: 600; padding: calc(16 * var(--u)) calc(40 * var(--u)); border: 0; border-radius: calc(16 * var(--u)); background: #161616; color: #fff; cursor: pointer; }
+.show-widget-ask button:focus-visible { outline: calc(4 * var(--u)) solid #2563eb; outline-offset: calc(4 * var(--u)); }
 /* A live figure (FigureLayer.tsx): over the slide, under the ink; the pointer is the figure's. */
 .show-figure { position: absolute; inset: 0; z-index: 1; cursor: default; overflow: hidden; }
 .show .dim { color: #777; }

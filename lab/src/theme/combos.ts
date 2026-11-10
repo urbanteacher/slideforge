@@ -21,21 +21,24 @@ export function luminance(hex: string) {
   const [r, g, b] = hexRgb(hex).map(linear);
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
+/** Not rounded: WCAG compares the ratio as computed (4.499:1 does not meet 4.5:1). Round it only to show it. */
 export function contrast(a: string, b: string) {
   const x = luminance(a), y = luminance(b);
-  return Math.round(((Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05)) * 100) / 100;
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 export type Grade = 'AAA' | 'AA' | 'Large';
 export const gradeOf = (ratio: number): Grade | null => (ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : ratio >= 3 ? 'Large' : null);
 
+/** `ratio` is rounded to two places, to show; `grade` was decided on the exact ratio. */
 export interface Pair { text: string; ground: string; ratio: number; grade: Grade }
 /** The pairs the palette can set text in, best first. Each pair once, whichever way round reads better. */
 export function readablePairs(colours: string[], limit = 12): Pair[] {
   const uniq = [...new Set(colours.map((c) => c.toLowerCase()))];
   const out: Pair[] = [];
   for (let i = 0; i < uniq.length; i++) for (let j = i + 1; j < uniq.length; j++) {
-    const ratio = contrast(uniq[i], uniq[j]);
-    const grade = gradeOf(ratio);
+    const exact = contrast(uniq[i], uniq[j]);
+    const grade = gradeOf(exact);
+    const ratio = Math.round(exact * 100) / 100;
     if (!grade) continue;
     // Text is the darker of the two on a light ground and the lighter on a dark one: the ground is
     // whichever sits further from the middle, which is how a slide is usually set.

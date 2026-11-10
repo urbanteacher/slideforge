@@ -6,7 +6,8 @@
 
 import { ArrowLeft, ArrowRight, CircleStop, Columns2, Ellipsis, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, QrCode, Trophy, Vote, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DeckPlayer, webContent, type WebContent } from '../engine';
+import { DeckPlayer, trustWidget, webContent, widgetKey, widgetTrusted, type WebContent } from '../engine';
+import { WIDGET_STARTER } from '../kinds/widget';
 import { KeySheet, QuestionsList, QuickPollForm, ROOM_VIEW_SAYS, ShowSide, controlFor, keyName, nextRoomView, presenterUrl, toggleBoard, type CmdData, type RoomView, type Screen, type ShowAction } from '../presenter';
 import { FLOOR_SAYS, reactionsSay, type QuickAsk } from '../live';
 import { useStore } from '../store';
@@ -158,6 +159,11 @@ function Show() {
   const reportRef = useRef(false);
   reportRef.current = reportOpen;
   const [, repaint] = useState(0);
+  /** Counts the player's builds and flips, so the web layers waiting for one come in with it. */
+  const [buildV, setBuildV] = useState(0);
+  /** Widgets that came with the lesson and the teacher said yes to here (the rest wait behind a Run button). */
+  const [, setRunV] = useState(0);
+  const stageRef = useRef<HTMLDivElement>(null);
   const link = useRef<PrompterLink | null>(null);
   const startedAt = useRef(Date.now()).current;
   const side = useRef<ShowSide | null>(null);
@@ -166,14 +172,19 @@ function Show() {
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const say = (text: string, ms = 2200) => {
+  // The opening notice is held for its time: a line said meanwhile ("Press Start…") waits for it, then shows.
+  const heldUntil = useRef(0);
+  const say = (text: string, ms = 2200, hold = false) => {
+    const wait = heldUntil.current - Date.now();
+    if (!hold && wait > 0) { setTimeout(() => say(text, ms), wait); return; }
+    if (hold) heldUntil.current = Date.now() + ms;
     setToast(text);
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(''), ms);
   };
 
   // What the show was opened with to say (the facts still to check): up long enough to read before the lesson starts.
-  useEffect(() => { const n = useShow.getState().notice; if (n) say(n, 7000); }, []);
+  useEffect(() => { const n = useShow.getState().notice; if (n) say(n, 7000, true); }, []);
 
   // The relay did not answer: the show closes and the shell says why (giveUp).
   const fail = useCallback((reason: string) => {
@@ -353,7 +364,7 @@ function Show() {
 
   useEffect(() => {
     const p = new DeckPlayer(canvasRef.current!, deck, {
-      start, onChange: (i) => setIndex(i),
+      start, onChange: (i) => { setIndex(i); setBuildV((v) => v + 1); },
       host: { next: () => nextRef.current(), prev: () => prevRef.current() },
     });
     player.current = p;
@@ -424,6 +435,20 @@ function Show() {
     return () => removeEventListener('keydown', on, true);
   }, [roomOn, deck, goIndex]);
 
+  // A key pressed inside a widget (a clicker's Page Down after the teacher clicked into it) reaches the show: the
+  // widget's page passes it up (engine/widget.ts), and only from a widget frame on this slide is it taken.
+  useEffect(() => {
+    const onMessage = (ev: MessageEvent) => {
+      const frames = [...(stageRef.current?.querySelectorAll<HTMLIFrameElement>('.show-widget iframe') ?? [])].map((f) => f.contentWindow);
+      const k = widgetKey(ev.data, ev.source, frames);
+      if (!k) return;
+      (document.activeElement as HTMLElement | null)?.blur?.();
+      dispatchEvent(new KeyboardEvent('keydown', { key: k.key, shiftKey: k.shiftKey, bubbles: true, cancelable: true }));
+    };
+    addEventListener('message', onMessage);
+    return () => removeEventListener('message', onMessage);
+  }, []);
+
   const wake = useCallback(() => {
     setBar(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -439,7 +464,11 @@ function Show() {
   useEffect(() => { ink.setSlide(String(index)); inkChanged(); }, [index, ink, inkChanged]);
   // Web layers (engine/web.ts): whatever a kind says it shows live, laid over the canvas at its box. A framed address
   // (a YouTube link) as it is; a page of our own (a widget) sandboxed, laid out at its box's size and scaled to fit.
-  const webs = slide.layers.map((l) => ({ l, w: webContent(l) })).filter((x): x is { l: typeof x.l; w: WebContent } => !!x.w);
+  // Only those out as far as the clicks and the flip go (player.showing): a widget on the back face, or one waiting
+  // for its click, comes in when its still does.
+  void buildV;
+  const webs = slide.layers.map((l) => ({ l, w: webContent(l) }))
+    .filter((x): x is { l: typeof x.l; w: WebContent } => !!x.w && (player.current ? player.current.showing(x.l) : x.l.face !== 'back'));
   const wall = roomOn ? wallOf({ room: room.state, steps, at: room.at, before: room.before, teamBefore: room.teamBefore, scoresOn, fallbackJoin: joinFallback() }) : null;
   const fbOpen = roomOn && !finished && wall?.view === 'feedback' ? room.state.feedback : null;
   const lobby = wall?.view === 'lobby' || wall?.view === 'connecting';
@@ -511,20 +540,33 @@ function Show() {
 
   return (
     <div className={`show${railWidth ? ' has-rail' : ''}`} role="dialog" aria-label="Slideshow" onMouseMove={wake} onFocus={wake} style={{ ['--u' as string]: 'calc(100vw / 1920)', ['--rail-w' as string]: railWidth || undefined }}>
-      <div className="show-stage" style={{ width: size.w, height: size.h }} onClick={() => nextRef.current()}>
+      <div ref={stageRef} className="show-stage" style={{ width: size.w, height: size.h }} onClick={() => nextRef.current()}>
         <canvas ref={canvasRef} style={{ width: size.w, height: size.h }} aria-label={slide.name} />
         {figure && <FigureLayer key={slide.id} figure={figure} step={figureStep} />}
         {wall && !finished && !['question', 'reveal', 'sprint', 'lobby', 'connecting', 'ended'].includes(wall.view) && <ReactionBay key={slide.id} reaction={room.state.reaction} height={size.h} />}
         <InkCanvas ink={ink} on={inkOn} w={size.w} h={size.h} version={inkV} onChange={inkChanged} />
         {webs.map(({ l, w }) => {
           const b = l.box!;
-          const place = { left: `${(b.x / deck.width) * 100}%`, top: `${(b.y / deck.height) * 100}%`, width: `${(b.w / deck.width) * 100}%`, height: `${(b.h / deck.height) * 100}%` };
+          // Turned as its still is on the canvas beneath it.
+          const place = { left: `${(b.x / deck.width) * 100}%`, top: `${(b.y / deck.height) * 100}%`, width: `${(b.w / deck.width) * 100}%`, height: `${(b.h / deck.height) * 100}%`, transform: b.rot ? `rotate(${b.rot}deg)` : undefined };
           if (w.kind === 'frame') {
             return <iframe key={`${index}-${l.id}`} className="show-embed" src={w.src} title={l.name} style={place}
-              allow={w.allow} allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />;
+              allow={w.allow} referrerPolicy="strict-origin-when-cross-origin" />;
           }
           // The ring in its own background covers the edge of the still drawn beneath it.
           const bg = w.background ?? '#ffffff', radius = ((w.radius ?? 0) * size.w) / deck.width;
+          const html = String(l.params.html ?? '');
+          // A widget that came with someone else's lesson asks first (engine/widget.ts says why); the teacher's yes is
+          // kept in this browser, so it asks once.
+          if (!widgetTrusted(html, WIDGET_STARTER)) {
+            return (
+              <div key={`${index}-${l.id}`} className="show-widget show-widget-ask" onClick={(ev) => ev.stopPropagation()}
+                style={{ ...place, background: bg, borderRadius: `${radius}px` }}>
+                <p>This widget came with the lesson. It runs walled off from your sign-in and your lessons, but it can open web pages.</p>
+                <button type="button" onClick={() => { trustWidget(html); setRunV((v) => v + 1); }}>Run the widget</button>
+              </div>
+            );
+          }
           return (
             <div key={`${index}-${l.id}`} className="show-widget" onClick={(ev) => ev.stopPropagation()}
               style={{ ...place, background: bg, borderRadius: `${radius}px`, boxShadow: `0 0 0 3px ${bg}` }}>
