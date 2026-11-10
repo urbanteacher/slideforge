@@ -81,11 +81,25 @@ order.
 | CS-18 | [Web layers](claude-slides-lessons.md): a layer kind declares live web content (a framed address or a sandboxed page) and the show lays it over the canvas; video links and widgets use it | S–M | Done · 10 Nov 2026 · `dedd1306` |
 | CS-19 | [Drawings that read their slide](claude-slides-lessons.md): a kind may read the rest of its slide, and the renderer redraws it when the slide changes; connectors use it | S–M | Done · 10 Nov 2026 · `dedd1306` |
 | CS-08 | [Ask for a change in the studio](claude-slides-lessons.md): "turn slide 7 into a quiz", "split this slide", answered by an edit you can undo; after CS-01 | M–L | To do · P2 |
-| LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
-| LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
-| LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
-| LAB-04 | [Reusable flagship choice boxes in a two-column grid](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
-| LAB-05 | [One to six snapping numbered points from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
+| LAB-01 | Lab bullet controls, cards and three-column header | S | Done · 24 Sep 2026 |
+| LAB-02 | Flagship frame as the lab default for new slides | S | Done · 24 Sep 2026 |
+| LAB-03 | Default text and image layout from the flagship | S | Done · 24 Sep 2026 |
+| LAB-04 | Reusable flagship choice boxes in a two-column grid | S | Done · 24 Sep 2026 |
+| LAB-05 | One to six snapping numbered points from the flagship | S | Done · 24 Sep 2026 |
+| LAB-06 | The Layout bank's 93 slides built natively, and a Slide designs panel | L | Done · 24 Sep 2026 |
+| LAB-07 | Motion lab slides 15–59 built natively, with chart and motion experiments | L | Done · 25 Sep 2026 |
+| LAB-08 | Video tab: YouTube and Vimeo links, full screen or framed, Add → Video | M | Done · 25 Sep 2026 |
+| LAB-09 | Game clock timer beside the heading, and a Timed task layout | S | Done · 25 Sep 2026 |
+| LAB-10 | Bespoke inspectors for special layers; slide designs edited and rebuilt | M | Done · 25 Sep 2026 |
+| LAB-11 | Theme palette in every colour picker | S | Done · 25 Sep 2026 |
+| LAB-12 | The lab's seven originals as Slide designs | S | Done · 25 Sep 2026 |
+| LAB-13 | Alpha Lyrae draws its notched letters | S | Done · 25 Sep 2026 |
+| LAB-14 | Hands-on check of the new lab interactions | S | To check · not tried live |
+| LAB-15 | Exported HTML decks frame the YouTube player | S | To do |
+
+| LAB-19 | Nodes Evidence talk: revise all 45 native slides against the current research and chain pages, export HTML, and verify local Studio save | S | Done · 10 Oct 2026 |
+| LAB-20 | Remotion-Studio-style timing in the Lesson studio: a timeline under the canvas (each layer's entrance, line steps, loop and exit as bars, click markers, a frame-accurate playhead) and Export → Video (.mp4, 30 fps, builds clicked on a hold, H.264 encoded in the browser). Open: 1:1 and 9:16 (typed layouts do not reflow), video clips in the video, audio | Done · 25 Oct 2026 · `d6214894` |
+| LAB-21 | Motion clips (`tools/motion/`) take three habits from the Remotion motion studio: named cues for every start time, 1:1 and 9:16 as their own compositions (`--format`), and a critic in a fresh context reviewing the sheet | S | Done · 25 Oct 2026 · `c0dbb33b` |
 
 ## Open decisions
 
@@ -789,15 +803,16 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 
 | ID | Item | Status |
 |---|---|---|
-| LAB-01 | Visible bullet controls, one-to-four-card chooser, themed three-column slide header | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
-| LAB-02 | New slides inherit the AI Awareness flagship frame; Header inserts it on other slides | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
-| LAB-03 | New flagship slides start with editable text at left and an image at right | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
-| LAB-04 | Add one to four A–D choice boxes at the flagship’s fixed grid positions | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
-| LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
+| LAB-01 | Visible bullet controls, one-to-four-card chooser, themed three-column slide header | Done · 24 Sep 2026 |
+| LAB-02 | New slides inherit the AI Awareness flagship frame; Header inserts it on other slides | Done · 24 Sep 2026 |
+| LAB-03 | New flagship slides start with editable text at left and an image at right | Done · 24 Sep 2026 |
+| LAB-04 | Add one to four A–D choice boxes at the flagship’s fixed grid positions | Done · 24 Sep 2026 |
+| LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 |
+| LAB-06 | The Layout bank built from lab builders (`fromSlideForge.ts`, `tools/lab-layout-bank.mjs`): every SlideForge chart idiom (`engine/chartKinds.ts`), Explore zooming per hotspot, Flip to facts, the gallery pile, a Before / after wipe and a Simulation dragged in Preview, video slides that play; Slide designs in the left panel | Done · 24 Sep 2026 · `5354e29` |
 | LAB-16 | Text effects and a text block: outline, outline only, gradient fill, shadows, glow, highlighter, word spacing; Scramble and Count up entrances, a typewriter cursor, random order; Safari draws the blur and white logos | Done · 26 Sep 2026 · `2885d4f` |
 | LAB-17 | Default slides move plainly: no blurred word motion or Blur in across the layouts, designs and the lab's originals; bullet lists build a point per click with the earlier points dimmed | Done · 26 Sep 2026 · `d8b981e` |
 | LAB-18 | Week 3 · Data Abstraction as a lesson, and ten chart-experiment kinds written once for both engines: a table melted wide to long, grouped and stacked bars into sorted totals, lines with a gap that drops into a derived balance, a 3D default to rescue, the pie's variants, unit charts counted into frequency | Done · 27 Sep 2026 · `39d9e95` `5a7167d` |
-| LAB-20 | Remotion-Studio-style timing in the Lesson studio: a timeline under the canvas (each layer's entrance, line steps, loop and exit as bars, click markers, a frame-accurate playhead) and Export → Video (.mp4, 30 fps, builds clicked on a hold, H.264 encoded in the browser). Open: 1:1 and 9:16 (typed layouts do not reflow), video clips in the video, audio | Done · 25 Oct 2026 · uncommitted |
+| LAB-20 | Remotion-Studio-style timing in the Lesson studio: a timeline under the canvas (each layer's entrance, line steps, loop and exit as bars, click markers, a frame-accurate playhead) and Export → Video (.mp4, 30 fps, builds clicked on a hold, H.264 encoded in the browser). Open: 1:1 and 9:16 (typed layouts do not reflow), video clips in the video, audio | Done · 25 Oct 2026 · `d6214894` |
 | LAB-21 | Motion clips (`tools/motion/`) take three habits from the Remotion motion studio: named cues for every start time, 1:1 and 9:16 as their own compositions (`--format`), and a critic in a fresh context reviewing the sheet | S | Done · 25 Oct 2026 · `c0dbb33b` |
 
 ## Story designs
