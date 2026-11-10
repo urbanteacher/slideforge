@@ -9,7 +9,8 @@ import { NodesPanel } from './nodes';
 import { GamePanel } from './game';
 import { RecipePanel } from './recipe';
 import { WandSparkles } from 'lucide-react';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
+import { designCheck, typeScaleNote } from '../../designs';
 
 /** Front | Back, on a slide with Flip to facts: which face the canvas shows, so the back's heading and
  *  words are edited where they are, on the canvas, like the front's. The show still turns it over on a
@@ -55,6 +56,22 @@ function LimitsNote() {
   return <div className="inline-warn slide-limits" role="status">{all.map((t) => <p key={t}>{t}</p>)}</div>;
 }
 
+/** The design rules this slide breaks (designs/designCheck.ts, CS-02), and the lesson's type scale, said only when
+ *  something is off. Worked out again only when the slide or the lesson changes: it measures text. */
+function DesignNote() {
+  const slide = useStore(slideOf);
+  const deck = useStore((s) => s.deck);
+  const notes = useMemo(() => designCheck(slide, deck), [slide, deck.height]);
+  const scale = useMemo(() => typeScaleNote(deck), [deck]);
+  const all = scale ? [...notes, scale] : notes;
+  if (!all.length) return null;
+  return (
+    <Section title="Design check">
+      <div className="design-notes" role="status">{all.map((t) => <p key={t}>{t}</p>)}</div>
+    </Section>
+  );
+}
+
 /** Facts to check before teaching (core/facts.ts): the placeholders left in the slide's words, and the author's
  *  own mark that a fact here still needs a source. Present says which slides have either. */
 function FactsSection() {
@@ -93,6 +110,7 @@ export function SlideDesign() {
         <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
       <LimitsNote />
+      <DesignNote />
       <FactsSection />
       <Section title="Speaker notes">
         <textarea className="textarea" placeholder="What you want to say on this slide… (press N while presenting)" value={slide.notes} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.notes = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} />

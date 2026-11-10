@@ -857,3 +857,5 @@ kbd { font: 500 11.5px/1 Inter, ui-sans-serif, system-ui, sans-serif; padding: 4
 .icon-tile canvas { width: 28px; height: 28px; }
 .icon-tile:hover, .icon-tile:focus-visible { background: var(--line-2); }
 .icon-tile.on { border-color: var(--accent); background: var(--line-2); }
+.design-notes { display: grid; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--text); }
+.design-notes p { margin: 0; padding-left: 10px; border-left: 2px solid #e0a100; }

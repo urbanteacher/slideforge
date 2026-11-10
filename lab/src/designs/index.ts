@@ -16,3 +16,4 @@ export { RECIPE_NAMES, rebuildSlide } from './recipes';
 export { canWriteNodes, writeNodes, type NodesBrief } from './nodesAI';
 export { NODES } from './nodes';
 export type { NodesFormat } from './nodes';
+export { DESIGN_RULES, deckTextSizes, designCheck, typeScaleNote } from './designCheck';
