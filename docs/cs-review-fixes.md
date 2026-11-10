@@ -38,17 +38,17 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 | ID | What breaks | Where | Fix | Test |
 |---|---|---|---|---|
-| CR-14 ✓ | `"layout": "constructor"` (or `toString`, `__proto__`) crashes the import with "spec.needs is not iterable" | `lab/src/decks/lessonFormat.ts:79` | `Object.hasOwn(LESSON_LAYOUTS, …)` | Those names give the "must be one of" message |
-| CR-15 ✓ | An icon named `constructor` crashes the drawing (`hasIcon` returns true, then the loop throws) | `lab/src/kinds/icon/draw.ts:11,18` | `Object.hasOwn(SET.icons, name)` | `hasIcon('constructor') === false`, and it draws the fallback |
-| CR-16 | A seventh term in a `keywords` slide is dropped without a word | `lessonFormat.ts:96`, `layouts/system.ts:93` | Limit `terms` to 1–6, and say so in `docs/lesson-format.md` | Seven terms gives a problem |
-| CR-17 | A file whose `format` is slightly wrong (`slideforge-lesson/v1`, or missing) is loaded as a broken deck | `js/shell.js:1142` | Send any object whose `slides[0].layout` is a string to `importLesson`, which then says what is wrong with `format` | Shell routing test |
-| CR-18 | When the lesson reader or the quiz starter fails, the teacher only sees "The lesson could not be built" | `lab/src/app/embed.ts:481-483` | Move both inside the `try`, and say the reason | Starter import that fails: the reason is shown |
-| CR-19 | A slide id `check-2` collides with a quiz's own built ids, and nothing reports it | `lessonFormat.ts:152`, `fromLesson.ts:95` | Reserve `${id}-${n}` for quiz slides | A collision gives a problem |
-| CR-20 | AGENTS.md says `factCheck: { note }`, but the lesson file takes a string | `AGENTS.md:23` | Write the lesson file's form, and say the deck stores `{ note }` | (docs) |
-| CR-21 | One unknown icon name rejects the whole lesson. AI writers use older Lucide names (`home`, `alert-triangle`, `help-circle`) | `lessonFormat.ts:104`, `tools/lab-icons.mjs` | The tool writes an `aliases` map from lucide's alias files. A name that is still unknown is a warning, and draws the fallback | `home` gives `house`; an unknown name imports with a warning. **Decision D3** |
-| CR-22 | `polyline` and `polygon` aren't drawn, so adding `inbox` or `package` would draw part of a blank icon | `draw.ts:28`, `lab-icons.mjs:42` | The tool fails on any tag it can't draw, and polyline/polygon are drawn with `moveTo`/`lineTo` | A polyline icon draws |
-| CR-23 | Filled dots (`chart-scatter`) draw as rings at the lowest weight | `draw.ts:31` | `ctx.fill()` when the element has a fill | (visual) |
-| CR-24 | The licence notices aren't shipped. About 20 of the 117 icons are Feather (MIT) as well as Lucide (ISC), and both notices must be in all copies | `tools/lab-icons.mjs:31`, `lab-app/` | Copy both notices into `icons.json`, and ship a `NOTICE` in `lab-app/`. Record the lucide version in `source` | The tool's output includes both |
+| CR-14 ✓ · fixed `638f9f05` | `"layout": "constructor"` (or `toString`, `__proto__`) crashes the import with "spec.needs is not iterable" | `lab/src/decks/lessonFormat.ts:79` | `Object.hasOwn(LESSON_LAYOUTS, …)` | Those names give the "must be one of" message |
+| CR-15 ✓ · fixed `638f9f05` | An icon named `constructor` crashes the drawing (`hasIcon` returns true, then the loop throws) | `lab/src/kinds/icon/draw.ts:11,18` | `Object.hasOwn(SET.icons, name)` | `hasIcon('constructor') === false`, and it draws the fallback |
+| CR-16 · fixed `638f9f05` | A seventh term in a `keywords` slide is dropped without a word | `lessonFormat.ts:96`, `layouts/system.ts:93` | Limit `terms` to 1–6, and say so in `docs/lesson-format.md` | Seven terms gives a problem |
+| CR-17 · fixed `638f9f05` | A file whose `format` is slightly wrong (`slideforge-lesson/v1`, or missing) is loaded as a broken deck | `js/shell.js:1142` | Send any object whose `slides[0].layout` is a string to `importLesson`, which then says what is wrong with `format` | Shell routing test |
+| CR-18 · fixed `638f9f05` | When the lesson reader or the quiz starter fails, the teacher only sees "The lesson could not be built" | `lab/src/app/embed.ts:481-483` | Move both inside the `try`, and say the reason | Starter import that fails: the reason is shown |
+| CR-19 · fixed `638f9f05` | A slide id `check-2` collides with a quiz's own built ids, and nothing reports it | `lessonFormat.ts:152`, `fromLesson.ts:95` | Reserve `${id}-${n}` for quiz slides | A collision gives a problem |
+| CR-20 · fixed `638f9f05` | AGENTS.md says `factCheck: { note }`, but the lesson file takes a string | `AGENTS.md:23` | Write the lesson file's form, and say the deck stores `{ note }` | (docs) |
+| CR-21 · fixed `638f9f05` | One unknown icon name rejects the whole lesson. AI writers use older Lucide names (`home`, `alert-triangle`, `help-circle`) | `lessonFormat.ts:104`, `tools/lab-icons.mjs` | The tool writes an `aliases` map from lucide's alias files. A name that is still unknown is a warning, and draws the fallback | `home` gives `house`; an unknown name imports with a warning. **Decision D3** |
+| CR-22 · fixed `638f9f05` | `polyline` and `polygon` aren't drawn, so adding `inbox` or `package` would draw part of a blank icon | `draw.ts:28`, `lab-icons.mjs:42` | The tool fails on any tag it can't draw, and polyline/polygon are drawn with `moveTo`/`lineTo` | A polyline icon draws |
+| CR-23 · fixed `638f9f05` | Filled dots (`chart-scatter`) draw as rings at the lowest weight | `draw.ts:31` | `ctx.fill()` when the element has a fill | (visual) |
+| CR-24 · fixed `638f9f05` | The licence notices aren't shipped. About 20 of the 117 icons are Feather (MIT) as well as Lucide (ISC), and both notices must be in all copies | `tools/lab-icons.mjs:31`, `lab-app/` | Copy both notices into `icons.json`, and ship a `NOTICE` in `lab-app/`. Record the lucide version in `source` | The tool's output includes both |
 
 ## 4. The show, widgets and the design check (batch 4)
 
@@ -152,6 +152,11 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 ## Change log
 
+- **10 November 2026, batch 3 done (`638f9f05`).** CR-14 to CR-24, with D3 as recommended. Each new test failed on the code before the fix. CR-17 was checked in SlideForge: a file with `"format": "slideforge-lesson/v1"` now gets the lesson reader's problem list ("format must be…") and imports nothing, where before it would have opened as a deck with empty slides. Notes:
+  - CR-21: `icons.json` now has an `aliases` map, which the tool builds from Lucide's own alias files (15 of them). `readLesson` now returns `warnings` as well as `problems`. They reach the teacher through Status, and through the shell's toast.
+  - CR-22: the tool stops on any element the studio can't draw.
+  - CR-24: the licence is in `icons.json` (`license`) and in `lab/public/icons-LICENSE.txt`, which ships in `lab-app/`.
+  - CR-20: AGENTS.md now gives `factCheck` in both its forms.
 - **10 November 2026, batch 2 done (`959e80c9`).** CR-08 to CR-11 and CR-13. Each new test failed on the code before the fix, and a duplicated slide was checked in the browser: its connector is drawn solid and joined, where before it was marked lost. Notes:
   - CR-08: copying now goes through `cloneLayers`, which re-links connectors. It is used for slides, the gallery, slide blocks and copied groups. A connector copied on its own keeps joining its old layers.
   - CR-09: a connector's ends are in the `_hidden` group, and `wordFields` skips that group.

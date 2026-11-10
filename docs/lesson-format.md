@@ -56,7 +56,7 @@ Any slide may also carry these:
 | `bullets` | `title`, `points` | | `points` is a list of lines. They shrink to fit. |
 | `cards` | `title`, `cards` | | Two to four `[heading, words]` pairs. |
 | `keyfact` | `title`, `fact` | `caption`, `details` | One number or rule, set large. `details` is a list of lines. |
-| `keywords` | `title`, `terms` | | A list of `[term, meaning]` pairs. |
+| `keywords` | `title`, `terms` | | One to six `[term, meaning]` pairs. |
 | `stats` | `title`, `stats` | `takeaway` | One to four `[number, what it counts]` pairs. |
 | `compare` | `title`, `heads`, `rows` | | `heads` is `["A", "B"]`; each row is `[label, A, B]`. |
 | `table` | `title`, `rows` | | The first row is the header. Every row is as long as the first. |
@@ -77,7 +77,9 @@ It has two to four `options`. `answer` is the right option's number counting fro
 
 ## The icons
 
-The `icons` layout names icons from the studio's set: 117 from [Lucide](https://lucide.dev) (ISC licence), kept in `lab/src/assets/icons.json` and rebuilt by `node tools/lab-icons.mjs`. A name that isn't here is reported as a problem.
+The `icons` layout names icons from the studio's set: 117 from [Lucide](https://lucide.dev) (ISC licence), kept in `lab/src/assets/icons.json` and rebuilt by `node tools/lab-icons.mjs`. Some of them come from Feather (MIT licence). Both licences travel with the set, in the file and in `lab-app/icons-LICENSE.txt`.
+
+Lucide's older names for these icons work too: `home` gives `house`, `alert-triangle` gives `triangle-alert`, and `help-circle` gives `circle-question-mark`. A name that isn't in the set still imports. The slide shows a marked empty square in its place, and the import says which ones to fill in.
 
 - **Ideas:** `lightbulb`, `brain`, `sparkles`, `puzzle`, `target`, `compass`, `key`, `lock`, `shield`, `flag`, `rocket`, `zap`, `star`
 - **People:** `user`, `users`, `user-check`, `graduation-cap`, `handshake`, `hand`, `message-circle`, `messages-square`, `megaphone`, `heart`, `face-slightly-smiling`, `face-slightly-frowning`, `face-neutral`
@@ -105,6 +107,7 @@ Give the AI this page and the example, and ask for one JSON file. Then import it
 
 ## Change log
 
+- **10 November 2026:** a `keywords` slide holds one to six terms (a seventh was dropped). Lucide's older icon names are read, and an unknown icon is a warning, not a problem (CR-16, CR-21).
 - **10 November 2026:** the `icons` layout and the icon list (CS-17).
 - **10 November 2026:** the `widget` layout (CS-15).
 - **10 November 2026:** version 1. Fourteen layouts, the quiz as a multiple-choice game, the common fields, and import in SlideForge and in the studio on its own.
