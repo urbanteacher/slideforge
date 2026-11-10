@@ -74,7 +74,7 @@ order.
 | CS-11 | [Say when a slide is too heavy](claude-slides-lessons.md): over 200 layers, an SVG over 150 KB, media over 2 MB, or 5 MB in all; ⚠ on the thumbnail and a note in the Slide panel | S | Done · 10 Nov 2026 · `58f6657e` |
 | CS-12 | [A version stamp on every lesson](claude-slides-lessons.md): `DECK_VERSION` 2, an upgrade step from each older version, and a warning above the inspector when a lesson was saved by a newer studio | M | Done · 10 Nov 2026 · `f409fbb0` |
 | CS-13 | [What a lesson needs](claude-slides-lessons.md), worked out from its content: a room for games, activities and feedback, the internet for YouTube, Vimeo and web pictures; the show's opening notice says when one is not met | S–M | Done · 10 Nov 2026 · `f409fbb0` |
-| CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): stored once by fingerprint everywhere, not only online, lifting the 7.5 MB share and 12 MB sync limits | L | To do · P2 |
+| CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): in this browser each picture over 8 KB is stored once by fingerprint and the lesson holds a reference, so an autosave writes the words, not the pictures. Step 1 done (`95ef1a5a`). Open, step 2: a share's pictures held apart, to lift the 7.5 MB share limit | L | In progress · step 1 done 10 Nov 2026 |
 | CS-15 | [A small live widget on a slide](claude-slides-lessons.md): a sandboxed one-file page (about 16 KB) for a one-off interactive | M | To do · P2 |
 | CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
 | CS-17 | [Icons and connectors as layers](claude-slides-lessons.md) the lesson file can name; check what shapes and diagrams already cover | M | To check first · P3 |
@@ -835,13 +835,23 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-11 | Slide limits (`lab/src/core/limits.ts`): 200 layers, 150 KB per drawing, 2 MB per picture or video, 5 MB per slide; warned, never refused | Done |
 | CS-12 | `lab/src/core/version.ts`: `DECK_VERSION`, `upgradeDeck` run by `loadDeck`, and the newer-studio warning | Done |
 | CS-13 | `lab/src/core/needs.ts`: `lessonNeeds`, said in the show's opening notice (`app/factsWarning.ts` `showNotice`) | Done |
-| CS-14 | Pictures stored once, outside the deck, everywhere | To do |
+| CS-14 | Step 1: `lab/src/app/pictureStore.ts`, every lesson read and write in `app/embed.ts` and `app/App.tsx` through it. Step 2 (shares): open | In progress |
 | CS-15 | A sandboxed live widget layer | To do |
 | CS-16 | Photo search with the credit kept | To do |
 | CS-17 | Icons and connectors | To check |
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — Pictures kept once, apart from the lesson (CS-14, step 1)
+
+Every autosave used to write the whole lesson twice (the last-open slot and the lesson's own record), pictures and all. Now, in this browser, each embedded picture, video or sound of 8 KB or more is stored once under its SHA-256 (`pic:<hash>`) and the lesson's records hold `sf-pic:<hash>` instead (`lab/src/app/pictureStore.ts`). An unchanged picture is neither hashed nor written again, and one used in several lessons is kept once.
+- **Nothing else changes.** Every read puts the pictures back first (`readStored` in `app/embed.ts`, used by opening, the last-open slot, the address's lesson, the backup and the online sync), so the editor, the show, exports, shares and sync see whole lessons. A lesson saved before this, pictures inside, reads as before.
+- **Safety.** Pictures are written before the lesson that refers to them. A picture that cannot be found keeps its reference, so the next save does not lose it, and Status says so. A minute after the studio opens, a sweep removes pictures no stored record refers to, but only ones more than a day old, so another tab mid-save cannot lose one; a page that kept a picture more than an hour ago writes it again rather than trusting it is still there.
+- **Measured** on Week 5 (88 slides, 4.4 MB as a file): its record is 1.16 MB, and its 12 large pictures, used 111 times, are 793 KB stored once. After a reload all 12 came back byte for byte, no reference leaked into what the backup and sync read, and the slides drew their pictures.
+- **Checked:** `lab/tests/picture-store.test.ts` (6 tests; the lab's 429 pass); the root `npm test` (648 of 649, the usual `output/notebooks` failure); the `stale-figure` smoke, three runs out of three (`95ef1a5a`).
+- **Found on the way.** The first version wrote each picture in its own transaction, and Week 5's first save took about 33 seconds; now the new pictures go in one transaction and it lands in a few seconds. It is still a little later than before, because the show's pictures are drawn as a lesson opens and the save's steps wait their turn. The `stale-figure` smoke read the saved copy the instant the lesson showed, so it now waits for the save, and it presses Present without waiting for the page to settle (Playwright's click gave up while a show of 88 slides started; this happened on the previous commit too once the smoke waited).
+- **Not yet (step 2):** shares still carry their pictures inside, so the 7.5 MB share limit stands. Lifting it needs the relay or Supabase to hold a share's pictures apart. The 12 MB sync limit already counts a lesson without its pictures (data-storage plan, step 5), so it was never this item's to lift.
 
 ### 10 November 2026 — A version on every lesson, and what a lesson needs (CS-12, CS-13)
 

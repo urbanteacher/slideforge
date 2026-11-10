@@ -9,7 +9,7 @@ Everything a teacher makes is saved only in the browser it was made in.
 | What | Where it lives now | Survives |
 |---|---|---|
 | Classic-editor lessons and games | localStorage (`slideforge.decks.v1`, `slideforge.games.v1`), via `SF.Store` (`src/storage.js`) | That browser, until its data is cleared |
-| Lesson-studio decks | IndexedDB `slideforge-studio`, keys `deck:<id>` and an index (`lab/src/persist/idb.ts`, `lab/src/embed.ts`) | The same |
+| Lesson-studio decks | IndexedDB `slideforge-studio`, keys `deck:<id>` and an index (`lab/src/core/idb.ts`, `lab/src/app/embed.ts`). Since 10 November their pictures over 8 KB are kept once as `pic:<sha256>`, and the deck holds `sf-pic:` references (`lab/src/app/pictureStore.ts`, BACKLOG CS-14) | The same |
 | Pictures | Data URLs inside the deck (`fileToDataUrl` in `lab/src/ui/Inspector.tsx`, and `src/editor/artwork.js`, `deck-settings.js`, `header-footer.js`) | Wherever the deck is |
 | Library folders | localStorage `slideforge.libraryFolders.v1` | That browser |
 | Restore points | IndexedDB `slideforge` (`js/history.js`) | That browser |
@@ -165,6 +165,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 10 November 2026: in this browser, a studio lesson's pictures are kept once, apart from its record (CS-14 step 1); every read puts them back, so the sync and backup see whole lessons as before.
 - 10 November 2026: step 6's shares built for signed-in teachers (`55dd800b`), open or private; the migration waits on the owner. Reports stay open.
 - 15 October 2026: the hosted Library starts empty, with the built-in lessons as templates, and a built-in's unchanged copy is kept out of the account (`js/builtins.js`). The live site was given `SUPABASE_URL` and `SUPABASE_ANON_KEY`, so saving online is on there. The 67 documents already in the owner's account are mostly built-in copies, uploaded before this rule; they are left as they are.
 - 14 October 2026, evening: step 5 built, pictures in the bucket for the online copy (`js/sync.js`).
