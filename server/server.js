@@ -174,6 +174,69 @@ const SHARE_MAX = 40;                     // a lecturer's shelf, not a CDN
    the share and go with it. */
 const SHARE_PICS = 600;                     // pictures one share may carry
 const SHARE_PICS_BYTES = 100 * 1024 * 1024; // and how much they may come to in all
+/* And the whole shelf: what its shares' pictures may come to together. A new picture that would pass it makes room
+   by taking the oldest other shares that hold pictures, as a new share does when the shelf has SHARE_MAX; one that
+   cannot fit is refused. SLIDEFORGE_SHARE_SHELF_MB sets it to the disk the shelf is on. */
+const SHARE_SHELF_BYTES = (Number(process.env.SLIDEFORGE_SHARE_SHELF_MB) || 400) * 1024 * 1024;
+/* What a share may carry: pictures, videos and sounds, as data addresses. Not a page, a script or a document. */
+const SHARE_MEDIA = /^data:(image|video|audio)\/[a-z0-9.+-]+(;[a-z0-9=.+-]+)*,/i;
+
+/* A request's body, read up to `max` bytes, then handed to `done`. One that says (Content-Length) or turns out to be
+   larger is answered 413 with `tooBig` at once, and the rest of it is not kept: the reply is sent with
+   Connection: close, so the client reads why rather than finding the connection cut. */
+function readBody(req, res, max, tooBig, done) {
+  const refuse = () => {
+    if (!res.headersSent) {
+      const body = JSON.stringify({ error: tooBig });
+      res.writeHead(413, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-store', Connection: 'close' });
+      res.end(body);
+    }
+    req.resume(); // what is still arriving is let go of, not held
+  };
+  if (Number(req.headers['content-length']) > max) return refuse();
+  const chunks = [];
+  let size = 0, over = false;
+  req.on('data', (c) => {
+    if (over) return;
+    size += c.length;
+    if (size > max) { over = true; chunks.length = 0; refuse(); return; }
+    chunks.push(c);
+  });
+  req.on('end', () => { if (!over) done(Buffer.concat(chunks).toString('utf8')); });
+}
+
+/* How many bytes each share's pictures take, worked out from the shelf once and then kept as pictures come and go,
+   so a picture's upload does not list and measure the whole shelf. */
+let shelfPics = null;
+function shelfCounts() {
+  if (shelfPics) return shelfPics;
+  shelfPics = new Map();
+  let ids = [];
+  try { ids = fs.readdirSync(SHARE_DIR).filter((n) => SHARE_ID.test(n)); } catch (e) {}
+  for (const id of ids) {
+    const sizes = new Map();
+    try { for (const f of fs.readdirSync(path.join(SHARE_DIR, id))) { const m = /^(\d+)\.txt$/.exec(f); if (m) sizes.set(Number(m[1]), fs.statSync(path.join(SHARE_DIR, id, f)).size); } } catch (e) {}
+    shelfPics.set(id, sizes);
+  }
+  return shelfPics;
+}
+const sharePicBytes = (id) => [...(shelfCounts().get(id) || new Map()).values()].reduce((t, n) => t + n, 0);
+const shelfPicBytes = () => [...shelfCounts().keys()].reduce((t, id) => t + sharePicBytes(id), 0);
+
+/* A share taken off the shelf: its record and its pictures. */
+function dropShare(id) {
+  try { fs.unlinkSync(path.join(SHARE_DIR, id + '.json')); } catch (e) {}
+  removeSharePictures(id);
+}
+
+/* The shares on the shelf, oldest first (by when each was made or last had a picture added), but for `keep`. */
+function sharesOldestFirst(keep) {
+  let names = [];
+  try { names = fs.readdirSync(SHARE_DIR).filter((n) => n.endsWith('.json')); } catch (e) {}
+  return names.map((n) => n.replace(/\.json$/, '')).filter((id) => SHARE_ID.test(id) && id !== keep)
+    .map((id) => { let t = 0; try { t = fs.statSync(path.join(SHARE_DIR, id + '.json')).mtimeMs; } catch (e) {} return { id, t }; })
+    .sort((a, b) => a.t - b.t).map((x) => x.id);
+}
 
 /* True when the share shelf is outside the app tree — i.e. almost certainly
    a persistent volume rather than the container image that deploys wipe. */
@@ -206,38 +269,27 @@ function publicBase(req) {
 }
 
 function shareCreate(req, res) {
-  let body = '';
-  let tooBig = false;
-  req.on('data', (chunk) => {
-    body += chunk;
-    if (body.length > MAX_DOC) { tooBig = true; req.destroy(); }
-  });
-  req.on('end', () => {
-    if (tooBig) return jsonReply(res, 413, { error: 'That deck is too large to share. Remove some embedded images first.' });
+  readBody(req, res, MAX_DOC, 'That deck is too large to share. Remove some embedded images first.', (body) => {
     let msg;
     try { msg = JSON.parse(body); } catch (e) { return jsonReply(res, 400, { error: 'Bad JSON' }); }
     const doc = msg && msg.doc;
     if (!doc || typeof doc !== 'object' || !Array.isArray(doc.slides)) {
       return jsonReply(res, 400, { error: 'No deck to share' });
     }
+    /* How many pictures will follow, each by its own upload (sharePicturePut); 0 for a share that carries its
+       pictures inside, as every share did before. Checked before anything on the shelf is touched, so a share that
+       is refused takes nobody else's off it. */
+    if (msg.pictures !== undefined && !(Number.isInteger(msg.pictures) && msg.pictures >= 0)) return jsonReply(res, 400, { error: 'Bad picture count' });
+    if (msg.pictures > SHARE_PICS) return jsonReply(res, 413, { error: 'That lesson has more than ' + SHARE_PICS + ' pictures to share.' });
+    const pictures = msg.pictures || 0;
     try {
       fs.mkdirSync(SHARE_DIR, { recursive: true, mode: 0o700 });
-      /* Oldest first once the shelf is full. A share nobody has opened in a
-         month is a better thing to lose than the one being made right now. */
-      const names = fs.readdirSync(SHARE_DIR).filter((n) => n.endsWith('.json'));
-      if (names.length >= SHARE_MAX) {
-        names
-          .map((n) => ({ n, t: fs.statSync(path.join(SHARE_DIR, n)).mtimeMs }))
-          .sort((a, b) => a.t - b.t)
-          .slice(0, names.length - SHARE_MAX + 1)
-          .forEach((x) => { try { fs.unlinkSync(path.join(SHARE_DIR, x.n)); } catch (e) {} removeSharePictures(x.n.replace(/\.json$/, '')); });
-      }
-      /* How many pictures will follow, each by its own upload (sharePicturePut); 0 for a share that carries its
-         pictures inside, as every share did before. */
-      const pictures = Number.isInteger(msg.pictures) && msg.pictures > 0 ? Math.min(msg.pictures, SHARE_PICS) : 0;
-      if (Number.isInteger(msg.pictures) && msg.pictures > SHARE_PICS) {
-        return jsonReply(res, 413, { error: 'That lesson has more than ' + SHARE_PICS + ' pictures to share.' });
-      }
+      /* Once the shelf holds SHARE_MAX, the oldest go first (by when each was made or last had a picture added):
+         an old share is a better thing to lose than the one being made right now. */
+      const old = sharesOldestFirst();
+      for (const gone of old.slice(0, Math.max(0, old.length - SHARE_MAX + 1))) dropShare(gone);
+      /* The share's picture count is the server's: the viewer reads it from the share, not from the lesson. */
+      if (pictures) doc.pictureCount = pictures;
       const id = crypto.randomBytes(16).toString('hex');
       const key = crypto.randomBytes(16).toString('hex');
       fs.writeFileSync(path.join(SHARE_DIR, id + '.json'),
@@ -254,6 +306,7 @@ function shareCreate(req, res) {
   });
 }
 
+/* Said where the link is made (js/share.js): without a persistent disk, a share on this relay is a quick one. */
 function shareRead(res, id) {
   if (!SHARE_ID.test(id)) return jsonReply(res, 404, { error: 'No such share.' });
   try {
@@ -271,6 +324,7 @@ function sharePicturesDir(id) { return path.join(SHARE_DIR, id); }
 function removeSharePictures(id) {
   if (!SHARE_ID.test(id)) return;
   try { fs.rmSync(sharePicturesDir(id), { recursive: true, force: true }); } catch (e) {}
+  if (shelfPics) shelfPics.delete(id);
 }
 /** The share's record when `key` is its withdrawal key, else null. Constant time, as shareDelete. */
 function shareWithKey(id, key) {
@@ -280,39 +334,68 @@ function shareWithKey(id, key) {
   return a.length === b.length && crypto.timingSafeEqual(a, b) ? rec : null;
 }
 
-/* PUT /api/share/<id>/picture/<n>: one picture, as its data address, by whoever made the share (its key). */
+/* PUT /api/share/<id>/picture/<n>: one picture, as its data address, by whoever made the share (its key). The key
+   and the number are checked before the picture is read, so a stranger's upload is turned away at once. */
 function sharePicturePut(req, res, id, n) {
   const key = String(req.headers.authorization || '').replace(/^Bearer /, '');
-  let body = '', tooBig = false;
-  req.on('data', (chunk) => { body += chunk; if (body.length > MAX_DOC) { tooBig = true; req.destroy(); } });
-  req.on('end', () => {
-    if (tooBig) return jsonReply(res, 413, { error: 'That picture is over 8 MB. Make it smaller and share again.' });
-    const rec = shareWithKey(id, key);
-    if (!rec) return jsonReply(res, 403, { error: 'That key does not open this share.' });
-    if (!(n < (rec.pictures || 0))) return jsonReply(res, 400, { error: 'That share has no picture ' + n + '.' });
-    if (!/^data:[a-z0-9.+-]+\/[a-z0-9.+-]+(;[a-z0-9=.+-]+)*,/i.test(body)) return jsonReply(res, 400, { error: 'A picture is sent as its data address.' });
+  const first = shareWithKey(id, key);
+  if (!first) { req.resume(); return jsonReply(res, 403, { error: 'That key does not open this share.' }); }
+  if (!(n < (first.pictures || 0))) { req.resume(); return jsonReply(res, 400, { error: 'That share has no picture ' + n + '.' }); }
+  readBody(req, res, MAX_DOC, 'That picture is over 8 MB. Make it smaller and share again.', (body) => {
+    if (!SHARE_MEDIA.test(body)) return jsonReply(res, 400, { error: 'A picture is sent as its data address: a picture, a video or a sound.' });
+    // Withdrawn, or taken off the shelf, while it was arriving: not written, so no folder is left behind.
+    if (!shareWithKey(id, key)) return jsonReply(res, 404, { error: 'That share is no longer on this server.' });
+    const size = Buffer.byteLength(body);
+    const mine = shelfCounts().get(id) || new Map();
+    const others = sharePicBytes(id) - (mine.get(n) || 0);
+    if (others + size > SHARE_PICS_BYTES) return jsonReply(res, 413, { error: 'Its pictures come to over 100 MB. Make them smaller and share again.' });
+    // The shelf as a whole: room is made by taking the oldest other shares; one that cannot fit even so is refused.
+    if (size > SHARE_SHELF_BYTES) return jsonReply(res, 413, { error: 'This server has no room for that picture.' });
+    // Only shares that hold pictures free any room; one with none is left be.
+    for (const gone of sharesOldestFirst(id).filter((x) => sharePicBytes(x) > 0)) {
+      if (shelfPicBytes() - (mine.get(n) || 0) + size <= SHARE_SHELF_BYTES) break;
+      dropShare(gone);
+      log('share ' + gone + ' taken off the shelf to make room');
+    }
+    if (shelfPicBytes() - (mine.get(n) || 0) + size > SHARE_SHELF_BYTES) return jsonReply(res, 413, { error: 'This server has no room for that picture.' });
     const dir = sharePicturesDir(id);
     try {
       fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-      const used = fs.readdirSync(dir).filter((f) => f !== n + '.txt').reduce((t, f) => t + fs.statSync(path.join(dir, f)).size, 0);
-      if (used + body.length > SHARE_PICS_BYTES) return jsonReply(res, 413, { error: 'Its pictures come to over 100 MB. Make them smaller and share again.' });
       fs.writeFileSync(path.join(dir, n + '.txt'), body, { mode: 0o600 });
+      // The share counts as touched now, so the shelf keeps it ahead of older ones.
+      const now = new Date();
+      try { fs.utimesSync(path.join(SHARE_DIR, id + '.json'), now, now); } catch (e) {}
     } catch (e) {
       return jsonReply(res, 500, { error: 'Could not store the picture.' });
     }
+    mine.set(n, size);
+    shelfCounts().set(id, mine);
     return jsonReply(res, 200, { stored: n });
   });
 }
 
-/* GET /api/share/<id>/picture/<n>: one picture of an open share. The address of the share is the credential, as
-   for the share itself. */
+/* GET /api/share/<id>/picture/<n>: one picture of an open share, as itself (its own type and bytes). The address of
+   the share is the credential, as for the share itself. A picture under its number never changes, so a browser keeps
+   it: a share opened again does not download its pictures again. It is served so it can only be shown, never run. */
 function sharePictureGet(res, id, n) {
-  try {
-    const data = fs.readFileSync(path.join(sharePicturesDir(id), n + '.txt'), 'utf8');
-    return jsonReply(res, 200, { data });
-  } catch (e) {
-    return jsonReply(res, 404, { error: 'That picture is not there. The share may have been withdrawn.' });
-  }
+  let data;
+  try { data = fs.readFileSync(path.join(sharePicturesDir(id), n + '.txt'), 'utf8'); }
+  catch (e) { return jsonReply(res, 404, { error: 'That picture is not there. The share may have been withdrawn.' }); }
+  const m = /^data:([a-z0-9.+-]+\/[a-z0-9.+-]+)((?:;[a-z0-9=.+-]+)*),/i.exec(data);
+  if (!m || !SHARE_MEDIA.test(data)) return jsonReply(res, 404, { error: 'That picture is not there.' });
+  const raw = data.slice(m[0].length);
+  let bytes;
+  try { bytes = /;base64/i.test(m[2]) ? Buffer.from(raw, 'base64') : Buffer.from(decodeURIComponent(raw), 'utf8'); }
+  catch (e) { return jsonReply(res, 404, { error: 'That picture could not be read.' }); }
+  res.writeHead(200, {
+    'Content-Type': m[1].toLowerCase(),
+    'Content-Length': bytes.length,
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff',
+    // An SVG opened on its own could carry a script: nothing in it runs.
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox"
+  });
+  res.end(bytes);
 }
 
 function shareDelete(req, res, id) {
@@ -447,14 +530,7 @@ function aiGenerate(req, res) {
   const ip = clientIp(req);
   if (aiRateLimited(ip)) return jsonReply(res, 429, { error: 'Too many AI requests. Try again shortly.' });
 
-  let body = '';
-  let tooBig = false;
-  req.on('data', (chunk) => {
-    body += chunk;
-    if (body.length > AI_MAX_BODY) { tooBig = true; req.destroy(); }
-  });
-  req.on('end', async () => {
-    if (tooBig) return jsonReply(res, 413, { error: 'Prompt too large' });
+  readBody(req, res, AI_MAX_BODY, 'Prompt too large', async (body) => {
     let msg;
     try { msg = JSON.parse(body); } catch (e) { return jsonReply(res, 400, { error: 'Bad JSON' }); }
     /* Caps stay well under Gemini's comfort zone — activity boxes and a
@@ -584,14 +660,7 @@ function aiGenerate(req, res) {
 }
 
 function saveData(req, res) {
-  let body = '';
-  let tooBig = false;
-  req.on('data', (chunk) => {
-    body += chunk;
-    if (body.length > MAX_DOC) { tooBig = true; req.destroy(); }
-  });
-  req.on('end', () => {
-    if (tooBig) return jsonReply(res, 413, { error: 'Document too large' });
+  readBody(req, res, MAX_DOC, 'Document too large', (body) => {
     let msg;
     try { msg = JSON.parse(body); } catch (e) {
       return jsonReply(res, 400, { error: 'Bad JSON' });

@@ -215,7 +215,7 @@
           ? 'It is kept in your account, so it survives app updates.'
           : j.durable
           ? 'This server keeps shared copies on durable storage — they survive an app update.'
-          : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).';
+          : 'This is a quick share: it lasts until the app is next updated or restarted, and an older one makes way when the shelf is full. Sign in to keep a share in your account instead.';
 
         if (followUrl) {
           SF.askText({

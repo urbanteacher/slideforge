@@ -51,7 +51,12 @@ export async function startViewer(): Promise<void> {
     return;
   }
   // Its pictures, when they travel apart from it (CS-14 step 2), from wherever the share itself came from.
-  const relayPicture = (n: number) => fetch(`/api/share/${link.id}/picture/${n}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((j) => (j as { data?: string } | null)?.data ?? null);
+  // The relay sends each picture as itself, kept by the browser (a picture under its number never changes); it is put
+  // back into the lesson as the data address it was shared as.
+  const relayPicture = (n: number) => fetch(`/api/share/${link.id}/picture/${n}`)
+    .then((r) => (r.ok ? r.blob() : null))
+    .then((b) => (b ? new Promise<string | null>((done) => { const fr = new FileReader(); fr.onload = () => done(typeof fr.result === 'string' ? fr.result : null); fr.onerror = () => done(null); fr.readAsDataURL(b); }) : null))
+    .catch(() => null);
   const filled = await withPictures(doc, onlineCopy ? (n) => cloudPicture(link.id, n) : relayPicture);
   doc = filled.doc;
   if (filled.missing) console.warn(`${filled.missing} picture(s) of this share could not be loaded.`);
