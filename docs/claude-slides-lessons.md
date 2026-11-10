@@ -73,6 +73,8 @@ These need no work. They are listed so nobody opens an item for them:
 
 **The change:** a deck records the theme version it was made with, and a theme change is offered as an update, not applied silently. Decide first whether the copy lives in the deck or in a versioned theme registry.
 
+**Built (10 November 2026, `a328676e`):** decided for a copy in the deck. A lesson keeps `themeCopy`, `themeOf` reads it, older lessons are pinned when they first open, and the theme picker offers **Use the new look** when the studio's version has changed.
+
 ### CS-05 · An outline before any slides — P2 · M
 
 **In Claude Slides:** before writing slides, Claude fixes an outline (one sentence per section), the length, the audience and the layouts to repeat, and asks questions when the brief is thin.
@@ -181,3 +183,4 @@ These come from the type's architecture rather than its screens. SlideForge alre
 - **10 November 2026:** section 7 added (how each app adds a feature); CS-18 and CS-19 built.
 - **10 November 2026:** CS-02 built: the Slide panel's Design check.
 - **10 November 2026:** CS-14 step 2 built: a share's pictures sent apart.
+- **10 November 2026:** CS-04 built: themes kept in the deck.

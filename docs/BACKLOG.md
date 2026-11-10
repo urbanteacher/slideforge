@@ -65,7 +65,7 @@ order.
 | CS-01 | [A lesson written as text](lesson-format.md): one JSON file whose slides name a studio layout and fill its words; Import builds it in the theme, or lists every problem by slide. Version 1: fourteen layouts and a multiple-choice quiz. Open: charts, diagrams, live figures and the other games, so a whole IPDV week can be written this way; writing a deck back out | L | In progress · v1 done 10 Nov 2026 · `770dca4a` |
 | CS-02 | [Design rules the editor checks](claude-slides-lessons.md): text under 24px, contrast under 4.5:1 (3:1 at 44px+), text shrunk to fit (split the slide), and more than six type sizes in a lesson, said in the Slide panel's Design check | M | Done · 10 Nov 2026 · `a78cdd3a` |
 | CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting. Open: the lab's AI writers are not yet told to leave placeholders | S–M | Done · 9 Nov 2026 · `b0fa402b` |
-| CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
+| CS-04 | [Themes kept in the deck](claude-slides-lessons.md): a lesson keeps a copy of its built-in theme, so a change to the studio's theme leaves it as it was; the theme picker offers Use the new look | M | Done · 10 Nov 2026 · `a328676e` |
 | CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: start from a brief (topic, length, audience), then sections, timings, live moments; build with SD-04 | M | To do · P2 |
 | CS-06 | [Links to a slide, and private shares kept online](claude-slides-lessons.md): `#slide-N` links and a Link button; a signed-in teacher's share goes to their account and can be for teachers only. Comments dropped (10 Nov). Migration run and tried by Mark, 10 Nov: works | S–M | Done · 10 Nov 2026 · `fb01269d` `55dd800b` |
 | CS-07 | [Send to…](claude-slides-lessons.md): a PowerPoint or a PDF handed to the device's share menu (Drive, Teams, Mail), a download where there is none. Direct Drive and Canva uploads not built | S | Done · 10 Nov 2026 · `fb01269d` |
@@ -828,7 +828,7 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-01 | The lesson file ([lesson-format.md](lesson-format.md), `lab/src/decks/lessonFormat.ts`, `fromLesson.ts`): title, section, statement, bullets, cards, keyfact, keywords, stats, compare, table, quote, split, timeline and quiz, with notes, hidden, ids and factCheck. Import in SlideForge and the studio. Open: more layouts (charts, diagrams, live figures, other games) and export | In progress · v1 done |
 | CS-02 | `lab/src/designs/designCheck.ts`, shown in the Slide panel. Not built: the footer band and the vertical budget as rules, and the checks inside the AI writers | Done |
 | CS-03 | A placeholder convention for facts nobody supplied (`[€__]`, `[source __]`), a per-slide "not yet checked" mark, a ? on the filmstrip, and a line in the show's toast when Present or Host live opens, with the list in Status. Open: the lab's AI writers | Done · 9 Nov 2026 · `b0fa402b` |
-| CS-04 | A deck records the theme version it was made with; a theme change is offered, not applied | To do · needs a decision (copy in the deck, or a versioned registry) |
+| CS-04 | Decided: a copy in the deck (`deck.themeCopy`, `layouts/style.ts` `themeOf`, `newerTheme`, `pinTheme`), offered in the theme picker | Done |
 | CS-05 | An outline step for AI-built lessons (sections, one sentence and a timing each, live moments), edited before filling; with SD-04 | To do |
 | CS-06 | A shared lesson opens at `#slide-N`, its address follows the slide, and Link copies it. A signed-in teacher's studio share is kept in their account (`supabase/migrations/0002_shares.sql`), survives app updates, and can be for signed-in teachers only; the viewer reads it through `get_share()`. Comments on a slide were dropped (Mark, 10 Nov) | Done · tried by Mark |
 | CS-07 | File → Export → Send to…: a PowerPoint (pictures or editable text) or a PDF of the student copy, made, then handed to the share menu on a second click. The PDF writer is `lab/src/export/pdf.ts` | Done |
@@ -846,6 +846,15 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — A lesson keeps its theme until you take the new look (CS-04)
+
+The decision: a copy of the theme in the deck, rather than versioned themes in the studio, so a lesson carries its own look into exports, shares and offline, and nothing has to keep old themes (`a328676e`).
+- **Kept in the deck.** A lesson on a built-in theme keeps `deck.themeCopy`, taken when the theme is applied or a lesson file is imported, and `themeOf` reads it (`lab/src/layouts/style.ts`). A change to the studio's theme, like Paper's new default on 25 October, no longer reaches into lessons already made.
+- **Older lessons** are pinned to the look they have the first time they open (`pinTheme`, from `loadDeck`).
+- **Offered, not applied.** When the studio's version differs from the lesson's copy, the theme picker (Layouts → Theme) says so and offers **Use the new look**, which restyles every slide and takes the new copy; undo puts the old look back.
+- Style guides were the deck's own already and are unchanged.
+- **Checked:** `lab/tests/theme-copy.test.ts` (3 tests; the lab's 452 pass), the root `npm test` (656 of 657, the usual `output/notebooks` failure); in the studio, applying Navy kept a copy, a changed copy brought up the offer, and Use the new look restyled the slides and cleared it.
 
 ### 10 November 2026 — A share's pictures sent apart: the 7.5 MB limit lifted (CS-14, step 2)
 
