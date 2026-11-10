@@ -1,7 +1,7 @@
 // The inspector with nothing selected: the slide's ground, its face and its design.
 import { themeOf, setSlideGround } from '../../layouts';
 import { slideOf, useStore } from '../../store';
-import { placeholdersOf } from '../../core';
+import { limitsOf, placeholdersOf } from '../../core';
 import { ColorField, Row, Section, Select, newGesture } from '../controls/controls';
 import { tidySlide } from '../stage/snap';
 import { ActivityPanel } from './activity';
@@ -47,6 +47,14 @@ function GroundRow() {
   );
 }
 
+/** What makes this slide too heavy for the editor or a share (core/limits.ts), said only when something does. */
+function LimitsNote() {
+  const slide = useStore(slideOf);
+  const all = limitsOf(slide);
+  if (!all.length) return null;
+  return <div className="inline-warn slide-limits" role="status">{all.map((t) => <p key={t}>{t}</p>)}</div>;
+}
+
 /** Facts to check before teaching (core/facts.ts): the placeholders left in the slide's words, and the author's
  *  own mark that a fact here still needs a source. Present says which slides have either. */
 function FactsSection() {
@@ -84,6 +92,7 @@ export function SlideDesign() {
         <FaceRow />
         <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
+      <LimitsNote />
       <FactsSection />
       <Section title="Speaker notes">
         <textarea className="textarea" placeholder="What you want to say on this slide… (press N while presenting)" value={slide.notes} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.notes = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} />

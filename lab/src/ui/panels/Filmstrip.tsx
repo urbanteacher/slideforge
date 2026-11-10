@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { renderStill } from '../../export';
 import { getAssetVersion } from '../../engine';
 import { inView, useStore } from '../../store';
-import { factsOf, type Slide } from '../../core';
+import { factsOf, limitsOf, type Slide } from '../../core';
 import { focusBrowse } from './Browse';
 
 /** Slide thumbnails are rendered by the real engine, lazily, only when a slide (or its assets) change. */
@@ -99,7 +99,7 @@ export function Filmstrip() {
           onPointerDown={(e) => { if (e.button === 0 && !(e.target as HTMLElement).closest('.thumb-acts')) selectSlide(s.id); }}
         >
           {i > 0 && s.transition.type !== 'none' && <div className="thumb-trans" title={`Transition: ${s.transition.type}`}><ChevronRight size={12} /></div>}
-          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation and the PDF"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}{s.warn && <span className="thumb-warn" title={s.warn}>⚠</span>}<FactsBadge slide={s} n={i + 1} /></div>
+          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation and the PDF"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}<WarnBadge slide={s} /><FactsBadge slide={s} n={i + 1} /></div>
           <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           <div className="thumb-acts" onClick={(e) => e.stopPropagation()}>
             <button title={s.hidden ? 'Show in the presentation and the PDF' : 'Hide from the presentation and the PDF'} aria-pressed={!!s.hidden} onClick={() => toggleHidden(s.id)}>{s.hidden ? <Eye size={12} /> : <EyeOff size={12} />}</button>
@@ -147,7 +147,7 @@ function SlideSorter({ close, thumb }: { close: () => void; thumb: (id: string) 
             onDrop={(e) => { e.preventDefault(); if (drag && drag.id !== s.id) moveSlide(drag.id, i); setDrag(null); }}
             onClick={() => { selectSlide(s.id); close(); }}
             onContextMenu={(e) => { selectSlide(s.id); openMenu(e, s.id); }}>
-            <div className="thumb-img" style={{ aspectRatio: ratio }}>{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden"><EyeOff size={12} />Hidden</span>}{s.warn && <span className="thumb-warn" title={s.warn}>⚠</span>}<FactsBadge slide={s} n={i + 1} /></div>
+            <div className="thumb-img" style={{ aspectRatio: ratio }}>{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden"><EyeOff size={12} />Hidden</span>}<WarnBadge slide={s} /><FactsBadge slide={s} n={i + 1} /></div>
             <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           </div>
         ))}
@@ -163,4 +163,12 @@ function FactsBadge({ slide, n }: { slide: Slide; n: number }) {
   if (!f) return null;
   const why = [f.placeholders.length ? `Fill ${f.placeholders.join(', ')}` : '', f.note !== null ? (f.note.trim() ? `Check: ${f.note.trim()}` : 'Marked as not yet checked') : ''].filter(Boolean).join('. ');
   return <span className="thumb-check" title={`Facts to check before teaching. ${why}.`} aria-label="Facts to check">?</span>;
+}
+
+/** What does not fit the slide's standard (`slide.warn`, a game's own check) and what makes it too heavy
+ *  (core/limits.ts), as one mark on its thumbnail. */
+function WarnBadge({ slide }: { slide: Slide }) {
+  const all = [slide.warn, ...limitsOf(slide)].filter(Boolean);
+  if (!all.length) return null;
+  return <span className="thumb-warn" title={all.join('\n')}>⚠</span>;
 }
