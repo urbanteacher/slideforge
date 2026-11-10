@@ -30,6 +30,19 @@ export async function idbSet(key: string, value: unknown): Promise<void> {
   });
 }
 
+/** Several records written in one transaction: one commit for all of them, rather than one each. */
+export async function idbSetMany(entries: [string, unknown][]): Promise<void> {
+  if (!entries.length) return;
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const st = tx.objectStore(STORE);
+    for (const [k, v] of entries) st.put(v, k);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export async function idbDelete(key: string): Promise<void> {
   const db = await open();
   return new Promise((resolve, reject) => {

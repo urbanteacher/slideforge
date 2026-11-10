@@ -28,6 +28,23 @@ try {
   await open();
   const id = await page.evaluate(() => SF.LabEngine.labDeck().id);
 
+  // The first save lands a few seconds after the lesson shows (its pictures are kept apart first, and the show's
+  // pictures are being drawn meanwhile: lab/src/app/pictureStore.ts), so wait for the saved copy before breaking it.
+  const hasSaved = (id) => new Promise((resolve) => {
+    const req = indexedDB.open('slideforge-studio', 1);
+    req.onsuccess = () => {
+      const get = req.result.transaction('kv').objectStore('kv').get(`deck:${id}`);
+      get.onsuccess = () => { resolve(!!get.result?.slides); req.result.close(); };
+      get.onerror = () => { resolve(false); req.result.close(); };
+    };
+    req.onerror = () => resolve(false);
+  });
+  let saved = false;
+  for (let i = 0; i < 90 && !saved; i++) {
+    saved = await page.evaluate(hasSaved, id);
+    if (!saved) await new Promise((r) => setTimeout(r, 1000));
+  }
+  assert.ok(saved, 'the lesson is saved in this browser');
   // Break the saved copy as an old one is: the figures gone, their slides' ids matching nothing, up to date.
   const broken = await page.evaluate((id) => new Promise((resolve, reject) => {
     const req = indexedDB.open('slideforge-studio', 1);
@@ -63,7 +80,9 @@ try {
 
   // Present opens the studio's show (with 79 slides to draw first) rather than refusing.
   const lab = page.frameLocator('#labFrame');
-  await lab.getByRole('button', { name: 'Present', exact: true }).click();
+  // Pressed without waiting for the page to settle: starting a show of 88 slides keeps it busy for a while, which
+  // Playwright's click waits out and then gives up on. The wait just below is the one that matters.
+  await lab.getByRole('button', { name: 'Present', exact: true }).evaluate((b) => { setTimeout(() => b.click(), 0); });
   const outcome = await page.waitForFunction(() => {
     const said = [...document.querySelectorAll('[class*=toast]')].map((e) => e.textContent).join(' ');
     if (/cannot start/.test(said)) return said;

@@ -1,4 +1,4 @@
-import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, unpackPictures, type Deck, type Slide } from '../core';
+import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, idbSetMany, unpackPictures, type Deck, type Slide } from '../core';
 import { deckFromLesson, loadChoiceStarter, readLesson, CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
 import { buildPdf, buildPptx, dataUrlBytes, renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
@@ -7,7 +7,8 @@ import { canHostInStudio, openStudioShow, roomRunning, roomWatchOn, whyNotPresen
 import { shareCopy } from '../viewer';
 import { saveSlide } from '../ui';
 import { SIZES } from '../rehearse';
-import { allCommands } from '../shell';
+import { allCommands, report } from '../shell';
+import { pictureStore } from './pictureStore';
 import { showNotice } from './factsWarning';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
@@ -30,6 +31,26 @@ const serial = <T>(job: () => Promise<T>): Promise<T> => {
   return run;
 };
 
+// Lessons are stored with their pictures kept once, apart (app/pictureStore.ts, BACKLOG CS-14), and read back whole.
+const pics = pictureStore({ get: idbGet, set: idbSet, setMany: idbSetMany, del: idbDelete, keys: idbKeys });
+
+/** A stored record with its pictures put back. A picture that cannot be found keeps its reference and is reported. */
+export async function readStored<T>(k: string): Promise<T | undefined> {
+  const raw = await idbGet<T>(k);
+  if (raw === undefined) return raw;
+  const { value, missing } = await pics.restore(raw);
+  if (missing.length) {
+    report({ id: `pictures-missing-${k}`, kind: 'open', state: 'failed', title: `${missing.length} picture${missing.length === 1 ? '' : 's'} could not be found`,
+      detail: 'This browser no longer has them. The slides keep their place, so nothing else is lost; put the pictures in again, or open a backup or the copy saved online.' });
+  }
+  return value;
+}
+
+/** Remove pictures no lesson in this browser refers to, a minute after the studio opens (only ones over a day old). */
+export function sweepPicturesSoon(): void {
+  setTimeout(() => { void serial(() => pics.sweep()).catch(() => {}); }, 60_000);
+}
+
 export async function listSaved(): Promise<SavedRow[]> {
   return (await idbGet<SavedRow[]>(INDEX)) ?? [];
 }
@@ -50,7 +71,7 @@ export function persistDeck(d: Deck): Promise<SavedRow[]> {
     if (d === lastWritten) return listSaved();
     lastWritten = d;
     const deck = { ...d, modified: Date.now() };
-    await idbSet(key(d.id), deck);
+    await idbSet(key(d.id), await pics.stash(deck));
     const rows = (await listSaved()).filter((r) => r.id !== d.id);
     rows.unshift({ id: d.id, title: d.title, modified: deck.modified, slides: d.slides.length, sourceId: d.sourceId, libraryGroup: d.libraryGroup });
     await idbSet(INDEX, rows);
@@ -62,7 +83,7 @@ export function persistDeck(d: Deck): Promise<SavedRow[]> {
 export async function saveCurrent(): Promise<void> {
   if (cleared) return;
   const st = useStore.getState();
-  await idbSet('current', { deck: st.deck, slideId: st.slideId });
+  await idbSet('current', await pics.stash({ deck: st.deck, slideId: st.slideId }));
   await persistDeck(st.deck);
 }
 
@@ -302,7 +323,7 @@ export const labApi = {
     if (isLabDeck(d)) { show(d); return { converted: false, dropped: 0 }; }
     const c = d as ClassicDeck;
     if (!c || !c.id) return { converted: false, dropped: 0 };
-    const saved = await idbGet<Deck>(key(`lab-${c.id}`));
+    const saved = await readStored<Deck>(key(`lab-${c.id}`));
     if (saved?.slides?.length) {
       const d2 = carryOnce(saved, c);
       show(d2);
@@ -332,7 +353,7 @@ export const labApi = {
   },
   /** A saved lab deck; `source` is its SlideForge lesson, when the shell still has it. */
   async openSaved(id: string, source?: ClassicDeck | null): Promise<boolean> {
-    const d = await idbGet<Deck>(key(id));
+    const d = await readStored<Deck>(key(id));
     if (!isLabDeck(d)) return false;
     const d2 = carryOnce(d, source);
     show(d2);
@@ -345,7 +366,7 @@ export const labApi = {
   convert: (c: ClassicDeck): Deck => convertClassic(c),
   /** A saved lab deck as it is stored, for the backup (js/docs.js). */
   async readSaved(id: string): Promise<Deck | null> {
-    const d = await idbGet<Deck>(key(id));
+    const d = await readStored<Deck>(key(id));
     return isLabDeck(d) ? d : null;
   },
   /** A deck from a backup, filed under its own id as it was (js/docs.js). */

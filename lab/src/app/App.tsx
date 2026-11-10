@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { cloneLayer, idbGet, blankDeck, type Deck } from '../core';
+import { cloneLayer, blankDeck, type Deck } from '../core';
 import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '../store';
-import { isLabDeck, saveCurrent } from './embed';
+import { isLabDeck, readStored, saveCurrent, sweepPicturesSoon } from './embed';
 import { ShowLayer } from '../show';
 import { registerGuideFonts } from '../theme';
 import { CanvasBar, Filmstrip, Gallery, LeftPanel, Stage, Timeline, VideoExport, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS, stepZoom, toggleSide } from '../ui';
@@ -54,7 +54,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
     let failingSince = 0, failures = 0;
     // The last-open slot, and the deck under its own id so the shell's Open can list it.
     const save = () => saveCurrent();
-    idbGet<{ deck: Deck; slideId?: string }>('current').then(async (saved) => {
+    readStored<{ deck: Deck; slideId?: string }>('current').then(async (saved) => {
       if (isLabDeck(saved?.deck)) {
         useStore.getState().loadDeck(saved.deck);
         if (saved.slideId && saved.deck.slides.some((s) => s.id === saved.slideId)) useStore.setState({ slideId: saved.slideId });
@@ -68,11 +68,12 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
       }
       // The place the address holds (deck, slide, inspector tab), then keep it there as it changes.
       const place = readPlace(embedded);
-      if (place) await restorePlace(place, embedded, async (id) => { const d = await idbGet<Deck>(`deck:${id}`); return isLabDeck(d) ? d : null; });
+      if (place) await restorePlace(place, embedded, async (id) => { const d = await readStored<Deck>(`deck:${id}`); return isLabDeck(d) ? d : null; });
       stopUrl = startUrlSync(embedded);
       ready = true;
       setRestored(true);
       onReady?.();
+      sweepPicturesSoon();
     }).catch((e) => {
       report({ kind: 'open', state: 'failed', title: "Couldn't read your saved deck from this browser", detail: `${reason(e)}. The editor opened without it; nothing has been overwritten yet, so reloading may bring it back.` });
       stopUrl = startUrlSync(embedded);
