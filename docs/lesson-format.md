@@ -65,6 +65,7 @@ Any slide may also carry these:
 | `timeline` | `title`, `events` | `subtitle` | One to six `[when, who or what, detail]`. |
 | `quiz` | `questions` | `title` | A multiple-choice game the room plays, made from the studio's own. |
 | `widget` | `html` | `title` | A small live web page, up to 16 KB, that runs in the show. Sandboxed: no internet, no way into the lesson. Its page is laid out at the slide's size, with text from 36px. |
+| `icons` | `title`, `items` | | Two to six `[icon, label, what it means]` rows, each with its icon in the theme's accent. The icon is a name from the list below. |
 
 A `quiz` question is:
 
@@ -73,6 +74,20 @@ A `quiz` question is:
 ```
 
 It has two to four `options`. `answer` is the right option's number counting from 1, or its exact words. `explanation` is optional and shows at the reveal. One quiz slide becomes the game's cover and one slide per question, each followed by its answer, as Browse makes it.
+
+## The icons
+
+The `icons` layout names icons from the studio's set: 117 from [Lucide](https://lucide.dev) (ISC licence), kept in `lab/src/assets/icons.json` and rebuilt by `node tools/lab-icons.mjs`. A name that isn't here is reported as a problem.
+
+- **Ideas:** `lightbulb`, `brain`, `sparkles`, `puzzle`, `target`, `compass`, `key`, `lock`, `shield`, `flag`, `rocket`, `zap`, `star`
+- **People:** `user`, `users`, `user-check`, `graduation-cap`, `handshake`, `hand`, `message-circle`, `messages-square`, `megaphone`, `heart`, `face-slightly-smiling`, `face-slightly-frowning`, `face-neutral`
+- **Learning:** `book-open`, `notebook-pen`, `pencil`, `clipboard-check`, `list-checks`, `check`, `x`, `circle-question-mark`, `info`, `triangle-alert`, `search`, `eye`, `ear`
+- **Data:** `chart-column`, `chart-line`, `chart-pie`, `chart-scatter`, `table`, `database`, `trending-up`, `trending-down`, `percent`, `calculator`, `sigma`, `binary`, `funnel`
+- **Tech:** `laptop`, `smartphone`, `monitor`, `cpu`, `bot`, `code`, `wifi`, `cloud`, `server`, `globe`, `link`, `mouse-pointer-click`, `camera`
+- **Science:** `flask-conical`, `atom`, `microscope`, `dna`, `leaf`, `sprout`, `tree-pine`, `sun`, `moon`, `droplet`, `flame`, `wind`, `earth`
+- **Time and place:** `clock`, `timer`, `calendar`, `hourglass`, `map`, `map-pin`, `house`, `building`, `school`, `factory`, `car`, `bus`, `plane`
+- **Money:** `coins`, `banknote`, `wallet`, `shopping-cart`, `piggy-bank`, `scale`, `briefcase`, `gift`, `trophy`, `medal`, `award`, `crown`, `gem`
+- **Arrows:** `arrow-right`, `arrow-left`, `arrow-up`, `arrow-down`, `move-right`, `refresh-cw`, `repeat`, `shuffle`, `git-branch`, `split`, `merge`, `circle-arrow-right`, `undo-2`
 
 ## Writing one with an AI
 
@@ -90,5 +105,6 @@ Give the AI this page and the example, and ask for one JSON file. Then import it
 
 ## Change log
 
+- **10 November 2026:** the `icons` layout and the icon list (CS-17).
 - **10 November 2026:** the `widget` layout (CS-15).
 - **10 November 2026:** version 1. Fourteen layouts, the quiz as a multiple-choice game, the common fields, and import in SlideForge and in the studio on its own.

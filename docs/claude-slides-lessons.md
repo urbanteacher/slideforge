@@ -143,7 +143,7 @@ These come from the type's architecture rather than its screens. SlideForge alre
 | **CS-14** · pictures outside the deck | Pictures stored once, by fingerprint; slides point at them | Only the online copy does this; locally and in shares pictures sit inside the lesson | Store once everywhere. **Step 1 done 10 November** (`lab/src/app/pictureStore.ts`): in this browser each picture is stored once and lessons hold references, so autosaves write the words only. Step 2, a share's pictures held apart to lift the 7.5 MB limit, is open. (The 12 MB sync limit already counts a lesson without its pictures.) |
 | **CS-15** · a live widget | A small sandboxed page on a slide (16 KB) | Experiments and live figures, built in code | A one-file widget layer, sandboxed. **Done 10 November** (`832a055b`, `lab/src/kinds/widget/`): up to 16 KB, scripts only, no network; runs in the show and Preview |
 | **CS-16** · photo search | Searches a photo library and keeps the credit | Picture slots start empty | A search that keeps the licence and credit; needs a provider |
-| **CS-17** · icons and connectors | Icon and connector elements an agent can write | Shapes and diagrams; not checked how far they go | Check first, then add what the lesson file needs |
+| **CS-17** · icons and connectors | Icon and connector elements an agent can write | Shapes and diagrams; not checked how far they go | Checked: shapes and diagrams had no icons and nothing joined two layers. **Done 10 November** (`461863db`): 117 Lucide icons, a connector that follows the layers it joins, and an `icons` layout in the lesson file |
 
 ## Change log
 
@@ -156,3 +156,4 @@ These come from the type's architecture rather than its screens. SlideForge alre
 - **10 November 2026:** CS-12 and CS-13 built.
 - **10 November 2026:** CS-14 step 1 built: pictures stored once, apart from the lesson, in this browser.
 - **10 November 2026:** CS-15 built: the live widget layer.
+- **10 November 2026:** CS-17 built: icons and connectors. Section 6 is done apart from CS-14's step 2 and CS-16.

@@ -77,7 +77,7 @@ order.
 | CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): in this browser each picture over 8 KB is stored once by fingerprint and the lesson holds a reference, so an autosave writes the words, not the pictures. Step 1 done (`95ef1a5a`). Open, step 2: a share's pictures held apart, to lift the 7.5 MB share limit | L | In progress · step 1 done 10 Nov 2026 |
 | CS-15 | [A small live widget on a slide](claude-slides-lessons.md): one web page of up to 16 KB that runs in the show and Preview, sandboxed to scripts only with no network; Add → Widget, a live preview in its tab, and a `widget` layout in the lesson file. Open: shared links and exported HTML show its card, not the live page | M | Done · 10 Nov 2026 · `832a055b` |
 | CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
-| CS-17 | [Icons and connectors as layers](claude-slides-lessons.md) the lesson file can name; check what shapes and diagrams already cover | M | To check first · P3 |
+| CS-17 | [Icons and connectors as layers](claude-slides-lessons.md): 117 Lucide icons drawn on the canvas, a connector that joins two layers and follows them, and an `icons` layout in the lesson file | M | Done · 10 Nov 2026 · `461863db` |
 | CS-08 | [Ask for a change in the studio](claude-slides-lessons.md): "turn slide 7 into a quiz", "split this slide", answered by an edit you can undo; after CS-01 | M–L | To do · P2 |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -838,10 +838,19 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-14 | Step 1: `lab/src/app/pictureStore.ts`, every lesson read and write in `app/embed.ts` and `app/App.tsx` through it. Step 2 (shares): open | In progress |
 | CS-15 | The widget layer (`lab/src/kinds/widget/`, `lab/src/engine/widget.ts`), run by the show (`show/Show.tsx`) | Done |
 | CS-16 | Photo search with the credit kept | To do |
-| CS-17 | Icons and connectors | To check |
+| CS-17 | `lab/src/kinds/icon/`, `lab/src/kinds/connector/`, `lab/src/core/connectors.ts` (run by the store's `mutate`), `tools/lab-icons.mjs` | Done |
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — Icons and connectors on slides (CS-17)
+
+The check first: shapes (rectangle to S-curve) are drawn in fixed boxes and the diagrams (loop, flowchart, timeline) draw their own arrows, but there were no icons, and nothing joined two layers. Both are built (`461863db`).
+- **Icons.** 117 icons from Lucide (ISC licence), in nine groups (ideas, people, learning, data, tech, science, time and place, money, arrows), copied by `tools/lab-icons.mjs` into `lab/src/assets/icons.json` (24 KB) rather than bundling all of Lucide. They are drawn as lines on the canvas, so a slide needs no font or picture: any colour, a line weight, and an optional disc behind. Add → Icon, and the Icon tab's picker, drawn by the same code, with a filter by name.
+- **Connectors.** A line between two layers, straight, with an elbow or curved, with an arrowhead at the end or both, solid or dashed. The store keeps it on them inside every change (`lab/src/core/connectors.ts`, from `mutate` and the font refit), writing its box and ends into the connector, so the editor, the show, the exports and undo all agree. Add → Connector joins the selected layer to the nearest one not on or inside it, a layer of the same kind first (card to card), and puts the line beneath both. A connector whose layer has gone is drawn dashed in orange, and its tab says so.
+- **The lesson file** gains an `icons` layout: two to six rows of icon, label and what it means, built on the keywords layout with the meaning moved over for the icon. The example lesson uses it, and an icon not in the set is reported by name.
+- **Checked:** `lab/tests/connectors.test.ts` (4 tests; the lab's 437 pass), the root `npm test` (650 of 651, the usual `output/notebooks` failure), the render-surface audit; in the studio, a connector joined Card 1 to Card 2, followed Card 2 when it moved and came back with undo, a dashed elbow ran to a moved Card 3, an icon was picked from the picker and drawn on a disc, and the `icons` layout drew three rows cleanly.
+- **Not yet:** connectors are not in the lesson file (its layouts do not name layers); a connector cannot be dragged to a new layer on the canvas, only chosen in its tab.
 
 ### 10 November 2026 — A live widget on a slide (CS-15)
 
