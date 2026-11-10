@@ -46,7 +46,7 @@ There is one source of truth, and it is `deploy-render` on GitHub: what Render r
 
 A layer kind is a folder in `lab/src/kinds/` (its `def.ts`, drawing, `index.ts` and an `Inspector.tsx` if it has a tab), listed in `kinds/index.ts`, with its tab in `ui/panels/special.tsx` and an Add entry in `ui/stage/insert.ts`.
 - **Live web content** (a framed site, a sandboxed page): declare `web` on the kind (`lab/src/engine/web.ts`). The show frames it; don't add a case to `show/Show.tsx`. The drawing is the still the editor and exports show.
-- **A drawing that depends on other layers**: set `readsSlide`, and read the slide passed to the drawing. The renderer redraws it when the slide changes; don't copy other layers' positions into its params.
+- **A drawing that depends on other layers**: set `readsSlide`, and read the slide passed to the drawing. Don't copy other layers' positions into its params. The renderer redraws it when the slide changes; give it `reads` (what of the slide it reads, as a connector gives its two joined boxes) so it is redrawn only when that changes.
 - Give it a layout in the lesson file (`lab/src/decks/lessonFormat.ts`, `fromLesson.ts`, `docs/lesson-format.md`) when an AI-written lesson would use it.
 
 ## Adding a game style

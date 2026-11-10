@@ -108,12 +108,12 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 | ID | What breaks | Where | Fix | Test |
 |---|---|---|---|---|
-| CR-64 | The lesson's text-size count re-measures every text layer on every slide at every keystroke, which is slow on 100+ slide decks | `inspectorSlide.tsx` DesignNote, `designCheck.ts` | Cache the sizes per slide in a `WeakMap` (immer keeps unchanged slides as the same objects), and fix the memo's dependencies | Unchanged slides aren't measured again |
-| CR-65 | Every keystroke redraws every connector on the slide | `lab/src/engine/renderer.ts:184` | A kind returns what it depends on, the two joined boxes, by reference | Edit another layer: no redraw |
-| CR-66 | `syncConnectors` reads the whole deck through immer's drafts on every change, which is about 1.5 ms per pointer move on a 150-slide deck | `store.ts:144`, `connectors.ts` | Search `original(draft)`, and skip slides with no connector | Time it before and after |
-| CR-67 | Every slide's facts and limits are worked out again on every edit | `Filmstrip.tsx` | `memo` on the badges, keyed on the slide | — |
-| CR-68 | The PDF draws hidden slides it then leaves out, and its flip-side pages show no progress | `lab/src/app/embed.ts:499` | Render only the pages it uses, and turn each into bytes as it goes | — |
-| CR-69 | Icon tiles don't redraw when the app's light/dark theme changes | `kinds/icon/IconTile.tsx` | Redraw on a theme change | — |
+| CR-64 · fixed `17d07e39` | The lesson's text-size count re-measures every text layer on every slide at every keystroke, which is slow on 100+ slide decks | `inspectorSlide.tsx` DesignNote, `designCheck.ts` | Cache the sizes per slide in a `WeakMap` (immer keeps unchanged slides as the same objects), and fix the memo's dependencies | Unchanged slides aren't measured again |
+| CR-65 · fixed `17d07e39` | Every keystroke redraws every connector on the slide | `lab/src/engine/renderer.ts:184` | A kind returns what it depends on, the two joined boxes, by reference | Edit another layer: no redraw |
+| CR-66 · fixed `17d07e39` | `syncConnectors` reads the whole deck through immer's drafts on every change, which is about 1.5 ms per pointer move on a 150-slide deck | `store.ts:144`, `connectors.ts` | Search `original(draft)`, and skip slides with no connector | Time it before and after |
+| CR-67 · fixed `17d07e39` | Every slide's facts and limits are worked out again on every edit | `Filmstrip.tsx` | `memo` on the badges, keyed on the slide | — |
+| CR-68 · fixed `17d07e39` | The PDF draws hidden slides it then leaves out, and its flip-side pages show no progress | `lab/src/app/embed.ts:499` | Render only the pages it uses, and turn each into bytes as it goes | — |
+| CR-69 · no change needed `17d07e39` | Icon tiles don't redraw when the app's light/dark theme changes | `kinds/icon/IconTile.tsx` | Redraw on a theme change | — |
 
 ## 8. Tidying: one rule in one place, and comments that are true (batch 8)
 
@@ -123,7 +123,7 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 | CR-71 | The widget limit is written three times, and the video limit two ways (60 MB, against a 2 MB warning) | `limits.ts:37`, `lessonFormat.ts:108`, `insert.ts:12`, `inspectorDesign.tsx:250` | Import `WIDGET_MAX`, and keep one media limit |
 | CR-72 | The SVG limit measures the encoded address, not the drawing | `limits.ts:49` | Measure decoded bytes (base64 × 3/4, or the decoded URI) |
 | CR-73 | `needs.ts` repeats a video regex, and reads only the top-level `src` | `lab/src/core/needs.ts:18` | `webContent(l)?.kind === 'frame'`, and walk the params as `limits.ts` does |
-| CR-74 | The handout pages are built twice, and the file name is made with its own copy of `slug` | `embed.ts:437,491,498` | One `handoutImages()`, and import `slug` |
+| CR-74 · fixed `17d07e39` | The handout pages are built twice, and the file name is made with its own copy of `slug` | `embed.ts:437,491,498` | One `handoutImages()`, and import `slug` |
 | CR-75 | The "joinable layer" rule is written twice | `kinds/connector/Inspector.tsx:9`, `ui/stage/insert.ts` | Export it from `core/connectors.ts` |
 | CR-76 | Comments that no longer match the code | `connectors.ts:4-6`, `pictureStore.ts:63`, `core/pictures.ts:3`, `lab-icons.mjs:8` (a test file that doesn't exist), `engine/web.ts` | Correct each one |
 | CR-77 | Tests that can't fail: constants checked against themselves, and messages reading "0 KB, over 0 KB" | `limits.test.ts:26,33`, `widget.test.ts:11`, `web-layers.test.ts:35` | Replace them with real cases at real sizes |
@@ -152,6 +152,12 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 ## Change log
 
+- **10 November 2026, batch 7 done (`17d07e39`).** CR-64 to CR-68, and CR-74 from batch 8, since it was the same code. Measured on 150 slides of 30 layers, a drag step's connector sync went from 3.1 ms to 0.07 ms. A connector followed a moved layer, and undid with it, in the lab. Notes:
+  - **CR-64:** each slide's text sizes are kept in a `WeakMap` keyed on the slide, and on the deck's height and the fonts loaded. A test counts the measuring: one edited slide of 40 is measured again, and the other 39 aren't.
+  - **CR-65:** a kind may now say what of its slide it reads (`reads`, `engine/raster.ts`). The connector reads its two joined boxes.
+  - **CR-66:** `syncChangedConnectors` runs after the change, on just the slides that change touched, and within the same undo step.
+  - **CR-68 and CR-74:** one `handoutImages()` now serves both the print handout and the PDF.
+  - **CR-69 was not a bug.** The studio has a single dark look, so an icon tile's ink never changes under it.
 - **10 November 2026, batch 6 done (`f9b4e6b6`).** CR-49 to CR-63. The new tests failed on the code before the fix. On the old viewer, a share claiming 100 million pictures kept it busy for 99 seconds. Notes:
   - **CR-49 to CR-52** have their first tests, `tests/share-upload.test.js`, which runs `js/share.js` against a stand-in relay. The upload is exposed for it as `SF.shareUpload`.
   - **CR-53 to CR-56:** `supabase/migrations/0004_share_limits.sql`. `is_teacher()` now reads `auth.users`: the email must be confirmed, and its domain must match an allowed one exactly. `email_verified` was not used, because Supabase keeps it in user metadata rather than as a claim.
