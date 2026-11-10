@@ -42,6 +42,13 @@ There is one source of truth, and it is `deploy-render` on GitHub: what Render r
 - **A branch with work that never reached `deploy-render` is a decision, not storage.** Merge it, or ask the user to drop it. Don't start new work on it.
 - **The Lesson studio (`lab/`) is the main app.** New slide, design and motion features go there. The classic editor and player get fixes, and whatever games and live rooms still need from them.
 
+## Adding a layer kind
+
+A layer kind is a folder in `lab/src/kinds/` (its `def.ts`, drawing, `index.ts` and an `Inspector.tsx` if it has a tab), listed in `kinds/index.ts`, with its tab in `ui/panels/special.tsx` and an Add entry in `ui/stage/insert.ts`.
+- **Live web content** (a framed site, a sandboxed page): declare `web` on the kind (`lab/src/engine/web.ts`). The show frames it; don't add a case to `show/Show.tsx`. The drawing is the still the editor and exports show.
+- **A drawing that depends on other layers**: set `readsSlide`, and read the slide passed to the drawing. The renderer redraws it when the slide changes; don't copy other layers' positions into its params.
+- Give it a layout in the lesson file (`lab/src/decks/lessonFormat.ts`, `fromLesson.ts`, `docs/lesson-format.md`) when an AI-written lesson would use it.
+
 ## Adding a game style
 
 A style is one file in `src/games/`. It is registered in these places:

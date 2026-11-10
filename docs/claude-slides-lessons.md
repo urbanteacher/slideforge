@@ -1,6 +1,6 @@
 # What SlideForge can take from Claude Slides
 
-The analysis behind backlog items **CS-01 – CS-17**.
+The analysis behind backlog items **CS-01 – CS-19**.
 
 Claude Slides is the slide-deck Artifact type built into claude.ai: you describe a deck in chat and Claude writes it as 16:9 slides you can present, share as a private link, and download as .pptx or PDF. It makes general presentations. SlideForge is a teaching tool with a live room. Most of what makes SlideForge worth having (phone answers, games, activities, reports) has no equivalent there. But the way Claude Slides is *built for an AI to write* is worth learning from.
 
@@ -145,6 +145,25 @@ These come from the type's architecture rather than its screens. SlideForge alre
 | **CS-16** · photo search | Searches a photo library and keeps the credit | Picture slots start empty | A search that keeps the licence and credit; needs a provider |
 | **CS-17** · icons and connectors | Icon and connector elements an agent can write | Shapes and diagrams; not checked how far they go | Checked: shapes and diagrams had no icons and nothing joined two layers. **Done 10 November** (`461863db`): 117 Lucide icons, a connector that follows the layers it joins, and an `icons` layout in the lesson file |
 
+## 7. How each app adds a feature
+
+**Claude Slides** treats a slide as a small web page in a closed set of elements. A feature is a new element (`x-icon`, `x-connector`, `x-embed`) that its runtime draws, and the browser does the layout. Claude writes the element; editing by hand comes second.
+
+**SlideForge** treats a slide as layers drawn on a canvas. A feature is a layer kind: its settings, its drawing, an inspector tab, a line in the registry, an Add entry, and often more. The widget needed a frame over the canvas in the show, and the connector needed a sync in the store, because a drawing saw only its own layer.
+
+| | Claude Slides | SlideForge |
+|---|---|---|
+| Cost of a feature | Low: an element the browser lays out | Higher: a kind, drawn by hand |
+| Text and layout | The browser's | Measured and fitted by the studio |
+| Consistency | Up to the author | Strong: layouts and one grid |
+| What a feature can do | Visual, and small sandboxed embeds | Anything, the live room included |
+| One picture everywhere | Page and download | Editor, show, PowerPoint, PDF, video |
+
+**For quick visual features, Claude's approach is cheaper. For a teaching tool with a live room, SlideForge's is right**: the canvas layers are what make the editor, show and exports agree and what games read. So SlideForge keeps its layers and makes each new one cheaper:
+- **CS-18, web layers** (`lab/src/engine/web.ts`): a kind declares live web content, and the show frames it. Video links and widgets use it. **Done 10 November** (`dedd1306`).
+- **CS-19, drawings that read their slide**: a kind may read its slide, and the renderer redraws it when the slide changes. Connectors use it. **Done 10 November** (`dedd1306`).
+- **The lesson file stays the AI's way in** (CS-01): each new kind gets a layout there as it is built, as the widget and icons did.
+
 ## Change log
 
 - **9 November 2026:** written from the Claude Slides type's instructions and a check of SlideForge's exports, themes and AI writers. Items CS-01 – CS-07 opened in [BACKLOG.md](BACKLOG.md).
@@ -157,3 +176,4 @@ These come from the type's architecture rather than its screens. SlideForge alre
 - **10 November 2026:** CS-14 step 1 built: pictures stored once, apart from the lesson, in this browser.
 - **10 November 2026:** CS-15 built: the live widget layer.
 - **10 November 2026:** CS-17 built: icons and connectors. Section 6 is done apart from CS-14's step 2 and CS-16.
+- **10 November 2026:** section 7 added (how each app adds a feature); CS-18 and CS-19 built.

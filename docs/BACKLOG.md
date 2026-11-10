@@ -78,6 +78,8 @@ order.
 | CS-15 | [A small live widget on a slide](claude-slides-lessons.md): one web page of up to 16 KB that runs in the show and Preview, sandboxed to scripts only with no network; Add → Widget, a live preview in its tab, and a `widget` layout in the lesson file. Open: shared links and exported HTML show its card, not the live page | M | Done · 10 Nov 2026 · `832a055b` |
 | CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
 | CS-17 | [Icons and connectors as layers](claude-slides-lessons.md): 117 Lucide icons drawn on the canvas, a connector that joins two layers and follows them, and an `icons` layout in the lesson file | M | Done · 10 Nov 2026 · `461863db` |
+| CS-18 | [Web layers](claude-slides-lessons.md): a layer kind declares live web content (a framed address or a sandboxed page) and the show lays it over the canvas; video links and widgets use it | S–M | Done · 10 Nov 2026 · `dedd1306` |
+| CS-19 | [Drawings that read their slide](claude-slides-lessons.md): a kind may read the rest of its slide, and the renderer redraws it when the slide changes; connectors use it | S–M | Done · 10 Nov 2026 · `dedd1306` |
 | CS-08 | [Ask for a change in the studio](claude-slides-lessons.md): "turn slide 7 into a quiz", "split this slide", answered by an edit you can undo; after CS-01 | M–L | To do · P2 |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -839,9 +841,18 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-15 | The widget layer (`lab/src/kinds/widget/`, `lab/src/engine/widget.ts`), run by the show (`show/Show.tsx`) | Done |
 | CS-16 | Photo search with the credit kept | To do |
 | CS-17 | `lab/src/kinds/icon/`, `lab/src/kinds/connector/`, `lab/src/core/connectors.ts` (run by the store's `mutate`), `tools/lab-icons.mjs` | Done |
+| CS-18 | `lab/src/engine/web.ts`: `LayerKind.web`, `webContent`; the show's one overlay path (`show/Show.tsx`) | Done |
+| CS-19 | `LayerKind.readsSlide`, `RasterFn`'s `slide`, the renderer's cache keyed by the slide's layers | Done |
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — Two engine paths that make a new layer cheaper (CS-18, CS-19)
+
+From comparing how the two apps add features ([claude-slides-lessons.md](claude-slides-lessons.md) section 7): Claude Slides adds an element the browser lays out, while every SlideForge feature is a layer kind drawn by hand on the canvas, and this session's features each needed extra plumbing. Two pieces of that plumbing are now shared (`dedd1306`).
+- **CS-18, web layers** (`lab/src/engine/web.ts`). A kind declares `web`: a framed address (a YouTube link) or a sandboxed page of our own (a widget). The show lays any such layer over the canvas at its box, and the canvas keeps drawing the kind's still for the editor, the exports and a share. Video links and widgets now declare it, and the show lost its two special cases. A next live layer is its kind's `web` and nothing in the show.
+- **CS-19, drawings that read their slide.** A kind may set `readsSlide`; its drawing is handed the slide, and the renderer draws it again whenever the slide's layers change, so a cached picture cannot go stale. Connectors now draw from where the two layers are, even when a change reached the slide without the store's sync (an imported file, an older copy); the sync still keeps their box current for selecting.
+- **Checked:** `lab/tests/web-layers.test.ts` (4 tests; the lab's 441 pass), the root `npm test` (651 of 652, the usual `output/notebooks` failure), the render-surface audit. In the studio, a connector followed a card moved by a change that bypassed the store, and in the show a YouTube frame and a counting widget both ran through the one path.
 
 ### 10 November 2026 — The new sharing and slide features tried by hand
 
