@@ -851,3 +851,9 @@ kbd { font: 500 11.5px/1 Inter, ui-sans-serif, system-ui, sans-serif; padding: 4
 .sheet .panel-scroll, .sheet .pref-group:last-of-type { padding-bottom: 12px; }
 .widget-try { width: 100%; overflow: hidden; border: 1px solid var(--line-2); border-radius: 8px; }
 .widget-try iframe { display: block; border: 0; transform-origin: 0 0; }
+.icon-group { margin-top: 10px; }
+.icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 4px; margin-top: 4px; }
+.icon-tile { display: grid; place-items: center; aspect-ratio: 1; padding: 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--text); cursor: pointer; }
+.icon-tile canvas { width: 28px; height: 28px; }
+.icon-tile:hover, .icon-tile:focus-visible { background: var(--line-2); }
+.icon-tile.on { border-color: var(--accent); background: var(--line-2); }

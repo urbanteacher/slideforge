@@ -3,6 +3,8 @@ export { ASPECTS, aspectOf, setAspect } from './aspect';
 export type { Aspect } from './aspect';
 export { TEMPLATES, blankDeck, blankSlide, cloneLayer, cloneSlide, createLayer, createSlide, demoDeck, rosetteSvg, uid } from './defaults';
 export { SLIDE_LIMITS, limitsOf } from './limits';
+export { connectorGeometry, syncConnectors, syncSlideConnectors } from './connectors';
+export type { ConnectorEnds } from './connectors';
 export { lessonNeeds, slideNeeds } from './needs';
 export type { Need } from './needs';
 export { DECK_VERSION, upgradeDeck, upgradeSteps } from './version';

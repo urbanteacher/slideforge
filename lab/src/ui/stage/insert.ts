@@ -170,7 +170,7 @@ function freeRow(slide: Slide, h: number, skip: string): number | null {
 }
 const WIDE = new Set(['chart', 'diagram', 'note', 'heading', 'table', 'line']);
 
-export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'diagram', 'table', 'line', 'timer', 'widget'] as const;
+export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'diagram', 'table', 'line', 'timer', 'widget', 'icon', 'connector'] as const;
 export type ItemId = (typeof ITEMS)[number];
 
 export function addItem(id: Exclude<ItemId, 'image'>) {
@@ -203,6 +203,45 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     case 'table': return make('table', 'Table', { ...kit.table.params }, undefined, kit.table.anim);
     case 'note': return make('note', 'Note', { ...kit.note.params }, undefined, kit.note.anim);
     case 'diagram': return make('diagram', 'Diagram', { ...kit.diagram.params }, { h: 760 }, kit.diagram.anim);
+    // An icon in the slide's ink, in the middle, with its tab open to choose one (CS-17).
+    case 'icon': {
+      const size = 200;
+      const layer = createLayer('icon', { name: 'Icon', params: { icon: 'lightbulb', color: ink, stroke: 2, disc: '', align: 'center' } as never, box: { x: (st.deck.width - size) / 2, y: (st.deck.height - size) / 2, w: size, h: size, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+      st.insertLayer(layer);
+      st.set({ inspectorTab: 'special' });
+      st.showToast('Choose its icon in the Icon tab; colour, weight and a disc are in Design.');
+      return;
+    }
+    // A line from the selected layer to the nearest other, beneath both, kept on them as they move (CS-17).
+    case 'connector': {
+      const isPart = (l: { box?: unknown; kind: string; name: string }) => !!l.box && l.kind !== 'connector' && !/^(ground|backdrop)$/i.test(l.name);
+      const from = slide.layers.find((l) => l.id === st.selectedId && isPart(l));
+      if (!from) { st.showToast('Select the layer the line should start from, then choose Connector again.'); return; }
+      const c = (b: { x: number; y: number; w: number; h: number }) => [b.x + b.w / 2, b.y + b.h / 2];
+      const [fx, fy] = c(from.box!);
+      // The nearest layer that is not on or inside it (a card's own heading is part of the card, not the next idea).
+      const fb = from.box!;
+      const apart = (b: { x: number; y: number; w: number; h: number }) => b.x >= fb.x + fb.w || b.x + b.w <= fb.x || b.y >= fb.y + fb.h || b.y + b.h <= fb.y;
+      const to = slide.layers.filter((l) => l !== from && isPart(l) && apart(l.box!)).sort((a, b) => {
+        // A layer of the same kind first (card to card, icon to icon), then the nearest.
+        const same = Number(b.kind === from.kind) - Number(a.kind === from.kind);
+        if (same) return same;
+        const [ax, ay] = c(a.box!), [bx, by] = c(b.box!);
+        return Math.hypot(ax - fx, ay - fy) - Math.hypot(bx - fx, by - fy);
+      })[0];
+      if (!to) { st.showToast('A connector joins two layers, and this slide has only one.'); return; }
+      const layer = createLayer('connector', { name: `${from.name} → ${to.name}`, params: { from: from.id, to: to.id, route: 'elbow', arrow: 'end', color: dark ? '#cfcac2' : '#5f5a52', width: 5, dash: false } as never, box: { x: 0, y: 0, w: 10, h: 10, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+      // Locked: it is placed by the layers it joins, so dragging it would only be undone.
+      layer.locked = true;
+      st.mutate((d) => {
+        const s2 = d.slides.find((x) => x.id === slide.id)!;
+        const at = Math.min(s2.layers.findIndex((l) => l.id === from.id), s2.layers.findIndex((l) => l.id === to.id));
+        s2.layers.splice(Math.max(0, at), 0, layer);
+      });
+      st.set({ selectedId: layer.id, inspectorTab: 'special' });
+      st.showToast(`Joined “${from.name}” to “${to.name}”. Change either end, the line and the arrowhead in the Connector tab.`);
+      return;
+    }
     // A widget in the middle of the slide, with its tab open: the dice example to change or replace (CS-15).
     case 'widget': {
       const g = gridFor(st.deck), w = (g.right - g.left) * 0.6, h = w * 0.56;

@@ -58,6 +58,22 @@ function build(s: LessonSlide, st: LayoutStyle): Slide {
       const widget = createLayer('widget', { name: s.title?.trim() || 'Widget', params: { html: s.html, background: '#ffffff', radius: 24 } as never, box: { x: cell(1, 1, 12, 1).x, y: top, w: cell(1, 1, 12, 1).w, h: CONTENT_FOOT - top, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
       return blockSlide(st, s.title?.trim() || 'Widget', s.title?.trim() ? [titleRow(st, s.title.trim()), titleBar(st), widget] : [widget]);
     }
+    case 'icons': {
+      // The keywords layout with an icon in the theme's accent before each row. The label keeps its width (its size
+      // was fitted to it) and moves right; the meaning, which can wrap, gives up the room.
+      const made = keywordsSlide(st, s.title, s.items.map(([, term, words]) => [term, words]));
+      const terms = made.layers.filter((l) => l.name === 'Keyword');
+      const meanings = made.layers.filter((l) => l.kind === 'text' && l.name !== 'Keyword' && terms.some((t) => t.box && l.box && Math.abs(l.box.y - t.box.y) < 1 && l.box.x > t.box.x));
+      terms.forEach((t, i) => {
+        const b = t.box!, size = Math.min(100, Math.max(56, b.h * 0.8)), shift = size + 28;
+        const icon = createLayer('icon', { name: `Icon · ${s.items[i][0]}`, params: { icon: s.items[i][0], color: st.accent, stroke: 2, disc: '', align: 'left' } as never, box: { x: b.x, y: b.y + (b.h - size) / 2, w: size, h: size, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+        t.box = { ...b, x: b.x + shift };
+        const m = meanings.find((l) => Math.abs(l.box!.y - b.y) < 1);
+        if (m?.box) m.box = { ...m.box, x: m.box.x + shift, w: Math.max(200, m.box.w - shift) };
+        made.layers.splice(made.layers.indexOf(t), 0, icon);
+      });
+      return made;
+    }
     case 'quiz': throw new Error('A quiz is built as a game.');
   }
 }

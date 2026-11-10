@@ -3,7 +3,13 @@
 // the studio places everything, so a file cannot put a box in the wrong place. This file reads and checks one, with
 // no drawing in it: what is wrong is reported slide by slide, so whoever wrote it can put it right.
 
+import icons from '../assets/icons.json';
+
 export const LESSON_FORMAT = 'slideforge-lesson/1';
+
+/** The icon names a lesson file may use (assets/icons.json, from Lucide). */
+export const LESSON_ICONS: string[] = Object.keys((icons as unknown as { icons: Record<string, unknown> }).icons);
+const iconKnown = (n: string) => LESSON_ICONS.includes(n);
 
 /** What every slide may carry, whatever its layout. */
 interface Common {
@@ -33,6 +39,7 @@ export type LessonSlide = Common & (
   | { layout: 'timeline'; title: string; subtitle?: string; events: [string, string, string][] }
   | { layout: 'quiz'; title?: string; questions: LessonQuestion[] }
   | { layout: 'widget'; title?: string; html: string }
+  | { layout: 'icons'; title: string; items: [string, string, string][] }
 );
 
 /** A multiple-choice question: `answer` is the right option's number from 1, or its words. */
@@ -57,6 +64,7 @@ export const LESSON_LAYOUTS: Record<LessonSlide['layout'], { needs: string[]; ma
   timeline: { needs: ['title', 'events'], may: ['subtitle'] },
   quiz: { needs: ['questions'], may: ['title'] },
   widget: { needs: ['html'], may: ['title'] },
+  icons: { needs: ['title', 'items'], may: [] },
 };
 const COMMON = ['layout', 'id', 'notes', 'hidden', 'factCheck'];
 
@@ -91,6 +99,10 @@ function slideProblems(s: Record<string, unknown>): string[] {
   if (layout === 'compare') want('rows', isRows(s.rows, 3), 'a list of [row label, A, B]');
   if (layout === 'table') want('rows', isRows(s.rows, Array.isArray((s.rows as unknown[] | undefined)?.[0]) ? ((s.rows as unknown[][])[0]).length : -1), 'a list of rows, each as long as the first (the first row is the header)');
   want('events', isRows(s.events, 3) && (s.events as unknown[]).length <= 6, 'one to six [when, who or what, detail]');
+  if (layout === 'icons') {
+    want('items', isRows(s.items, 3) && (s.items as unknown[]).length >= 2 && (s.items as unknown[]).length <= 6, 'two to six [icon, label, what it means]');
+    if (isRows(s.items, 3)) (s.items as string[][]).forEach((r, i) => { if (!iconKnown(r[0])) out.push(`row ${i + 1}'s icon "${r[0]}" is not in the studio's set (docs/lesson-format.md lists them)`); });
+  }
   if (layout === 'widget') {
     want('html', isText(s.html), 'the widget\'s page, as HTML');
     if (typeof s.html === 'string' && s.html.length > 16 * 1024) out.push(`"html" is ${Math.round(s.html.length / 1024)} KB; a widget's page may be 16 KB at most`);

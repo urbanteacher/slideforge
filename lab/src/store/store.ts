@@ -2,7 +2,7 @@ import { produce } from 'immer';
 import { create } from 'zustand';
 import { contentHeight, shrinks, kind } from '../engine';
 import { reflowCards, themeOf, themeSlide } from '../layouts';
-import { upgradeDeck, blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck, hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters, type Deck, type Layer, type Slide } from '../core';
+import { syncConnectors, upgradeDeck, blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck, hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters, type Deck, type Layer, type Slide } from '../core';
 import { repairGames } from '../designs';
 
 export type LeftTab = 'layers' | 'add';
@@ -140,7 +140,8 @@ export const useStore = create<State>((set, get) => ({
 
   mutate: (recipe, merge) => {
     const { deck, past, lastMerge } = get();
-    const next = produce(deck, recipe);
+    // Connectors follow the layers they join, inside the same change, so undo takes them back too (core/connectors.ts).
+    const next = produce(deck, (d) => { recipe(d); syncConnectors(d); });
     if (next === deck) return;
     const now = performance.now();
     const coalesce = merge && lastMerge && lastMerge.key === merge && now - lastMerge.t < 1200;
@@ -331,6 +332,7 @@ export function refitAllText() {
       }
       reflowCards(s, d.height);
     }
+    syncConnectors(d);
   });
   if (next !== st.deck) useStore.setState({ deck: next });
 }
