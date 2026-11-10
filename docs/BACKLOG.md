@@ -67,8 +67,10 @@ order.
 | CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting. Open: the lab's AI writers are not yet told to leave placeholders | S–M | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
 | CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: start from a brief (topic, length, audience), then sections, timings, live moments; build with SD-04 | M | To do · P2 |
-| CS-06 | [Links to a slide, and comments on a slide](claude-slides-lessons.md) | S–M | To check first · P3 |
-| CS-07 | [Send a deck to Google Drive and other apps](claude-slides-lessons.md) | S | To do · P3 · only if asked |
+| CS-06 | [Links to a slide, and private shares kept online](claude-slides-lessons.md): `#slide-N` links and a Link button; a signed-in teacher's share goes to their account and can be for teachers only. Comments dropped (10 Nov). Open: run `0002_shares.sql`, then try a signed-in share | S–M | Done · 10 Nov 2026 · `fb01269d` `55dd800b` · needs the migration |
+| CS-07 | [Send to…](claude-slides-lessons.md): a PowerPoint or a PDF handed to the device's share menu (Drive, Teams, Mail), a download where there is none. Direct Drive and Canva uploads not built | S | Done · 10 Nov 2026 · `fb01269d` |
+| CS-09 | [A gentler first ten minutes](claude-slides-lessons.md): a guided first lesson, or a simple mode that hides the advanced panels until asked for | M | To do · P2 |
+| CS-10 | [The interface in more languages](claude-slides-lessons.md): Claude Slides comes in eleven, SlideForge in English only | L | Needs a decision · P3 |
 | CS-08 | [Ask for a change in the studio](claude-slides-lessons.md): "turn slide 7 into a quiz", "split this slide", answered by an edit you can undo; after CS-01 | M–L | To do · P2 |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -819,11 +821,23 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-03 | A placeholder convention for facts nobody supplied (`[€__]`, `[source __]`), a per-slide "not yet checked" mark, a ? on the filmstrip, and a line in the show's toast when Present or Host live opens, with the list in Status. Open: the lab's AI writers | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | A deck records the theme version it was made with; a theme change is offered, not applied | To do · needs a decision (copy in the deck, or a versioned registry) |
 | CS-05 | An outline step for AI-built lessons (sections, one sentence and a timing each, live moments), edited before filling; with SD-04 | To do |
-| CS-06 | Deep links to a slide and comments on a slide, after checking what the share link and viewer already do | To check |
-| CS-07 | Send a deck to Google Drive and similar apps | To do · only if asked |
+| CS-06 | A shared lesson opens at `#slide-N`, its address follows the slide, and Link copies it. A signed-in teacher's studio share is kept in their account (`supabase/migrations/0002_shares.sql`), survives app updates, and can be for signed-in teachers only; the viewer reads it through `get_share()`. Comments on a slide were dropped (Mark, 10 Nov) | Done · needs the migration |
+| CS-07 | File → Export → Send to…: a PowerPoint (pictures or editable text) or a PDF of the student copy, made, then handed to the share menu on a second click. The PDF writer is `lab/src/export/pdf.ts` | Done |
+| CS-09 | A gentler start: a guided first lesson, or a simple mode that hides advanced panels | To do |
+| CS-10 | More interface languages | Needs a decision |
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — Links to a slide, Send to…, and private shares kept online (CS-06, CS-07)
+
+From Claude Slides' Share menu ([claude-slides-lessons.md](claude-slides-lessons.md)). Comments on a slide were planned and dropped (Mark). PowerPoint and PDF export already existed.
+- **Links to a slide** (`fb01269d`): a shared lesson opens at `#slide-N`, the address follows the slide, and the viewer's **Link** button copies a link to the slide on screen. Follow mode ignores it, since the room picks the slide.
+- **Send to…** (`fb01269d`): File → Export → Send to… makes a PowerPoint (pictures or editable text) or a PDF of the student copy, then hands it to the device's share menu (Drive, Teams, Mail, AirDrop). Browsers open that menu only straight after a click and a long lesson takes longer to draw, so a second click sends it. Where the browser has no share menu for files, it downloads, and says why. The PDF is written by `lab/src/export/pdf.ts`, one JPEG to a page, no library.
+- **Private shares, kept online** (`55dd800b`): a Lesson-studio share made while signed in goes to the teacher's account (`supabase/migrations/0002_shares.sql`) rather than the relay's disk, so it survives a deploy, and the teacher chooses *Anyone with the link* or *Signed-in teachers only*. Shares cannot be listed: the viewer reads one by its id through `get_share()`, with the teacher's stored sign-in, and a private share asked for by anyone else answers only that it is private, so the viewer asks them to sign in. Signed out, a share goes to the relay as before; older links still open.
+- **Checked:** the lab's 410 tests (new: `pdf.test.ts`, `viewer-cloud.test.ts` against a stand-in for Supabase, slide links in `viewer.test.ts`); the root `npm test` (644 of 645; the one failure is the `output/notebooks` pages that load a missing `vis.js`); in the browser on a local server, a share opened at `#slide-3` and moved on to `#slide-4`, Send to… made a PDF and offered Download (that browser has no share menu), the signed-out Share flow made and copied a link, and an unknown id reached Supabase and fell back to the relay's message.
+- **Not checked, and needed:** run `supabase/migrations/0002_shares.sql` once in the Supabase SQL editor. Until then a signed-in share fails with a message and a signed-out one works as before. After it, a signed-in share, a private link opened signed out, and the share menu on a phone or Mac all need trying by hand.
+- **Opened:** CS-09 (a gentler first ten minutes) and CS-10 (more languages), the UX gaps the comparison found that nothing covered.
 
 ### 9 November 2026 — The two apps' UX compared; CS-08 opened
 

@@ -1,6 +1,6 @@
 # What SlideForge can take from Claude Slides
 
-The analysis behind backlog items **CS-01 – CS-08**.
+The analysis behind backlog items **CS-01 – CS-10**.
 
 Claude Slides is the slide-deck Artifact type built into claude.ai: you describe a deck in chat and Claude writes it as 16:9 slides you can present, share as a private link, and download as .pptx or PDF. It makes general presentations. SlideForge is a teaching tool with a live room. Most of what makes SlideForge worth having (phone answers, games, activities, reports) has no equivalent there. But the way Claude Slides is *built for an AI to write* is worth learning from.
 
@@ -81,13 +81,19 @@ These need no work. They are listed so nobody opens an item for them:
 
 **In Claude Slides:** a link can open a given slide (`#slide-7`), and comments can be attached to a slide, which helps when a co-teacher reviews a deck.
 
-**In SlideForge:** not checked. Check what the share link and the viewer already do before building anything.
+**Built (10 November 2026, `fb01269d`, `55dd800b`):**
+- **Links to a slide:** a shared lesson opens at `#slide-N`, the address follows the slide, and the viewer's Link button copies it (`lab/src/viewer/state.ts` `readLink`, `slideHash`).
+- **Private shares:** a signed-in teacher's studio share is kept in their account (`supabase/migrations/0002_shares.sql`), survives app updates, and is either open or for signed-in teachers only. The viewer reads it by id through `get_share()` (`lab/src/viewer/cloud.ts`), so shares cannot be listed. Signed out, shares go to the relay as before.
+- **Comments on a slide:** dropped (10 November).
+- **Still needed:** the migration run once in the Supabase SQL editor, then a signed-in share and a private link opened signed out, tried by hand. Withdrawing an online share has no screen yet; it is a row the teacher owns.
 
 ### CS-07 · Send a deck to other apps — P3 · S
 
 **In Claude Slides:** Share › Export › Send to posts a deck to apps such as Google Drive and Canva.
 
 **In SlideForge:** .pptx, PDF and HTML exports already cover most of the need. Worth doing only if a teacher asks for Drive.
+
+**Built (10 November 2026, `fb01269d`):** File → Export → **Send to…** makes a PowerPoint (pictures or editable text) or a PDF of the student copy, then a second click hands it to the device's share menu: Drive, Teams, Mail, AirDrop. Where a browser has no share menu for files, it downloads. The PDF is written by `lab/src/export/pdf.ts`. Uploading straight into Drive or Canva is not built: it needs a Google Cloud OAuth client and a Canva developer app.
 
 ## 3. What not to take
 
@@ -97,7 +103,7 @@ These need no work. They are listed so nobody opens an item for them:
 
 ## 4. Order
 
-CS-03 first: it is small and stops a real risk in teaching. CS-01 next: it changes how every future deck is made. Then CS-02 and CS-05, which build on CS-01's format. CS-04, CS-06 and CS-07 when there is room. CS-08 after CS-01.
+CS-03 first: it is small and stops a real risk in teaching. CS-01 next: it changes how every future deck is made. Then CS-02 and CS-05, which build on CS-01's format. CS-04 when there is room. CS-08 after CS-01. CS-06 and CS-07 are built (10 November).
 
 ## 5. How the two feel to use
 
@@ -121,9 +127,11 @@ Claude Slides' side comes from its instructions, not a hands-on trial.
 - **Asking for a change is the other gap.** That is **CS-08**: a request box in the studio, with each answer one undo step. It needs CS-01's text format so the AI can write a slide safely.
 - **Saving is not a gap.** Sign-in and sync are built. What is left is shares and reports that survive a deploy.
 - **Feedback and the room are SlideForge's strengths.** Keep them visible in anything built from this list.
+- **Two gaps had no item:** the learning curve (**CS-09**, a guided first lesson or a simple mode) and languages (**CS-10**).
 
 ## Change log
 
 - **9 November 2026:** written from the Claude Slides type's instructions and a check of SlideForge's exports, themes and AI writers. Items CS-01 – CS-07 opened in [BACKLOG.md](BACKLOG.md).
 - **9 November 2026:** CS-03 built (`b0fa402b`); its section records what was built and what is still open.
 - **9 November 2026:** section 5 added, comparing how the two apps feel to use; CS-08 opened.
+- **10 November 2026:** CS-06 (links to a slide, private online shares; comments dropped) and CS-07 (Send to…) built; CS-09 and CS-10 opened.

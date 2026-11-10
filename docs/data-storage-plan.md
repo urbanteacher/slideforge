@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 5 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment is set (15 October), so the live site saves online.
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 5 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment is set (15 October), so the live site saves online. Step 6's shares are built (10 November) and wait on `0002_shares.sql` being run; reports are still open.
 
 ## 1. The problem
 
@@ -140,7 +140,12 @@ Each step is its own commit and works on its own.
    - Documents uploaded before this (in the older form) are uploaded once more, so their pictures move to the bucket too.
    - The 12 MB limit now applies to a lesson without its pictures.
    - Checked by `tools/smoke/cloud-sync.mjs`: one bucket copy for a picture in two lessons, a small online lesson, and the exact picture back on the other device.
-6. **Shares and reports to Supabase.** The server writes them to the database or bucket instead of `SHARE_DIR`, so they survive deploys. This lifts the 40-share limit.
+6. **Shares and reports to Supabase. Shares built 10 November for signed-in teachers; reports open.**
+   - A Lesson-studio share made while signed in is a row in `shares` (`supabase/migrations/0002_shares.sql`), written by the browser with the teacher's own sign-in (`js/share.js`), so it survives deploys and is not counted against the relay's 40. It is open or private (signed-in teachers only).
+   - Nobody can list shares: the viewer reads one by id through `get_share()` (`lab/src/viewer/cloud.ts`), which hands a private share only to a signed-in teacher.
+   - Signed out, and for classic copies, shares still go to the relay's `SHARE_DIR`, and older links still open from it.
+   - **Still open:** live-session reports, which the relay writes to its journal files.
+   - **What the owner does, once:** run `supabase/migrations/0002_shares.sql` in the SQL editor.
 7. **Built-in lessons as data.** Lessons hard-coded today (`js/lab-decks.js`, `lessons/`) can be published to a shared "built-in" folder in Supabase instead of the code. Large MP4s move to the bucket. The code then keeps only the starter decks.
 
 Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make it scale.
@@ -160,6 +165,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 10 November 2026: step 6's shares built for signed-in teachers (`55dd800b`), open or private; the migration waits on the owner. Reports stay open.
 - 15 October 2026: the hosted Library starts empty, with the built-in lessons as templates, and a built-in's unchanged copy is kept out of the account (`js/builtins.js`). The live site was given `SUPABASE_URL` and `SUPABASE_ANON_KEY`, so saving online is on there. The 67 documents already in the owner's account are mostly built-in copies, uploaded before this rule; they are left as they are.
 - 14 October 2026, evening: step 5 built, pictures in the bucket for the online copy (`js/sync.js`).
 - 14 October 2026, evening: sign-in changed from the email magic link to a work email and password; accounts are made in the Supabase dashboard.
