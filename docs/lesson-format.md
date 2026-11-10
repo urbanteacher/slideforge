@@ -44,7 +44,7 @@ Any slide may also carry these:
 | `hidden` | `true` keeps the slide in the deck but out of the show and the student copy. |
 | `factCheck` | A fact on this slide still needs a source: what to check. The studio marks the slide and says so when a show opens. |
 
-**Never invent a fact.** Where a figure, name, date or source wasn't given, write a placeholder: square brackets round two or more underscores, as `[__%]`, `[year __]` or `[source __]`. The studio marks these too (CS-03).
+**Never invent a fact.** Where a figure, name, date or source wasn't given, write a placeholder: square brackets round a blank of two or more underscores that doesn't touch a letter or digit, as `[__%]`, `[year __]` or `[source __]`. Underscores inside code (`[__init__]`, `"__x"`) are not placeholders. The studio marks these too (CS-03).
 
 ## The layouts
 
@@ -64,7 +64,7 @@ Any slide may also carry these:
 | `split` | `title`, `points` | `picture`, `side` | Text beside a picture. `picture` is a picture's address; `side` is `"left"` or `"right"` (where the picture goes). |
 | `timeline` | `title`, `events` | `subtitle` | One to six `[when, who or what, detail]`. |
 | `quiz` | `questions` | `title` | A multiple-choice game the room plays, made from the studio's own. |
-| `widget` | `html` | `title` | A small live web page, up to 16 KB, that runs in the show. Sandboxed: no internet, no way into the lesson. Its page is laid out at the slide's size, with text from 36px. |
+| `widget` | `html` | `title` | A small live web page, up to 16 KB, that runs in the show. It is walled off from the lesson and the teacher's sign-in, and it can't fetch anything, but it can open a web page in its own frame. So a widget from a lesson file asks the teacher before it first runs. Its page is laid out at the slide's size, with text from 36px. |
 | `icons` | `title`, `items` | | Two to six `[icon, label, what it means]` rows, each with its icon in the theme's accent. The icon is a name from the list below. |
 
 A `quiz` question is:
@@ -107,6 +107,7 @@ Give the AI this page and the example, and ask for one JSON file. Then import it
 
 ## Change log
 
+- **10 November 2026:** the widget's wording corrected; a widget from a lesson file asks before it first runs. The placeholder's blank must stand on its own (CR-25, CR-37).
 - **10 November 2026:** a `keywords` slide holds one to six terms (a seventh was dropped). Lucide's older icon names are read, and an unknown icon is a warning, not a problem (CR-16, CR-21).
 - **10 November 2026:** the `icons` layout and the icon list (CS-17).
 - **10 November 2026:** the `widget` layout (CS-15).

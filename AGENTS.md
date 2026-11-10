@@ -20,7 +20,7 @@ For any AI agent (Claude, Cursor, Codex) and for people.
 - After changing `server/server.js`, restart the local server; it does not reload.
 - The built-in lessons ship as Lesson-studio copies (`assets/lab-lessons/`, `js/lab-lessons.js`). After changing a lesson, or bumping the converter's `CARRIED`, run `node tools/build-lab-lessons.mjs [key…]` (it needs `lab-app/` built). `tests/lab-lessons.test.js` fails until the copies match. A stale copy is never shown: the browser converts that lesson as before.
 - **A new lesson can be written as a lesson file** ([docs/lesson-format.md](docs/lesson-format.md)): one JSON file whose slides name a studio layout and fill its words, imported with File → Import. Prefer it to a new builder script when its layouts cover the lesson.
-- **Never invent a fact on a slide.** Where a figure, name, date or source was not given, write a placeholder: square brackets round two or more underscores, as `[€__]` or `[source __]`. A fact from memory that still needs a source gets the slide's `factCheck`: in a lesson file, the words to check (`"factCheck": "…"`); in a deck, `{ note }`. The Lesson studio marks both and says so when a show opens (`lab/src/core/facts.ts`).
+- **Never invent a fact on a slide.** Where a figure, name, date or source was not given, write a placeholder: square brackets round a blank of two or more underscores, as `[€__]` or `[source __]`. The blank touches no letter or digit. A fact from memory that still needs a source gets the slide's `factCheck`: in a lesson file, the words to check (`"factCheck": "…"`); in a deck, `{ note }`. The Lesson studio marks both and says so when a show opens (`lab/src/core/facts.ts`).
 
 ## Committing
 

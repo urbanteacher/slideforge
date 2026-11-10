@@ -54,22 +54,22 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 | ID | What breaks | Where | Fix | Test |
 |---|---|---|---|---|
-| CR-25 ✓ | The widget comment, its tab and its description say it "cannot reach the internet". It can: it may load another page in its own frame, and that page has no content policy | `lab/src/engine/widget.ts:1-5`, `kinds/widget/Inspector.tsx:16`, `def.ts:6`, `docs/lesson-format.md` | Say what is true. What else to do is **decision D1** | (copy) |
-| CR-26 | Once the teacher clicks inside a widget, the clicker and arrow keys stop working until they click the slide | `lab/src/show/Show.tsx:423` | `widgetDoc` forwards the navigation keys with `parent.postMessage`. The show accepts them only when `ev.source` is that frame's window | Try it in the show by hand. A unit test for the message filter |
-| CR-27 | Try It rebuilds the widget on every keystroke, so a half-typed `while(true){` can freeze the editor | `kinds/widget/Inspector.tsx:18,48` | Debounce it by 600 ms, plus a Run button | (by hand) |
-| CR-28 | A pasted page of several MB is kept in the deck, the undo history and shares. Only running it is refused | Widget inspector, `lessonFormat.ts` | Refuse more than 4 × `WIDGET_MAX` at input | Paste too much: refused, with a message |
-| CR-29 | A back-face layer, and a layer still waiting for its click, are framed live at slide entry | `lab/src/engine/web.ts:24` | `webContent` takes the show's flipped/built state, and skips layers that aren't showing yet | Back face and an unbuilt step give null |
-| CR-30 | A rotated video or widget is framed upright over its rotated still | `Show.tsx:520` | `transform: rotate(${b.rot}deg)` on the frame | (smoke) |
-| CR-31 ✓ | The design check rounds contrast before comparing, so 4.49:1 passes | `lab/src/theme/combos.ts:26`, `palettes.ts`, `gradeOf` | Compare the exact ratio, and round only for display | `#008580` on white fails at 4.5 |
-| CR-32 | A note's own panel, or a text block, is ignored, so a default note on a dark slide gets a false contrast warning | `lab/src/designs/designCheck.ts:29` | The layer's own panel or block (opacity ≥ 0.9) is its ground first | A default note on a dark slide: no warning |
-| CR-33 | Back-face layers count as ground for front text. A non-normal blend, or opacity under 0.9, gives a confident wrong answer | `designCheck.ts:31-35` | Look only at the same face, and say nothing for a non-normal blend or low opacity | One case each |
-| CR-34 | The 44px "large text" size is labelled WCAG, but WCAG's large text is 24px (or 18.67px bold) | `designCheck.ts:4,11` | Call it a projection rule, stricter than WCAG on purpose | (comment) |
-| CR-35 | Colours that aren't 6-digit hex (`#abc`, `rgb()`, named), and outline-only shapes, quietly stop the check | `designCheck.ts` | Turn colours into hex, and look past a shape with no fill | One case each |
-| CR-36 ✓ | "Facts to check" stays in Status after every fact is fixed | `lab/src/app/factsWarning.ts:30` | Clear the row (report it as done) when the list is empty | A fixed deck clears the row |
-| CR-37 | The placeholder pattern matches code (`[__init__]`, `df["__x"]`) and reads every param, URLs and game data included | `lab/src/core/facts.ts:12` | Need a space or the bracket before `__`, cap it at `_{2,60}`, and read only text params | A code slide gives no hits |
-| CR-38 | A malformed `factCheck` (`{}`) in a deck file crashes the filmstrip | `facts.ts:40`, `Filmstrip.tsx:164` | Read the note only when it is a string | `factCheck: {}` gives null |
-| CR-39 | The not-yet-checked checkbox and its note have no accessible names, and `aria-label` on the role-less badges isn't read | `inspectorSlide.tsx:87`, `Filmstrip.tsx` | Give the inputs `aria-label`, and the badges `role="img"` and a label | (a11y check) |
-| CR-40 | The opening notice can be replaced within 7 s by another `say()` | `Show.tsx` | Hold the opening notice for its time, then show the next one | (smoke) |
+| CR-25 ✓ · fixed `67497305` | The widget comment, its tab and its description say it "cannot reach the internet". It can: it may load another page in its own frame, and that page has no content policy | `lab/src/engine/widget.ts:1-5`, `kinds/widget/Inspector.tsx:16`, `def.ts:6`, `docs/lesson-format.md` | Say what is true. What else to do is **decision D1** | (copy) |
+| CR-26 · fixed `67497305` | Once the teacher clicks inside a widget, the clicker and arrow keys stop working until they click the slide | `lab/src/show/Show.tsx:423` | `widgetDoc` forwards the navigation keys with `parent.postMessage`. The show accepts them only when `ev.source` is that frame's window | Try it in the show by hand. A unit test for the message filter |
+| CR-27 · fixed `67497305` | Try It rebuilds the widget on every keystroke, so a half-typed `while(true){` can freeze the editor | `kinds/widget/Inspector.tsx:18,48` | Debounce it by 600 ms, plus a Run button | (by hand) |
+| CR-28 · fixed `67497305` | A pasted page of several MB is kept in the deck, the undo history and shares. Only running it is refused | Widget inspector, `lessonFormat.ts` | Refuse more than 4 × `WIDGET_MAX` at input | Paste too much: refused, with a message |
+| CR-29 · fixed `67497305` | A back-face layer, and a layer still waiting for its click, are framed live at slide entry | `lab/src/engine/web.ts:24` | `webContent` takes the show's flipped/built state, and skips layers that aren't showing yet | Back face and an unbuilt step give null |
+| CR-30 · fixed `67497305` | A rotated video or widget is framed upright over its rotated still | `Show.tsx:520` | `transform: rotate(${b.rot}deg)` on the frame | (smoke) |
+| CR-31 ✓ · fixed `67497305` | The design check rounds contrast before comparing, so 4.49:1 passes | `lab/src/theme/combos.ts:26`, `palettes.ts`, `gradeOf` | Compare the exact ratio, and round only for display | `#008580` on white fails at 4.5 |
+| CR-32 · fixed `67497305` | A note's own panel, or a text block, is ignored, so a default note on a dark slide gets a false contrast warning | `lab/src/designs/designCheck.ts:29` | The layer's own panel or block (opacity ≥ 0.9) is its ground first | A default note on a dark slide: no warning |
+| CR-33 · fixed `67497305` | Back-face layers count as ground for front text. A non-normal blend, or opacity under 0.9, gives a confident wrong answer | `designCheck.ts:31-35` | Look only at the same face, and say nothing for a non-normal blend or low opacity | One case each |
+| CR-34 · fixed `67497305` | The 44px "large text" size is labelled WCAG, but WCAG's large text is 24px (or 18.67px bold) | `designCheck.ts:4,11` | Call it a projection rule, stricter than WCAG on purpose | (comment) |
+| CR-35 · fixed `67497305` | Colours that aren't 6-digit hex (`#abc`, `rgb()`, named), and outline-only shapes, quietly stop the check | `designCheck.ts` | Turn colours into hex, and look past a shape with no fill | One case each |
+| CR-36 ✓ · fixed `67497305` | "Facts to check" stays in Status after every fact is fixed | `lab/src/app/factsWarning.ts:30` | Clear the row (report it as done) when the list is empty | A fixed deck clears the row |
+| CR-37 · fixed `67497305` | The placeholder pattern matches code (`[__init__]`, `df["__x"]`) and reads every param, URLs and game data included | `lab/src/core/facts.ts:12` | Need a space or the bracket before `__`, cap it at `_{2,60}`, and read only text params | A code slide gives no hits |
+| CR-38 · fixed `67497305` | A malformed `factCheck` (`{}`) in a deck file crashes the filmstrip | `facts.ts:40`, `Filmstrip.tsx:164` | Read the note only when it is a string | `factCheck: {}` gives null |
+| CR-39 · fixed `67497305` | The not-yet-checked checkbox and its note have no accessible names, and `aria-label` on the role-less badges isn't read | `inspectorSlide.tsx:87`, `Filmstrip.tsx` | Give the inputs `aria-label`, and the badges `role="img"` and a label | (a11y check) |
+| CR-40 · fixed `67497305` | The opening notice can be replaced within 7 s by another `say()` | `Show.tsx` | Hold the opening notice for its time, then show the next one | (smoke) |
 
 ## 5. Sharing: the relay server (batch 5)
 
@@ -152,6 +152,18 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 ## Change log
 
+- **10 November 2026, batch 4 done (`67497305`).** CR-25 to CR-40, with D1 as recommended. Each new test failed on the code before the fix. Tried in the lab's show:
+  - a widget from elsewhere showed its Run cover, turned 8° with its box;
+  - a widget waiting for its click stayed out until Next;
+  - a Page Down pressed inside a widget's own page built the slide's next step.
+
+  The browser tool's own key presses don't reach a sandboxed frame's page, so the last check had the widget press the key itself. Notes on how the fixes were done:
+  - CR-25 and D1: the teacher's yes is kept in this browser, by the page's fingerprint (`sf-widgets-ok`). Editing a widget in its tab counts as a yes, and Add's starter always runs.
+  - CR-26: the widget's page passes the show's keys up, and the show takes them only from a widget frame on the slide.
+  - CR-29: `DeckPlayer.showing()`, and the player now reports a flip as a change.
+  - CR-31: `contrast()` is no longer rounded, and its displays round it.
+  - CR-37: the blank must stand on its own, so `[name__]` no longer counts. Code, addresses and a widget's page aren't read.
+  - The back face (CR-29), the held notice (CR-40) and the accessible names (CR-39) were not tried by hand.
 - **10 November 2026, batch 3 done (`638f9f05`).** CR-14 to CR-24, with D3 as recommended. Each new test failed on the code before the fix. CR-17 was checked in SlideForge: a file with `"format": "slideforge-lesson/v1"` now gets the lesson reader's problem list ("format must be…") and imports nothing, where before it would have opened as a deck with empty slides. Notes:
   - CR-21: `icons.json` now has an `aliases` map, which the tool builds from Lucide's own alias files (15 of them). `readLesson` now returns `warnings` as well as `problems`. They reach the teacher through Status, and through the shell's toast.
   - CR-22: the tool stops on any element the studio can't draw.
