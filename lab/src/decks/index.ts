@@ -5,3 +5,6 @@ export type { MotionLabData } from './motionLab';
 export { nulDeck } from './nulDeck';
 export { TEACHING_ROUTINE_FLOW, TEACHING_ROUTINE_LOOP, teachingRoutineSlides } from './teachingRoutine';
 export { ukbtDeck, ukbtInstituteDeck } from './ukbtDeck';
+export { LESSON_THEMES, deckFromLesson, loadChoiceStarter } from './fromLesson';
+export { LESSON_FORMAT, LESSON_LAYOUTS, answerIndex, readLesson } from './lessonFormat';
+export type { Lesson, LessonQuestion, LessonSlide } from './lessonFormat';

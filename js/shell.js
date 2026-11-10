@@ -1138,6 +1138,16 @@
       }
       if (active.flush) active.flush();
 
+      /* A lesson written as text (docs/lesson-format.md): the Lesson studio builds it. */
+      if (raw && raw.format === 'slideforge-lesson/1') {
+        if (SF.LabEngine && SF.LabEngine.importLesson) {
+          if (SF.History && SF.History.ready() && active && active.doc) SF.History.snapshot(active.doc(), 'Before importing a lesson file');
+          activate('deck', { toast: false });
+          SF.LabEngine.importLesson(text);
+        } else SF.toast('Lesson files need the Lesson studio, which is not available here');
+        return;
+      }
+
       if (raw && (raw.kind === 'slideforge-bundle' ||
                   (Array.isArray(raw.decks) && Array.isArray(raw.games)))) {
         importBundle(raw);
@@ -1345,7 +1355,7 @@
           items: function () {
             return [
               { id: 'file', title: 'From a SlideForge file',
-                blurb: 'Pick a .sfdeck.json, .sfgame.json or backup file.' },
+                blurb: 'Pick a .sfdeck.json, .sfgame.json or backup file, or a lesson file written as text by you or an AI (docs/lesson-format.md).' },
               { id: 'md', title: 'From a Markdown outline',
                 blurb: 'Headings and lists become starter slides (title, content, cards, quote, image). Not a live lesson round-trip.' },
               { id: 'folder', title: 'From the app folder',

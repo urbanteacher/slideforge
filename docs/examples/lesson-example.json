@@ -1,0 +1,23 @@
+{
+  "format": "slideforge-lesson/1",
+  "title": "Reading a chart before believing it",
+  "theme": "paper",
+  "slides": [
+    { "layout": "title", "id": "cover", "title": "Reading a chart before believing it", "subtitle": "Data literacy · 40 minutes" },
+    { "layout": "statement", "text": "Every chart is a choice.", "credit": "Someone decided what you would see first.", "notes": "Pause after the line. Ask: whose choice?" },
+    { "layout": "section", "title": "Three questions to ask", "subtitle": "Before you trust any chart" },
+    { "layout": "bullets", "id": "three-questions", "title": "Ask these first", "points": ["What does the title claim?", "Where does the axis start?", "Who made it, and why?"] },
+    { "layout": "cards", "title": "What each question catches", "cards": [["The title", "A claim the data may not support"], ["The axis", "A small change made to look large"], ["The maker", "A reason to show one side"]] },
+    { "layout": "keyfact", "title": "Most people read the title first", "fact": "[__%]", "caption": "of readers look at the title before the data", "details": ["Put the finding in the title, and check it against the data."], "factCheck": "the share of readers who read the title first, and its source" },
+    { "layout": "keywords", "title": "Words for today", "terms": [["Axis", "The scale along the edge of a chart"], ["Baseline", "Where the axis starts, usually zero"], ["Source", "Where the numbers came from"]] },
+    { "layout": "compare", "title": "Bar or pie?", "heads": ["Bar chart", "Pie chart"], "rows": [["Best for", "Comparing amounts", "Parts of one whole"], ["Reads by", "Length on a shared axis", "Angle and area"], ["Breaks when", "Too many bars", "More than five slices"]] },
+    { "layout": "table", "title": "One dataset, three charts", "rows": [["", "Bar", "Line", "Pie"], ["Shows change", "No", "Yes", "No"], ["Shows parts", "Sometimes", "No", "Yes"]] },
+    { "layout": "timeline", "title": "Where charts came from", "events": [["1786", "Playfair", "The bar and line chart"], ["1858", "Nightingale", "The rose diagram"], ["1983", "Tufte", "Data-ink and chartjunk"]] },
+    { "layout": "quote", "quote": "Above all else show the data.", "who": "Edward Tufte" },
+    { "layout": "quiz", "id": "check", "title": "Quick check", "questions": [
+      { "question": "Where should a bar chart's axis usually start?", "options": ["At zero", "At the smallest bar", "Wherever looks best"], "answer": 1, "explanation": "A bar's length is its value, so the axis starts at zero." },
+      { "question": "What should you read first?", "options": ["The legend", "The title", "The source"], "answer": "The title", "explanation": "It says what the maker wants you to believe; then check it." }
+    ] },
+    { "layout": "stats", "title": "What you can now check", "stats": [["3", "questions to ask"], ["1", "axis to read"]], "takeaway": "Ask the three questions before you share a chart." }
+  ]
+}

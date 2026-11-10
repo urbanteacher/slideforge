@@ -925,6 +925,30 @@
           function () { SF.toast('The PowerPoint could not be made'); });
       });
     },
+    /** A lesson file (docs/lesson-format.md): built in the studio, opened, and filed in the Library. A file with
+        problems opens nothing; the problems are listed, to copy back to whoever wrote it. */
+    importLesson: function (/** @type {string} */ text) {
+      SF.toast('Building the lesson\u2026');
+      whenReady(function (a) {
+        a.lessonDeck(text).then(function (/** @type {{ deck: any, problems: string[] }} */ r) {
+          if (!r.deck) {
+            var all = r.problems.join('\n');
+            var shown = r.problems.slice(0, 6).join(' ');
+            SF.askText({
+              title: 'That lesson file has ' + r.problems.length + ' problem' + (r.problems.length === 1 ? '' : 's'),
+              detail: 'Nothing was imported. ' + shown + (r.problems.length > 6 ? ' And ' + (r.problems.length - 6) + ' more.' : '') +
+                ' Copy the list, give it to whoever wrote the file, and import it again once they have fixed it.',
+              value: r.problems.join(' | '), confirm: 'Copy the problems'
+            }, function () {
+              if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(all).then(function () { SF.toast('Copied.'); }, function () {});
+            });
+            return;
+          }
+          open(r.deck, true);
+          SF.toast('Imported \u201c' + r.deck.title + '\u201d \u00b7 ' + r.deck.slides.length + ' slide' + (r.deck.slides.length === 1 ? '' : 's'));
+        }, function () { SF.toast('The lesson could not be built'); });
+      });
+    },
     /** The lesson as a file to hand to another app (File → Export → Send to…): 'pptx', 'pptx-edit' or 'pdf'.
         Resolves with { name, blob, type }; nothing is downloaded. */
     makeFile: function (/** @type {string} */ kind) {

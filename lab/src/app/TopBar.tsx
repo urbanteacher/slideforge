@@ -2,7 +2,7 @@ import { ChevronDown, Clapperboard, FileCode, FileJson, FilePlus, FolderOpen, Im
 import { useRef } from 'react';
 import { exportHtml, exportJson, exportPng, renderStill, editableSlides, exportPptx } from '../export';
 import { blankDeck, demoDeck, type Deck } from '../core';
-import { ukbtDeck, ukbtInstituteDeck, nulDeck } from '../decks';
+import { LESSON_FORMAT, deckFromLesson, loadChoiceStarter, readLesson, ukbtDeck, ukbtInstituteDeck, nulDeck } from '../decks';
 import { hasRoomGame, openStudioShow, studioRoomEnabled, studioShowEnabled } from '../show';
 import { slideOf, useStore } from '../store';
 import { FormatBar, Menu } from '../ui';
@@ -19,7 +19,14 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
 
   const openFile = async (f: File) => {
     try {
-      const d = JSON.parse(await f.text()) as Deck;
+      const text = await f.text();
+      let d = JSON.parse(text) as Deck;
+      // A lesson written as text (docs/lesson-format.md): built here, in the studio's layouts.
+      if ((d as unknown as { format?: string }).format === LESSON_FORMAT) {
+        const { lesson, problems } = readLesson(text);
+        if (!lesson) throw new Error(`The lesson file has ${problems.length} problem${problems.length === 1 ? '' : 's'}: ${problems.join(' ')}`);
+        d = deckFromLesson(lesson, lesson.slides.some((s) => s.layout === 'quiz') ? await loadChoiceStarter() : undefined);
+      }
       if (!Array.isArray(d.slides) || !d.slides.length) throw new Error('No slides found');
       loadDeck(d);
       showToast(`Opened “${d.title}”`);

@@ -11,7 +11,7 @@ export { LAYOUT_STYLES, cell, gridFor, guideStyle, layoutFor, slideStyle, themeO
 export { beforeAfterSlide, chartCalloutSlide, experimentSlide, exploreSlide, framedPictureSlide, gallerySlide, gameClock, sceneSlide, simulationSlide, youtubeSlide } from './show';
 export { bulletsSlide, cardsSlide, chartSlide, compareSlide, diagramSlide, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, splitSlide, statsSlide, tableSlide, titleSlide } from './system';
 export { closerSlide, codeSlide, columnsSlide, funnelSlide, introductionSlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, timelineSlide } from './rich';
-export { groundParams, itemStyle } from './blocks';
+export { credit, groundParams, itemStyle, slide as blockSlide, statement } from './blocks';
 export { icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide } from './infographics';
 export { blankSlide, explainSlide, resultsSlide, spotfakeSlide } from './leftovers';
 export type { LayoutStyle } from './style';

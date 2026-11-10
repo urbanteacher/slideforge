@@ -1,5 +1,5 @@
 import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, unpackPictures, type Deck, type Slide } from '../core';
-import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
+import { deckFromLesson, loadChoiceStarter, readLesson, CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
 import { buildPdf, buildPptx, dataUrlBytes, renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
 import { enterView, useStore, type LabView } from '../store';
@@ -454,6 +454,15 @@ export const labApi = {
     const shots = await stills(1920, onProgress, 0.92);
     await exportPptx(deck, shots.map((s) => ({ image: s.image, notes: s.notes, hidden: s.hidden, name: s.name })));
   },
+  /** A lesson file (BACKLOG CS-01, docs/lesson-format.md) built as a deck, not yet opened: the deck, or every
+   *  problem found in the file, slide by slide. The shell opens the deck and files it in the Library. */
+  async lessonDeck(text: string): Promise<{ deck: Deck | null; problems: string[] }> {
+    const { lesson, problems } = readLesson(text);
+    if (!lesson) return { deck: null, problems };
+    const starter = lesson.slides.some((s) => s.layout === 'quiz') ? await loadChoiceStarter() : undefined;
+    try { return { deck: deckFromLesson(lesson, starter), problems: [] }; }
+    catch (e) { return { deck: null, problems: [e instanceof Error ? e.message : String(e)] }; }
+  },
   /** The lesson as a file to hand to another app (the shell's Send to…, BACKLOG CS-07): 'pptx' and 'pptx-edit' as
    *  Export makes them, or 'pdf', the student copy's pages (handoutPages) as a PDF file. Nothing is downloaded. */
   async file(kind: 'pptx' | 'pptx-edit' | 'pdf', onProgress?: (done: number, total: number) => void): Promise<{ name: string; blob: Blob; type: string }> {
@@ -489,3 +498,4 @@ export const labApi = {
 };
 
 export type LabApi = typeof labApi;
+
