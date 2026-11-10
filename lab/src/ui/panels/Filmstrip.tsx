@@ -2,7 +2,7 @@ import { ChevronRight, Copy, Plus, Trash2, Eye, EyeOff, LayoutGrid, LayoutTempla
 import { is, keyProps } from '../../keys';
 import { toggleHidden, useSlideContextMenu } from '../controls/SlideMenu';
 import { FEEDBACK } from './Engagement';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { renderStill } from '../../export';
 import { getAssetVersion } from '../../engine';
 import { inView, useStore } from '../../store';
@@ -157,20 +157,22 @@ function SlideSorter({ close, thumb }: { close: () => void; thumb: (id: string) 
   );
 }
 
-/** A slide with facts still to check (core/facts.ts): a placeholder in its words, or the author's mark. */
-function FactsBadge({ slide, n }: { slide: Slide; n: number }) {
+/** A slide with facts still to check (core/facts.ts): a placeholder in its words, or the author's mark. Memoised on
+ *  the slide object, which the store keeps for a slide that did not change: an edit reads one slide's words again,
+ *  not every slide's. */
+const FactsBadge = memo(function FactsBadge({ slide, n }: { slide: Slide; n: number }) {
   const f = factsOf(slide, n);
   if (!f) return null;
   // The Status row's own sentence (describeFacts), without its "Slide n:" lead: the thumbnail already says which.
   const why = describeFacts([f]).replace(/^Slide \d+(?: \([^)]*\))?: /, '');
   const label = `Facts to check before teaching: ${why}`;
   return <span className="thumb-check" role="img" title={label} aria-label={label}>?</span>;
-}
+});
 
 /** What does not fit the slide's standard (`slide.warn`, a game's own check) and what makes it too heavy
  *  (core/limits.ts), as one mark on its thumbnail. */
-function WarnBadge({ slide }: { slide: Slide }) {
+const WarnBadge = memo(function WarnBadge({ slide }: { slide: Slide }) {
   const all = [slide.warn, ...limitsOf(slide)].filter(Boolean);
   if (!all.length) return null;
   return <span className="thumb-warn" role="img" title={all.join('\n')} aria-label={`Check this slide: ${all.join(' ')}`}>⚠</span>;
-}
+});

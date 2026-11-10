@@ -233,7 +233,8 @@ export interface Still { id: string; sourceSlideId?: string; /** A stand-in for 
 // One cache per size: a share drawn small does not throw away the pictures Host live drew large.
 const stillCaches = new Map<string, WeakMap<Slide, { url: string; hf: unknown; guide: unknown; page: number }>>();
 
-async function stills(width = 1600, onProgress?: (done: number, total: number) => void, quality = 0.9): Promise<Still[]> {
+/** `only`: draw just these slides (by id), as the handout and the PDF need, rather than every slide, hidden ones too. */
+async function stills(width = 1600, onProgress?: (done: number, total: number) => void, quality = 0.9, only?: Set<string>): Promise<Still[]> {
   const size = `${width}|${quality}`;
   if (!stillCaches.has(size)) stillCaches.set(size, new WeakMap());
   const stillCache = stillCaches.get(size)!;
@@ -247,8 +248,9 @@ async function stills(width = 1600, onProgress?: (done: number, total: number) =
   await document.fonts?.ready;
   const shown = deck.slides.filter((s) => !s.hidden);
   const out: Still[] = [];
-  for (let i = 0; i < deck.slides.length; i++) {
-    const s = deck.slides[i];
+  const todo = only ? deck.slides.filter((s) => only.has(s.id)) : deck.slides;
+  for (let i = 0; i < todo.length; i++) {
+    const s = todo[i];
     const page = shown.indexOf(s);
     const hit = stillCache.get(s);
     let url = hit && hit.hf === deck.headerFooter && hit.guide === deck.styleGuide && hit.page === page ? hit.url : '';
@@ -259,9 +261,29 @@ async function stills(width = 1600, onProgress?: (done: number, total: number) =
       await new Promise((r) => setTimeout(r, 0));
     }
     out.push({ id: s.id, sourceSlideId: s.sourceSlideId, liveFigure: s.liveFigure, figure: s.figure ? structuredClone(s.figure) : undefined, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined, game: s.game ? structuredClone(s.game) : undefined });
-    onProgress?.(i + 1, deck.slides.length);
+    onProgress?.(i + 1, todo.length);
   }
   return out;
+}
+
+/** The student copy's pictures (or the teacher's), by page id: each page's slide drawn once at 1600 wide, and each
+ *  flip-side page turned over. The print handout and the PDF both use it, so a change to which pages a copy has, or
+ *  how a turned-over slide is drawn, lands in both. Progress counts every picture drawn, the turned-over ones too. */
+async function handoutImages(deck: Deck, teacher: boolean, onProgress?: (done: number, total: number) => void): Promise<{ pages: ReturnType<typeof handoutPages>; images: Record<string, string> }> {
+  const pages = handoutPages(deck, teacher);
+  const fronts = new Set(pages.filter((p) => !p.back).map((p) => p.id));
+  const backs = pages.filter((p) => p.back);
+  const total = fronts.size + backs.length;
+  const shots = await stills(1600, (done) => onProgress?.(done, total), 0.9, fronts);
+  const images: Record<string, string> = Object.fromEntries(shots.map((s) => [s.id, s.image]));
+  let done = shots.length;
+  for (const p of backs) {
+    const slide = deck.slides.find((s) => `${s.id}:back` === p.id);
+    if (slide) images[p.id] = renderStill(slide, deck, 1600, 'image/jpeg', 2, 0.9, undefined, 1);
+    onProgress?.(++done, total);
+    await new Promise((r) => setTimeout(r, 0));
+  }
+  return { pages, images };
 }
 
 /** A slide's words, for SlideForge's practice notes: a picture of a slide has none to give. */
@@ -446,13 +468,7 @@ export const labApi = {
    *  keeps the answer slides and each slide's notes. The shell opens the window and prints it. */
   async handout(teacher = false): Promise<string> {
     const deck = useStore.getState().deck;
-    const pages = handoutPages(deck, teacher);
-    const shots = await stills(1600);
-    const images: Record<string, string> = Object.fromEntries(shots.map((s) => [s.id, s.image]));
-    for (const p of pages.filter((x) => x.back)) {
-      const slide = deck.slides.find((s) => `${s.id}:back` === p.id);
-      if (slide) images[p.id] = renderStill(slide, deck, 1600, 'image/jpeg', 2, 0.9, undefined, 1);
-    }
+    const { pages, images } = await handoutImages(deck, teacher);
     return handoutHtml(deck.title, pages, images, teacher, deck.width / deck.height);
   },
   /** The lesson as Share uploads it for the studio viewer (lab-app/view.html, M12): shown slides, no notes, pictures packed. */
@@ -515,13 +531,7 @@ export const labApi = {
       const shots = await stills(1920, onProgress, 0.92);
       return { name: `${base}.pptx`, blob: await buildPptx(deck, shots.map((s) => ({ image: s.image, notes: s.notes, hidden: s.hidden, name: s.name }))), type: pptxType };
     }
-    const pages = handoutPages(deck, false);
-    const shots = await stills(1600, onProgress);
-    const images: Record<string, string> = Object.fromEntries(shots.map((s) => [s.id, s.image]));
-    for (const p of pages.filter((x) => x.back)) {
-      const slide = deck.slides.find((s) => `${s.id}:back` === p.id);
-      if (slide) images[p.id] = renderStill(slide, deck, 1600, 'image/jpeg', 2, 0.9, undefined, 1);
-    }
+    const { pages, images } = await handoutImages(deck, false, onProgress);
     const jpegs = pages.map((p) => images[p.id]).filter(Boolean).map(dataUrlBytes);
     return { name: `${base}.pdf`, blob: buildPdf(jpegs, deck.title), type: 'application/pdf' };
   },

@@ -1,7 +1,7 @@
 // The inspector with nothing selected: the slide's ground, its face and its design.
 import { themeOf, setSlideGround } from '../../layouts';
 import { slideOf, useStore } from '../../store';
-import { limitsOf, placeholdersOf } from '../../core';
+import { limitsOf, placeholdersOf, type Deck } from '../../core';
 import { ColorField, Row, Section, Select, newGesture } from '../controls/controls';
 import { tidySlide } from '../stage/snap';
 import { ActivityPanel } from './activity';
@@ -60,9 +60,11 @@ function LimitsNote() {
  *  something is off. Worked out again only when the slide or the lesson changes: it measures text. */
 function DesignNote() {
   const slide = useStore(slideOf);
-  const deck = useStore((s) => s.deck);
-  const notes = useMemo(() => designCheck(slide, deck), [slide, deck.height]);
-  const scale = useMemo(() => typeScaleNote(deck), [deck]);
+  const height = useStore((s) => s.deck.height);
+  const slides = useStore((s) => s.deck.slides);
+  const notes = useMemo(() => designCheck(slide, { height }), [slide, height]);
+  // Each slide's sizes are kept while it is unchanged (designCheck.ts), so this measures only the slide edited.
+  const scale = useMemo(() => typeScaleNote({ height, slides } as Deck), [slides, height]);
   const all = scale ? [...notes, scale] : notes;
   if (!all.length) return null;
   return (

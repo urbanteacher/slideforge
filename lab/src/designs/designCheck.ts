@@ -7,7 +7,7 @@
 //   - text that has had to shrink to fit is a slide with too much on it: split it, rather than shrinking the words;
 //   - a lesson with more than six text sizes no longer reads as one design (four or five is the aim).
 import type { Deck, Layer, Slide } from '../core';
-import { groupSizes, textSize } from '../engine';
+import { getAssetVersion, groupSizes, textSize } from '../engine';
 import { contrast } from '../theme';
 
 export const DESIGN_RULES = { minPx: 24, contrast: 4.5, largeContrast: 3, largePx: 44, shrunk: 0.8, sizes: 6 };
@@ -115,16 +115,26 @@ export function designCheck(slide: Slide, deck: Pick<Deck, 'height'>): string[] 
   return out;
 }
 
+/** Each slide's drawn text sizes, kept while the slide is the same object (the store makes a new one only for a slide
+ *  that changed), at the same deck height and with the same fonts loaded: a keystroke measures one slide again, not
+ *  a hundred. */
+const SLIDE_SIZES = new WeakMap<Slide, { h: number; asset: number; sizes: number[] }>();
+function slideTextSizes(s: Slide, deckH: number): number[] {
+  const asset = getAssetVersion();
+  const kept = SLIDE_SIZES.get(s);
+  if (kept && kept.h === deckH && kept.asset === asset) return kept.sizes;
+  const groups = groupSizes(s.layers);
+  const sizes = s.layers.filter((l) => textOf(l)).map((l) => drawnPx(l, groups, deckH));
+  SLIDE_SIZES.set(s, { h: deckH, asset, sizes });
+  return sizes;
+}
+
 /** The steps of a lesson's type scale, largest first: its shown text sizes, with sizes within 15% of the step above
  *  them counted as that step (120 and 124 are one size to the eye; a statement sized to fill its box is one size
  *  however its words fall). */
 export function deckTextSizes(deck: Deck): number[] {
   const sizes: number[] = [];
-  for (const s of deck.slides) {
-    if (s.hidden) continue;
-    const groups = groupSizes(s.layers);
-    for (const l of s.layers) if (textOf(l)) sizes.push(drawnPx(l, groups, deck.height));
-  }
+  for (const s of deck.slides) if (!s.hidden) sizes.push(...slideTextSizes(s, deck.height));
   const steps: number[] = [];
   for (const px of sizes.sort((a, b) => b - a)) if (!steps.length || px < steps[steps.length - 1] / 1.15) steps.push(Math.round(px));
   return steps;

@@ -2,7 +2,7 @@ import type { BlendMode, Layer, Slide, TransitionType } from '../core';
 import { EASE, IDLE_STATE, animTotal, layerState, schedule, stepLight, type LayerState } from './anim';
 import { CONTENT_GLSL, MAIN, PRELUDE, VERT } from './glsl';
 import { REDUCED_CHANGE } from './motion';
-import { getAssetVersion, groupSizes, rasterise, readsSlide, textSize } from './raster';
+import { getAssetVersion, groupSizes, rasterise, sameReads, slideReads, textSize } from './raster';
 import { contentFrame } from './media';
 import { kind } from './registry';
 import { DEFAULT_EDGE, TRANSITION_FRAG, TRANSITION_INDEX, type TransitionLook } from './transitions';
@@ -26,8 +26,8 @@ interface Prog { prog: WebGLProgram; loc: Map<string, WebGLUniformLocation | nul
 interface TexEntry {
   tex: WebGLTexture; rect: [number, number, number, number];
   params: unknown; w: number; h: number; asset: number; textT: number; frame: number;
-  /** The slide's layers it was drawn from, for a kind that reads its slide (raster.ts readsSlide). */
-  layers?: unknown;
+  /** What of its slide it was drawn from, for a kind that reads its slide (raster.ts slideReads). */
+  reads: unknown[] | null;
 }
 
 export interface FrameOpts {
@@ -181,9 +181,10 @@ export class Renderer {
     const asset = getAssetVersion();
     const frame = contentFrame(layer);
     const e = this.tex.get(layer.id);
-    // A kind that reads its slide is drawn again when anything on the slide changes (a new layers list).
-    const layers = readsSlide(layer.kind) ? slide?.layers : undefined;
-    if (e && e.params === layer.params && e.w === box.w && e.h === box.h && e.asset === asset && e.textT === textT && e.frame === frame && e.layers === layers) return e;
+    // A kind that reads its slide is drawn again when what it reads of it changes (raster.ts slideReads): a connector
+    // when either layer it joins moves, not on every keystroke elsewhere on the slide.
+    const reads = slideReads(layer, slide);
+    if (e && e.params === layer.params && e.w === box.w && e.h === box.h && e.asset === asset && e.textT === textT && e.frame === frame && sameReads(e.reads, reads)) return e;
     const r = rasterise(layer, textT, slide);
     if (!r) return e ?? null;
     const gl = this.gl;
@@ -200,7 +201,7 @@ export class Renderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    const entry: TexEntry = { tex, rect: r.rect, params: layer.params, w: box.w, h: box.h, asset, textT, frame, layers };
+    const entry: TexEntry = { tex, rect: r.rect, params: layer.params, w: box.w, h: box.h, asset, textT, frame, reads };
     this.tex.set(layer.id, entry);
     return entry;
   }

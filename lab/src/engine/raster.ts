@@ -262,16 +262,34 @@ export function contentHeight(l: Pick<Layer, 'kind' | 'params'>, width: number):
 export type RasterFn = (layer: Layer, textT: number, slide?: Slide) => Raster | null;
 /** A layer kind's drawing, registered by kinds/index.ts: how it is drawn, how tall its content is, and whether it reads
  *  the rest of its slide. One that does is drawn again whenever anything on its slide changes (engine/renderer.ts). */
-export interface KindDrawing { raster: RasterFn; measure?: Measure; readsSlide?: boolean }
+export interface KindDrawing { raster: RasterFn; measure?: Measure; readsSlide?: boolean; reads?: SlideReads }
+/** What of its slide a kind's drawing reads (a connector: the two layers it joins), as values compared by identity:
+ *  it is drawn again only when one of them changes. A kind that reads its slide without saying is drawn again
+ *  whenever the slide's layers change. */
+export type SlideReads = (layer: Layer, slide: Slide) => unknown[];
 const RASTERS: Record<string, RasterFn> = {};
 const READS = new Set<string>();
+const READS_OF: Record<string, SlideReads> = {};
 
 /** A kind's drawing, from kinds/index.ts: the engine draws the kinds only through what is registered here. */
 export function registerRaster(id: string, d: KindDrawing) {
   RASTERS[id] = d.raster;
   if (d.measure) MEASURES[id] = d.measure;
   if (d.readsSlide) READS.add(id); else READS.delete(id);
+  if (d.readsSlide && d.reads) READS_OF[id] = d.reads; else delete READS_OF[id];
 }
+
+/** What a layer's drawing depends on from its slide, for the renderer's cache: null for a kind that does not read its
+ *  slide, else the values it said (`reads`), or the slide's layers list. */
+export function slideReads(layer: Layer, slide?: Slide): unknown[] | null {
+  if (!READS.has(layer.kind)) return null;
+  if (!slide) return [];
+  const of = READS_OF[layer.kind];
+  return of ? of(layer, slide) : [slide.layers];
+}
+/** Whether two slideReads lists are the same values. */
+export const sameReads = (a: unknown[] | null | undefined, b: unknown[] | null | undefined): boolean =>
+  a === b || (!!a && !!b && a.length === b.length && a.every((x, i) => x === b[i]));
 
 /** Whether a kind's drawing reads the rest of its slide (so its picture depends on more than the layer itself). */
 export const readsSlide = (kindId: string): boolean => READS.has(kindId);

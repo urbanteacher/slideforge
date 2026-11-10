@@ -2,7 +2,7 @@ import { produce } from 'immer';
 import { create } from 'zustand';
 import { contentHeight, shrinks, kind } from '../engine';
 import { pinTheme, reflowCards, themeOf, themeSlide } from '../layouts';
-import { syncConnectors, upgradeDeck, blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck, hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters, type Deck, type Layer, type Slide } from '../core';
+import { syncConnectors, syncSlideConnectors, upgradeDeck, blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck, hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters, type Deck, type Layer, type Slide } from '../core';
 import { repairGames } from '../designs';
 
 export type LeftTab = 'layers' | 'add';
@@ -141,9 +141,12 @@ export const useStore = create<State>((set, get) => ({
 
   mutate: (recipe, merge) => {
     const { deck, past, lastMerge } = get();
-    // Connectors follow the layers they join, inside the same change, so undo takes them back too (core/connectors.ts).
-    const next = produce(deck, (d) => { recipe(d); syncConnectors(d); });
-    if (next === deck) return;
+    // Connectors follow the layers they join, in the same change, so undo takes them back too (core/connectors.ts):
+    // only on the slides this change touched that have one, rather than walking every slide of the deck through
+    // immer's drafts on every drag step.
+    const changed = produce(deck, recipe);
+    if (changed === deck) return;
+    const next = syncChangedConnectors(deck, changed);
     const now = performance.now();
     const coalesce = merge && lastMerge && lastMerge.key === merge && now - lastMerge.t < 1200;
     set({
@@ -331,6 +334,14 @@ export const useStore = create<State>((set, get) => ({
 }));
 
 /** Re-measure every auto-height box once web fonts have arrived (without touching undo history). */
+/** `after` with the connectors brought up to date on each slide that differs from `before` and has one. */
+export function syncChangedConnectors(before: Deck, after: Deck): Deck {
+  const was = new Map(before.slides.map((s) => [s.id, s]));
+  const touched = after.slides.map((s, i) => (was.get(s.id) !== s && s.layers.some((l) => l.kind === 'connector') ? i : -1)).filter((i) => i >= 0);
+  if (!touched.length) return after;
+  return produce(after, (d) => { for (const i of touched) syncSlideConnectors(d.slides[i]); });
+}
+
 export function refitAllText() {
   const st = useStore.getState();
   const next = produce(st.deck, (d) => {

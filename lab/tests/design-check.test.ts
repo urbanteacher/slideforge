@@ -84,3 +84,21 @@ test('colours written other ways are read too: #abc, rgb() and a named colour', 
   assert.match(designCheck(slide([text('Pale', 'Hard to read', 32, '#bbbbbb')], 'white'), deck)[0] ?? '', /contrast of 1\.9:1/);
   assert.deepEqual(designCheck(slide([text('Seen through', 'Words', 32, 'rgba(0, 0, 0, 0.3)')]), deck), [], 'a see-through colour is not guessed at');
 });
+
+test('the lesson\'s text sizes measure a slide again only when it changed', () => {
+  let measured = 0;
+  const m = ctx.measureText.bind(ctx);
+  ctx.measureText = (t: string) => { measured++; return m(t); };
+  const slides = Array.from({ length: 40 }, (_, i) => slide([text(`T${i}`, 'Words that are measured', 64, '#161616', { fit: 'shrink' })]));
+  const d = { height: 1080, slides } as unknown as Deck;
+  deckTextSizes(d);
+  const first = measured;
+  measured = 0;
+  deckTextSizes({ ...d, slides: [...slides] } as Deck);
+  assert.equal(measured, 0, 'nothing changed: nothing measured');
+  const edited = [...slides];
+  edited[3] = slide([text('T3', 'Words that were changed', 64, '#161616', { fit: 'shrink' })]);
+  deckTextSizes({ ...d, slides: edited } as Deck);
+  assert.ok(measured > 0 && measured <= first / 20, `one slide of 40 measured again (${measured} of ${first})`);
+  ctx.measureText = m;
+});
