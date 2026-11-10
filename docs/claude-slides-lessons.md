@@ -29,6 +29,8 @@ These need no work. They are listed so nobody opens an item for them:
 
 **Done when:** a new IPDV week can be written as these files and imported without a builder script, and AGENTS.md points agents at the format.
 
+**Built, version 1 (10 November 2026, `770dca4a`):** [lesson-format.md](lesson-format.md). One JSON file, not a file per slide: it is what a teacher downloads from an AI and imports in one step. Each slide names a layout and its words, and the studio builds it with that layout's builder. Fourteen layouts and a multiple-choice quiz; every problem is reported by slide number. AGENTS.md points agents at it. **Still open for "done when":** charts, diagrams, live figures and the other games as layouts, so a whole IPDV week fits.
+
 ### CS-02 · Design rules the editor can check — P2 · M
 
 **In Claude Slides,** the rules are numbers:
@@ -135,3 +137,4 @@ Claude Slides' side comes from its instructions, not a hands-on trial.
 - **9 November 2026:** CS-03 built (`b0fa402b`); its section records what was built and what is still open.
 - **9 November 2026:** section 5 added, comparing how the two apps feel to use; CS-08 opened.
 - **10 November 2026:** CS-06 (links to a slide, private online shares; comments dropped) and CS-07 (Send to…) built; CS-09 and CS-10 opened.
+- **10 November 2026:** CS-01 version 1 built: the lesson file ([lesson-format.md](lesson-format.md)).

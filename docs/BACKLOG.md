@@ -62,7 +62,7 @@ order.
 | SD-02 | [The Story design set](story-designs-plan.md): twelve editorial designs from the Air Pollution deck, theme-aware and rebuilt from `slide.recipe`. All twelve done | M–L | Done · 10 Oct 2026 |
 | SD-03 | [Media library, featured decks and Publish](story-designs-plan.md) | L | To do · needs a hosting decision |
 | SD-04 | [AI story builder over the Story designs](story-designs-plan.md) | M | To do · after SD-02 |
-| CS-01 | [A slide format an AI can write directly](claude-slides-lessons.md): one text file per slide in the typed layouts, plus an index, imported by the studio, so new decks need no builder script | L | To do · P1 |
+| CS-01 | [A lesson written as text](lesson-format.md): one JSON file whose slides name a studio layout and fill its words; Import builds it in the theme, or lists every problem by slide. Version 1: fourteen layouts and a multiple-choice quiz. Open: charts, diagrams, live figures and the other games, so a whole IPDV week can be written this way; writing a deck back out | L | In progress · v1 done 10 Nov 2026 · `770dca4a` |
 | CS-02 | [Design rules the editor can check](claude-slides-lessons.md): minimum size, contrast, type scale, footer band, vertical budget; split the slide, never shrink | M | To do · P2 · after CS-01 |
 | CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting. Open: the lab's AI writers are not yet told to leave placeholders | S–M | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
@@ -816,7 +816,7 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 
 | ID | Item | Status |
 |---|---|---|
-| CS-01 | A documented, text-based lesson format (one file per slide in the typed layouts, plus an index for order, sections and theme) that agents write and the Lesson studio imports | To do |
+| CS-01 | The lesson file ([lesson-format.md](lesson-format.md), `lab/src/decks/lessonFormat.ts`, `fromLesson.ts`): title, section, statement, bullets, cards, keyfact, keywords, stats, compare, table, quote, split, timeline and quiz, with notes, hidden, ids and factCheck. Import in SlideForge and the studio. Open: more layouts (charts, diagrams, live figures, other games) and export | In progress · v1 done |
 | CS-02 | Claude Slides' design rules as checks in Review and the AI writers: 24px minimum, 4.5:1 contrast, four or five type sizes, a footer band, the vertical budget; suggest a split where the fit check would shrink | To do |
 | CS-03 | A placeholder convention for facts nobody supplied (`[€__]`, `[source __]`), a per-slide "not yet checked" mark, a ? on the filmstrip, and a line in the show's toast when Present or Host live opens, with the list in Status. Open: the lab's AI writers | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | A deck records the theme version it was made with; a theme change is offered, not applied | To do · needs a decision (copy in the deck, or a versioned registry) |
@@ -828,6 +828,13 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — A lesson written as text: the lesson file, version 1 (CS-01)
+
+A lesson can now be written as one JSON file, by a person, a script or an AI, and imported ([lesson-format.md](lesson-format.md), `770dca4a`). Each slide names one of the studio's layouts and fills its words: title, section, statement, bullets, cards, keyfact, keywords, stats, compare, table, quote, split, timeline, or quiz (a multiple-choice game made from the studio's own). The studio builds each slide with that layout's builder, in the lesson's theme, so a file cannot put a box in the wrong place. Notes, hidden, ids and `factCheck` carry over, and placeholders like `[__%]` are marked as CS-03 does.
+- **Import:** SlideForge's File → Import (the file is recognised by its `format`) and the studio's File → Open. A file with problems imports nothing; a dialog lists every problem by slide number, with **Copy the problems** to give back to whoever wrote it.
+- **Checked:** `lab/tests/lesson-format.test.ts` (6 tests: the reader's checks, every layout built, the quiz as a game, the example reading clean); the lab's 416 tests; the root runner's lab files; the render-surface audit. In the browser, the example imported as 17 slides, every one built in the theme, and a broken file was refused with both its problems named.
+- **Not yet:** a whole IPDV week, which needs charts, diagrams, live figures and the other games as layouts; writing a deck back out as a lesson file (with CS-08); one-file-per-slide folders, which an agent joins into the list before importing.
 
 ### 10 November 2026 — Links to a slide, Send to…, and private shares kept online (CS-06, CS-07)
 
