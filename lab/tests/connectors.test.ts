@@ -52,7 +52,11 @@ test('the store\'s sync: a connector follows its layers, and one whose layer has
 test('the lesson file\'s icons layout names icons from the set', () => {
   const lesson = (items: unknown) => JSON.stringify({ format: 'slideforge-lesson/1', title: 'T', slides: [{ layout: 'icons', title: 'Look at', items }] });
   assert.deepEqual(readLesson(lesson([['user', 'People', 'Who'], ['clock', 'Time', 'When']])).problems, []);
-  assert.deepEqual(readLesson(lesson([['unicorn', 'A', 'B'], ['clock', 'Time', 'When']])).problems, ['Slide 1: row 1\'s icon "unicorn" is not in the studio\'s set (docs/lesson-format.md lists them).']);
+  // An icon the set does not have is said, and the lesson is still built (decision D3, CR-21).
+  const unknown = readLesson(lesson([['unicorn', 'A', 'B'], ['clock', 'Time', 'When']]));
+  assert.deepEqual(unknown.problems, []);
+  assert.ok(unknown.lesson);
+  assert.deepEqual(unknown.warnings, ['Slide 1: row 1\'s icon "unicorn" is not in the studio\'s set, so it is shown as an empty square to fill in (docs/lesson-format.md lists them).']);
   assert.deepEqual(readLesson(lesson([['clock', 'Time', 'When']])).problems, ['Slide 1: "items" must be two to six [icon, label, what it means].']);
 });
 

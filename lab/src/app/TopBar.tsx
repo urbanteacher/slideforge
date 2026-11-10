@@ -23,9 +23,10 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
       let d = JSON.parse(text) as Deck;
       // A lesson written as text (docs/lesson-format.md): built here, in the studio's layouts.
       if ((d as unknown as { format?: string }).format === LESSON_FORMAT) {
-        const { lesson, problems } = readLesson(text);
+        const { lesson, problems, warnings } = readLesson(text);
         if (!lesson) throw new Error(`The lesson file has ${problems.length} problem${problems.length === 1 ? '' : 's'}: ${problems.join(' ')}`);
         d = deckFromLesson(lesson, lesson.slides.some((s) => s.layout === 'quiz') ? await loadChoiceStarter() : undefined);
+        if (warnings.length) report({ kind: 'open', state: 'info', title: `${warnings.length} thing${warnings.length === 1 ? '' : 's'} to fill in`, detail: warnings.join(' ') });
       }
       if (!Array.isArray(d.slides) || !d.slides.length) throw new Error('No slides found');
       loadDeck(d);

@@ -4,12 +4,13 @@
 // no drawing in it: what is wrong is reported slide by slide, so whoever wrote it can put it right.
 
 import icons from '../assets/icons.json';
+import { iconName } from '../kinds/icon';
 
 export const LESSON_FORMAT = 'slideforge-lesson/1';
 
-/** The icon names a lesson file may use (assets/icons.json, from Lucide). */
+/** The icon names a lesson file may use (assets/icons.json, from Lucide). Lucide's older names for them (home for
+ *  house) are read too (`iconName`). */
 export const LESSON_ICONS: string[] = Object.keys((icons as unknown as { icons: Record<string, unknown> }).icons);
-const iconKnown = (n: string) => LESSON_ICONS.includes(n);
 
 /** What every slide may carry, whatever its layout. */
 interface Common {
@@ -72,11 +73,13 @@ const isText = (v: unknown): v is string => typeof v === 'string' && v.trim() !=
 const isTexts = (v: unknown): v is string[] => Array.isArray(v) && v.length > 0 && v.every(isText);
 const isRows = (v: unknown, n: number): v is string[][] => Array.isArray(v) && v.length > 0 && v.every((r) => Array.isArray(r) && r.length === n && r.every((c) => typeof c === 'string'));
 
-/** What is wrong with one slide's fields, in words (empty when nothing is). */
-function slideProblems(s: Record<string, unknown>): string[] {
+/** What is wrong with one slide's fields, in words (empty when nothing is), and what is only worth saying (`warn`):
+ *  the lesson is still built. */
+function slideProblems(s: Record<string, unknown>, warn: (w: string) => void = () => {}): string[] {
   const out: string[] = [];
   const layout = s.layout as LessonSlide['layout'];
-  const spec = LESSON_LAYOUTS[layout];
+  // Own keys only: "constructor" or "__proto__" is not a layout.
+  const spec = typeof layout === 'string' && Object.hasOwn(LESSON_LAYOUTS, layout) ? LESSON_LAYOUTS[layout] : undefined;
   if (!spec) return [`"layout" must be one of ${Object.keys(LESSON_LAYOUTS).join(', ')}${s.layout === undefined ? '' : `, not "${String(s.layout)}"`}`];
   for (const k of spec.needs) if (s[k] === undefined) out.push(`a ${layout} slide needs "${k}"`);
   for (const k of Object.keys(s)) if (!COMMON.includes(k) && !spec.needs.includes(k) && !spec.may.includes(k)) out.push(`a ${layout} slide has no field "${k}"`);
@@ -93,7 +96,7 @@ function slideProblems(s: Record<string, unknown>): string[] {
   want('details', Array.isArray(s.details) && (s.details as unknown[]).every((x) => typeof x === 'string'), 'a list of lines');
   want('cards', isRows(s.cards, 2) && (s.cards as unknown[]).length <= 4, 'two to four [heading, words] pairs');
   if (Array.isArray(s.cards) && (s.cards as unknown[]).length === 1) out.push('"cards" needs at least two cards');
-  want('terms', isRows(s.terms, 2), 'a list of [term, meaning] pairs');
+  want('terms', isRows(s.terms, 2) && (s.terms as unknown[]).length <= 6, 'one to six [term, meaning] pairs');
   want('stats', isRows(s.stats, 2) && (s.stats as unknown[]).length <= 4, 'one to four [number, what it counts] pairs');
   want('heads', isRows([s.heads], 2), 'two column headings, as ["A", "B"]');
   if (layout === 'compare') want('rows', isRows(s.rows, 3), 'a list of [row label, A, B]');
@@ -101,7 +104,8 @@ function slideProblems(s: Record<string, unknown>): string[] {
   want('events', isRows(s.events, 3) && (s.events as unknown[]).length <= 6, 'one to six [when, who or what, detail]');
   if (layout === 'icons') {
     want('items', isRows(s.items, 3) && (s.items as unknown[]).length >= 2 && (s.items as unknown[]).length <= 6, 'two to six [icon, label, what it means]');
-    if (isRows(s.items, 3)) (s.items as string[][]).forEach((r, i) => { if (!iconKnown(r[0])) out.push(`row ${i + 1}'s icon "${r[0]}" is not in the studio's set (docs/lesson-format.md lists them)`); });
+    // An icon the set does not have is said, not refused: the slide is built with a marked empty square in its place.
+    if (isRows(s.items, 3)) (s.items as string[][]).forEach((r, i) => { if (!iconName(r[0])) warn(`row ${i + 1}'s icon "${r[0]}" is not in the studio's set, so it is shown as an empty square to fill in (docs/lesson-format.md lists them)`); });
   }
   if (layout === 'widget') {
     want('html', isText(s.html), 'the widget\'s page, as HTML');
@@ -129,13 +133,15 @@ export function answerIndex(q: LessonQuestion): number {
   return typeof q.answer === 'string' ? q.options.findIndex((o) => o.trim() === String(q.answer).trim()) : -1;
 }
 
-/** A lesson file read and checked: the lesson when nothing is wrong, and every problem found either way. */
-export function readLesson(input: unknown): { lesson: Lesson | null; problems: string[] } {
+/** A lesson file read and checked: the lesson when nothing is wrong, every problem found either way, and what is
+ *  worth saying about a lesson that is still built (an icon the set does not have). */
+export function readLesson(input: unknown): { lesson: Lesson | null; problems: string[]; warnings: string[] } {
+  const warnings: string[] = [];
   let v = input;
   if (typeof v === 'string') {
-    try { v = JSON.parse(v); } catch (e) { return { lesson: null, problems: [`It is not JSON: ${e instanceof Error ? e.message : String(e)}`] }; }
+    try { v = JSON.parse(v); } catch (e) { return { lesson: null, problems: [`It is not JSON: ${e instanceof Error ? e.message : String(e)}`], warnings }; }
   }
-  if (!v || typeof v !== 'object' || Array.isArray(v)) return { lesson: null, problems: ['A lesson file is one JSON object, with "format", "title" and "slides".'] };
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return { lesson: null, problems: ['A lesson file is one JSON object, with "format", "title" and "slides".'], warnings };
   const o = v as Record<string, unknown>;
   const problems: string[] = [];
   if (o.format !== LESSON_FORMAT) problems.push(`"format" must be "${LESSON_FORMAT}"`);
@@ -144,13 +150,24 @@ export function readLesson(input: unknown): { lesson: Lesson | null; problems: s
   for (const k of Object.keys(o)) if (!['format', 'title', 'theme', 'slides'].includes(k)) problems.push(`a lesson has no field "${k}"`);
   if (!Array.isArray(o.slides) || !o.slides.length) problems.push('"slides" must be a list of one or more slides');
   else {
-    const ids = new Set<string>();
+    // Every id the lesson's slides will have: a quiz with id "check" and three questions makes "check", "check-2" and
+    // "check-3" (decks/fromLesson.ts), so those are taken too.
+    const ids = new Map<string, { slide: number; made: boolean }>();
+    const take = (id: string, i: number, made: boolean) => {
+      const was = ids.get(id);
+      if (!was) { ids.set(id, { slide: i, made }); return; }
+      problems.push(was.made || made
+        ? `Slide ${i + 1}: the id "${id}" is taken: the quiz on slide ${(was.made ? was.slide : i) + 1} numbers its questions' slides this way.`
+        : `Slide ${i + 1}: the id "${id}" is used twice.`);
+    };
     o.slides.forEach((s, i) => {
       if (!s || typeof s !== 'object' || Array.isArray(s)) { problems.push(`Slide ${i + 1}: must be an object with a "layout"`); return; }
-      for (const p of slideProblems(s as Record<string, unknown>)) problems.push(`Slide ${i + 1}: ${p}.`);
-      const id = (s as { id?: unknown }).id;
-      if (typeof id === 'string') { if (ids.has(id)) problems.push(`Slide ${i + 1}: the id "${id}" is used twice.`); ids.add(id); }
+      for (const p of slideProblems(s as Record<string, unknown>, (w) => warnings.push(`Slide ${i + 1}: ${w}.`))) problems.push(`Slide ${i + 1}: ${p}.`);
+      const { id, layout, questions } = s as { id?: unknown; layout?: unknown; questions?: unknown };
+      if (typeof id !== 'string') return;
+      take(id, i, false);
+      if (layout === 'quiz' && Array.isArray(questions)) for (let k = 2; k <= questions.length; k++) take(`${id}-${k}`, i, true);
     });
   }
-  return { lesson: problems.length ? null : (o as unknown as Lesson), problems };
+  return { lesson: problems.length ? null : (o as unknown as Lesson), problems, warnings };
 }

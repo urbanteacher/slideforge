@@ -930,7 +930,7 @@
     importLesson: function (/** @type {string} */ text) {
       SF.toast('Building the lesson\u2026');
       whenReady(function (a) {
-        a.lessonDeck(text).then(function (/** @type {{ deck: any, problems: string[] }} */ r) {
+        a.lessonDeck(text).then(function (/** @type {{ deck: any, problems: string[], warnings?: string[] }} */ r) {
           if (!r.deck) {
             var all = r.problems.join('\n');
             var shown = r.problems.slice(0, 6).join(' ');
@@ -945,8 +945,10 @@
             return;
           }
           open(r.deck, true);
-          SF.toast('Imported \u201c' + r.deck.title + '\u201d \u00b7 ' + r.deck.slides.length + ' slide' + (r.deck.slides.length === 1 ? '' : 's'));
-        }, function () { SF.toast('The lesson could not be built'); });
+          var warn = r.warnings || [];
+          SF.toast('Imported \u201c' + r.deck.title + '\u201d \u00b7 ' + r.deck.slides.length + ' slide' + (r.deck.slides.length === 1 ? '' : 's') +
+            (warn.length ? ' \u00b7 ' + warn.length + ' thing' + (warn.length === 1 ? '' : 's') + ' to fill in: ' + warn.slice(0, 2).join(' ') : ''));
+        }, function (/** @type {any} */ e) { SF.toast('The lesson could not be built: ' + (e && e.message ? e.message : String(e))); });
       });
     },
     /** The lesson as a file to hand to another app (File → Export → Send to…): 'pptx', 'pptx-edit' or 'pdf'.

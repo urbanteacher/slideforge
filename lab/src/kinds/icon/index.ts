@@ -3,5 +3,5 @@ import { rasterIcon } from './raster';
 import { iconDef } from './def';
 import type { LayerKind } from '../../engine';
 
-export { ICON_GROUPS, ICON_NAMES, drawIcon, hasIcon } from './draw';
+export { ICON_GROUPS, ICON_NAMES, drawIcon, hasIcon, iconName } from './draw';
 export const iconKind: LayerKind = { def: iconDef, raster: rasterIcon };

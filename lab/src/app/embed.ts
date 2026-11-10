@@ -489,12 +489,20 @@ export const labApi = {
   },
   /** A lesson file (BACKLOG CS-01, docs/lesson-format.md) built as a deck, not yet opened: the deck, or every
    *  problem found in the file, slide by slide. The shell opens the deck and files it in the Library. */
-  async lessonDeck(text: string): Promise<{ deck: Deck | null; problems: string[] }> {
-    const { lesson, problems } = readLesson(text);
-    if (!lesson) return { deck: null, problems };
-    const starter = lesson.slides.some((s) => s.layout === 'quiz') ? await loadChoiceStarter() : undefined;
-    try { return { deck: deckFromLesson(lesson, starter), problems: [] }; }
-    catch (e) { return { deck: null, problems: [e instanceof Error ? e.message : String(e)] }; }
+  async lessonDeck(text: string): Promise<{ deck: Deck | null; problems: string[]; warnings: string[] }> {
+    // Whatever goes wrong, reading it, loading the quiz game or building it, comes back as the reason, not a bare
+    // "could not be built".
+    try {
+      const { lesson, problems, warnings } = readLesson(text);
+      if (!lesson) return { deck: null, problems, warnings };
+      const starter = lesson.slides.some((s) => s.layout === 'quiz') ? await loadChoiceStarter() : undefined;
+      const deck = deckFromLesson(lesson, starter);
+      // Kept in Status, since the shell's toast fades: an icon the set does not have, shown as a square to fill in.
+      if (warnings.length) report({ kind: 'open', state: 'info', title: `“${deck.title}”: ${warnings.length} thing${warnings.length === 1 ? '' : 's'} to fill in`, detail: warnings.join(' ') });
+      return { deck, problems: [], warnings };
+    } catch (e) {
+      return { deck: null, problems: [e instanceof Error ? e.message : String(e)], warnings: [] };
+    }
   },
   /** The lesson as a file to hand to another app (the shell's Send to…, BACKLOG CS-07): 'pptx' and 'pptx-edit' as
    *  Export makes them, or 'pdf', the student copy's pages (handoutPages) as a PDF file. Nothing is downloaded. */

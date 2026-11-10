@@ -90,3 +90,35 @@ test('an unknown theme falls back to the default, and a quiz needs its starter',
   const { lesson: q } = readLesson(lesson([{ layout: 'quiz', questions: [{ question: 'Q', options: ['A', 'B'], answer: 1 }] }]));
   assert.throws(() => deckFromLesson(q!), /Slide 1 is a quiz/);
 });
+
+test('a layout name that is only a property of every object ("constructor", "__proto__") is not a layout', () => {
+  for (const name of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+    const { lesson: l, problems } = readLesson(lesson([{ layout: name, title: 'A' }]));
+    assert.equal(l, null, name);
+    assert.match(problems[0], /^Slide 1: "layout" must be one of /, name);
+  }
+});
+
+test('a keywords slide holds one to six terms, as the layout shows: a seventh is refused, not dropped', () => {
+  const terms = (n: number) => Array.from({ length: n }, (_, i) => [`T${i}`, `meaning ${i}`]);
+  assert.deepEqual(readLesson(lesson([{ layout: 'keywords', title: 'K', terms: terms(6) }])).problems, []);
+  assert.deepEqual(readLesson(lesson([{ layout: 'keywords', title: 'K', terms: terms(7) }])).problems, ['Slide 1: "terms" must be one to six [term, meaning] pairs.']);
+});
+
+test('a quiz\'s own slide ids are taken: another slide cannot use them', () => {
+  const quiz = { layout: 'quiz', id: 'check', questions: [{ question: 'A?', options: ['x', 'y'], answer: 1 }, { question: 'B?', options: ['x', 'y'], answer: 2 }] };
+  const clash = readLesson(lesson([quiz, { layout: 'title', id: 'check-2', title: 'Later' }]));
+  assert.deepEqual(clash.problems, ['Slide 2: the id "check-2" is taken: the quiz on slide 1 numbers its questions\' slides this way.']);
+  assert.deepEqual(readLesson(lesson([{ layout: 'title', id: 'a', title: 'A' }, { layout: 'title', id: 'a', title: 'B' }])).problems, ['Slide 2: the id "a" is used twice.']);
+  assert.deepEqual(readLesson(lesson([quiz, { layout: 'title', id: 'check-3', title: 'Fine' }])).problems, []);
+});
+
+test('an icon by an older Lucide name is drawn by its new one; an unknown one still builds, with a square to fill in', () => {
+  const { lesson: l, problems, warnings } = readLesson(lesson([{ layout: 'icons', title: 'I', items: [['home', 'Home', 'Where'], ['unicorn', 'U', 'What']] }]));
+  assert.deepEqual(problems, []);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /"unicorn" is not in the studio's set/);
+  const deck = deckFromLesson(l!);
+  const icons = deck.slides[0].layers.filter((x) => x.kind === 'icon').map((x) => x.params.icon);
+  assert.deepEqual(icons, ['house', 'unicorn']);
+});

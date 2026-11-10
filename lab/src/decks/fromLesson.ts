@@ -2,6 +2,7 @@
 // names, in the deck's theme, exactly as the Gallery would insert it with these words: the file says what, the
 // studio decides where. Read and check the file first (lessonFormat.ts readLesson).
 import { blankDeck, createLayer, uid, type Deck, type Slide } from '../core';
+import { iconName } from '../kinds/icon';
 import {
   CONTENT_FOOT, CONTENT_TOP, DEFAULT_THEME, cell, themeCopyOf, LAYOUT_STYLES, blockSlide, titleBar, titleRow, bulletsSlide, cardsSlide, compareSlide, credit, keyfactSlide, keywordsSlide, quoteSlide,
   sectionSlide, splitSlide, statement, statsSlide, tableSlide, themeOf, timelineSlide, titleSlide, type LayoutStyle,
@@ -66,7 +67,7 @@ function build(s: LessonSlide, st: LayoutStyle): Slide {
       const meanings = made.layers.filter((l) => l.kind === 'text' && l.name !== 'Keyword' && terms.some((t) => t.box && l.box && Math.abs(l.box.y - t.box.y) < 1 && l.box.x > t.box.x));
       terms.forEach((t, i) => {
         const b = t.box!, size = Math.min(100, Math.max(56, b.h * 0.8)), shift = size + 28;
-        const icon = createLayer('icon', { name: `Icon · ${s.items[i][0]}`, params: { icon: s.items[i][0], color: st.accent, stroke: 2, disc: '', align: 'left' } as never, box: { x: b.x, y: b.y + (b.h - size) / 2, w: size, h: size, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+        const icon = createLayer('icon', { name: `Icon · ${s.items[i][0]}`, params: { icon: iconName(s.items[i][0]) ?? s.items[i][0], color: st.accent, stroke: 2, disc: '', align: 'left' } as never, box: { x: b.x, y: b.y + (b.h - size) / 2, w: size, h: size, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
         t.box = { ...b, x: b.x + shift };
         const m = meanings.find((l) => Math.abs(l.box!.y - b.y) < 1);
         if (m?.box) m.box = { ...m.box, x: m.box.x + shift, w: Math.max(200, m.box.w - shift) };

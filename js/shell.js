@@ -1138,8 +1138,12 @@
       }
       if (active.flush) active.flush();
 
-      /* A lesson written as text (docs/lesson-format.md): the Lesson studio builds it. */
-      if (raw && raw.format === 'slideforge-lesson/1') {
+      /* A lesson written as text (docs/lesson-format.md): the Lesson studio builds it. A file whose "format" is a
+         little off (missing, or "slideforge-lesson/v1") but whose slides name a layout is one too: the studio
+         says what is wrong with it, rather than it opening as a deck with nothing on its slides. */
+      var first = raw && Array.isArray(raw.slides) ? raw.slides[0] : null;
+      var lessonish = !!first && typeof first === 'object' && typeof first.layout === 'string' && !Array.isArray(first.layers) && first.type === undefined;
+      if (raw && (raw.format === 'slideforge-lesson/1' || (typeof raw.format === 'string' && /^slideforge-lesson/.test(raw.format)) || (raw.format === undefined && lessonish))) {
         if (SF.LabEngine && SF.LabEngine.importLesson) {
           if (SF.History && SF.History.ready() && active && active.doc) SF.History.snapshot(active.doc(), 'Before importing a lesson file');
           activate('deck', { toast: false });
