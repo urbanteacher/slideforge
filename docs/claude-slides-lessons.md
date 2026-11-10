@@ -1,6 +1,6 @@
 # What SlideForge can take from Claude Slides
 
-The analysis behind backlog items **CS-01 – CS-10**.
+The analysis behind backlog items **CS-01 – CS-17**.
 
 Claude Slides is the slide-deck Artifact type built into claude.ai: you describe a deck in chat and Claude writes it as 16:9 slides you can present, share as a private link, and download as .pptx or PDF. It makes general presentations. SlideForge is a teaching tool with a live room. Most of what makes SlideForge worth having (phone answers, games, activities, reports) has no equivalent there. But the way Claude Slides is *built for an AI to write* is worth learning from.
 
@@ -131,6 +131,20 @@ Claude Slides' side comes from its instructions, not a hands-on trial.
 - **Feedback and the room are SlideForge's strengths.** Keep them visible in anything built from this list.
 - **Two gaps had no item:** the learning curve (**CS-09**, a guided first lesson or a simple mode) and languages (**CS-10**).
 
+## 6. From how Claude Slides is built
+
+These come from the type's architecture rather than its screens. SlideForge already has morph transitions, diagrams, a restore point when two devices disagree, and private teacher notes, so none of those is listed.
+
+| Item | In Claude Slides | In SlideForge | The change |
+|---|---|---|---|
+| **CS-11** · slide limits | At most 200 elements a slide, 52 KB a drawing | No limits | Warn past 200 layers, 150 KB a drawing, 2 MB a picture or video, 5 MB a slide. **Done 10 November** (`58f6657e`, `lab/src/core/limits.ts`) |
+| **CS-12** · a version stamp | Each deck pins the player version it was made for | Every deck says `version: 1`; older lessons are fixed by one-off converter steps | A real version and an upgrade step from each, with CS-04 |
+| **CS-13** · what a lesson needs | A deck declares what it uses (downloads, comments, a room) | Found out in class | The lesson lists a room, phones, internet, a live figure; checked before class |
+| **CS-14** · pictures outside the deck | Pictures stored once, by fingerprint; slides point at them | Only the online copy does this; locally and in shares pictures sit inside the lesson | Store once everywhere: lifts the 7.5 MB share and 12 MB sync limits |
+| **CS-15** · a live widget | A small sandboxed page on a slide (16 KB) | Experiments and live figures, built in code | A one-file widget layer, sandboxed |
+| **CS-16** · photo search | Searches a photo library and keeps the credit | Picture slots start empty | A search that keeps the licence and credit; needs a provider |
+| **CS-17** · icons and connectors | Icon and connector elements an agent can write | Shapes and diagrams; not checked how far they go | Check first, then add what the lesson file needs |
+
 ## Change log
 
 - **9 November 2026:** written from the Claude Slides type's instructions and a check of SlideForge's exports, themes and AI writers. Items CS-01 – CS-07 opened in [BACKLOG.md](BACKLOG.md).
@@ -138,3 +152,4 @@ Claude Slides' side comes from its instructions, not a hands-on trial.
 - **9 November 2026:** section 5 added, comparing how the two apps feel to use; CS-08 opened.
 - **10 November 2026:** CS-06 (links to a slide, private online shares; comments dropped) and CS-07 (Send to…) built; CS-09 and CS-10 opened.
 - **10 November 2026:** CS-01 version 1 built: the lesson file ([lesson-format.md](lesson-format.md)).
+- **10 November 2026:** section 6 added (CS-11 to CS-17, from how Claude Slides is built); CS-11 built.

@@ -71,6 +71,13 @@ order.
 | CS-07 | [Send to…](claude-slides-lessons.md): a PowerPoint or a PDF handed to the device's share menu (Drive, Teams, Mail), a download where there is none. Direct Drive and Canva uploads not built | S | Done · 10 Nov 2026 · `fb01269d` |
 | CS-09 | [A gentler first ten minutes](claude-slides-lessons.md): a guided first lesson, or a simple mode that hides the advanced panels until asked for | M | To do · P2 |
 | CS-10 | [The interface in more languages](claude-slides-lessons.md): Claude Slides comes in eleven, SlideForge in English only | L | Needs a decision · P3 |
+| CS-11 | [Say when a slide is too heavy](claude-slides-lessons.md): over 200 layers, an SVG over 150 KB, media over 2 MB, or 5 MB in all; ⚠ on the thumbnail and a note in the Slide panel | S | Done · 10 Nov 2026 · `58f6657e` |
+| CS-12 | [A version stamp on every lesson](claude-slides-lessons.md), with upgrade steps from each version, so old lessons keep opening as the studio changes; with CS-04 | M | To do · P2 |
+| CS-13 | [A lesson says what it needs](claude-slides-lessons.md) (a room, phones, internet, a live figure), checked before class beside CS-03's warning | S–M | To do · P2 · with CS-12 |
+| CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): stored once by fingerprint everywhere, not only online, lifting the 7.5 MB share and 12 MB sync limits | L | To do · P2 |
+| CS-15 | [A small live widget on a slide](claude-slides-lessons.md): a sandboxed one-file page (about 16 KB) for a one-off interactive | M | To do · P2 |
+| CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
+| CS-17 | [Icons and connectors as layers](claude-slides-lessons.md) the lesson file can name; check what shapes and diagrams already cover | M | To check first · P3 |
 | CS-08 | [Ask for a change in the studio](claude-slides-lessons.md): "turn slide 7 into a quiz", "split this slide", answered by an edit you can undo; after CS-01 | M–L | To do · P2 |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -825,9 +832,21 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-07 | File → Export → Send to…: a PowerPoint (pictures or editable text) or a PDF of the student copy, made, then handed to the share menu on a second click. The PDF writer is `lab/src/export/pdf.ts` | Done |
 | CS-09 | A gentler start: a guided first lesson, or a simple mode that hides advanced panels | To do |
 | CS-10 | More interface languages | Needs a decision |
+| CS-11 | Slide limits (`lab/src/core/limits.ts`): 200 layers, 150 KB per drawing, 2 MB per picture or video, 5 MB per slide; warned, never refused | Done |
+| CS-12 | A lesson's version, and upgrade steps from each | To do |
+| CS-13 | What a lesson needs, checked before class | To do |
+| CS-14 | Pictures stored once, outside the deck, everywhere | To do |
+| CS-15 | A sandboxed live widget layer | To do |
+| CS-16 | Photo search with the credit kept | To do |
+| CS-17 | Icons and connectors | To check |
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — From how Claude Slides is built: CS-11 to CS-17, and slide limits
+
+Seven more items from how Claude Slides is built rather than what it shows ([claude-slides-lessons.md](claude-slides-lessons.md) section 6), worked one at a time in the order CS-11, CS-12 with CS-13, CS-14, then CS-15 to CS-17.
+- **CS-11 done** (`58f6657e`): a slide with over 200 layers, an SVG drawing over 150 KB, a picture or video over 2 MB, or over 5 MB held in all gets the ⚠ on its thumbnail, beside a game's own check, and a note in the Slide panel saying what to do. Nothing is refused. Checked by `lab/tests/limits.test.ts` (the lab's 419 pass) and in the studio with a 200 KB drawing on a slide.
 
 ### 10 November 2026 — A lesson written as text: the lesson file, version 1 (CS-01)
 
