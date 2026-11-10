@@ -138,8 +138,8 @@ These come from the type's architecture rather than its screens. SlideForge alre
 | Item | In Claude Slides | In SlideForge | The change |
 |---|---|---|---|
 | **CS-11** · slide limits | At most 200 elements a slide, 52 KB a drawing | No limits | Warn past 200 layers, 150 KB a drawing, 2 MB a picture or video, 5 MB a slide. **Done 10 November** (`58f6657e`, `lab/src/core/limits.ts`) |
-| **CS-12** · a version stamp | Each deck pins the player version it was made for | Every deck says `version: 1`; older lessons are fixed by one-off converter steps | A real version and an upgrade step from each, with CS-04 |
-| **CS-13** · what a lesson needs | A deck declares what it uses (downloads, comments, a room) | Found out in class | The lesson lists a room, phones, internet, a live figure; checked before class |
+| **CS-12** · a version stamp | Each deck pins the player version it was made for | Every deck says `version: 1`; older lessons are fixed by one-off converter steps | A real version and an upgrade step from each, with CS-04. **Done 10 November** (`f409fbb0`, `lab/src/core/version.ts`): an older lesson is upgraded as it opens, and one from a newer studio is warned about |
+| **CS-13** · what a lesson needs | A deck declares what it uses (downloads, comments, a room) | Found out in class | Worked out from the lesson, not declared, so it cannot go stale. **Done 10 November** (`f409fbb0`, `lab/src/core/needs.ts`): a room and the internet; the show's notice says when one is not met |
 | **CS-14** · pictures outside the deck | Pictures stored once, by fingerprint; slides point at them | Only the online copy does this; locally and in shares pictures sit inside the lesson | Store once everywhere: lifts the 7.5 MB share and 12 MB sync limits |
 | **CS-15** · a live widget | A small sandboxed page on a slide (16 KB) | Experiments and live figures, built in code | A one-file widget layer, sandboxed |
 | **CS-16** · photo search | Searches a photo library and keeps the credit | Picture slots start empty | A search that keeps the licence and credit; needs a provider |
@@ -153,3 +153,4 @@ These come from the type's architecture rather than its screens. SlideForge alre
 - **10 November 2026:** CS-06 (links to a slide, private online shares; comments dropped) and CS-07 (Send to…) built; CS-09 and CS-10 opened.
 - **10 November 2026:** CS-01 version 1 built: the lesson file ([lesson-format.md](lesson-format.md)).
 - **10 November 2026:** section 6 added (CS-11 to CS-17, from how Claude Slides is built); CS-11 built.
+- **10 November 2026:** CS-12 and CS-13 built.

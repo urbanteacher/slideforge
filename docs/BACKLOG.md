@@ -72,8 +72,8 @@ order.
 | CS-09 | [A gentler first ten minutes](claude-slides-lessons.md): a guided first lesson, or a simple mode that hides the advanced panels until asked for | M | To do · P2 |
 | CS-10 | [The interface in more languages](claude-slides-lessons.md): Claude Slides comes in eleven, SlideForge in English only | L | Needs a decision · P3 |
 | CS-11 | [Say when a slide is too heavy](claude-slides-lessons.md): over 200 layers, an SVG over 150 KB, media over 2 MB, or 5 MB in all; ⚠ on the thumbnail and a note in the Slide panel | S | Done · 10 Nov 2026 · `58f6657e` |
-| CS-12 | [A version stamp on every lesson](claude-slides-lessons.md), with upgrade steps from each version, so old lessons keep opening as the studio changes; with CS-04 | M | To do · P2 |
-| CS-13 | [A lesson says what it needs](claude-slides-lessons.md) (a room, phones, internet, a live figure), checked before class beside CS-03's warning | S–M | To do · P2 · with CS-12 |
+| CS-12 | [A version stamp on every lesson](claude-slides-lessons.md): `DECK_VERSION` 2, an upgrade step from each older version, and a warning above the inspector when a lesson was saved by a newer studio | M | Done · 10 Nov 2026 · `f409fbb0` |
+| CS-13 | [What a lesson needs](claude-slides-lessons.md), worked out from its content: a room for games, activities and feedback, the internet for YouTube, Vimeo and web pictures; the show's opening notice says when one is not met | S–M | Done · 10 Nov 2026 · `f409fbb0` |
 | CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): stored once by fingerprint everywhere, not only online, lifting the 7.5 MB share and 12 MB sync limits | L | To do · P2 |
 | CS-15 | [A small live widget on a slide](claude-slides-lessons.md): a sandboxed one-file page (about 16 KB) for a one-off interactive | M | To do · P2 |
 | CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
@@ -833,8 +833,8 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-09 | A gentler start: a guided first lesson, or a simple mode that hides advanced panels | To do |
 | CS-10 | More interface languages | Needs a decision |
 | CS-11 | Slide limits (`lab/src/core/limits.ts`): 200 layers, 150 KB per drawing, 2 MB per picture or video, 5 MB per slide; warned, never refused | Done |
-| CS-12 | A lesson's version, and upgrade steps from each | To do |
-| CS-13 | What a lesson needs, checked before class | To do |
+| CS-12 | `lab/src/core/version.ts`: `DECK_VERSION`, `upgradeDeck` run by `loadDeck`, and the newer-studio warning | Done |
+| CS-13 | `lab/src/core/needs.ts`: `lessonNeeds`, said in the show's opening notice (`app/factsWarning.ts` `showNotice`) | Done |
 | CS-14 | Pictures stored once, outside the deck, everywhere | To do |
 | CS-15 | A sandboxed live widget layer | To do |
 | CS-16 | Photo search with the credit kept | To do |
@@ -842,6 +842,12 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — A version on every lesson, and what a lesson needs (CS-12, CS-13)
+
+- **CS-12** (`f409fbb0`): every lesson says which deck format it was saved in (`lab/src/core/version.ts`, `DECK_VERSION` 2). `loadDeck` runs an upgrade step from each older version, on a copy. A lesson saved by a newer studio and opened in an older copy of the app (a cached page, a deploy not yet finished) is left exactly as it is, and the inspector says to reload before editing, since a save there could drop what the newer studio added. Converted SlideForge lessons keep their own steps (`CARRIED`). Each lesson is saved once more the first time it opens, as its version goes from 1 to 2, so a signed-in teacher's lessons each sync once.
+- **CS-13** (`f409fbb0`): what a lesson needs is worked out from what is in it, not declared, so it cannot go out of date (`lab/src/core/needs.ts`): a live room for its games, activities, feedback and Nodes slides, and the internet for YouTube, Vimeo and pictures on other sites. When a show opens, its notice says when a need is not met: game slides in a show without a room, or web content while this computer is offline. It sits before the facts still to check.
+- **Checked:** `lab/tests/version.test.ts` (4 tests; the lab's 423 pass); the root `npm test` (647 of 648; the one failure is the `output/notebooks` pages that load a missing `vis.js`). In the studio, a lesson stamped version 9 showed the warning, and the open lesson was upgraded to version 2 as it loaded. The needs notice was not seen in a show.
 
 ### 10 November 2026 — From how Claude Slides is built: CS-11 to CS-17, and slide limits
 
