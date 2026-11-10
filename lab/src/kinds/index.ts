@@ -20,6 +20,7 @@ import { modelKind } from './model';
 import { experimentKind } from './experiment';
 import { sceneKind } from './scene';
 import { quoteKind } from './quote';
+import { widgetKind } from './widget';
 import { EFFECTS } from './effects';
 
 /** Every kind, in the order the add menu and the inspector list them: the content kinds, then the effects. */
@@ -38,6 +39,7 @@ export const KINDS: LayerKind[] = [
   wipeKind,
   modelKind,
   experimentKind,
+  widgetKind,
   sceneKind,
   quoteKind,
   ...EFFECTS,

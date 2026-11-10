@@ -4,6 +4,8 @@
 .show canvas { display: block; }
 .show-stage { position: relative; cursor: pointer; }
 .show-embed { position: absolute; border: 0; background: #000; }
+.show-widget { position: absolute; overflow: hidden; }
+.show-widget iframe { display: block; border: 0; background: transparent; transform-origin: 0 0; }
 /* A live figure (FigureLayer.tsx): over the slide, under the ink; the pointer is the figure's. */
 .show-figure { position: absolute; inset: 0; z-index: 1; cursor: default; overflow: hidden; }
 .show .dim { color: #777; }

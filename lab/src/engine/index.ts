@@ -15,5 +15,6 @@ export type { PlanPreset, UnitLook } from './words';
 export type { Ctx, Line, Measure, Raster, RasterFn } from './raster';
 export { boxCanvas, card, fit, fmtNum, mix, onColour, pill, rgba, setFont, useFont, withAlpha, wrap } from './draw';
 export { getVideo, videoEmbed, videoService, videoStill } from './media';
+export { WIDGET_MAX, WIDGET_SANDBOX, widgetDoc, widgetRuns } from './widget';
 export { autoClicks, deckReel, frameCount, reel, reelAt, slideTimeline } from './timeline';
 export type { Reel, ReelPart, SlideTimeline, Span, Track } from './timeline';

@@ -1,3 +1,4 @@
+import { WIDGET_STARTER } from '../../kinds/widget';
 import { kind } from '../../engine';
 import { createLayer, hasFlagshipTextImage, textImageForSlide, type Slide } from '../../core';
 import { headingClock } from '../../designs';
@@ -169,7 +170,7 @@ function freeRow(slide: Slide, h: number, skip: string): number | null {
 }
 const WIDE = new Set(['chart', 'diagram', 'note', 'heading', 'table', 'line']);
 
-export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'diagram', 'table', 'line', 'timer'] as const;
+export const ITEMS = ['heading', 'text', 'note', 'bullets', 'numbers', 'image', 'video', 'quote', 'chart', 'diagram', 'table', 'line', 'timer', 'widget'] as const;
 export type ItemId = (typeof ITEMS)[number];
 
 export function addItem(id: Exclude<ItemId, 'image'>) {
@@ -202,6 +203,15 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     case 'table': return make('table', 'Table', { ...kit.table.params }, undefined, kit.table.anim);
     case 'note': return make('note', 'Note', { ...kit.note.params }, undefined, kit.note.anim);
     case 'diagram': return make('diagram', 'Diagram', { ...kit.diagram.params }, { h: 760 }, kit.diagram.anim);
+    // A widget in the middle of the slide, with its tab open: the dice example to change or replace (CS-15).
+    case 'widget': {
+      const g = gridFor(st.deck), w = (g.right - g.left) * 0.6, h = w * 0.56;
+      const layer = createLayer('widget', { name: 'Widget', params: { html: WIDGET_STARTER, background: '#ffffff', radius: 24 } as never, box: { x: (st.deck.width - w) / 2, y: (st.deck.height - h) / 2, w, h, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+      st.insertLayer(layer);
+      st.set({ inspectorTab: 'special' });
+      st.showToast('A live widget: it runs in Preview and the show. Change its page in the Widget tab, or ask an AI for one.');
+      return;
+    }
     // An empty video at 16:9 in the middle of the slide, with its Video tab open for the address.
     case 'video': {
       const g = gridFor(st.deck), w = (g.right - g.left) * 0.7, h = (w * 9) / 16;

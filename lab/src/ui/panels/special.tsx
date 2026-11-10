@@ -6,6 +6,7 @@ import { SimulationPanel } from '../../kinds/model/Inspector';
 import { ScenePanel } from '../../kinds/scene/Inspector';
 import { TimerPanel } from '../../kinds/timer/Inspector';
 import { WipePanel } from '../../kinds/wipe/Inspector';
+import { WidgetPanel } from '../../kinds/widget/Inspector';
 
 /*
  * The layers that do something of their own — Before / after, Simulation, Chart experiment, Motion
@@ -19,6 +20,7 @@ const KIND_INSPECTORS: Record<string, { tab: string; Inspector: (props: { layer:
   experiment: { tab: 'Experiment', Inspector: ExperimentPanel },
   scene: { tab: 'Motion', Inspector: ScenePanel },
   timer: { tab: 'Timer', Inspector: TimerPanel },
+  widget: { tab: 'Widget', Inspector: WidgetPanel },
   diagram: { tab: 'Diagram', Inspector: DiagramPanel },
 };
 

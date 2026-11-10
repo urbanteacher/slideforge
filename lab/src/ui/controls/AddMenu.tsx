@@ -1,4 +1,4 @@
-import { ChartColumn, ChevronDown, Heading, ImagePlus, LayoutGrid, List, ListOrdered, Minus, Play, Plus, Quote, Rows2, Shapes, SquareSplitHorizontal, StickyNote, Table, Timer, Type, Video, Workflow } from 'lucide-react';
+import { ChartColumn, ChevronDown, Heading, ImagePlus, LayoutGrid, List, ListOrdered, Minus, Play, Plus, Quote, Rows2, Shapes, SquareSplitHorizontal, StickyNote, Table, Timer, Type, Video, Workflow, CodeXml } from 'lucide-react';
 import { useRef } from 'react';
 import { useStore } from '../../store';
 import { addImageFile, addItem, addTextImage } from '../stage/insert';
@@ -41,6 +41,7 @@ export function AddMenu() {
                   <button onClick={() => { insertBlock('choices'); close(); }}><Rows2 size={15} />Choice boxes · A–D</button>
                   <hr />
                   <button onClick={item('timer')}><Timer size={15} />Timer</button>
+                  <button onClick={item('widget')}><CodeXml size={15} />Widget · a live web page</button>
                   <button onClick={add('shape')}><Shapes size={15} />Shape</button>
                   <button onClick={item('line')}><Minus size={15} />Line</button>
                 </div>

@@ -32,6 +32,10 @@ export function limitsOf(slide: Slide, limits = SLIDE_LIMITS): string[] {
   if (slide.layers.length > limits.layers) {
     out.push(`${slide.layers.length} layers, over the ${limits.layers} the editor handles smoothly. Split the slide, or merge layers that never move.`);
   }
+  for (const l of slide.layers) {
+    const html = l.kind === 'widget' ? String((l.params as Record<string, unknown>).html ?? '') : '';
+    if (html.length > 16 * 1024) out.push(`“${l.name}” is a widget of ${kb(html.length)}, over 16 KB, so the show will not run it. Make its page smaller.`);
+  }
   let total = 0;
   const seen = new Set<string>();
   for (const l of slide.layers) {

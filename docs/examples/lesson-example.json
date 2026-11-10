@@ -18,6 +18,7 @@
       { "question": "Where should a bar chart's axis usually start?", "options": ["At zero", "At the smallest bar", "Wherever looks best"], "answer": 1, "explanation": "A bar's length is its value, so the axis starts at zero." },
       { "question": "What should you read first?", "options": ["The legend", "The title", "The source"], "answer": "The title", "explanation": "It says what the maker wants you to believe; then check it." }
     ] },
+    {"layout": "widget", "title": "Try it: does the axis change the story?", "html": "<style>.w{display:grid;gap:16px;place-items:center;height:100%}.bars{display:flex;gap:24px;align-items:flex-end;height:60%}.bars div{width:80px;background:#0d7a6f}label{font-size:22px}</style><div class=\"w\"><div class=\"bars\"><div id=\"a\"></div><div id=\"b\"></div></div><label>Axis starts at <input id=\"s\" type=\"range\" min=\"0\" max=\"90\" value=\"0\"> <b id=\"v\">0</b></label></div><script>const A=92,B=96,s=document.getElementById('s');function draw(){const z=+s.value,k=100-z;document.getElementById('a').style.height=((A-z)/k*100)+'%';document.getElementById('b').style.height=((B-z)/k*100)+'%';document.getElementById('v').textContent=z;}s.oninput=draw;draw();</script>", "notes": "Slide the axis start up and watch a 4-point gap look huge."},
     { "layout": "stats", "title": "What you can now check", "stats": [["3", "questions to ask"], ["1", "axis to read"]], "takeaway": "Ask the three questions before you share a chart." }
   ]
 }

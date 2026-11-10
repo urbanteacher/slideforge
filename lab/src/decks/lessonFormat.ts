@@ -32,6 +32,7 @@ export type LessonSlide = Common & (
   | { layout: 'split'; title: string; points: string[]; picture?: string; side?: 'left' | 'right' }
   | { layout: 'timeline'; title: string; subtitle?: string; events: [string, string, string][] }
   | { layout: 'quiz'; title?: string; questions: LessonQuestion[] }
+  | { layout: 'widget'; title?: string; html: string }
 );
 
 /** A multiple-choice question: `answer` is the right option's number from 1, or its words. */
@@ -55,6 +56,7 @@ export const LESSON_LAYOUTS: Record<LessonSlide['layout'], { needs: string[]; ma
   split: { needs: ['title', 'points'], may: ['picture', 'side'] },
   timeline: { needs: ['title', 'events'], may: ['subtitle'] },
   quiz: { needs: ['questions'], may: ['title'] },
+  widget: { needs: ['html'], may: ['title'] },
 };
 const COMMON = ['layout', 'id', 'notes', 'hidden', 'factCheck'];
 
@@ -72,7 +74,7 @@ function slideProblems(s: Record<string, unknown>): string[] {
   for (const k of Object.keys(s)) if (!COMMON.includes(k) && !spec.needs.includes(k) && !spec.may.includes(k)) out.push(`a ${layout} slide has no field "${k}"`);
   const want = (k: string, ok: boolean, what: string) => { if (s[k] !== undefined && !ok) out.push(`"${k}" must be ${what}`); };
   for (const k of ['title', 'subtitle', 'text', 'credit', 'fact', 'caption', 'takeaway', 'quote', 'who', 'picture', 'notes', 'factCheck', 'id']) {
-    if (k === 'title' && layout === 'quiz') { want(k, s[k] === undefined || typeof s[k] === 'string', 'words'); continue; }
+    if (k === 'title' && (layout === 'quiz' || layout === 'widget')) { want(k, s[k] === undefined || typeof s[k] === 'string', 'words'); continue; }
     if (spec.needs.includes(k)) want(k, isText(s[k]), 'words, not empty');
     else want(k, typeof s[k] === 'string', 'words');
   }
@@ -89,6 +91,10 @@ function slideProblems(s: Record<string, unknown>): string[] {
   if (layout === 'compare') want('rows', isRows(s.rows, 3), 'a list of [row label, A, B]');
   if (layout === 'table') want('rows', isRows(s.rows, Array.isArray((s.rows as unknown[] | undefined)?.[0]) ? ((s.rows as unknown[][])[0]).length : -1), 'a list of rows, each as long as the first (the first row is the header)');
   want('events', isRows(s.events, 3) && (s.events as unknown[]).length <= 6, 'one to six [when, who or what, detail]');
+  if (layout === 'widget') {
+    want('html', isText(s.html), 'the widget\'s page, as HTML');
+    if (typeof s.html === 'string' && s.html.length > 16 * 1024) out.push(`"html" is ${Math.round(s.html.length / 1024)} KB; a widget's page may be 16 KB at most`);
+  }
   if (layout === 'quiz') {
     const qs = s.questions;
     if (s.questions !== undefined && (!Array.isArray(qs) || !qs.length)) out.push('"questions" must be a list of one or more questions');

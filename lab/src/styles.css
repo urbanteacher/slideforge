@@ -849,3 +849,5 @@ kbd { font: 500 11.5px/1 Inter, ui-sans-serif, system-ui, sans-serif; padding: 4
 .pref-row small { color: var(--dim); font-size: 12px; line-height: 1.4; }
 .pref-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 .sheet .panel-scroll, .sheet .pref-group:last-of-type { padding-bottom: 12px; }
+.widget-try { width: 100%; overflow: hidden; border: 1px solid var(--line-2); border-radius: 8px; }
+.widget-try iframe { display: block; border: 0; transform-origin: 0 0; }

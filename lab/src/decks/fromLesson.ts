@@ -1,9 +1,9 @@
 // A lesson file built as a studio deck (BACKLOG CS-01, docs/lesson-format.md). Each slide is made by the layout it
 // names, in the deck's theme, exactly as the Gallery would insert it with these words: the file says what, the
 // studio decides where. Read and check the file first (lessonFormat.ts readLesson).
-import { blankDeck, uid, type Deck, type Slide } from '../core';
+import { blankDeck, createLayer, uid, type Deck, type Slide } from '../core';
 import {
-  DEFAULT_THEME, LAYOUT_STYLES, blockSlide, bulletsSlide, cardsSlide, compareSlide, credit, keyfactSlide, keywordsSlide, quoteSlide,
+  CONTENT_FOOT, CONTENT_TOP, DEFAULT_THEME, cell, LAYOUT_STYLES, blockSlide, titleBar, titleRow, bulletsSlide, cardsSlide, compareSlide, credit, keyfactSlide, keywordsSlide, quoteSlide,
   sectionSlide, splitSlide, statement, statsSlide, tableSlide, themeOf, timelineSlide, titleSlide, type LayoutStyle,
 } from '../layouts';
 import { gameSlides, type ShowcaseGame } from '../designs';
@@ -51,6 +51,12 @@ function build(s: LessonSlide, st: LayoutStyle): Slide {
       const pic = made.layers.find((l) => l.kind === 'image');
       if (pic && s.picture) pic.params.src = s.picture;
       return made;
+    }
+    case 'widget': {
+      // The heading row, and the widget below it across the grid (kinds/widget): it runs in the show.
+      const top = s.title?.trim() ? CONTENT_TOP : 140;
+      const widget = createLayer('widget', { name: s.title?.trim() || 'Widget', params: { html: s.html, background: '#ffffff', radius: 24 } as never, box: { x: cell(1, 1, 12, 1).x, y: top, w: cell(1, 1, 12, 1).w, h: CONTENT_FOOT - top, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+      return blockSlide(st, s.title?.trim() || 'Widget', s.title?.trim() ? [titleRow(st, s.title.trim()), titleBar(st), widget] : [widget]);
     }
     case 'quiz': throw new Error('A quiz is built as a game.');
   }

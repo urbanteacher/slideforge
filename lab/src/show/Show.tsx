@@ -6,7 +6,7 @@
 
 import { ArrowLeft, ArrowRight, CircleStop, Columns2, Ellipsis, Eye, Keyboard, LayoutGrid, Maximize, MessageCircleQuestion, Monitor, MonitorOff, PenLine, Radio, Share2, Smartphone, Users, QrCode, Trophy, Vote, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DeckPlayer, videoEmbed } from '../engine';
+import { DeckPlayer, WIDGET_SANDBOX, videoEmbed, widgetDoc, widgetRuns } from '../engine';
 import { KeySheet, QuestionsList, QuickPollForm, ROOM_VIEW_SAYS, ShowSide, controlFor, keyName, nextRoomView, presenterUrl, toggleBoard, type CmdData, type RoomView, type Screen, type ShowAction } from '../presenter';
 import { FLOOR_SAYS, reactionsSay, type QuickAsk } from '../live';
 import { useStore } from '../store';
@@ -438,6 +438,8 @@ function Show() {
   // The marks belong to the slide on the wall: leaving it clears them (as classic's ink does).
   useEffect(() => { ink.setSlide(String(index)); inkChanged(); }, [index, ink, inkChanged]);
   const embeds = slide.layers.filter((l) => l.kind === 'video' && l.visible && l.box && videoEmbed(l.params)).map((l) => ({ id: l.id, box: l.box!, src: videoEmbed(l.params), title: l.name }));
+  // Live widgets (CS-15): each page in a frame that may run scripts and nothing else (engine/widget.ts).
+  const widgets = slide.layers.filter((l) => l.kind === 'widget' && l.visible && l.box && widgetRuns(l.params.html)).map((l) => ({ id: l.id, box: l.box!, doc: widgetDoc(String(l.params.html)), title: l.name, bg: String(l.params.background ?? '#ffffff'), radius: Number(l.params.radius ?? 24) }));
   const wall = roomOn ? wallOf({ room: room.state, steps, at: room.at, before: room.before, teamBefore: room.teamBefore, scoresOn, fallbackJoin: joinFallback() }) : null;
   const fbOpen = roomOn && !finished && wall?.view === 'feedback' ? room.state.feedback : null;
   const lobby = wall?.view === 'lobby' || wall?.view === 'connecting';
@@ -514,6 +516,15 @@ function Show() {
         {figure && <FigureLayer key={slide.id} figure={figure} step={figureStep} />}
         {wall && !finished && !['question', 'reveal', 'sprint', 'lobby', 'connecting', 'ended'].includes(wall.view) && <ReactionBay key={slide.id} reaction={room.state.reaction} height={size.h} />}
         <InkCanvas ink={ink} on={inkOn} w={size.w} h={size.h} version={inkV} onChange={inkChanged} />
+        {widgets.map((e) => (
+          // Laid out at the box's size on the slide and scaled to the screen (engine/widget.ts), so it reads the same everywhere.
+          // The ring in its own background covers the edge of the editor's card drawn beneath it.
+          <div key={`${index}-${e.id}`} className="show-widget" onClick={(ev) => ev.stopPropagation()}
+            style={{ left: `${(e.box.x / deck.width) * 100}%`, top: `${(e.box.y / deck.height) * 100}%`, width: `${(e.box.w / deck.width) * 100}%`, height: `${(e.box.h / deck.height) * 100}%`, background: e.bg, borderRadius: `${(e.radius * size.w) / deck.width}px`, boxShadow: `0 0 0 3px ${e.bg}` }}>
+            <iframe srcDoc={e.doc} title={e.title} sandbox={WIDGET_SANDBOX}
+              style={{ width: e.box.w, height: e.box.h, transform: `scale(${size.w / deck.width})` }} />
+          </div>
+        ))}
         {embeds.map((e) => (
           <iframe key={`${index}-${e.id}`} className="show-embed" src={e.src} title={e.title}
             style={{ left: `${(e.box.x / deck.width) * 100}%`, top: `${(e.box.y / deck.height) * 100}%`, width: `${(e.box.w / deck.width) * 100}%`, height: `${(e.box.h / deck.height) * 100}%` }}
