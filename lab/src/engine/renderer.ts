@@ -2,7 +2,7 @@ import type { BlendMode, Layer, Slide, TransitionType } from '../core';
 import { EASE, IDLE_STATE, animTotal, layerState, schedule, stepLight, type LayerState } from './anim';
 import { CONTENT_GLSL, MAIN, PRELUDE, VERT } from './glsl';
 import { REDUCED_CHANGE } from './motion';
-import { getAssetVersion, groupSizes, rasterise, textSize } from './raster';
+import { getAssetVersion, groupSizes, rasterise, readsSlide, textSize } from './raster';
 import { contentFrame } from './media';
 import { kind } from './registry';
 import { DEFAULT_EDGE, TRANSITION_FRAG, TRANSITION_INDEX, type TransitionLook } from './transitions';
@@ -26,6 +26,8 @@ interface Prog { prog: WebGLProgram; loc: Map<string, WebGLUniformLocation | nul
 interface TexEntry {
   tex: WebGLTexture; rect: [number, number, number, number];
   params: unknown; w: number; h: number; asset: number; textT: number; frame: number;
+  /** The slide's layers it was drawn from, for a kind that reads its slide (raster.ts readsSlide). */
+  layers?: unknown;
 }
 
 export interface FrameOpts {
@@ -174,13 +176,15 @@ export class Renderer {
     this.program('transition', () => TRANSITION_FRAG);
   }
 
-  private texture(layer: Layer, textT: number): TexEntry | null {
+  private texture(layer: Layer, textT: number, slide?: Slide): TexEntry | null {
     const box = layer.box!;
     const asset = getAssetVersion();
     const frame = contentFrame(layer);
     const e = this.tex.get(layer.id);
-    if (e && e.params === layer.params && e.w === box.w && e.h === box.h && e.asset === asset && e.textT === textT && e.frame === frame) return e;
-    const r = rasterise(layer, textT);
+    // A kind that reads its slide is drawn again when anything on the slide changes (a new layers list).
+    const layers = readsSlide(layer.kind) ? slide?.layers : undefined;
+    if (e && e.params === layer.params && e.w === box.w && e.h === box.h && e.asset === asset && e.textT === textT && e.frame === frame && e.layers === layers) return e;
+    const r = rasterise(layer, textT, slide);
     if (!r) return e ?? null;
     const gl = this.gl;
     const tex = e?.tex ?? gl.createTexture()!;
@@ -196,7 +200,7 @@ export class Renderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    const entry: TexEntry = { tex, rect: r.rect, params: layer.params, w: box.w, h: box.h, asset, textT, frame };
+    const entry: TexEntry = { tex, rect: r.rect, params: layer.params, w: box.w, h: box.h, asset, textT, frame, layers };
     this.tex.set(layer.id, entry);
     return entry;
   }
@@ -509,7 +513,7 @@ export class Renderer {
         passes.push({
           layer,
           run: (p) => {
-            const te = this.texture(layer, textT);
+            const te = this.texture(layer, textT, slide);
             if (!te) return false;
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, te.tex);

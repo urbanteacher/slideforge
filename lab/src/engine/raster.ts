@@ -1,4 +1,4 @@
-import type { Layer, Params } from '../core';
+import type { Layer, Params, Slide } from '../core';
 
 // Rasterises content layers (text / shape / image) into 2D canvases that the renderer uploads as
 // textures. Each result carries `rect`: the area the canvas covers, relative to the layer box's
@@ -257,18 +257,26 @@ export function contentHeight(l: Pick<Layer, 'kind' | 'params'>, width: number):
   return Math.ceil(m(mctx(), l.params, width).height);
 }
 
-export type RasterFn = (layer: Layer, textT: number) => Raster | null;
-/** A layer kind's drawing, registered by kinds/index.ts: how it is drawn, and how tall its content is. */
-export interface KindDrawing { raster: RasterFn; measure?: Measure }
+/** A kind's drawing. `slide` is the slide the layer is on, handed only to a kind that reads it (`readsSlide`): a
+ *  connector reads where the layers it joins are. Its rect is measured from the layer's own box, as always. */
+export type RasterFn = (layer: Layer, textT: number, slide?: Slide) => Raster | null;
+/** A layer kind's drawing, registered by kinds/index.ts: how it is drawn, how tall its content is, and whether it reads
+ *  the rest of its slide. One that does is drawn again whenever anything on its slide changes (engine/renderer.ts). */
+export interface KindDrawing { raster: RasterFn; measure?: Measure; readsSlide?: boolean }
 const RASTERS: Record<string, RasterFn> = {};
+const READS = new Set<string>();
 
 /** A kind's drawing, from kinds/index.ts: the engine draws the kinds only through what is registered here. */
 export function registerRaster(id: string, d: KindDrawing) {
   RASTERS[id] = d.raster;
   if (d.measure) MEASURES[id] = d.measure;
+  if (d.readsSlide) READS.add(id); else READS.delete(id);
 }
 
-export function rasterise(layer: Layer, textT: number): Raster | null {
+/** Whether a kind's drawing reads the rest of its slide (so its picture depends on more than the layer itself). */
+export const readsSlide = (kindId: string): boolean => READS.has(kindId);
+
+export function rasterise(layer: Layer, textT: number, slide?: Slide): Raster | null {
   const draw = RASTERS[layer.kind];
-  return draw ? draw(layer, textT) : null;
+  return draw ? draw(layer, textT, READS.has(layer.kind) ? slide : undefined) : null;
 }

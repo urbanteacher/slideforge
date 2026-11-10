@@ -1,6 +1,7 @@
 import type { BlendMode, Params, ParamValue } from '../core';
 import type { Measure, RasterFn } from './raster';
 import { registerRaster } from './raster';
+import { registerWeb, type WebFn } from './web';
 
 export type Category = 'source' | 'generate' | 'distort' | 'colour' | 'light' | 'stylise';
 
@@ -79,7 +80,14 @@ export const style = (size: number, font = 'Inter', min = 12, max = 200): ParamD
 
 export const REGISTRY: Record<string, KindDef> = {};
 /** A layer kind as kinds/index.ts lists it: its definition, and for the content kinds how it is drawn. */
-export interface LayerKind { def: KindDef; raster?: RasterFn; measure?: Measure }
+export interface LayerKind {
+  def: KindDef; raster?: RasterFn; measure?: Measure;
+  /** Its drawing reads the rest of its slide (engine/raster.ts readsSlide). */
+  readsSlide?: boolean;
+  /** Live web content the show lays over the canvas where the layer is (engine/web.ts): a framed address or a
+   *  sandboxed page. The canvas keeps drawing the kind's still, which the editor, the exports and a share show. */
+  web?: WebFn;
+}
 
 // Every kind's definition, in the list's order: filled by kinds/index.ts (registerKinds), never written here.
 const KINDS: KindDef[] = [];
@@ -89,7 +97,8 @@ export function registerKinds(list: LayerKind[]) {
   for (const k of list) {
     KINDS.push(k.def);
     REGISTRY[k.def.id] = k.def;
-    if (k.raster) registerRaster(k.def.id, { raster: k.raster, measure: k.measure });
+    if (k.raster) registerRaster(k.def.id, { raster: k.raster, measure: k.measure, readsSlide: k.readsSlide });
+    if (k.web) registerWeb(k.def.id, k.web);
   }
 }
 

@@ -3,4 +3,5 @@ import { rasterConnector } from './raster';
 import { connectorDef } from './def';
 import type { LayerKind } from '../../engine';
 
-export const connectorKind: LayerKind = { def: connectorDef, raster: rasterConnector };
+// It reads its slide: its line runs between where the two layers are (engine/raster.ts readsSlide).
+export const connectorKind: LayerKind = { def: connectorDef, raster: rasterConnector, readsSlide: true };

@@ -1,7 +1,9 @@
-// The connector drawn into a canvas: from its stored ends (core/connectors.ts), straight, with an elbow at the
-// middle, or as a curve that leaves each layer square on, with an arrowhead at the end or both. A connector whose
-// layer has gone is drawn dashed in orange where it last was, so it can be joined again or deleted.
-import type { Layer } from '../../core';
+// The connector drawn into a canvas, straight, with an elbow at the middle, or as a curve that leaves each layer square
+// on, with an arrowhead at the end or both. It reads its slide (readsSlide), so its ends are worked out from where the
+// two layers are now (core/connectors.ts), whatever its own box says; the store's sync keeps that box close for
+// selecting it. Without the slide it draws its stored ends. A connector whose layer has gone is drawn dashed in orange
+// where it last was, so it can be joined again or deleted.
+import { connectorGeometry, type Layer, type Slide } from '../../core';
 import { boxCanvas, type Ctx, type Raster } from '../../engine';
 
 function head(ctx: Ctx, x: number, y: number, fromX: number, fromY: number, size: number) {
@@ -14,12 +16,31 @@ function head(ctx: Ctx, x: number, y: number, fromX: number, fromY: number, size
   ctx.fill();
 }
 
-export function rasterConnector(layer: Layer): Raster | null {
+/** Where the line runs: live from the slide when it is handed one, else as the store last wrote it. */
+function endsOf(layer: Layer, slide?: Slide) {
   const p = layer.params as Record<string, unknown>;
-  if (p._x1 === undefined) return null;
-  const { canvas, ctx, rect } = boxCanvas(layer, 12);
-  const x1 = Number(p._x1), y1 = Number(p._y1), x2 = Number(p._x2), y2 = Number(p._y2);
-  const lost = p._lost === true, side = p._side === 'v' ? 'v' : 'h';
+  if (slide && layer.box) {
+    const a = slide.layers.find((l) => l.id === p.from), b = slide.layers.find((l) => l.id === p.to);
+    if (a?.box && b?.box && a !== b && a.kind !== 'connector' && b.kind !== 'connector') {
+      const g = connectorGeometry(a.box, b.box);
+      // Its own canvas is the box the geometry wants, placed against the layer's box (which the rect is measured from).
+      return { box: g.box, dx: g.box.x - layer.box.x, dy: g.box.y - layer.box.y, ...g.ends, lost: false };
+    }
+    if (p._x1 === undefined) return null;
+    return { box: layer.box, dx: 0, dy: 0, x1: Number(p._x1), y1: Number(p._y1), x2: Number(p._x2), y2: Number(p._y2), side: p._side as 'h' | 'v', lost: true };
+  }
+  if (p._x1 === undefined || !layer.box) return null;
+  return { box: layer.box, dx: 0, dy: 0, x1: Number(p._x1), y1: Number(p._y1), x2: Number(p._x2), y2: Number(p._y2), side: p._side as 'h' | 'v', lost: p._lost === true };
+}
+
+export function rasterConnector(layer: Layer, _textT: number, slide?: Slide): Raster | null {
+  const p = layer.params as Record<string, unknown>;
+  const e = endsOf(layer, slide);
+  if (!e) return null;
+  const { canvas, ctx, rect } = boxCanvas({ ...layer, box: e.box }, 12);
+  rect[0] += e.dx; rect[1] += e.dy;
+  const { x1, y1, x2, y2 } = e;
+  const lost = e.lost, side = e.side === 'v' ? 'v' : 'h';
   const width = Number(p.width ?? 5), colour = lost ? '#c2410c' : String(p.color ?? '#5f5a52');
   const size = Math.max(14, width * 4);
   ctx.strokeStyle = colour; ctx.fillStyle = colour; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
