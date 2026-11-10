@@ -1,7 +1,7 @@
 import londonNight from '../assets/motion-lab-london-night.jpg?inline';
 import { makePlan } from '../engine';
 import { setBackdrop, LAYOUTS, LAYOUT_STYLES, chartCalloutSlide, chartSlide, experimentSlide, keyfactSlide, mindmapSlide, railSlide, sceneSlide, sectionEditorialSlide, sectionSlide, splitSlide, youtubeSlide, type BackdropMode, type LayoutStyle } from '../layouts';
-import { uid, type Anim, type Deck, type Layer, type Slide } from '../core';
+import { DECK_VERSION, uid, type Anim, type Deck, type Layer, type Slide } from '../core';
 import { LOOKS, SCENES, EXPERIMENTS } from '../experiments';
 
 // SlideForge's Motion lab lesson, slides 1–14, made in the lab from the lab's own pieces: the
@@ -140,7 +140,7 @@ function picture(): Slide {
 export function motionLabDeck(): Deck {
   const slides = [...SLIDES.map((o) => statement(o)), picture()];
   slides.forEach((s, i) => { if (i < SLIDES.length) s.name = `${i + 1} · ${SLIDES[i].line}`; else s.name = `${i + 1} · ${s.name}`; });
-  const deck: Deck = { id: uid(), title: 'Motion lab — slides 1–14', width: 1920, height: 1080, version: 1, theme: st.id, slides };
+  const deck: Deck = { id: uid(), title: 'Motion lab — slides 1–14', width: 1920, height: 1080, version: DECK_VERSION, theme: st.id, slides };
   SLIDES.forEach((o, i) => { if (o.backdrop) setBackdrop(deck, slides[i].id, o.backdrop); });
   return deck;
 }

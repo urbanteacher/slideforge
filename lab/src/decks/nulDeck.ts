@@ -1,7 +1,7 @@
 import londonNight from '../assets/motion-lab-london-night.jpg?inline';
 import skyline from '../assets/nul/nu-london-skyline.png?inline';
 import snowMap from '../assets/nul/snow-cholera-map-1854.jpg?inline';
-import { uid, type Deck, type Slide } from '../core';
+import { DECK_VERSION, uid, type Deck, type Slide } from '../core';
 import { LAYOUTS, closerSlide, columnsSlide, diagramSlide, funnelSlide, introductionSlide, journeySlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, splitSlide, timelineSlide, type LayoutStyle } from '../layouts';
 import { teachingRoutineSlides } from './teachingRoutine';
 import { finish, framed, kit } from './ukbtDeck';
@@ -81,5 +81,5 @@ export function nulDeck(): Deck {
     put(closerSlide(on('working'), 'Leave them with a picture.', 'Northeastern University London', skyline, 1458 / 533), 'working',
       'CLOSER — image. Same tool as the opener, different job: end on atmosphere and one line, not another bullet list.'),
   ];
-  return framed({ id: uid(), title: 'NU London — openers, breakaways & a layout range', width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) }, guide.marks[0].src, 'Northeastern University London');
+  return framed({ id: uid(), title: 'NU London — openers, breakaways & a layout range', width: 1920, height: 1080, version: DECK_VERSION, theme: 'guide', styleGuide: guide, slides: finish(slides) }, guide.marks[0].src, 'Northeastern University London');
 }

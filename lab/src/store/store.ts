@@ -26,6 +26,7 @@ interface State {
   lastMerge: { key: string; t: number } | null;
   saveState: 'saved' | 'saving' | 'unsaved';
   /** The open deck was saved by a newer studio (core/version.ts): its version, or null. Said above the inspector. */
+  /** Set while the open deck was saved by a newer studio (its version, NaN when unreadable): it is not saved here. */
   deckTooNew: number | null;
   playToken: number;
   /** The timeline under the canvas is open (the canvas bar's timeline button). Remembered in this browser. */
@@ -175,13 +176,19 @@ export const useStore = create<State>((set, get) => ({
   },
 
   loadDeck: (d0) => {
-    // Brought up to this studio's deck version (core/version.ts); one saved by a newer studio is left as it is, and said.
+    // Brought up to this studio's deck version (core/version.ts). One saved by a newer studio is shown exactly as it
+    // came: no repairs, no refit, and the autosave leaves it unwritten (app/embed.ts), so nothing that studio added
+    // is lost here. The Slide panel says so.
     const up = upgradeDeck(d0);
+    if (up.newer) {
+      set({ deck: up.deck, slideId: up.deck.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null, deckTooNew: up.from });
+      return;
+    }
     // Games built by an older lab brought up to date as the deck opens (model/gameLook.ts).
     let d = repairGames(up.deck);
     // A lesson from before CS-04 keeps the theme it wears now, so a later change to the studio's theme leaves it be.
-    if (!up.newer && !d.themeCopy && d.theme && d.theme !== 'guide') { d = structuredClone(d); pinTheme(d); }
-    set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null, deckTooNew: up.newer ? up.from : null });
+    if (!d.themeCopy && d.theme && d.theme !== 'guide') { d = structuredClone(d); pinTheme(d); }
+    set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null, deckTooNew: null });
     refitAllText(); // a deck saved before a box type measured itself gets its heights now
   },
 

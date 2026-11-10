@@ -15,10 +15,21 @@ const UPGRADES: Record<number, (d: Deck) => void> = {
   1: () => {},
 };
 
-/** The deck brought up to this studio's version. `newer` when it was saved by a newer studio: it is left as it is. */
+/** The version a deck says it is: a missing stamp is a deck from before stamps (1). A stamp written as text ("3") is
+ *  read as its number. One that is not a whole number from 1 up cannot be read, so it is NaN: the deck is not
+ *  upgraded, since it may be from a studio that writes versions some other way. */
+export function deckVersion(d: { version?: unknown }): number {
+  const v = d.version;
+  if (v === undefined || v === null) return 1;
+  const n = typeof v === 'string' && /^\d+$/.test(v.trim()) ? Number(v) : v;
+  return typeof n === 'number' && Number.isInteger(n) && n >= 1 ? n : NaN;
+}
+
+/** The deck brought up to this studio's version. `newer` when it was saved by a newer studio, or its version cannot be
+ *  read (`from` is then NaN): it is left exactly as it is. */
 export function upgradeDeck(d: Deck): { deck: Deck; from: number; newer: boolean } {
-  const from = typeof d.version === 'number' && Number.isInteger(d.version) && d.version >= 1 ? d.version : 1;
-  if (from > DECK_VERSION) return { deck: d, from, newer: true };
+  const from = deckVersion(d);
+  if (Number.isNaN(from) || from > DECK_VERSION) return { deck: d, from, newer: true };
   if (from === DECK_VERSION) return { deck: d, from, newer: false };
   const copy = structuredClone(d);
   for (let v = from; v < DECK_VERSION; v++) UPGRADES[v]?.(copy);

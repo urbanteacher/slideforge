@@ -15,6 +15,8 @@
 /** The few key-value calls the store needs: IndexedDB in the studio (core/idb.ts), a Map in the tests. */
 export interface Kv {
   get<T>(key: string): Promise<T | undefined>;
+  /** Several records in one read (one IndexedDB transaction), in the order asked. */
+  getMany<T>(keys: string[]): Promise<(T | undefined)[]>;
   set(key: string, value: unknown): Promise<void>;
   /** Several records in one write (one IndexedDB transaction): a lesson's new pictures are committed together. */
   setMany(entries: [string, unknown][]): Promise<void>;
@@ -54,14 +56,19 @@ function collect(v: unknown, want: (s: string) => boolean): Set<string> {
   return found;
 }
 
-async function sha256(s: string): Promise<string> {
-  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
+/** The browser's SHA-256, or null where there is none. It exists only on a secure page (https, or localhost), so
+ *  the studio opened at a plain-http address on the school network (http://192.168.…:8787) has none. */
+const browserDigest = (): SubtleCrypto | null => globalThis.crypto?.subtle ?? null;
 
-export function pictureStore(kv: Kv, now = () => Date.now()) {
-  // A picture's fingerprint, once worked out, and when this page last wrote or read each picture: an autosave
-  // neither hashes nor writes a picture it kept in the last hour. After that it is written again, in case another
+/** `digest` is the browser's by default; the tests pass null to stand for a plain-http page. Without one, a lesson
+ *  is stored with its pictures inside, as before CS-14: it saves, only less compactly, and reads back the same. */
+export function pictureStore(kv: Kv, now = () => Date.now(), digest: SubtleCrypto | null = browserDigest()) {
+  const sha256 = async (s: string): Promise<string> => {
+    const d = await digest!.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+  // A picture's fingerprint, once worked out (or read back), and when this page last wrote each picture: an autosave
+  // neither hashes nor writes a picture it wrote in the last hour. After that it is written again, in case another
   // tab's sweep has since taken it. The memo is bounded, oldest out first.
   const hashes = new Map<string, string>();
   const written = new Map<string, number>();
@@ -79,6 +86,7 @@ export function pictureStore(kv: Kv, now = () => Date.now()) {
   /** The value as it is stored: its large data addresses written as pictures of their own, first, and replaced by
    *  their references. The value passed in is not changed. */
   async function stash<T>(value: T): Promise<T> {
+    if (!digest) return value;
     const big = collect(value, (s) => s.startsWith('data:') && s.length >= PIC_MIN);
     if (!big.size) return value;
     // Fingerprinted together, then every picture not kept lately written in one transaction: one commit, however
@@ -100,12 +108,13 @@ export function pictureStore(kv: Kv, now = () => Date.now()) {
     if (!refs.size) return { value, missing: [] };
     const data = new Map<string, string>();
     const missing: string[] = [];
-    for (const r of refs) {
-      const h = r.slice(REF.length);
-      const pic = await kv.get<Pic>(PIC + h);
+    const list = [...refs];
+    const got = await kv.getMany<Pic>(list.map((r) => PIC + r.slice(REF.length)));
+    list.forEach((r, i) => {
+      const h = r.slice(REF.length), pic = got[i];
       if (pic && typeof pic.data === 'string') { data.set(r, pic.data); hashes.set(pic.data, h); }
       else missing.push(h);
-    }
+    });
     return { value: walk(value, (s) => data.get(s)) as T, missing };
   }
 

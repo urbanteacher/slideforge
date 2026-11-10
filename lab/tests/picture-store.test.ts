@@ -10,6 +10,7 @@ function memoryKv() {
   const writes: string[] = [];
   const kv: Kv = {
     get: async <T>(k: string) => structuredClone(m.get(k)) as T | undefined,
+    getMany: async <T>(ks: string[]) => ks.map((k) => structuredClone(m.get(k)) as T | undefined),
     set: async (k, v) => { writes.push(k); m.set(k, structuredClone(v)); },
     setMany: async (es) => { for (const [k, v] of es) { writes.push(k); m.set(k, structuredClone(v)); } },
     del: async (k) => { m.delete(k); },
@@ -92,4 +93,16 @@ test('after an hour a picture is written again, in case another tab swept it', a
   t += 2 * 60 * 60 * 1000;
   await store.stash(deck(pic('A'), pic('A')));
   assert.equal(writes.length, n + 1);
+});
+
+test('on a page with no SHA-256 (plain http on the school network) a lesson is kept whole, and still saves', async () => {
+  const { kv, m } = memoryKv();
+  const store = pictureStore(kv, () => 0, null);
+  const d = deck(pic('A'), pic('B'));
+  const stored = await store.stash(d);
+  assert.equal(stored, d, 'kept with its pictures inside, as before CS-14');
+  assert.equal([...m.keys()].filter((k) => k.startsWith('pic:')).length, 0);
+  // A lesson stored on a secure page, opened later on the plain one, still reads back whole.
+  const kept = await pictureStore(kv).stash(d);
+  assert.deepEqual((await store.restore(kept)).value, d);
 });

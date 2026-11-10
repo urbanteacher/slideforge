@@ -1,4 +1,4 @@
-import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, idbSetMany, unpackPictures, type Deck, type Slide } from '../core';
+import { TEMPLATES, blankDeck, idbDelete, idbGet, idbGetMany, idbKeys, idbSet, idbSetMany, unpackPictures, type Deck, type Slide } from '../core';
 import { deckFromLesson, loadChoiceStarter, readLesson, CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
 import { buildPdf, buildPptx, dataUrlBytes, renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
@@ -32,7 +32,7 @@ const serial = <T>(job: () => Promise<T>): Promise<T> => {
 };
 
 // Lessons are stored with their pictures kept once, apart (app/pictureStore.ts, BACKLOG CS-14), and read back whole.
-const pics = pictureStore({ get: idbGet, set: idbSet, setMany: idbSetMany, del: idbDelete, keys: idbKeys });
+const pics = pictureStore({ get: idbGet, getMany: idbGetMany, set: idbSet, setMany: idbSetMany, del: idbDelete, keys: idbKeys });
 
 /** A stored record with its pictures put back. A picture that cannot be found keeps its reference and is reported. */
 export async function readStored<T>(k: string): Promise<T | undefined> {
@@ -64,10 +64,20 @@ let cleared = false;
 // modified time stays when it was last changed, which is what the online sync compares (js/sync.js).
 let lastWritten: Deck | null = null;
 
+/** Why the open lesson is not being saved, or '' when it is: one saved by a newer studio is never written over here
+ *  (store.ts loadDeck, core/version.ts), so a change made in this older copy cannot lose what that studio added. */
+export function notSavedWhy(d: Deck): string {
+  const st = useStore.getState();
+  if (st.deckTooNew === null || d.id !== st.deck.id) return '';
+  return 'This lesson was saved by a newer version of the studio, so this copy does not save over it. Reload the page to edit and save it';
+}
+
 /** Keep one deck under its own id, and list it for the shell's Open. */
 export function persistDeck(d: Deck): Promise<SavedRow[]> {
   return serial(async () => {
     if (cleared) return [];
+    // Left unwritten, quietly: opening it from the shell must still work. The autosave (saveCurrent) says why.
+    if (notSavedWhy(d)) return listSaved();
     if (d === lastWritten) return listSaved();
     lastWritten = d;
     const deck = { ...d, modified: Date.now() };
@@ -83,6 +93,8 @@ export function persistDeck(d: Deck): Promise<SavedRow[]> {
 export async function saveCurrent(): Promise<void> {
   if (cleared) return;
   const st = useStore.getState();
+  const why = notSavedWhy(st.deck);
+  if (why) throw new Error(why);
   await idbSet('current', await pics.stash({ deck: st.deck, slideId: st.slideId }));
   await persistDeck(st.deck);
 }

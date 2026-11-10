@@ -1,7 +1,7 @@
 // The studio viewer's state, with no page in it (lab-engine-plan M12): what a share link asks for, the shared lab
 // deck as the viewer plays it, where a followed room is, and the practice questions with their marking. The page
 // (viewer/page.ts) draws it; the tests read it.
-import { packPictures, unpackPictures, type Deck, type Slide } from '../core';
+import { packPictures, unpackPictures, upgradeDeck, type Deck, type Slide } from '../core';
 import { gameStyle, markResponse } from '@sf/games/registry.js';
 
 /** Every `notes` taken off, at any depth: a slide's speaker notes, and any a game's question carries. */
@@ -44,6 +44,10 @@ export function sharedDeck(doc: unknown): Shared | null {
   if (!doc || typeof doc !== 'object') return null;
   const d = structuredClone(doc) as Deck & { pictures?: string[]; practice?: unknown; studio?: unknown };
   if (!Array.isArray(d.slides) || !d.slides.length || !d.slides.every(isSlide)) return null;
+  // A share kept online for months is brought up to this player's deck version, as the studio does when it opens
+  // one (core/version.ts). One from a newer studio is played as it is.
+  const up = upgradeDeck(d);
+  if (up.deck !== d) Object.assign(d, up.deck);
   unpackPictures(d);
   const practice = d.practice === true;
   delete d.practice;

@@ -138,3 +138,11 @@ test('a shipped lesson shared: well under the relay\'s 8 MB, and the viewer play
   assert.ok(text.length < JSON.stringify(shipped).length, 'smaller than the deck unpacked');
   assert.equal(sharedDeck(JSON.parse(text))!.deck.slides.length, shipped.slides.filter((s) => !s.hidden).length);
 });
+
+test('a share kept since an older studio is played at this version; one from a newer studio as it is', async () => {
+  const { DECK_VERSION } = await import('../src/core/version');
+  const old = sharedDeck({ ...deck([slide('a')]), version: 1 });
+  assert.equal(old?.deck.version, DECK_VERSION);
+  const newer = sharedDeck({ ...deck([slide('a')]), version: DECK_VERSION + 5 });
+  assert.equal(newer?.deck.version, DECK_VERSION + 5);
+});

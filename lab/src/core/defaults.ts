@@ -219,7 +219,7 @@ export function demoDeck(): Deck {
     title: 'Motion Culture — demo',
     width: DECK_W,
     height: DECK_H,
-    version: 1,
+    version: DECK_VERSION,
     slides: ids.map((id) => TEMPLATES.find((t) => t.id === id)!.make()),
   };
 }

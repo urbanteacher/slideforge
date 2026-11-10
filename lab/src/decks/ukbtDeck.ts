@@ -1,5 +1,5 @@
 import chevron from '../assets/ukbt/ukbt-chevron.svg?raw';
-import { createLayer, uid, type Deck, type Slide } from '../core';
+import { DECK_VERSION, createLayer, uid, type Deck, type Slide } from '../core';
 import { chooseSet, fromPreset, paletteGroups } from '../theme';
 import { syncHeaderFooter, cardsSlide, guideStyle, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, slideStyle, tableSlide, titleSlide, type LayoutStyle } from '../layouts';
 
@@ -133,7 +133,7 @@ export function ukbtDeck(): Deck {
       ['Set the prices', 'Every figure in this deck is a placeholder until you replace it.'],
     ]), 'quiet', 'This slide is a checklist for you, not for the partner — replace it with your actual contact details and the booking link before this deck leaves the building, and change the two placeholder-pricing titles at the same time.'),
   ];
-  return framed({ id: uid(), title: 'UK Black Tech — partnership pack', width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) }, guide.marks[0].src, 'UK Black Tech · Partnership pack');
+  return framed({ id: uid(), title: 'UK Black Tech — partnership pack', width: 1920, height: 1080, version: DECK_VERSION, theme: 'guide', styleGuide: guide, slides: finish(slides) }, guide.marks[0].src, 'UK Black Tech · Partnership pack');
 }
 
 // The UKBT Institute's partnership pack (SlideForge's `ukbt-institute-partnership`), in the
@@ -220,5 +220,5 @@ export function ukbtInstituteDeck(): Deck {
       ['UK Black Tech', 'ukblacktech.com'],
     ]), 'quiet', 'Add the booking link for a scoping conversation, and your contact details — name, role, email, phone, LinkedIn. The pack leaves all of them to confirm and so does this deck.'),
   ];
-  return framed({ id: uid(), title: 'UKBT Institute — partnership pack', width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) }, guide.marks[0].src, 'UKBT Institute · Partnership pack');
+  return framed({ id: uid(), title: 'UKBT Institute — partnership pack', width: 1920, height: 1080, version: DECK_VERSION, theme: 'guide', styleGuide: guide, slides: finish(slides) }, guide.marks[0].src, 'UKBT Institute · Partnership pack');
 }

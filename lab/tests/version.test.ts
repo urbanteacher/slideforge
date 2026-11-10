@@ -13,7 +13,7 @@ test('every version below this one has an upgrade step', () => {
 });
 
 test('an older or unstamped deck is upgraded on a copy; a current one is left alone', () => {
-  for (const v of [1, undefined, 0, 'x']) {
+  for (const v of [1, undefined, null, '1']) {
     const d = deck(v);
     const up = upgradeDeck(d);
     assert.equal(up.deck.version, DECK_VERSION);
@@ -23,6 +23,19 @@ test('an older or unstamped deck is upgraded on a copy; a current one is left al
   }
   const now = deck(DECK_VERSION);
   assert.equal(upgradeDeck(now).deck, now);
+});
+
+test('a stamp that cannot be read is not upgraded over: it may be from a studio that writes versions differently', () => {
+  for (const v of [0, 2.5, 'x', '', -1, {}]) {
+    const d = deck(v);
+    const up = upgradeDeck(d);
+    assert.equal(up.deck, d, `version ${JSON.stringify(v)} is left as it is`);
+    assert.equal(up.newer, true);
+    assert.ok(Number.isNaN(up.from));
+  }
+  // A newer version written as text is still newer, not "unstamped".
+  const text = upgradeDeck(deck(String(DECK_VERSION + 1)));
+  assert.deepEqual([text.from, text.newer], [DECK_VERSION + 1, true]);
 });
 
 test('a deck from a newer studio is left exactly as it is, and said', () => {

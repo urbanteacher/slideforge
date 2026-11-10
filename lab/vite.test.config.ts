@@ -11,6 +11,9 @@ const input = Object.fromEntries(readdirSync(dir).filter((f) => f.endsWith('.tes
 
 export default defineConfig({
   resolve: { alias: SF_ALIAS },
+  // Packages go into the build, so a test that loads the store (immer, zustand, React) also runs from the root's temporary
+  // folder (tests/lab-unit.test.js), where there is no node_modules beside it to find them in.
+  ssr: { noExternal: true },
   // Tests need none of the app's public files (its fonts).
   publicDir: false,
   build: {

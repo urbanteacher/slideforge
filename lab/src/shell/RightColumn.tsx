@@ -40,7 +40,7 @@ function Where({ embedded }: { embedded: boolean }) {
   return (
     <div className="insp-where">
       <p>{layer ? <>This layer, on slide {n} of {total} · {where}.</> : <>Slide {n} of {total}: settings here change this slide only · {where}.</>}</p>
-      {tooNew !== null && <p className="inline-warn" role="alert">This lesson was saved by a newer version of the studio (format {tooNew}; this one reads up to {DECK_VERSION}). Reload the page before editing it, or a change made here could lose what the newer version added.</p>}
+      {tooNew !== null && <p className="inline-warn" role="alert">{Number.isNaN(tooNew) ? <>This lesson says a version this studio can't read (it reads up to {DECK_VERSION}).</> : <>This lesson was saved by a newer version of the studio (format {tooNew}; this one reads up to {DECK_VERSION}).</>} It is shown as it came and is not saved here, so nothing the newer version added is lost. Reload the page to edit and save it.</p>}
       {saveFailed && <p className="inline-warn" role="alert">Can't save changes: {saveFailed.detail ?? 'the browser refused the write'}. What you see is on screen only until a save works{embedded ? '; File → Export keeps a copy now.' : '; File → Save deck file keeps a copy now.'}</p>}
       {layer?.locked && <p className="inline-note">Locked: it can't be dragged on the slide. Changes here still apply.</p>}
       {layer && !layer.visible && <p className="inline-note">Hidden in Layers: changes here are kept, but you won't see them until it is shown.</p>}

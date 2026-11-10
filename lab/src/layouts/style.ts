@@ -1,5 +1,5 @@
 // The layout grid and the layout styles: where every region sits, and the looks a layout is built in.
-import { aspectOf, setAspect, type Box, type Deck, type Slide, type StyleGuide } from '../core';
+import { DECK_VERSION, aspectOf, setAspect, type Box, type Deck, type Slide, type StyleGuide } from '../core';
 import { resolveGround } from '../theme';
 import { DEFAULT_THEME } from './defaultTheme';
 
@@ -34,7 +34,7 @@ export function cell(col: number, row: number, cols: number, rows: number, g: Pi
 export function layoutFor(layout: LayoutDef, st: LayoutStyle, deck: Pick<Deck, 'width' | 'height'>): Slide {
   const slide = layout.make(st);
   if (deck.width === 1920 && deck.height === 1080) return slide;
-  const tmp = { id: '', title: '', width: 1920, height: 1080, version: 1, slides: [slide] } as Deck;
+  const tmp = { id: '', title: '', width: 1920, height: 1080, version: DECK_VERSION, slides: [slide] } as Deck;
   setAspect(tmp, aspectOf(deck));
   return slide;
 }

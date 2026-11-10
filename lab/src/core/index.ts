@@ -7,10 +7,10 @@ export { connectorGeometry, syncConnectors, syncSlideConnectors } from './connec
 export type { ConnectorEnds } from './connectors';
 export { lessonNeeds, slideNeeds } from './needs';
 export type { Need } from './needs';
-export { DECK_VERSION, upgradeDeck, upgradeSteps } from './version';
+export { DECK_VERSION, deckVersion, upgradeDeck, upgradeSteps } from './version';
 export { PLACEHOLDER, describeFacts, factsOf, factsToCheck, placeholdersOf, sayNumbers } from './facts';
 export type { FactsToCheck } from './facts';
 export { hasFlagshipFrame, hasFlagshipTextImage, isFlagshipFrameLayer, newSlideWithFrame, setFramePage, syncFrameCounters, textImageForSlide } from './frame';
-export { idbDelete, idbGet, idbKeys, idbSet, idbSetMany } from './idb';
+export { idbDelete, idbForget, idbGet, idbGetMany, idbKeys, idbSet, idbSetMany } from './idb';
 export { packPictures, unpackPictures } from './pictures';
 export type { ActivitySettings, ActivityStage, Anim, BlendMode, Box, ClickAction, Deck, Easing, EntranceType, ExitType, FeedbackKind, GameLook, GameSettings, GuideGround, GuideSwatch, GuideTheme, HFItem, HFKind, HFSlot, HeaderFooter, HoverType, Interact, Layer, LiveFigure, LoopType, ParamValue, Params, PlanStep, Slide, SlideFeedback, SlideGame, StageJob, StyleGuide, TransitionType, Trigger, WordArc } from './types';

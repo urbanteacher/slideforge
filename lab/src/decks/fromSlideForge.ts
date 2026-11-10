@@ -1,4 +1,4 @@
-import { createLayer, uid, type Deck, type LiveFigure, type Slide } from '../core';
+import { DECK_VERSION, createLayer, uid, type Deck, type LiveFigure, type Slide } from '../core';
 import { videoEmbed } from '../engine';
 import { CHART_DARK, CHART_LIGHT } from '../charts';
 import { EXPERIMENTS, LOOKS, SCENES, experimentPreset } from '../experiments';
@@ -731,7 +731,7 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { fram
     const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title, total: data.slides.length, slides: data.slides }, data.games, lesson);
     if (made.length) slides.push(...made); else skipped++;
   });
-  const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };
+  const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: DECK_VERSION, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };
   if (data.theme?.startsWith('aiad27')) return pageNumbers(deck);
   if (opts.frame === false) return deck;
   // A NU London lesson wears SlideForge's frame; the lab's own NU decks keep theirs.
