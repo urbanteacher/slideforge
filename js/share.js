@@ -38,6 +38,45 @@
     (SF.toast || function () {})('Open the lesson in SlideForge, then choose this again.');
   }
 
+  /* Online shares (BACKLOG CS-06, supabase/migrations/0002_shares.sql): a Lesson-studio share made by a signed-in
+     teacher goes to the teacher's account rather than the relay's disk, so it survives an app update, and it can be
+     private: only a signed-in teacher can open it. Signed out, a share goes to the relay as before. */
+  function cloudClient() {
+    var c = SF.Cloud;
+    return c && c.user && c.user() && c.client ? c.client() : null;
+  }
+
+  /** A share's id: 32 hex characters, as the relay's own ids, so the follow link and the viewer read it the same. */
+  function newShareId() {
+    var b = new Uint8Array(16);
+    crypto.getRandomValues(b);
+    return Array.prototype.map.call(b, function (/** @type {number} */ x) { return (x < 16 ? '0' : '') + x.toString(16); }).join('');
+  }
+
+  /**
+   * Upload the copy: online when `isPrivate` is a boolean (a signed-in teacher's studio share), else to the relay.
+   * @param {any} body  the copy to share
+   * @param {boolean|null} isPrivate
+   * @returns {Promise<{ id: string, key?: string, base?: string, durable: boolean, online: boolean }>}
+   */
+  function upload(body, isPrivate) {
+    var client = isPrivate === null ? null : cloudClient();
+    if (client) {
+      var id = newShareId();
+      return client.from('shares').insert({ id: id, title: String(body.title || '').slice(0, 200), private: !!isPrivate, doc: body })
+        .then(function (/** @type {any} */ r) {
+          if (r && r.error) throw new Error(r.error.message || 'the account refused it');
+          return { id: id, base: location.origin, durable: true, online: true };
+        });
+    }
+    return fetch('/api/share', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doc: body })
+    }).then(function (r) {
+      return r.json().then(function (/** @type {any} */ j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return Object.assign({ online: false }, j); });
+    });
+  }
+
   function shareLessonDoc(doc, opts) {
     opts = opts || {};
     var toast = opts.toast || (SF.toast ? function (m) { SF.toast(m); } : function () {});
@@ -49,11 +88,14 @@
     }
 
     var liveNow = !!opts.live;
+    /** @type {{ choice: string, body: any }} */
+    var sent = { choice: '', body: null };
     SF.askChoice({
       title: 'Share “' + (doc.title || 'this lesson') + '”',
-      detail: 'The first three put a copy on this server, without your notes, at an address nobody can guess. They cannot ' +
+      detail: 'The first three put a copy ' + (opts.studio && cloudClient() ? 'in your account' : 'on this server') + ', without your notes, at an address nobody can guess. They cannot ' +
         'edit it and it is not listed anywhere — but a link that escapes is a lesson that ' +
-        'escaped. ' + (opts.studio ? 'The games come as their slides; practice lets one learner answer them. ' : 'Games are not carried across; the slides are. ') + 'You get a key that withdraws it.',
+        'escaped. ' + (opts.studio ? 'The games come as their slides; practice lets one learner answer them. ' : 'Games are not carried across; the slides are. ') +
+        (opts.studio && cloudClient() ? 'Next you choose whether anyone with the link can open it, or only signed-in teachers.' : 'You get a key that withdraws it.' + (opts.studio && SF.Cloud && SF.Cloud.client && SF.Cloud.client() ? ' Sign in to keep it in your account, where it survives app updates and can be for teachers only.' : '')),
       options: [
         { value: 'practice', label: 'Practice: the games, for one learner',
           detail: 'The slides and every game that can be played alone: they answer, see the answer and why, and keep a score on their own device. Games that need a room — spoken, boards, sorts on phones — say so instead.' },
@@ -73,19 +115,37 @@
     }, function (choice) {
       /* Not a copy on the server: the notes go to the show's own private channel (js/player.js). */
       if (choice === 'notes') { notesElsewhere(); return; }
+      sent.choice = choice;
+      /* Practice carries the solo-playable games inside the copy. */
+      /* A studio copy carries its games as slides; practice is a flag the studio viewer reads. */
+      var body = withoutNotes(opts.studio
+        ? (choice === 'practice' ? Object.assign({}, doc, { practice: true }) : doc)
+        : choice === 'practice' && SF.practiceDoc
+          ? SF.practiceDoc(doc, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; })
+          : doc);
+      sent.body = body;
+      /* Signed in, a studio share asks who may open it; signed out (or a classic copy), it goes to the relay. */
+      if (opts.studio && cloudClient()) {
+        SF.askChoice({
+          title: 'Who can open it?',
+          detail: 'It is kept in your account, so the link survives app updates.',
+          options: [
+            { value: 'open', label: 'Anyone with the link',
+              detail: 'Students and colleagues open it without signing in, as before.' },
+            { value: 'teachers', label: 'Signed-in teachers only',
+              detail: 'Only a teacher signed in to SlideForge with a work email can open it. Anyone else is asked to sign in. For colleagues, not students.' }
+          ]
+        }, function (who) { if (who) send(who === 'teachers'); });
+        return;
+      }
+      send(null);
+    });
+
+    /** @param {boolean|null} isPrivate */
+    function send(isPrivate) {
+      var choice = sent.choice, body = sent.body;
       toast('Uploading a copy…');
-      fetch('/api/share', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        /* Practice carries the solo-playable games inside the copy. */
-        /* A studio copy carries its games as slides; practice is a flag the studio viewer reads. */
-        body: JSON.stringify({ doc: withoutNotes(opts.studio
-          ? (choice === 'practice' ? Object.assign({}, doc, { practice: true }) : doc)
-          : choice === 'practice' && SF.practiceDoc
-            ? SF.practiceDoc(doc, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; })
-            : doc) })
-      }).then(function (r) {
-        return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
-      }).then(function (j) {
+      upload(body, isPrivate).then(function (j) {
         var base = String(j.base || location.origin).replace(/\/$/, '');
         var url = opts.studio ? base + '/lab-app/view.html?s=' + j.id : (j.url || (base + '/view.html?s=' + j.id));
         var watched = false;
@@ -94,19 +154,21 @@
 
         try {
           var keys = JSON.parse(localStorage.getItem('slideforge.shares.v1') || '[]');
-          keys.unshift({ id: j.id, key: j.key, title: doc.title || '', at: Date.now() });
+          keys.unshift({ id: j.id, key: j.key || '', online: !!j.online, private: isPrivate === true, title: doc.title || '', at: Date.now() });
           localStorage.setItem('slideforge.shares.v1', JSON.stringify(keys.slice(0, 40)));
         } catch (e) {}
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).then(function () {
-            toast('Link copied. Anyone with it can read the lesson.');
+            toast(isPrivate ? 'Link copied. Only signed-in teachers can open it.' : 'Link copied. Anyone with it can read the lesson.');
           }, function () { toast('Shared: ' + url); });
         } else {
           toast('Shared: ' + url);
         }
 
-        var durability = j.durable
+        var durability = j.online
+          ? 'It is kept in your account, so it survives app updates.'
+          : j.durable
           ? 'This server keeps shared copies on durable storage — they survive an app update.'
           : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).';
 
@@ -124,15 +186,16 @@
         readOnlyDialog();
         function readOnlyDialog() {
           SF.askText({
-            title: 'Your read-only link',
-            detail: 'Anyone with this address can open the lesson. Scan the code or paste the link — it is already on your clipboard. ' + durability,
+            title: isPrivate ? 'Your link for teachers' : 'Your read-only link',
+            detail: (isPrivate ? 'Only a teacher signed in to SlideForge can open this address; anyone else is asked to sign in. ' : 'Anyone with this address can open the lesson. ') +
+              'Scan the code or paste the link — it is already on your clipboard. ' + durability,
             value: url, qr: true, confirm: 'Done'
           }, function () {});
         }
       }).catch(function (e) {
         toast('Could not share: ' + (e.message || e));
       });
-    });
+    }
   }
 
   SF.shareLessonDoc = shareLessonDoc;

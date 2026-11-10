@@ -4,6 +4,7 @@
 import type { Deck } from '../core';
 import { DeckPlayer, refreshAssets } from '../engine';
 import { registerGuideFonts } from '../theme';
+import { cloudShare } from './cloud';
 import { followIndex, practiceCount, practiceOf, PracticeScore, readLink, sharedDeck, slideHash, type PracticeAsk } from './state';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] => {
@@ -22,14 +23,30 @@ function message(title: string, detail: string) {
 export async function startViewer(): Promise<void> {
   const link = readLink(location.search, location.hash);
   if (!link) { message('That link is not complete', 'A shared lesson address ends in ?s= followed by the code from the link you were sent.'); return; }
+  // A share is on the relay (made signed out, or before shares went online) or online (CS-06, made signed in).
   let doc: unknown;
+  let why = '';
   try {
     const r = await fetch(`/api/share/${link.id}`, { cache: 'no-store' });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((j as { error?: string }).error || 'Not found');
-    doc = (j as { doc?: unknown }).doc;
-  } catch (e) {
-    message('This link no longer works', `${e instanceof Error ? e.message : String(e)} Shared copies are held on the server, and a hosted server loses them when the app is updated.`);
+    if (r.ok) doc = (j as { doc?: unknown }).doc;
+    else why = (j as { error?: string }).error || 'Not found.';
+  } catch (e) { why = e instanceof Error ? e.message : String(e); }
+  if (doc === undefined) {
+    const online = await cloudShare(link.id).catch(() => null);
+    if (online?.private && online.doc === undefined) {
+      const box = document.getElementById('sf-msg')!;
+      const go = el('a', 'sf-signin', 'Open SlideForge to sign in');
+      go.href = '/';
+      box.replaceChildren(el('h1', '', 'This lesson is for teachers'),
+        el('p', '', 'It was shared with signed-in teachers only. Sign in to SlideForge with your work email in this browser, then open this link again.'), go);
+      box.hidden = false;
+      return;
+    }
+    if (online?.doc !== undefined) doc = online.doc;
+  }
+  if (doc === undefined) {
+    message('This link no longer works', `${why ? why.replace(/\.?$/, '.') : 'It may have been withdrawn.'} A copy shared without signing in is held on the server, and a hosted server loses it when the app is updated.`);
     return;
   }
   const shared = sharedDeck(doc);
