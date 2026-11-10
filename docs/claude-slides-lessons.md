@@ -141,7 +141,7 @@ These come from the type's architecture rather than its screens. SlideForge alre
 | **CS-12** · a version stamp | Each deck pins the player version it was made for | Every deck says `version: 1`; older lessons are fixed by one-off converter steps | A real version and an upgrade step from each, with CS-04. **Done 10 November** (`f409fbb0`, `lab/src/core/version.ts`): an older lesson is upgraded as it opens, and one from a newer studio is warned about |
 | **CS-13** · what a lesson needs | A deck declares what it uses (downloads, comments, a room) | Found out in class | Worked out from the lesson, not declared, so it cannot go stale. **Done 10 November** (`f409fbb0`, `lab/src/core/needs.ts`): a room and the internet; the show's notice says when one is not met |
 | **CS-14** · pictures outside the deck | Pictures stored once, by fingerprint; slides point at them | Only the online copy does this; locally and in shares pictures sit inside the lesson | Store once everywhere. **Step 1 done 10 November** (`lab/src/app/pictureStore.ts`): in this browser each picture is stored once and lessons hold references, so autosaves write the words only. Step 2, a share's pictures held apart to lift the 7.5 MB limit, is open. (The 12 MB sync limit already counts a lesson without its pictures.) |
-| **CS-15** · a live widget | A small sandboxed page on a slide (16 KB) | Experiments and live figures, built in code | A one-file widget layer, sandboxed |
+| **CS-15** · a live widget | A small sandboxed page on a slide (16 KB) | Experiments and live figures, built in code | A one-file widget layer, sandboxed. **Done 10 November** (`832a055b`, `lab/src/kinds/widget/`): up to 16 KB, scripts only, no network; runs in the show and Preview |
 | **CS-16** · photo search | Searches a photo library and keeps the credit | Picture slots start empty | A search that keeps the licence and credit; needs a provider |
 | **CS-17** · icons and connectors | Icon and connector elements an agent can write | Shapes and diagrams; not checked how far they go | Check first, then add what the lesson file needs |
 
@@ -155,3 +155,4 @@ These come from the type's architecture rather than its screens. SlideForge alre
 - **10 November 2026:** section 6 added (CS-11 to CS-17, from how Claude Slides is built); CS-11 built.
 - **10 November 2026:** CS-12 and CS-13 built.
 - **10 November 2026:** CS-14 step 1 built: pictures stored once, apart from the lesson, in this browser.
+- **10 November 2026:** CS-15 built: the live widget layer.

@@ -75,7 +75,7 @@ order.
 | CS-12 | [A version stamp on every lesson](claude-slides-lessons.md): `DECK_VERSION` 2, an upgrade step from each older version, and a warning above the inspector when a lesson was saved by a newer studio | M | Done · 10 Nov 2026 · `f409fbb0` |
 | CS-13 | [What a lesson needs](claude-slides-lessons.md), worked out from its content: a room for games, activities and feedback, the internet for YouTube, Vimeo and web pictures; the show's opening notice says when one is not met | S–M | Done · 10 Nov 2026 · `f409fbb0` |
 | CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): in this browser each picture over 8 KB is stored once by fingerprint and the lesson holds a reference, so an autosave writes the words, not the pictures. Step 1 done (`95ef1a5a`). Open, step 2: a share's pictures held apart, to lift the 7.5 MB share limit | L | In progress · step 1 done 10 Nov 2026 |
-| CS-15 | [A small live widget on a slide](claude-slides-lessons.md): a sandboxed one-file page (about 16 KB) for a one-off interactive | M | To do · P2 |
+| CS-15 | [A small live widget on a slide](claude-slides-lessons.md): one web page of up to 16 KB that runs in the show and Preview, sandboxed to scripts only with no network; Add → Widget, a live preview in its tab, and a `widget` layout in the lesson file. Open: shared links and exported HTML show its card, not the live page | M | Done · 10 Nov 2026 · `832a055b` |
 | CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
 | CS-17 | [Icons and connectors as layers](claude-slides-lessons.md) the lesson file can name; check what shapes and diagrams already cover | M | To check first · P3 |
 | CS-08 | [Ask for a change in the studio](claude-slides-lessons.md): "turn slide 7 into a quiz", "split this slide", answered by an edit you can undo; after CS-01 | M–L | To do · P2 |
@@ -836,12 +836,22 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-12 | `lab/src/core/version.ts`: `DECK_VERSION`, `upgradeDeck` run by `loadDeck`, and the newer-studio warning | Done |
 | CS-13 | `lab/src/core/needs.ts`: `lessonNeeds`, said in the show's opening notice (`app/factsWarning.ts` `showNotice`) | Done |
 | CS-14 | Step 1: `lab/src/app/pictureStore.ts`, every lesson read and write in `app/embed.ts` and `app/App.tsx` through it. Step 2 (shares): open | In progress |
-| CS-15 | A sandboxed live widget layer | To do |
+| CS-15 | The widget layer (`lab/src/kinds/widget/`, `lab/src/engine/widget.ts`), run by the show (`show/Show.tsx`) | Done |
 | CS-16 | Photo search with the credit kept | To do |
 | CS-17 | Icons and connectors | To check |
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — A live widget on a slide (CS-15)
+
+A slide can hold a small live web page (`832a055b`): a dice roller, a slider, a toy simulation, written by a teacher or an AI.
+- **The layer.** A widget holds one page of HTML with its own style and script, up to 16 KB (`lab/src/kinds/widget/`). The editor draws a card with its name in its place. Its tab has the page, how much of the 16 KB it uses, and **Try it**, the page running as the show will run it. Add → *Widget · a live web page* inserts a dice example.
+- **Sandboxed.** The show and Preview run it in a frame allowed scripts and nothing else, under a content policy that loads nothing (`lab/src/engine/widget.ts`). It cannot reach the lesson, the teacher's sign-in, the browser's storage or the internet, and it works offline. Checked in the show with a page that tried each: its clock ran, and the page around it, a fetch and local storage were all blocked.
+- **The same everywhere.** The page is laid out at its box's size on a 1920-wide slide and scaled to the screen, so the preview and every projector show it alike; its text starts at 36px, as a slide's body does.
+- **Also:** a `widget` layout in the lesson file (`{ title, html }`, used by the example lesson), and the slide limits warn when a widget's page is over 16 KB.
+- **Checked:** `lab/tests/widget.test.ts` (4 tests; the lab's 433 pass), the root `npm test` (649 of 650, the usual `output/notebooks` failure), the render-surface audit, and in the studio: insert, the preview, and the show.
+- **Not yet:** a shared link's viewer and an exported HTML deck show the widget's card, not the live page. The browser tool could not click inside a scaled frame, so pressing the dice button was not tried; the self-reporting page shows its script runs.
 
 ### 10 November 2026 — Pictures kept once, apart from the lesson (CS-14, step 1)
 

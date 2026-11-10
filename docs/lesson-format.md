@@ -64,6 +64,7 @@ Any slide may also carry these:
 | `split` | `title`, `points` | `picture`, `side` | Text beside a picture. `picture` is a picture's address; `side` is `"left"` or `"right"` (where the picture goes). |
 | `timeline` | `title`, `events` | `subtitle` | One to six `[when, who or what, detail]`. |
 | `quiz` | `questions` | `title` | A multiple-choice game the room plays, made from the studio's own. |
+| `widget` | `html` | `title` | A small live web page, up to 16 KB, that runs in the show. Sandboxed: no internet, no way into the lesson. Its page is laid out at the slide's size, with text from 36px. |
 
 A `quiz` question is:
 
@@ -89,4 +90,5 @@ Give the AI this page and the example, and ask for one JSON file. Then import it
 
 ## Change log
 
+- **10 November 2026:** the `widget` layout (CS-15).
 - **10 November 2026:** version 1. Fourteen layouts, the quiz as a multiple-choice game, the common fields, and import in SlideForge and in the studio on its own.
