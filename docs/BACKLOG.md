@@ -74,7 +74,7 @@ order.
 | CS-11 | [Say when a slide is too heavy](claude-slides-lessons.md): over 200 layers, an SVG over 150 KB, media over 2 MB, or 5 MB in all; ⚠ on the thumbnail and a note in the Slide panel | S | Done · 10 Nov 2026 · `58f6657e` |
 | CS-12 | [A version stamp on every lesson](claude-slides-lessons.md): `DECK_VERSION` 2, an upgrade step from each older version, and a warning above the inspector when a lesson was saved by a newer studio | M | Done · 10 Nov 2026 · `f409fbb0` |
 | CS-13 | [What a lesson needs](claude-slides-lessons.md), worked out from its content: a room for games, activities and feedback, the internet for YouTube, Vimeo and web pictures; the show's opening notice says when one is not met | S–M | Done · 10 Nov 2026 · `f409fbb0` |
-| CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): in this browser each picture over 8 KB is stored once by fingerprint and the lesson holds a reference, so an autosave writes the words, not the pictures. Step 1 done (`95ef1a5a`). Open, step 2: a share's pictures held apart, to lift the 7.5 MB share limit | L | In progress · step 1 done 10 Nov 2026 |
+| CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): step 1, each picture stored once in this browser (`95ef1a5a`); step 2, a share's pictures sent apart from its lesson, so the limit is 7.5 MB for the words and each picture and 100 MB in all (`c5549eb2`). Open: run `0003_share_pictures.sql` for signed-in shares | L | Done · 10 Nov 2026 · needs the migration |
 | CS-15 | [A small live widget on a slide](claude-slides-lessons.md): one web page of up to 16 KB that runs in the show and Preview, sandboxed to scripts only with no network; Add → Widget, a live preview in its tab, and a `widget` layout in the lesson file. Open: shared links and exported HTML show its card, not the live page | M | Done · 10 Nov 2026 · `832a055b` |
 | CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
 | CS-17 | [Icons and connectors as layers](claude-slides-lessons.md): 117 Lucide icons drawn on the canvas, a connector that joins two layers and follows them, and an `icons` layout in the lesson file | M | Done · 10 Nov 2026 · `461863db` |
@@ -837,7 +837,7 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-11 | Slide limits (`lab/src/core/limits.ts`): 200 layers, 150 KB per drawing, 2 MB per picture or video, 5 MB per slide; warned, never refused | Done |
 | CS-12 | `lab/src/core/version.ts`: `DECK_VERSION`, `upgradeDeck` run by `loadDeck`, and the newer-studio warning | Done |
 | CS-13 | `lab/src/core/needs.ts`: `lessonNeeds`, said in the show's opening notice (`app/factsWarning.ts` `showNotice`) | Done |
-| CS-14 | Step 1: `lab/src/app/pictureStore.ts`, every lesson read and write in `app/embed.ts` and `app/App.tsx` through it. Step 2 (shares): open | In progress |
+| CS-14 | Step 1: `lab/src/app/pictureStore.ts`. Step 2: the relay's `/api/share/<id>/picture/<n>`, `supabase/migrations/0003_share_pictures.sql`, `js/share.js` `splitPictures`, the viewer's `withPictures` | Done · needs the migration |
 | CS-15 | The widget layer (`lab/src/kinds/widget/`, `lab/src/engine/widget.ts`), run by the show (`show/Show.tsx`) | Done |
 | CS-16 | Photo search with the credit kept | To do |
 | CS-17 | `lab/src/kinds/icon/`, `lab/src/kinds/connector/`, `lab/src/core/connectors.ts` (run by the store's `mutate`), `tools/lab-icons.mjs` | Done |
@@ -846,6 +846,15 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — A share's pictures sent apart: the 7.5 MB limit lifted (CS-14, step 2)
+
+A Lesson-studio share now carries its pictures apart from its lesson (`c5549eb2`). The lesson goes first, holding `pictureCount` where its pictures were, then each picture in a request of its own. The limit is now 7.5 MB for the slides' words and 7.5 MB for each picture, with 100 MB for the pictures in all (`js/lab-engine.js` `studioShareDeck` says which one a lesson breaks).
+- **Signed out (the relay):** `POST /api/share` takes how many pictures follow; `PUT /api/share/<id>/picture/<n>`, with the share's key, stores each in `SHARE_DIR/<id>/`; `GET` reads it back. Withdrawing a share, or the shelf pruning its oldest, takes its pictures too. Still lost at a deploy without a disk, as relay shares always were.
+- **Signed in (Supabase):** `supabase/migrations/0003_share_pictures.sql` adds `share_pictures`, deleted with its share, written only by the share's owner and read through `get_share_picture()`, which hands a private share's pictures only to a signed-in teacher.
+- **Safety:** if a picture cannot be sent, the half-made share is taken down again, so no link goes out with pictures missing. The viewer fetches the pictures from wherever the share came from, four at a time; a picture it cannot get is left empty and noted in the console. Shares made before this, pictures inside, read as before.
+- **Checked:** `tests/share-pictures.test.js` (2 relay tests through a real server), `lab/tests/viewer-pictures.test.ts` (3 tests), the updated `tests/lab-engine-default.test.js` (each limit); the root `npm test` (the usual `output/notebooks` failure only). In the browser, signed out, a lesson with 8.5 MB of pictures (over the old limit) shared, uploaded its three pictures one by one, and opened in the viewer at slide 2 with its picture.
+- **Needed:** run `supabase/migrations/0003_share_pictures.sql` once in the Supabase SQL editor. Until then a signed-in share with pictures fails with a message, and is taken down; signed-out shares already work.
 
 ### 10 November 2026 — Design rules the editor checks (CS-02)
 
