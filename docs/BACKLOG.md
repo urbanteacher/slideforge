@@ -67,7 +67,7 @@ order.
 | CS-03 | [Never invent facts](claude-slides-lessons.md): one placeholder convention, a per-slide "unchecked" mark, and a warning before presenting. Open: the lab's AI writers are not yet told to leave placeholders | S–M | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | [Themes pinned by version](claude-slides-lessons.md): a deck keeps its look until a theme update is accepted | M | To do · P2 · needs a decision |
 | CS-05 | [An outline before any slides](claude-slides-lessons.md) for AI-built lessons: start from a brief (topic, length, audience), then sections, timings, live moments; build with SD-04 | M | To do · P2 |
-| CS-06 | [Links to a slide, and private shares kept online](claude-slides-lessons.md): `#slide-N` links and a Link button; a signed-in teacher's share goes to their account and can be for teachers only. Comments dropped (10 Nov). Open: run `0002_shares.sql`, then try a signed-in share | S–M | Done · 10 Nov 2026 · `fb01269d` `55dd800b` · needs the migration |
+| CS-06 | [Links to a slide, and private shares kept online](claude-slides-lessons.md): `#slide-N` links and a Link button; a signed-in teacher's share goes to their account and can be for teachers only. Comments dropped (10 Nov). Migration run and tried by Mark, 10 Nov: works | S–M | Done · 10 Nov 2026 · `fb01269d` `55dd800b` |
 | CS-07 | [Send to…](claude-slides-lessons.md): a PowerPoint or a PDF handed to the device's share menu (Drive, Teams, Mail), a download where there is none. Direct Drive and Canva uploads not built | S | Done · 10 Nov 2026 · `fb01269d` |
 | CS-09 | [A gentler first ten minutes](claude-slides-lessons.md): a guided first lesson, or a simple mode that hides the advanced panels until asked for | M | To do · P2 |
 | CS-10 | [The interface in more languages](claude-slides-lessons.md): Claude Slides comes in eleven, SlideForge in English only | L | Needs a decision · P3 |
@@ -828,7 +828,7 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-03 | A placeholder convention for facts nobody supplied (`[€__]`, `[source __]`), a per-slide "not yet checked" mark, a ? on the filmstrip, and a line in the show's toast when Present or Host live opens, with the list in Status. Open: the lab's AI writers | Done · 9 Nov 2026 · `b0fa402b` |
 | CS-04 | A deck records the theme version it was made with; a theme change is offered, not applied | To do · needs a decision (copy in the deck, or a versioned registry) |
 | CS-05 | An outline step for AI-built lessons (sections, one sentence and a timing each, live moments), edited before filling; with SD-04 | To do |
-| CS-06 | A shared lesson opens at `#slide-N`, its address follows the slide, and Link copies it. A signed-in teacher's studio share is kept in their account (`supabase/migrations/0002_shares.sql`), survives app updates, and can be for signed-in teachers only; the viewer reads it through `get_share()`. Comments on a slide were dropped (Mark, 10 Nov) | Done · needs the migration |
+| CS-06 | A shared lesson opens at `#slide-N`, its address follows the slide, and Link copies it. A signed-in teacher's studio share is kept in their account (`supabase/migrations/0002_shares.sql`), survives app updates, and can be for signed-in teachers only; the viewer reads it through `get_share()`. Comments on a slide were dropped (Mark, 10 Nov) | Done · tried by Mark |
 | CS-07 | File → Export → Send to…: a PowerPoint (pictures or editable text) or a PDF of the student copy, made, then handed to the share menu on a second click. The PDF writer is `lab/src/export/pdf.ts` | Done |
 | CS-09 | A gentler start: a guided first lesson, or a simple mode that hides advanced panels | To do |
 | CS-10 | More interface languages | Needs a decision |
@@ -842,6 +842,10 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — The new sharing and slide features tried by hand
+
+Mark tried what had not been tried by hand, and it worked: sharing while signed in and a private link opened signed out (so `0002_shares.sql` is run), the share menu from Send to…, and pressing a button inside a widget. The live site after these deploys was part of the same check. CS-06's row no longer waits on the migration.
 
 ### 10 November 2026 — Icons and connectors on slides (CS-17)
 

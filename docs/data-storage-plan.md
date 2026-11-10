@@ -1,6 +1,6 @@
 # Data storage: saving lessons online
 
-Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 5 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment is set (15 October), so the live site saves online. Step 6's shares are built (10 November) and wait on `0002_shares.sql` being run; reports are still open.
+Status: plan, 12 October 2026. Step 1 is built (`js/docs.js`). Steps 2 to 5 are built and live locally (14 October). The project is **SlideForge** (`qarbniuzgfxoqixqjhdn`, London, free plan, organisation "urban teacher"), with the schema applied. Render's environment is set (15 October), so the live site saves online. Step 6's shares are built and `0002_shares.sql` is run (10 November); reports are still open.
 
 ## 1. The problem
 
@@ -145,7 +145,7 @@ Each step is its own commit and works on its own.
    - Nobody can list shares: the viewer reads one by id through `get_share()` (`lab/src/viewer/cloud.ts`), which hands a private share only to a signed-in teacher.
    - Signed out, and for classic copies, shares still go to the relay's `SHARE_DIR`, and older links still open from it.
    - **Still open:** live-session reports, which the relay writes to its journal files.
-   - **What the owner does, once:** run `supabase/migrations/0002_shares.sql` in the SQL editor.
+   - **Done by the owner, 10 November:** `supabase/migrations/0002_shares.sql` run in the SQL editor; a signed-in share and a private link tried and working.
 7. **Built-in lessons as data.** Lessons hard-coded today (`js/lab-decks.js`, `lessons/`) can be published to a shared "built-in" folder in Supabase instead of the code. Large MP4s move to the bucket. The code then keeps only the starter decks.
 
 Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make it scale.
@@ -165,6 +165,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 
 ## Change log
 
+- 10 November 2026: `0002_shares.sql` run; online and private shares tried by the owner and working.
 - 10 November 2026: in this browser, a studio lesson's pictures are kept once, apart from its record (CS-14 step 1); every read puts them back, so the sync and backup see whole lessons as before.
 - 10 November 2026: step 6's shares built for signed-in teachers (`55dd800b`), open or private; the migration waits on the owner. Reports stay open.
 - 15 October 2026: the hosted Library starts empty, with the built-in lessons as templates, and a built-in's unchanged copy is kept out of the account (`js/builtins.js`). The live site was given `SUPABASE_URL` and `SUPABASE_ANON_KEY`, so saving online is on there. The 67 documents already in the owner's account are mostly built-in copies, uploaded before this rule; they are left as they are.
