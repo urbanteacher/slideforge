@@ -1,4 +1,4 @@
-import { cloneLayer, createLayer, hasFlagshipFrame, isFlagshipFrameLayer, setFramePage, type Layer } from '../../core';
+import { cloneLayer, cloneLayers, createLayer, hasFlagshipFrame, isFlagshipFrameLayer, setFramePage, type Layer } from '../../core';
 import { DEFAULT_THEME, LAYOUT_STYLES, themeOf } from '../../layouts';
 import { slideOf, useStore } from '../../store';
 import { kind } from '../../engine';
@@ -133,7 +133,7 @@ function replaceBlock(role: string, layers: Layer[], every: boolean, background?
       }
       let at = slide.layers.length;
       while (at > 0 && !kind(slide.layers[at - 1].kind).content && kind(slide.layers[at - 1].kind).category !== 'generate') at--;
-      const fresh = slide.id === st.slideId ? structuredClone(layers) : layers.map(cloneLayer);
+      const fresh = slide.id === st.slideId ? structuredClone(layers) : cloneLayers(layers);
       if (role === 'header' && fresh.some((l) => isFlagshipFrameLayer(l)))
         setFramePage(fresh, index + 1, d.slides.length, d.width);
       slide.layers.splice(at, 0, ...fresh);

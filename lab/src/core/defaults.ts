@@ -1,5 +1,6 @@
 import { defaultAnim, defaultInteract, contentHeight, defaultParams, kind } from '../engine';
 import { DECK_VERSION } from './version';
+import { relinkConnectors } from './connectors';
 import type { Anim, Box, Deck, Interact, Layer, Params, Slide } from './types';
 
 export const DECK_W = 1920;
@@ -60,8 +61,15 @@ export function createSlide(name = 'Slide', layers: Layer[] = [], background = '
 export function cloneLayer(l: Layer): Layer {
   return { ...structuredClone(l), id: uid() };
 }
+/** Layers copied together, each with a fresh id, and the connectors among them joined to the copies
+ *  (core/connectors.ts): a connector copied on its own keeps joining the layers it joined. */
+export function cloneLayers(ls: Layer[]): Layer[] {
+  const out = ls.map(cloneLayer);
+  relinkConnectors(out, new Map(ls.map((l, i) => [l.id, out[i].id])));
+  return out;
+}
 export function cloneSlide(s: Slide): Slide {
-  return { ...structuredClone(s), id: uid(), layers: s.layers.map(cloneLayer) };
+  return { ...structuredClone(s), id: uid(), layers: cloneLayers(s.layers) };
 }
 
 // ─── Artwork ────────────────────────────────────────────────────────────────

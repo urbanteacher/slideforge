@@ -1,6 +1,6 @@
 import { WIDGET_STARTER } from '../../kinds/widget';
 import { kind } from '../../engine';
-import { createLayer, hasFlagshipTextImage, textImageForSlide, type Slide } from '../../core';
+import { createLayer, hasFlagshipTextImage, joinable, textImageForSlide, type Layer, type Slide } from '../../core';
 import { headingClock } from '../../designs';
 import { DEFAULT_THEME, cell, gridFor, itemStyle, slideStyle, themeOf } from '../../layouts';
 import { useStore } from '../../store';
@@ -214,7 +214,7 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     }
     // A line from the selected layer to the nearest other, beneath both, kept on them as they move (CS-17).
     case 'connector': {
-      const isPart = (l: { box?: unknown; kind: string; name: string }) => !!l.box && l.kind !== 'connector' && !/^(ground|backdrop)$/i.test(l.name);
+      const isPart = (l: Layer) => joinable(l) && l.visible !== false;
       const from = slide.layers.find((l) => l.id === st.selectedId && isPart(l));
       if (!from) { st.showToast('Select the layer the line should start from, then choose Connector again.'); return; }
       const c = (b: { x: number; y: number; w: number; h: number }) => [b.x + b.w / 2, b.y + b.h / 2];

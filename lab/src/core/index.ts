@@ -1,9 +1,9 @@
 // core/: its public interface. Code outside core/ imports from here, never from its files (lab-engine-plan hard rule 13).
 export { ASPECTS, aspectOf, setAspect } from './aspect';
 export type { Aspect } from './aspect';
-export { TEMPLATES, blankDeck, blankSlide, cloneLayer, cloneSlide, createLayer, createSlide, demoDeck, rosetteSvg, uid } from './defaults';
+export { TEMPLATES, blankDeck, blankSlide, cloneLayer, cloneLayers, cloneSlide, createLayer, createSlide, demoDeck, rosetteSvg, uid } from './defaults';
 export { SLIDE_LIMITS, limitsOf } from './limits';
-export { connectorGeometry, syncConnectors, syncSlideConnectors } from './connectors';
+export { connectorGeometry, joinable, joinedPair, relinkConnectors, shownBox, syncConnectors, syncSlideConnectors } from './connectors';
 export type { ConnectorEnds } from './connectors';
 export { lessonNeeds, slideNeeds } from './needs';
 export type { Need } from './needs';

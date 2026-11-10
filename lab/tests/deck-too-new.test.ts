@@ -2,13 +2,10 @@
 // with no repairs or refit, and the autosave does not write over it, so nothing that studio added is lost.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import './dom-stand-in';
 import { DECK_VERSION, blankDeck, type Deck } from '../src/core';
-
-// The store and the save path draw text, so they reach for a canvas as they load; a bare stand-in is enough here.
-const ctx = new Proxy({}, { get: () => () => ({ width: 0 }) });
-(globalThis as { document?: unknown }).document ??= { createElement: () => ({ getContext: () => ctx, style: {} }), fonts: undefined };
-const { useStore } = await import('../src/store');
-const { notSavedWhy } = await import('../src/app/embed');
+import { useStore } from '../src/store';
+import { notSavedWhy } from '../src/app/embed';
 
 test('a deck from a newer studio is opened as it came, and not saved here', () => {
   const d = { ...blankDeck(), version: DECK_VERSION + 1, theme: 'paper', future: { kept: true } } as Deck & { future: unknown };

@@ -1,15 +1,46 @@
 import type { Box, Deck, Layer, Slide } from './types';
 
 // Connectors (BACKLOG CS-17, from Claude Slides' connector element): a line that joins two layers on a slide and
-// follows them. Drawing a layer sees only that layer, so the store keeps each connector up to date instead
-// (store.ts mutate → syncConnectors): after every change it works out where the two joined layers are and writes
-// the connector's box and its two ends into the connector itself. The editor, the show, the exports and a share
-// then all draw the same line, and undo takes the line back with the move that changed it.
+// follows them. Its drawing reads the slide (readsSlide, kinds/connector/raster.ts), so it is drawn from where the
+// two layers are now. The store also keeps the connector's own box and ends current (store.ts mutate and loadDeck →
+// syncConnectors), so it is selected and hit where it is drawn, and a drawing handed no slide (or a connector whose
+// layer has gone) still has its last ends. Undo takes the line back with the move that changed it.
+// Which layers it joins, and when it has lost one, is said once here (`joinable`, `joinedPair`) for all of them.
 
 /** Where a connector starts and ends, in its own box (0 at its top left): what its drawing reads. */
 export interface ConnectorEnds { x1: number; y1: number; x2: number; y2: number; side: 'h' | 'v' }
 
 const PAD = 24;
+
+/** The box a layer covers on screen: a rotated one's bounding box, since its edges are where it is drawn. */
+export function shownBox(b: Box): Box {
+  if (!b.rot) return b;
+  const r = (b.rot * Math.PI) / 180, c = Math.abs(Math.cos(r)), s = Math.abs(Math.sin(r));
+  const w = b.w * c + b.h * s, h = b.w * s + b.h * c;
+  return { x: b.x + b.w / 2 - w / 2, y: b.y + b.h / 2 - h / 2, w, h, rot: 0 };
+}
+
+/** A layer the teacher may join a connector to: one with a box, not a connector, not the slide's ground. */
+export const joinable = (l: Pick<Layer, 'box' | 'kind' | 'name'>): boolean => !!l.box && l.kind !== 'connector' && !/^(ground|backdrop)$/i.test(l.name ?? '');
+
+/** The two layers a connector joins on this slide, or null when it has lost one: gone, hidden, boxless, the same
+ *  layer twice, or another connector. */
+export function joinedPair(slide: Pick<Slide, 'layers'>, c: Layer): [Layer, Layer] | null {
+  const p = c.params as Record<string, unknown>;
+  const a = slide.layers.find((l) => l.id === p.from), b = slide.layers.find((l) => l.id === p.to);
+  const ok = (l: Layer | undefined): l is Layer => !!l?.box && l.kind !== 'connector' && l.visible !== false;
+  return ok(a) && ok(b) && a !== b ? [a, b] : null;
+}
+
+/** A set of layers copied together (a duplicated slide, a block from the gallery) with each connector among them
+ *  joined to the copies of its layers, not to the originals it was copied from. `ids` maps old ids to new. */
+export function relinkConnectors(layers: Layer[], ids: Map<string, string>): void {
+  for (const l of layers) {
+    if (l.kind !== 'connector') continue;
+    const p = l.params as Record<string, unknown>;
+    for (const k of ['from', 'to'] as const) { const to = ids.get(String(p[k] ?? '')); if (to) p[k] = to; }
+  }
+}
 
 /** The point on a box's edge facing the other box, and which way the line leaves it. */
 function edges(a: Box, b: Box): { p1: [number, number]; p2: [number, number]; side: 'h' | 'v' } {
@@ -27,7 +58,7 @@ function edges(a: Box, b: Box): { p1: [number, number]; p2: [number, number]; si
 
 /** A connector's box and ends for two boxes it joins. */
 export function connectorGeometry(a: Box, b: Box): { box: Box; ends: ConnectorEnds } {
-  const { p1, p2, side } = edges(a, b);
+  const { p1, p2, side } = edges(shownBox(a), shownBox(b));
   const x = Math.min(p1[0], p2[0]) - PAD, y = Math.min(p1[1], p2[1]) - PAD;
   const w = Math.abs(p2[0] - p1[0]) + 2 * PAD, h = Math.abs(p2[1] - p1[1]) + 2 * PAD;
   const r = (n: number) => Math.round(n * 10) / 10;
@@ -39,17 +70,15 @@ export function connectorGeometry(a: Box, b: Box): { box: Box; ends: ConnectorEn
 
 const isConnector = (l: Layer) => l.kind === 'connector';
 
-/** One slide's connectors brought up to date with the layers they join. A connector whose layer has gone, or that
- *  joins a layer to itself, is left where it last was and marked `_lost`, so its drawing can say so. */
+/** One slide's connectors brought up to date with the layers they join. A connector that has lost a layer
+ *  (joinedPair) is left where it last was and marked `_lost`, so its drawing can say so. */
 export function syncSlideConnectors(s: Slide): void {
   if (!s.layers.some(isConnector)) return;
-  const byId = new Map(s.layers.map((l) => [l.id, l]));
   for (const c of s.layers.filter(isConnector)) {
     const p = c.params as Record<string, unknown>;
-    const a = byId.get(String(p.from ?? '')), b = byId.get(String(p.to ?? ''));
-    const lost = !a?.box || !b?.box || a === b || a.kind === 'connector' || b.kind === 'connector';
-    if (lost) { if (p._lost !== true) p._lost = true; continue; }
-    const { box, ends } = connectorGeometry(a.box!, b.box!);
+    const pair = joinedPair(s, c);
+    if (!pair) { if (p._lost !== true) p._lost = true; continue; }
+    const { box, ends } = connectorGeometry(pair[0].box!, pair[1].box!);
     if (p._lost) delete p._lost;
     const old = c.box;
     if (!old || old.x !== box.x || old.y !== box.y || old.w !== box.w || old.h !== box.h || old.rot !== 0) c.box = box;

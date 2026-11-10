@@ -6,8 +6,9 @@ export const connectorDef: KindDef = {
   id: 'connector', name: 'Connector', category: 'source', content: 'connector',
   description: 'A line from one layer to another that follows them when they move: straight, with an elbow, or curved, with an arrowhead.',
   params: [
-    { key: 'from', label: 'From', type: 'text', default: '', group: 'Connector', info: 'The layer it starts at. Choose it in the Connector tab.' },
-    { key: 'to', label: 'To', type: 'text', default: '', group: 'Connector' },
+    // Layer ids, chosen by name in the Connector tab: hidden from the design panel and never edited as words.
+    { key: 'from', label: 'From', type: 'text', default: '', group: '_hidden' },
+    { key: 'to', label: 'To', type: 'text', default: '', group: '_hidden' },
     { key: 'route', label: 'Line', type: 'select', options: opt('straight', 'elbow', 'curve'), default: 'elbow', group: 'Connector' },
     { key: 'arrow', label: 'Arrowhead', type: 'select', options: opt('end', 'both', 'none'), default: 'end', group: 'Connector' },
     { key: 'color', label: 'Colour', type: 'color', default: '#5f5a52', group: 'Connector' },

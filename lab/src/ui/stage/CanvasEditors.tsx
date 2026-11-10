@@ -10,8 +10,8 @@ import { newGesture } from '../controls/controls';
 // editable in place; the side panel keeps only how it looks. Plain text has its own editor in
 // Stage.tsx; these cover the layers whose words live in several fields, and the chart.
 
-/** The words a layer holds, in the order they appear on it. */
-export const wordFields = (l: Layer) => kind(l.kind).params.filter((d) => d.type === 'text');
+/** The words a layer holds, in the order they appear on it. A hidden text param (a connector's layer ids) is not words. */
+export const wordFields = (l: Layer) => kind(l.kind).params.filter((d) => d.type === 'text' && d.group !== '_hidden');
 export const editsOnCanvas = (l: Layer) => l.kind === 'chart' || (l.kind !== 'text' && wordFields(l).length > 0);
 
 function useClose(ref: React.RefObject<HTMLElement | null>) {

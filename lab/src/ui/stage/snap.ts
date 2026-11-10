@@ -1,5 +1,5 @@
 import { contentHeight, kind } from '../../engine';
-import { cloneLayer, type Box, type Layer, type Slide } from '../../core';
+import { cloneLayers, type Box, type Layer, type Slide } from '../../core';
 import { gridFor } from '../../layouts';
 import { growBlock } from '../panels/SlideBlocks';
 import { refitAllText, slideOf, useStore } from '../../store';
@@ -151,8 +151,8 @@ export function addAnother(layerId: string) {
   }
 
   const texts = unit.layers.filter((l) => l.kind === 'text').sort((a, b) => a.box!.y - b.box!.y);
-  const copies = unit.layers.map((l) => {
-    const c = cloneLayer(l);
+  const copies = cloneLayers(unit.layers).map((c, i) => {
+    const l = unit.layers[i];
     c.box = { ...c.box!, x: c.box!.x + dx, y: c.box!.y + dy };
     if (c.kind === 'text') {
       c.params = { ...c.params, text: placeholder(l, l.id === texts[0]?.id, texts.length > 1) };

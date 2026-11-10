@@ -1,12 +1,12 @@
 // The connector's own inspector: which two layers it joins, chosen by name from the slide's layers.
-import type { Layer } from '../../core';
+import { joinable, type Layer } from '../../core';
 import { Row, Section, Select, useLayerParams } from '../../ui';
 import { slideOf, useStore } from '../../store';
 
 export function ConnectorPanel({ layer }: { layer: Layer }) {
   const set = useLayerParams(layer);
   const slide = useStore(slideOf);
-  const others = slide.layers.filter((l) => l.id !== layer.id && l.box && l.kind !== 'connector' && !/^(ground|backdrop)$/i.test(l.name));
+  const others = slide.layers.filter((l) => l.id !== layer.id && joinable(l));
   const options = [{ value: '', label: 'Choose a layer…' }, ...others.map((l) => ({ value: l.id, label: l.name || l.kind }))];
   const lost = layer.params._lost === true;
   return (

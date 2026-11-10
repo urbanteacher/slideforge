@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Deck, Slide } from '../src/core';
 import { connectorGeometry, syncConnectors } from '../src/core/connectors';
+import { cloneSlide } from '../src/core/defaults';
 import { LESSON_ICONS, readLesson } from '../src/decks/lessonFormat';
 import icons from '../src/assets/icons.json';
 
@@ -53,4 +54,35 @@ test('the lesson file\'s icons layout names icons from the set', () => {
   assert.deepEqual(readLesson(lesson([['user', 'People', 'Who'], ['clock', 'Time', 'When']])).problems, []);
   assert.deepEqual(readLesson(lesson([['unicorn', 'A', 'B'], ['clock', 'Time', 'When']])).problems, ['Slide 1: row 1\'s icon "unicorn" is not in the studio\'s set (docs/lesson-format.md lists them).']);
   assert.deepEqual(readLesson(lesson([['clock', 'Time', 'When']])).problems, ['Slide 1: "items" must be two to six [icon, label, what it means].']);
+});
+
+test('a slide copied with its connectors (Duplicate, the gallery) keeps them joined to the copies', () => {
+  const s = { id: 's', name: 'S', background: '', transition: { type: 'none', duration: 0 }, notes: '', layers: [
+    layer('a', 'text', box(100, 100)), layer('b', 'text', box(600, 100)), layer('c', 'connector', box(0, 0, 10, 10), { from: 'a', to: 'b' }),
+  ] } as unknown as Slide;
+  const copy = cloneSlide(s);
+  const [a, b, c] = copy.layers;
+  assert.notEqual(a.id, 'a');
+  assert.deepEqual([c.params.from, c.params.to], [a.id, b.id], 'joined to the copies');
+  const deck = { slides: [copy] } as unknown as Deck;
+  syncConnectors(deck);
+  assert.equal(c.params._lost, undefined, 'not lost');
+  assert.deepEqual([s.layers[2].params.from, s.layers[2].params.to], ['a', 'b'], 'the original is left as it was');
+});
+
+test('a connector to a hidden layer has lost it, and says so', () => {
+  const deck = { slides: [{ id: 's', layers: [
+    layer('a', 'text', box(100, 100)), { ...layer('b', 'text', box(600, 100)), visible: false },
+    layer('c', 'connector', box(0, 0, 10, 10), { from: 'a', to: 'b' }),
+  ] }] } as unknown as Deck;
+  syncConnectors(deck);
+  assert.equal(deck.slides[0].layers[2].params._lost, true);
+});
+
+test('a rotated layer is joined at the edge it is drawn with, not its unrotated box', () => {
+  // A 200 × 100 box turned a quarter is drawn 100 wide and 200 high about the same middle (200, 150).
+  const turned = { x: 100, y: 100, w: 200, h: 100, rot: 90 };
+  const g = connectorGeometry(turned, box(600, 100));
+  assert.equal(g.ends.side, 'h');
+  assert.equal(Math.round(g.box.x + g.ends.x1), 250, 'the right edge of what is drawn, not 300');
 });

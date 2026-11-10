@@ -3,7 +3,7 @@
 // two layers are now (core/connectors.ts), whatever its own box says; the store's sync keeps that box close for
 // selecting it. Without the slide it draws its stored ends. A connector whose layer has gone is drawn dashed in orange
 // where it last was, so it can be joined again or deleted.
-import { connectorGeometry, type Layer, type Slide } from '../../core';
+import { connectorGeometry, joinedPair, type Layer, type Slide } from '../../core';
 import { boxCanvas, type Ctx, type Raster } from '../../engine';
 
 function head(ctx: Ctx, x: number, y: number, fromX: number, fromY: number, size: number) {
@@ -20,9 +20,9 @@ function head(ctx: Ctx, x: number, y: number, fromX: number, fromY: number, size
 function endsOf(layer: Layer, slide?: Slide) {
   const p = layer.params as Record<string, unknown>;
   if (slide && layer.box) {
-    const a = slide.layers.find((l) => l.id === p.from), b = slide.layers.find((l) => l.id === p.to);
-    if (a?.box && b?.box && a !== b && a.kind !== 'connector' && b.kind !== 'connector') {
-      const g = connectorGeometry(a.box, b.box);
+    const pair = joinedPair(slide, layer);
+    if (pair) {
+      const g = connectorGeometry(pair[0].box!, pair[1].box!);
       // Its own canvas is the box the geometry wants, placed against the layer's box (which the rect is measured from).
       return { box: g.box, dx: g.box.x - layer.box.x, dy: g.box.y - layer.box.y, ...g.ends, lost: false };
     }

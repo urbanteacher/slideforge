@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Deck, Slide } from '../src/core';
 import { packPictures, unpackPictures } from '../src/core/pictures';
+import { DECK_VERSION } from '../src/core/version';
 import { followIndex, markPractice, practiceCount, practiceOf, PracticeScore, readLink, shareCopy, sharedDeck, type PracticeAsk } from '../src/viewer/state';
 import { root } from './replay-kit';
 
@@ -139,8 +140,7 @@ test('a shipped lesson shared: well under the relay\'s 8 MB, and the viewer play
   assert.equal(sharedDeck(JSON.parse(text))!.deck.slides.length, shipped.slides.filter((s) => !s.hidden).length);
 });
 
-test('a share kept since an older studio is played at this version; one from a newer studio as it is', async () => {
-  const { DECK_VERSION } = await import('../src/core/version');
+test('a share kept since an older studio is played at this version; one from a newer studio as it is', () => {
   const old = sharedDeck({ ...deck([slide('a')]), version: 1 });
   assert.equal(old?.deck.version, DECK_VERSION);
   const newer = sharedDeck({ ...deck([slide('a')]), version: DECK_VERSION + 5 });
