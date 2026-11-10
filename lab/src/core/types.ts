@@ -292,6 +292,9 @@ export interface Deck {
   version: number;
   /** One theme for the whole deck (a LAYOUT_STYLES id). Choosing it restyles every slide. */
   theme?: string;
+  /** The built-in theme as this deck last wore it (BACKLOG CS-04, layouts/style.ts themeOf): kept in the deck, so a
+   *  change to the studio's theme does not change a lesson already made. The theme picker offers the new look. */
+  themeCopy?: { id: string } & Record<string, unknown>;
   headerFooter?: HeaderFooter;
   /** The deck's own style guide, when one has been read in: its colours, fonts and marks. */
   styleGuide?: StyleGuide;

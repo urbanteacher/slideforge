@@ -91,10 +91,38 @@ export function slideStyle(st: LayoutStyle, s: Pick<Slide, 'ground'>): LayoutSty
   return { ...st, ground: gr.ground, ink: gr.ink, muted: gr.muted, accent: gr.accent, panel: mixHex(gr.ground, gr.ink, 0.08), glow: undefined };
 }
 
-/** The theme a deck is in: a built-in one, or its own style guide. */
-export function themeOf(d: Pick<Deck, 'theme' | 'styleGuide'>): LayoutStyle | undefined {
+/** The theme a deck is in: its own style guide, or a built-in one as the deck keeps it (CS-04: `themeCopy`, the theme
+ *  as it was when the deck last took it), or, for a deck that keeps no copy yet, the built-in one as it is now. */
+export function themeOf(d: Pick<Deck, 'theme' | 'styleGuide' | 'themeCopy'>): LayoutStyle | undefined {
   if (d.theme === 'guide' && d.styleGuide) return guideStyle(d.styleGuide);
+  if (d.themeCopy && d.themeCopy.id === d.theme) return d.themeCopy as unknown as LayoutStyle;
   return LAYOUT_STYLES.find((s) => s.id === d.theme);
+}
+
+/** A built-in theme as a deck keeps it: a copy, so the studio changing its own does not reach into the deck. */
+export const themeCopyOf = (st: LayoutStyle): NonNullable<Deck['themeCopy']> => structuredClone(st) as unknown as NonNullable<Deck['themeCopy']>;
+
+const sameTheme = (a: unknown, b: unknown) => {
+  const order = (v: unknown): unknown => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v as object).sort().map((k) => [k, order((v as Record<string, unknown>)[k])])) : Array.isArray(v) ? v.map(order) : v);
+  return JSON.stringify(order(a)) === JSON.stringify(order(b));
+};
+
+/** The studio's newer look for the built-in theme a deck keeps a copy of, or null when it has not changed (or the deck
+ *  wears a style guide, or a theme the studio no longer has). */
+export function newerTheme(d: Pick<Deck, 'theme' | 'themeCopy'>): LayoutStyle | null {
+  if (!d.themeCopy || d.themeCopy.id !== d.theme) return null;
+  const now = LAYOUT_STYLES.find((s) => s.id === d.theme);
+  return now && !sameTheme(now, d.themeCopy) ? now : null;
+}
+
+/** Keep a copy of the built-in theme a deck wears, if it keeps none yet: a lesson from before CS-04 is pinned to the
+ *  look it has now, the first time it opens. In place; true when a copy was added. */
+export function pinTheme(d: Deck): boolean {
+  if (d.themeCopy || !d.theme || d.theme === 'guide') return false;
+  const now = LAYOUT_STYLES.find((s) => s.id === d.theme);
+  if (!now) return false;
+  d.themeCopy = themeCopyOf(now);
+  return true;
 }
 
 export interface LayoutDef {

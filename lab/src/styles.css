@@ -859,3 +859,5 @@ kbd { font: 500 11.5px/1 Inter, ui-sans-serif, system-ui, sans-serif; padding: 4
 .icon-tile.on { border-color: var(--accent); background: var(--line-2); }
 .design-notes { display: grid; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--text); }
 .design-notes p { margin: 0; padding-left: 10px; border-left: 2px solid #e0a100; }
+.theme-newer { margin: 4px 0 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(224, 161, 0, .4); background: rgba(224, 161, 0, .1); font-size: 12px; line-height: 1.45; display: grid; gap: 6px; }
+.theme-newer p { margin: 0; }

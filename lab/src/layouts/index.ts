@@ -7,7 +7,7 @@ export type { BackdropMode } from './backdrop';
 export { reflowCards } from './cards';
 export { HF_KINDS, HF_SLOTS, carryCanvasEdits, editHeaderFooter, headerFooterStale, hfConfig, hfDefaults, syncHeaderFooter } from './headerFooter';
 export { LAYOUTS, LAYOUT_GROUPS } from './catalogue';
-export { LAYOUT_STYLES, cell, gridFor, guideStyle, layoutFor, slideStyle, themeOf } from './style';
+export { LAYOUT_STYLES, cell, gridFor, guideStyle, layoutFor, newerTheme, pinTheme, slideStyle, themeCopyOf, themeOf } from './style';
 export { beforeAfterSlide, chartCalloutSlide, experimentSlide, exploreSlide, framedPictureSlide, gallerySlide, gameClock, sceneSlide, simulationSlide, youtubeSlide } from './show';
 export { bulletsSlide, cardsSlide, chartSlide, compareSlide, diagramSlide, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, splitSlide, statsSlide, tableSlide, titleSlide } from './system';
 export { closerSlide, codeSlide, columnsSlide, funnelSlide, introductionSlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, timelineSlide } from './rich';

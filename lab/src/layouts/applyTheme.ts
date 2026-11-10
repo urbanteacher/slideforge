@@ -1,5 +1,5 @@
 import { groundParams } from './blocks';
-import { slideStyle, themeOf, type LayoutStyle } from './style';
+import { slideStyle, themeCopyOf, themeOf, type LayoutStyle } from './style';
 import type { Deck, Layer, Slide } from '../core';
 
 // One theme per deck. Choosing a theme restyles every slide at once, the way changing a SlideForge
@@ -89,6 +89,8 @@ export function applyTheme(d: Deck, st: LayoutStyle) {
     themeSlide(s, slideStyle(st, s), d.width, from);
   }
   d.theme = st.id;
+  // A built-in theme is kept in the deck as it is now (CS-04); a style guide is the deck's own already.
+  if (st.id === 'guide') delete d.themeCopy; else d.themeCopy = themeCopyOf(st);
 }
 
 /** Put one slide on another of the theme's grounds (or back on its main one, with no id). */

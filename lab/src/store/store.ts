@@ -1,7 +1,7 @@
 import { produce } from 'immer';
 import { create } from 'zustand';
 import { contentHeight, shrinks, kind } from '../engine';
-import { reflowCards, themeOf, themeSlide } from '../layouts';
+import { pinTheme, reflowCards, themeOf, themeSlide } from '../layouts';
 import { syncConnectors, upgradeDeck, blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck, hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters, type Deck, type Layer, type Slide } from '../core';
 import { repairGames } from '../designs';
 
@@ -178,7 +178,9 @@ export const useStore = create<State>((set, get) => ({
     // Brought up to this studio's deck version (core/version.ts); one saved by a newer studio is left as it is, and said.
     const up = upgradeDeck(d0);
     // Games built by an older lab brought up to date as the deck opens (model/gameLook.ts).
-    const d = repairGames(up.deck);
+    let d = repairGames(up.deck);
+    // A lesson from before CS-04 keeps the theme it wears now, so a later change to the studio's theme leaves it be.
+    if (!up.newer && !d.themeCopy && d.theme && d.theme !== 'guide') { d = structuredClone(d); pinTheme(d); }
     set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null, deckTooNew: up.newer ? up.from : null });
     refitAllText(); // a deck saved before a box type measured itself gets its heights now
   },

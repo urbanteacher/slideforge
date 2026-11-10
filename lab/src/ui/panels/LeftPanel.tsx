@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, Copy, Eye, EyeOff, LayoutGrid, ListOrdered, Lock, Rows2, SquareSplitHorizontal, Trash2, Unlock } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { DEFAULT_THEME, LAYOUTS, LAYOUT_STYLES, guideStyle, layoutFor, themeOf, applyTheme } from '../../layouts';
+import { DEFAULT_THEME, LAYOUTS, LAYOUT_STYLES, guideStyle, layoutFor, newerTheme, themeOf, applyTheme } from '../../layouts';
 import { useThumbs } from './Gallery';
 import { addTextImage } from '../stage/insert';
 import { DeckSettings } from './DeckSettings';
@@ -114,6 +114,7 @@ function LayoutsPanel() {
       <div className="lp-label">Slide shape · every slide</div>
       <DeckSettings />
       <div className="lp-label">Theme · every slide</div>
+      <NewerTheme />
       <div className="g-styles lp-styles">
         {LAYOUT_STYLES.map((s) => (
           <button key={s.id} className={`g-style${s.id === st.id && themeId ? ' on' : ''}`} title={`${s.name}: ${s.display} and ${s.body}. Restyles every slide.`}
@@ -303,6 +304,21 @@ function EffectsPanel() {
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** The studio's look for this lesson's theme has changed since the lesson took it (CS-04): the lesson keeps its own
+ *  copy, so nothing moved, and this offers the new look. Undo takes it back. */
+function NewerTheme() {
+  const deck = useStore((s) => s.deck);
+  const newer = newerTheme(deck);
+  if (!newer) return null;
+  const { mutate, showToast } = useStore.getState();
+  return (
+    <div className="theme-newer" role="status">
+      <p>The studio’s {newer.name} theme has changed since this lesson took it. The lesson keeps its own look until you choose.</p>
+      <button className="btn-soft" onClick={() => { mutate((d) => applyTheme(d, newer)); showToast(`Every slide now has the new ${newer.name}. Undo puts the old look back.`); }}>Use the new look</button>
     </div>
   );
 }

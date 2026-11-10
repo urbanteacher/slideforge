@@ -3,7 +3,7 @@
 // studio decides where. Read and check the file first (lessonFormat.ts readLesson).
 import { blankDeck, createLayer, uid, type Deck, type Slide } from '../core';
 import {
-  CONTENT_FOOT, CONTENT_TOP, DEFAULT_THEME, cell, LAYOUT_STYLES, blockSlide, titleBar, titleRow, bulletsSlide, cardsSlide, compareSlide, credit, keyfactSlide, keywordsSlide, quoteSlide,
+  CONTENT_FOOT, CONTENT_TOP, DEFAULT_THEME, cell, themeCopyOf, LAYOUT_STYLES, blockSlide, titleBar, titleRow, bulletsSlide, cardsSlide, compareSlide, credit, keyfactSlide, keywordsSlide, quoteSlide,
   sectionSlide, splitSlide, statement, statsSlide, tableSlide, themeOf, timelineSlide, titleSlide, type LayoutStyle,
 } from '../layouts';
 import { gameSlides, type ShowcaseGame } from '../designs';
@@ -87,6 +87,7 @@ export function deckFromLesson(lesson: Lesson, choiceStarter?: ShowcaseGame): De
   deck.title = lesson.title.trim();
   deck.theme = lesson.theme && LESSON_THEMES.includes(lesson.theme) ? lesson.theme : DEFAULT_THEME.id;
   const st = themeOf(deck) ?? DEFAULT_THEME;
+  deck.themeCopy = themeCopyOf(st);
   deck.slides = lesson.slides.flatMap((s, i) => {
     if (s.layout === 'quiz' && !choiceStarter) throw new Error(`Slide ${i + 1} is a quiz, and the multiple-choice game could not be loaded.`);
     const made = s.layout === 'quiz' ? quizSlides(s, st, choiceStarter!) : [build(s, st)];
