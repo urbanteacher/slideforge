@@ -39,8 +39,11 @@ test('a shipped lesson round-trips through the packing the share uses', () => {
 
 test('the link: a 32-hex share id, and follow=1', () => {
   const id = 'a'.repeat(32);
-  assert.deepEqual(readLink(`?s=${id}`), { id, follow: false });
-  assert.deepEqual(readLink(`?s=${id}&follow=1`), { id, follow: true });
+  assert.deepEqual(readLink(`?s=${id}`), { id, follow: false, slide: null });
+  assert.deepEqual(readLink(`?s=${id}`, '#slide-7'), { id, follow: false, slide: 6 });
+  assert.deepEqual(readLink(`?s=${id}`, '#slide-0'), { id, follow: false, slide: null });
+  assert.deepEqual(readLink(`?s=${id}`, '#slide=x'), { id, follow: false, slide: null });
+  assert.deepEqual(readLink(`?s=${id}&follow=1`), { id, follow: true, slide: null });
   assert.equal(readLink('?s=abc'), null);
   assert.equal(readLink(''), null);
 });

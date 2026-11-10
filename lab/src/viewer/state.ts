@@ -19,14 +19,19 @@ export function shareCopy(deck: Deck): Omit<Deck, 'slides'> & { slides: Omit<Sli
   return { ...packPictures(d), studio: 1 };
 }
 
-export interface ShareLink { id: string; follow: boolean }
+/** `slide`: the slide the link opens at, counted from 0 (`#slide-7` is the seventh), or null for the first. */
+export interface ShareLink { id: string; follow: boolean; slide: number | null }
+
+/** The address's ending for a slide, counted from 0: `#slide-7` for the seventh. */
+export const slideHash = (i: number): string => `#slide-${i + 1}`;
 
 /** `?s=<32 hex>` (and `&follow=1`), as the relay's /api/share hands out; null when the address is not complete. */
-export function readLink(search: string): ShareLink | null {
+export function readLink(search: string, hash = ''): ShareLink | null {
   const p = new URLSearchParams(search);
   const id = p.get('s') ?? '';
   if (!/^[a-f0-9]{32}$/.test(id)) return null;
-  return { id, follow: p.get('follow') === '1' };
+  const n = /^#slide-(\d{1,4})$/.exec(hash);
+  return { id, follow: p.get('follow') === '1', slide: n && Number(n[1]) > 0 ? Number(n[1]) - 1 : null };
 }
 
 export interface Shared { deck: Deck; practice: boolean }

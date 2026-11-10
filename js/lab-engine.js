@@ -925,6 +925,15 @@
           function () { SF.toast('The PowerPoint could not be made'); });
       });
     },
+    /** The lesson as a file to hand to another app (File → Export → Send to…): 'pptx', 'pptx-edit' or 'pdf'.
+        Resolves with { name, blob, type }; nothing is downloaded. */
+    makeFile: function (/** @type {string} */ kind) {
+      return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) {
+        return a.file(kind, function (/** @type {number} */ done, /** @type {number} */ total) {
+          if (done === total || done % 10 === 0) SF.toast('Making the file\u2026 ' + done + ' of ' + total + ' slides');
+        });
+      });
+    },
     /** Every lesson the lab has saved, whole, for the backup (js/docs.js). The one on screen is written first. */
     savedDecks: function () {
       return new Promise(function (resolve) { whenReady(resolve); }).then(function (/** @type {any} */ a) {

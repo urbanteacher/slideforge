@@ -2,7 +2,8 @@
 export { exportHtml, exportJson, exportPng, renderStill } from './exporters';
 export { handoutHtml, handoutPages } from './handout';
 export type { HandoutPage } from './handout';
-export { editableSlides, exportPptx, exportSlide } from './pptx';
+export { buildPptx, editableSlides, exportPptx, exportSlide } from './pptx';
+export { buildPdf, dataUrlBytes, jpegSize } from './pdf';
 export type { SlideFormat } from './pptx';
 export { canExportVideo, exportVideo, makeVideo, videoLength, VIDEO_FPS } from './video';
 export type { VideoOptions } from './video';

@@ -1207,6 +1207,56 @@
 
     /* Restored: these handlers were dropped when Lecture setup moved to ⚙.
        Export / Import / Help are file chrome — they are not lecture checks. */
+    /* Send to… (BACKLOG CS-07): the lesson as a file, handed to the device's share menu (Drive, Teams, Mail,
+       AirDrop). A browser only opens that menu straight after a click, and a long lesson takes longer than that to
+       draw, so the file is made first and a second click sends it. No share menu: it downloads. */
+    function sendTo() {
+      picker({
+        title: 'Send to\u2026',
+        items: function () {
+          return [
+            { id: 'pdf', title: 'PDF, one slide to a page', blurb: 'The student copy: every shown slide fully built, no notes, no answer slides.' },
+            { id: 'pptx', title: 'PowerPoint (.pptx), slides as pictures', blurb: 'Every slide exactly as it looks here, with your speaker notes.' },
+            { id: 'pptx-edit', title: 'PowerPoint (.pptx), editable text', blurb: 'Headings and body text as text boxes you can change. Opens in Google Slides and Canva too.' }
+          ];
+        },
+        describe: function (f) { return f.blurb; },
+        onPick: function (f) {
+          SF.toast('Making the file\u2026');
+          SF.LabEngine.makeFile(f.id).then(function (/** @type {{ name: string, blob: Blob, type: string }} */ out) {
+            var file = new File([out.blob], out.name, { type: out.type });
+            var nav = /** @type {any} */ (navigator);
+            var canSend = !!(nav.canShare && nav.share && nav.canShare({ files: [file] }));
+            var save = function () {
+              var a = document.createElement('a');
+              a.href = URL.createObjectURL(file);
+              a.download = out.name;
+              document.body.appendChild(a); a.click(); a.remove();
+              setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+            };
+            picker({
+              title: out.name + ' is ready',
+              items: function () {
+                var list = [];
+                if (canSend) list.push({ id: 'send', title: 'Send to\u2026', blurb: 'Opens your device\u2019s share menu: choose Drive, Teams, Mail or another app.' });
+                list.push({ id: 'save', title: 'Download', blurb: canSend ? 'Save the file on this computer instead.' : 'This browser has no share menu for files, so save it and upload it to Drive or Canva from there.' });
+                return list;
+              },
+              describe: function (x) { return x.blurb; },
+              onPick: function (x) {
+                if (x.id === 'save') { save(); return; }
+                nav.share({ files: [file], title: out.name }).catch(function (/** @type {any} */ e) {
+                  if (e && e.name === 'AbortError') return;
+                  SF.toast('The share menu would not open, so the file was downloaded.');
+                  save();
+                });
+              }
+            });
+          }, function () { SF.toast('The file could not be made'); });
+        }
+      });
+    }
+
     var btnExport = $('btnExport');
     if (btnExport) {
       btnExport.onclick = function () {
@@ -1226,6 +1276,9 @@
             items.push({ id: 'pptx-edit', title: 'PowerPoint (.pptx), editable text', blurb: 'The headings and body text as PowerPoint text boxes you can change, over a picture of everything else. Words with special effects (gradients, outlines, highlighter, panels) and the header and footer stay part of the picture. PowerPoint uses its own font when the slide\u2019s font is not installed, so lines may break a little differently.' });
           }
           items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results. A student copy, or a teacher copy with each check as its answer.' });
+          if (active.lab && SF.LabEngine && SF.LabEngine.makeFile) {
+            items.push({ id: 'send', title: 'Send to\u2026 (Drive, Teams, Mail)', blurb: 'Hand the lesson to another app as a PowerPoint or a PDF, through your device\u2019s share menu. Where the browser has no share menu, the file downloads instead.' });
+          }
           items.push({
             id: 'md',
             title: 'Practice notes (.md)',
@@ -1267,6 +1320,7 @@
                 onPick: function (f) { SF.LabEngine.saveSlide(f.id); }
               });
             }
+            if (it.id === 'send') return sendTo();
             if (it.id === 'pptx') return SF.LabEngine.exportPptx(false);
             if (it.id === 'pptx-edit') return SF.LabEngine.exportPptx(true);
             if (it.id === 'md') return exportMarkdown();

@@ -4,7 +4,7 @@
 import type { Deck } from '../core';
 import { DeckPlayer, refreshAssets } from '../engine';
 import { registerGuideFonts } from '../theme';
-import { followIndex, practiceCount, practiceOf, PracticeScore, readLink, sharedDeck, type PracticeAsk } from './state';
+import { followIndex, practiceCount, practiceOf, PracticeScore, readLink, sharedDeck, slideHash, type PracticeAsk } from './state';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] => {
   const n = document.createElement(tag);
@@ -20,7 +20,7 @@ function message(title: string, detail: string) {
 }
 
 export async function startViewer(): Promise<void> {
-  const link = readLink(location.search);
+  const link = readLink(location.search, location.hash);
   if (!link) { message('That link is not complete', 'A shared lesson address ends in ?s= followed by the code from the link you were sent.'); return; }
   let doc: unknown;
   try {
@@ -39,10 +39,10 @@ export async function startViewer(): Promise<void> {
     return;
   }
   document.getElementById('sf-msg')!.hidden = true;
-  play(shared.deck, link.follow ? 'follow' : shared.practice ? 'practice' : 'read', link.id);
+  play(shared.deck, link.follow ? 'follow' : shared.practice ? 'practice' : 'read', link.id, link.slide);
 }
 
-function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string) {
+function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string, startAt: number | null = null) {
   document.title = `${deck.title || 'A shared lesson'} — SlideForge`;
   document.body.classList.add(`mode-${mode}`);
   registerGuideFonts(deck.styleGuide);
@@ -66,10 +66,11 @@ function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string) {
   const next = el('button', '', '›'); next.setAttribute('aria-label', 'Next slide');
   const slides = el('button', '', 'Slides'); slides.setAttribute('aria-expanded', 'false');
   const full = el('button', '', '⛶'); full.setAttribute('aria-label', 'Full screen');
+  const share = el('button', '', 'Link'); share.title = 'Copy a link that opens at this slide';
   const status = el('span', 'sf-status');
   const score = el('span', 'sf-score');
   const nav = el('span', 'sf-nav');
-  if (mode !== 'follow') nav.append(back, pos, next, slides);
+  if (mode !== 'follow') nav.append(back, pos, next, slides, share);
   nav.append(full);
   bar.append(title, nav, mode === 'follow' ? status : mode === 'practice' ? score : el('span', 'sf-hint', '← → to move'));
   addEventListener('resize', fit);
@@ -120,11 +121,21 @@ function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string) {
       pos.textContent = `${i + 1} / ${deck.slides.length}`;
       list.querySelectorAll('button').forEach((b, k) => b.classList.toggle('now', k === i));
       if (drawn !== i) { drawn = i; drawPractice(i); }
+      // The address follows the slide, so a copied or bookmarked address opens here again (not in follow mode,
+      // where the room decides the slide).
+      if (mode !== 'follow') { try { history.replaceState(null, '', slideHash(i)); } catch { /* a sandboxed frame */ } }
     },
   });
+  if (mode !== 'follow' && startAt !== null && startAt > 0 && startAt < deck.slides.length) player.cut(startAt, true);
   drawPractice(player.index);
   drawScore();
 
+  share.onclick = async () => {
+    const url = `${location.origin}${location.pathname}${location.search}${slideHash(player.index)}`;
+    try { await navigator.clipboard.writeText(url); share.textContent = 'Copied'; }
+    catch { window.prompt('Copy this link to the slide:', url); }
+    setTimeout(() => { share.textContent = 'Link'; }, 1600);
+  };
   back.onclick = () => player.prev();
   next.onclick = () => player.next();
   full.onclick = () => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); };

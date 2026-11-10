@@ -1,7 +1,7 @@
 import { TEMPLATES, blankDeck, idbDelete, idbGet, idbKeys, idbSet, unpackPictures, type Deck, type Slide } from '../core';
 import { CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
-import { renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
+import { buildPdf, buildPptx, dataUrlBytes, renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
 import { enterView, useStore, type LabView } from '../store';
 import { canHostInStudio, openStudioShow, roomRunning, roomWatchOn, whyNotPresentInStudio, type ShowFirst, type ShowHooks } from '../show';
 import { shareCopy } from '../viewer';
@@ -453,6 +453,27 @@ export const labApi = {
     if (editableText) { await exportPptx(deck, await editableSlides(deck, onProgress), true); return; }
     const shots = await stills(1920, onProgress, 0.92);
     await exportPptx(deck, shots.map((s) => ({ image: s.image, notes: s.notes, hidden: s.hidden, name: s.name })));
+  },
+  /** The lesson as a file to hand to another app (the shell's Send to…, BACKLOG CS-07): 'pptx' and 'pptx-edit' as
+   *  Export makes them, or 'pdf', the student copy's pages (handoutPages) as a PDF file. Nothing is downloaded. */
+  async file(kind: 'pptx' | 'pptx-edit' | 'pdf', onProgress?: (done: number, total: number) => void): Promise<{ name: string; blob: Blob; type: string }> {
+    const deck = useStore.getState().deck;
+    const base = (deck.title || 'lesson').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'lesson';
+    const pptxType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    if (kind === 'pptx-edit') return { name: `${base}-editable.pptx`, blob: await buildPptx(deck, await editableSlides(deck, onProgress)), type: pptxType };
+    if (kind === 'pptx') {
+      const shots = await stills(1920, onProgress, 0.92);
+      return { name: `${base}.pptx`, blob: await buildPptx(deck, shots.map((s) => ({ image: s.image, notes: s.notes, hidden: s.hidden, name: s.name }))), type: pptxType };
+    }
+    const pages = handoutPages(deck, false);
+    const shots = await stills(1600, onProgress);
+    const images: Record<string, string> = Object.fromEntries(shots.map((s) => [s.id, s.image]));
+    for (const p of pages.filter((x) => x.back)) {
+      const slide = deck.slides.find((s) => `${s.id}:back` === p.id);
+      if (slide) images[p.id] = renderStill(slide, deck, 1600, 'image/jpeg', 2, 0.9, undefined, 1);
+    }
+    const jpegs = pages.map((p) => images[p.id]).filter(Boolean).map(dataUrlBytes);
+    return { name: `${base}.pdf`, blob: buildPdf(jpegs, deck.title), type: 'application/pdf' };
   },
   /** The slides of a SlideForge lesson the lab cannot build: its activities, and a game it has not been handed compiled or cannot make. */
   cannotBuild: (slides: SFSlide[], games?: Record<string, LessonGame>) => (slides ?? []).filter((s) => !convertsSlide(s, games)).map((s) => s.id).filter(Boolean) as string[],
