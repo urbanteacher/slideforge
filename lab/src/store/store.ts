@@ -2,7 +2,7 @@ import { produce } from 'immer';
 import { create } from 'zustand';
 import { contentHeight, shrinks, kind } from '../engine';
 import { reflowCards, themeOf, themeSlide } from '../layouts';
-import { blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck, hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters, type Deck, type Layer, type Slide } from '../core';
+import { upgradeDeck, blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck, hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters, type Deck, type Layer, type Slide } from '../core';
 import { repairGames } from '../designs';
 
 export type LeftTab = 'layers' | 'add';
@@ -25,6 +25,8 @@ interface State {
   future: Deck[];
   lastMerge: { key: string; t: number } | null;
   saveState: 'saved' | 'saving' | 'unsaved';
+  /** The open deck was saved by a newer studio (core/version.ts): its version, or null. Said above the inspector. */
+  deckTooNew: number | null;
   playToken: number;
   /** The timeline under the canvas is open (the canvas bar's timeline button). Remembered in this browser. */
   timelineOpen: boolean;
@@ -116,6 +118,7 @@ export const useStore = create<State>((set, get) => ({
   future: [],
   lastMerge: null,
   saveState: 'saved',
+  deckTooNew: null,
   backOf: null,
   view: 'lesson',
   playToken: 0,
@@ -171,9 +174,11 @@ export const useStore = create<State>((set, get) => ({
   },
 
   loadDeck: (d0) => {
+    // Brought up to this studio's deck version (core/version.ts); one saved by a newer studio is left as it is, and said.
+    const up = upgradeDeck(d0);
     // Games built by an older lab brought up to date as the deck opens (model/gameLook.ts).
-    const d = repairGames(d0);
-    set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null });
+    const d = repairGames(up.deck);
+    set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null, deckTooNew: up.newer ? up.from : null });
     refitAllText(); // a deck saved before a box type measured itself gets its heights now
   },
 

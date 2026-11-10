@@ -1,4 +1,5 @@
 import { defaultAnim, defaultInteract, contentHeight, defaultParams, kind } from '../engine';
+import { DECK_VERSION } from './version';
 import type { Anim, Box, Deck, Interact, Layer, Params, Slide } from './types';
 
 export const DECK_W = 1920;
@@ -224,5 +225,5 @@ export function demoDeck(): Deck {
 }
 
 export function blankDeck(): Deck {
-  return { id: uid(), title: 'Untitled', width: DECK_W, height: DECK_H, version: 1, slides: [blankSlide()] };
+  return { id: uid(), title: 'Untitled', width: DECK_W, height: DECK_H, version: DECK_VERSION, slides: [blankSlide()] };
 }

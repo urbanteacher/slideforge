@@ -288,7 +288,8 @@ export interface Deck {
   width: number;
   height: number;
   slides: Slide[];
-  version: 1;
+  /** The deck format it was saved in (core/version.ts DECK_VERSION); older decks are upgraded as they open. */
+  version: number;
   /** One theme for the whole deck (a LAYOUT_STYLES id). Choosing it restyles every slide. */
   theme?: string;
   headerFooter?: HeaderFooter;

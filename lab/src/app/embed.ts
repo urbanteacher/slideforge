@@ -8,7 +8,7 @@ import { shareCopy } from '../viewer';
 import { saveSlide } from '../ui';
 import { SIZES } from '../rehearse';
 import { allCommands } from '../shell';
-import { factsNotice } from './factsWarning';
+import { showNotice } from './factsWarning';
 
 // The lab as SlideForge's lesson engine. SlideForge's shell (js/shell.js) loads the lab in a frame
 // over its workspace and drives it through this: the shell keeps the title, File, Library, Save and
@@ -382,7 +382,7 @@ export const labApi = {
   hostInStudio(hooks: ShowHooks): boolean {
     const st = useStore.getState();
     if (!canHostInStudio(st.deck).ok) return false;
-    openStudioShow({ room: true, slideId: st.slideId, hooks, notice: factsNotice() });
+    openStudioShow({ room: true, slideId: st.slideId, hooks, notice: showNotice(true) });
     return true;
   },
   /** A plain show of the lesson in the studio (M11a): no room, with the Teacher Presenter window, notes on another
@@ -393,7 +393,7 @@ export const labApi = {
   presentInStudio(hooks?: ShowHooks, first?: ShowFirst): boolean {
     const st = useStore.getState();
     if (!st.deck.slides.some((s) => !s.hidden)) return false;
-    openStudioShow({ room: false, slideId: st.slideId, hooks, first, notice: factsNotice() });
+    openStudioShow({ room: false, slideId: st.slideId, hooks, first, notice: showNotice(false) });
     return true;
   },
   /** The shell's Rehearse (M14): when the studio's room can run the lesson, open its show with its room and a

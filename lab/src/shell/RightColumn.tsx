@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Info, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ariaKeys, tip } from '../keys';
+import { DECK_VERSION } from '../core';
 import { layerOf, slideOf, useStore } from '../store';
 import { Inspector } from '../ui';
 import { showStatus, unseenFailures, useStatus, type Job } from './status';
@@ -34,10 +35,12 @@ function Where({ embedded }: { embedded: boolean }) {
   const n = useStore((s) => s.deck.slides.indexOf(slideOf(s)) + 1);
   const total = useStore((s) => s.deck.slides.length);
   const saveFailed = useStatus((s) => s.jobs.find((j) => j.id === 'autosave' && j.state === 'failed'));
+  const tooNew = useStore((s) => s.deckTooNew);
   const where = embedded ? 'saved with the lesson in this browser; SlideForge’s Library lists it' : 'saved with the deck in this browser';
   return (
     <div className="insp-where">
       <p>{layer ? <>This layer, on slide {n} of {total} · {where}.</> : <>Slide {n} of {total}: settings here change this slide only · {where}.</>}</p>
+      {tooNew !== null && <p className="inline-warn" role="alert">This lesson was saved by a newer version of the studio (format {tooNew}; this one reads up to {DECK_VERSION}). Reload the page before editing it, or a change made here could lose what the newer version added.</p>}
       {saveFailed && <p className="inline-warn" role="alert">Can't save changes: {saveFailed.detail ?? 'the browser refused the write'}. What you see is on screen only until a save works{embedded ? '; File → Export keeps a copy now.' : '; File → Save deck file keeps a copy now.'}</p>}
       {layer?.locked && <p className="inline-note">Locked: it can't be dragged on the slide. Changes here still apply.</p>}
       {layer && !layer.visible && <p className="inline-note">Hidden in Layers: changes here are kept, but you won't see them until it is shown.</p>}
