@@ -39,3 +39,31 @@ export async function cloudShare(id: string): Promise<CloudShare | null> {
   const j = await r.json().catch(() => null) as CloudShare | null;
   return j && typeof j === 'object' ? j : null;
 }
+
+/** How the viewer reaches the project: its address, its public key, and the teacher's sign-in if this browser has one. */
+let projectOnce: Promise<{ url: string; anonKey: string; token: string } | null> | null = null;
+/** Asked once per page, however many pictures a share has. */
+function project() { return (projectOnce ??= readProject()); }
+async function readProject(): Promise<{ url: string; anonKey: string; token: string } | null> {
+  const cfg = await fetch('/api/cloud-config', { cache: 'no-store' }).then((r) => r.json()).catch(() => null) as { enabled?: boolean; url?: string; anonKey?: string } | null;
+  if (!cfg?.enabled || !cfg.url || !cfg.anonKey) return null;
+  let token = '';
+  try { token = sessionToken(localStorage); } catch { /* no storage */ }
+  return { url: cfg.url, anonKey: cfg.anonKey, token };
+}
+
+/** One picture of an online share (supabase/migrations/0003_share_pictures.sql), or null when it cannot be had. */
+export async function cloudPicture(id: string, n: number): Promise<string | null> {
+  const p = await project();
+  if (!p) return null;
+  const ask = (bearer: string) => fetch(`${p.url}/rest/v1/rpc/get_share_picture`, {
+    method: 'POST',
+    headers: { apikey: p.anonKey, Authorization: `Bearer ${bearer}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ share_id: id, n }),
+  });
+  let r = await ask(p.token || p.anonKey);
+  if (r.status === 401 && p.token) r = await ask(p.anonKey);
+  if (!r.ok) return null;
+  const v = await r.json().catch(() => null);
+  return typeof v === 'string' ? v : null;
+}

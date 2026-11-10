@@ -4,8 +4,8 @@
 import type { Deck } from '../core';
 import { DeckPlayer, refreshAssets } from '../engine';
 import { registerGuideFonts } from '../theme';
-import { cloudShare } from './cloud';
-import { followIndex, practiceCount, practiceOf, PracticeScore, readLink, sharedDeck, slideHash, type PracticeAsk } from './state';
+import { cloudPicture, cloudShare } from './cloud';
+import { followIndex, practiceCount, practiceOf, PracticeScore, readLink, sharedDeck, slideHash, withPictures, type PracticeAsk } from './state';
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] => {
   const n = document.createElement(tag);
@@ -25,6 +25,7 @@ export async function startViewer(): Promise<void> {
   if (!link) { message('That link is not complete', 'A shared lesson address ends in ?s= followed by the code from the link you were sent.'); return; }
   // A share is on the relay (made signed out, or before shares went online) or online (CS-06, made signed in).
   let doc: unknown;
+  let onlineCopy = false;
   let why = '';
   try {
     const r = await fetch(`/api/share/${link.id}`, { cache: 'no-store' });
@@ -43,12 +44,17 @@ export async function startViewer(): Promise<void> {
       box.hidden = false;
       return;
     }
-    if (online?.doc !== undefined) doc = online.doc;
+    if (online?.doc !== undefined) { doc = online.doc; onlineCopy = true; }
   }
   if (doc === undefined) {
     message('This link no longer works', `${why ? why.replace(/\.?$/, '.') : 'It may have been withdrawn.'} A copy shared without signing in is held on the server, and a hosted server loses it when the app is updated.`);
     return;
   }
+  // Its pictures, when they travel apart from it (CS-14 step 2), from wherever the share itself came from.
+  const relayPicture = (n: number) => fetch(`/api/share/${link.id}/picture/${n}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((j) => (j as { data?: string } | null)?.data ?? null);
+  const filled = await withPictures(doc, onlineCopy ? (n) => cloudPicture(link.id, n) : relayPicture);
+  doc = filled.doc;
+  if (filled.missing) console.warn(`${filled.missing} picture(s) of this share could not be loaded.`);
   const shared = sharedDeck(doc);
   if (!shared) {
     // A copy shared from the classic slideshow, which SlideForge no longer has (M14): it cannot be played here.

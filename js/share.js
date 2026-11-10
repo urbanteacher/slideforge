@@ -54,28 +54,73 @@
   }
 
   /**
+   * The copy split for travel (BACKLOG CS-14, step 2): a studio copy's pictures (packed by shareCopy into
+   * `pictures`, the slides holding `@picture:N`) go one request each after the lesson, which carries
+   * `pictureCount` instead, so a share is no longer held to the size of one request. A copy without them is sent whole.
+   * @param {any} body
+   * @returns {{ doc: any, pictures: string[] }}
+   */
+  function splitPictures(body) {
+    var pics = Array.isArray(body && body.pictures) ? body.pictures : [];
+    if (!pics.length) return { doc: body, pictures: [] };
+    var doc = Object.assign({}, body, { pictureCount: pics.length });
+    delete doc.pictures;
+    return { doc: doc, pictures: pics };
+  }
+
+  /**
    * Upload the copy: online when `isPrivate` is a boolean (a signed-in teacher's studio share), else to the relay.
+   * Its pictures follow the lesson one at a time; if one cannot be sent, the half-made share is taken down again,
+   * so no link goes out with pictures missing.
    * @param {any} body  the copy to share
    * @param {boolean|null} isPrivate
+   * @param {function(string)=} say  progress, for the toast
    * @returns {Promise<{ id: string, key?: string, base?: string, durable: boolean, online: boolean }>}
    */
-  function upload(body, isPrivate) {
+  function upload(body, isPrivate, say) {
+    var split = splitPictures(body), pics = split.pictures, n = pics.length;
+    var tell = function (/** @type {number} */ i) { if (n > 1 && say) say('Uploading pictures\u2026 ' + i + ' of ' + n); };
+    /** @param {function(number): Promise<any>} one @returns {Promise<void>} */
+    var each = function (one) {
+      var i = 0;
+      var next = function () { if (i >= n) return Promise.resolve(); var k = i++; return one(k).then(function () { tell(k + 1); return next(); }); };
+      return next();
+    };
     var client = isPrivate === null ? null : cloudClient();
     if (client) {
       var id = newShareId();
-      return client.from('shares').insert({ id: id, title: String(body.title || '').slice(0, 200), private: !!isPrivate, doc: body })
+      return client.from('shares').insert({ id: id, title: String(body.title || '').slice(0, 200), private: !!isPrivate, doc: split.doc })
         .then(function (/** @type {any} */ r) {
           if (r && r.error) throw new Error(r.error.message || 'the account refused it');
-          return { id: id, base: location.origin, durable: true, online: true };
-        });
+          return each(function (k) {
+            return client.from('share_pictures').insert({ share_id: id, n: k, data: pics[k] }).then(function (/** @type {any} */ q) {
+              if (q && q.error) throw new Error('picture ' + (k + 1) + ' of ' + n + ': ' + (q.error.message || 'refused'));
+            });
+          }).catch(function (/** @type {any} */ e) {
+            return client.from('shares').delete().eq('id', id).then(function () { throw e; }, function () { throw e; });
+          });
+        })
+        .then(function () { return { id: id, base: location.origin, durable: true, online: true }; });
     }
     return fetch('/api/share', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ doc: body })
+      body: JSON.stringify(n ? { doc: split.doc, pictures: n } : { doc: body })
     }).then(function (r) {
       return r.json().then(function (/** @type {any} */ j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return Object.assign({ online: false }, j); });
+    }).then(function (/** @type {any} */ made) {
+      if (!n) return made;
+      var auth = { Authorization: 'Bearer ' + made.key };
+      return each(function (k) {
+        return fetch('/api/share/' + made.id + '/picture/' + k, { method: 'PUT', headers: auth, body: pics[k] }).then(function (r) {
+          if (r.ok) return;
+          return r.json().catch(function () { return {}; }).then(function (/** @type {any} */ j) { throw new Error(j.error || ('picture ' + (k + 1) + ' of ' + n + ' was refused')); });
+        });
+      }).then(function () { return made; }, function (/** @type {any} */ e) {
+        return fetch('/api/share/' + made.id, { method: 'DELETE', headers: auth }).then(function () { throw e; }, function () { throw e; });
+      });
     });
   }
+
 
   function shareLessonDoc(doc, opts) {
     opts = opts || {};
@@ -145,7 +190,7 @@
     function send(isPrivate) {
       var choice = sent.choice, body = sent.body;
       toast('Uploading a copy…');
-      upload(body, isPrivate).then(function (j) {
+      upload(body, isPrivate, toast).then(function (j) {
         var base = String(j.base || location.origin).replace(/\/$/, '');
         var url = opts.studio ? base + '/lab-app/view.html?s=' + j.id : (j.url || (base + '/view.html?s=' + j.id));
         var watched = false;

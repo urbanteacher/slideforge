@@ -118,3 +118,25 @@ export class PracticeScore {
 export function practiceCount(deck: Deck): number {
   return deck.slides.filter((s) => practiceOf(s)?.kind === 'ask').length;
 }
+
+/** A share whose pictures travel apart (CS-14 step 2: `pictureCount`, the slides holding `@picture:N`) given its
+ *  pictures back, fetched by `get` a few at a time, so sharedDeck reads it as one that carried them. A picture that
+ *  cannot be had is left empty, and counted. A share made the old way is handed back as it is. */
+export async function withPictures(doc: unknown, get: (n: number) => Promise<string | null>): Promise<{ doc: unknown; missing: number }> {
+  const d = doc as { pictureCount?: unknown; pictures?: unknown } | null;
+  const n = Number(d?.pictureCount);
+  if (!d || !Number.isInteger(n) || n <= 0 || Array.isArray(d.pictures)) return { doc, missing: 0 };
+  const pictures: string[] = new Array(n).fill('');
+  let missing = 0, next = 0;
+  const worker = async () => {
+    while (next < n) {
+      const k = next++;
+      const v = await get(k).catch(() => null);
+      if (typeof v === 'string' && v.startsWith('data:')) pictures[k] = v; else missing++;
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, n) }, worker));
+  const out = { ...d, pictures };
+  delete (out as { pictureCount?: unknown }).pictureCount;
+  return { doc: out, missing };
+}

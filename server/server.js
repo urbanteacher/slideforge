@@ -169,6 +169,11 @@ const SHARE_DIR = path.resolve(
 );
 const SHARE_ID = /^[a-f0-9]{32}$/;
 const SHARE_MAX = 40;                     // a lecturer's shelf, not a CDN
+/* A Lesson-studio share's pictures travel apart from its lesson (BACKLOG CS-14, step 2), each its own upload, so
+   the 8 MB a request may carry is a limit per picture, not per lesson. They sit in SHARE_DIR/<id>/<n>.txt beside
+   the share and go with it. */
+const SHARE_PICS = 600;                     // pictures one share may carry
+const SHARE_PICS_BYTES = 100 * 1024 * 1024; // and how much they may come to in all
 
 /* True when the share shelf is outside the app tree — i.e. almost certainly
    a persistent volume rather than the container image that deploys wipe. */
@@ -225,12 +230,18 @@ function shareCreate(req, res) {
           .map((n) => ({ n, t: fs.statSync(path.join(SHARE_DIR, n)).mtimeMs }))
           .sort((a, b) => a.t - b.t)
           .slice(0, names.length - SHARE_MAX + 1)
-          .forEach((x) => { try { fs.unlinkSync(path.join(SHARE_DIR, x.n)); } catch (e) {} });
+          .forEach((x) => { try { fs.unlinkSync(path.join(SHARE_DIR, x.n)); } catch (e) {} removeSharePictures(x.n.replace(/\.json$/, '')); });
+      }
+      /* How many pictures will follow, each by its own upload (sharePicturePut); 0 for a share that carries its
+         pictures inside, as every share did before. */
+      const pictures = Number.isInteger(msg.pictures) && msg.pictures > 0 ? Math.min(msg.pictures, SHARE_PICS) : 0;
+      if (Number.isInteger(msg.pictures) && msg.pictures > SHARE_PICS) {
+        return jsonReply(res, 413, { error: 'That lesson has more than ' + SHARE_PICS + ' pictures to share.' });
       }
       const id = crypto.randomBytes(16).toString('hex');
       const key = crypto.randomBytes(16).toString('hex');
       fs.writeFileSync(path.join(SHARE_DIR, id + '.json'),
-        JSON.stringify({ key, at: Date.now(), doc }), { mode: 0o600 });
+        JSON.stringify(pictures ? { key, at: Date.now(), doc, pictures } : { key, at: Date.now(), doc }), { mode: 0o600 });
       log('shared "' + String(doc.title || 'untitled').slice(0, 60) + '" as ' + id);
       const base = publicBase(req);
       return jsonReply(res, 200, {
@@ -248,9 +259,59 @@ function shareRead(res, id) {
   try {
     const rec = JSON.parse(fs.readFileSync(path.join(SHARE_DIR, id + '.json'), 'utf8'));
     /* The withdrawal key never travels to a viewer. */
-    return jsonReply(res, 200, { doc: rec.doc, at: rec.at });
+    return jsonReply(res, 200, rec.pictures ? { doc: rec.doc, at: rec.at, pictures: rec.pictures } : { doc: rec.doc, at: rec.at });
   } catch (e) {
     return jsonReply(res, 404, { error: 'That link has expired or was withdrawn.' });
+  }
+}
+
+/* ------------------------------------------------------------ a share's pictures, apart (CS-14 step 2) */
+
+function sharePicturesDir(id) { return path.join(SHARE_DIR, id); }
+function removeSharePictures(id) {
+  if (!SHARE_ID.test(id)) return;
+  try { fs.rmSync(sharePicturesDir(id), { recursive: true, force: true }); } catch (e) {}
+}
+/** The share's record when `key` is its withdrawal key, else null. Constant time, as shareDelete. */
+function shareWithKey(id, key) {
+  let rec;
+  try { rec = JSON.parse(fs.readFileSync(path.join(SHARE_DIR, id + '.json'), 'utf8')); } catch (e) { return null; }
+  const a = Buffer.from(String(rec.key)), b = Buffer.from(String(key));
+  return a.length === b.length && crypto.timingSafeEqual(a, b) ? rec : null;
+}
+
+/* PUT /api/share/<id>/picture/<n>: one picture, as its data address, by whoever made the share (its key). */
+function sharePicturePut(req, res, id, n) {
+  const key = String(req.headers.authorization || '').replace(/^Bearer /, '');
+  let body = '', tooBig = false;
+  req.on('data', (chunk) => { body += chunk; if (body.length > MAX_DOC) { tooBig = true; req.destroy(); } });
+  req.on('end', () => {
+    if (tooBig) return jsonReply(res, 413, { error: 'That picture is over 8 MB. Make it smaller and share again.' });
+    const rec = shareWithKey(id, key);
+    if (!rec) return jsonReply(res, 403, { error: 'That key does not open this share.' });
+    if (!(n < (rec.pictures || 0))) return jsonReply(res, 400, { error: 'That share has no picture ' + n + '.' });
+    if (!/^data:[a-z0-9.+-]+\/[a-z0-9.+-]+(;[a-z0-9=.+-]+)*,/i.test(body)) return jsonReply(res, 400, { error: 'A picture is sent as its data address.' });
+    const dir = sharePicturesDir(id);
+    try {
+      fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+      const used = fs.readdirSync(dir).filter((f) => f !== n + '.txt').reduce((t, f) => t + fs.statSync(path.join(dir, f)).size, 0);
+      if (used + body.length > SHARE_PICS_BYTES) return jsonReply(res, 413, { error: 'Its pictures come to over 100 MB. Make them smaller and share again.' });
+      fs.writeFileSync(path.join(dir, n + '.txt'), body, { mode: 0o600 });
+    } catch (e) {
+      return jsonReply(res, 500, { error: 'Could not store the picture.' });
+    }
+    return jsonReply(res, 200, { stored: n });
+  });
+}
+
+/* GET /api/share/<id>/picture/<n>: one picture of an open share. The address of the share is the credential, as
+   for the share itself. */
+function sharePictureGet(res, id, n) {
+  try {
+    const data = fs.readFileSync(path.join(sharePicturesDir(id), n + '.txt'), 'utf8');
+    return jsonReply(res, 200, { data });
+  } catch (e) {
+    return jsonReply(res, 404, { error: 'That picture is not there. The share may have been withdrawn.' });
   }
 }
 
@@ -269,6 +330,7 @@ function shareDelete(req, res, id) {
     return jsonReply(res, 403, { error: 'That key does not open this share.' });
   }
   try { fs.unlinkSync(file); } catch (e) { return jsonReply(res, 500, { error: 'Could not withdraw it.' }); }
+  removeSharePictures(id);
   log('share ' + id + ' withdrawn');
   return jsonReply(res, 200, { deleted: id });
 }
@@ -651,6 +713,11 @@ function serve(req, res) {
      asked to publish, to an address nobody can guess, and can be withdrawn
      with the key it hands back. Being reachable is the entire feature. */
   if (rel === '/api/share' && req.method === 'POST') return shareCreate(req, res);
+  const pic = /^\/api\/share\/([a-f0-9]{32})\/picture\/(\d{1,4})$/.exec(rel);
+  if (pic) {
+    if (req.method === 'PUT') return sharePicturePut(req, res, pic[1], Number(pic[2]));
+    if (req.method === 'GET') return sharePictureGet(res, pic[1], Number(pic[2]));
+  }
   if (rel.startsWith('/api/share/')) {
     const sid = rel.slice('/api/share/'.length);
     if (req.method === 'GET') return shareRead(res, sid);

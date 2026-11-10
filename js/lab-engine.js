@@ -1025,11 +1025,15 @@
           var why = whyNotShown(a);
           if (why) { resolve({ why: why }); return; }
           var doc = a.shareDeck();
-          var size = JSON.stringify(doc).length, limit = 7.5 * 1024 * 1024;
-          if (size > limit) {
-            resolve({ why: 'the lesson is ' + (size / 1048576).toFixed(1) + ' MB with its pictures, over the room server\u2019s 7.5 MB. Make its pictures and videos smaller, or split the lesson' });
-            return;
-          }
+          /* Its pictures travel apart from it (js/share.js, CS-14 step 2): the words, and each picture, may be up to
+             7.5 MB, and the pictures 100 MB in all. */
+          var pics = Array.isArray(doc.pictures) ? doc.pictures : [], MB = 1048576, limit = 7.5 * MB;
+          var words = JSON.stringify(Object.assign({}, doc, { pictures: undefined })).length;
+          var biggest = pics.reduce(function (/** @type {number} */ m, /** @type {string} */ p) { return Math.max(m, p.length); }, 0);
+          var all = pics.reduce(function (/** @type {number} */ t, /** @type {string} */ p) { return t + p.length; }, 0);
+          if (words > limit) { resolve({ why: 'the lesson\u2019s slides come to ' + (words / MB).toFixed(1) + ' MB without their pictures, over 7.5 MB. Split the lesson' }); return; }
+          if (biggest > limit) { resolve({ why: 'one picture or video is ' + (biggest / MB).toFixed(1) + ' MB, over the 7.5 MB each may be. Make it smaller, or link the video instead' }); return; }
+          if (all > 100 * MB) { resolve({ why: 'its pictures and videos come to ' + (all / MB).toFixed(0) + ' MB, over the 100 MB a share may carry. Make them smaller, or split the lesson' }); return; }
           resolve({ doc: doc });
         });
       });

@@ -6,5 +6,5 @@
 //   sharedDeck(doc)        a shared copy as the viewer plays it (pictures back, hidden slides and notes out)
 //   practiceOf(slide)      what practice offers on a slide; PracticeScore marks it with SlideForge's own marking
 export { startViewer } from './page';
-export { followIndex, markPractice, practiceCount, practiceOf, PracticeScore, readLink, shareCopy, sharedDeck, slideHash } from './state';
+export { followIndex, markPractice, practiceCount, practiceOf, PracticeScore, readLink, shareCopy, sharedDeck, slideHash, withPictures } from './state';
 export type { Practice, PracticeAsk, PracticeRoom, Shared, ShareLink } from './state';
