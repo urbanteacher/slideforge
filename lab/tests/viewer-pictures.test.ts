@@ -27,3 +27,17 @@ test('a share made the old way, pictures inside, is handed back as it was', asyn
   assert.equal(doc, old);
   assert.equal(missing, 0);
 });
+
+test('a share that says it has more pictures than any share may carry asks for none of them', async () => {
+  let asked = 0;
+  const { missing } = await withPictures(deck({ pictureCount: 1e8 }), async () => { asked++; return null; });
+  assert.equal(asked, 0);
+  assert.equal(missing, 1e8);
+});
+
+test('a picture reference past the share\'s pictures is left empty, not asked for as a file', async () => {
+  const d = deck({ pictureCount: 1 });
+  (d.slides[0].layers[1].params as Record<string, unknown>).src = '@picture:7';
+  const { doc } = await withPictures(d, async () => 'data:image/png;base64,P0');
+  assert.equal(sharedDeck(doc)!.deck.slides[0].layers[1].params.src, '');
+});

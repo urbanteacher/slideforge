@@ -68,10 +68,34 @@
     return { doc: doc, pictures: pics };
   }
 
+  var SHARES_KEY = 'slideforge.shares.v1';
+  /** This browser's list of the shares it made, newest first, with the keys that withdraw them. */
+  function readShares() { try { var v = JSON.parse(localStorage.getItem(SHARES_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  /** @param {any} entry */
+  function rememberShare(entry) {
+    try { localStorage.setItem(SHARES_KEY, JSON.stringify([entry].concat(readShares().filter(function (s) { return s && s.id !== entry.id; })).slice(0, 40))); } catch (e) {}
+  }
+  /** @param {string} id */
+  function forgetShare(id) {
+    try { localStorage.setItem(SHARES_KEY, JSON.stringify(readShares().filter(function (s) { return s && s.id !== id; }))); } catch (e) {}
+  }
+
+  /** A step tried up to three times, a moment apart: one dropped request among forty pictures is not the end.
+   *  @param {function(): Promise<any>} step @param {number=} left @returns {Promise<any>} */
+  function retried(step, left) {
+    left = left === undefined ? 2 : left;
+    return step().catch(function (/** @type {any} */ e) {
+      if (!left || (e && e.final)) throw e;
+      return new Promise(function (r) { setTimeout(r, 800 * (3 - left)); }).then(function () { return retried(step, left - 1); });
+    });
+  }
+
   /**
    * Upload the copy: online when `isPrivate` is a boolean (a signed-in teacher's studio share), else to the relay.
-   * Its pictures follow the lesson one at a time; if one cannot be sent, the half-made share is taken down again,
-   * so no link goes out with pictures missing.
+   * Its pictures follow the lesson, two at a time, each tried up to three times. The share is remembered in this
+   * browser, with its key, before they go, so it can always be withdrawn. If one cannot be sent, the half-made share
+   * is taken down again, so no link goes out with pictures missing; if even that fails, the error says a copy was
+   * left, and the share stays in the list to withdraw.
    * @param {any} body  the copy to share
    * @param {boolean|null} isPrivate
    * @param {function(string)=} say  progress, for the toast
@@ -79,25 +103,49 @@
    */
   function upload(body, isPrivate, say) {
     var split = splitPictures(body), pics = split.pictures, n = pics.length;
-    var tell = function (/** @type {number} */ i) { if (n > 1 && say) say('Uploading pictures\u2026 ' + i + ' of ' + n); };
-    /** @param {function(number): Promise<any>} one @returns {Promise<void>} */
+    var done = 0;
+    var tell = function () { done++; if (n > 1 && say) say('Uploading pictures\u2026 ' + done + ' of ' + n); };
+    /** Every picture, two at a time; the first that cannot be sent (after its tries) stops the rest.
+     *  @param {function(number): Promise<any>} one @returns {Promise<void>} */
     var each = function (one) {
-      var i = 0;
-      var next = function () { if (i >= n) return Promise.resolve(); var k = i++; return one(k).then(function () { tell(k + 1); return next(); }); };
-      return next();
+      var i = 0, failed = false;
+      var worker = function () {
+        if (failed || i >= n) return Promise.resolve();
+        var k = i++;
+        return retried(function () { return one(k); }).then(function () { tell(); return worker(); }, function (/** @type {any} */ e) {
+          failed = true;
+          var why = e && e.message ? e.message : String(e);
+          throw new Error(/picture \d+ of/.test(why) ? why : 'picture ' + (k + 1) + ' of ' + n + ': ' + why);
+        });
+      };
+      return Promise.all([worker(), worker()]).then(function () {});
     };
+    /** Taken down after a picture failed; the error says whether a copy was left.
+     *  @param {string} id @param {function(): Promise<boolean>} withdraw @param {any} e */
+    var undo = function (id, withdraw, e) {
+      var why = e && e.message ? e.message : String(e);
+      return withdraw().then(function (ok) { return ok; }, function () { return false; }).then(function (ok) {
+        if (ok) { forgetShare(id); throw e; }
+        throw new Error(why + '. A copy without all its pictures was left; withdraw it from your shared lessons.');
+      });
+    };
+    var title = String(body.title || '');
     var client = isPrivate === null ? null : cloudClient();
     if (client) {
       var id = newShareId();
-      return client.from('shares').insert({ id: id, title: String(body.title || '').slice(0, 200), private: !!isPrivate, doc: split.doc })
+      return client.from('shares').insert({ id: id, title: title.slice(0, 200), private: !!isPrivate, doc: split.doc })
         .then(function (/** @type {any} */ r) {
           if (r && r.error) throw new Error(r.error.message || 'the account refused it');
+          if (!n) return;
+          rememberShare({ id: id, key: '', online: true, private: !!isPrivate, title: title, at: Date.now() });
           return each(function (k) {
-            return client.from('share_pictures').insert({ share_id: id, n: k, data: pics[k] }).then(function (/** @type {any} */ q) {
-              if (q && q.error) throw new Error('picture ' + (k + 1) + ' of ' + n + ': ' + (q.error.message || 'refused'));
+            // upsert: a try that reached the database but whose answer was lost does not trip over itself.
+            return client.from('share_pictures').upsert({ share_id: id, n: k, data: pics[k] }).then(function (/** @type {any} */ q) {
+              if (q && q.error) throw Object.assign(new Error('picture ' + (k + 1) + ' of ' + n + ': ' + (q.error.message || 'refused')), { final: /violates|check constraint|permission|row-level/i.test(q.error.message || '') });
             });
           }).catch(function (/** @type {any} */ e) {
-            return client.from('shares').delete().eq('id', id).then(function () { throw e; }, function () { throw e; });
+            // supabase-js says a refusal in { error }, rather than by throwing: only a delete with no error counts.
+            return undo(id, function () { return client.from('shares').delete().eq('id', id).then(function (/** @type {any} */ d) { return !(d && d.error); }); }, e);
           });
         })
         .then(function () { return { id: id, base: location.origin, durable: true, online: true }; });
@@ -110,13 +158,17 @@
     }).then(function (/** @type {any} */ made) {
       if (!n) return made;
       var auth = { Authorization: 'Bearer ' + made.key };
+      rememberShare({ id: made.id, key: made.key, online: false, private: false, title: title, at: Date.now() });
       return each(function (k) {
         return fetch('/api/share/' + made.id + '/picture/' + k, { method: 'PUT', headers: auth, body: pics[k] }).then(function (r) {
           if (r.ok) return;
-          return r.json().catch(function () { return {}; }).then(function (/** @type {any} */ j) { throw new Error(j.error || ('picture ' + (k + 1) + ' of ' + n + ' was refused')); });
+          return r.json().catch(function () { return {}; }).then(function (/** @type {any} */ j) {
+            // A refusal (too large, not a picture, the wrong key) is the same the next time: not tried again.
+            throw Object.assign(new Error('picture ' + (k + 1) + ' of ' + n + ': ' + (j.error || 'refused')), { final: r.status >= 400 && r.status < 500 });
+          });
         });
       }).then(function () { return made; }, function (/** @type {any} */ e) {
-        return fetch('/api/share/' + made.id, { method: 'DELETE', headers: auth }).then(function () { throw e; }, function () { throw e; });
+        return undo(made.id, function () { return fetch('/api/share/' + made.id, { method: 'DELETE', headers: auth }).then(function (r) { return r.ok || r.status === 404; }); }, e);
       });
     });
   }
@@ -197,11 +249,7 @@
         if (typeof opts.watchOn === 'function') watched = !!opts.watchOn(j.id);
         var followUrl = (choice === 'follow' && watched) ? url + '&follow=1' : '';
 
-        try {
-          var keys = JSON.parse(localStorage.getItem('slideforge.shares.v1') || '[]');
-          keys.unshift({ id: j.id, key: j.key || '', online: !!j.online, private: isPrivate === true, title: doc.title || '', at: Date.now() });
-          localStorage.setItem('slideforge.shares.v1', JSON.stringify(keys.slice(0, 40)));
-        } catch (e) {}
+        rememberShare({ id: j.id, key: j.key || '', online: !!j.online, private: isPrivate === true, title: doc.title || '', at: Date.now() });
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).then(function () {
@@ -244,4 +292,6 @@
   }
 
   SF.shareLessonDoc = shareLessonDoc;
+  /* The upload on its own, for tests/share-upload.test.js: the dialogs above are the way in for everyone else. */
+  SF.shareUpload = upload;
 })(typeof window !== 'undefined' ? window : globalThis);

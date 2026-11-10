@@ -1036,6 +1036,9 @@
           if (words > limit) { resolve({ why: 'the lesson\u2019s slides come to ' + (words / MB).toFixed(1) + ' MB without their pictures, over 7.5 MB. Split the lesson' }); return; }
           if (biggest > limit) { resolve({ why: 'one picture or video is ' + (biggest / MB).toFixed(1) + ' MB, over the 7.5 MB each may be. Make it smaller, or link the video instead' }); return; }
           if (all > 100 * MB) { resolve({ why: 'its pictures and videos come to ' + (all / MB).toFixed(0) + ' MB, over the 100 MB a share may carry. Make them smaller, or split the lesson' }); return; }
+          /* 600 is what the relay and the account take (server/server.js SHARE_PICS, 0003_share_pictures.sql): said
+             now, rather than after 600 uploads. */
+          if (pics.length > 600) { resolve({ why: 'it has ' + pics.length + ' different pictures and videos, over the 600 a share may carry. Split the lesson' }); return; }
           resolve({ doc: doc });
         });
       });

@@ -40,7 +40,7 @@ export async function startViewer(): Promise<void> {
       const go = el('a', 'sf-signin', 'Open SlideForge to sign in');
       go.href = '/';
       box.replaceChildren(el('h1', '', 'This lesson is for teachers'),
-        el('p', '', 'It was shared with signed-in teachers only. Sign in to SlideForge with your work email in this browser, then open this link again.'), go);
+        el('p', '', 'It was shared with signed-in teachers only. Open SlideForge in this browser, signing in with your work email if it asks, then open this link again.'), go);
       box.hidden = false;
       return;
     }
@@ -59,7 +59,7 @@ export async function startViewer(): Promise<void> {
     .catch(() => null);
   const filled = await withPictures(doc, onlineCopy ? (n) => cloudPicture(link.id, n) : relayPicture);
   doc = filled.doc;
-  if (filled.missing) console.warn(`${filled.missing} picture(s) of this share could not be loaded.`);
+  const missing = filled.missing;
   const shared = sharedDeck(doc);
   if (!shared) {
     // A copy shared from the classic slideshow, which SlideForge no longer has (M14): it cannot be played here.
@@ -67,10 +67,10 @@ export async function startViewer(): Promise<void> {
     return;
   }
   document.getElementById('sf-msg')!.hidden = true;
-  play(shared.deck, link.follow ? 'follow' : shared.practice ? 'practice' : 'read', link.id, link.slide);
+  play(shared.deck, link.follow ? 'follow' : shared.practice ? 'practice' : 'read', link.id, link.slide, missing);
 }
 
-function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string, startAt: number | null = null) {
+function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string, startAt: number | null = null, missing = 0) {
   document.title = `${deck.title || 'A shared lesson'} — SlideForge`;
   document.body.classList.add(`mode-${mode}`);
   registerGuideFonts(deck.styleGuide);
@@ -101,6 +101,12 @@ function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string, star
   if (mode !== 'follow') nav.append(back, pos, next, slides, share);
   nav.append(full);
   bar.append(title, nav, mode === 'follow' ? status : mode === 'practice' ? score : el('span', 'sf-hint', '← → to move'));
+  // Said where the reader looks, not only in the console: a blank where a picture should be is explained.
+  if (missing) {
+    const gone = el('span', 'sf-missing', `${missing} picture${missing === 1 ? '' : 's'} could not be loaded, so ${missing === 1 ? 'it shows' : 'they show'} as blank. Reload to try again.`);
+    gone.setAttribute('role', 'status');
+    bar.append(gone);
+  }
   addEventListener('resize', fit);
   fit();
 
@@ -175,6 +181,12 @@ function play(deck: Deck, mode: 'read' | 'follow' | 'practice', id: string, star
   slides.onclick = () => { list.hidden = !list.hidden; slides.setAttribute('aria-expanded', String(!list.hidden)); };
 
   if (mode === 'follow') { follow(deck, player, id, (t) => { status.textContent = t; }); return; }
+  // A slide link pasted into this tab, with the share already open, changes only the part after #: the page does not
+  // load again, so the slide is moved here.
+  addEventListener('hashchange', () => {
+    const to = readLink(location.search, location.hash)?.slide;
+    if (to != null && to >= 0 && to < deck.slides.length && to !== player.index) player.goto(to, to > player.index ? 1 : -1, true);
+  });
   addEventListener('keydown', (e) => {
     if ((e.target as HTMLElement | null)?.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
     if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); player.next(); }

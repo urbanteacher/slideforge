@@ -24,13 +24,15 @@ export function packPictures<T>(value: T): T & { pictures?: string[] } {
   return packed;
 }
 
-/** Each '@picture:<n>' put back as the picture it names, in place; `pictures` is taken off. */
+/** Each '@picture:<n>' put back as the picture it names, in place; `pictures` is taken off. One that names no picture
+ *  (past the list, or a picture that could not be fetched) is left empty, so nothing asks for a file called
+ *  "@picture:7". */
 export function unpackPictures<T extends object>(d: T & { pictures?: string[] }): T {
   const pics = d.pictures;
   if (!Array.isArray(pics)) return d;
   delete d.pictures;
   const walk = (v: unknown): unknown => {
-    if (typeof v === 'string') { const m = /^@picture:(\d+)$/.exec(v); return m && pics[+m[1]] !== undefined ? pics[+m[1]] : v; }
+    if (typeof v === 'string') { const m = /^@picture:(\d+)$/.exec(v); return m ? (typeof pics[+m[1]] === 'string' ? pics[+m[1]] : '') : v; }
     if (Array.isArray(v)) { for (let i = 0; i < v.length; i++) v[i] = walk(v[i]); return v; }
     if (v && typeof v === 'object') { for (const k of Object.keys(v)) (v as Record<string, unknown>)[k] = walk((v as Record<string, unknown>)[k]); return v; }
     return v;
