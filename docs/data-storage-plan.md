@@ -144,7 +144,7 @@ Each step is its own commit and works on its own.
    - A Lesson-studio share made while signed in is a row in `shares` (`supabase/migrations/0002_shares.sql`), written by the browser with the teacher's own sign-in (`js/share.js`), so it survives deploys and is not counted against the relay's 40. It is open or private (signed-in teachers only).
    - Nobody can list shares: the viewer reads one by id through `get_share()` (`lab/src/viewer/cloud.ts`), which hands a private share only to a signed-in teacher.
    - Signed out, and for classic copies, shares still go to the relay's `SHARE_DIR`, and older links still open from it.
-   - **A share's pictures** go apart from its lesson (10 November, CS-14 step 2): rows of `share_pictures` (`supabase/migrations/0003_share_pictures.sql`) read through `get_share_picture()`, so a share is no longer held to the size of one request.
+   - **A share's pictures** go apart from its lesson (10 November, CS-14 step 2): rows of `share_pictures` (`supabase/migrations/0003_share_pictures.sql`) read through `get_share_picture()`, so a share is no longer held to the size of one request. `0004_share_limits.sql` then puts size and kind limits on shares and pictures. It also has `is_teacher()` read the confirmed account rather than the token's email claim, and sets the policies to Supabase's advice; `supabase/tests/shares.sql` checks the rules.
    - **Still open:** live-session reports, which the relay writes to its journal files.
    - **Done by the owner, 10 November:** `supabase/migrations/0002_shares.sql` run in the SQL editor; a signed-in share and a private link tried and working.
 7. **Built-in lessons as data.** Lessons hard-coded today (`js/lab-decks.js`, `lessons/`) can be published to a shared "built-in" folder in Supabase instead of the code. Large MP4s move to the bucket. The code then keeps only the starter decks.
@@ -167,6 +167,7 @@ Steps 1 to 4 fix the real problem (lessons on every device). Steps 5 to 7 make i
 ## Change log
 
 - 10 November 2026: a share's pictures sent apart (`0003_share_pictures.sql`, waits on the owner); the 7.5 MB share limit lifted.
+- 10 November 2026: `0004_share_limits.sql` (waits on the owner, after 0003): limits on shares and pictures, `is_teacher()` from the confirmed account, the policies tightened; `supabase/tests/shares.sql` checks them.
 - 10 November 2026: `0002_shares.sql` run; online and private shares tried by the owner and working.
 - 10 November 2026: in this browser, a studio lesson's pictures are kept once, apart from its record (CS-14 step 1); every read puts them back, so the sync and backup see whole lessons as before.
 - 10 November 2026: step 6's shares built for signed-in teachers (`55dd800b`), open or private; the migration waits on the owner. Reports stay open.

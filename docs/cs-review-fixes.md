@@ -88,21 +88,21 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 | ID | What breaks | Where | Fix | Test |
 |---|---|---|---|---|
-| CR-49 | A failed share can leave a copy online that the teacher can't withdraw: the clean-up delete isn't checked, and the key is saved only on success | `js/share.js:99,118,200` | Save `{id, key}` before the pictures go up. Drop it only when the delete succeeds, and say if a copy was left | Stub a failing picture, then a failing delete: the share is still listed |
-| CR-50 | One dropped request among 40 pictures throws the whole share away | `share.js:84` | Retry each picture twice, with a wait, two at a time | A stub that fails once: the share completes |
-| CR-51 | More than 600 pictures is found only on picture 601, after 600 uploads | `js/lab-engine.js:1030` | Check the count before the first upload | 601 pictures gives a clear refusal |
-| CR-52 | A network failure doesn't say which picture failed | `share.js:116` | Add "picture k of n" in each picture's `catch` | — |
-| CR-53 | Supabase has no size limit on a picture, a lesson or a title, and any data type is accepted | `supabase/migrations/` | New `0004_share_limits.sql` with `alter table … add constraint`: `data ~ '^data:image/'`, `octet_length(data) <= 8000000`, a cap on `doc`, and `char_length(title) <= 200` | (SQL, run by hand) |
-| CR-54 | The RLS policies don't follow Supabase's advice: no `to authenticated`, and `auth.uid()` and `is_teacher()` aren't wrapped in `(select …)`. Also `search_path = public`, not `''`; anon can execute `is_teacher()`; and `share_id` is unqualified | 0002, 0003 | The same `0004` recreates the policies and functions the advised way | (SQL) |
-| CR-55 | `is_teacher()` trusts the email claim (safe only while every sign-in proves the address), and matches the domain with `like` | `0001` | Require `email_verified`, and compare with `split_part(email,'@',2) = domain` | (SQL) |
-| CR-56 | Nothing tests the SQL | — | A `supabase/tests/shares.sql` script, run by hand in the SQL editor, that checks each rule as anon, as a teacher and as another teacher | — |
-| CR-57 | The viewer trusts the share's own picture count, so a count of `1e8` means 1e8 fetches | `lab/src/viewer/state.ts:127` | Cap the count at 600, or use the count the relay returns | `1e8` gives at most 600 |
-| CR-58 | A picture that fails shows as a blank image, with no word to the student. A reference past the count becomes a request for `/@picture:7` | `viewer/page.ts:57`, `core/pictures.ts:33` | One line in the viewer's bar, and empty any reference with no picture | `withPictures` with a missing picture |
-| CR-59 | Pasting a slide link into a tab that already has the share open doesn't move the slide | `viewer/page.ts:149` | Listen for `hashchange` (not in follow mode) | (smoke) |
-| CR-60 | `cloud.ts` fetches its settings twice, caches a failed fetch forever, and retries each picture's 401 separately | `lab/src/viewer/cloud.ts` | One `project()`, cleared when it fails, and one `rpc()` helper that drops a refused token after the first 401 | `cloudPicture` tests, with the stubs restored |
-| CR-61 | Signed-out reads send the anon key as a Bearer token. That works only while the project uses a legacy anon key, and those are deprecated by the end of 2026 | `cloud.ts:35,64` | Without a token, send no `Authorization` header | Signed out: no header |
-| CR-62 | A signed-in teacher whose token has expired (after an hour away) is told to sign in | `cloud.ts:17`, `page.ts:38` | Change the words to "Open SlideForge, then this link again" | — |
-| CR-63 | Any stored Supabase session can be picked | `cloud.ts:13` | Build the exact key from `cfg.url` | Two sessions: the right one is used |
+| CR-49 · fixed `f9b4e6b6` | A failed share can leave a copy online that the teacher can't withdraw: the clean-up delete isn't checked, and the key is saved only on success | `js/share.js:99,118,200` | Save `{id, key}` before the pictures go up. Drop it only when the delete succeeds, and say if a copy was left | Stub a failing picture, then a failing delete: the share is still listed |
+| CR-50 · fixed `f9b4e6b6` | One dropped request among 40 pictures throws the whole share away | `share.js:84` | Retry each picture twice, with a wait, two at a time | A stub that fails once: the share completes |
+| CR-51 · fixed `f9b4e6b6` | More than 600 pictures is found only on picture 601, after 600 uploads | `js/lab-engine.js:1030` | Check the count before the first upload | 601 pictures gives a clear refusal |
+| CR-52 · fixed `f9b4e6b6` | A network failure doesn't say which picture failed | `share.js:116` | Add "picture k of n" in each picture's `catch` | — |
+| CR-53 · fixed `f9b4e6b6` | Supabase has no size limit on a picture, a lesson or a title, and any data type is accepted | `supabase/migrations/` | New `0004_share_limits.sql` with `alter table … add constraint`: `data ~ '^data:image/'`, `octet_length(data) <= 8000000`, a cap on `doc`, and `char_length(title) <= 200` | (SQL, run by hand) |
+| CR-54 · fixed `f9b4e6b6` | The RLS policies don't follow Supabase's advice: no `to authenticated`, and `auth.uid()` and `is_teacher()` aren't wrapped in `(select …)`. Also `search_path = public`, not `''`; anon can execute `is_teacher()`; and `share_id` is unqualified | 0002, 0003 | The same `0004` recreates the policies and functions the advised way | (SQL) |
+| CR-55 · fixed `f9b4e6b6` | `is_teacher()` trusts the email claim (safe only while every sign-in proves the address), and matches the domain with `like` | `0001` | Require `email_verified`, and compare with `split_part(email,'@',2) = domain` | (SQL) |
+| CR-56 · fixed `f9b4e6b6` | Nothing tests the SQL | — | A `supabase/tests/shares.sql` script, run by hand in the SQL editor, that checks each rule as anon, as a teacher and as another teacher | — |
+| CR-57 · fixed `f9b4e6b6` | The viewer trusts the share's own picture count, so a count of `1e8` means 1e8 fetches | `lab/src/viewer/state.ts:127` | Cap the count at 600, or use the count the relay returns | `1e8` gives at most 600 |
+| CR-58 · fixed `f9b4e6b6` | A picture that fails shows as a blank image, with no word to the student. A reference past the count becomes a request for `/@picture:7` | `viewer/page.ts:57`, `core/pictures.ts:33` | One line in the viewer's bar, and empty any reference with no picture | `withPictures` with a missing picture |
+| CR-59 · fixed `f9b4e6b6` | Pasting a slide link into a tab that already has the share open doesn't move the slide | `viewer/page.ts:149` | Listen for `hashchange` (not in follow mode) | (smoke) |
+| CR-60 · fixed `f9b4e6b6` | `cloud.ts` fetches its settings twice, caches a failed fetch forever, and retries each picture's 401 separately | `lab/src/viewer/cloud.ts` | One `project()`, cleared when it fails, and one `rpc()` helper that drops a refused token after the first 401 | `cloudPicture` tests, with the stubs restored |
+| CR-61 · fixed `f9b4e6b6` | Signed-out reads send the anon key as a Bearer token. That works only while the project uses a legacy anon key, and those are deprecated by the end of 2026 | `cloud.ts:35,64` | Without a token, send no `Authorization` header | Signed out: no header |
+| CR-62 · fixed `f9b4e6b6` | A signed-in teacher whose token has expired (after an hour away) is told to sign in | `cloud.ts:17`, `page.ts:38` | Change the words to "Open SlideForge, then this link again" | — |
+| CR-63 · fixed `f9b4e6b6` | Any stored Supabase session can be picked | `cloud.ts:13` | Build the exact key from `cfg.url` | Two sessions: the right one is used |
 
 ## 7. Speed (batch 7)
 
@@ -152,6 +152,12 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 ## Change log
 
+- **10 November 2026, batch 6 done (`f9b4e6b6`).** CR-49 to CR-63. The new tests failed on the code before the fix. On the old viewer, a share claiming 100 million pictures kept it busy for 99 seconds. Notes:
+  - **CR-49 to CR-52** have their first tests, `tests/share-upload.test.js`, which runs `js/share.js` against a stand-in relay. The upload is exposed for it as `SF.shareUpload`.
+  - **CR-53 to CR-56:** `supabase/migrations/0004_share_limits.sql`. `is_teacher()` now reads `auth.users`: the email must be confirmed, and its domain must match an allowed one exactly. `email_verified` was not used, because Supabase keeps it in user metadata rather than as a claim.
+  - **The SQL ran on PGlite,** with stand-ins for Supabase's `auth` and `storage`. Migrations 0001 to 0004 run, and 0004 runs again cleanly. `supabase/tests/shares.sql` passes, and it caught each rule that was removed in turn (the media check, the confirmed email). Neither file has run on the real project yet.
+  - **CR-57 to CR-59 were tried in the viewer.** A share missing one of its two pictures said so in the bar, and `#slide-2` typed into the open tab moved it to slide 2.
+  - **Seen while testing, and left alone:** a missing picture still draws the editor's empty-picture hint to the reader. That was already so before this batch.
 - **10 November 2026, batch 5 done (`12e02e30`).** CR-41 to CR-48, with D2 as recommended. The new relay tests failed on the server before the change. A relay share with a picture was opened in the viewer, which read the picture as bytes. Notes:
   - **CR-41:** one `readBody` now serves shares, pictures, saved data, and the AI endpoint, which had the same bug.
   - **CR-43 was a smaller problem than reported.** The check and the write ran in one synchronous step, so parallel uploads could not overrun the 100 MB. The cost of listing and measuring the folder on every upload was real, though, and running totals replace it.
