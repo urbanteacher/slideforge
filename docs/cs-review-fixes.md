@@ -27,12 +27,12 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 | ID | What breaks | Where | Fix | Test |
 |---|---|---|---|---|
-| CR-08 ✓ | Duplicating a slide, or inserting one from the Gallery, breaks its connectors: the copy gets new layer ids, but `from`/`to` still name the old ones | `lab/src/core/defaults.ts:63` `cloneSlide` | Map old ids to new and rewrite `from`/`to`. Do the same when several layers are copied together | Duplicate a slide with a connector: it is not lost |
-| CR-09 | Double-clicking a connector opens a text editor showing raw layer ids, and typing there breaks the join | `kinds/connector/def.ts:9` (`type: 'text'`), `CanvasEditors.tsx` `wordFields` | Give `from`/`to` a type of their own, or the `_hidden` group, so they aren't treated as words | `wordFields(connector)` is empty |
-| CR-10 | A hidden layer still gets a line, drawn to empty space | `lab/src/core/connectors.ts:50` | Count a hidden end as lost | Hide one end: the connector is marked lost |
-| CR-11 | Rotation is ignored: the line ends on the unrotated edge | `connectors.ts:15` | Use the rotated box's bounding box | A 45° box: the end is on its bounding edge |
-| CR-12 | An imported deck draws its connectors in one place, but selects and wipes them from their old box until the first edit | `store.ts` `loadDeck` | Run `syncConnectors` inside `loadDeck` | Load a deck with a stale connector box: the box is current |
-| CR-13 | The "lost" rule is written twice (store and drawing) | `kinds/connector/raster.ts:23`, `connectors.ts:50` | One `joined(slide, layer)` in `core/connectors.ts`, used by both | Existing tests |
+| CR-08 ✓ · fixed `959e80c9` | Duplicating a slide, or inserting one from the Gallery, breaks its connectors: the copy gets new layer ids, but `from`/`to` still name the old ones | `lab/src/core/defaults.ts:63` `cloneSlide` | Map old ids to new and rewrite `from`/`to`. Do the same when several layers are copied together | Duplicate a slide with a connector: it is not lost |
+| CR-09 · fixed `959e80c9` | Double-clicking a connector opens a text editor showing raw layer ids, and typing there breaks the join | `kinds/connector/def.ts:9` (`type: 'text'`), `CanvasEditors.tsx` `wordFields` | Give `from`/`to` a type of their own, or the `_hidden` group, so they aren't treated as words | `wordFields(connector)` is empty |
+| CR-10 · fixed `959e80c9` | A hidden layer still gets a line, drawn to empty space | `lab/src/core/connectors.ts:50` | Count a hidden end as lost | Hide one end: the connector is marked lost |
+| CR-11 · fixed `959e80c9` | Rotation is ignored: the line ends on the unrotated edge | `connectors.ts:15` | Use the rotated box's bounding box | A 45° box: the end is on its bounding edge |
+| CR-12 · no change needed `959e80c9` | An imported deck draws its connectors in one place, but selects and wipes them from their old box until the first edit | `store.ts` `loadDeck` | Run `syncConnectors` inside `loadDeck` | Load a deck with a stale connector box: the box is current |
+| CR-13 · fixed `959e80c9` | The "lost" rule is written twice (store and drawing) | `kinds/connector/raster.ts:23`, `connectors.ts:50` | One `joined(slide, layer)` in `core/connectors.ts`, used by both | Existing tests |
 
 ## 3. Lesson files and icons (batch 3)
 
@@ -152,6 +152,13 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 ## Change log
 
+- **10 November 2026, batch 2 done (`959e80c9`).** CR-08 to CR-11 and CR-13. Each new test failed on the code before the fix, and a duplicated slide was checked in the browser: its connector is drawn solid and joined, where before it was marked lost. Notes:
+  - CR-08: copying now goes through `cloneLayers`, which re-links connectors. It is used for slides, the gallery, slide blocks and copied groups. A connector copied on its own keeps joining its old layers.
+  - CR-09: a connector's ends are in the `_hidden` group, and `wordFields` skips that group.
+  - CR-11: rotated layers use the bounding box of what is drawn (`shownBox`).
+  - CR-13: the rules are in one place, `joinable` and `joinedPair`.
+  - **CR-12 was not a bug.** `loadDeck` runs `refitAllText`, which already syncs connectors. A test now pins this.
+  - The test build had been running some test files twice. A test using `await import()` split the build, and a shared chunk then imported other test files. Tests now load a document stand-in (`tests/dom-stand-in.ts`) with a normal import. The lab count went from 474 runs to 465 tests, each run once.
 - **10 November 2026, batch 1 done (`0e0639a4`).** CR-01 to CR-07. Each new test failed on the code before the fix. On the old code, the storage-full write never settled, as the review said. Notes on how the fixes were done:
   - CR-01: on a page without SHA-256 the lesson is kept with its pictures inside.
   - CR-03: there is one connection per page, which closes on `versionchange`, and a new `idbGetMany` reads them.
