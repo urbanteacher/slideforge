@@ -75,14 +75,14 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 | ID | What breaks | Where | Fix | Test |
 |---|---|---|---|---|
-| CR-41 ✓ | "That picture is over 8 MB" never reaches the teacher, because `req.destroy()` comes before the reply, so they see "Failed to fetch". The same pattern is at 211 and 591 | `server/server.js:287` | Send the 413 with `Connection: close`, then `req.resume()` | The test asserts 413 and its words (today it accepts a crash) |
-| CR-42 | The key and `n` are checked only after up to 8 MB has been read | `server.js:285` | Check `shareWithKey`, `n` and `Content-Length` before reading the body | A bad key with a large body gets 403 fast |
-| CR-43 | The 100 MB-per-share check races, and blocks: `readdirSync` and `statSync` run on every PUT | `server.js:304` | Keep a running total in the share's record | Parallel PUTs can't pass 100 MB |
-| CR-44 | A refused share still evicts another share, because pruning runs before the over-600 check. One client can push every teacher's share off the shelf | `server.js:227-239` | Validate before pruning, and cap the shelf's total bytes | A refused share leaves the shelf as it was |
-| CR-45 | Pictures come back as base64 in JSON, marked `no-store`, so every view downloads them all again | `server.js:323` | Send the bytes with their own type and `Cache-Control: public, max-age=31536000, immutable`. The viewer then uses the URL as the picture source | GET returns `image/*` |
-| CR-46 | Any data type is accepted, `data:text/html` included | `server.js:302` | Accept `image/*` only | `text/html` is refused |
-| CR-47 | Dead code and wrong comments: `Math.min(…, SHARE_PICS)`, the count kept twice, and "nobody has opened in a month" | `server.js:236` and others | Remove them, and keep one count | Existing tests |
-| CR-48 | Shares on Render's local disk are lost at every deploy or restart | `render.yaml` | **Decision D2** | — |
+| CR-41 ✓ · fixed `12e02e30` | "That picture is over 8 MB" never reaches the teacher, because `req.destroy()` comes before the reply, so they see "Failed to fetch". The same pattern is at 211 and 591 | `server/server.js:287` | Send the 413 with `Connection: close`, then `req.resume()` | The test asserts 413 and its words (today it accepts a crash) |
+| CR-42 · fixed `12e02e30` | The key and `n` are checked only after up to 8 MB has been read | `server.js:285` | Check `shareWithKey`, `n` and `Content-Length` before reading the body | A bad key with a large body gets 403 fast |
+| CR-43 · fixed `12e02e30` | The 100 MB-per-share check races, and blocks: `readdirSync` and `statSync` run on every PUT | `server.js:304` | Keep a running total in the share's record | Parallel PUTs can't pass 100 MB |
+| CR-44 · fixed `12e02e30` | A refused share still evicts another share, because pruning runs before the over-600 check. One client can push every teacher's share off the shelf | `server.js:227-239` | Validate before pruning, and cap the shelf's total bytes | A refused share leaves the shelf as it was |
+| CR-45 · fixed `12e02e30` | Pictures come back as base64 in JSON, marked `no-store`, so every view downloads them all again | `server.js:323` | Send the bytes with their own type and `Cache-Control: public, max-age=31536000, immutable`. The viewer then uses the URL as the picture source | GET returns `image/*` |
+| CR-46 · fixed `12e02e30` | Any data type is accepted, `data:text/html` included | `server.js:302` | Accept `image/*` only | `text/html` is refused |
+| CR-47 · fixed `12e02e30` | Dead code and wrong comments: `Math.min(…, SHARE_PICS)`, the count kept twice, and "nobody has opened in a month" | `server.js:236` and others | Remove them, and keep one count | Existing tests |
+| CR-48 · decided (D2) and said `12e02e30` | Shares on Render's local disk are lost at every deploy or restart | `render.yaml` | **Decision D2** | — |
 
 ## 6. Sharing: the client, the viewer and Supabase (batch 6)
 
@@ -152,6 +152,14 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 ## Change log
 
+- **10 November 2026, batch 5 done (`12e02e30`).** CR-41 to CR-48, with D2 as recommended. The new relay tests failed on the server before the change. A relay share with a picture was opened in the viewer, which read the picture as bytes. Notes:
+  - **CR-41:** one `readBody` now serves shares, pictures, saved data, and the AI endpoint, which had the same bug.
+  - **CR-43 was a smaller problem than reported.** The check and the write ran in one synchronous step, so parallel uploads could not overrun the 100 MB. The cost of listing and measuring the folder on every upload was real, though, and running totals replace it.
+  - **CR-44:** the shelf's cap is 400 MB, set by `SLIDEFORGE_SHARE_SHELF_MB`. Room is made only from shares that hold pictures. A first version took shares with none, which free nothing; the test now pins this.
+  - **CR-45:** pictures are served as bytes with an immutable cache, and the viewer turns them back into data addresses.
+  - **CR-48:** the share dialog now calls a relay share without a disk "a quick share".
+  - Not tested: the 100 MB per-share limit, which the test would have to upload 100 MB to reach.
+  - **Restart the local server** to run the new relay.
 - **10 November 2026, batch 4 done (`67497305`).** CR-25 to CR-40, with D1 as recommended. Each new test failed on the code before the fix. Tried in the lab's show:
   - a widget from elsewhere showed its Run cover, turned 8° with its box;
   - a widget waiting for its click stayed out until Next;
