@@ -75,6 +75,7 @@ order.
 | CS-12 | [A version stamp on every lesson](claude-slides-lessons.md): `DECK_VERSION` 2, an upgrade step from each older version, and a warning above the inspector when a lesson was saved by a newer studio | M | Done · 10 Nov 2026 · `f409fbb0` |
 | CS-13 | [What a lesson needs](claude-slides-lessons.md), worked out from its content: a room for games, activities and feedback, the internet for YouTube, Vimeo and web pictures; the show's opening notice says when one is not met | S–M | Done · 10 Nov 2026 · `f409fbb0` |
 | CS-14 | [Pictures out of the deck file](claude-slides-lessons.md): step 1, each picture stored once in this browser (`95ef1a5a`); step 2, a share's pictures sent apart from its lesson, so the limit is 7.5 MB for the words and each picture and 100 MB in all (`c5549eb2`). Open: run `0003_share_pictures.sql` for signed-in shares | L | Done · 10 Nov 2026 · needs the migration |
+| CR-01 – CR-82 | [Fixing what the CS review found](cs-review-fixes.md): twenty reviewers checked the CS work against the official docs. The design is sound; the failure paths and edges are thin. Eight batches: saving, slides and connectors, lesson files and icons, the show and design check, the relay, the share client and Supabase, speed, tidying. Decisions D1–D3 wait for Mark. Batch 1 (saving, CR-01–07) done `0e0639a4` | L | In progress |
 | CS-15 | [A small live widget on a slide](claude-slides-lessons.md): one web page of up to 16 KB that runs in the show and Preview, sandboxed to scripts only with no network; Add → Widget, a live preview in its tab, and a `widget` layout in the lesson file. Open: shared links and exported HTML show its card, not the live page | M | Done · 10 Nov 2026 · `832a055b` |
 | CS-16 | [Photo search that keeps the credit](claude-slides-lessons.md), so a picture slot can be filled with its licence and photographer | M | To do · P3 · needs a provider |
 | CS-17 | [Icons and connectors as layers](claude-slides-lessons.md): 117 Lucide icons drawn on the canvas, a connector that joins two layers and follows them, and an `icons` layout in the lesson file | M | Done · 10 Nov 2026 · `461863db` |
@@ -861,6 +862,17 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 10 November 2026 — Saving holds up when the browser says no (CR-01 to CR-07)
+
+- A lesson with pictures now saves on a plain-http page on the school network.
+- A full browser storage now fails a save with its reason, instead of holding up every save after it.
+- A lesson from a newer studio opens exactly as it came and isn't saved over.
+- Builders write the current deck version, and the share viewer upgrades old shares. Commit `0e0639a4`; details are in [cs-review-fixes.md](cs-review-fixes.md).
+
+### 10 November 2026 — The CS work reviewed, and a plan to fix what was found
+
+- Twenty reviewers each read one part of CS-01 to CS-19 against the docs for what it uses. Their findings that hold up are in [cs-review-fixes.md](cs-review-fixes.md) as CR-01 to CR-82, in eight batches with a test for each bug. Three choices wait for Mark (D1 the widget and the internet, D2 the relay's disk, D3 unknown icon names).
 
 ### 10 November 2026 — A lesson keeps its theme until you take the new look (CS-04)
 
