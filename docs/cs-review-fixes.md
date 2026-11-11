@@ -2,6 +2,17 @@
 
 On 10 November 2026, twenty reviewers each read one part of the Claude Slides work (CS-01 to CS-19). Each checked its part against the official docs for what it uses: MDN, WCAG 2.2, Supabase, PostgREST, Node, immer, React, zustand, Lucide and the PDF spec. Their verdict: **the design is sound, but the failure paths and edges are thin, and the tests mostly cover the paths that work.** This plan fixes everything they found that holds up.
 
+**Where it stands (11 November 2026): every batch is done.** 77 items were fixed. Four needed no change:
+- **CR-12:** connectors were already synced when a lesson opens.
+- **CR-43:** the per-share limit could not actually be raced.
+- **CR-69:** the studio has a single dark look, so an icon tile never goes stale.
+- **CR-48:** decided (D2), and now said in the share dialog.
+
+What's left is the owner's:
+- run `supabase/migrations/0004_share_limits.sql`, then `supabase/tests/shares.sql`;
+- restart the relay;
+- push.
+
 Each item has an ID (CR-), the place in the code, the fix, and the test that keeps it fixed. ✓ means the claim was checked in the code; the others are the reviewer's report, to be confirmed by a failing test before the fix.
 
 ## How the work is done
@@ -119,19 +130,19 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 | ID | What | Where | Fix |
 |---|---|---|---|
-| CR-70 ✓ | The warnings still say "A shared lesson carries 7.5 MB in all" | `lab/src/core/limits.ts:5,14,50` | New words, and thresholds taken from one exported share-limits constant |
-| CR-71 | The widget limit is written three times, and the video limit two ways (60 MB, against a 2 MB warning) | `limits.ts:37`, `lessonFormat.ts:108`, `insert.ts:12`, `inspectorDesign.tsx:250` | Import `WIDGET_MAX`, and keep one media limit |
-| CR-72 | The SVG limit measures the encoded address, not the drawing | `limits.ts:49` | Measure decoded bytes (base64 × 3/4, or the decoded URI) |
-| CR-73 | `needs.ts` repeats a video regex, and reads only the top-level `src` | `lab/src/core/needs.ts:18` | `webContent(l)?.kind === 'frame'`, and walk the params as `limits.ts` does |
+| CR-70 ✓ · fixed `5ed7bf28` | The warnings still say "A shared lesson carries 7.5 MB in all" | `lab/src/core/limits.ts:5,14,50` | New words, and thresholds taken from one exported share-limits constant |
+| CR-71 · fixed `5ed7bf28` | The widget limit is written three times, and the video limit two ways (60 MB, against a 2 MB warning) | `limits.ts:37`, `lessonFormat.ts:108`, `insert.ts:12`, `inspectorDesign.tsx:250` | Import `WIDGET_MAX`, and keep one media limit |
+| CR-72 · fixed `5ed7bf28` | The SVG limit measures the encoded address, not the drawing | `limits.ts:49` | Measure decoded bytes (base64 × 3/4, or the decoded URI) |
+| CR-73 · fixed `5ed7bf28` | `needs.ts` repeats a video regex, and reads only the top-level `src` | `lab/src/core/needs.ts:18` | `webContent(l)?.kind === 'frame'`, and walk the params as `limits.ts` does |
 | CR-74 · fixed `17d07e39` | The handout pages are built twice, and the file name is made with its own copy of `slug` | `embed.ts:437,491,498` | One `handoutImages()`, and import `slug` |
-| CR-75 | The "joinable layer" rule is written twice | `kinds/connector/Inspector.tsx:9`, `ui/stage/insert.ts` | Export it from `core/connectors.ts` |
-| CR-76 | Comments that no longer match the code | `connectors.ts:4-6`, `pictureStore.ts:63`, `core/pictures.ts:3`, `lab-icons.mjs:8` (a test file that doesn't exist), `engine/web.ts` | Correct each one |
-| CR-77 | Tests that can't fail: constants checked against themselves, and messages reading "0 KB, over 0 KB" | `limits.test.ts:26,33`, `widget.test.ts:11`, `web-layers.test.ts:35` | Replace them with real cases at real sizes |
-| CR-78 | The cloud tests replace `fetch` and `localStorage` and never put them back | `lab/tests/viewer-cloud.test.ts` | `t.mock.method`, and set storage in each test |
-| CR-79 | The Send to… label promises Drive, Teams and Mail on desktops where it can only download | `js/shell.js:1290` | "Send to… (share or download)" |
-| CR-80 | The PDF writes a non-JPEG as JPEG, so the file won't open. Non-ASCII titles lose their letters | `lab/src/export/pdf.ts:32,53` | Refuse a page that isn't a JPEG, with a message, and write the title as UTF-16BE | One case each |
-| CR-81 | The picture sweep runs once a minute after opening, and deleting a lesson doesn't sweep | `embed.ts:51,386` | Sweep after `remove` too | — |
-| CR-82 | Minor duplications: `allowFullScreen` is given beside `allow="fullscreen"`, and `media.ts` and `web.ts` check `visible` differently | `Show.tsx:524`, `media.ts:109,140` | Keep one of each |
+| CR-75 · fixed `959e80c9` (with CR-13) | The "joinable layer" rule is written twice | `kinds/connector/Inspector.tsx:9`, `ui/stage/insert.ts` | Export it from `core/connectors.ts` |
+| CR-76 · fixed `5ed7bf28`, with parts in `0e0639a4`, `959e80c9` and `638f9f05` | Comments that no longer match the code | `connectors.ts:4-6`, `pictureStore.ts:63`, `core/pictures.ts:3`, `lab-icons.mjs:8` (a test file that doesn't exist), `engine/web.ts` | Correct each one |
+| CR-77 · fixed `5ed7bf28` | Tests that can't fail: constants checked against themselves, and messages reading "0 KB, over 0 KB" | `limits.test.ts:26,33`, `widget.test.ts:11`, `web-layers.test.ts:35` | Replace them with real cases at real sizes |
+| CR-78 · fixed `f9b4e6b6` (with CR-60) | The cloud tests replace `fetch` and `localStorage` and never put them back | `lab/tests/viewer-cloud.test.ts` | `t.mock.method`, and set storage in each test |
+| CR-79 · fixed `5ed7bf28` | The Send to… label promises Drive, Teams and Mail on desktops where it can only download | `js/shell.js:1290` | "Send to… (share or download)" |
+| CR-80 · fixed `5ed7bf28` | The PDF writes a non-JPEG as JPEG, so the file won't open. Non-ASCII titles lose their letters | `lab/src/export/pdf.ts:32,53` | Refuse a page that isn't a JPEG, with a message, and write the title as UTF-16BE | One case each |
+| CR-81 · fixed `5ed7bf28` | The picture sweep runs once a minute after opening, and deleting a lesson doesn't sweep | `embed.ts:51,386` | Sweep after `remove` too | — |
+| CR-82 · fixed `5ed7bf28`, with `allowFullScreen` in `67497305` | Minor duplications: `allowFullScreen` is given beside `allow="fullscreen"`, and `media.ts` and `web.ts` check `visible` differently | `Show.tsx:524`, `media.ts:109,140` | Keep one of each |
 
 ## 9. Decisions for Mark
 
@@ -152,6 +163,11 @@ Each item has an ID (CR-), the place in the code, the fix, and the test that kee
 
 ## Change log
 
+- **11 November 2026, batch 8 done (`5ed7bf28`): the review is closed.** CR-70 to CR-82. The new tests failed on the code before the fix. SlideForge's share check was run against the studio in the app. Notes:
+  - **CR-70:** what a share may carry is now said once, in `core/limits.ts` (`SHARE_LIMITS`, `shareTooLarge`). SlideForge asks the studio, and the share-size messages are tested in `lab/tests/limits.test.ts`, where they are made. The relay keeps its own copy of the numbers, since it is another program, and the comment there points to the studio's.
+  - **CR-72:** sizes are now what a picture holds (`dataBytes`), shown in KB below a megabyte. What a share sends is still measured as sent.
+  - **CR-75 and CR-78** had already been done, with CR-13 and CR-60.
+  - **CR-77:** the slide limits' tests now use real sizes and check the exact sentences. The widget's sandbox is tested on what the show is handed. The web layer's registration test is kept, because it checks that the kind is wired up, not just a constant.
 - **10 November 2026, batch 7 done (`17d07e39`).** CR-64 to CR-68, and CR-74 from batch 8, since it was the same code. Measured on 150 slides of 30 layers, a drag step's connector sync went from 3.1 ms to 0.07 ms. A connector followed a moved layer, and undid with it, in the lab. Notes:
   - **CR-64:** each slide's text sizes are kept in a `WeakMap` keyed on the slide, and on the deck's height and the fonts loaded. A test counts the measuring: one edited slide of 40 is measured again, and the other 39 aren't.
   - **CR-65:** a kind may now say what of its slide it reads (`reads`, `engine/raster.ts`). The connector reads its two joined boxes.
