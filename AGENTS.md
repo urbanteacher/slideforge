@@ -41,6 +41,7 @@ There is one source of truth, and it is `deploy-render` on GitHub: what Render r
 - **Built files conflict, and are rebuilt, not merged by hand.** That means `js/model.js`, `lab-app/` and `lab-app/stage.js`. Rebuild from the merged source with `npm run build` and `npm --prefix lab run build:app`.
 - **A branch with work that never reached `deploy-render` is a decision, not storage.** Merge it, or ask the user to drop it. Don't start new work on it.
 - **The Lesson studio (`lab/`) is the main app.** New slide, design and motion features go there. The classic editor and player get fixes, and whatever games and live rooms still need from them.
+- **Every word on a slide is editable in the Lesson studio.** Build slides from studio layers: a lesson file, or the studio's layouts and build steps (`anim.step`, `onClick`). Use a live figure (`src/figures/`) only for what layers can't do, such as a chart that steps or a picture the room hovers. Put its words in its data, never only inside a drawn picture or SVG. A slide whose words can't be edited in the studio is a bug ([docs/editable-figures-plan.md](docs/editable-figures-plan.md)).
 
 ## Adding a layer kind
 
