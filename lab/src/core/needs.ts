@@ -11,14 +11,19 @@ export type Need = 'room' | 'internet';
 export function slideNeeds(s: Slide): Need[] {
   const out = new Set<Need>();
   if (s.game || s.activity || s.feedback || s.nodes) out.add('room');
-  for (const l of s.layers) {
-    if (l.visible === false) continue;
-    const src = String((l.params as Record<string, unknown>).src ?? '').trim();
-    if (!src) continue;
-    if (l.kind === 'video' && /youtube\.com|youtu\.be|vimeo\.com/i.test(src)) out.add('internet');
-    else if (/^https?:\/\//i.test(src) && !isSameSite(src)) out.add('internet');
-  }
+  // An address on another site anywhere in a shown layer's settings: a YouTube or Vimeo link, a picture on the web, a
+  // gallery's pictures in a list. (A video link is such an address, so it needs no rule of its own.)
+  if (s.layers.some((l) => l.visible !== false && webAddress(l.params))) out.add('internet');
   return [...out];
+}
+
+/** Whether a value holds an address on another site, however deep (as core/limits.ts reads a layer's pictures). */
+function webAddress(v: unknown, depth = 0): boolean {
+  if (depth > 6 || v == null) return false;
+  if (typeof v === 'string') { const t = v.trim(); return /^https?:\/\//i.test(t) && !isSameSite(t); }
+  if (Array.isArray(v)) return v.some((x) => webAddress(x, depth + 1));
+  if (typeof v === 'object') return Object.values(v as Record<string, unknown>).some((x) => webAddress(x, depth + 1));
+  return false;
 }
 
 function isSameSite(src: string): boolean {

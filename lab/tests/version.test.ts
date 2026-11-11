@@ -56,3 +56,10 @@ test('a lesson needs a room for its games and activities, and the internet for Y
   const d = deck(DECK_VERSION, [slide(), slide({ activity: { key: 'a', page: 0 } }, [web]), slide({ hidden: true, game: { id: 'g' } as Slide['game'] }), slide({}, [video])]);
   assert.deepEqual(lessonNeeds(d), { room: [2], internet: [2, 4] });
 });
+
+test('the internet is needed for any address on another site in a shown layer, however deep; a local file is not one', () => {
+  const lay = (params: Record<string, unknown>, kind = 'image') => ({ id: 'x', kind, name: 'X', visible: true, params });
+  assert.deepEqual(slideNeeds(slide({}, [lay({ items: [{ picture: { src: 'https://example.org/a.png' } }] }, 'gallery')])), ['internet'], 'deep in a gallery');
+  assert.deepEqual(slideNeeds(slide({}, [lay({ src: '/clips/vimeo.com-intro.mp4' }, 'video')])), [], 'a file whose name mentions a video site');
+  assert.deepEqual(slideNeeds(slide({}, [lay({ src: 'https://vimeo.com/123' }, 'video')])), ['internet']);
+});

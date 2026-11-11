@@ -1291,7 +1291,7 @@
           }
           items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results. A student copy, or a teacher copy with each check as its answer.' });
           if (active.lab && SF.LabEngine && SF.LabEngine.makeFile) {
-            items.push({ id: 'send', title: 'Send to\u2026 (Drive, Teams, Mail)', blurb: 'Hand the lesson to another app as a PowerPoint or a PDF, through your device\u2019s share menu. Where the browser has no share menu, the file downloads instead.' });
+            items.push({ id: 'send', title: 'Send to\u2026 (share or download)', blurb: 'Hand the lesson to another app as a PowerPoint or a PDF, through your device\u2019s share menu (Drive, Teams, Mail, where your device offers them). Where the browser has no share menu, as on most desktops, the file downloads instead.' });
           }
           items.push({
             id: 'md',

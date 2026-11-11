@@ -93,9 +93,9 @@ function noFallback(why) {
     whyNotInStudio: () => why.room || '', whyNotPresentInStudio: () => why.show || '',
     hostInStudio: () => { opened.push('room'); return true; }, presentInStudio: () => { opened.push('show'); return true; },
     rehearseInStudio: () => { opened.push('rehearse'); return true; },
-    /* Pictures travel apart (CS-14 step 2): the words, each picture, and the pictures in all are each held to a limit. */
-    shareDeck: () => ({ id: 'lab', studio: 1, slides: [], pad: why.big ? 'x'.repeat(8 * 1024 * 1024) : '',
-      pictures: why.bigPicture ? ['data:' + 'x'.repeat(8 * 1024 * 1024)] : why.manyPictures ? Array.from({ length: 15 }, () => 'data:' + 'x'.repeat(7 * 1024 * 1024)) : why.pictures ? Array.from({ length: 3 }, () => 'data:' + 'x'.repeat(5 * 1024 * 1024)) : undefined }),
+    shareDeck: () => ({ id: 'lab', studio: 1, slides: [] }),
+    /* What a share may carry is the studio's to say (lab/src/core/limits.ts, tested in lab/tests/limits.test.ts). */
+    shareTooLarge: () => why.tooLarge || '',
     handout: () => Promise.resolve('')
   });
   return { LE, toasts, opened };
@@ -111,11 +111,8 @@ test('what the studio cannot run is refused with the reason; nothing falls back 
   assert.deepEqual({ ...(await show.LE.studioShareDeck()) }, { why: '"Fig" has a live figure the lesson does not carry' });
   show.LE.studioHandout();
   assert.deepEqual(show.toasts, ['The PDF handout cannot start: "Fig" has a live figure the lesson does not carry.']);
-  const big = noFallback({ big: true });
-  assert.match((await big.LE.studioShareDeck()).why, /^the lesson’s slides come to 8\.0 MB without their pictures, over 7\.5 MB/);
-  assert.match((await noFallback({ bigPicture: true }).LE.studioShareDeck()).why, /^one picture or video is 8\.0 MB, over the 7\.5 MB each may be/);
-  assert.match((await noFallback({ manyPictures: true }).LE.studioShareDeck()).why, /^its pictures and videos come to 105 MB, over the 100 MB a share may carry/);
-  assert.ok((await noFallback({ pictures: true }).LE.studioShareDeck()).doc, 'three 5 MB pictures, 15 MB in all, now share');
+  // A lesson over what a share may carry is refused with the studio's reason, before anything is sent.
+  assert.deepEqual({ ...(await noFallback({ tooLarge: 'one picture or video is 8.0 MB, over the 7.5 MB each may be' }).LE.studioShareDeck()) }, { why: 'one picture or video is 8.0 MB, over the 7.5 MB each may be' });
   const fine = noFallback({});
   fine.LE.hostLive();
   assert.deepEqual(fine.opened, ['room'], 'a lesson the studio runs is hosted there');

@@ -106,7 +106,7 @@ export function getVideo(src: string): HTMLVideoElement | null {
 
 /** A video layer that plays its own sound in a show: a file (not YouTube or Vimeo) with "Start muted" off. */
 export function voicedVideo(layer: Layer): boolean {
-  return layer.kind === 'video' && layer.visible && layer.params.muted === false && !!layer.params.src && !videoEmbed(layer.params);
+  return layer.kind === 'video' && layer.visible !== false && layer.params.muted === false && !!layer.params.src && !videoEmbed(layer.params);
 }
 
 /**
@@ -137,7 +137,7 @@ export function showMedia(layers: Layer[] | null) {
 
 /** A clip the lab plays itself: a file, not a YouTube or Vimeo link (those play in the service's own player). */
 export function fileClip(layer: Layer): boolean {
-  return layer.kind === 'video' && layer.visible && !!layer.params.src && !videoEmbed(layer.params);
+  return layer.kind === 'video' && layer.visible !== false && !!layer.params.src && !videoEmbed(layer.params);
 }
 
 /** Whether a clip is playing now. */

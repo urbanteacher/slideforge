@@ -28,8 +28,14 @@ export function dataUrlBytes(url: string): Uint8Array {
   return out;
 }
 
-/** PDF text string: ASCII kept, brackets and backslashes escaped, anything else dropped. */
-const pdfText = (s: string) => s.replace(/[^\x20-\x7e]/g, '').replace(/[\\()]/g, (c) => `\\${c}`);
+/** A PDF text string: plain ASCII as it is (brackets and backslashes escaped), anything else ("Café", "Ελληνικά") as
+ *  UTF-16BE in hex with its byte-order mark, as ISO 32000-1 §7.9.2.2 allows, so no letter is lost. */
+export function pdfText(s: string): string {
+  if (/^[\x20-\x7e]*$/.test(s)) return `(${s.replace(/[\\()]/g, (c) => `\\${c}`)})`;
+  let hex = 'FEFF';
+  for (let i = 0; i < s.length; i++) hex += s.charCodeAt(i).toString(16).toUpperCase().padStart(4, '0');
+  return `<${hex}>`;
+}
 
 /**
  * A PDF with one JPEG per page. `widthPt` is each page's width in points (72 to the inch); its height follows the
@@ -48,9 +54,11 @@ export function buildPdf(jpegs: Uint8Array[], title = '', widthPt = 960): Blob {
   push('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n');
   obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
   obj(2, () => push(`<< /Type /Pages /Count ${jpegs.length} /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] >>`));
-  obj(3, () => push(`<< /Title (${pdfText(title)}) /Producer (SlideForge) >>`));
+  // A page that is not a JPEG would be written as one and the file would not open: refused here, with the page.
+  jpegs.forEach((jpg, k) => { if (!jpegSize(jpg)) throw new Error(`Page ${k + 1} could not be drawn as a picture, so the PDF was not made.`); });
+  obj(3, () => push(`<< /Title ${pdfText(title)} /Producer (SlideForge) >>`));
   jpegs.forEach((jpg, k) => {
-    const dim = jpegSize(jpg) ?? { w: 1600, h: 900 };
+    const dim = jpegSize(jpg)!;
     const w = widthPt;
     const h = Math.round((widthPt * dim.h) / dim.w * 100) / 100;
     const [page, contents, image] = [pageIds[k], pageIds[k] + 1, pageIds[k] + 2];

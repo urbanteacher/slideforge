@@ -1,6 +1,6 @@
 import { WIDGET_STARTER } from '../../kinds/widget';
 import { kind } from '../../engine';
-import { createLayer, hasFlagshipTextImage, joinable, textImageForSlide, type Layer, type Slide } from '../../core';
+import { VIDEO_UPLOAD_MAX, createLayer, hasFlagshipTextImage, joinable, textImageForSlide, type Layer, type Slide } from '../../core';
 import { headingClock } from '../../designs';
 import { DEFAULT_THEME, cell, gridFor, itemStyle, slideStyle, themeOf } from '../../layouts';
 import { useStore } from '../../store';
@@ -9,7 +9,6 @@ import { fileToDataUrl, readDataUrl } from '../controls/files';
 // Media arrives from the Add menu, a drop on the canvas or a paste. All three land here, sized to
 // the file's own proportions and centred on (x, y), or on the slide when no point is given.
 
-const VIDEO_LIMIT = 60e6;
 
 function centreBox(iw: number, ih: number, x?: number, y?: number) {
   const { deck } = useStore.getState();
@@ -84,8 +83,8 @@ export async function addImageFile(f: File, x?: number, y?: number) {
 /** The video is stored inside the deck, so it travels with the saved file and the HTML export. */
 export async function addVideoFile(f: File, x?: number, y?: number) {
   const { showToast, insertLayer } = useStore.getState();
-  if (f.size > VIDEO_LIMIT) {
-    showToast(`That video is ${Math.round(f.size / 1e6)} MB. Keep clips under ${VIDEO_LIMIT / 1e6} MB, or paste a link to it instead.`);
+  if (f.size > VIDEO_UPLOAD_MAX) {
+    showToast(`That video is ${Math.round(f.size / 1e6)} MB. Keep clips under ${VIDEO_UPLOAD_MAX / 1e6} MB, or paste a link to it instead.`);
     return;
   }
   const src = await readDataUrl(f);

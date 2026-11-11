@@ -5,6 +5,7 @@
 
 import icons from '../assets/icons.json';
 import { iconName } from '../kinds/icon';
+import { WIDGET_MAX } from '../engine';
 
 export const LESSON_FORMAT = 'slideforge-lesson/1';
 
@@ -109,7 +110,7 @@ function slideProblems(s: Record<string, unknown>, warn: (w: string) => void = (
   }
   if (layout === 'widget') {
     want('html', isText(s.html), 'the widget\'s page, as HTML');
-    if (typeof s.html === 'string' && s.html.length > 16 * 1024) out.push(`"html" is ${Math.round(s.html.length / 1024)} KB; a widget's page may be 16 KB at most`);
+    if (typeof s.html === 'string' && s.html.length > WIDGET_MAX) out.push(`"html" is ${(s.html.length / 1024).toFixed(1)} KB; a widget's page may be ${WIDGET_MAX / 1024} KB at most`);
   }
   if (layout === 'quiz') {
     const qs = s.questions;

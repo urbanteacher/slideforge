@@ -20,7 +20,8 @@ const WEB: Record<string, WebFn> = {};
 /** A kind's web content, from kinds/index.ts through registerKinds. */
 export function registerWeb(id: string, fn: WebFn) { WEB[id] = fn; }
 
-/** The live content of a layer, or null: only a visible layer with a box and a kind that declares some. */
+/** The live content of a layer, or null: only a visible layer with a box and a kind that declares some. The show also
+ *  waits, as the layer's still does, for its click and its face (DeckPlayer.showing). */
 export function webContent(layer: Layer): WebContent | null {
   const fn = WEB[layer.kind];
   if (!fn || layer.visible === false || !layer.box) return null;

@@ -1,7 +1,7 @@
 // A lab deck carries each picture as data in every place it is used: a theme's logo is on every slide. A packed
 // deck keeps each once, in `pictures`, and refers to it as '@picture:<n>'. The shipped lesson copies are packed
 // this way (tools/build-lab-lessons.mjs, the same rule in Node), and so is a shared lesson (lab-engine-plan M12),
-// which has to fit the relay's 8 MB (MAX_DOC in server/server.js).
+// whose pictures then travel apart from it, each in its own request (js/share.js, CS-14 step 2).
 
 /** Only data longer than this is kept once: a short one costs less than its reference. */
 const MIN = 1000;

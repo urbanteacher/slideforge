@@ -2,7 +2,7 @@
 // shape, and a cross-reference table a reader can trust.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPdf, jpegSize } from '../src/export/pdf';
+import { buildPdf, jpegSize, pdfText } from '../src/export/pdf';
 
 /** The smallest bytes jpegSize reads: start of image, an APP0 to skip, then a baseline frame header. */
 const fakeJpeg = (w: number, h: number) => new Uint8Array([
@@ -32,4 +32,14 @@ test('one page per picture, each the picture\'s shape at 960 points wide', async
   assert.ok(text.slice(start).startsWith('xref'));
   const rows = text.slice(start).split('\n').slice(3).filter((r) => / n $/.test(r));
   rows.forEach((r, k) => assert.ok(text.slice(Number(r.slice(0, 10))).startsWith(`${k + 1} 0 obj`), `object ${k + 1}`));
+});
+
+test('a title in any language keeps its letters; a page that is not a JPEG is refused, not written as one', async () => {
+
+  assert.equal(pdfText('Week 4 (colour)'), '(Week 4 \\(colour\\))');
+  assert.equal(pdfText('Café'), '<FEFF00430061006600E9>');
+  const pdf = new TextDecoder('latin1').decode(new Uint8Array(await buildPdf([fakeJpeg(1600, 900)], 'Café').arrayBuffer()));
+  assert.match(pdf, /\/Title <FEFF00430061006600E9>/);
+  assert.throws(() => buildPdf([fakeJpeg(1600, 900), new Uint8Array([0x89, 0x50, 0x4e, 0x47])]), /Page 2 could not be drawn as a picture/);
+  assert.throws(() => buildPdf([new Uint8Array(0)]), /Page 1/);
 });

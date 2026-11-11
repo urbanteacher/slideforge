@@ -2,7 +2,7 @@
 export { ASPECTS, aspectOf, setAspect } from './aspect';
 export type { Aspect } from './aspect';
 export { TEMPLATES, blankDeck, blankSlide, cloneLayer, cloneLayers, cloneSlide, createLayer, createSlide, demoDeck, rosetteSvg, uid } from './defaults';
-export { SLIDE_LIMITS, limitsOf } from './limits';
+export { SHARE_LIMITS, SLIDE_LIMITS, VIDEO_UPLOAD_MAX, dataBytes, limitsOf, shareTooLarge } from './limits';
 export { connectorGeometry, joinable, joinedPair, relinkConnectors, shownBox, syncConnectors, syncSlideConnectors } from './connectors';
 export type { ConnectorEnds } from './connectors';
 export { lessonNeeds, slideNeeds } from './needs';

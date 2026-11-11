@@ -2,13 +2,19 @@
 // is 16 KB at most, said in the lesson file, the slide limits and the show.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WIDGET_MAX, WIDGET_SANDBOX, widgetDoc, widgetRuns } from '../src/engine/widget';
+import '../src/kinds';
+import { webContent } from '../src/engine';
+import { WIDGET_MAX, widgetDoc, widgetRuns } from '../src/engine/widget';
 import { readLesson } from '../src/decks/lessonFormat';
 import { limitsOf } from '../src/core/limits';
 import type { Slide } from '../src/core';
 
-test('the frame may run scripts and nothing else', () => {
-  assert.equal(WIDGET_SANDBOX, 'allow-scripts');
+test('the frame the show runs a widget in may run scripts and nothing else: never with the page\'s own origin', () => {
+  const w = webContent({ id: 'w', kind: 'widget', name: 'W', visible: true, box: { x: 0, y: 0, w: 100, h: 100, rot: 0 }, params: { html: '<b>hi</b>' } } as never);
+  assert.equal(w?.kind, 'page');
+  const sandbox = w?.kind === 'page' ? w.sandbox.split(/\s+/) : [];
+  assert.deepEqual(sandbox, ['allow-scripts'], 'the sandbox the show is handed, not only the constant');
+  assert.equal(sandbox.includes('allow-same-origin'), false, 'with scripts, same origin would undo the sandbox');
 });
 
 test('the page loads nothing from anywhere, and keeps the widget\'s own HTML', () => {
@@ -34,5 +40,5 @@ test('the lesson file checks a widget\'s page, and the slide limits say when it 
   assert.deepEqual(readLesson(lesson('')).problems, ['Slide 1: "html" must be the widget\'s page, as HTML.']);
   assert.match(readLesson(lesson('x'.repeat(WIDGET_MAX + 10))).problems[0], /16 KB at most/);
   const slide = { id: 's', name: 'S', background: '', notes: '', transition: { type: 'none', duration: 0 }, layers: [{ id: 'w', kind: 'widget', name: 'Dice', visible: true, params: { html: 'x'.repeat(WIDGET_MAX + 10) } }] } as unknown as Slide;
-  assert.match(limitsOf(slide)[0], /^“Dice” is a widget of 16 KB, over 16 KB/);
+  assert.match(limitsOf(slide)[0], /^“Dice” is a widget of 16\.0 KB, over 16 KB, so the show will not run it/);
 });

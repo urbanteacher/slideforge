@@ -1027,18 +1027,10 @@
           var why = whyNotShown(a);
           if (why) { resolve({ why: why }); return; }
           var doc = a.shareDeck();
-          /* Its pictures travel apart from it (js/share.js, CS-14 step 2): the words, and each picture, may be up to
-             7.5 MB, and the pictures 100 MB in all. */
-          var pics = Array.isArray(doc.pictures) ? doc.pictures : [], MB = 1048576, limit = 7.5 * MB;
-          var words = JSON.stringify(Object.assign({}, doc, { pictures: undefined })).length;
-          var biggest = pics.reduce(function (/** @type {number} */ m, /** @type {string} */ p) { return Math.max(m, p.length); }, 0);
-          var all = pics.reduce(function (/** @type {number} */ t, /** @type {string} */ p) { return t + p.length; }, 0);
-          if (words > limit) { resolve({ why: 'the lesson\u2019s slides come to ' + (words / MB).toFixed(1) + ' MB without their pictures, over 7.5 MB. Split the lesson' }); return; }
-          if (biggest > limit) { resolve({ why: 'one picture or video is ' + (biggest / MB).toFixed(1) + ' MB, over the 7.5 MB each may be. Make it smaller, or link the video instead' }); return; }
-          if (all > 100 * MB) { resolve({ why: 'its pictures and videos come to ' + (all / MB).toFixed(0) + ' MB, over the 100 MB a share may carry. Make them smaller, or split the lesson' }); return; }
-          /* 600 is what the relay and the account take (server/server.js SHARE_PICS, 0003_share_pictures.sql): said
-             now, rather than after 600 uploads. */
-          if (pics.length > 600) { resolve({ why: 'it has ' + pics.length + ' different pictures and videos, over the 600 a share may carry. Split the lesson' }); return; }
+          /* Its pictures travel apart from it (js/share.js, CS-14 step 2). What a share may carry is said once, in
+             the studio (lab/src/core/limits.ts SHARE_LIMITS): checked here, before anything is sent. */
+          var tooLarge = a.shareTooLarge(doc);
+          if (tooLarge) { resolve({ why: tooLarge }); return; }
           resolve({ doc: doc });
         });
       });

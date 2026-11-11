@@ -1,5 +1,6 @@
 // The inspector's Design tab for a layer: its params, row by row, its box and its alignment.
 import type { BlendMode, Layer, ParamValue } from '../../core';
+import { VIDEO_UPLOAD_MAX } from '../../core';
 import { RECIPE_NAMES } from '../../designs';
 import { autoHeight, textSize, FONTS, defaultParams, kind, type ParamDef } from '../../engine';
 import { slideOf, useStore } from '../../store';
@@ -247,7 +248,7 @@ export function VideoPick({ value, onChange }: { value: string; onChange: (v: st
             const f = e.target.files?.[0];
             e.target.value = '';
             if (!f) return;
-            if (f.size > 60e6) { showToast(`That video is ${Math.round(f.size / 1e6)} MB. Keep clips under 60 MB, or paste a link to it instead.`); return; }
+            if (f.size > VIDEO_UPLOAD_MAX) { showToast(`That video is ${Math.round(f.size / 1e6)} MB. Keep clips under ${VIDEO_UPLOAD_MAX / 1e6} MB, or paste a link to it instead.`); return; }
             onChange(await readDataUrl(f));
           }} />
         </div>

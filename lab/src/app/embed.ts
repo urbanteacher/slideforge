@@ -1,4 +1,4 @@
-import { TEMPLATES, blankDeck, idbDelete, idbGet, idbGetMany, idbKeys, idbSet, idbSetMany, unpackPictures, type Deck, type Slide } from '../core';
+import { TEMPLATES, blankDeck, shareTooLarge, idbDelete, idbGet, idbGetMany, idbKeys, idbSet, idbSetMany, unpackPictures, type Deck, type Slide } from '../core';
 import { deckFromLesson, loadChoiceStarter, readLesson, CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
 import { buildPdf, buildPptx, dataUrlBytes, renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
@@ -422,6 +422,8 @@ export const labApi = {
       await idbDelete(key(id));
       await idbSet(INDEX, (await listSaved()).filter((r) => r.id !== id));
     });
+    // Its pictures, when no other lesson uses them, go too (only ones over a day old, as the opening sweep).
+    void serial(() => pics.sweep()).catch(() => {});
   },
   setTitle(title: string) {
     if (useStore.getState().deck.title === title) return;
@@ -473,6 +475,8 @@ export const labApi = {
   },
   /** The lesson as Share uploads it for the studio viewer (lab-app/view.html, M12): shown slides, no notes, pictures packed. */
   shareDeck: () => shareCopy(useStore.getState().deck),
+  /** Why a packed copy is over what a share may carry (core/limits.ts SHARE_LIMITS), or '' when it is within it. */
+  shareTooLarge: (doc: { pictures?: string[] }) => shareTooLarge(doc),
   /** A studio room is open (its follow link can be offered), and lets a follow link watch it by a share id. */
   roomRunning,
   watchOn: (shareId: string): boolean => roomWatchOn(shareId),
