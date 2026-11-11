@@ -2,11 +2,15 @@
 
 On 10 November 2026, twenty reviewers each read one part of the Claude Slides work (CS-01 to CS-19). Each checked its part against the official docs for what it uses: MDN, WCAG 2.2, Supabase, PostgREST, Node, immer, React, zustand, Lucide and the PDF spec. Their verdict: **the design is sound, but the failure paths and edges are thin, and the tests mostly cover the paths that work.** This plan fixes everything they found that holds up.
 
-**Where it stands (11 November 2026): every batch is done.** 77 items were fixed. Four needed no change:
-- **CR-12:** connectors were already synced when a lesson opens.
-- **CR-43:** the per-share limit could not actually be raced.
-- **CR-69:** the studio has a single dark look, so an icon tile never goes stale.
+**Where it stands (11 November 2026): every batch is done.** 79 items were fixed and one was decided:
 - **CR-48:** decided (D2), and now said in the share dialog.
+
+Two needed no change:
+- **CR-12:** connectors were already synced when a lesson opens.
+- **CR-69:** the studio has a single dark look, so an icon tile never goes stale.
+
+One was only part true:
+- **CR-43:** the race it described could not happen, but the slow folder scan it found was real, and has been replaced.
 
 What's left is the owner's:
 - run `supabase/migrations/0004_share_limits.sql`, then `supabase/tests/shares.sql`;
