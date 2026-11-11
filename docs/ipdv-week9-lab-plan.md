@@ -1,6 +1,6 @@
 # Week 9 lab · Who drives the story? Tutorial, challenge and sample solution: plan
 
-Status: plan, 11 November 2026. Nothing built yet. Decisions in section 7 come first.
+Status: built for a **one-hour** lab, 11 November 2026 (section 9 says what was built and how it differs from this plan). Not committed yet.
 
 ## The aim
 
@@ -137,7 +137,37 @@ The same notebook with every blank filled and run, plus, as in Week 8:
 5. Canvas folder and zip on the Desktop.
 6. If D6 is taken: the lecture's lab slide, rebuilt.
 
+## 9. What was built (one-hour lab)
+
+The lab is one hour and the lecture's Build-it slides already show the code, so the build is shorter than sections
+4 and 5 planned:
+
+- **Challenge** (`tools/ipdv-week9/code/activity.py` writes `lessons/09_Activity_IPDV_Brixton_Road_Story.ipynb` and
+  `..._Solutions.ipynb`): six parts in about 55 minutes, 16 blanks, ✅/❌ checks.
+  - **A, isolate (8 min):** find the fall, 174 → 48, which is 72%, and the rank: no road worse, 1 of 39 over the limit.
+  - **B, honest axis (5 min):** `year:O` hides the missing years, so the fix is `year:Q`.
+  - **C, layered marks (12 min):** a `mark_rect` band "over the limit", the limit rule and its label, and a two-part finding as the title.
+  - **D, conditional channel (15 min):** every road in one chart, Brixton red via `alt.when`. A median line from `transform_aggregate` and end labels replace the legend.
+  - **E, martini glass (12 min):** an `alt.param` with three chapters, and a hover stretch.
+  - **F, hand-in (3 min):** the chart and one sentence: what it tells, and what a reader would need to disagree.
+  - **The teacher copy:** every blank filled and run in the build, what each cell should show, a picture of each chart (plan B), an error guide, sample titles from weak to excellent, and a 6-mark marking guide. The numbers are computed from `no2_london.csv`, and the build stops if the story stops being true.
+- **Tutorial** (`tools/ipdv-week9/code/notebook.py` writes `lessons/09_Notebook_IPDV_Narrative_Experiential.ipynb`, and with `--run` a run copy):
+  - **What it holds:** the seven Build-its as on the slides, each with a *Try it* and a model answer. All of it runs, and so do the model answers.
+  - **Not built:** the planned new sections 3b, 4b, 4c and 5b. The challenge teaches the band and `alt.when` itself.
+- **Tutorial, sections 8 and 9** (added at the teacher's request, from lecture slides 37 and 43):
+  - **8, three ways to lead, then let go:** an interactive slideshow (three chapters, with captions worked out from the data) and a drill-down story (click a type in the overview, and its monitors open below with `&`). The martini glass is §6.
+  - **9, four ways to make a number land:** count it out (one square per monitor, 60 of 87 over the limit in 2010 and 1 of 59 in 2025), human scale (WHO-guideline blocks, 10 and then 3 for Marylebone Road) and make it physical (a printable tower). Guess first is §7.
+  - Each has a *Try it* with a model answer.
+- **Canvas folder:** `Adv Data Vis Materials /LDSCI6253_Week_9_Canvas/`.
+  - `LDSCI6253_Week_9/` holds the tutorial, the challenge, `no2_london.csv` and `week9_build_its.py`, and there is a zip of it.
+  - `Teacher_only/` holds the solutions and the run tutorial.
+- **The ULEZ notes in E** are London-wide events (central 2019, widened October 2021, London-wide 2023), worded as
+  when, not as causes. This avoids the unchecked claim that Brixton Road is inside the 2021 zone.
+- **Not done:** the lecture's lab slide still lists Concept, Sketch and Critique (D6), and `tests/week9-lab.test.js`.
+
 ## Change log
+
+- 11 November 2026: built for a one-hour lab (section 9).
 
 - 11 November 2026: plan written. Same day: refocused on the session's aim (advanced marks and channels,
   isolating data to highlight a story); Brixton Road facts checked against `no2_london.csv`.
