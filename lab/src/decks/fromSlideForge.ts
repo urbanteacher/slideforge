@@ -8,6 +8,7 @@ import { addThemeArt, themeGround, type ArtContext } from '../theme';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
 import { aiad27Slide, builds27 } from './aiad27';
 import { leftoverQuizzes, scoresFor } from './fromQuiz';
+import { isNativeFigure, revealOf } from './reveals';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
 // a table, chart data — and the lab has a layout for each type, on its own standard rules. This
@@ -301,9 +302,9 @@ export function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: st
       return { slide, ground: g };
     }
     case 'figure': {
-      // A live figure is SlideForge's to play. The shell hands its last step over as a picture
-      // (figureStill, js/lab-engine.js), which stands in for it here; with no picture there is
-      // nothing to draw, and the slide stays SlideForge's alone, as before.
+      if (isNativeFigure(s)) return { ...revealOf(st, s), ground: g }; // a revealed list: the lab's own layers (decks/reveals.ts)
+      // A live figure is SlideForge's to play. The shell hands its last step over as a picture (figureStill,
+      // js/lab-engine.js), which stands in for it here; with no picture, the slide stays SlideForge's alone.
       const still = (s as { figureStill?: string }).figureStill;
       if (!still) return null;
       return { slide: framedPictureSlide(st, t, sub, still, '16:9', 'none', ''), ground: g,
@@ -408,7 +409,6 @@ export function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: st
     default: return null; // games and activities are SlideForge's, not the lab's
   }
 }
-
 
 /** What a SlideForge slide does in the room, onto the lab slide built from it: its audience feedback,
  *  and its time as the game clock level with the heading (the Timed task's clock), the heading kept
@@ -568,14 +568,14 @@ const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'], 
 type Kit = ReturnType<typeof kit>;
 
 /** One SlideForge slide as the lab slide a fresh conversion makes of it, or null for what the lab leaves out. */
-function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtContext): Slide | null {
+export function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtContext): Slide | null {
   // AI Awareness Day 2027's compositions are built as the design draws them (aiad27.ts).
   const out = art && builds27(art.theme, s) ? aiad27Slide(s, art.theme) : convert(s, k.on, img, k.guide.marks[1]?.src ?? k.guide.marks[0]?.src ?? '', art?.theme);
   if (!out) return null;
   const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
   const made = k.put(out.slide, out.ground, notes);
   if (s.id) made.sourceSlideId = s.id;
-  if (s.type === 'figure') { made.liveFigure = true; made.figure = figureOf(s); made.name = `Live figure · ${s.title ?? ''}`.trim(); }
+  if (s.type === 'figure' && !isNativeFigure(s)) { made.liveFigure = true; made.figure = figureOf(s); made.name = `Live figure · ${s.title ?? ''}`.trim(); }
   // A slide SlideForge keeps out of the show stays out of it: a teacher's preparation is not for the wall.
   if (s.hidden) made.hidden = true;
   carryLive(s, made, k.on(out.ground));

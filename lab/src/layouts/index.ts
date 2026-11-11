@@ -10,6 +10,7 @@ export { LAYOUTS, LAYOUT_GROUPS } from './catalogue';
 export { LAYOUT_STYLES, cell, gridFor, guideStyle, layoutFor, newerTheme, pinTheme, slideStyle, themeCopyOf, themeOf } from './style';
 export { beforeAfterSlide, chartCalloutSlide, experimentSlide, exploreSlide, framedPictureSlide, gallerySlide, gameClock, sceneSlide, simulationSlide, youtubeSlide } from './show';
 export { bulletsSlide, cardsSlide, chartSlide, compareSlide, diagramSlide, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, splitSlide, statsSlide, tableSlide, titleSlide } from './system';
+export { revealSlide, type RevealRow, type RevealSpec } from './reveal';
 export { closerSlide, codeSlide, columnsSlide, funnelSlide, introductionSlide, mindmapSlide, orgchartSlide, quoteSlide, railSlide, sectionEditorialSlide, sectionFrameSlide, sidecarTitleSlide, timelineSlide } from './rich';
 export { CONTENT_FOOT, CONTENT_TOP, credit, groundParams, itemStyle, slide as blockSlide, statement, titleBar, titleRow } from './blocks';
 export { icebergSlide, shiftSlide, sourcecheckSlide, spectrumSlide } from './infographics';

@@ -1,5 +1,5 @@
 import { TEMPLATES, blankDeck, shareTooLarge, idbDelete, idbGet, idbGetMany, idbKeys, idbSet, idbSetMany, unpackPictures, type Deck, type Slide } from '../core';
-import { deckFromLesson, loadChoiceStarter, readLesson, CARRIED, carryDeck27, carryDeckFigures, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
+import { deckFromLesson, loadChoiceStarter, readLesson, CARRIED, carryDeck27, carryDeckFigures, carryDeckReveals, carryDeckVideo, carryDeckArt, carryDeckExperimentPresets, carryDeckHidden, pageNumbers, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, fitStatement, type LessonGame, type SFDeck, type SFSlide } from '../decks';
 import { imageSettled } from '../engine';
 import { buildPdf, buildPptx, dataUrlBytes, renderStill, editableSlides, exportPptx, handoutHtml, handoutPages, type SlideFormat } from '../export';
 import { enterView, useStore, type LabView } from '../store';
@@ -185,7 +185,7 @@ export const isLabDeck = (d: unknown): d is Deck => {
 function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   const from = d.carried ?? 0;
   if (!source || !Array.isArray(source.slides)) return d;
-  if (from >= CARRIED) return figuresMended(d, source);
+  if (from >= CARRIED) return revealsBuilt(figuresMended(d, source), source);
   const copy = structuredClone(d);
   const { palette, set } = paletteFor(source.theme);
   const art = { theme: source.theme || '', title: source.title || '' };
@@ -206,8 +206,18 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   if (from < 7) carryDeckHidden(copy, source.slides);
   if (from < 12) carryDeckVideo(copy, source.slides);
   carryDeckFigures(copy, source.slides);
+  carryDeckReveals(copy, palette, set, art, source.slides);
   copy.carried = CARRIED;
   return copy;
+}
+
+/** A copy whose revealed lists are still pictures of their live figure: built from the lab's layers, so every
+ *  word can be edited (docs/editable-figures-plan.md). Each time it opens, until it has none. */
+function revealsBuilt(d: Deck, source: ClassicDeck): Deck {
+  if (!d.slides.some((s) => s.liveFigure && s.figure?.figure === 'reveal')) return d;
+  const copy = structuredClone(d);
+  const { palette, set } = paletteFor(source.theme);
+  return carryDeckReveals(copy, palette, set, { theme: source.theme || '', title: source.title || '' }, source.slides ?? []) ? copy : d;
 }
 
 /** A copy already up to date whose live figure still has only its picture: a copy carried to version 15

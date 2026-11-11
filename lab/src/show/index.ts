@@ -13,3 +13,5 @@ export { hasRoomGame } from './steps';
 export { canHostInStudio, whyNotPresentInStudio, type CanHost } from './canHost';
 export type { ShowHooks, SessionRef } from './hooks';
 export { roomRunning, roomWatchOn } from './useRoom';
+// A live figure drawn still, for the editor (ui/panels/figure.tsx): its picture again after its words change, and the words at a point.
+export { figureStill, figureTextAt } from './figure';

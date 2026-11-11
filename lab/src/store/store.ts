@@ -6,7 +6,7 @@ import { syncConnectors, syncSlideConnectors, upgradeDeck, blankSlide, cloneLaye
 import { repairGames } from '../designs';
 
 export type LeftTab = 'layers' | 'add';
-export type InspectorTab = 'design' | 'picture' | 'video' | 'special' | 'animate' | 'interact' | 'engage';
+export type InspectorTab = 'figure' | 'design' | 'picture' | 'video' | 'special' | 'animate' | 'interact' | 'engage';
 
 /** SlideForge's three studios, as views of the lesson open in the lab. */
 export type LabView = 'lesson' | 'quiz' | 'activities' | 'nodes';

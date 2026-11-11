@@ -11,6 +11,8 @@ export { DECK_VERSION, deckVersion, upgradeDeck, upgradeSteps } from './version'
 export { PLACEHOLDER, describeFacts, factsOf, factsToCheck, placeholdersOf, sayNumbers } from './facts';
 export type { FactsToCheck } from './facts';
 export { hasFlagshipFrame, hasFlagshipTextImage, isFlagshipFrameLayer, newSlideWithFrame, setFramePage, syncFrameCounters, textImageForSlide } from './frame';
+export { figureWords, setFigureWord, svgTexts, wordFor } from './figureWords';
+export type { FigureWord } from './figureWords';
 export { idbDelete, idbForget, idbGet, idbGetMany, idbKeys, idbSet, idbSetMany } from './idb';
 export { packPictures, unpackPictures } from './pictures';
 export type { ActivitySettings, ActivityStage, Anim, BlendMode, Box, ClickAction, Deck, Easing, EntranceType, ExitType, FeedbackKind, GameLook, GameSettings, GuideGround, GuideSwatch, GuideTheme, HFItem, HFKind, HFSlot, HeaderFooter, HoverType, Interact, Layer, LiveFigure, LoopType, ParamValue, Params, PlanStep, Slide, SlideFeedback, SlideGame, StageJob, StyleGuide, TransitionType, Trigger, WordArc } from './types';

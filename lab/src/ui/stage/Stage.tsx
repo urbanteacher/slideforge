@@ -12,6 +12,9 @@ import { addMediaFile, choosePicture } from './insert';
 import { moveInOrder, moveLine, moveUnit, siblingsOf, type Unit } from './order';
 import { useSlideContextMenu } from '../controls/SlideMenu';
 import { FEEDBACK } from '../panels/Engagement';
+import { focusFigureWord, isSvgPicture, standInOf, unpackPicture, wordKey } from '../panels/figure';
+import { figureTextAt } from '../../show';
+import { figureWords, wordFor } from '../../core';
 
 type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 const HANDLES: { h: Handle; sx: number; sy: number; cur: string }[] = [
@@ -401,6 +404,24 @@ export function Stage() {
     selectLayer(hit.id);
     set({ partId: hit.id });
     // A picture: straight to choosing its file, the way double-click goes into a text's words.
+    // A live figure's picture: its words are in the Figure tab (figure.tsx). Straight to the word under the pointer.
+    if (hit.kind === 'image' && slide.figure?.figure && standInOf(slide)?.id === hit.id && hit.box) {
+      set({ inspectorTab: 'figure' });
+      const drawn = figureTextAt(slide.figure, ((x - hit.box.x) / hit.box.w) * 1280, ((y - hit.box.y) / hit.box.h) * 720);
+      const word = drawn ? wordFor(figureWords(slide.figure), drawn) : undefined;
+      if (word) setTimeout(() => focusFigureWord(wordKey(word)), 60);
+      return;
+    }
+    // A drawn picture (an SVG): its words onto the slide as text (figure.tsx unpackPicture).
+    if (hit.kind === 'image' && isSvgPicture(hit) && hit.box) {
+      // Its words become text layers on the slide, the drawing kept under them; the word under the pointer is opened.
+      void unpackPicture(hit.id, [x, y]).then(({ n, under }) => {
+        if (!n) { set({ inspectorTab: 'figure' }); return; }
+        set({ inspectorTab: 'design' });
+        if (under) { selectLayer(under); set({ editingTextId: under }); }
+      });
+      return;
+    }
     if (hit.kind === 'image') { choosePicture(hit.id); return; }
     if (hit.kind === 'text' || editsOnCanvas(hit)) set({ editingTextId: hit.id });
   };
