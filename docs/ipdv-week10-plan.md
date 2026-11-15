@@ -14,7 +14,7 @@ A plan for the Week 10 lecture and lab of LDSCI6253 Advanced Information Present
 
 The proposed key is `ipdv-ml-w10`, in the `northeastern` theme, as with Weeks 8 and 9.
 
-**Status:** built, reviewed and restructured to fit (15 Nov 2026): 59 slides (58 in the student copy), 83 planned minutes from `node tools/build-ipdv-week10.js`, key `ipdv-ml-w10`; the lab tutorial, challenge and solutions in `lessons/10_*`. §10 says what was built and where it differs from this plan. Not committed yet.
+**Status:** built, reviewed and restructured to fit (15 Nov 2026): 64 slides (63 in the student copy), 91 planned minutes from `node tools/build-ipdv-week10.js`, key `ipdv-ml-w10`; the lab tutorial, challenge and solutions in `lessons/10_*`. §10 says what was built and where it differs from this plan. Not committed yet.
 
 ---
 
@@ -115,7 +115,7 @@ By the end, students can:
 
 | Time | Part | Notes |
 |---|---|---|
-| 0–12 | Opening | Recall, the route, the "guess the genre" hook, the lecture's one line, outcomes, six words, Spotify's features, the five-stop map |
+| 0–13 | Opening | Recall, the route, today's data and Spotify's numbers, the "guess the genre" hook, the lecture's one line, six words, the five-stop map, outcomes |
 | 12–18 | Why use a model, and which kind? | The ladder (guess, one chart, one scatter, a model), the five kinds, six everyday scenarios matched in pairs |
 | 18–30 | Stop 1: Look before you model | Anscombe, the songs before any model; the setup, histogram and box plot built |
 | 30–42 | Stop 2: Too many columns | A pair-predict, the brushable matrix, PCA, k-means, then last year's k-means colour mistake |
@@ -185,15 +185,15 @@ All 25 pages of `01_Lecture_IPDV_10.pdf` were looked at, pictures included. Ever
 
 ## 10. What was built
 
-- **The lecture** (`tools/build-ipdv-week10.js`, slides in `tools/ipdv-week10/lesson.js`, drawings in `drawings.js` and `power.js`): 59 slides in the `northeastern` theme, keyed `ipdv-ml-w10`, with a student copy that hides only the neighbour question. §4 gives the running order.
-  - **Opening:** recall, the route (Week 10 marked, then Week 11 and AE2), the "guess the genre" hook, the one-line statement, outcomes, six words (feature, label, model, training and test songs, accuracy, correlation), Spotify's features, the five-stop map.
-  - **Why a model, and which kind:** the ladder, the five kinds, six everyday scenarios.
+- **The lecture** (`tools/build-ipdv-week10.js`, slides in `tools/ipdv-week10/lesson.js`, drawings in `drawings.js` and `power.js`): 64 slides in the `northeastern` theme, keyed `ipdv-ml-w10`, with a student copy that hides only the neighbour question. §4 gives the running order.
+  - **Opening:** recall, the route (Week 10 marked, then Week 11 and AE2), today's data (rows, the six genres, the label is the playlist's) and Spotify's numbers, then the "guess the genre" hook, the one-line statement, outcomes, six words (feature, label, model, training and test songs, accuracy, correlation), the five-stop map.
+  - **Why a model, and which kind:** four ways machine learning meets data visualisation (simplify, flag, explain, make charts), the ladder, "a chart alone, or a chart with a model?" (a two-column table from today's numbers), the five kinds, six everyday scenarios.
   - **Each stop:** a section naming its place on the map ("Stop 2 of 5"), a see-it or guess-first opener, the library one-liner where it adds something, the Altair build, a card. Two pair-predict slides, at the matrix and the depth curve, with the answer on the slide.
   - **The hook's songs:** Suge (DaBaby) as rap, Highway to Hell (AC/DC) as rock, and Ed Sheeran's Perfect, filed as Latin: the label is the playlist's. Each is filed under one genre only; the first draft used Life Is Good and Blinding Lights, which the file puts under four genres each.
   - **Stop 1 opener:** Anscombe's quartet (1973), four panels; its statistics checked by computing them.
   - **Stop 2:** the k-means Build-it, then last year's clustering slide as "spot the problem".
-  - **Stop 4:** five words for checking a model (baseline, recall, precision, overfitting, boundary), the 56% opener, the confusion matrix both ways, the depth curve, one tree at depths 2, 6 and 20 (panels).
-  - **Stop 5:** the 98% hit model, the honest comparison, the public rewrite, five rules, AE2, and "the data can disappear" (Spotify's 27 November 2024 change).
+  - **Stop 4:** five words for checking a model (baseline, recall, precision, overfitting, boundary), the 56% opener, the confusion matrix both ways, the depth curve, one tree at depths 2, 6 and 20 (panels), and the depth-2 tree drawn as its questions (`plot_tree`).
+  - **Stop 5:** the 98% hit model, the honest comparison, the public rewrite, five rules, "a chart from a typed question still needs checking", AE2, and "the data can disappear" (Spotify's 27 November 2024 change).
   - **Arriving:** one before-and-after chart, a quiz flash round, the lab bridge, and the opening line finished.
   - **Taught in the lab, not the lecture:** seaborn's pairplot, the correlation heatmap, and the boundary grid both ways. Their Build-its are in the tutorial and `week10_build_its.py`; `LAB_ONLY` in `lesson.js` lists them and the test checks they are there.
 - **Every word editable:** the revealed lists become studio layers (the reveal converter); the two panel slides (Anscombe, the boundaries) stay live figures whose words are in the Figure tab; the Build-its are SVG pictures that unpack to text layers on double-click.
@@ -213,6 +213,14 @@ All 25 pages of `01_Lecture_IPDV_10.pdf` were looked at, pictures included. Ever
 
 ## Change log
 
+- 15 November 2026: four slides moved after a 50-reviewer order review ([review §7](ipdv-week10-review.md)): the outcomes after the map; the chart-alone table to the ending, after the before-and-after; "The data can disappear" beside "Telling the public"; what a PCA map loses straight after PCA.
+- 15 November 2026: added from two overviews of ML in data visualisation the user shared (64 slides, 91 planned minutes):
+  - "Four ways machine learning meets data visualisation", opening the why-ML section. Forecasting is named but not shown, because the songs have no time series.
+  - "A chart alone, or a chart with a model?", a two-column table answered with today's numbers. The overview's claims that ML "explains why" and forecasts "with confidence" were corrected: not why, and give a range and a date.
+  - The depth-2 tree drawn with `plot_tree` (a new step in `steps.py`, `facts.tree`), on the slides and in the tutorial (4g).
+  - "A chart from a typed question still needs checking", at stop 5.
+  - SHAP (Lundberg and Lee, 2017) in stop 3's notes; t-SNE and UMAP, with their sources, in the overview's notes.
+- 15 November 2026: the guess was hard because the data hadn't been explained yet. A new slide, "Today's data: songs from Spotify playlists" (rows, the six genres with their counts, the label is the playlist's, one row per song per playlist), and Spotify's numbers now come before the hook. 60 slides.
 - 15 November 2026: restructured after the 20-reviewer flow review, from 66 slides and 96 planned minutes to 59 and 83 (§4):
   - **Opening:** one definitions slide of six words; the other five move to stop 4, where they are first used. The map comes before the why-ML section. "Each kind, tried on the songs" and its card were cut.
   - **Stops:** the pairplot, the correlation heatmap and the boundary code (both ways) moved to the lab. The importance "disagree" list was folded into the Build-it that shows both rankings. Last year's k-means slide moved beside our own k-means. There are two pair-predict slides, and each section says "Stop n of 5".

@@ -154,7 +154,25 @@ Run on 14 November 2026 against the 66-slide deck: the teacher copy with its spe
 | 9 | Hands up | The scenarios are done in pairs, and the two predicts include silent thinking time |
 | 10 | Others | Slide 31's notes were cut to what can be said; every section says "Stop n of 5" and points back to the map. Not changed: read-aloud cues on code slides, and colour on the heatmap (each boundary panel's key already names its colours) |
 
+## 7. Slide order: 50 reviewers
+
+Run on 15 November 2026 against the 64-slide deck, after the slides from two outside overviews of ML in data visualisation were added. The reviewers were 30 learner personas (six from each band in §1) and 20 teaching roles (the 20 in §6, with an ML lecturer and a student representative in place of two). Each reviewer proposed a full order of all 64 slides. All 50 orders were valid. The average score was 6.0 now and 7.8 after their own order.
+
+| Move | How many proposed it | Done? |
+|---|---|---|
+| The outcomes (was 9) after the five-stop map, so they follow the six words and the map they rely on | All 50 moved it; 40 to after the map | Yes |
+| "A chart alone, or a chart with a model?" (was 15) after the before-and-after, since its numbers (38% kept, 284 flagged) are only taught in the stops | 43 (39 after the before-and-after, 4 just before it) | Yes. Its notes now call it the recap |
+| "The data can disappear" (was 57) beside "Telling the public", whose "learnt from what" row it supports | 29 moved it, most of them next to that slide | Yes, straight after it |
+| "What a map of ten columns loses" (was 33) straight after PCA, before k-means | 12 | Yes: nobody argued against it, and it matches the stop 2 card |
+| "Four ways ML meets data visualisation" after the five kinds | 15 | No: 33 kept it first, as the frame for the section |
+| The AE2 slide just before the lab bridge | 12 | No: most kept it with stop 5 |
+| Cuts: the table (13), the neighbour question (13), the route (7), the data can disappear (7) | Each under a third | No. The route is in every week's lecture |
+
+The order changes no minutes: the planned total is still about 91.
+
 ## Change log
+
+- 15 November 2026: §7 added: the 50-reviewer slide-order review, and the four moves made.
 
 - 15 November 2026: §6 "What was changed" added: the restructure.
 
