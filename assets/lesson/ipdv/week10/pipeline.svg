@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#fbfaf8"/>
+<text x="64" y="58" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2.6" fill="#c8102e">TODAY</text>
+<text x="64" y="100" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="36" fill="#14181f">A chart at every stage of a model’s life</text>
+<text x="64" y="140" font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="20" font-weight="400" text-anchor="start" fill="#5a6572">data  →  columns  →  model  →  its errors  →  the public</text>
+<rect x="64" y="170" width="212" height="420" rx="10" fill="#fff" stroke="#d9d4ca"/>
+<circle cx="108" cy="222" r="26" fill="#0c3354"/>
+<text x="108" y="231" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#fff">1</text>
+<text x="84" y="292" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">Look first</text>
+<text x="84" y="370" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">Is the data fit to</text>
+<text x="84" y="394" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">learn from?</text>
+<line x1="84" y1="460" x2="256" y2="460" stroke="#d9d4ca"/>
+<text x="84" y="490" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">histogram · box plot ·</text>
+<text x="84" y="511" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">missing values</text>
+<path d="M280 222 l13 0 m-6 -7 l7 7 l-7 7" stroke="#c8102e" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="299" y="170" width="212" height="420" rx="10" fill="#fff" stroke="#d9d4ca"/>
+<circle cx="343" cy="222" r="26" fill="#0c3354"/>
+<text x="343" y="231" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#fff">2</text>
+<text x="319" y="292" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">Too many</text>
+<text x="319" y="322" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">columns</text>
+<text x="319" y="370" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">How do you see ten</text>
+<text x="319" y="394" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">at once?</text>
+<line x1="319" y1="460" x2="491" y2="460" stroke="#d9d4ca"/>
+<text x="319" y="490" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">scatter-plot matrix ·</text>
+<text x="319" y="511" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">PCA map</text>
+<path d="M515 222 l13 0 m-6 -7 l7 7 l-7 7" stroke="#c8102e" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="534" y="170" width="212" height="420" rx="10" fill="#fff" stroke="#d9d4ca"/>
+<circle cx="578" cy="222" r="26" fill="#0c3354"/>
+<text x="578" y="231" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#fff">3</text>
+<text x="554" y="292" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">What it</text>
+<text x="554" y="322" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">listens to</text>
+<text x="554" y="370" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">Which features</text>
+<text x="554" y="394" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">matter?</text>
+<line x1="554" y1="460" x2="726" y2="460" stroke="#d9d4ca"/>
+<text x="554" y="490" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">heatmap · importance</text>
+<text x="554" y="511" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">bars</text>
+<path d="M750 222 l13 0 m-6 -7 l7 7 l-7 7" stroke="#c8102e" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="769" y="170" width="212" height="420" rx="10" fill="#fff" stroke="#d9d4ca"/>
+<circle cx="813" cy="222" r="26" fill="#0c3354"/>
+<text x="813" y="231" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#fff">4</text>
+<text x="789" y="292" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">Where it’s</text>
+<text x="789" y="322" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">wrong</text>
+<text x="789" y="370" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">Is the model any</text>
+<text x="789" y="394" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">good?</text>
+<line x1="789" y1="460" x2="961" y2="460" stroke="#d9d4ca"/>
+<text x="789" y="490" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">confusion matrix ·</text>
+<text x="789" y="511" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">depth curve · boundary</text>
+<path d="M985 222 l13 0 m-6 -7 l7 7 l-7 7" stroke="#c8102e" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1004" y="170" width="212" height="420" rx="10" fill="#fff" stroke="#d9d4ca"/>
+<circle cx="1048" cy="222" r="26" fill="#c8102e"/>
+<text x="1048" y="231" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#fff">5</text>
+<text x="1024" y="292" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">Tell the</text>
+<text x="1024" y="322" font-family="'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif" font-size="25" font-weight="400" text-anchor="start" fill="#0c3354">public</text>
+<text x="1024" y="370" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">What does “98%”</text>
+<text x="1024" y="394" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#14181f">hide?</text>
+<line x1="1024" y1="460" x2="1196" y2="460" stroke="#d9d4ca"/>
+<text x="1024" y="490" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" text-anchor="start" fill="#c8102e">the honest comparison</text>
+<text x="64" y="650" font-family="'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif" font-size="19" font-weight="400" text-anchor="start" fill="#5a6572">Each stop: see it, name it, the library’s one line, then build it in Altair. All on one dataset: about 30,000 songs.</text>
+</svg>
