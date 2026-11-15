@@ -84,3 +84,72 @@ test('a template opened in the studio is noted as built, and joins the account o
   doc.modified = 501;
   assert.ok(!SF.BuiltIns.leaveOut([doc], () => false)['lesson:new']);
 });
+
+/* Bringing built-in copies up to date (refresh): a lesson rebuilt since this browser filed its copy. */
+const HASH = fs.readFileSync(path.join(__dirname, '..', 'js', 'lesson-hash.js'), 'utf8');
+function refreshWorld({ created = Date.UTC(2026, 10, 1), noted = 500, studioModified = 500, slides = ['old'] } = {}) {
+  const docs = new Map();
+  const put = (d) => docs.set(d.id, JSON.parse(JSON.stringify(d)));
+  put({ id: 'c1', title: 'IPDV intro', sourceKey: 'ipdv-intro', libraryGroup: 'nul', created, modified: created, slides: slides.map((t) => ({ type: 'content', title: t })) });
+  put({ id: 'lab-c1', title: 'IPDV intro', labCard: true, slides: [{ type: 'title' }] });
+  put({ id: 'own', title: 'Mine', slides: [{ type: 'content', title: 'x' }] });
+  let built = 0, gamesSaved = 0;
+  const SF = {
+    LIBRARY_SEED_KEYS: { 'ipdv-intro': 'nul' },
+    LESSONS: [{ key: 'ipdv-intro', title: 'IPDV intro' }],
+    normalizeDeck: (d) => d,
+    GameStore: { save: () => { gamesSaved++; return true; } },
+    buildLesson: (key) => { built++; SF.GameStore.save({}); return { id: 'n' + built, title: 'IPDV intro', sourceKey: key, libraryGroup: 'nul', created: Date.now(), slides: [{ type: 'content', title: 'new' }] }; },
+    Store: { list: () => [...docs.values()].map((d) => JSON.parse(JSON.stringify(d))), get: (id) => (docs.has(id) ? JSON.parse(JSON.stringify(docs.get(id))) : null), save: put, remove: (id) => docs.delete(id) }
+  };
+  const store = { 'slideforge.builtinCopies.v1': JSON.stringify({ 'lesson:lab-c1': noted }) };
+  const localStorage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
+  const window = { SF, location: { protocol: 'https:', hostname: 'x.onrender.com' } };
+  vm.runInNewContext(HASH + '\n' + SRC, { window, localStorage, Date, JSON, Object });
+  const forgot = [];
+  const run = () => JSON.parse(JSON.stringify(SF.BuiltIns.refresh([{ id: 'lab-c1', sourceId: 'c1', modified: studioModified }], (id) => forgot.push(id))));
+  return { SF, docs, forgot, run, games: () => gamesSaved, store };
+}
+
+test('a built-in copy that matches its lesson is left alone', () => {
+  const w = refreshWorld({ slides: ['new'] });
+  const r = w.run();
+  assert.deepEqual([r.updated, r.kept], [[], []]);
+  assert.ok(w.docs.has('c1') && w.docs.has('lab-c1'));
+  assert.equal(w.games(), 0, 'checking a lesson files none of its games');
+});
+
+test('a copy nobody changed is swapped for the lesson as it is now, studio copy and all', () => {
+  const w = refreshWorld();
+  const r = w.run();
+  assert.deepEqual(r.updated, ['IPDV intro']);
+  assert.deepEqual(w.forgot, ['lab-c1']);
+  assert.ok(!w.docs.has('c1') && !w.docs.has('lab-c1'), 'the old copy and its card are gone');
+  const fresh = [...w.docs.values()].filter((d) => d.sourceKey === 'ipdv-intro');
+  assert.equal(fresh.length, 1);
+  assert.equal(fresh[0].slides[0].title, 'new');
+  assert.equal(r.swaps[0].copies[0], 'lab-c1');
+  assert.ok(w.docs.has('own'), 'the teacher’s own lessons are untouched');
+  assert.ok(!('lesson:lab-c1' in JSON.parse(w.store['slideforge.builtinCopies.v1'])));
+});
+
+test('a copy changed in the studio is kept as an earlier copy, beside the new lesson', () => {
+  const w = refreshWorld({ studioModified: 900 });
+  const r = w.run();
+  assert.deepEqual([r.updated, r.kept], [[], ['IPDV intro']]);
+  assert.deepEqual(w.forgot, []);
+  assert.equal(w.docs.get('c1').title, 'IPDV intro (earlier copy)');
+  assert.equal(w.docs.get('c1').sourceKey, undefined, 'no longer the built-in’s copy');
+  assert.equal(w.docs.get('lab-c1').title, 'IPDV intro (earlier copy)');
+  assert.equal([...w.docs.values()].filter((d) => d.sourceKey === 'ipdv-intro').length, 1);
+  w.run();
+  assert.equal(w.docs.get('c1').title, 'IPDV intro (earlier copy)', 'named once, and a second pass changes nothing');
+});
+
+test('a copy filed before the classic editor went, or never noted, cannot be vouched for, so it is kept', () => {
+  const old = refreshWorld({ created: Date.UTC(2026, 7, 1) });
+  assert.deepEqual(old.run().kept, ['IPDV intro']);
+  const unnoted = refreshWorld({ noted: undefined });
+  delete unnoted.store['slideforge.builtinCopies.v1'];
+  assert.deepEqual(unnoted.run().kept, ['IPDV intro']);
+});

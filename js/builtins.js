@@ -8,12 +8,17 @@
    (js/sync.js). It joins the account the first time it changes. What "unchanged" means is remembered here, per
    browser: the modified time each copy had when it was filed. A copy already in the account stays in step as before.
 
+   When a built-in lesson changes (a rebuilt js/lessons-*.js), a copy nobody has changed is swapped for the lesson as
+   it is now, the next time the page loads (refresh). A copy that was changed, or that this browser can't vouch for,
+   is kept, renamed "(earlier copy)", and the new lesson is filed beside it. Nothing anyone made is deleted.
+
    SF.BuiltIns
      seeding()                 whether this browser's Library is filled with the built-ins
      note(key, modified)       a copy just filed, as it was built ("kind:id")
      isTemplateLesson(deck)    a Lesson-studio deck that is a built-in's copy
      leaveOut(docs, inAccount) the documents sync should leave alone, by key
-     templates()               the built-ins this Library does not hold yet: [{ key, title, group, shipped }] */
+     templates()               the built-ins this Library does not hold yet: [{ key, title, group, shipped }]
+     refresh(rows, forget)     bring built-in copies up to date; rows are the Lesson studio's saved copies */
 (function (global) {
   'use strict';
   /** @type {any} */
@@ -127,5 +132,82 @@
     return out;
   }
 
-  SF.BuiltIns = { seeding: seeding, note: note, isTemplateLesson: isTemplateLesson, leaveOut: leaveOut, templates: templates };
+  /* ------------------------------------------- bringing copies up to date
+
+     A copy is told from the lesson it was built from by a fingerprint of its slides and settings (js/lesson-hash.js),
+     leaving out what the Library changes: its name, its folder. Unchanged means both halves are as filed:
+     - the classic deck, which nothing has edited since the classic editor went (26 September 2026): a deck filed
+       before then may have been edited there, so it can't be vouched for;
+     - its Lesson-studio copies, where every edit is made: each still has the modified time noted when it was filed. */
+  var EDITOR_GONE = Date.UTC(2026, 8, 26);
+  var EARLIER = ' (earlier copy)';
+  /** @type {Record<string, 1>} */ var CHROME = { title: 1, libraryGroup: 1, folder: 1 };
+
+  /** @param {any} d */
+  function contentHash(d) {
+    /** @type {any} */ var c = {};
+    Object.keys(d || {}).forEach(function (k) { if (!CHROME[k]) c[k] = d[k]; });
+    return SF.lessonHash(SF.normalizeDeck(JSON.parse(JSON.stringify(c))));
+  }
+
+  /** The lesson as it is now, built without filing its games (a build files them otherwise). @param {string} key */
+  function dryBuild(key) {
+    var games = SF.GameStore;
+    if (games) SF.GameStore = Object.assign({}, games, { save: function () { return true; } });
+    try { return SF.buildLesson(key); } finally { if (games) SF.GameStore = games; }
+  }
+
+  /**
+   * @param {any[]} rows  the Lesson studio's saved copies: { id, sourceId, modified }
+   * @param {(id: string) => void} [forget]  removes a Lesson-studio copy
+   * @returns {{ updated: string[], kept: string[], fresh: any[], swaps: { copies: string[], deck: any }[] }}
+   */
+  function refresh(rows, forget) {
+    var out = { updated: /** @type {string[]} */ ([]), kept: /** @type {string[]} */ ([]), fresh: /** @type {any[]} */ ([]),
+      swaps: /** @type {{ copies: string[], deck: any }[]} */ ([]) };
+    if (!SF.Store || !SF.Store.list || !SF.buildLesson || !SF.lessonHash || !SF.normalizeDeck) return out;
+    var seeds = SF.LIBRARY_SEED_KEYS || {}, m = read(), changed = false;
+    /** @type {Record<string, true>} */ var known = {};
+    (SF.LESSONS || []).forEach(function (/** @type {any} */ l) { if (l && l.key) known[l.key] = true; });
+    /** @type {Record<string, string>} */ var now = {};
+    SF.Store.list().forEach(function (/** @type {any} */ d) {
+      var key = d && d.sourceKey;
+      if (!key || d.labCard || !seeds[key] || !known[key]) return;
+      if (!(key in now)) { var built = dryBuild(key); now[key] = built ? contentHash(built) : ''; }
+      if (!now[key] || contentHash(d) === now[key]) return;
+      var copies = (rows || []).filter(function (r) { return r && r.sourceId === d.id; });
+      var asFiled = (Number(d.created) || 0) >= EDITOR_GONE && copies.every(function (r) {
+        var k = 'lesson:' + r.id;
+        return k in m && m[k] !== MINE && m[k] === Number(r.modified);
+      });
+      var fresh = SF.buildLesson(key);
+      if (!fresh) return;
+      fresh.sourceKey = key;
+      if (d.libraryGroup) fresh.libraryGroup = d.libraryGroup;
+      if (asFiled) {
+        copies.forEach(function (r) {
+          if (forget) forget(r.id);
+          SF.Store.remove(r.id);
+          if (('lesson:' + r.id) in m) { delete m['lesson:' + r.id]; changed = true; }
+        });
+        SF.Store.remove(d.id);
+        out.updated.push(fresh.title || key);
+        out.swaps.push({ copies: copies.map(function (r) { return r.id; }), deck: fresh });
+      } else {
+        /* No longer the built-in's copy: the teacher's own, under a name that says which it is. */
+        var rename = function (/** @type {any} */ x) { if (x && String(x.title || '').indexOf(EARLIER) < 0) x.title = (x.title || fresh.title || key) + EARLIER; };
+        rename(d);
+        delete d.sourceKey;
+        SF.Store.save(d, { force: true });
+        copies.forEach(function (r) { var c = SF.Store.get(r.id); if (c) { rename(c); SF.Store.save(c, { force: true }); } });
+        out.kept.push(fresh.title || key);
+      }
+      SF.Store.save(fresh, { force: true });
+      out.fresh.push(fresh);
+    });
+    if (changed) write(m);
+    return out;
+  }
+
+  SF.BuiltIns = { seeding: seeding, note: note, isTemplateLesson: isTemplateLesson, leaveOut: leaveOut, templates: templates, refresh: refresh };
 })(window);

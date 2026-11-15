@@ -830,6 +830,28 @@
     });
   }
 
+  /* Built-in lessons changed since this browser filed them (js/builtins.js refresh): a copy nobody changed is
+     swapped for the lesson as it is now, and one that was changed is kept as "(earlier copy)" beside it. A swapped
+     copy on screen is replaced on screen by the new lesson. */
+  /** @param {any} a */
+  function refreshBuiltIns(a) {
+    if (!SF.BuiltIns || !SF.BuiltIns.refresh) return;
+    var onScreen = a.getDeck().id, gone = false;
+    var r = SF.BuiltIns.refresh(saved, function (/** @type {string} */ id) {
+      /* Off the screen first, or the next save writes the removed copy back. */
+      if (id === onScreen) { gone = true; a.open(a.blank()); }
+      a.remove(id);
+    });
+    if (!r.updated.length && !r.kept.length) return;
+    saved = saved.filter(function (x) { return !r.swaps.some(function (s) { return s.copies.indexOf(x.id) >= 0; }); });
+    refreshSaved();
+    var back = gone ? r.swaps.filter(function (s) { return s.copies.indexOf(onScreen) >= 0; })[0] : null;
+    if (back) openLesson(back.deck);
+    var names = r.updated.concat(r.kept);
+    SF.toast((names.length === 1 ? names[0] + ' is' : names.length + ' built-in lessons are') + ' now the latest version' +
+      (r.kept.length ? '. Your changed ' + (r.kept.length === 1 ? 'copy is' : 'copies are') + ' kept as \u201c(earlier copy)\u201d.' : '.'));
+  }
+
   /* Called by the lab (lab/src/main.tsx) once its deck is back from storage. */
   function ready(a) {
     api = a;
@@ -842,6 +864,7 @@
         if (SF.Store.get(r.id)) return;
         writeCard({ id: r.id, title: r.title, sourceId: r.sourceId, libraryGroup: r.libraryGroup });
       });
+      refreshBuiltIns(a);
     });
     var lastDeck = a.getDeck();
     a.subscribe(function () {
