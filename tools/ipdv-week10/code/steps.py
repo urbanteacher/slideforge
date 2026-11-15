@@ -306,6 +306,18 @@ shown.ax_.scatter(few['speechiness'], few['danceability'],
     cmap='tab10', vmax=9, s=8, edgecolor='white', linewidth=0.3)
 """
 
+# The depth-2 tree's questions, drawn as a flowchart: the "too simple" panel's two cuts.
+LIB_TREE = """import matplotlib.pyplot as plt
+from sklearn.tree import plot_tree
+
+small = DecisionTreeClassifier(max_depth=2, random_state=0)
+small.fit(three[two], three['playlist_genre'])
+
+plt.figure(figsize=(11, 5))
+plot_tree(small, feature_names=two, class_names=list(small.classes_),
+          impurity=False, proportion=True, rounded=True, fontsize=12)
+"""
+
 # ------------------------------------------------------------ stop 5: tell the public
 HIT = """hit = unique['track_popularity'] >= 80     # a "hit"
 X_tr, X_te, h_tr, h_te = train_test_split(
@@ -349,6 +361,7 @@ STEPS = [
     ("depth", DEPTH, SETUP + LOOK_KEEP + MODEL_KEEP, ["validation_curve", "max_depth", "param_range"], "alt"),
     ("boundary", BOUNDARY.format(depth=3), SETUP + LOOK_KEEP + MODEL_KEEP + "import numpy as np\nfrom sklearn.tree import DecisionTreeClassifier\n", ["DecisionTreeClassifier", "meshgrid", "tree.predict", "mark_square"], "alt"),
     ("lib-boundary", LIB_BOUNDARY, SETUP + LOOK_KEEP + MODEL_KEEP + "import numpy as np\nfrom sklearn.tree import DecisionTreeClassifier\n" + BOUNDARY.format(depth=3), ["DecisionBoundaryDisplay", "eps=0.02", "scatter"], "lib"),
+    ("lib-tree", LIB_TREE, SETUP + LOOK_KEEP + MODEL_KEEP + "import numpy as np\nfrom sklearn.tree import DecisionTreeClassifier\n" + BOUNDARY_KEEP, ["plot_tree", "max_depth=2", "class_names", "proportion=True"], "lib"),
     ("hit", HIT, SETUP + LOOK_KEEP + MODEL_KEEP, ["track_popularity'] >= 80", "stratify=hit", "1 - h_te.mean()"], "alt"),
 ]
 
@@ -563,6 +576,15 @@ facts["clusterMap"] = [[round(float(xy[i, 0]), 2), round(float(xy[i, 1]), 2), in
 odd_idx = np.where(odd)[0]
 calm_idx = np.random.default_rng(1).choice(np.where(~odd)[0], 600, replace=False)
 facts["oddMap"] = [[round(float(unique["tempo"].iloc[i]), 1), round(float(unique["duration_ms"].iloc[i]) / 1000, 1), int(odd[i])] for i in np.concatenate([calm_idx, odd_idx])]
+# The depth-2 tree on the slide: its first question, and where its four answers lead.
+from sklearn.tree import DecisionTreeClassifier  # noqa: E402
+_three = unique[unique["playlist_genre"].isin(["pop", "rap", "rock"])]
+_small = DecisionTreeClassifier(max_depth=2, random_state=0).fit(_three[["speechiness", "danceability"]], _three["playlist_genre"])
+_t = _small.tree_
+_names = ["speechiness", "danceability"]
+facts["tree"] = {"root": _names[_t.feature[0]], "threshold": round(float(_t.threshold[0]), 3),
+                 "leaves": [str(_small.classes_[int(np.argmax(_t.value[i]))]) for i in range(_t.node_count) if _t.children_left[i] == -1],
+                 "accuracy": round(float(_small.score(_three[_names], _three["playlist_genre"])), 3)}
 facts["anscombe"] = {"meanX": 9, "meanY": 7.5, "r": 0.82, "line": "y = 3 + 0.5x"}
 # What the slides say in words must still be true of the data.
 assert facts["byGenre"]["rap"]["speechiness"] == max(v["speechiness"] for v in facts["byGenre"].values()), "rap is no longer the wordiest"

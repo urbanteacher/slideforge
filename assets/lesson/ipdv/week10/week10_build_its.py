@@ -298,6 +298,18 @@ shown.ax_.scatter(few['speechiness'], few['danceability'],
     cmap='tab10', vmax=9, s=8, edgecolor='white', linewidth=0.3)
 
 
+# %% 4g · The tree's questions, drawn out
+import matplotlib.pyplot as plt
+from sklearn.tree import plot_tree
+
+small = DecisionTreeClassifier(max_depth=2, random_state=0)
+small.fit(three[two], three['playlist_genre'])
+
+plt.figure(figsize=(11, 5))
+plot_tree(small, feature_names=two, class_names=list(small.classes_),
+          impurity=False, proportion=True, rounded=True, fontsize=12)
+
+
 # %% 5 · Tell the public: the honest comparison
 hit = unique['track_popularity'] >= 80     # a "hit"
 X_tr, X_te, h_tr, h_te = train_test_split(

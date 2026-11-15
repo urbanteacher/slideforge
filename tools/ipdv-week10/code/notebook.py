@@ -136,10 +136,14 @@ SECTIONS = [
      "depth = 20\n# ... the rest of the cell unchanged.\n# The boundary wraps round single songs: it has memorised them. New songs won't sit in the same tiny islands."),
     ("lib-boundary", "4f · The boundary, the library way",
      "scikit-learn's `DecisionBoundaryDisplay` does the grid for you. Its default margin (`eps=1.0`) is meant for unscaled data: try deleting `eps=0.02` to see why it is set.", None, None),
+    ("lib-tree", "4g · The tree's questions, drawn out",
+     "`plot_tree` draws the same kind of tree as a flowchart: each box is a yes/no question, and each answer box says which genre it guesses and what share of songs reach it. This is the depth-2 tree, the \"too simple\" boundary, as questions.",
+     "Change `max_depth=2` to `max_depth=3`. How many answer boxes now? Could you still explain every one to a friend?",
+     "small = DecisionTreeClassifier(max_depth=3, random_state=0)\n# ... the rest unchanged. Eight answer boxes: still readable.\n# At the best depth for six genres, the tree has hundreds: that is why we chart its behaviour instead."),
     ("hit", "5 · Tell the public: the honest comparison",
      f"A \"hit\" is popularity 80 or more: {F['hitShare'] * 100:.1f}% of songs. The model is right {F['hitAccuracy'] * 100:.1f}% of the time; saying \"not a hit\" every time is right {F['alwaysNo'] * 100:.1f}%. The chart puts the three numbers a reader needs side by side.",
      "Lower the bar for a hit to 70 and run it again. Does the model find more of the real hits? Is \"98% accurate\" still the right headline?",
-     "hit = unique['track_popularity'] >= 70\n# ... the rest unchanged. More songs count as hits, the lazy model's score falls,\n# and the share of real hits found is still the number a reader needs."),
+     "hit = unique['track_popularity'] >= 70\n# ... the rest unchanged. More songs count as hits, the baseline's score falls,\n# and the share of real hits found is still the number a reader needs."),
 ]
 
 for key, title, what, task, model in SECTIONS:

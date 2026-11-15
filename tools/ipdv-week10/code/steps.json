@@ -197,6 +197,18 @@
    ]
   },
   {
+   "id": "lib-tree",
+   "kind": "lib",
+   "code": "import matplotlib.pyplot as plt\nfrom sklearn.tree import plot_tree\n\nsmall = DecisionTreeClassifier(max_depth=2, random_state=0)\nsmall.fit(three[two], three['playlist_genre'])\n\nplt.figure(figsize=(11, 5))\nplot_tree(small, feature_names=two, class_names=list(small.classes_),\n          impurity=False, proportion=True, rounded=True, fontsize=12)\n",
+   "run": "import altair as alt\nimport pandas as pd\n\nsongs = pd.read_csv('songs.csv')\nFEATURES = ['danceability', 'energy', 'loudness',\n            'speechiness', 'acousticness', 'instrumentalness',\n            'liveness', 'valence', 'tempo', 'duration_ms']\n# Okabe and Ito's colour-blind-safe colours, one per genre\ngenre = alt.Color('playlist_genre:N', title='genre',\n    scale=alt.Scale(\n        domain=['edm', 'latin', 'pop', 'r&b', 'rap', 'rock'],\n        range=['#0072b2', '#e69f00', '#cc79a7', '#009e73',\n               '#d55e00', '#56b4e9']))\n# The file is sorted by playlist. Shuffle it once, so any\n# slice of it (a sample, a test set) mixes every genre.\nunique = (songs.drop_duplicates('track_id')\n          .sample(frac=1, random_state=0))\nsample = unique.sample(4000, random_state=0)\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\n\nX, y = unique[FEATURES], unique['playlist_genre']\nX_tr, X_te, y_tr, y_te = train_test_split(\n    X, y, test_size=0.25, random_state=0, stratify=y)\nmodel = RandomForestClassifier(300, random_state=0)\nmodel.fit(X_tr, y_tr)        # learn from 3 songs in 4\nimport numpy as np\nfrom sklearn.tree import DecisionTreeClassifier\nthree = unique[unique['playlist_genre']\n                .isin(['pop', 'rap', 'rock'])]\ntwo = ['speechiness', 'danceability']\n\nimport matplotlib.pyplot as plt\nfrom sklearn.tree import plot_tree\n\nsmall = DecisionTreeClassifier(max_depth=2, random_state=0)\nsmall.fit(three[two], three['playlist_genre'])\n\nplt.figure(figsize=(11, 5))\nplot_tree(small, feature_names=two, class_names=list(small.classes_),\n          impurity=False, proportion=True, rounded=True, fontsize=12)\n",
+   "new": [
+    "plot_tree",
+    "max_depth=2",
+    "class_names",
+    "proportion=True"
+   ]
+  },
+  {
    "id": "hit",
    "kind": "alt",
    "code": "hit = unique['track_popularity'] >= 80     # a \"hit\"\nX_tr, X_te, h_tr, h_te = train_test_split(\n    X, hit, test_size=0.25, random_state=0, stratify=hit)\nspotter = RandomForestClassifier(300, random_state=0)\nguess = spotter.fit(X_tr, h_tr).predict(X_te)\n\nscores = pd.DataFrame({'claim': [\n    'the hit model is right',\n    'saying \"not a hit\" every time is right',\n    'real hits the model found'],\n  'share': [(guess == h_te).mean(), 1 - h_te.mean(),\n            guess[h_te.to_numpy()].mean()]})\n\nalt.Chart(scores).mark_bar(color='#0c3354').encode(\n    x=alt.X('share:Q', axis=alt.Axis(format='%'),\n            scale=alt.Scale(domain=[0, 1]), title=None),\n    y=alt.Y('claim:N', sort=None, title=None),\n).properties(width=420, height=180) + alt.Chart(scores).mark_text(\n    align='left', dx=6).encode(\n    x='share:Q', y=alt.Y('claim:N', sort=None),\n    text=alt.Text('share:Q', format='.1%'))\n",

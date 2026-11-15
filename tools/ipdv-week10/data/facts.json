@@ -8332,6 +8332,17 @@
    1
   ]
  ],
+ "tree": {
+  "root": "speechiness",
+  "threshold": 0.127,
+  "leaves": [
+   "rock",
+   "pop",
+   "rap",
+   "rap"
+  ],
+  "accuracy": 0.612
+ },
  "anscombe": {
   "meanX": 9,
   "meanY": 7.5,
