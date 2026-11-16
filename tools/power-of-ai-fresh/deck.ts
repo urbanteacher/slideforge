@@ -125,9 +125,9 @@ slides.push(page('The Power of AI', [
 
 // Your speaker, before any data: who Mark is, and AI Awareness Day. The day's 2027 logo sits on its cream working
 // ground with the words beside it in its ink and deep green (docs/aiad27-style-guide.md, sections 2 to 4); next
-// year's ask sits on its Future strand, in black, as its contrast rules ask.
+// year's date sits in a pill on its Future strand, in black, as its contrast rules ask.
 {
-  const AIAD_INK = '#231F20', AIAD_CREAM = '#F6F4ED', AIAD_DIM = '#54504E', AIAD_FUTURE = '#FA83EB', AIAD_RESPONSIBLE_DEEP = '#176E3B';
+  const AIAD_INK = '#231F20', AIAD_CREAM = '#F6F4ED', AIAD_FUTURE = '#FA83EB', AIAD_RESPONSIBLE_DEEP = '#176E3B';
   const aiadMark = createLayer('image', { name: 'AI Awareness Day logo', params: { src: '/assets/power-of-ai-fresh/aiad27-mark.svg', fit: 'contain', tone: 'light' }, anim: rise(0.6) });
   aiadMark.box = at(772, 461, 248, 248);
   const aiadQr = createLayer('image', { name: 'AI Awareness Day QR code', params: { src: qrCode('https://aiawarenessday.co.uk/', 'qr-aiawarenessday.svg', AIAD_CREAM, AIAD_INK, 'aiawarenessday.co.uk'), fit: 'contain', tone: 'light' }, anim: rise(0.9) });
@@ -145,13 +145,12 @@ slides.push(page('The Power of AI', [
     shape('AIAD panel', at(740, 410, 1070, 350), { radius: 28, fill: AIAD_CREAM }, rise(0.5)),
     aiadMark,
     mono('Founder', 'Founder', at(1052, 456, 460, 44), AIAD_RESPONSIBLE_DEEP, { size: 30 }, rise(0.6)),
-    text('Reach', 'Supporting AI literacy for over 1 million children across the country.', at(1052, 506, 460, 186), { size: 38, weight: '700', color: AIAD_INK, lineHeight: 1.18 }, rise(0.7)),
-    text('AIAD · theme', '2027 theme: Keep Humans in the Loop', at(1052, 700, 460, 40), { size: 26, weight: '500', color: AIAD_DIM }, rise(0.8)),
+    text('Reach', 'Supporting AI literacy for over 1 million children across the country.', at(1052, 516, 460, 186), { size: 38, weight: '700', color: AIAD_INK, lineHeight: 1.18 }, rise(0.7)),
     aiadQr,
     text('AIAD · site', 'aiawarenessday.co.uk', at(1516, 684, 284, 40), { size: 26, weight: '600', color: AIAD_INK, align: 'center' }, rise(0.9)),
-    shape('Next year card', at(740, 790, 1070, 190), { radius: 28, fill: AIAD_FUTURE }, click(rise())),
-    mono('Next year', 'Next year · Thursday 29 April 2027', at(790, 818, 970, 44), AIAD_INK, { size: 30 }, then({ type: 'fade', duration: 0.3 })),
-    text('Next year · ask', 'We’re encouraging businesses like yours to take part.', at(790, 868, 970, 96), { size: 44, weight: '700', color: AIAD_INK, lineHeight: 1.1 }, then(rise())),
+    // Next year's date in a pill (the day's Future pink, in black), with the ask beside it on the dark ground.
+    sticker('Next year', 'Next year · Thursday 29 April 2027', 762, 812, 760, AIAD_FUTURE, 0, click(pop()), 34, AIAD_INK),
+    text('Next year · ask', 'We’re encouraging businesses like yours to take part.', at(740, 892, 1070, 70), { size: 44, weight: '700', lineHeight: 1.1 }, then(rise())),
   ], 'YOUR SPEAKER · ABOUT 30 SECONDS. The QR code in the box opens the AI Awareness Day website, aiawarenessday.co.uk. Who you are, before any data: Mark Martin MBE, in education, R&D and computer science. Founder of AI Awareness Day, a nationwide campaign that builds AI literacy across schools; it supports over 1 million children across the country (its site says "we estimate we’re already reaching over 1,000,000 students").\n\nClick for the ask. Next year’s AI Awareness Day is on Thursday 29 April 2027, and its theme is "Keep Humans in the Loop", the same message as this talk. This time it is asking businesses like the ones in this room to take part.\n\nThen: "So, five questions."',
   { factCheck: { note: 'The date: AI Awareness Day’s site gives Thursday 29 April 2027 at the top of its page, but Friday 4 June 2027 in its display-board guidance. Confirm which is right before the day.' } }));
 }
