@@ -1087,6 +1087,144 @@ From comparing `tools/motion/` with the Remotion studio in `~/Desktop/Engineerin
 - **Then: the speaker and a 7-day action plan.** About 40 minutes (30-minute cut), 45 slides, 43 shown. Mark Martin MBE CITP and his five focus areas after the title; the key message (technology alone, finance alone) before the plan; then the 7-day SME action plan, one slide per question, with a QR code to `sme-plan.html`, a phone page that keeps answers on the phone and copies, shares or saves them. The page is live only once pushed. The intro uses a split slide because the introduction layout says "Meet your lecturer".
 - **16 October: animation, logos and support codes.** Five clips made with `tools/motion/` (Friday 4pm, the jagged frontier, the µg/mg check, 520 hours, one commitment) replace three static slides and add two, with their HTML in `tools/ai-sme/clips/`. Partner logos are from each partner's own site. Three "Who can help" posters and a survey poster carry SAMPLE QR codes until `SUPPORT.<key>.url` is set in the builder; their one-line descriptions are placeholders until each partner confirms. 51 slides, 49 shown.
 - **16 November: tightened, and the hidden costs.** 39 slides shown, down from 49; cut slides stay hidden as backup. A new section, The hidden costs, from Anthropic's study of its own staff (December 2025) and its skill-formation trial (January 2026), Berkeley's work-intensification research (HBR, February 2026), METR, and Microsoft and Carnegie Mellon on trust and critical thinking (CHI 2025). The "false mastery" paper is conceptual, so the deck says it as an idea. Five habits replace the four rules. Three of the five case studies are shown, all composites.
+- **16 November, later: The Power of AI, new edition.** A separate Lesson-studio deck (`?lesson=power-of-ai-fresh`, UK Black Tech folder), built layer by layer by `tools/power-of-ai-fresh/build.mjs` (`deck.ts`, bundled with the studio's own Vite) and shipped in `js/lab-decks.js`. Its look is fresh and young:
+  - near-black, with a moving mesh glow and film grain;
+  - Bricolage Grotesque headlines, Instrument Serif italic asides and JetBrains Mono tags;
+  - one sticker colour per kind of AI: purple generative, blue predictive, orange automation, lime agents.
+
+  Part 1, "What even is AI?", is 13 slides: the chat-box picture, the assumption struck through, the umbrella, one slide per kind, why the mix-up costs you, the risk scale, pick the right AI, a "Which AI is it?" round and "AI ≠ chatbot". The built-in-tools claim (Xero, Sage, HubSpot, Shopify) carries a fact check. More parts are to come from the user's content.
+- **Then: Part 2, "The UK picture" (11 slides, 24 in all).** The 2026 surveys as infographics: DSIT's 32% from 16% (bars to scale); five surveys on one dot plot (32% to 55%); ONS and NatWest by size (columns); ONS by sector, 58% against 13% (circles by area); NatWest's 6% "transforming" (6 dots in 100); DSIT's uses (admin 81%, marketing 71%, IT 66%; 77% large language models); FSB's 59% and 92%, and the £42bn projection; BCC's 95% and 86%, and ONS's 62% retraining; what the numbers mean; and "Everyone's trying it. Almost nobody's transformed." Every figure was checked at source except FSB's, which come from trade-press reports and carry a fact check. Two were left off: DSIT's size bands (27%, 34%, 47%), not in its summary, and FSB's 24% revenue growth. "Shadow AI" is said as what we see, not as a DSIT finding.
+- **Then: Part 3, "Over the horizon" (12 slides, 36 in all).** What happens to jobs, through Anthropic's "How employment is changing at Anthropic" (16 October 2026), checked against the report:
+  - six agent hours for every human hour (pictogram);
+  - about 80% of a session waiting for a person, and half a week to read it all;
+  - 5× commits, with agent code undone no more often;
+  - meta-work from 10% to 22%, and 8,500 standing instructions;
+  - junior share of tech hires from 27% to 9%, and of tech staff from 21% to 14%, while the company tripled; AI-tool mentions in interview notes 3–4×;
+  - how it feels (one short quote);
+  - the authors' caveats;
+  - what it means for your team;
+  - "Your job doesn't disappear. It moves.";
+  - and Thank you.
+
+  Left out as not in the report: a 1.4× to 5.1× output range, "job listings", and staff "pressured to delegate the tasks they were hired to do".
+- **Then: the slump, placed where the story needs it (40 slides).** After "Wide, not deep", "Learning feels like this": a learning curve drawn a stretch per click, from the user's sketch ("Looks like fun" to "I did it!"; the sketch's swear word became "I know nothing!"). Then "Four reasons the buzz wears off": the novelty cliff, the competency dip, setup feels like progress, too many settings. Before "Thank you", "Push past the slump" (four tiles) and "Ten minutes a day" (a 14-day streak). The dopamine explanation is in the notes as popular psychology, not on a slide. The label over each title is now numbered by the build, so slides can be added anywhere.
+- **Then: Part 4, "Borrowed or owned?", the UKBT Institute model (51 slides).** It comes after "Your job moves":
+  - the core claim ("AI productivity without independence is borrowed, not owned");
+  - Wharton's study (Bastani et al., PNAS 2025): grades up 48% with plain GPT-4 and 127% with a guarded tutor; worse than never having it once AI is removed, a preprint figure that carries a fact check;
+  - the productivity × independence 2×2 (Owned, the mirage, Unaided, Stuck);
+  - "It feels easier. That's the trap.";
+  - the eight-strand wheel and its two tables (evidence and measure for each);
+  - the three pillars;
+  - an honest note on early evidence.
+
+  The pitch ("Everyone can make your team faster…") is the last slide before "Thank you". Two claims in the brief were corrected against Shen and Tamkin's paper (arXiv 2601.20245): it was the group without AI that reported learning more, and the paper does not show experienced developers resisting the deficit. So strand 1's evidence is "nobody was immune".
+- **Then: the UK Black Tech logo on every slide.** It is the full-name wordmark for dark grounds (`assets/brand/ukbt-wordmark.png`): the user asked for the full name, not the UKBT short mark. Its image layer keeps the logo's own colours (`tone: 'light'`); left to the theme, a dark ground shows every logo white. It sits small at the top right of content slides, and larger at the bottom right on covers and statements, in place of the "UK Black Tech" text.
+- **Then: UK Black Tech's own fonts** (from the brand guide, `~/Desktop/UKBlackTech/UKBT-Brand-Guide.md`). The one hero line on each big moment (the covers, takeaways, pitch and thanks) is in Alpha Lyrae Medium, in capitals. Everything else is Uncut Sans: Bold headings, Regular body, italic asides, and Semibold labels and stickers in capitals. Bricolage Grotesque, Instrument Serif, JetBrains Mono and Inter are gone. The background is still the deck's near-black with a mesh glow, not the guide's Dark Blue.
+- **Then: one talk, not four parts (36 slides, from 51).** 25 reviewers reordered the new edition, and the result is in [power-of-ai-fresh-running-order.md](power-of-ai-fresh-running-order.md). The 51-slide version they reviewed is kept in [power-of-ai-fresh-current.md](power-of-ai-fresh-current.md).
+  - **The opening.** One cover, "The Power of AI", and a new "Five questions" slide replace the four part covers. The label over each content slide now says where you are, for example "3 of 5 · What happens to my job?".
+  - **Takeaways.** The "in one line" takeaways for "AI ≠ chatbot" and the UK picture are now spoken bridges in the notes. "Your job doesn't disappear. It moves." stays as the hinge.
+  - **Merges:**
+    - the assumption into What people picture;
+    - the risk scale into Why the mix-up costs you;
+    - Pick the right AI into Which AI is it?;
+    - FSB's helping and worrying with BCC's not-replacing (59%, 92%, 95%);
+    - waiting for you with how it feels;
+    - more output with managing the agents;
+    - the three pillars into the wheel.
+  - **Moves.** The learning curve now opens the last question, straight before Push past the slump. The order is now Wharton, then "It feels easier", then the map.
+  - **The honest note** is now the last line of the second strand table.
+  - **Spoilers and order.** The agents slide no longer gives away Anthropic's numbers. The streak's notes now hand over to the Institute's line, not "thank the room".
+  - **Notes.** They now carry the hands-up moments. Every fact from a cut slide is in a neighbour or its notes. Every fact check stays with its figures.
+  - **Checks.** The build fails if `ORDER` leaves out or repeats a slide. All 36 slides were rendered and checked. `npm test` passes except one unrelated check, on an ignored notebook export in `output/`.
+- **Then: the speaker's own edits, carried into the build (36 slides, 35 shown).** The speaker edited the deck in Chrome and saved a deck file. Its three changes are now in `deck.ts`, so a rebuild keeps them:
+  - the titles of 8 slides are in Alpha Lyrae: Five questions, What people picture, AI is an umbrella, Why the mix-up costs you, Which AI is it?, Depends who you ask, Mostly admin and marketing, and It's helping. It's worrying;
+  - the ChatGPT, Claude and Copilot chips on What people picture sit 20px lower;
+  - Wide, not deep is hidden. Its landing line and the bridge into question 3 are now in the notes of the slide before it.
+
+  The rebuilt deck matches the speaker's file. The only differences are the chips lined up to the same pixel and those notes.
+- **Then: every title in Alpha Lyrae.** The speaker asked for the rest to match the eight. Every slide's title is now in Alpha Lyrae: 31 slides in all, counting the four kinds' names on their colour panels. Weight and case are unchanged. Five slides have no title line:
+  - the three big statements, already in Alpha Lyrae capitals;
+  - the core claim, Borrowed, not owned, whose statement stays in Uncut Sans Bold;
+  - the productivity-and-independence map.
+
+  All 36 slides were rendered and checked, and every title fits.
+- **Then: plain words for a non-technical room (34 slides, 33 shown).** The speaker pasted a review, and its fixes are in; the [running order](power-of-ai-fresh-running-order.md) has the details.
+  - **Terms explained on the slides:**
+    - prompt;
+    - machine learning and CRM;
+    - who DSIT, ONS, NatWest, BCC and FSB are;
+    - agent hours;
+    - a session;
+    - code changes and standing instructions;
+    - GPT-4 and the AI tutor;
+    - what the test in the skill trial was.
+  - **One pair of words for the core idea: owned and borrowed.** On the claim, "independence" is now "your own skill"; the Institute's wording stays in the notes. On the map, the mirage is now "Borrowed", and "Unaided" is now "Not yet using AI".
+  - **The method is one slide in plain words,** in place of the wheel and two strand tables. The strands get plain labels with the technical name under each. The pillars are plain promises. The honest note closes the slide. The evidence and measures are in the notes.
+  - **The method moves to just before the Institute's line,** so the map runs straight into How do I make it stick?
+  - **Bridges.**
+    - Question 2 to 3: jobs in small firms haven't gone, but where agents arrive first their shape is changing.
+    - Question 3 to 4: checking takes the skill AI can quietly erode. This one is now on screen, as the last click of "Your job moves".
+    - Each Anthropic finding gets a "For you" line in its notes, for a room that works in admin and marketing.
+    - "It" in question 5 is said as "AI in your routine, without borrowing your skill".
+  - **Checks.** All 34 slides were rendered and checked. `npm test` is unchanged: one unrelated failure on an ignored notebook export.
+- **Then: a second review, checked point by point.** The speaker pasted a second review. Each point was checked against the deck and against Shen and Tamkin's paper.
+  - **Already right, and unchanged:**
+    - The no-AI group did report more learning (section 5.2.2).
+    - The no-AI group scored higher at every level of experience.
+  - **Assumed a 25-minute slot.** The slot is 40 minutes, so no further cuts.
+  - **Already done:** the strand tables are gone.
+  - **Six fixes made:**
+    - Day 14 is "starting to feel normal". Lally 2010, about 66 days on average, is in the notes with a fact check.
+    - The learning curve's axis is Confidence, and the slide says it is an illustration, not data.
+    - Most AI training is now an arrow into Borrowed.
+    - Ten minutes a day is an owned routine: try it yourself first, ask the AI why, check its answer.
+    - "Lower the friction" now says "Keep the thinking hard".
+    - The skill trial's last line says its authors expect the loss to be greater still with agents. It paraphrases section 6.1 and carries a fact check. A notes line on "summarise" is added too.
+  - **Waiting on the speaker:** the audit link or QR code and contact details, and a slide about Mark in his own words.
+- **Then: a third review.**
+  - **Questions before the close.** Questions now comes before the Institute's line, so the talk ends on its message.
+  - **An audit card on both slides:** QR code, "Scan for the audit", link and contact. All are placeholders (`[QR code __]`, `[audit link __]`, `[contact __]`) until the speaker sends them.
+  - **Who gets hired** has a key: early 2025 against the 2026 report.
+  - **Plain words:**
+    - "the rest" is now "the agent actually working";
+    - "work people did by hand", "More output ≠ better output", "work sessions with AI";
+    - Wharton's tool is "a ChatGPT-style tool", with a plain version and a hints-only tutor.
+  - **The skill trial.** Its agents line keeps to the paper's words. The gloss is the speaker's own, in the notes. Both cards were checked in the paper (section 5.2.2), so that slide no longer needs a fact check.
+  - **The method's colours.** The strands and pillars are in brand green, not the kinds' colours.
+  - **A speaker edit carried in.** The four chips on Why look at an AI company? sit where the speaker moved them in the pane.
+  - **Not taken:**
+    - "Answers already showing": they appear on click.
+    - "Too long for 18–20 minutes": the slot is 40 minutes.
+    - "Time spent with AI" for "AI sessions": the report counts sessions, not time.
+    - Weekdays only: the speaker's call.
+- **Then: the core claim, reworded.** It reads "Fast with AI is borrowed. Good without it is owned." Two things were wrong before:
+  - "borrowed" was attached to productivity, while the map attaches it to the skill;
+  - "not owned" was in the owned green.
+
+  Each line is now in its own word's colour: orange for borrowed, green for owned. The map and the method already use the same words. The Institute's original wording stays in the notes.
+- **Then: a speaker slide (35 slides, 34 shown).** "Your speaker" comes straight after the cover, before any data.
+  - Mark Martin MBE's portrait (`assets/power-of-ai-fresh/mark-portrait.jpg`, copied from the air-pollution deck), with three pills: Education, R&D and Computer Science.
+  - "Founder" of AI Awareness Day. The day's 2027 lockup is set as text in its own style (docs/aiad27-style-guide.md §6) on its ink ground.
+  - "Over 1 million children across the country, supported with AI literacy". The day's site says "we estimate we're already reaching over 1,000,000 students".
+  - On the click, a card in the day's Future pink: next year, Thursday 29 April 2027, "we're encouraging businesses like yours to take part".
+
+  The date carries a fact check: the day's site gives 29 April at the top of its page and 4 June 2027 in its display-board guidance.
+- **Then: the UKBT Institute, pushed (36 slides, 35 shown).**
+  - **Its logo.** The white-and-green Institute logo (`assets/brand/ukbt-institute.svg`) now labels the core claim, the method and the Institute's closing line.
+  - **A new slide, "Who the Institute is for",** sits between the method and Questions. It is in the Institute's own words, from ukblacktech.com/ukbt-institute: academics, technologists, industry and practitioners. Each card has the page's tagline, its opening line and its call to action. Industry is marked "That's this room".
+  - **The notes** give where each call goes: the contact page, or register.
+- **Then: the close says what the Institute is.** The speaker pointed out that the Institute is multidisciplinary: it brings professionals together in a townhouse to take on hard problems.
+  - The last slide now reads "One townhouse. Many disciplines. We bring professionals together to take on the hardest problems. Academics, technologists, industry and practitioners, under one roof."
+  - It replaces "Everyone can make your team faster…", which stays in the notes as the tie back to the talk.
+  - The notes quote the Institute's own line, "hard problems don't respect disciplinary boundaries".
+- **Then: the QR code is real.** The audit card on Questions and the close now opens `https://ukblacktech.com/contact/`, which the speaker chose. The Institute's own page sends "De-risk your R&D" and "Partner with us" there.
+  - The code is drawn when the deck is built, by SlideForge's own encoder (`js/qr.js`), into `assets/power-of-ai-fresh/qr-ukblacktech-contact.svg`. To change the link, edit `CONTACT_URL` in `deck.ts`.
+  - The card reads "Scan to ask about the audit" and "ukblacktech.com/contact". The `[QR code __]`, `[audit link __]` and `[contact __]` placeholders are gone.
+  - The browser's own barcode reader decodes both rendered slides, and the code at 120, 187 and 280 pixels, to that address.
+- **Then: AI Awareness Day's own logo, and its website.** The speaker's slide now uses the day's 2027 logo, the chamfered "AI AWARENESS DAY 2027" tile. The file is `aiad27-mark.svg`, copied from the AI Awareness Day site's brand folder, and its words are in the brand face. The logo sits on the campaign's cream working ground.
+  - "Supporting AI literacy for over 1 million children across the country." is now smaller type beside the logo, as the speaker asked. The 2027 theme is under it.
+  - A QR code in the same box opens `https://aiawarenessday.co.uk/`. One helper, `qrCode()` in `deck.ts`, now makes both QR codes.
+  - All three codes in the deck decode from the rendered slides.
 - **Still open:** four of the five case studies are composites and say so; only Vertis Media (DSIT, June 2026) is a named firm. The speaker's name, the partners' logos and any partner offers on "Grow together" need confirming with CDA. No Lesson-studio copy ships yet.
 
 ### 15 October 2026, later — Studio 90: case files from the sources, and a professional offside graphic
