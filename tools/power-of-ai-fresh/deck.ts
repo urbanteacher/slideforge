@@ -60,6 +60,24 @@ const sticker = (name: string, value: string, x: number, y: number, w: number, c
 const chip = (name: string, value: string, x: number, y: number, w: number, edge: string, anim: A = pop()) =>
   text(name, value, at(x, y, w, 58), { font: BODY, weight: '600', size: 38, color: INK, lineHeight: 1.1,
     block: 'hug', blockColor: CARD, blockRadius: 80, blockPad: 20, blockBorder: 2.5, blockBorderColor: edge, fit: 'none' }, anim);
+/** Uncut Sans Semibold's advance widths, as a share of the type size (measured in the browser, 16 November), so a row
+   of pills can be laid out to their real width: within about 1% of the browser's own measure. */
+const UNCUT_600: Record<string, number> = {"0":0.682,"1":0.555,"2":0.616,"3":0.635,"4":0.693,"5":0.622,"6":0.621,"7":0.563,"8":0.647,"9":0.647,"a":0.549,"b":0.612,"c":0.569,"d":0.612,"e":0.562,"f":0.408,"g":0.612,"h":0.569,"i":0.246,"j":0.282,"k":0.559,"l":0.256,"m":0.877,"n":0.569,"o":0.582,"p":0.612,"q":0.612,"r":0.4,"s":0.536,"t":0.412,"u":0.564,"v":0.537,"w":0.788,"x":0.55,"y":0.567,"z":0.522,"A":0.679,"B":0.608,"C":0.757,"D":0.699,"E":0.569,"F":0.556,"G":0.813,"H":0.683,"I":0.265,"J":0.579,"K":0.643,"L":0.534,"M":0.865,"N":0.727,"O":0.779,"P":0.599,"Q":0.791,"R":0.632,"S":0.604,"T":0.653,"U":0.656,"V":0.623,"W":0.897,"X":0.657,"Y":0.602,"Z":0.595," ":0.217,"&":0.679,"-":0.48,"’":0.268,".":0.259,",":0.271};
+/** How wide a chip's pill is drawn: its words at 38px, and the 20px of padding the pill adds on each side. */
+const chipWidth = (value: string) => Math.round([...value].reduce((n, ch) => n + (UNCUT_600[ch] ?? 0.58), 0) * 38) + 40;
+/** A row of chips that wraps: each pill starts flush at x (the pill's own left edge, not its box's), and the gap
+   between pills is the same everywhere. Returns the chips and the number of lines they took. */
+function chipRow(names: string[], x0: number, y: number, right: number, edge: string, anims: (j: number) => A, prefix = 'Example', gap = 16, lineH = 84): { layers: Layer[]; lines: number } {
+  const layers: Layer[] = [];
+  let x = x0, line = 0;
+  names.forEach((c, j) => {
+    const w = chipWidth(c);
+    if (x + w > right && x > x0) { x = x0; line++; }
+    layers.push(chip(`${prefix} · ${c}`, c, x + 20, y + line * lineH, w, edge, anims(j)));
+    x += w + gap;
+  });
+  return { layers, lines: line + 1 };
+}
 const shape = (name: string, box: ReturnType<typeof at>, p: Record<string, unknown>, anim: A = { type: 'fade', duration: 0.6 }) =>
   createLayer('shape', { name, box, params: { shape: 'rect', radius: 40, fill: CARD, strokeWidth: 0, ...p }, anim });
 const icon = (name: string, which: string, box: ReturnType<typeof at>, colour: string, anim: A = pop(0.2)) =>
@@ -138,9 +156,7 @@ slides.push(page('The Power of AI', [
     ...ground(deep(GREEN)), ...chrome('The Power of AI · Your speaker'),
     portrait,
     display('Title', 'Mark Martin MBE', at(740, 170, 1070, 130), 112, {}, rise(0.2)),
-    chip('Field · education', 'Education', 740, 320, 260, GREEN, pop(0.4)),
-    chip('Field · R&D', 'R&D', 981, 320, 150, GREEN, pop(0.5)),
-    chip('Field · computer science', 'Computer Science', 1121, 320, 420, GREEN, pop(0.6)),
+    ...chipRow(['Education', 'R&D', 'Computer Science'], 720, 320, 1810, GREEN, (j) => pop(0.4 + j * 0.1), 'Field').layers,
     // AI Awareness Day's own logo (aiad27-mark.svg, from its site's brand folder), on its cream working ground.
     shape('AIAD panel', at(740, 410, 1070, 350), { radius: 28, fill: AIAD_CREAM }, rise(0.5)),
     aiadMark,
@@ -231,14 +247,9 @@ function kindSlide(k: Kind, rows: { label: string; body?: string; chips?: string
       y += h + 56;
     }
     if (r.chips) {
-      let x = 820, line = 0;
-      r.chips.forEach((c, j) => {
-        const w = Math.min(990, 70 + c.length * 22);
-        if (x + w > 1820) { x = 820; line++; }
-        layers.push(chip(`Example · ${c}`, c, x, y + line * 84, w, t.colour, pop(d + 0.15 + j * 0.08)));
-        x += w + 18;
-      });
-      y += (line + 1) * 84 + 48;
+      const row = chipRow(r.chips, 820, y + 8, 1810, t.colour, (j) => pop(d + 0.15 + j * 0.08));
+      layers.push(...row.layers);
+      y += row.lines * 84 + 48;
     }
   });
   return page(t.name, layers, notes, factCheck ? { factCheck: { note: factCheck } } : {});
