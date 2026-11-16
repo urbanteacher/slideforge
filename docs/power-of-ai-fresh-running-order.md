@@ -53,8 +53,8 @@ Some suggestions were not taken:
 1. **The Power of AI** (cover). "(spoiler: it's not just a chatbot)", the four kinds as stickers, and Mark Martin MBE CITP.
 2. **Your speaker** (new). It shows:
    - a black-and-white portrait of Mark Martin MBE, with three pills: Education, R&D and Computer Science;
-   - a cream panel in AI Awareness Day's style. It has the day's own 2027 logo, "Founder", and "Supporting AI literacy for over 1 million children across the country." in smaller type, with the 2027 theme, "Keep Humans in the Loop". A QR code opens aiawarenessday.co.uk;
-   - on the click, a card in the day's Future pink: "Next year · Thursday 29 April 2027. We're encouraging businesses like yours to take part."
+   - a cream panel in AI Awareness Day's style. It has the day's own 2027 logo, "Founder", and "Supporting AI literacy for over 1 million children across the country." in smaller type. A QR code opens aiawarenessday.co.uk;
+   - on the click, a pill in the day's Future pink, "Next year · Thursday 29 April 2027", with "We're encouraging businesses like yours to take part." under it.
 
    The date carries a fact check, because the day's site also gives 4 June 2027 in one place.
 3. **Five questions** (new). What even is AI? Who's actually using it? What happens to my job? Borrowed or owned? How do I make it stick?

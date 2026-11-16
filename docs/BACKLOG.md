@@ -1225,6 +1225,8 @@ From comparing `tools/motion/` with the Remotion studio in `~/Desktop/Engineerin
   - "Supporting AI literacy for over 1 million children across the country." is now smaller type beside the logo, as the speaker asked. The 2027 theme is under it.
   - A QR code in the same box opens `https://aiawarenessday.co.uk/`. One helper, `qrCode()` in `deck.ts`, now makes both QR codes.
   - All three codes in the deck decode from the rendered slides.
+- **Then: the date in a pill.** On the speaker's slide, "Next year · Thursday 29 April 2027" is now a pill in the day's Future pink, in place of the pink box. "We're encouraging businesses like yours to take part." sits under it on the dark ground.
+- **Then: the theme line removed.** "2027 theme: Keep Humans in the Loop" is gone from the speaker's AI Awareness Day box; the speaker found it awkward there.
 - **Still open:** four of the five case studies are composites and say so; only Vertis Media (DSIT, June 2026) is a named firm. The speaker's name, the partners' logos and any partner offers on "Grow together" need confirming with CDA. No Lesson-studio copy ships yet.
 
 ### 15 October 2026, later — Studio 90: case files from the sources, and a professional offside graphic
