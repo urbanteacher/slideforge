@@ -16,6 +16,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DECKS = [
   // Mark Martin MBE: "From a school street to the world stage" (The Air Pollution Project).
   { key: 'air-pollution-story', file: 'assets/air-pollution/Air-Pollution-Story.lesson.json' },
+  // The Power of AI, new edition (UK Black Tech): built layer by layer by tools/power-of-ai-fresh/build.mjs.
+  { key: 'power-of-ai-fresh', file: 'assets/power-of-ai-fresh/Power-of-AI-Fresh.lesson.json', inline: false },
   // Nodes (the Nodes folder): large decks, so only their address is written in; each is fetched from its file when opened.
   { key: 'nodes-critical-text-3', file: 'lessons/nodes/critical-text-3.lesson.json', inline: false },
   { key: 'nodes-describe-three-systems', file: 'lessons/nodes/describe-three-systems.lesson.json', inline: false },

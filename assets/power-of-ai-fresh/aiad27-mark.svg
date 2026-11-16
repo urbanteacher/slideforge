@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"
+     role="img" aria-label="AI Awareness Day 2027">
+  <defs>
+    <style>
+      /* Subset of assets/fonts/aiad27, inlined by scripts/embed-brand-font.py
+         so this file renders in the brand face on its own. Do not hand-edit:
+         change the type above, then re-run the script. */
+      @font-face { font-family: 'AIAD Sans'; font-style: normal;
+        font-weight: 600;
+        src: url(data:font/woff2;base64,d09GMk9UVE8AAATUAAsAAAAAB6wAAASHAAFN0gAAAAAAAAAAAAAAAAAAAAAAAAAADYVfG4E6HIEiBmAARAE2AiQDKAQGBYJgByAb5gYALgZTka0numwypHMa11v0SML03T/fyf9/vf/2SXzzAWC66eBSLs0OcgXy5k1mrfd/dlX1QpxxtKS6Z6lIiEUdI4B92Z99xUPPqf8uiWiM0rG4PGlaQSvaVwxYhZZVvDabU5w9Xv7DR8//5bSxdEzc2DvgqJctsETuj/bEbC3bGN7LCrhtWRhuXRbeywM/wBb1gkqjLn4TkRIU5Ny5yygvi0gjS40iitwzEREUZoYiM4wQskWEHDGsLCe6fbZN+X5ENgnFLTamYjopgwUxtwCukY1zkqDqwYxdmSRVVFaZ0GZEGnVWkeVFJZgwQt5kampmbGFqOT/wuh0J+GzXzhJGMFWSWXBjEJrDAEOSNYWsory9Adaz3U9FkkFqanNUct/m2m/mLtrwfHf9JciJEPBMTgp0wjKt7wrfB9+Ueve7Dx9NXw4PppPyHamkeEMF9bsKt1z/9Hyvdj+5hnf581jVfVNBexq70wqVUogIVB35YTx028534YG7RkggscNd4DN3EYWfsz2hgYsBA6aB30IVbrACWVg9zargn4SGYFoybvIFD93OPHTie60euL8/K0twBXfwQUcZLEgMGO9dNXJx6ytd4nQ1MpDp9x9ykfDo+58/N6Os3Df78ZiGCi1LaHMVTWe4K6wBV9HTb+rRwq209U7lqb/AAEMI1wF/1i8rFuhFRpanAbg2y/cuXbx+vjfNwq5MFt6HYw0Uwk/TzD/fCO7FZUS5lxcwCX77FPq444+gb//X8U1R0mJj2f2dbK3qOGFqTiiTzATilR28wAchDJ9uOvDTiEDVpz+8VlzuQwRr6V1n5HAx/kom4JWcBi+XPyEMG9Hv2JzZgfAyLLC231zYLxGUfW530Jc4GDbscQ/PszvkIJcgI3d/ddWn9Xz+kZUjqfo+jCnc5Cse0pEHPPmVyJOMV4ev59/phMs4JKXwIwxkn3WczM+LiHEzeDWv2r9lamlptGRcdos+aoAATIQ0QtMNjEQKm1kZiRRIAFz8+tarEhJJQRs1iR6kakkAaDpYMlStTjqJ4akrbO0ytff/ixkUEKJDfU0igKrIRFQWFaK+MeG5dyZGU0S8esODjIrU/oMigXRsGjGmJQUoSNMrMQV8qrANXr5aDoWCcD7YbsG4yEVEvEFwbKiQ0g1P+wZSNmYPcRCGyQC79bvQhrl/KCzJ0c5RTDA6QYrs4tLuCSGNT3wt6CVyACCEI0AAiAAPgCyWpGg0GmFTijTZf3qv/nf+NxAxRJPHjrZsYopiwR9NVHwPAC99d1GT3/+szyGNgErAcxcT2j5EXOcgFCWW7Sg8lJi5rNICftHXLAqBlXC5G1ogBlD1EUWlDqAIwECiFBkETiYYRHkmTUr9GWRF9r1PEeAjylEEqpXIkyNXGYY0KdKkClEvTWk/7KwSQxOqvpSpQMUQ/lJFjELKUK5MpD2GRNRERk2RPOnswn8IlyVHuUJpSphJki5FhnydAsQI5jA2rzJvFIyeF3GpvFkSg3qrFaomkDsXpXRJ0urFMdIXyZAldiqkCrqvOVS4siMNAAAA) format('woff2'); }
+      @font-face { font-family: 'AIAD Sans'; font-style: normal;
+        font-weight: 700 900;
+        src: url(data:font/woff2;base64,d09GMk9UVE8AAAUsAAwAAAAACCgAAATgAAFN0gAAAAAAAAAAAAAAAAAAAAAAAAAADYZaGhYbgW4cKgZgAGQBNgIkAygEBgWCWgcgG00HEZWcucl+FMZtzoNK5c3bLfbZqUIKTd2ctNtjsvvYtJ8NsE2hkZpAqJulPTPPfXcbcpv3Q/zXbf+7GJugJoEg6tBCiSMuvgL4n+/e6V1j0seef/I04ETGvOagOWhsaoNmPY8SWpvW1jCxBRRYAJ4CetbOUeuCds+/g+ADpIih3Tq6YnnrsHVZfMkYkCIhWiBoQUSTdZoXz9zduHPrrvjahwRtuekqu9FD2+UOXBF9ZEZSUnJCalJaQ4ITV137v62xS9WGhaVjs0/0CJuWq6zgC853CJ4BgjLxFCBDgSrrHYRzcDM842M/lEj8SCiJI4Uer6MieX+H13zHrhGM+5JkybYSu1CQzvmgSl/FLgFP0leY11GlbKO9SWD9VNqHgmbNB6/LlKiWKczj4XKHaQrlgEcevvGpZ56caTquoHJCQK/NzPAa8whkSlguM1nYZs30GAsNaKq1NipSXOPbP1qYZYvAMtCsYpYi4avrvDEeXb5Ho0X63Pb0q18HoFH9mGUpcbLERMcDzFN7QGBulHn6BPFI/lRi2yluZy96h2PXn/STx8cbGzvHcywSKs6rNoPTvs0wyn3iTcjTD2+fzjlsOckyBVToNlR3IAw8qWf8JRS0gyh4XIOWSFRUHXbYIBdJrOwzPt0xJfloUygw39aBV+H2VyXLVAIIES5CjESp0mTJIRbhDJ5KeFpF7+LaEeMroXK4eMIRGCy/Gy5HisbWEJm8jgqnigH2v21lBC37meHHrBZ8S2nLhYjGI6GiKuOmeNnznwSinRYjG1etS5RxByqeP0RL2g8iyX/yQ5RsxLv3YRzzXelxtd3pORQsetpiZeMm20pySfsiTDSuO6ftPkeVzKedbq773CT7H152s/dVniAWEdSC6pmla4/f/MjrKbKEZT5YQpHXliPvWC5gMcU4e5PA/Kj0ug9atA0UX3BsEDDa3sQsjg2UvaBtEFg0lWwr8SYUlomVwxDeFUrx/Uo8LMHi2CcsGj8RWBjFRcd6QSLn7MlcmCzNWhlB6vA9v/3rPlEixYOOz70Zr1mjRckPUhzCMBOMIIYAG7Kwg0mAD5i/jGEqJUt3JzFbJHIgANwAAADoEFLhSm4CIAqTQjcvdW1g7MdyKxjxAOASzrvOpVbQgxALz1VBFJsO4At0FvEA1jpMjwJQBnO+9lMAAOBkoDFFFudPqUI0On/5p6/4hQSvGYimwId/1kaNHUJYR4+DWvfgIJ2ZRjCjOhx+ppwRoqh+GmR/Pl15hAB0a0QA51dohXQprpDYibbtW2cD2BTrbs/2BorZz/ks8uWRTioDAB0ADoAXqSA8xmtCZnMWDkCxctUatOrUPcZAGUBq+SDnEx/78Pvf8853IGBMTyL7+0zmtM+gKe/Xc9wPAOAr/xuwmHn8wW3LKwgXOgAABIxadufQmAu32k5Mq4U8ypznlKXMppUHPZ/ArbYp/rXW88siL9AERAAuenDI5AoABcDHCS8FuI5ei52TUhbnKfbjggI37Y/y8wOUWrBojaWmTZqynCpFkhTJVLWGLcuD40FVgwXMMmbWStOWWa6d1agVNVBrOWTlUUkJOPecZAlSJUmTq12tTg1yS0vLquPJ4i1pVF7RMQJsmel6K7VtVJkbXmPRVOlgqgQppC1KKppJkyG6T/cYjsHNeV4KAA==) format('woff2'); }
+    </style>
+  </defs>
+  <!-- The chamfered panel, squared off: same 22% corner cut as shape-chamfer-tile,
+       on both the top-right and bottom-left corners as shape-chamfer-panel does. -->
+  <path fill="#231F20" d="M0 0H400L512 112V512H112L0 400Z"/>
+  <g font-family="'AIAD Sans', Arial, Helvetica, sans-serif" fill="#F6F4ED">
+    <g font-size="70" font-weight="700" letter-spacing="-1.5">
+      <text x="44" y="168">AI</text>
+      <text x="44" y="242">AWARENESS</text>
+      <text x="44" y="316">DAY</text>
+    </g>
+    <text x="468" y="452" text-anchor="end" font-size="52" font-weight="600" letter-spacing="0.5">2027</text>
+  </g>
+</svg>
