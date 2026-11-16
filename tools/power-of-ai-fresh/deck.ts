@@ -861,7 +861,8 @@ const p4Matrix = (() => {
     ...quad('Borrowed', 'Fast, but lost without it. Looks like success: the mirage.', mx, my, ORANGE, BLACK, click(pop())),
     text('Most training', 'Most AI training pushes this way', at(X + 50, my + 226, 700, 44), { font: MONO, size: 30, color: INK, uppercase: true, tracking: 0.1 }, click(rise())),
     shape('Training arrow', at(X + 50, my + 280, 780, 40), { shape: 'arrow', fill: INK }, then({ type: 'wipeRight', duration: 0.7, easing: 'expoOut' })),
-    sticker('Our job', 'Our job: up and right ↗', mx - 280, my - 40, 560, LIME, -4, click(pop()), 34),
+    // Cream, as the speaker set it in the studio (16 November).
+    sticker('Our job', 'Our job: up and right ↗', mx - 280, my - 40, 560, INK, -4, click(pop()), 34),
   ], 'The model that anchors everything, in two words: owned and borrowed. Across: speed with AI. Up: your own skill, what you can still do without it.\n\nOwned (top right) is the goal: fast, and still good without it. Borrowed (bottom right) is the danger, because it looks like success: fast, but lost without it. That is the mirage, and it is what the last two slides showed: the students on the plain version, and the developers who found the task easier. Click: most AI training pushes people right, towards speed, so the arrow runs from Stuck straight into Borrowed. Click: the Institute’s job is to move them up and right, into Owned.\n\nBridge: "Knowing the trap isn’t enough. Here’s why most people stall, and how to make it stick: AI in your routine, without borrowing your skill."');
 })();
 

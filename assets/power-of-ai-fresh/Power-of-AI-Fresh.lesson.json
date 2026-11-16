@@ -69,12 +69,12 @@
  },
  "slides": [
   {
-   "id": "qpe3zeso",
+   "id": "0opddhxj",
    "name": "The Power of AI",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "sbrxma0r",
+     "id": "oclzjiv9",
      "kind": "mesh",
      "name": "Ground",
      "visible": true,
@@ -115,7 +115,7 @@
      }
     },
     {
-     "id": "pu8cas2i",
+     "id": "wn9ixagz",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -149,7 +149,7 @@
      }
     },
     {
-     "id": "o1it4hdn",
+     "id": "3eoizzh9",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -221,7 +221,7 @@
      }
     },
     {
-     "id": "c2s0s8xu",
+     "id": "etbaa1ux",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -293,7 +293,7 @@
      }
     },
     {
-     "id": "b0jjkr42",
+     "id": "37g1txm0",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -365,7 +365,7 @@
      }
     },
     {
-     "id": "v3dusi8r",
+     "id": "onf2xfhx",
      "kind": "text",
      "name": "Sticker · generative",
      "visible": true,
@@ -437,7 +437,7 @@
      }
     },
     {
-     "id": "k9xhk8up",
+     "id": "2771i665",
      "kind": "text",
      "name": "Sticker · predictive",
      "visible": true,
@@ -509,7 +509,7 @@
      }
     },
     {
-     "id": "vftgbpkp",
+     "id": "ga95pjq4",
      "kind": "text",
      "name": "Sticker · automation",
      "visible": true,
@@ -581,7 +581,7 @@
      }
     },
     {
-     "id": "abu64qim",
+     "id": "rujnlftp",
      "kind": "text",
      "name": "Sticker · agents",
      "visible": true,
@@ -653,7 +653,7 @@
      }
     },
     {
-     "id": "ivs4va70",
+     "id": "ksttm372",
      "kind": "text",
      "name": "Speaker",
      "visible": true,
@@ -725,7 +725,7 @@
      }
     },
     {
-     "id": "6p6ibt23",
+     "id": "hck13yl1",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -793,12 +793,12 @@
    "notes": "THE POWER OF AI · ABOUT 40 MINUTES · FIVE QUESTIONS.\n\nLet the title and the spoiler land. \"Artificial intelligence\" is a broad umbrella term, but public conversation has shrunk it to one narrow branch: generative AI chatbots such as ChatGPT, Claude and Microsoft Copilot. The four stickers are the four kinds of AI we meet first; their colours stay the same all talk."
   },
   {
-   "id": "stys8n32",
+   "id": "5oy48pfm",
    "name": "Your speaker",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "t5ra8o1x",
+     "id": "6t1nqxq6",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -835,7 +835,7 @@
      }
     },
     {
-     "id": "9h3v84qi",
+     "id": "wn1qlrp7",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -869,7 +869,7 @@
      }
     },
     {
-     "id": "q0f88jlt",
+     "id": "n9ls8yky",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -941,7 +941,7 @@
      }
     },
     {
-     "id": "kxi6opgt",
+     "id": "uzn17tgi",
      "kind": "image",
      "name": "Portrait",
      "visible": true,
@@ -1002,7 +1002,7 @@
      }
     },
     {
-     "id": "vcks7jl7",
+     "id": "qc5at1x4",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -1074,7 +1074,7 @@
      }
     },
     {
-     "id": "whumlcip",
+     "id": "hnyeaqjy",
      "kind": "text",
      "name": "Field · Education",
      "visible": true,
@@ -1146,7 +1146,7 @@
      }
     },
     {
-     "id": "a85rmzrz",
+     "id": "mdu4zh20",
      "kind": "text",
      "name": "Field · R&D",
      "visible": true,
@@ -1218,7 +1218,7 @@
      }
     },
     {
-     "id": "kky441vu",
+     "id": "b18ckvw7",
      "kind": "text",
      "name": "Field · Computer Science",
      "visible": true,
@@ -1290,7 +1290,7 @@
      }
     },
     {
-     "id": "du1yd42u",
+     "id": "w8l9pj7p",
      "kind": "shape",
      "name": "AIAD panel",
      "visible": true,
@@ -1346,7 +1346,7 @@
      }
     },
     {
-     "id": "hhy7vez1",
+     "id": "qv4owvex",
      "kind": "image",
      "name": "AI Awareness Day logo",
      "visible": true,
@@ -1407,7 +1407,7 @@
      }
     },
     {
-     "id": "2mxwctnl",
+     "id": "kzau3d0c",
      "kind": "text",
      "name": "Founder",
      "visible": true,
@@ -1479,7 +1479,7 @@
      }
     },
     {
-     "id": "ux5vh4x8",
+     "id": "dsgcamjf",
      "kind": "text",
      "name": "Reach",
      "visible": true,
@@ -1551,7 +1551,7 @@
      }
     },
     {
-     "id": "qolufyja",
+     "id": "58m0f7r2",
      "kind": "image",
      "name": "AI Awareness Day QR code",
      "visible": true,
@@ -1612,7 +1612,7 @@
      }
     },
     {
-     "id": "rslxmmwa",
+     "id": "a0670eli",
      "kind": "text",
      "name": "AIAD · site",
      "visible": true,
@@ -1684,7 +1684,7 @@
      }
     },
     {
-     "id": "1z7aahj6",
+     "id": "4yfyful9",
      "kind": "text",
      "name": "Next year",
      "visible": true,
@@ -1756,7 +1756,7 @@
      }
     },
     {
-     "id": "tbrso8oj",
+     "id": "cqrg8gmn",
      "kind": "text",
      "name": "Next year · ask",
      "visible": true,
@@ -1828,7 +1828,7 @@
      }
     },
     {
-     "id": "umtkn9bv",
+     "id": "4knhuqft",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -1899,12 +1899,12 @@
    }
   },
   {
-   "id": "6zgrzigf",
+   "id": "4vt6cf5u",
    "name": "Five questions",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "qhrp2tet",
+     "id": "jiq5zmll",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -1941,7 +1941,7 @@
      }
     },
     {
-     "id": "b7ezqfqg",
+     "id": "asqlm7n9",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -1975,7 +1975,7 @@
      }
     },
     {
-     "id": "fbkhrofo",
+     "id": "auq4udr8",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -2047,7 +2047,7 @@
      }
     },
     {
-     "id": "gtadon0e",
+     "id": "zq6c9fxl",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -2119,7 +2119,7 @@
      }
     },
     {
-     "id": "oatb0a57",
+     "id": "i0hfvdsc",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -2191,7 +2191,7 @@
      }
     },
     {
-     "id": "a6ng9cpk",
+     "id": "hq30i6q1",
      "kind": "shape",
      "name": "Row · 1",
      "visible": true,
@@ -2247,7 +2247,7 @@
      }
     },
     {
-     "id": "x8sb6lux",
+     "id": "q1vp6kaw",
      "kind": "text",
      "name": "Number · 1",
      "visible": true,
@@ -2319,7 +2319,7 @@
      }
     },
     {
-     "id": "rlailjnm",
+     "id": "yjzumgiu",
      "kind": "text",
      "name": "Question · 1",
      "visible": true,
@@ -2391,7 +2391,7 @@
      }
     },
     {
-     "id": "bngvn8a6",
+     "id": "utwjao6n",
      "kind": "shape",
      "name": "Row · 2",
      "visible": true,
@@ -2447,7 +2447,7 @@
      }
     },
     {
-     "id": "ivj0wddn",
+     "id": "pzc7bubx",
      "kind": "text",
      "name": "Number · 2",
      "visible": true,
@@ -2519,7 +2519,7 @@
      }
     },
     {
-     "id": "sz6qvlhl",
+     "id": "jquvv9fc",
      "kind": "text",
      "name": "Question · 2",
      "visible": true,
@@ -2591,7 +2591,7 @@
      }
     },
     {
-     "id": "tqat0cca",
+     "id": "3l7231y1",
      "kind": "shape",
      "name": "Row · 3",
      "visible": true,
@@ -2647,7 +2647,7 @@
      }
     },
     {
-     "id": "yrdtyt42",
+     "id": "4as6yk0z",
      "kind": "text",
      "name": "Number · 3",
      "visible": true,
@@ -2719,7 +2719,7 @@
      }
     },
     {
-     "id": "nilqt2zu",
+     "id": "sj9ny563",
      "kind": "text",
      "name": "Question · 3",
      "visible": true,
@@ -2791,7 +2791,7 @@
      }
     },
     {
-     "id": "1df9ij01",
+     "id": "m5470wbl",
      "kind": "shape",
      "name": "Row · 4",
      "visible": true,
@@ -2847,7 +2847,7 @@
      }
     },
     {
-     "id": "5divl4n9",
+     "id": "lqgv472l",
      "kind": "text",
      "name": "Number · 4",
      "visible": true,
@@ -2919,7 +2919,7 @@
      }
     },
     {
-     "id": "ukw06ymj",
+     "id": "59pebp19",
      "kind": "text",
      "name": "Question · 4",
      "visible": true,
@@ -2991,7 +2991,7 @@
      }
     },
     {
-     "id": "ifnssf3b",
+     "id": "v5h96auw",
      "kind": "shape",
      "name": "Row · 5",
      "visible": true,
@@ -3047,7 +3047,7 @@
      }
     },
     {
-     "id": "wxi2timp",
+     "id": "57qkzur8",
      "kind": "text",
      "name": "Number · 5",
      "visible": true,
@@ -3119,7 +3119,7 @@
      }
     },
     {
-     "id": "tyvekcoq",
+     "id": "sxcaee29",
      "kind": "text",
      "name": "Question · 5",
      "visible": true,
@@ -3191,7 +3191,7 @@
      }
     },
     {
-     "id": "4o71fa0p",
+     "id": "z26hahkr",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -3259,12 +3259,12 @@
    "notes": "One talk, five questions. Read them out; the label at the top of every slide says which one we are on.\n\n01 What even is AI? (about 9 minutes). 02 Who’s actually using it? The UK numbers (about 8). 03 What happens to my job? A look inside the company that makes Claude (about 10). 04 Borrowed or owned? The idea the UKBT Institute is built on (about 6). 05 How do I make it stick? AI in your routine, without borrowing your skill: ten minutes a day from tomorrow, and the Institute’s method (about 7).\n\nBridge: \"First question. When I say AI, what do you picture?\""
   },
   {
-   "id": "csm1ecn5",
+   "id": "god1yhrj",
    "name": "What people picture",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "f4v4r7w6",
+     "id": "wmua3r0t",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -3301,7 +3301,7 @@
      }
     },
     {
-     "id": "tb8ol14v",
+     "id": "5xwj1lvr",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -3335,7 +3335,7 @@
      }
     },
     {
-     "id": "bfgf7xq9",
+     "id": "uo5bdscl",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -3407,7 +3407,7 @@
      }
     },
     {
-     "id": "q0f1i1w8",
+     "id": "usdnef3h",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -3479,7 +3479,7 @@
      }
     },
     {
-     "id": "0e7kq2in",
+     "id": "epcsypkc",
      "kind": "shape",
      "name": "Chat box",
      "visible": true,
@@ -3535,7 +3535,7 @@
      }
     },
     {
-     "id": "t9g7c9qn",
+     "id": "sg6qrzrf",
      "kind": "text",
      "name": "Prompt",
      "visible": true,
@@ -3608,7 +3608,7 @@
      }
     },
     {
-     "id": "si822v5g",
+     "id": "99r2fjzn",
      "kind": "shape",
      "name": "Send",
      "visible": true,
@@ -3664,7 +3664,7 @@
      }
     },
     {
-     "id": "9xdqo0gb",
+     "id": "ltmdkthu",
      "kind": "icon",
      "name": "Send arrow",
      "visible": true,
@@ -3706,7 +3706,7 @@
      }
     },
     {
-     "id": "3gmyi3hb",
+     "id": "ydxryrgl",
      "kind": "text",
      "name": "Tool · ChatGPT",
      "visible": true,
@@ -3778,7 +3778,7 @@
      }
     },
     {
-     "id": "e2gqcxnq",
+     "id": "69bj0c8b",
      "kind": "text",
      "name": "Tool · Claude",
      "visible": true,
@@ -3850,7 +3850,7 @@
      }
     },
     {
-     "id": "bvubtjqk",
+     "id": "l98cmfll",
      "kind": "text",
      "name": "Tool · Copilot",
      "visible": true,
@@ -3922,7 +3922,7 @@
      }
     },
     {
-     "id": "xnz65mb4",
+     "id": "1dgug4pu",
      "kind": "text",
      "name": "Prompt label",
      "visible": true,
@@ -3994,7 +3994,7 @@
      }
     },
     {
-     "id": "hdlncj3f",
+     "id": "bxxco0me",
      "kind": "text",
      "name": "That’s one branch",
      "visible": true,
@@ -4066,7 +4066,7 @@
      }
     },
     {
-     "id": "ufw4it47",
+     "id": "sdpnh8i0",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -4134,12 +4134,12 @@
    "notes": "Ask the room: \"When I say AI, what do you picture?\" Most people picture a chat box.\n\nBecause business owners and the public have mostly met conversational chatbots, many SMEs assume \"adopting AI\" simply means typing prompts into a box. Point at the box: \"What you type here is called a prompt.\" Say that assumption out loud. Think that, and you miss the wider toolkit that does the real work: the forecasting, the document reading, the routing, the agents.\n\nClick: that is one branch. Over the next few slides we meet the other three, and why the difference matters for a business."
   },
   {
-   "id": "g73y6qtf",
+   "id": "1wjmtl5k",
    "name": "AI is an umbrella",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "hmlrdirn",
+     "id": "12mssrfi",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -4176,7 +4176,7 @@
      }
     },
     {
-     "id": "whh2ojwp",
+     "id": "r8fzdp97",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -4210,7 +4210,7 @@
      }
     },
     {
-     "id": "08hdpyyb",
+     "id": "kjqbr2hp",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -4282,7 +4282,7 @@
      }
     },
     {
-     "id": "o104cugj",
+     "id": "3m4h9rm8",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -4354,7 +4354,7 @@
      }
     },
     {
-     "id": "x5255mdf",
+     "id": "7nyszb9k",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -4426,7 +4426,7 @@
      }
     },
     {
-     "id": "mzqctl3c",
+     "id": "spapsbo8",
      "kind": "shape",
      "name": "Tile · Generative",
      "visible": true,
@@ -4482,7 +4482,7 @@
      }
     },
     {
-     "id": "jf8ylody",
+     "id": "o3w0mrqy",
      "kind": "text",
      "name": "Number · Generative",
      "visible": true,
@@ -4554,7 +4554,7 @@
      }
     },
     {
-     "id": "q2vd35y9",
+     "id": "7t04tben",
      "kind": "icon",
      "name": "Icon · Generative",
      "visible": true,
@@ -4596,7 +4596,7 @@
      }
     },
     {
-     "id": "bjv8d0fn",
+     "id": "eq0o4twk",
      "kind": "text",
      "name": "Name · Generative",
      "visible": true,
@@ -4668,7 +4668,7 @@
      }
     },
     {
-     "id": "qfsa4btk",
+     "id": "e3sgp59l",
      "kind": "text",
      "name": "Nickname · Generative",
      "visible": true,
@@ -4740,7 +4740,7 @@
      }
     },
     {
-     "id": "mf53pkuf",
+     "id": "jk1fmd31",
      "kind": "shape",
      "name": "Tile · Predictive",
      "visible": true,
@@ -4796,7 +4796,7 @@
      }
     },
     {
-     "id": "kys510q5",
+     "id": "3gu3vc6i",
      "kind": "text",
      "name": "Number · Predictive",
      "visible": true,
@@ -4868,7 +4868,7 @@
      }
     },
     {
-     "id": "qry3rps2",
+     "id": "yt9zmny3",
      "kind": "icon",
      "name": "Icon · Predictive",
      "visible": true,
@@ -4910,7 +4910,7 @@
      }
     },
     {
-     "id": "fo30l99b",
+     "id": "5xetaxer",
      "kind": "text",
      "name": "Name · Predictive",
      "visible": true,
@@ -4982,7 +4982,7 @@
      }
     },
     {
-     "id": "oesf8yn4",
+     "id": "o7oguii9",
      "kind": "text",
      "name": "Nickname · Predictive",
      "visible": true,
@@ -5054,7 +5054,7 @@
      }
     },
     {
-     "id": "cnx5co0u",
+     "id": "hoxl0pgb",
      "kind": "shape",
      "name": "Tile · Automation",
      "visible": true,
@@ -5110,7 +5110,7 @@
      }
     },
     {
-     "id": "6mxzu9wd",
+     "id": "h4jgy2wo",
      "kind": "text",
      "name": "Number · Automation",
      "visible": true,
@@ -5182,7 +5182,7 @@
      }
     },
     {
-     "id": "kjtytbqw",
+     "id": "n123sf4w",
      "kind": "icon",
      "name": "Icon · Automation",
      "visible": true,
@@ -5224,7 +5224,7 @@
      }
     },
     {
-     "id": "vd7hvema",
+     "id": "bko9dc79",
      "kind": "text",
      "name": "Name · Automation",
      "visible": true,
@@ -5296,7 +5296,7 @@
      }
     },
     {
-     "id": "6p0kz6lv",
+     "id": "rxruesah",
      "kind": "text",
      "name": "Nickname · Automation",
      "visible": true,
@@ -5368,7 +5368,7 @@
      }
     },
     {
-     "id": "oto9yj5q",
+     "id": "hpf0b8yc",
      "kind": "shape",
      "name": "Tile · Agents",
      "visible": true,
@@ -5424,7 +5424,7 @@
      }
     },
     {
-     "id": "kpi6xp28",
+     "id": "p04y5xif",
      "kind": "text",
      "name": "Number · Agents",
      "visible": true,
@@ -5496,7 +5496,7 @@
      }
     },
     {
-     "id": "igpbqouz",
+     "id": "aap7rmht",
      "kind": "icon",
      "name": "Icon · Agents",
      "visible": true,
@@ -5538,7 +5538,7 @@
      }
     },
     {
-     "id": "0ogp6bve",
+     "id": "bo1oiz23",
      "kind": "text",
      "name": "Name · Agents",
      "visible": true,
@@ -5610,7 +5610,7 @@
      }
     },
     {
-     "id": "qs5ql1er",
+     "id": "ynjmraj8",
      "kind": "text",
      "name": "Nickname · Agents",
      "visible": true,
@@ -5682,7 +5682,7 @@
      }
     },
     {
-     "id": "qsp2zb0q",
+     "id": "yxfpsctk",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -5750,12 +5750,12 @@
    "notes": "Four kinds, one click each. Give each its nickname as it lands.\n\n01 Generative: the public face. 02 Predictive and analytical: the quiet workhorse. 03 Automation and workflow: the efficiency engine. 04 Autonomous agents: the new frontier.\n\nOn the last click, ask the room: \"Hands up for each kind you’ve used. One hand for one, two for two…\"\n\nKeep the colours in mind: they stay the same for the rest of the talk."
   },
   {
-   "id": "dfq74q9y",
+   "id": "hkmht1oo",
    "name": "Generative AI",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "r35fh2xs",
+     "id": "lmyay0fg",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -5792,7 +5792,7 @@
      }
     },
     {
-     "id": "39dzbgoe",
+     "id": "avse9azv",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -5826,7 +5826,7 @@
      }
     },
     {
-     "id": "ndwfbhly",
+     "id": "tphnidtv",
      "kind": "shape",
      "name": "Panel",
      "visible": true,
@@ -5882,7 +5882,7 @@
      }
     },
     {
-     "id": "mz9tv1ye",
+     "id": "zdszmxc2",
      "kind": "text",
      "name": "Number",
      "visible": true,
@@ -5954,7 +5954,7 @@
      }
     },
     {
-     "id": "2mn05ktf",
+     "id": "2y44rad0",
      "kind": "icon",
      "name": "Icon",
      "visible": true,
@@ -5996,7 +5996,7 @@
      }
     },
     {
-     "id": "8b6bme08",
+     "id": "adbt8g3i",
      "kind": "text",
      "name": "Name",
      "visible": true,
@@ -6068,7 +6068,7 @@
      }
     },
     {
-     "id": "wjzdvqt4",
+     "id": "25692khk",
      "kind": "text",
      "name": "Nickname",
      "visible": true,
@@ -6140,7 +6140,7 @@
      }
     },
     {
-     "id": "ntvhcd1u",
+     "id": "7p9i2ell",
      "kind": "text",
      "name": "Label · What it does",
      "visible": true,
@@ -6212,7 +6212,7 @@
      }
     },
     {
-     "id": "muyr9nne",
+     "id": "i99o11oz",
      "kind": "text",
      "name": "Text · What it does",
      "visible": true,
@@ -6284,7 +6284,7 @@
      }
     },
     {
-     "id": "kw5drgmu",
+     "id": "0w47vv42",
      "kind": "text",
      "name": "Label · You’ll know it as",
      "visible": true,
@@ -6356,7 +6356,7 @@
      }
     },
     {
-     "id": "gtll9uhq",
+     "id": "1gqhzvr8",
      "kind": "text",
      "name": "Example · ChatGPT",
      "visible": true,
@@ -6428,7 +6428,7 @@
      }
     },
     {
-     "id": "95xvlzp3",
+     "id": "5zfbq2i4",
      "kind": "text",
      "name": "Example · Claude",
      "visible": true,
@@ -6500,7 +6500,7 @@
      }
     },
     {
-     "id": "2qm6za5e",
+     "id": "wvsocgpu",
      "kind": "text",
      "name": "Example · Microsoft Copilot",
      "visible": true,
@@ -6572,7 +6572,7 @@
      }
     },
     {
-     "id": "v6mkhk7v",
+     "id": "12ma05cs",
      "kind": "text",
      "name": "Label · Watch out",
      "visible": true,
@@ -6644,7 +6644,7 @@
      }
     },
     {
-     "id": "r9qygmvr",
+     "id": "40gecejz",
      "kind": "text",
      "name": "Text · Watch out",
      "visible": true,
@@ -6716,7 +6716,7 @@
      }
     },
     {
-     "id": "t8di7vip",
+     "id": "r8nzgdyl",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -6784,12 +6784,12 @@
    "notes": "01 · GENERATIVE AI, THE PUBLIC FACE. Tools that create new text, images, code or audio on demand. They are accessible and impressive, which is why they dominate the headlines. They are also prone to hallucinations and need constant human supervision."
   },
   {
-   "id": "q8ivonzm",
+   "id": "ap794610",
    "name": "Predictive & analytical AI",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "tkzse3of",
+     "id": "hezsx0ui",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -6826,7 +6826,7 @@
      }
     },
     {
-     "id": "okaqmqot",
+     "id": "az980inx",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -6860,7 +6860,7 @@
      }
     },
     {
-     "id": "otyghd02",
+     "id": "e7iyry6z",
      "kind": "shape",
      "name": "Panel",
      "visible": true,
@@ -6916,7 +6916,7 @@
      }
     },
     {
-     "id": "yaqnfva9",
+     "id": "u3420kc9",
      "kind": "text",
      "name": "Number",
      "visible": true,
@@ -6988,7 +6988,7 @@
      }
     },
     {
-     "id": "w7m86bt4",
+     "id": "grytzqeg",
      "kind": "icon",
      "name": "Icon",
      "visible": true,
@@ -7030,7 +7030,7 @@
      }
     },
     {
-     "id": "rsqhkhd6",
+     "id": "pcm50h30",
      "kind": "text",
      "name": "Name",
      "visible": true,
@@ -7102,7 +7102,7 @@
      }
     },
     {
-     "id": "vrfh4v3d",
+     "id": "32dqikb0",
      "kind": "text",
      "name": "Nickname",
      "visible": true,
@@ -7174,7 +7174,7 @@
      }
     },
     {
-     "id": "q9l2ybqe",
+     "id": "tj8a9ee6",
      "kind": "text",
      "name": "Label · What it does",
      "visible": true,
@@ -7246,7 +7246,7 @@
      }
     },
     {
-     "id": "sxthgdkn",
+     "id": "ucy2ne3u",
      "kind": "text",
      "name": "Text · What it does",
      "visible": true,
@@ -7318,7 +7318,7 @@
      }
     },
     {
-     "id": "n4aljxd7",
+     "id": "tb7h6zbd",
      "kind": "text",
      "name": "Label · It can",
      "visible": true,
@@ -7390,7 +7390,7 @@
      }
     },
     {
-     "id": "rpzyc5vy",
+     "id": "q963xg9h",
      "kind": "text",
      "name": "Example · Forecast cash flow",
      "visible": true,
@@ -7462,7 +7462,7 @@
      }
     },
     {
-     "id": "7qg5vtwm",
+     "id": "sa7826z5",
      "kind": "text",
      "name": "Example · Predict stock demand",
      "visible": true,
@@ -7534,7 +7534,7 @@
      }
     },
     {
-     "id": "hmeqg27k",
+     "id": "pzkib2ps",
      "kind": "text",
      "name": "Example · Flag late payers",
      "visible": true,
@@ -7606,7 +7606,7 @@
      }
     },
     {
-     "id": "rppmamsv",
+     "id": "q8rzkes4",
      "kind": "text",
      "name": "Example · Spot customers leaving",
      "visible": true,
@@ -7678,7 +7678,7 @@
      }
     },
     {
-     "id": "4h0fvxnp",
+     "id": "1jon02xx",
      "kind": "text",
      "name": "Label · Where it lives",
      "visible": true,
@@ -7750,7 +7750,7 @@
      }
     },
     {
-     "id": "ljwe7h4i",
+     "id": "0869vyeh",
      "kind": "text",
      "name": "Text · Where it lives",
      "visible": true,
@@ -7822,7 +7822,7 @@
      }
     },
     {
-     "id": "29drmv6z",
+     "id": "idcluzmc",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -7890,12 +7890,12 @@
    "notes": "02 · PREDICTIVE AND ANALYTICAL AI, THE QUIET WORKHORSE. Machine-learning models that spot patterns in historical data: forecasting cash flow, predicting stock demand, flagging late-paying invoices, identifying customer churn (customers about to leave). These tools run quietly inside existing accounting, CRM and inventory software."
   },
   {
-   "id": "1clzxe4m",
+   "id": "5sk2ebr4",
    "name": "Automation & workflow AI",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "ofz58mhr",
+     "id": "0e5tx7r4",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -7932,7 +7932,7 @@
      }
     },
     {
-     "id": "gqj9gx7y",
+     "id": "100e4408",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -7966,7 +7966,7 @@
      }
     },
     {
-     "id": "dkqx5u57",
+     "id": "3k6mlc0w",
      "kind": "shape",
      "name": "Panel",
      "visible": true,
@@ -8022,7 +8022,7 @@
      }
     },
     {
-     "id": "vme8f1tk",
+     "id": "wdtl3wtw",
      "kind": "text",
      "name": "Number",
      "visible": true,
@@ -8094,7 +8094,7 @@
      }
     },
     {
-     "id": "lcortxtf",
+     "id": "zx0suima",
      "kind": "icon",
      "name": "Icon",
      "visible": true,
@@ -8136,7 +8136,7 @@
      }
     },
     {
-     "id": "7i31fwpx",
+     "id": "qy4rstbb",
      "kind": "text",
      "name": "Name",
      "visible": true,
@@ -8208,7 +8208,7 @@
      }
     },
     {
-     "id": "ylu553u2",
+     "id": "6bfkxgma",
      "kind": "text",
      "name": "Nickname",
      "visible": true,
@@ -8280,7 +8280,7 @@
      }
     },
     {
-     "id": "stv1adon",
+     "id": "im70ghii",
      "kind": "text",
      "name": "Label · What it does",
      "visible": true,
@@ -8352,7 +8352,7 @@
      }
     },
     {
-     "id": "c3x5xtdj",
+     "id": "zrtdzm3s",
      "kind": "text",
      "name": "Text · What it does",
      "visible": true,
@@ -8424,7 +8424,7 @@
      }
     },
     {
-     "id": "47wjjo1g",
+     "id": "bmbk3q64",
      "kind": "text",
      "name": "Label · It can",
      "visible": true,
@@ -8496,7 +8496,7 @@
      }
     },
     {
-     "id": "69gmfxe8",
+     "id": "22b256fu",
      "kind": "text",
      "name": "Example · Read invoices",
      "visible": true,
@@ -8568,7 +8568,7 @@
      }
     },
     {
-     "id": "9hieoovs",
+     "id": "6xijt4e3",
      "kind": "text",
      "name": "Example · Pull data from PDFs",
      "visible": true,
@@ -8640,7 +8640,7 @@
      }
     },
     {
-     "id": "ay66zyx3",
+     "id": "yxbn7z08",
      "kind": "text",
      "name": "Example · Route support tickets",
      "visible": true,
@@ -8712,7 +8712,7 @@
      }
     },
     {
-     "id": "an6ccq5k",
+     "id": "d03q5ncn",
      "kind": "text",
      "name": "Example · Transcribe meetings",
      "visible": true,
@@ -8784,7 +8784,7 @@
      }
     },
     {
-     "id": "hiblgeo8",
+     "id": "pbsalgi3",
      "kind": "text",
      "name": "Example · Summarise meetings",
      "visible": true,
@@ -8856,7 +8856,7 @@
      }
     },
     {
-     "id": "r9hkntzt",
+     "id": "u59pm985",
      "kind": "text",
      "name": "Label · Why it matters",
      "visible": true,
@@ -8928,7 +8928,7 @@
      }
     },
     {
-     "id": "kovng3ub",
+     "id": "a78af9yi",
      "kind": "text",
      "name": "Text · Why it matters",
      "visible": true,
@@ -9000,7 +9000,7 @@
      }
     },
     {
-     "id": "ifl6ux5m",
+     "id": "iym5r3xl",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -9068,12 +9068,12 @@
    "notes": "03 · AUTOMATION AND WORKFLOW AI, THE EFFICIENCY ENGINE. Systems that extract data from PDFs, read invoices, route customer support tickets, or transcribe and summarise meetings, without anyone prompting them."
   },
   {
-   "id": "4sqtwjn5",
+   "id": "6wwfu91h",
    "name": "Autonomous AI agents",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "jk0nhw82",
+     "id": "gc0dq8cs",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -9110,7 +9110,7 @@
      }
     },
     {
-     "id": "cqdel1pi",
+     "id": "bvw09jl3",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -9144,7 +9144,7 @@
      }
     },
     {
-     "id": "cmrn94su",
+     "id": "sjlm97o9",
      "kind": "shape",
      "name": "Panel",
      "visible": true,
@@ -9200,7 +9200,7 @@
      }
     },
     {
-     "id": "60p5dxiy",
+     "id": "47gxpm25",
      "kind": "text",
      "name": "Number",
      "visible": true,
@@ -9272,7 +9272,7 @@
      }
     },
     {
-     "id": "sgvp8pit",
+     "id": "di433x7g",
      "kind": "icon",
      "name": "Icon",
      "visible": true,
@@ -9314,7 +9314,7 @@
      }
     },
     {
-     "id": "cr70ypbz",
+     "id": "u9pmso3c",
      "kind": "text",
      "name": "Name",
      "visible": true,
@@ -9386,7 +9386,7 @@
      }
     },
     {
-     "id": "lh10kat2",
+     "id": "5sz0l1th",
      "kind": "text",
      "name": "Nickname",
      "visible": true,
@@ -9458,7 +9458,7 @@
      }
     },
     {
-     "id": "j34emzy9",
+     "id": "xaq4rrxx",
      "kind": "text",
      "name": "Label · What it does",
      "visible": true,
@@ -9530,7 +9530,7 @@
      }
     },
     {
-     "id": "2o3kmmdk",
+     "id": "fw1uwf5k",
      "kind": "text",
      "name": "Text · What it does",
      "visible": true,
@@ -9602,7 +9602,7 @@
      }
     },
     {
-     "id": "tc1dp1rc",
+     "id": "1gyt52a3",
      "kind": "text",
      "name": "Label · It can",
      "visible": true,
@@ -9674,7 +9674,7 @@
      }
     },
     {
-     "id": "ghapkzmv",
+     "id": "3jirogmp",
      "kind": "text",
      "name": "Example · Plan the steps",
      "visible": true,
@@ -9746,7 +9746,7 @@
      }
     },
     {
-     "id": "esuv1wbv",
+     "id": "4qa4qthk",
      "kind": "text",
      "name": "Example · Use your tools",
      "visible": true,
@@ -9818,7 +9818,7 @@
      }
     },
     {
-     "id": "n1fjr51w",
+     "id": "jb39kmcv",
      "kind": "text",
      "name": "Example · Finish the job",
      "visible": true,
@@ -9890,7 +9890,7 @@
      }
     },
     {
-     "id": "5gjl2tuv",
+     "id": "uum1pcdp",
      "kind": "text",
      "name": "Label · Why now",
      "visible": true,
@@ -9962,7 +9962,7 @@
      }
     },
     {
-     "id": "yx6r5xiw",
+     "id": "yzarab5z",
      "kind": "text",
      "name": "Text · Why now",
      "visible": true,
@@ -10034,7 +10034,7 @@
      }
     },
     {
-     "id": "cfvg8892",
+     "id": "yqeabvrx",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -10102,12 +10102,12 @@
    "notes": "04 · AUTONOMOUS AI AGENTS, THE NEW FRONTIER. Goal-driven systems that can plan multi-step tasks, use software tools and execute workflows independently.\n\nThis is the shift examined in Anthropic’s \"How employment is changing at Anthropic\" (16 October 2026), the third question of the talk. Keep its numbers for then: don’t give them away here."
   },
   {
-   "id": "z86pae7w",
+   "id": "x62e6lnw",
    "name": "Why the mix-up costs you",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "fi3vqqz4",
+     "id": "h9n57o3l",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -10144,7 +10144,7 @@
      }
     },
     {
-     "id": "dh0ldltz",
+     "id": "60dursgi",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -10178,7 +10178,7 @@
      }
     },
     {
-     "id": "9ux1hjbq",
+     "id": "azecsf0r",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -10250,7 +10250,7 @@
      }
     },
     {
-     "id": "892wlwup",
+     "id": "ijuig2wa",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -10322,7 +10322,7 @@
      }
     },
     {
-     "id": "hugaa2d7",
+     "id": "1awe1ei7",
      "kind": "shape",
      "name": "Card · 01",
      "visible": true,
@@ -10378,7 +10378,7 @@
      }
     },
     {
-     "id": "y7yrqq9a",
+     "id": "l1iqwwda",
      "kind": "shape",
      "name": "Band · 01",
      "visible": true,
@@ -10434,7 +10434,7 @@
      }
     },
     {
-     "id": "eildvge9",
+     "id": "05ryd7kw",
      "kind": "text",
      "name": "Number · 01",
      "visible": true,
@@ -10506,7 +10506,7 @@
      }
     },
     {
-     "id": "azc48u23",
+     "id": "eqws8sp7",
      "kind": "text",
      "name": "Heading · 01",
      "visible": true,
@@ -10578,7 +10578,7 @@
      }
     },
     {
-     "id": "xw8bm5ls",
+     "id": "x324pgi4",
      "kind": "text",
      "name": "Text · 01",
      "visible": true,
@@ -10651,7 +10651,7 @@
      }
     },
     {
-     "id": "reb37npk",
+     "id": "cvww31qi",
      "kind": "shape",
      "name": "Card · 02",
      "visible": true,
@@ -10707,7 +10707,7 @@
      }
     },
     {
-     "id": "rwgf17wb",
+     "id": "6w223blq",
      "kind": "shape",
      "name": "Band · 02",
      "visible": true,
@@ -10763,7 +10763,7 @@
      }
     },
     {
-     "id": "lwf2ktba",
+     "id": "msph0be2",
      "kind": "text",
      "name": "Number · 02",
      "visible": true,
@@ -10835,7 +10835,7 @@
      }
     },
     {
-     "id": "7m9se8fe",
+     "id": "wqaruk6w",
      "kind": "text",
      "name": "Heading · 02",
      "visible": true,
@@ -10907,7 +10907,7 @@
      }
     },
     {
-     "id": "9lbky61h",
+     "id": "5t4hrev8",
      "kind": "text",
      "name": "Text · 02",
      "visible": true,
@@ -10980,7 +10980,7 @@
      }
     },
     {
-     "id": "gzlzm83g",
+     "id": "ivk0dr7e",
      "kind": "shape",
      "name": "Card · 03",
      "visible": true,
@@ -11036,7 +11036,7 @@
      }
     },
     {
-     "id": "2dbpk1ow",
+     "id": "3pvrfvhm",
      "kind": "shape",
      "name": "Band · 03",
      "visible": true,
@@ -11092,7 +11092,7 @@
      }
     },
     {
-     "id": "cjb94usu",
+     "id": "oohv6i6q",
      "kind": "text",
      "name": "Number · 03",
      "visible": true,
@@ -11164,7 +11164,7 @@
      }
     },
     {
-     "id": "blct2yol",
+     "id": "fktvjvpm",
      "kind": "text",
      "name": "Heading · 03",
      "visible": true,
@@ -11236,7 +11236,7 @@
      }
     },
     {
-     "id": "2g4suifa",
+     "id": "f9ihz4ne",
      "kind": "text",
      "name": "Text · 03",
      "visible": true,
@@ -11309,7 +11309,7 @@
      }
     },
     {
-     "id": "b64fpkww",
+     "id": "a6m9jgl8",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -11380,12 +11380,12 @@
    }
   },
   {
-   "id": "kin5amgz",
+   "id": "u9mz40ux",
    "name": "Which AI is it?",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "mil8is10",
+     "id": "sbbx1ns9",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -11422,7 +11422,7 @@
      }
     },
     {
-     "id": "hyw30axl",
+     "id": "zfdr15bx",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -11456,7 +11456,7 @@
      }
     },
     {
-     "id": "7iba3w3o",
+     "id": "fntmmntd",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -11528,7 +11528,7 @@
      }
     },
     {
-     "id": "vjzhk2hw",
+     "id": "7qc6a2pz",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -11600,7 +11600,7 @@
      }
     },
     {
-     "id": "mkexht3y",
+     "id": "nygmgp4a",
      "kind": "text",
      "name": "Shout",
      "visible": true,
@@ -11672,7 +11672,7 @@
      }
     },
     {
-     "id": "nxzayqaf",
+     "id": "u88d5p2g",
      "kind": "shape",
      "name": "Task card · 1",
      "visible": true,
@@ -11728,7 +11728,7 @@
      }
     },
     {
-     "id": "kbwye8g9",
+     "id": "txfflem9",
      "kind": "text",
      "name": "Task · 1",
      "visible": true,
@@ -11800,7 +11800,7 @@
      }
     },
     {
-     "id": "z7uehl49",
+     "id": "kzt7b8ua",
      "kind": "shape",
      "name": "Task card · 2",
      "visible": true,
@@ -11856,7 +11856,7 @@
      }
     },
     {
-     "id": "56q403eo",
+     "id": "ma0npher",
      "kind": "text",
      "name": "Task · 2",
      "visible": true,
@@ -11928,7 +11928,7 @@
      }
     },
     {
-     "id": "o5v0e4zd",
+     "id": "p3sc8igi",
      "kind": "shape",
      "name": "Task card · 3",
      "visible": true,
@@ -11984,7 +11984,7 @@
      }
     },
     {
-     "id": "59o9s9n1",
+     "id": "9zt7tx7k",
      "kind": "text",
      "name": "Task · 3",
      "visible": true,
@@ -12056,7 +12056,7 @@
      }
     },
     {
-     "id": "f3x31hom",
+     "id": "26nzl163",
      "kind": "shape",
      "name": "Task card · 4",
      "visible": true,
@@ -12112,7 +12112,7 @@
      }
     },
     {
-     "id": "wmz30uc4",
+     "id": "yarug752",
      "kind": "text",
      "name": "Task · 4",
      "visible": true,
@@ -12184,7 +12184,7 @@
      }
     },
     {
-     "id": "rtdst058",
+     "id": "ng2cny4h",
      "kind": "shape",
      "name": "Task card · 5",
      "visible": true,
@@ -12240,7 +12240,7 @@
      }
     },
     {
-     "id": "1szsfgso",
+     "id": "n7pb5pkt",
      "kind": "text",
      "name": "Task · 5",
      "visible": true,
@@ -12312,7 +12312,7 @@
      }
     },
     {
-     "id": "dbx98iz4",
+     "id": "z4tfey78",
      "kind": "shape",
      "name": "Task card · 6",
      "visible": true,
@@ -12368,7 +12368,7 @@
      }
     },
     {
-     "id": "9j9jdgrr",
+     "id": "2mxu8jq2",
      "kind": "text",
      "name": "Task · 6",
      "visible": true,
@@ -12440,7 +12440,7 @@
      }
     },
     {
-     "id": "z6npowda",
+     "id": "0ycmli53",
      "kind": "text",
      "name": "Answer · 1",
      "visible": true,
@@ -12512,7 +12512,7 @@
      }
     },
     {
-     "id": "q5qar9js",
+     "id": "mvvk0ycm",
      "kind": "text",
      "name": "Answer · 2",
      "visible": true,
@@ -12584,7 +12584,7 @@
      }
     },
     {
-     "id": "ks8s3f2v",
+     "id": "nr2hw04m",
      "kind": "text",
      "name": "Answer · 3",
      "visible": true,
@@ -12656,7 +12656,7 @@
      }
     },
     {
-     "id": "r1rbyccw",
+     "id": "4h50rbnb",
      "kind": "text",
      "name": "Answer · 4",
      "visible": true,
@@ -12728,7 +12728,7 @@
      }
     },
     {
-     "id": "h3xfr4ql",
+     "id": "cw79bkna",
      "kind": "text",
      "name": "Answer · 5",
      "visible": true,
@@ -12800,7 +12800,7 @@
      }
     },
     {
-     "id": "3d4wsyqk",
+     "id": "9ke4t44q",
      "kind": "text",
      "name": "Answer · 6",
      "visible": true,
@@ -12872,7 +12872,7 @@
      }
     },
     {
-     "id": "t3080bej",
+     "id": "v1pz2yfm",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -12940,12 +12940,12 @@
    "notes": "A quick-fire round. Read each task, let the room shout the kind, then click to show the answer sticker.\n\n1 Forecast cash flow: predictive. 2 Pull totals off supplier invoices: automation and workflow. 3 Critique a draft: generative. 4 Handle a refund end to end with a human for exceptions: an agent. 5 Spot customers about to leave: predictive. 6 Transcribe and summarise a meeting: automation. If someone shouts \"generative\" for the summary, they have a point: the summary is usually written by generative AI inside the meeting tool. Use it: the kinds overlap, and the skill is matching the tool to the task.\n\nThe chatbot habit against the right AI, if you want an example per answer:\n- Forecasting cash flow or sales: not pasting spreadsheets into a chatbot to guess next quarter, but the predictive AI built into accounting or ERP tools, modelling historical trends.\n- Processing supplier invoices: not copying invoice text into a prompt one by one, but document and workflow AI (OCR plus automated rules) extracting and matching the data.\n- Writing and brainstorming: not blindly handing over final client proposals, but generative AI as a sparring partner to critique drafts and test ideas.\n- Multi-step customer support: not an unsupervised chatbot making refund promises, but an agent with strict standing instructions and a human for exceptions.\n\nLand it: only one of the six is a chatbot job. AI is not a chatbot. It is a toolkit, and the skill is matching the type of intelligence to the job.\n\nBridge: \"AI is a toolkit, not a chatbot. So who’s actually using the toolkit? Five big UK reports landed this year.\""
   },
   {
-   "id": "pnmaq4t1",
+   "id": "er4zj3a1",
    "name": "It doubled in a year",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "1i53g7g2",
+     "id": "w0fatj5i",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -12982,7 +12982,7 @@
      }
     },
     {
-     "id": "ctyztste",
+     "id": "lyydoybi",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -13016,7 +13016,7 @@
      }
     },
     {
-     "id": "z4civ4ng",
+     "id": "z03t1dh0",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -13088,7 +13088,7 @@
      }
     },
     {
-     "id": "tr9wxz4c",
+     "id": "1or90yg7",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -13160,7 +13160,7 @@
      }
     },
     {
-     "id": "gxh2eztz",
+     "id": "fpmbhhec",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -13232,7 +13232,7 @@
      }
     },
     {
-     "id": "8jpfau89",
+     "id": "a55cdqyi",
      "kind": "text",
      "name": "Number",
      "visible": true,
@@ -13304,7 +13304,7 @@
      }
     },
     {
-     "id": "yb9l5tt5",
+     "id": "fmjhjevt",
      "kind": "text",
      "name": "Caption",
      "visible": true,
@@ -13376,7 +13376,7 @@
      }
     },
     {
-     "id": "g1ps7kcy",
+     "id": "0t2lq0qa",
      "kind": "text",
      "name": "Label · 2025",
      "visible": true,
@@ -13448,7 +13448,7 @@
      }
     },
     {
-     "id": "l71jdgzo",
+     "id": "isptype4",
      "kind": "shape",
      "name": "Track · 2025",
      "visible": true,
@@ -13504,7 +13504,7 @@
      }
     },
     {
-     "id": "p33850tu",
+     "id": "dkl6rbx2",
      "kind": "shape",
      "name": "Bar · 2025",
      "visible": true,
@@ -13560,7 +13560,7 @@
      }
     },
     {
-     "id": "7ftupfde",
+     "id": "xcjh9rlx",
      "kind": "text",
      "name": "Value · 2025",
      "visible": true,
@@ -13632,7 +13632,7 @@
      }
     },
     {
-     "id": "ipflkutw",
+     "id": "r624ildr",
      "kind": "text",
      "name": "Label · 2026",
      "visible": true,
@@ -13704,7 +13704,7 @@
      }
     },
     {
-     "id": "9klq3x1j",
+     "id": "wnepvqtt",
      "kind": "shape",
      "name": "Track · 2026",
      "visible": true,
@@ -13760,7 +13760,7 @@
      }
     },
     {
-     "id": "6lokex9k",
+     "id": "hgm74ss9",
      "kind": "shape",
      "name": "Bar · 2026",
      "visible": true,
@@ -13816,7 +13816,7 @@
      }
     },
     {
-     "id": "cb8zcwgd",
+     "id": "zy9r5n4i",
      "kind": "text",
      "name": "Value · 2026",
      "visible": true,
@@ -13888,7 +13888,7 @@
      }
     },
     {
-     "id": "udx8qtji",
+     "id": "ca0f9mkq",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -13960,7 +13960,7 @@
      }
     },
     {
-     "id": "qouexw4f",
+     "id": "yea4wmts",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -14028,12 +14028,12 @@
    "notes": "SECOND QUESTION · WHO’S ACTUALLY USING IT? · ABOUT 8 MINUTES. Five major UK reports on small-business AI landed in 2026: the government (DSIT), the statisticians (ONS), a bank (NatWest), the chambers (BCC) and the small-business federation (FSB). Use roughly doubled in a year, but there is a sharp divide between trying the tools and changing how the business works.\n\nAsk first, then let the number land: \"Hands up if your business uses at least one AI tool.\"\n\nDSIT, \"AI adoption survey 2026\" (29 October 2026): 3,503 telephone interviews between 7 January and 21 April 2026, plus 50 in-depth interviews and 7 site visits. 32% of UK businesses used at least one AI technology, against 16% in 2025. Larger firms: 52%.\n\nNot on the slide: a breakdown of 27% micro, 34% small and 47% medium is quoted in coverage, but it is not in DSIT’s executive summary. Check the full report before quoting it."
   },
   {
-   "id": "3taa88l7",
+   "id": "vg0cr7br",
    "name": "Depends who you ask",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "6y77eczo",
+     "id": "ad1ue3t1",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -14070,7 +14070,7 @@
      }
     },
     {
-     "id": "cresb1ox",
+     "id": "s57g0k5o",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -14104,7 +14104,7 @@
      }
     },
     {
-     "id": "kvcx2yqv",
+     "id": "ltvfycsu",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -14176,7 +14176,7 @@
      }
     },
     {
-     "id": "j8u1iu3s",
+     "id": "hldn2wf8",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -14248,7 +14248,7 @@
      }
     },
     {
-     "id": "kfbdm5st",
+     "id": "h2xc6i8o",
      "kind": "text",
      "name": "Who’s who",
      "visible": true,
@@ -14320,7 +14320,7 @@
      }
     },
     {
-     "id": "w4mho3hw",
+     "id": "e2sv2y3n",
      "kind": "shape",
      "name": "Scale",
      "visible": true,
@@ -14376,7 +14376,7 @@
      }
     },
     {
-     "id": "pilpaq94",
+     "id": "sp39277w",
      "kind": "text",
      "name": "Tick · 25%",
      "visible": true,
@@ -14448,7 +14448,7 @@
      }
     },
     {
-     "id": "c3z5hg61",
+     "id": "0j64yfag",
      "kind": "text",
      "name": "Tick · 30%",
      "visible": true,
@@ -14520,7 +14520,7 @@
      }
     },
     {
-     "id": "0s6jkomc",
+     "id": "mtpx0lx4",
      "kind": "text",
      "name": "Tick · 40%",
      "visible": true,
@@ -14592,7 +14592,7 @@
      }
     },
     {
-     "id": "2cvnq1av",
+     "id": "i6l5usgt",
      "kind": "text",
      "name": "Tick · 50%",
      "visible": true,
@@ -14664,7 +14664,7 @@
      }
     },
     {
-     "id": "5fk1w3ti",
+     "id": "fazluwx7",
      "kind": "text",
      "name": "Tick · 60%",
      "visible": true,
@@ -14736,7 +14736,7 @@
      }
     },
     {
-     "id": "jijio8ie",
+     "id": "fu8jnkw7",
      "kind": "shape",
      "name": "Dot · DSIT",
      "visible": true,
@@ -14792,7 +14792,7 @@
      }
     },
     {
-     "id": "0u9kdf41",
+     "id": "n8wko76s",
      "kind": "shape",
      "name": "Stem · DSIT",
      "visible": true,
@@ -14848,7 +14848,7 @@
      }
     },
     {
-     "id": "468a3yjy",
+     "id": "7r8jqvj7",
      "kind": "text",
      "name": "Value · DSIT",
      "visible": true,
@@ -14920,7 +14920,7 @@
      }
     },
     {
-     "id": "0pxoc05j",
+     "id": "gmms7t9k",
      "kind": "text",
      "name": "Who · DSIT",
      "visible": true,
@@ -14992,7 +14992,7 @@
      }
     },
     {
-     "id": "651vcvsp",
+     "id": "bqwbrydm",
      "kind": "shape",
      "name": "Dot · ONS",
      "visible": true,
@@ -15048,7 +15048,7 @@
      }
     },
     {
-     "id": "qhqhf0ow",
+     "id": "ju0y1lep",
      "kind": "shape",
      "name": "Stem · ONS",
      "visible": true,
@@ -15104,7 +15104,7 @@
      }
     },
     {
-     "id": "pitca9iw",
+     "id": "m5jy25hc",
      "kind": "text",
      "name": "Value · ONS",
      "visible": true,
@@ -15176,7 +15176,7 @@
      }
     },
     {
-     "id": "9hb5cyur",
+     "id": "l5qacj5o",
      "kind": "text",
      "name": "Who · ONS",
      "visible": true,
@@ -15248,7 +15248,7 @@
      }
     },
     {
-     "id": "nezu3cxu",
+     "id": "p27l4rd1",
      "kind": "shape",
      "name": "Dot · NatWest",
      "visible": true,
@@ -15304,7 +15304,7 @@
      }
     },
     {
-     "id": "tqlid5ky",
+     "id": "w9t5lnhv",
      "kind": "shape",
      "name": "Stem · NatWest",
      "visible": true,
@@ -15360,7 +15360,7 @@
      }
     },
     {
-     "id": "nz3bzc2w",
+     "id": "jzlltvil",
      "kind": "text",
      "name": "Value · NatWest",
      "visible": true,
@@ -15432,7 +15432,7 @@
      }
     },
     {
-     "id": "e42uao1m",
+     "id": "bcu1g951",
      "kind": "text",
      "name": "Who · NatWest",
      "visible": true,
@@ -15504,7 +15504,7 @@
      }
     },
     {
-     "id": "ogxay52m",
+     "id": "1h38ywmv",
      "kind": "shape",
      "name": "Dot · BCC",
      "visible": true,
@@ -15560,7 +15560,7 @@
      }
     },
     {
-     "id": "yy3ku7tw",
+     "id": "nbqo2lxx",
      "kind": "shape",
      "name": "Stem · BCC",
      "visible": true,
@@ -15616,7 +15616,7 @@
      }
     },
     {
-     "id": "29xgew3d",
+     "id": "hnh6nqop",
      "kind": "text",
      "name": "Value · BCC",
      "visible": true,
@@ -15688,7 +15688,7 @@
      }
     },
     {
-     "id": "h4inamv8",
+     "id": "e507z58n",
      "kind": "text",
      "name": "Who · BCC",
      "visible": true,
@@ -15760,7 +15760,7 @@
      }
     },
     {
-     "id": "n7stjcfe",
+     "id": "426fiy32",
      "kind": "shape",
      "name": "Dot · FSB",
      "visible": true,
@@ -15816,7 +15816,7 @@
      }
     },
     {
-     "id": "q119exyu",
+     "id": "zfnzt1zp",
      "kind": "shape",
      "name": "Stem · FSB",
      "visible": true,
@@ -15872,7 +15872,7 @@
      }
     },
     {
-     "id": "v8qdel51",
+     "id": "4tq3ajbb",
      "kind": "text",
      "name": "Value · FSB",
      "visible": true,
@@ -15944,7 +15944,7 @@
      }
     },
     {
-     "id": "2ruk8r19",
+     "id": "b2yzi8qo",
      "kind": "text",
      "name": "Who · FSB",
      "visible": true,
@@ -16016,7 +16016,7 @@
      }
     },
     {
-     "id": "sub5brzc",
+     "id": "rhyvlom3",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -16088,7 +16088,7 @@
      }
     },
     {
-     "id": "qipkw11i",
+     "id": "rmyk59lz",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -16159,12 +16159,12 @@
    }
   },
   {
-   "id": "086xdwir",
+   "id": "cvkwfkra",
    "name": "Bigger firms are further ahead",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "cu6oaspw",
+     "id": "7kizldie",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -16201,7 +16201,7 @@
      }
     },
     {
-     "id": "kf1el9yl",
+     "id": "4q4ug6z9",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -16235,7 +16235,7 @@
      }
     },
     {
-     "id": "ea9gneh0",
+     "id": "z1ox8j5g",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -16307,7 +16307,7 @@
      }
     },
     {
-     "id": "dloca5xm",
+     "id": "2lhpif53",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -16379,7 +16379,7 @@
      }
     },
     {
-     "id": "pr4lvnyx",
+     "id": "2sf9q32n",
      "kind": "shape",
      "name": "Baseline",
      "visible": true,
@@ -16435,7 +16435,7 @@
      }
     },
     {
-     "id": "d016n9lc",
+     "id": "wqf8im3u",
      "kind": "text",
      "name": "Group · ONS",
      "visible": true,
@@ -16507,7 +16507,7 @@
      }
     },
     {
-     "id": "7gi7208j",
+     "id": "9umibac0",
      "kind": "text",
      "name": "Group · NatWest",
      "visible": true,
@@ -16579,7 +16579,7 @@
      }
     },
     {
-     "id": "evyh0waj",
+     "id": "zimauwy5",
      "kind": "shape",
      "name": "Column · 0–9 staff",
      "visible": true,
@@ -16635,7 +16635,7 @@
      }
     },
     {
-     "id": "xo7z2ubj",
+     "id": "7j1li6jd",
      "kind": "text",
      "name": "Value · 0–9 staff",
      "visible": true,
@@ -16707,7 +16707,7 @@
      }
     },
     {
-     "id": "98fagxcs",
+     "id": "661t5k1w",
      "kind": "text",
      "name": "Label · 0–9 staff",
      "visible": true,
@@ -16779,7 +16779,7 @@
      }
     },
     {
-     "id": "41ez3j0q",
+     "id": "umgquzah",
      "kind": "shape",
      "name": "Column · 250+ staff",
      "visible": true,
@@ -16835,7 +16835,7 @@
      }
     },
     {
-     "id": "anx4lrx3",
+     "id": "lagn1eee",
      "kind": "text",
      "name": "Value · 250+ staff",
      "visible": true,
@@ -16907,7 +16907,7 @@
      }
     },
     {
-     "id": "cydkq4d9",
+     "id": "ob5pf5lc",
      "kind": "text",
      "name": "Label · 250+ staff",
      "visible": true,
@@ -16979,7 +16979,7 @@
      }
     },
     {
-     "id": "v5i9hw9n",
+     "id": "kslldq12",
      "kind": "shape",
      "name": "Column · Smaller firms",
      "visible": true,
@@ -17035,7 +17035,7 @@
      }
     },
     {
-     "id": "xqf9n79p",
+     "id": "h9i14bgt",
      "kind": "text",
      "name": "Value · Smaller firms",
      "visible": true,
@@ -17107,7 +17107,7 @@
      }
     },
     {
-     "id": "86sjpp27",
+     "id": "uubl880b",
      "kind": "text",
      "name": "Label · Smaller firms",
      "visible": true,
@@ -17179,7 +17179,7 @@
      }
     },
     {
-     "id": "yz8eoy0n",
+     "id": "o7ofrnwj",
      "kind": "shape",
      "name": "Column · 100+ staff",
      "visible": true,
@@ -17235,7 +17235,7 @@
      }
     },
     {
-     "id": "htkbqneb",
+     "id": "sgvug80n",
      "kind": "text",
      "name": "Value · 100+ staff",
      "visible": true,
@@ -17307,7 +17307,7 @@
      }
     },
     {
-     "id": "fwevazuo",
+     "id": "kzfbm7y7",
      "kind": "text",
      "name": "Label · 100+ staff",
      "visible": true,
@@ -17379,7 +17379,7 @@
      }
     },
     {
-     "id": "wo52kwg1",
+     "id": "sefkihxw",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -17447,12 +17447,12 @@
    "notes": "Ask: \"Hands up if you have fewer than ten staff.\" The smallest firms are furthest behind, and that is most of this room.\n\nONS, \"Artificial intelligence in UK businesses: 2023 to 2026\" (20 July 2026, BICS wave 159, fieldwork 5 to 28 June 2026): 28% of firms with 0 to 9 employees use AI, against 49% of those with 250 or more.\n\nNatWest Group, AI growth gap research (25 September 2026, 1,400 UK SMEs and mid-market firms): 36% of smaller firms use AI, against 67% of those with more than 100 staff. NatWest does not state the cut-off for \"smaller\".\n\nAnd by sector, in one line: ONS (20 July 2026, firms with 10 or more staff) finds adoption highest in information and communication, where almost three-fifths (58%) use AI, and as low as 13% in construction, about one in eight. The ONS article does not call construction the lowest of all industries, so do not say it is."
   },
   {
-   "id": "tw9y1muw",
+   "id": "vg0hw34v",
    "name": "Mostly admin and marketing",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "i9vvuj3p",
+     "id": "u81rzod8",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -17489,7 +17489,7 @@
      }
     },
     {
-     "id": "pgs34sy7",
+     "id": "ywhyu0ja",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -17523,7 +17523,7 @@
      }
     },
     {
-     "id": "e47dx5fp",
+     "id": "ugkzp5z4",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -17595,7 +17595,7 @@
      }
     },
     {
-     "id": "zgfyo9co",
+     "id": "ktp0902u",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -17667,7 +17667,7 @@
      }
     },
     {
-     "id": "di7wz8c2",
+     "id": "smagf441",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -17739,7 +17739,7 @@
      }
     },
     {
-     "id": "wbe7nuj8",
+     "id": "o0z65ibr",
      "kind": "text",
      "name": "Label · Admin",
      "visible": true,
@@ -17811,7 +17811,7 @@
      }
     },
     {
-     "id": "c2fks9lm",
+     "id": "ou2oghdx",
      "kind": "shape",
      "name": "Track · Admin",
      "visible": true,
@@ -17867,7 +17867,7 @@
      }
     },
     {
-     "id": "asaxlb5u",
+     "id": "hm6wp30w",
      "kind": "shape",
      "name": "Bar · Admin",
      "visible": true,
@@ -17923,7 +17923,7 @@
      }
     },
     {
-     "id": "zelfaehy",
+     "id": "14qf3gy6",
      "kind": "text",
      "name": "Value · Admin",
      "visible": true,
@@ -17995,7 +17995,7 @@
      }
     },
     {
-     "id": "1k8q5p6o",
+     "id": "ebbyadox",
      "kind": "text",
      "name": "Label · Marketing",
      "visible": true,
@@ -18067,7 +18067,7 @@
      }
     },
     {
-     "id": "w4nkj4en",
+     "id": "hpmx2b80",
      "kind": "shape",
      "name": "Track · Marketing",
      "visible": true,
@@ -18123,7 +18123,7 @@
      }
     },
     {
-     "id": "g302v7dx",
+     "id": "667213tt",
      "kind": "shape",
      "name": "Bar · Marketing",
      "visible": true,
@@ -18179,7 +18179,7 @@
      }
     },
     {
-     "id": "9562iu1m",
+     "id": "4bhv5egz",
      "kind": "text",
      "name": "Value · Marketing",
      "visible": true,
@@ -18251,7 +18251,7 @@
      }
     },
     {
-     "id": "dlksalzk",
+     "id": "apq1bff2",
      "kind": "text",
      "name": "Label · IT",
      "visible": true,
@@ -18323,7 +18323,7 @@
      }
     },
     {
-     "id": "m3op0va9",
+     "id": "f49qmbub",
      "kind": "shape",
      "name": "Track · IT",
      "visible": true,
@@ -18379,7 +18379,7 @@
      }
     },
     {
-     "id": "xw3a92er",
+     "id": "wzyxg7bg",
      "kind": "shape",
      "name": "Bar · IT",
      "visible": true,
@@ -18435,7 +18435,7 @@
      }
     },
     {
-     "id": "3ikaw67k",
+     "id": "lqw6llgk",
      "kind": "text",
      "name": "Value · IT",
      "visible": true,
@@ -18507,7 +18507,7 @@
      }
     },
     {
-     "id": "b08uj7jy",
+     "id": "7eq44tbg",
      "kind": "text",
      "name": "Generative",
      "visible": true,
@@ -18579,7 +18579,7 @@
      }
     },
     {
-     "id": "q7au19cw",
+     "id": "e041for8",
      "kind": "text",
      "name": "LLMs",
      "visible": true,
@@ -18651,7 +18651,7 @@
      }
     },
     {
-     "id": "ghib1rqt",
+     "id": "9ptfjvyb",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -18723,7 +18723,7 @@
      }
     },
     {
-     "id": "ynnsva1t",
+     "id": "3g1gbwd4",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -18791,12 +18791,12 @@
    "notes": "DSIT (October 2026), among businesses using or planning to use AI: administration 81%, marketing 71%, IT 66%. Use is concentrated in natural language processing and text generation; large language models account for 77% of users or planned users.\n\nThe link back to the four kinds: most firms are using the public face of AI, generative chat tools, for admin and marketing. The other three kinds are mostly untouched."
   },
   {
-   "id": "solem2uo",
+   "id": "i1mnncxy",
    "name": "It’s helping. It’s worrying.",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "xrwplb2m",
+     "id": "ycjirx0h",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -18833,7 +18833,7 @@
      }
     },
     {
-     "id": "8oay4ftx",
+     "id": "kgbk1p53",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -18867,7 +18867,7 @@
      }
     },
     {
-     "id": "4mfl9k2p",
+     "id": "wl45h7gw",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -18939,7 +18939,7 @@
      }
     },
     {
-     "id": "rpxk68cd",
+     "id": "1f4ibrgo",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -19011,7 +19011,7 @@
      }
     },
     {
-     "id": "apsgketk",
+     "id": "paa94ics",
      "kind": "shape",
      "name": "Card · 59%",
      "visible": true,
@@ -19067,7 +19067,7 @@
      }
     },
     {
-     "id": "1kj1qcdr",
+     "id": "8l8b458v",
      "kind": "text",
      "name": "Who · 59%",
      "visible": true,
@@ -19139,7 +19139,7 @@
      }
     },
     {
-     "id": "j9zzee4o",
+     "id": "f8w5icpk",
      "kind": "text",
      "name": "Value · 59%",
      "visible": true,
@@ -19211,7 +19211,7 @@
      }
     },
     {
-     "id": "bsu3yjbi",
+     "id": "83iweuew",
      "kind": "text",
      "name": "Caption · 59%",
      "visible": true,
@@ -19284,7 +19284,7 @@
      }
     },
     {
-     "id": "5jvhrdxz",
+     "id": "oitkfwa0",
      "kind": "shape",
      "name": "Card · 92%",
      "visible": true,
@@ -19340,7 +19340,7 @@
      }
     },
     {
-     "id": "znnw2opi",
+     "id": "u4gcffi0",
      "kind": "text",
      "name": "Who · 92%",
      "visible": true,
@@ -19412,7 +19412,7 @@
      }
     },
     {
-     "id": "g1872yde",
+     "id": "m1b8l34t",
      "kind": "text",
      "name": "Value · 92%",
      "visible": true,
@@ -19484,7 +19484,7 @@
      }
     },
     {
-     "id": "2mzss1ju",
+     "id": "onbezv0k",
      "kind": "text",
      "name": "Caption · 92%",
      "visible": true,
@@ -19557,7 +19557,7 @@
      }
     },
     {
-     "id": "es6ewoap",
+     "id": "es6ozd4a",
      "kind": "shape",
      "name": "Card · 95%",
      "visible": true,
@@ -19613,7 +19613,7 @@
      }
     },
     {
-     "id": "spqi6o6p",
+     "id": "wquxep08",
      "kind": "text",
      "name": "Who · 95%",
      "visible": true,
@@ -19685,7 +19685,7 @@
      }
     },
     {
-     "id": "foft7qh9",
+     "id": "n0xk3mfx",
      "kind": "text",
      "name": "Value · 95%",
      "visible": true,
@@ -19757,7 +19757,7 @@
      }
     },
     {
-     "id": "0ekctevw",
+     "id": "asgkmo29",
      "kind": "text",
      "name": "Caption · 95%",
      "visible": true,
@@ -19830,7 +19830,7 @@
      }
     },
     {
-     "id": "za1sl3k0",
+     "id": "lsa0akgc",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -19902,7 +19902,7 @@
      }
     },
     {
-     "id": "szfwla7t",
+     "id": "jbkglmop",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -19973,12 +19973,12 @@
    }
   },
   {
-   "id": "1kehs08y",
+   "id": "y67cbq57",
    "name": "Wide, not deep",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "881nli7m",
+     "id": "jiqovc9k",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -20015,7 +20015,7 @@
      }
     },
     {
-     "id": "uk4lny24",
+     "id": "mbyzg7x4",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -20049,7 +20049,7 @@
      }
     },
     {
-     "id": "ni0tpiu4",
+     "id": "0u8wtsoq",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -20121,7 +20121,7 @@
      }
     },
     {
-     "id": "u98wnbyz",
+     "id": "uzux7q2g",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -20193,7 +20193,7 @@
      }
     },
     {
-     "id": "jl0t90b7",
+     "id": "x56irfsu",
      "kind": "shape",
      "name": "Dot 1",
      "visible": true,
@@ -20249,7 +20249,7 @@
      }
     },
     {
-     "id": "iu149mau",
+     "id": "tkfp3g2x",
      "kind": "shape",
      "name": "Dot 2",
      "visible": true,
@@ -20305,7 +20305,7 @@
      }
     },
     {
-     "id": "g160cwwe",
+     "id": "j8onut5c",
      "kind": "shape",
      "name": "Dot 3",
      "visible": true,
@@ -20361,7 +20361,7 @@
      }
     },
     {
-     "id": "riq8tfp2",
+     "id": "avo64w0e",
      "kind": "shape",
      "name": "Dot 4",
      "visible": true,
@@ -20417,7 +20417,7 @@
      }
     },
     {
-     "id": "uxks8awu",
+     "id": "imypf1qp",
      "kind": "shape",
      "name": "Dot 5",
      "visible": true,
@@ -20473,7 +20473,7 @@
      }
     },
     {
-     "id": "6q0be7ad",
+     "id": "jgyroa2y",
      "kind": "shape",
      "name": "Dot 6",
      "visible": true,
@@ -20529,7 +20529,7 @@
      }
     },
     {
-     "id": "6xhynjjp",
+     "id": "qb8vcxdk",
      "kind": "shape",
      "name": "Dot 7",
      "visible": true,
@@ -20585,7 +20585,7 @@
      }
     },
     {
-     "id": "w1ltnnc3",
+     "id": "8og0pwu1",
      "kind": "shape",
      "name": "Dot 8",
      "visible": true,
@@ -20641,7 +20641,7 @@
      }
     },
     {
-     "id": "3iacct7k",
+     "id": "56r1i841",
      "kind": "shape",
      "name": "Dot 9",
      "visible": true,
@@ -20697,7 +20697,7 @@
      }
     },
     {
-     "id": "em5p0tm0",
+     "id": "y6zqcyiy",
      "kind": "shape",
      "name": "Dot 10",
      "visible": true,
@@ -20753,7 +20753,7 @@
      }
     },
     {
-     "id": "wfl77uhc",
+     "id": "oc1m19x4",
      "kind": "shape",
      "name": "Dot 11",
      "visible": true,
@@ -20809,7 +20809,7 @@
      }
     },
     {
-     "id": "bo1jr5g7",
+     "id": "0d33lmlo",
      "kind": "shape",
      "name": "Dot 12",
      "visible": true,
@@ -20865,7 +20865,7 @@
      }
     },
     {
-     "id": "u70ilhpc",
+     "id": "9z93ifv0",
      "kind": "shape",
      "name": "Dot 13",
      "visible": true,
@@ -20921,7 +20921,7 @@
      }
     },
     {
-     "id": "xxn7lr5m",
+     "id": "l5woo0ov",
      "kind": "shape",
      "name": "Dot 14",
      "visible": true,
@@ -20977,7 +20977,7 @@
      }
     },
     {
-     "id": "ytwc0rka",
+     "id": "upkvnyj9",
      "kind": "shape",
      "name": "Dot 15",
      "visible": true,
@@ -21033,7 +21033,7 @@
      }
     },
     {
-     "id": "2n6scsu2",
+     "id": "zwnynzqm",
      "kind": "shape",
      "name": "Dot 16",
      "visible": true,
@@ -21089,7 +21089,7 @@
      }
     },
     {
-     "id": "8t48401i",
+     "id": "9v8n53ym",
      "kind": "shape",
      "name": "Dot 17",
      "visible": true,
@@ -21145,7 +21145,7 @@
      }
     },
     {
-     "id": "2hht2cea",
+     "id": "r7a3qi17",
      "kind": "shape",
      "name": "Dot 18",
      "visible": true,
@@ -21201,7 +21201,7 @@
      }
     },
     {
-     "id": "omop6zxl",
+     "id": "yz6yaqjn",
      "kind": "shape",
      "name": "Dot 19",
      "visible": true,
@@ -21257,7 +21257,7 @@
      }
     },
     {
-     "id": "t3bjzio9",
+     "id": "lhltxf1p",
      "kind": "shape",
      "name": "Dot 20",
      "visible": true,
@@ -21313,7 +21313,7 @@
      }
     },
     {
-     "id": "8ths5x6o",
+     "id": "k6hsxb0e",
      "kind": "shape",
      "name": "Dot 21",
      "visible": true,
@@ -21369,7 +21369,7 @@
      }
     },
     {
-     "id": "765aoy8n",
+     "id": "lzlxmjtn",
      "kind": "shape",
      "name": "Dot 22",
      "visible": true,
@@ -21425,7 +21425,7 @@
      }
     },
     {
-     "id": "o5qafunp",
+     "id": "tz3wiogc",
      "kind": "shape",
      "name": "Dot 23",
      "visible": true,
@@ -21481,7 +21481,7 @@
      }
     },
     {
-     "id": "j90otic3",
+     "id": "anokn3vi",
      "kind": "shape",
      "name": "Dot 24",
      "visible": true,
@@ -21537,7 +21537,7 @@
      }
     },
     {
-     "id": "g8flquh1",
+     "id": "okx0y2p6",
      "kind": "shape",
      "name": "Dot 25",
      "visible": true,
@@ -21593,7 +21593,7 @@
      }
     },
     {
-     "id": "rtzxwc6m",
+     "id": "uttypztr",
      "kind": "shape",
      "name": "Dot 26",
      "visible": true,
@@ -21649,7 +21649,7 @@
      }
     },
     {
-     "id": "zpfneycw",
+     "id": "988eoc7x",
      "kind": "shape",
      "name": "Dot 27",
      "visible": true,
@@ -21705,7 +21705,7 @@
      }
     },
     {
-     "id": "ff95hx6c",
+     "id": "kui0u828",
      "kind": "shape",
      "name": "Dot 28",
      "visible": true,
@@ -21761,7 +21761,7 @@
      }
     },
     {
-     "id": "855i8qdu",
+     "id": "dmpqmteb",
      "kind": "shape",
      "name": "Dot 29",
      "visible": true,
@@ -21817,7 +21817,7 @@
      }
     },
     {
-     "id": "kcu8yt5a",
+     "id": "2hnhtrtv",
      "kind": "shape",
      "name": "Dot 30",
      "visible": true,
@@ -21873,7 +21873,7 @@
      }
     },
     {
-     "id": "ev3u4ppt",
+     "id": "dj7wlgti",
      "kind": "shape",
      "name": "Dot 31",
      "visible": true,
@@ -21929,7 +21929,7 @@
      }
     },
     {
-     "id": "bldt19a3",
+     "id": "upewjrux",
      "kind": "shape",
      "name": "Dot 32",
      "visible": true,
@@ -21985,7 +21985,7 @@
      }
     },
     {
-     "id": "uoaz3o3u",
+     "id": "d3424bu0",
      "kind": "shape",
      "name": "Dot 33",
      "visible": true,
@@ -22041,7 +22041,7 @@
      }
     },
     {
-     "id": "qzlimlsd",
+     "id": "gggp7yn5",
      "kind": "shape",
      "name": "Dot 34",
      "visible": true,
@@ -22097,7 +22097,7 @@
      }
     },
     {
-     "id": "h0k2m5ue",
+     "id": "ll4nagae",
      "kind": "shape",
      "name": "Dot 35",
      "visible": true,
@@ -22153,7 +22153,7 @@
      }
     },
     {
-     "id": "lopi98ji",
+     "id": "wwy62ub7",
      "kind": "shape",
      "name": "Dot 36",
      "visible": true,
@@ -22209,7 +22209,7 @@
      }
     },
     {
-     "id": "kr7fi1r0",
+     "id": "n23q5cpc",
      "kind": "shape",
      "name": "Dot 37",
      "visible": true,
@@ -22265,7 +22265,7 @@
      }
     },
     {
-     "id": "q75pdr5g",
+     "id": "9akmgpfa",
      "kind": "shape",
      "name": "Dot 38",
      "visible": true,
@@ -22321,7 +22321,7 @@
      }
     },
     {
-     "id": "e5q1xruw",
+     "id": "2wrv555f",
      "kind": "shape",
      "name": "Dot 39",
      "visible": true,
@@ -22377,7 +22377,7 @@
      }
     },
     {
-     "id": "oyuejxkd",
+     "id": "l2210wa6",
      "kind": "shape",
      "name": "Dot 40",
      "visible": true,
@@ -22433,7 +22433,7 @@
      }
     },
     {
-     "id": "p9u30gk4",
+     "id": "zfcvblo9",
      "kind": "shape",
      "name": "Dot 41",
      "visible": true,
@@ -22489,7 +22489,7 @@
      }
     },
     {
-     "id": "oho33fbl",
+     "id": "1y6790q7",
      "kind": "shape",
      "name": "Dot 42",
      "visible": true,
@@ -22545,7 +22545,7 @@
      }
     },
     {
-     "id": "4s7h6511",
+     "id": "gk4dgy63",
      "kind": "shape",
      "name": "Dot 43",
      "visible": true,
@@ -22601,7 +22601,7 @@
      }
     },
     {
-     "id": "hdsjxlci",
+     "id": "hfq8rsxk",
      "kind": "shape",
      "name": "Dot 44",
      "visible": true,
@@ -22657,7 +22657,7 @@
      }
     },
     {
-     "id": "xb76n909",
+     "id": "t1bix9zd",
      "kind": "shape",
      "name": "Dot 45",
      "visible": true,
@@ -22713,7 +22713,7 @@
      }
     },
     {
-     "id": "fq9sbvkm",
+     "id": "ppmf7mhr",
      "kind": "shape",
      "name": "Dot 46",
      "visible": true,
@@ -22769,7 +22769,7 @@
      }
     },
     {
-     "id": "2i5k3gh7",
+     "id": "pzwkser9",
      "kind": "shape",
      "name": "Dot 47",
      "visible": true,
@@ -22825,7 +22825,7 @@
      }
     },
     {
-     "id": "04kfkq5b",
+     "id": "ompsgpym",
      "kind": "shape",
      "name": "Dot 48",
      "visible": true,
@@ -22881,7 +22881,7 @@
      }
     },
     {
-     "id": "6rqqpmae",
+     "id": "tqv1nvvc",
      "kind": "shape",
      "name": "Dot 49",
      "visible": true,
@@ -22937,7 +22937,7 @@
      }
     },
     {
-     "id": "03htjofa",
+     "id": "dx9bj1op",
      "kind": "shape",
      "name": "Dot 50",
      "visible": true,
@@ -22993,7 +22993,7 @@
      }
     },
     {
-     "id": "31nwxfce",
+     "id": "579puqir",
      "kind": "shape",
      "name": "Dot 51",
      "visible": true,
@@ -23049,7 +23049,7 @@
      }
     },
     {
-     "id": "jgerxmsq",
+     "id": "q0go957p",
      "kind": "shape",
      "name": "Dot 52",
      "visible": true,
@@ -23105,7 +23105,7 @@
      }
     },
     {
-     "id": "hslm5rct",
+     "id": "zlo2xeee",
      "kind": "shape",
      "name": "Dot 53",
      "visible": true,
@@ -23161,7 +23161,7 @@
      }
     },
     {
-     "id": "kh4nd0sd",
+     "id": "piqsqqo4",
      "kind": "shape",
      "name": "Dot 54",
      "visible": true,
@@ -23217,7 +23217,7 @@
      }
     },
     {
-     "id": "ob36ztiz",
+     "id": "k8j49qoq",
      "kind": "shape",
      "name": "Dot 55",
      "visible": true,
@@ -23273,7 +23273,7 @@
      }
     },
     {
-     "id": "s0mciwt8",
+     "id": "vlbnmn52",
      "kind": "shape",
      "name": "Dot 56",
      "visible": true,
@@ -23329,7 +23329,7 @@
      }
     },
     {
-     "id": "q05gyqe5",
+     "id": "wxy48jme",
      "kind": "shape",
      "name": "Dot 57",
      "visible": true,
@@ -23385,7 +23385,7 @@
      }
     },
     {
-     "id": "x0ob8j4r",
+     "id": "zlt4nezi",
      "kind": "shape",
      "name": "Dot 58",
      "visible": true,
@@ -23441,7 +23441,7 @@
      }
     },
     {
-     "id": "wqo8uh5o",
+     "id": "ye0otqbp",
      "kind": "shape",
      "name": "Dot 59",
      "visible": true,
@@ -23497,7 +23497,7 @@
      }
     },
     {
-     "id": "gn3deieb",
+     "id": "0vzqkrym",
      "kind": "shape",
      "name": "Dot 60",
      "visible": true,
@@ -23553,7 +23553,7 @@
      }
     },
     {
-     "id": "mdawqhaa",
+     "id": "m6gsmm6v",
      "kind": "shape",
      "name": "Dot 61",
      "visible": true,
@@ -23609,7 +23609,7 @@
      }
     },
     {
-     "id": "hsx0rk7q",
+     "id": "h7eldmvr",
      "kind": "shape",
      "name": "Dot 62",
      "visible": true,
@@ -23665,7 +23665,7 @@
      }
     },
     {
-     "id": "g8tlkcnf",
+     "id": "y4588c36",
      "kind": "shape",
      "name": "Dot 63",
      "visible": true,
@@ -23721,7 +23721,7 @@
      }
     },
     {
-     "id": "3xxkohns",
+     "id": "hoyf8xzf",
      "kind": "shape",
      "name": "Dot 64",
      "visible": true,
@@ -23777,7 +23777,7 @@
      }
     },
     {
-     "id": "4es6l2vk",
+     "id": "1rirjxoz",
      "kind": "shape",
      "name": "Dot 65",
      "visible": true,
@@ -23833,7 +23833,7 @@
      }
     },
     {
-     "id": "83qmoumy",
+     "id": "yz40l4l7",
      "kind": "shape",
      "name": "Dot 66",
      "visible": true,
@@ -23889,7 +23889,7 @@
      }
     },
     {
-     "id": "gu6r582u",
+     "id": "17xct0lo",
      "kind": "shape",
      "name": "Dot 67",
      "visible": true,
@@ -23945,7 +23945,7 @@
      }
     },
     {
-     "id": "615a36hs",
+     "id": "6srq4ygu",
      "kind": "shape",
      "name": "Dot 68",
      "visible": true,
@@ -24001,7 +24001,7 @@
      }
     },
     {
-     "id": "uk15g8pt",
+     "id": "nqki9erh",
      "kind": "shape",
      "name": "Dot 69",
      "visible": true,
@@ -24057,7 +24057,7 @@
      }
     },
     {
-     "id": "flkxehar",
+     "id": "gqohcave",
      "kind": "shape",
      "name": "Dot 70",
      "visible": true,
@@ -24113,7 +24113,7 @@
      }
     },
     {
-     "id": "o21tybvh",
+     "id": "7icdr3k1",
      "kind": "shape",
      "name": "Dot 71",
      "visible": true,
@@ -24169,7 +24169,7 @@
      }
     },
     {
-     "id": "ltporuy7",
+     "id": "x2wyizff",
      "kind": "shape",
      "name": "Dot 72",
      "visible": true,
@@ -24225,7 +24225,7 @@
      }
     },
     {
-     "id": "a834c4p0",
+     "id": "y09odvsd",
      "kind": "shape",
      "name": "Dot 73",
      "visible": true,
@@ -24281,7 +24281,7 @@
      }
     },
     {
-     "id": "uhy03sun",
+     "id": "7y4euz2l",
      "kind": "shape",
      "name": "Dot 74",
      "visible": true,
@@ -24337,7 +24337,7 @@
      }
     },
     {
-     "id": "fh69u3n9",
+     "id": "6a6hsl09",
      "kind": "shape",
      "name": "Dot 75",
      "visible": true,
@@ -24393,7 +24393,7 @@
      }
     },
     {
-     "id": "ep2mqghh",
+     "id": "0lktr65r",
      "kind": "shape",
      "name": "Dot 76",
      "visible": true,
@@ -24449,7 +24449,7 @@
      }
     },
     {
-     "id": "ubnqh0t4",
+     "id": "rm1leodo",
      "kind": "shape",
      "name": "Dot 77",
      "visible": true,
@@ -24505,7 +24505,7 @@
      }
     },
     {
-     "id": "hoanue2l",
+     "id": "xopvwid8",
      "kind": "shape",
      "name": "Dot 78",
      "visible": true,
@@ -24561,7 +24561,7 @@
      }
     },
     {
-     "id": "r7lree16",
+     "id": "qsxm6rbx",
      "kind": "shape",
      "name": "Dot 79",
      "visible": true,
@@ -24617,7 +24617,7 @@
      }
     },
     {
-     "id": "0fdn899a",
+     "id": "805zwjpj",
      "kind": "shape",
      "name": "Dot 80",
      "visible": true,
@@ -24673,7 +24673,7 @@
      }
     },
     {
-     "id": "2u6nj89k",
+     "id": "jcay7x84",
      "kind": "shape",
      "name": "Dot 81",
      "visible": true,
@@ -24729,7 +24729,7 @@
      }
     },
     {
-     "id": "wbt8rm9k",
+     "id": "x2mhfum7",
      "kind": "shape",
      "name": "Dot 82",
      "visible": true,
@@ -24785,7 +24785,7 @@
      }
     },
     {
-     "id": "17f19cgp",
+     "id": "v8dtw3od",
      "kind": "shape",
      "name": "Dot 83",
      "visible": true,
@@ -24841,7 +24841,7 @@
      }
     },
     {
-     "id": "dylmz6n9",
+     "id": "h6qdoimd",
      "kind": "shape",
      "name": "Dot 84",
      "visible": true,
@@ -24897,7 +24897,7 @@
      }
     },
     {
-     "id": "p38enh9d",
+     "id": "lede4dja",
      "kind": "shape",
      "name": "Dot 85",
      "visible": true,
@@ -24953,7 +24953,7 @@
      }
     },
     {
-     "id": "0vyo385i",
+     "id": "xvudam0g",
      "kind": "shape",
      "name": "Dot 86",
      "visible": true,
@@ -25009,7 +25009,7 @@
      }
     },
     {
-     "id": "t2yxokhi",
+     "id": "0jp0o7id",
      "kind": "shape",
      "name": "Dot 87",
      "visible": true,
@@ -25065,7 +25065,7 @@
      }
     },
     {
-     "id": "kwjdvn34",
+     "id": "5el0zunu",
      "kind": "shape",
      "name": "Dot 88",
      "visible": true,
@@ -25121,7 +25121,7 @@
      }
     },
     {
-     "id": "f6ee4kb3",
+     "id": "rr2ec88w",
      "kind": "shape",
      "name": "Dot 89",
      "visible": true,
@@ -25177,7 +25177,7 @@
      }
     },
     {
-     "id": "1rqlcxiq",
+     "id": "cis0gl2b",
      "kind": "shape",
      "name": "Dot 90",
      "visible": true,
@@ -25233,7 +25233,7 @@
      }
     },
     {
-     "id": "v413q52d",
+     "id": "m9hqkdum",
      "kind": "shape",
      "name": "Dot 91",
      "visible": true,
@@ -25289,7 +25289,7 @@
      }
     },
     {
-     "id": "q9d55f8z",
+     "id": "1znahhn4",
      "kind": "shape",
      "name": "Dot 92",
      "visible": true,
@@ -25345,7 +25345,7 @@
      }
     },
     {
-     "id": "6w3vxmjd",
+     "id": "x3x8yq7d",
      "kind": "shape",
      "name": "Dot 93",
      "visible": true,
@@ -25401,7 +25401,7 @@
      }
     },
     {
-     "id": "nw9upofu",
+     "id": "jk9bx6p2",
      "kind": "shape",
      "name": "Dot 94",
      "visible": true,
@@ -25457,7 +25457,7 @@
      }
     },
     {
-     "id": "7y3mq6bu",
+     "id": "43gr9322",
      "kind": "shape",
      "name": "Dot 95",
      "visible": true,
@@ -25513,7 +25513,7 @@
      }
     },
     {
-     "id": "igffff8m",
+     "id": "9c2gt1n2",
      "kind": "shape",
      "name": "Dot 96",
      "visible": true,
@@ -25569,7 +25569,7 @@
      }
     },
     {
-     "id": "fr0a20hh",
+     "id": "auotq03d",
      "kind": "shape",
      "name": "Dot 97",
      "visible": true,
@@ -25625,7 +25625,7 @@
      }
     },
     {
-     "id": "1qzu9i8j",
+     "id": "r7yufne4",
      "kind": "shape",
      "name": "Dot 98",
      "visible": true,
@@ -25681,7 +25681,7 @@
      }
     },
     {
-     "id": "noa9dhy4",
+     "id": "1msp1u2h",
      "kind": "shape",
      "name": "Dot 99",
      "visible": true,
@@ -25737,7 +25737,7 @@
      }
     },
     {
-     "id": "el0fz7tn",
+     "id": "7lsa73l3",
      "kind": "shape",
      "name": "Dot 100",
      "visible": true,
@@ -25793,7 +25793,7 @@
      }
     },
     {
-     "id": "oyd0uyby",
+     "id": "j11a2y55",
      "kind": "text",
      "name": "Number",
      "visible": true,
@@ -25865,7 +25865,7 @@
      }
     },
     {
-     "id": "7zg9d1fz",
+     "id": "4we55j9k",
      "kind": "text",
      "name": "Caption",
      "visible": true,
@@ -25937,7 +25937,7 @@
      }
     },
     {
-     "id": "yvuu7ka0",
+     "id": "z680jqkn",
      "kind": "text",
      "name": "Exploring",
      "visible": true,
@@ -26009,7 +26009,7 @@
      }
     },
     {
-     "id": "ynndkf2r",
+     "id": "hztyhgzh",
      "kind": "text",
      "name": "Exploring saves",
      "visible": true,
@@ -26081,7 +26081,7 @@
      }
     },
     {
-     "id": "iao7icy1",
+     "id": "4kxw11b4",
      "kind": "text",
      "name": "Transforming",
      "visible": true,
@@ -26153,7 +26153,7 @@
      }
     },
     {
-     "id": "u0grh156",
+     "id": "mabd49j2",
      "kind": "text",
      "name": "Transforming saves",
      "visible": true,
@@ -26225,7 +26225,7 @@
      }
     },
     {
-     "id": "gtj8cokb",
+     "id": "xnt702zr",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -26297,7 +26297,7 @@
      }
     },
     {
-     "id": "ca79v6kt",
+     "id": "l8f56ihy",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -26366,12 +26366,12 @@
    "hidden": true
   },
   {
-   "id": "2j30hgi0",
+   "id": "bhgws874",
    "name": "Why look at an AI company?",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "1poxtq67",
+     "id": "m5jbvyvo",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -26408,7 +26408,7 @@
      }
     },
     {
-     "id": "jgmuljhe",
+     "id": "cra2eblv",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -26442,7 +26442,7 @@
      }
     },
     {
-     "id": "uwhomshr",
+     "id": "36wdbcb0",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -26514,7 +26514,7 @@
      }
     },
     {
-     "id": "tbbcexnv",
+     "id": "kyyjg8dc",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -26586,7 +26586,7 @@
      }
     },
     {
-     "id": "h80l78bq",
+     "id": "9c4r3j4b",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -26658,7 +26658,7 @@
      }
     },
     {
-     "id": "3lfixm2e",
+     "id": "1b8y1d69",
      "kind": "shape",
      "name": "Report card",
      "visible": true,
@@ -26714,7 +26714,7 @@
      }
     },
     {
-     "id": "s52hd6c2",
+     "id": "lu18xjxq",
      "kind": "icon",
      "name": "Compass",
      "visible": true,
@@ -26756,7 +26756,7 @@
      }
     },
     {
-     "id": "m95civ0p",
+     "id": "vrvlj1ow",
      "kind": "text",
      "name": "Date",
      "visible": true,
@@ -26828,7 +26828,7 @@
      }
     },
     {
-     "id": "4rxb799i",
+     "id": "vwwhi2vh",
      "kind": "text",
      "name": "Report title",
      "visible": true,
@@ -26900,7 +26900,7 @@
      }
     },
     {
-     "id": "fzcs69av",
+     "id": "ucr82uik",
      "kind": "text",
      "name": "Read",
      "visible": true,
@@ -26972,7 +26972,7 @@
      }
     },
     {
-     "id": "bwybbur5",
+     "id": "93unnh4i",
      "kind": "text",
      "name": "Hiring records",
      "visible": true,
@@ -27044,7 +27044,7 @@
      }
     },
     {
-     "id": "b05rgnpk",
+     "id": "a2f7eka8",
      "kind": "text",
      "name": "Software logs",
      "visible": true,
@@ -27116,7 +27116,7 @@
      }
     },
     {
-     "id": "2d36l10x",
+     "id": "en906lwm",
      "kind": "text",
      "name": "Calendars",
      "visible": true,
@@ -27188,7 +27188,7 @@
      }
     },
     {
-     "id": "pzjxpe88",
+     "id": "8lg5jlo0",
      "kind": "text",
      "name": "17 interviews",
      "visible": true,
@@ -27260,7 +27260,7 @@
      }
     },
     {
-     "id": "wj2qhrmx",
+     "id": "sy9e9lyq",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -27328,12 +27328,12 @@
    "notes": "THIRD QUESTION · WHAT HAPPENS TO MY JOB? · ABOUT 10 MINUTES. The question everyone in the room has: what happens to my job, and my team’s? Most small firms are only starting with AI, and their jobs haven’t gone: 95% say headcount hasn’t changed (BCC). What changes first, at the frontier, is the shape of the work. One company is years ahead, because it makes the tools: Anthropic studied what happened inside it as AI agents spread. That is our look over the horizon.\n\nAnthropic, \"How employment is changing at Anthropic\" (Wilmers, Catipon, Massenkoff and McCrory, 16 October 2026). It drew on hiring records, output measures, surveys, communications, calendars and 17 employee interviews.\n\nSay why it matters: this is a company where AI agents are already part of everyone’s day, so it shows what a workplace looks like when they scale. It is not typical, and the authors say so (we come back to their caveats before the lessons)."
   },
   {
-   "id": "ylkqii6g",
+   "id": "15siu2cl",
    "name": "Six agent hours for every human hour",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "qwwnwa8s",
+     "id": "rfbqjfdk",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -27370,7 +27370,7 @@
      }
     },
     {
-     "id": "rmqvbyzl",
+     "id": "beku3ve3",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -27404,7 +27404,7 @@
      }
     },
     {
-     "id": "owu1hie9",
+     "id": "to3nq3uy",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -27476,7 +27476,7 @@
      }
     },
     {
-     "id": "ct5nuqdx",
+     "id": "1f43txby",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -27548,7 +27548,7 @@
      }
     },
     {
-     "id": "4u7zbj0k",
+     "id": "pmlq6lsd",
      "kind": "text",
      "name": "Agent hours",
      "visible": true,
@@ -27620,7 +27620,7 @@
      }
     },
     {
-     "id": "sf7s7cst",
+     "id": "c5ngie3y",
      "kind": "shape",
      "name": "Agent disc 1",
      "visible": true,
@@ -27676,7 +27676,7 @@
      }
     },
     {
-     "id": "jy8b4yl7",
+     "id": "csz663ln",
      "kind": "icon",
      "name": "Agent 1",
      "visible": true,
@@ -27718,7 +27718,7 @@
      }
     },
     {
-     "id": "n8szcwvk",
+     "id": "b958hhd2",
      "kind": "shape",
      "name": "Agent disc 2",
      "visible": true,
@@ -27774,7 +27774,7 @@
      }
     },
     {
-     "id": "vpp0ls0p",
+     "id": "zxohstbl",
      "kind": "icon",
      "name": "Agent 2",
      "visible": true,
@@ -27816,7 +27816,7 @@
      }
     },
     {
-     "id": "8muva8dl",
+     "id": "4d3qzc1a",
      "kind": "shape",
      "name": "Agent disc 3",
      "visible": true,
@@ -27872,7 +27872,7 @@
      }
     },
     {
-     "id": "89mun2pp",
+     "id": "qpl7nl9v",
      "kind": "icon",
      "name": "Agent 3",
      "visible": true,
@@ -27914,7 +27914,7 @@
      }
     },
     {
-     "id": "osp812d1",
+     "id": "zdnl7hgr",
      "kind": "shape",
      "name": "Agent disc 4",
      "visible": true,
@@ -27970,7 +27970,7 @@
      }
     },
     {
-     "id": "6tm4rmou",
+     "id": "erk8u3qk",
      "kind": "icon",
      "name": "Agent 4",
      "visible": true,
@@ -28012,7 +28012,7 @@
      }
     },
     {
-     "id": "bndertjb",
+     "id": "a0lc95yl",
      "kind": "shape",
      "name": "Agent disc 5",
      "visible": true,
@@ -28068,7 +28068,7 @@
      }
     },
     {
-     "id": "0o5q6zo9",
+     "id": "m7316ljd",
      "kind": "icon",
      "name": "Agent 5",
      "visible": true,
@@ -28110,7 +28110,7 @@
      }
     },
     {
-     "id": "vnytnyuq",
+     "id": "q2e85n84",
      "kind": "shape",
      "name": "Agent disc 6",
      "visible": true,
@@ -28166,7 +28166,7 @@
      }
     },
     {
-     "id": "p0hzcnc1",
+     "id": "z1rabjku",
      "kind": "icon",
      "name": "Agent 6",
      "visible": true,
@@ -28208,7 +28208,7 @@
      }
     },
     {
-     "id": "i7og6s3n",
+     "id": "2gxi98l7",
      "kind": "text",
      "name": "To",
      "visible": true,
@@ -28280,7 +28280,7 @@
      }
     },
     {
-     "id": "b7dsjb6s",
+     "id": "hc538nzm",
      "kind": "shape",
      "name": "Person disc",
      "visible": true,
@@ -28336,7 +28336,7 @@
      }
     },
     {
-     "id": "pj6d304u",
+     "id": "abyycjft",
      "kind": "icon",
      "name": "Person",
      "visible": true,
@@ -28378,7 +28378,7 @@
      }
     },
     {
-     "id": "ybp5v82d",
+     "id": "kmz05dr8",
      "kind": "text",
      "name": "Caption",
      "visible": true,
@@ -28450,7 +28450,7 @@
      }
     },
     {
-     "id": "fqk3zohu",
+     "id": "avayaqs6",
      "kind": "text",
      "name": "First",
      "visible": true,
@@ -28522,7 +28522,7 @@
      }
     },
     {
-     "id": "i14l9pp9",
+     "id": "zpyxd5hx",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -28594,7 +28594,7 @@
      }
     },
     {
-     "id": "d0g5bute",
+     "id": "z2x264y1",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -28662,12 +28662,12 @@
    "notes": "The headline number: across the company, agent hours first passed human hours in March 2026; by August, staff’s own agents were logging about six hours for every hour their human handlers worked.\n\nSay what it measures: hours of activity, not business value. The authors are careful about that, and so should we be.\n\nAgent hours, plainly: time the AI spent working on tasks by itself.\n\nFor you: these are engineers, but the room works in admin and marketing. Picture an assistant drafting your emails, quotes and posts by itself all week. That is what agent hours are."
   },
   {
-   "id": "q44i4yzq",
+   "id": "mkplzdwl",
    "name": "Most of the time, the agent is waiting",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "9e9a2yos",
+     "id": "wwxcnuvz",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -28704,7 +28704,7 @@
      }
     },
     {
-     "id": "zm0c0968",
+     "id": "mbd1e7vt",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -28738,7 +28738,7 @@
      }
     },
     {
-     "id": "zc4yz2bd",
+     "id": "5vzcj6n1",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -28810,7 +28810,7 @@
      }
     },
     {
-     "id": "je6f5e63",
+     "id": "j8km3xsd",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -28882,7 +28882,7 @@
      }
     },
     {
-     "id": "ktbrlhk0",
+     "id": "1de8zfy5",
      "kind": "shape",
      "name": "Waiting",
      "visible": true,
@@ -28938,7 +28938,7 @@
      }
     },
     {
-     "id": "g2exkm1v",
+     "id": "zfrxqhiz",
      "kind": "shape",
      "name": "The rest",
      "visible": true,
@@ -28994,7 +28994,7 @@
      }
     },
     {
-     "id": "rr42nqpr",
+     "id": "68teshn6",
      "kind": "icon",
      "name": "Hourglass",
      "visible": true,
@@ -29036,7 +29036,7 @@
      }
     },
     {
-     "id": "puuxv45e",
+     "id": "v7lpev6v",
      "kind": "text",
      "name": "Value · waiting",
      "visible": true,
@@ -29108,7 +29108,7 @@
      }
     },
     {
-     "id": "1e3aild2",
+     "id": "dzwkvwqs",
      "kind": "text",
      "name": "Label · waiting",
      "visible": true,
@@ -29180,7 +29180,7 @@
      }
     },
     {
-     "id": "g1jzse2k",
+     "id": "rag9z441",
      "kind": "text",
      "name": "Label · rest",
      "visible": true,
@@ -29252,7 +29252,7 @@
      }
     },
     {
-     "id": "m0avb74m",
+     "id": "r885p7jd",
      "kind": "text",
      "name": "Label · babysitting",
      "visible": true,
@@ -29324,7 +29324,7 @@
      }
     },
     {
-     "id": "6etqr9uf",
+     "id": "gvgftsg2",
      "kind": "text",
      "name": "Quote",
      "visible": true,
@@ -29396,7 +29396,7 @@
      }
     },
     {
-     "id": "kmm8xm20",
+     "id": "reizixwb",
      "kind": "text",
      "name": "Who · quote",
      "visible": true,
@@ -29468,7 +29468,7 @@
      }
     },
     {
-     "id": "jpcsq3pf",
+     "id": "hc83lwv5",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -29540,7 +29540,7 @@
      }
     },
     {
-     "id": "4al1hmmz",
+     "id": "1dj38x3x",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -29608,12 +29608,12 @@
    "notes": "The bottleneck has moved. Around 80% of a Claude session is spent idly waiting for human input: review, clarification, approval. And for non-technical groups, reading all the output their interactive sessions produce would take over half the work week (the authors’ estimate, from text volume and an assumed reading speed of 250 words a minute).\n\nClick: how it feels. Staff running several agents in parallel described a stream of notifications and approval requests; one compared it to babysitting, where every child \"brings to you concerns with an equal demand for your attention\". Others described themselves as \"bottlenecking the agents\": the slow part, holding the agents up.\n\nAsk the room: \"Who here already feels like the bottleneck for their own team?\"\n\nFor you: it’s the AI-drafted quotes, replies and posts sitting in a queue, waiting for your yes.\n\nThe point for the room: agents don’t remove the work. They move it, from doing to checking."
   },
   {
-   "id": "vtgiw988",
+   "id": "gbj6tvfd",
    "name": "More output, and a new job",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "rac5pcxd",
+     "id": "wt7919kx",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -29650,7 +29650,7 @@
      }
     },
     {
-     "id": "0eklzuoj",
+     "id": "tpv0yuso",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -29684,7 +29684,7 @@
      }
     },
     {
-     "id": "u8v51kk6",
+     "id": "ljpx0p3k",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -29756,7 +29756,7 @@
      }
     },
     {
-     "id": "4dcu651m",
+     "id": "0fvw8pew",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -29828,7 +29828,7 @@
      }
     },
     {
-     "id": "hks4134x",
+     "id": "v6vy8agv",
      "kind": "shape",
      "name": "Card · commits",
      "visible": true,
@@ -29884,7 +29884,7 @@
      }
     },
     {
-     "id": "k78cstch",
+     "id": "cwshpawc",
      "kind": "text",
      "name": "Value · commits",
      "visible": true,
@@ -29956,7 +29956,7 @@
      }
     },
     {
-     "id": "6r3mhzrg",
+     "id": "ozb0s94u",
      "kind": "text",
      "name": "Caption · commits",
      "visible": true,
@@ -30028,7 +30028,7 @@
      }
     },
     {
-     "id": "9ozuqeqn",
+     "id": "5khm7zkt",
      "kind": "text",
      "name": "Caption · undone",
      "visible": true,
@@ -30100,7 +30100,7 @@
      }
     },
     {
-     "id": "lxyd2wv4",
+     "id": "0eq9nakt",
      "kind": "text",
      "name": "Caveat",
      "visible": true,
@@ -30172,7 +30172,7 @@
      }
     },
     {
-     "id": "2s72theg",
+     "id": "tq5i2c9h",
      "kind": "text",
      "name": "Head · meta",
      "visible": true,
@@ -30244,7 +30244,7 @@
      }
     },
     {
-     "id": "kblqtwql",
+     "id": "by7djov9",
      "kind": "text",
      "name": "Meta · what",
      "visible": true,
@@ -30316,7 +30316,7 @@
      }
     },
     {
-     "id": "9c4tac36",
+     "id": "dp8z6dg7",
      "kind": "text",
      "name": "Label · autumn",
      "visible": true,
@@ -30388,7 +30388,7 @@
      }
     },
     {
-     "id": "g7fh54nr",
+     "id": "6n7zaqbh",
      "kind": "shape",
      "name": "Track · autumn",
      "visible": true,
@@ -30444,7 +30444,7 @@
      }
     },
     {
-     "id": "7rdgz2mu",
+     "id": "r4ln8jlf",
      "kind": "shape",
      "name": "Bar · autumn",
      "visible": true,
@@ -30500,7 +30500,7 @@
      }
     },
     {
-     "id": "q0te6319",
+     "id": "7l93silb",
      "kind": "text",
      "name": "Value · autumn",
      "visible": true,
@@ -30572,7 +30572,7 @@
      }
     },
     {
-     "id": "v79bkc43",
+     "id": "0dnbjjil",
      "kind": "text",
      "name": "Label · spring",
      "visible": true,
@@ -30644,7 +30644,7 @@
      }
     },
     {
-     "id": "ky1i6wqf",
+     "id": "hkbbbwtu",
      "kind": "shape",
      "name": "Track · spring",
      "visible": true,
@@ -30700,7 +30700,7 @@
      }
     },
     {
-     "id": "nh050y8b",
+     "id": "gqmsdm8n",
      "kind": "shape",
      "name": "Bar · spring",
      "visible": true,
@@ -30756,7 +30756,7 @@
      }
     },
     {
-     "id": "91i3gqt0",
+     "id": "6b3f9s0j",
      "kind": "text",
      "name": "Value · spring",
      "visible": true,
@@ -30828,7 +30828,7 @@
      }
     },
     {
-     "id": "x9sinkmz",
+     "id": "m5da3aue",
      "kind": "text",
      "name": "Bar note",
      "visible": true,
@@ -30900,7 +30900,7 @@
      }
     },
     {
-     "id": "6xufbu6a",
+     "id": "ktpsplow",
      "kind": "text",
      "name": "Instructions",
      "visible": true,
@@ -30972,7 +30972,7 @@
      }
     },
     {
-     "id": "ewdxzrf3",
+     "id": "ydyudc8j",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -31044,7 +31044,7 @@
      }
     },
     {
-     "id": "02sv5b4t",
+     "id": "n3ir4gwq",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -31112,12 +31112,12 @@
    "notes": "Output went up sharply. Each engineer saved about five times as many code commits (saved code changes) as six months earlier. Comparing 192 engineers who adopted coding agents with 74 who did not, agent-written code was no more likely to be deleted or rolled back later. Other teams (data scientists, lawyers, accounts payable, sales) also rose, but the report gives no multiples for them, so neither do we. The authors’ own warning, on the sticker in plain words: more code is not necessarily better code, and AI errors may be harder to spot.\n\nClick: the new job. When reviewing raw output is exhausting, people build the system instead. \"Meta-work\" (managing the AI: writing standing instructions, written rules for the agents, monitoring, reviewing output) rose from 10% of the average employee’s AI sessions in autumn 2025 to 22% in spring 2026. Standing instructions grew from a few hundred in July 2025 to 8,500 a year later.\n\nThe bars are drawn to scale against a third of all sessions, so 22% is just over twice 10%, as it should be.\n\nFor you: five times the drafts is five times the checking. Meta-work is your brand guide, your email templates, the checklist you write once for the AI to follow every time."
   },
   {
-   "id": "q9gbr57v",
+   "id": "t0vcf4tq",
    "name": "Who gets hired is changing",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "f1ypdo7a",
+     "id": "f8d6chys",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -31154,7 +31154,7 @@
      }
     },
     {
-     "id": "qaeyn5bz",
+     "id": "u1t1o2lc",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -31188,7 +31188,7 @@
      }
     },
     {
-     "id": "oq0e93t2",
+     "id": "6s0azceh",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -31260,7 +31260,7 @@
      }
     },
     {
-     "id": "zlcq3lgc",
+     "id": "8rdshqgz",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -31332,7 +31332,7 @@
      }
     },
     {
-     "id": "9sroxgae",
+     "id": "6jqbglf0",
      "kind": "shape",
      "name": "Baseline",
      "visible": true,
@@ -31388,7 +31388,7 @@
      }
     },
     {
-     "id": "zkhszlcv",
+     "id": "md2uip3x",
      "kind": "shape",
      "name": "Key · before",
      "visible": true,
@@ -31444,7 +31444,7 @@
      }
     },
     {
-     "id": "54fmijsj",
+     "id": "auuspznb",
      "kind": "text",
      "name": "Key · before label",
      "visible": true,
@@ -31516,7 +31516,7 @@
      }
     },
     {
-     "id": "628zetsu",
+     "id": "qcpd13nl",
      "kind": "shape",
      "name": "Key · after",
      "visible": true,
@@ -31572,7 +31572,7 @@
      }
     },
     {
-     "id": "60bj144a",
+     "id": "ap25zypn",
      "kind": "text",
      "name": "Key · after label",
      "visible": true,
@@ -31644,7 +31644,7 @@
      }
     },
     {
-     "id": "a8b5tr9z",
+     "id": "76wrly8a",
      "kind": "shape",
      "name": "Before · Junior share of tech hires",
      "visible": true,
@@ -31700,7 +31700,7 @@
      }
     },
     {
-     "id": "li5z7sae",
+     "id": "oxka5l1p",
      "kind": "text",
      "name": "Before value · Junior share of tech hires",
      "visible": true,
@@ -31772,7 +31772,7 @@
      }
     },
     {
-     "id": "8sey3l0a",
+     "id": "3ce6asn5",
      "kind": "shape",
      "name": "After · Junior share of tech hires",
      "visible": true,
@@ -31828,7 +31828,7 @@
      }
     },
     {
-     "id": "29ewjpv5",
+     "id": "pss08gr1",
      "kind": "text",
      "name": "After value · Junior share of tech hires",
      "visible": true,
@@ -31900,7 +31900,7 @@
      }
     },
     {
-     "id": "mof2w7z4",
+     "id": "1hx9jziu",
      "kind": "text",
      "name": "Label · Junior share of tech hires",
      "visible": true,
@@ -31972,7 +31972,7 @@
      }
     },
     {
-     "id": "l0wn0qug",
+     "id": "3o78dfan",
      "kind": "shape",
      "name": "Before · Junior share of tech staff",
      "visible": true,
@@ -32028,7 +32028,7 @@
      }
     },
     {
-     "id": "e02qhnlc",
+     "id": "n0kfa3aa",
      "kind": "text",
      "name": "Before value · Junior share of tech staff",
      "visible": true,
@@ -32100,7 +32100,7 @@
      }
     },
     {
-     "id": "f8w31tl8",
+     "id": "wog1phpk",
      "kind": "shape",
      "name": "After · Junior share of tech staff",
      "visible": true,
@@ -32156,7 +32156,7 @@
      }
     },
     {
-     "id": "6wp0689x",
+     "id": "uuh6j1p6",
      "kind": "text",
      "name": "After value · Junior share of tech staff",
      "visible": true,
@@ -32228,7 +32228,7 @@
      }
     },
     {
-     "id": "75d6vxlk",
+     "id": "k9y6bc9c",
      "kind": "text",
      "name": "Label · Junior share of tech staff",
      "visible": true,
@@ -32300,7 +32300,7 @@
      }
     },
     {
-     "id": "rkrx4h53",
+     "id": "9gfzn5vd",
      "kind": "text",
      "name": "Tripled",
      "visible": true,
@@ -32372,7 +32372,7 @@
      }
     },
     {
-     "id": "sjno03y5",
+     "id": "0wrlnuzy",
      "kind": "shape",
      "name": "Card · interviews",
      "visible": true,
@@ -32428,7 +32428,7 @@
      }
     },
     {
-     "id": "b2z11g9s",
+     "id": "lwgpp0h5",
      "kind": "icon",
      "name": "Briefcase",
      "visible": true,
@@ -32470,7 +32470,7 @@
      }
     },
     {
-     "id": "2ii004hu",
+     "id": "y1gidi1u",
      "kind": "text",
      "name": "Value · interviews",
      "visible": true,
@@ -32542,7 +32542,7 @@
      }
     },
     {
-     "id": "vmd5qbm8",
+     "id": "6jrbo600",
      "kind": "text",
      "name": "Caption · interviews",
      "visible": true,
@@ -32614,7 +32614,7 @@
      }
     },
     {
-     "id": "kss7zury",
+     "id": "e6g4haca",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -32686,7 +32686,7 @@
      }
     },
     {
-     "id": "f1qar5l3",
+     "id": "o5zc2xu2",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -32754,12 +32754,12 @@
    "notes": "The junior share of technical hires fell from 27% to 9%, and the junior share of technical staff from 21% to 14% since early 2025, while the company tripled in size. So the share falling does not by itself mean fewer juniors. Junior postings fell sharply after December 2025, and administrative hiring has not grown with the company, which the authors call \"clerical-light\".\n\nIn hiring managers’ interview notes, mentions of a candidate’s AI tool use tripled for technical roles and quadrupled for non-technical roles between 2024 and 2026 (from about 5% and 7% of assessments). These are interview notes, not job adverts. What it signals: judgement, autonomy and directing AI matter more; narrow manual execution matters less.\n\nThe columns are drawn to scale, from zero to 30%: grey is early 2025, orange is the share by the October 2026 report.\n\nFor you: think of the routine admin and marketing tasks a junior used to learn the job on. If AI does them, how does your next junior learn?\n\nTurn to your neighbour, 30 seconds: \"Which entry-level job in your firm changes first?\""
   },
   {
-   "id": "sf3ljopw",
+   "id": "4gbgn4gb",
    "name": "Read it with care",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "33ws8d62",
+     "id": "mpx0zcfn",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -32796,7 +32796,7 @@
      }
     },
     {
-     "id": "nk5ddexe",
+     "id": "15yievi8",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -32830,7 +32830,7 @@
      }
     },
     {
-     "id": "yp8s3zvn",
+     "id": "w4jnm7e6",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -32902,7 +32902,7 @@
      }
     },
     {
-     "id": "30jaa8qv",
+     "id": "lmd8lgi9",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -32974,7 +32974,7 @@
      }
     },
     {
-     "id": "kkt1wxv3",
+     "id": "mwb97gds",
      "kind": "text",
      "name": "Whose",
      "visible": true,
@@ -33046,7 +33046,7 @@
      }
     },
     {
-     "id": "sqe3npnw",
+     "id": "bas6hmqj",
      "kind": "shape",
      "name": "Card · An unusual company",
      "visible": true,
@@ -33102,7 +33102,7 @@
      }
     },
     {
-     "id": "s7uc7c9u",
+     "id": "dbmd7kyi",
      "kind": "shape",
      "name": "Band · An unusual company",
      "visible": true,
@@ -33158,7 +33158,7 @@
      }
     },
     {
-     "id": "0xx06fwq",
+     "id": "syzriuwn",
      "kind": "text",
      "name": "Heading · An unusual company",
      "visible": true,
@@ -33230,7 +33230,7 @@
      }
     },
     {
-     "id": "4u6tswaq",
+     "id": "fc6hja79",
      "kind": "text",
      "name": "Text · An unusual company",
      "visible": true,
@@ -33303,7 +33303,7 @@
      }
     },
     {
-     "id": "no8uv15p",
+     "id": "g8rlqe5p",
      "kind": "shape",
      "name": "Card · Activity isn’t value",
      "visible": true,
@@ -33359,7 +33359,7 @@
      }
     },
     {
-     "id": "2wfwzmwj",
+     "id": "3zap9i22",
      "kind": "shape",
      "name": "Band · Activity isn’t value",
      "visible": true,
@@ -33415,7 +33415,7 @@
      }
     },
     {
-     "id": "mm02vecm",
+     "id": "qdaodo0u",
      "kind": "text",
      "name": "Heading · Activity isn’t value",
      "visible": true,
@@ -33487,7 +33487,7 @@
      }
     },
     {
-     "id": "c3auo2nt",
+     "id": "qip04imo",
      "kind": "text",
      "name": "Text · Activity isn’t value",
      "visible": true,
@@ -33560,7 +33560,7 @@
      }
     },
     {
-     "id": "t6qhqidd",
+     "id": "yufcthjv",
      "kind": "shape",
      "name": "Card · Errors hide better",
      "visible": true,
@@ -33616,7 +33616,7 @@
      }
     },
     {
-     "id": "mpnlfqcc",
+     "id": "cx05itlv",
      "kind": "shape",
      "name": "Band · Errors hide better",
      "visible": true,
@@ -33672,7 +33672,7 @@
      }
     },
     {
-     "id": "azjde76r",
+     "id": "stnz27ow",
      "kind": "text",
      "name": "Heading · Errors hide better",
      "visible": true,
@@ -33744,7 +33744,7 @@
      }
     },
     {
-     "id": "x0m0mqhz",
+     "id": "p2zu5vtk",
      "kind": "text",
      "name": "Text · Errors hide better",
      "visible": true,
@@ -33817,7 +33817,7 @@
      }
     },
     {
-     "id": "x6ublb1p",
+     "id": "hxxq6o0m",
      "kind": "shape",
      "name": "Card · Growth muddies it",
      "visible": true,
@@ -33873,7 +33873,7 @@
      }
     },
     {
-     "id": "63uczj1n",
+     "id": "bfwvmlha",
      "kind": "shape",
      "name": "Band · Growth muddies it",
      "visible": true,
@@ -33929,7 +33929,7 @@
      }
     },
     {
-     "id": "5mrqkyu9",
+     "id": "10net01l",
      "kind": "text",
      "name": "Heading · Growth muddies it",
      "visible": true,
@@ -34001,7 +34001,7 @@
      }
     },
     {
-     "id": "mofe4e5e",
+     "id": "li7d8ku7",
      "kind": "text",
      "name": "Text · Growth muddies it",
      "visible": true,
@@ -34074,7 +34074,7 @@
      }
     },
     {
-     "id": "ngyf9914",
+     "id": "fzlnve3w",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -34142,12 +34142,12 @@
    "notes": "Be the honest one in the room. These are the authors’ own caveats: Anthropic is unusual, and many of its practices cannot be replicated across the economy; more code does not necessarily mean better code or business impact; AI errors may be harder to spot than human ones; business growth at the same time may explain some of the gains; employees chose when to adopt the tools; and the hours figures rest on assumptions (40-hour weeks, 250 words read a minute).\n\nIf asked about outside critics: commentators have pointed out that high activity is not the same as value if tired reviewers rubber-stamp the work. That is the next slide’s first lesson."
   },
   {
-   "id": "3e0wa7sn",
+   "id": "djmlyjls",
    "name": "What it means for your team",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "5jnl3n30",
+     "id": "8lnckfu6",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -34184,7 +34184,7 @@
      }
     },
     {
-     "id": "qyayl3rq",
+     "id": "15xex5nu",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -34218,7 +34218,7 @@
      }
     },
     {
-     "id": "1alm1483",
+     "id": "naec826o",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -34290,7 +34290,7 @@
      }
     },
     {
-     "id": "jnhz7dr0",
+     "id": "j7gzbhy7",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -34362,7 +34362,7 @@
      }
     },
     {
-     "id": "attvpmid",
+     "id": "wzyrf501",
      "kind": "shape",
      "name": "Card · Checking becomes the bottleneck",
      "visible": true,
@@ -34418,7 +34418,7 @@
      }
     },
     {
-     "id": "6y9sf8bw",
+     "id": "fl1939ea",
      "kind": "shape",
      "name": "Icon disc · Checking becomes the bottleneck",
      "visible": true,
@@ -34474,7 +34474,7 @@
      }
     },
     {
-     "id": "xwgba4wg",
+     "id": "72h4x0or",
      "kind": "icon",
      "name": "Icon · Checking becomes the bottleneck",
      "visible": true,
@@ -34516,7 +34516,7 @@
      }
     },
     {
-     "id": "37n6p2rf",
+     "id": "krmdnr6f",
      "kind": "text",
      "name": "Heading · Checking becomes the bottleneck",
      "visible": true,
@@ -34588,7 +34588,7 @@
      }
     },
     {
-     "id": "g8i9akrh",
+     "id": "48jr9s74",
      "kind": "text",
      "name": "Text · Checking becomes the bottleneck",
      "visible": true,
@@ -34660,7 +34660,7 @@
      }
     },
     {
-     "id": "w8gwsihn",
+     "id": "i22w92go",
      "kind": "shape",
      "name": "Card · Watch for rubber-stamping",
      "visible": true,
@@ -34716,7 +34716,7 @@
      }
     },
     {
-     "id": "k12g0vhz",
+     "id": "k7acplb3",
      "kind": "shape",
      "name": "Icon disc · Watch for rubber-stamping",
      "visible": true,
@@ -34772,7 +34772,7 @@
      }
     },
     {
-     "id": "u2ilw7ad",
+     "id": "scmyg7a7",
      "kind": "icon",
      "name": "Icon · Watch for rubber-stamping",
      "visible": true,
@@ -34814,7 +34814,7 @@
      }
     },
     {
-     "id": "f6hqv14r",
+     "id": "ch1flj3z",
      "kind": "text",
      "name": "Heading · Watch for rubber-stamping",
      "visible": true,
@@ -34886,7 +34886,7 @@
      }
     },
     {
-     "id": "n1yuesma",
+     "id": "2qz3kra3",
      "kind": "text",
      "name": "Text · Watch for rubber-stamping",
      "visible": true,
@@ -34958,7 +34958,7 @@
      }
     },
     {
-     "id": "2lipo5xs",
+     "id": "e8fp2te6",
      "kind": "shape",
      "name": "Card · Rethink the first job",
      "visible": true,
@@ -35014,7 +35014,7 @@
      }
     },
     {
-     "id": "k32qzo1u",
+     "id": "cpkfvhug",
      "kind": "shape",
      "name": "Icon disc · Rethink the first job",
      "visible": true,
@@ -35070,7 +35070,7 @@
      }
     },
     {
-     "id": "kjixzxej",
+     "id": "ksc8ek1u",
      "kind": "icon",
      "name": "Icon · Rethink the first job",
      "visible": true,
@@ -35112,7 +35112,7 @@
      }
     },
     {
-     "id": "1yfck2ny",
+     "id": "9h96bw8t",
      "kind": "text",
      "name": "Heading · Rethink the first job",
      "visible": true,
@@ -35184,7 +35184,7 @@
      }
     },
     {
-     "id": "xx7wz7xc",
+     "id": "gzitetjl",
      "kind": "text",
      "name": "Text · Rethink the first job",
      "visible": true,
@@ -35256,7 +35256,7 @@
      }
     },
     {
-     "id": "09mz33qv",
+     "id": "rl3784rd",
      "kind": "shape",
      "name": "Card · Write the rules once",
      "visible": true,
@@ -35312,7 +35312,7 @@
      }
     },
     {
-     "id": "9wn6gj4c",
+     "id": "6a9rgjv9",
      "kind": "shape",
      "name": "Icon disc · Write the rules once",
      "visible": true,
@@ -35368,7 +35368,7 @@
      }
     },
     {
-     "id": "ejzzkj1w",
+     "id": "lk43ctus",
      "kind": "icon",
      "name": "Icon · Write the rules once",
      "visible": true,
@@ -35410,7 +35410,7 @@
      }
     },
     {
-     "id": "ymbgy4ks",
+     "id": "itxk6uqc",
      "kind": "text",
      "name": "Heading · Write the rules once",
      "visible": true,
@@ -35482,7 +35482,7 @@
      }
     },
     {
-     "id": "hb10vqsj",
+     "id": "0i7a8bqz",
      "kind": "text",
      "name": "Text · Write the rules once",
      "visible": true,
@@ -35554,7 +35554,7 @@
      }
     },
     {
-     "id": "yepj3n32",
+     "id": "cd9oz1hy",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -35622,12 +35622,12 @@
    "notes": "What a small team takes from Anthropic’s report: an early warning not to confuse agent activity with productivity.\n\nYour bottleneck shifts from doing to checking: deploying agents will not cure a small team’s workload if every output needs a manual sign-off; batch the approvals and automate the routine quality checks.\n\nProtect against rubber-stamp risk: a lean team flooded with AI-made proposals, financial models or code gets review fatigue fast, and tired people approve subtle errors.\n\nRethink entry-level roles: routine execution work is shrinking, so future hires need judgement and problem-framing skills to direct the tools. Small firms still need to grow their own people, because the checker of tomorrow is today’s junior.\n\nInvest in guardrails, \"meta-work\": Anthropic’s staff answered the surge with standing instructions and automated checks; for an SME that means reusable prompt templates, brand guardrails and checklists, not managing AI one message at a time.\n\nTwo more from the UK numbers, if there is time. Shadow AI: staff on personal AI accounts nobody approved, with nobody checking the work, which brings the same checking risks. Say this as what we see in firms: DSIT’s published summary does not measure it. Train, don’t just hire: around 62% of firms short of AI expertise train their own staff (ONS), so build judgement and AI supervision in the people you have."
   },
   {
-   "id": "tazpsy6a",
+   "id": "g9524vdd",
    "name": "Your job moves",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "fwd6nov5",
+     "id": "k39i789f",
      "kind": "mesh",
      "name": "Ground",
      "visible": true,
@@ -35668,7 +35668,7 @@
      }
     },
     {
-     "id": "8o1lzo50",
+     "id": "p6rbwpr2",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -35702,7 +35702,7 @@
      }
     },
     {
-     "id": "q39oci73",
+     "id": "s1px4rez",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -35774,7 +35774,7 @@
      }
     },
     {
-     "id": "pstu4vnr",
+     "id": "oqbuzozh",
      "kind": "text",
      "name": "Takeaway",
      "visible": true,
@@ -35846,7 +35846,7 @@
      }
     },
     {
-     "id": "kf8afjm8",
+     "id": "pinmss9p",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -35918,7 +35918,7 @@
      }
     },
     {
-     "id": "7sbjysk1",
+     "id": "vci84fdx",
      "kind": "text",
      "name": "Bridge",
      "visible": true,
@@ -35990,7 +35990,7 @@
      }
     },
     {
-     "id": "6hi07leh",
+     "id": "lht6nedb",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -36058,12 +36058,12 @@
    "notes": "The answer to the third question. Land it, then pause: AI is more than a chatbot; most firms are trying it but few have changed how they work; and where agents arrive first, the work moves from doing to directing and checking. The skill to protect, in yourself and your team, is judgement.\n\nClick, the bridge the whole talk turns on: \"If your job becomes checking the AI’s work, you need the skill to spot its mistakes. And that’s exactly the skill AI can quietly erode.\" Then: \"That’s the idea the UKBT Institute is built on.\""
   },
   {
-   "id": "k3ihvkax",
+   "id": "li726tza",
    "name": "Borrowed, not owned",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "omrrdq7c",
+     "id": "d5qr75z4",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -36100,7 +36100,7 @@
      }
     },
     {
-     "id": "zb4ipdfd",
+     "id": "og06dnbx",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -36134,7 +36134,7 @@
      }
     },
     {
-     "id": "aizm7bwa",
+     "id": "4gm3czz6",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -36206,7 +36206,7 @@
      }
     },
     {
-     "id": "sophg8yr",
+     "id": "2qgzb765",
      "kind": "image",
      "name": "Institute logo",
      "visible": true,
@@ -36267,7 +36267,7 @@
      }
     },
     {
-     "id": "oyn1unvs",
+     "id": "yypxjxk8",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -36339,7 +36339,7 @@
      }
     },
     {
-     "id": "4zg6kqj9",
+     "id": "k6ulxp1k",
      "kind": "text",
      "name": "Line 1 · borrowed",
      "visible": true,
@@ -36412,7 +36412,7 @@
      }
     },
     {
-     "id": "ebj4k5is",
+     "id": "wp83wp7g",
      "kind": "text",
      "name": "Line 2 · owned",
      "visible": true,
@@ -36485,7 +36485,7 @@
      }
     },
     {
-     "id": "ka3ckcog",
+     "id": "t9b4e7ft",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -36557,7 +36557,7 @@
      }
     },
     {
-     "id": "7ud6bsz3",
+     "id": "zt7qbjd9",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -36625,12 +36625,12 @@
    "notes": "FOURTH QUESTION · BORROWED OR OWNED? · ABOUT 6 MINUTES. The idea the UKBT Institute is built on: what happens to people’s own skill as they lean on AI. Productivity and independence are the theory; the next few slides show it is grounded in evidence, pedagogy and measured impact.\n\nThe core claim, in the talk’s two words. Fast with AI is borrowed: if you can only do the task with AI, the skill is the AI’s. Good without it is owned: if you can still do it without AI, the skill is yours. Click for the second line. (The Institute’s own wording is \"AI productivity without independence is borrowed, not owned\"; on the slide it is said plainly, with each colour on its own meaning: orange for borrowed, green for owned, as on the map.) Speed and skill can move in opposite directions, so the Institute measures both, not just speed."
   },
   {
-   "id": "ryktekuh",
+   "id": "x0anl4lq",
    "name": "Faster with it. Worse without it.",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "3vntjuva",
+     "id": "xvriwp7l",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -36667,7 +36667,7 @@
      }
     },
     {
-     "id": "fha76yhh",
+     "id": "wym5m0e7",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -36701,7 +36701,7 @@
      }
     },
     {
-     "id": "q2h4r8z4",
+     "id": "dwnv4kyi",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -36773,7 +36773,7 @@
      }
     },
     {
-     "id": "ly8wx7dk",
+     "id": "nvmq4u41",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -36845,7 +36845,7 @@
      }
     },
     {
-     "id": "80jmgv18",
+     "id": "wpx6hb4i",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -36917,7 +36917,7 @@
      }
     },
     {
-     "id": "t9zaq2yh",
+     "id": "z9sq8vfo",
      "kind": "text",
      "name": "Head · with",
      "visible": true,
@@ -36989,7 +36989,7 @@
      }
     },
     {
-     "id": "ph5433cy",
+     "id": "of9nsulr",
      "kind": "text",
      "name": "Label · base with",
      "visible": true,
@@ -37062,7 +37062,7 @@
      }
     },
     {
-     "id": "w3sgybjz",
+     "id": "ot7r7von",
      "kind": "shape",
      "name": "Track · base with",
      "visible": true,
@@ -37118,7 +37118,7 @@
      }
     },
     {
-     "id": "pku8sohf",
+     "id": "s6wtw4q9",
      "kind": "shape",
      "name": "Bar · base with",
      "visible": true,
@@ -37174,7 +37174,7 @@
      }
     },
     {
-     "id": "pvm6jvv2",
+     "id": "lw7lxfsg",
      "kind": "text",
      "name": "Value · base with",
      "visible": true,
@@ -37246,7 +37246,7 @@
      }
     },
     {
-     "id": "iuhmodd9",
+     "id": "crztzu0x",
      "kind": "text",
      "name": "Label · tutor with",
      "visible": true,
@@ -37319,7 +37319,7 @@
      }
     },
     {
-     "id": "ncnu4zit",
+     "id": "wdlt8a03",
      "kind": "shape",
      "name": "Track · tutor with",
      "visible": true,
@@ -37375,7 +37375,7 @@
      }
     },
     {
-     "id": "jhsbye0e",
+     "id": "j3123hd8",
      "kind": "shape",
      "name": "Bar · tutor with",
      "visible": true,
@@ -37431,7 +37431,7 @@
      }
     },
     {
-     "id": "db85sdvv",
+     "id": "0aeaobhg",
      "kind": "text",
      "name": "Value · tutor with",
      "visible": true,
@@ -37503,7 +37503,7 @@
      }
     },
     {
-     "id": "omt362iq",
+     "id": "0shgjcg3",
      "kind": "text",
      "name": "Note · with",
      "visible": true,
@@ -37575,7 +37575,7 @@
      }
     },
     {
-     "id": "g4ymb6op",
+     "id": "gew07j51",
      "kind": "shape",
      "name": "Divider",
      "visible": true,
@@ -37631,7 +37631,7 @@
      }
     },
     {
-     "id": "d2p1xhvc",
+     "id": "nzgs4hek",
      "kind": "text",
      "name": "Head · without",
      "visible": true,
@@ -37703,7 +37703,7 @@
      }
     },
     {
-     "id": "3fgh3qsh",
+     "id": "9y9ken3b",
      "kind": "text",
      "name": "Without · base",
      "visible": true,
@@ -37776,7 +37776,7 @@
      }
     },
     {
-     "id": "2j164qfv",
+     "id": "ucp8vnaj",
      "kind": "text",
      "name": "Without · tutor",
      "visible": true,
@@ -37849,7 +37849,7 @@
      }
     },
     {
-     "id": "jdz3y7tx",
+     "id": "75ngjm40",
      "kind": "text",
      "name": "Why",
      "visible": true,
@@ -37921,7 +37921,7 @@
      }
     },
     {
-     "id": "052iqavo",
+     "id": "rd5zvkil",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -37993,7 +37993,7 @@
      }
     },
     {
-     "id": "war0mex7",
+     "id": "do05drbu",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -38064,12 +38064,12 @@
    }
   },
   {
-   "id": "sb499h63",
+   "id": "hb7b8wly",
    "name": "The mirage feels like progress",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "wehlh10x",
+     "id": "5j1c592j",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -38106,7 +38106,7 @@
      }
     },
     {
-     "id": "vk00vw63",
+     "id": "vcsolmmp",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -38140,7 +38140,7 @@
      }
     },
     {
-     "id": "afgmhdin",
+     "id": "jkj5bnjo",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -38212,7 +38212,7 @@
      }
     },
     {
-     "id": "wnr2t3r6",
+     "id": "5fgzljbc",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -38284,7 +38284,7 @@
      }
     },
     {
-     "id": "kjtlgrqg",
+     "id": "dau71kth",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -38356,7 +38356,7 @@
      }
     },
     {
-     "id": "iuwgrlzu",
+     "id": "tn8n5cll",
      "kind": "shape",
      "name": "Card · easier",
      "visible": true,
@@ -38412,7 +38412,7 @@
      }
     },
     {
-     "id": "afdoks44",
+     "id": "28ki9uvz",
      "kind": "icon",
      "name": "Easier",
      "visible": true,
@@ -38454,7 +38454,7 @@
      }
     },
     {
-     "id": "o8j1h4dn",
+     "id": "7t210ess",
      "kind": "text",
      "name": "Text · easier",
      "visible": true,
@@ -38526,7 +38526,7 @@
      }
     },
     {
-     "id": "cwv0uldk",
+     "id": "ogoamh53",
      "kind": "shape",
      "name": "Card · scored",
      "visible": true,
@@ -38582,7 +38582,7 @@
      }
     },
     {
-     "id": "d1qmrkgi",
+     "id": "nv4efz7z",
      "kind": "text",
      "name": "Value · scored",
      "visible": true,
@@ -38654,7 +38654,7 @@
      }
     },
     {
-     "id": "op0wufg0",
+     "id": "dqvqgmca",
      "kind": "text",
      "name": "Text · scored",
      "visible": true,
@@ -38726,7 +38726,7 @@
      }
     },
     {
-     "id": "d4hmscv8",
+     "id": "nphv975u",
      "kind": "shape",
      "name": "Card · felt",
      "visible": true,
@@ -38782,7 +38782,7 @@
      }
     },
     {
-     "id": "is4beab6",
+     "id": "bj4mq5sf",
      "kind": "icon",
      "name": "Felt",
      "visible": true,
@@ -38824,7 +38824,7 @@
      }
     },
     {
-     "id": "0qwdhqc8",
+     "id": "n64rqyjz",
      "kind": "text",
      "name": "Text · felt",
      "visible": true,
@@ -38896,7 +38896,7 @@
      }
     },
     {
-     "id": "fd06q93a",
+     "id": "6hjzyplq",
      "kind": "text",
      "name": "Agents",
      "visible": true,
@@ -38968,7 +38968,7 @@
      }
     },
     {
-     "id": "c5l6omfc",
+     "id": "4wa6t4vr",
      "kind": "text",
      "name": "Source",
      "visible": true,
@@ -39040,7 +39040,7 @@
      }
     },
     {
-     "id": "3p8ubpmy",
+     "id": "q4ju9d8m",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -39108,12 +39108,12 @@
    "notes": "Why this is dangerous: it feels fine from the inside. Before the last click, a vote: \"Which group said it learned more: with AI, or without?\"\n\nIn Anthropic’s skill trial (Shen and Tamkin, January 2026, 52 mostly junior developers learning a new library), people with the AI assistant found the task easier, then scored 50% on the quiz against 67% for those coding by hand. Both groups enjoyed the task, and it was the group without AI that reported learning more.\n\nNote: some summaries say the AI users felt they learned more. The paper says the opposite (\"The control group (No AI) reported higher self-reported learning\", section 5.2.2), so say it this way.\n\nThe last line links the agents back to this: the authors write that \"the loss in knowledge is likely even greater in an agentic or autocomplete setting where composing queries is not required\" (section 6.1), and that \"accomplishing a task with new knowledge or skills does not necessarily lead to the same productive gains\" (section 7). It is their expectation, not a finding. Your own gloss, said as yours, not theirs: with agents, you don’t even have to ask. And your advice from it: agents are fine for the craft you’ve already mastered, and risky for the one you’re still learning.\n\nBoth cards were checked in the paper (section 5.2.2): \"participants in the treatment group (AI Assistance) found the task easier than the control group\", and \"The control group (No AI) reported higher self-reported learning\"."
   },
   {
-   "id": "s8a1mndr",
+   "id": "y0t7j7ct",
    "name": "Productivity and independence",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "pka1oqmh",
+     "id": "9w6l4na3",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -39150,7 +39150,7 @@
      }
     },
     {
-     "id": "ke6r5qrg",
+     "id": "t1vhntld",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -39184,7 +39184,7 @@
      }
     },
     {
-     "id": "jhlrw3ym",
+     "id": "hgsqiumo",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -39256,7 +39256,7 @@
      }
     },
     {
-     "id": "c41aj1m2",
+     "id": "6m3pwqwh",
      "kind": "text",
      "name": "Axis · independence",
      "visible": true,
@@ -39328,7 +39328,7 @@
      }
     },
     {
-     "id": "nveklufx",
+     "id": "l87glzu5",
      "kind": "text",
      "name": "Axis · productivity",
      "visible": true,
@@ -39400,7 +39400,7 @@
      }
     },
     {
-     "id": "crwz01kl",
+     "id": "sji90xo8",
      "kind": "shape",
      "name": "Quadrant · Not yet using AI",
      "visible": true,
@@ -39456,7 +39456,7 @@
      }
     },
     {
-     "id": "97hq5mnv",
+     "id": "wtbsrbxz",
      "kind": "text",
      "name": "Name · Not yet using AI",
      "visible": true,
@@ -39528,7 +39528,7 @@
      }
     },
     {
-     "id": "0wf1yn34",
+     "id": "jbu7852t",
      "kind": "text",
      "name": "What · Not yet using AI",
      "visible": true,
@@ -39600,7 +39600,7 @@
      }
     },
     {
-     "id": "24y6c2p8",
+     "id": "ct0iq2jg",
      "kind": "shape",
      "name": "Quadrant · Owned",
      "visible": true,
@@ -39656,7 +39656,7 @@
      }
     },
     {
-     "id": "fla44d2y",
+     "id": "ksmaq9b1",
      "kind": "text",
      "name": "Name · Owned",
      "visible": true,
@@ -39728,7 +39728,7 @@
      }
     },
     {
-     "id": "a2eak0ox",
+     "id": "a07f8huz",
      "kind": "text",
      "name": "What · Owned",
      "visible": true,
@@ -39800,7 +39800,7 @@
      }
     },
     {
-     "id": "naw4cc7r",
+     "id": "ch19vl9r",
      "kind": "shape",
      "name": "Quadrant · Stuck",
      "visible": true,
@@ -39856,7 +39856,7 @@
      }
     },
     {
-     "id": "x6ubquye",
+     "id": "b6ss1nfp",
      "kind": "text",
      "name": "Name · Stuck",
      "visible": true,
@@ -39928,7 +39928,7 @@
      }
     },
     {
-     "id": "3opxnzqk",
+     "id": "05enir63",
      "kind": "text",
      "name": "What · Stuck",
      "visible": true,
@@ -40000,7 +40000,7 @@
      }
     },
     {
-     "id": "gfzzn7vo",
+     "id": "9z2anrr9",
      "kind": "shape",
      "name": "Quadrant · Borrowed",
      "visible": true,
@@ -40056,7 +40056,7 @@
      }
     },
     {
-     "id": "ia3ljt6l",
+     "id": "k6lafowl",
      "kind": "text",
      "name": "Name · Borrowed",
      "visible": true,
@@ -40128,7 +40128,7 @@
      }
     },
     {
-     "id": "801k02cp",
+     "id": "h5irl3wd",
      "kind": "text",
      "name": "What · Borrowed",
      "visible": true,
@@ -40200,7 +40200,7 @@
      }
     },
     {
-     "id": "prfwh8qx",
+     "id": "6nu4y2is",
      "kind": "text",
      "name": "Most training",
      "visible": true,
@@ -40272,7 +40272,7 @@
      }
     },
     {
-     "id": "jggc2sf8",
+     "id": "utpz803e",
      "kind": "shape",
      "name": "Training arrow",
      "visible": true,
@@ -40328,7 +40328,7 @@
      }
     },
     {
-     "id": "rlvszd7c",
+     "id": "vexyys6d",
      "kind": "text",
      "name": "Our job",
      "visible": true,
@@ -40365,7 +40365,7 @@
       "highlight": false,
       "highlightColor": "#ffe066",
       "block": "hug",
-      "blockColor": "#cefd85",
+      "blockColor": "#f5f3ee",
       "blockOpacity": 1,
       "blockPad": 22,
       "blockRadius": 80,
@@ -40400,7 +40400,7 @@
      }
     },
     {
-     "id": "a4ye0bun",
+     "id": "x3x13lkn",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -40468,12 +40468,12 @@
    "notes": "The model that anchors everything, in two words: owned and borrowed. Across: speed with AI. Up: your own skill, what you can still do without it.\n\nOwned (top right) is the goal: fast, and still good without it. Borrowed (bottom right) is the danger, because it looks like success: fast, but lost without it. That is the mirage, and it is what the last two slides showed: the students on the plain version, and the developers who found the task easier. Click: most AI training pushes people right, towards speed, so the arrow runs from Stuck straight into Borrowed. Click: the Institute’s job is to move them up and right, into Owned.\n\nBridge: \"Knowing the trap isn’t enough. Here’s why most people stall, and how to make it stick: AI in your routine, without borrowing your skill.\""
   },
   {
-   "id": "cq7pb1lq",
+   "id": "rh2bfk3g",
    "name": "Why people stall",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "6fdfm5z9",
+     "id": "rcjemnm7",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -40510,7 +40510,7 @@
      }
     },
     {
-     "id": "ef3591v3",
+     "id": "81d03t51",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -40544,7 +40544,7 @@
      }
     },
     {
-     "id": "wi4aj45n",
+     "id": "y6c6tsa9",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -40616,7 +40616,7 @@
      }
     },
     {
-     "id": "tbxuvsuc",
+     "id": "l6d81h0z",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -40688,7 +40688,7 @@
      }
     },
     {
-     "id": "jtik2k90",
+     "id": "abhw7qvp",
      "kind": "shape",
      "name": "Axis · experience",
      "visible": true,
@@ -40744,7 +40744,7 @@
      }
     },
     {
-     "id": "m1fgxgk5",
+     "id": "j3f63bl8",
      "kind": "shape",
      "name": "Axis · time",
      "visible": true,
@@ -40800,7 +40800,7 @@
      }
     },
     {
-     "id": "ne9tbdlz",
+     "id": "5s8qkpgj",
      "kind": "text",
      "name": "Label · experience",
      "visible": true,
@@ -40872,7 +40872,7 @@
      }
     },
     {
-     "id": "880o3kna",
+     "id": "47yuvhfn",
      "kind": "text",
      "name": "Label · time",
      "visible": true,
@@ -40944,7 +40944,7 @@
      }
     },
     {
-     "id": "pc4yxghj",
+     "id": "rj86anrb",
      "kind": "text",
      "name": "Illustration",
      "visible": true,
@@ -41016,7 +41016,7 @@
      }
     },
     {
-     "id": "7hctgzgv",
+     "id": "vvds7mcb",
      "kind": "shape",
      "name": "Line · 1",
      "visible": true,
@@ -41072,7 +41072,7 @@
      }
     },
     {
-     "id": "ft4ghr2b",
+     "id": "ackvhqbu",
      "kind": "text",
      "name": "Point · Looks like fun.",
      "visible": true,
@@ -41144,7 +41144,7 @@
      }
     },
     {
-     "id": "rti1f88g",
+     "id": "xp156cve",
      "kind": "shape",
      "name": "Line · 2",
      "visible": true,
@@ -41200,7 +41200,7 @@
      }
     },
     {
-     "id": "6d9m8ukl",
+     "id": "jufjjeca",
      "kind": "text",
      "name": "Point · This is hard!",
      "visible": true,
@@ -41272,7 +41272,7 @@
      }
     },
     {
-     "id": "z7jo81nc",
+     "id": "90ocm61b",
      "kind": "shape",
      "name": "Line · 3",
      "visible": true,
@@ -41328,7 +41328,7 @@
      }
     },
     {
-     "id": "96p9ihtj",
+     "id": "4htv45r3",
      "kind": "text",
      "name": "Thought · No idea what I’m doing. But I keep going.",
      "visible": true,
@@ -41400,7 +41400,7 @@
      }
     },
     {
-     "id": "csay0kn0",
+     "id": "khy1fqar",
      "kind": "text",
      "name": "Point · Now I get it!",
      "visible": true,
@@ -41472,7 +41472,7 @@
      }
     },
     {
-     "id": "ir85pzsp",
+     "id": "fgwptons",
      "kind": "shape",
      "name": "Line · 4",
      "visible": true,
@@ -41528,7 +41528,7 @@
      }
     },
     {
-     "id": "e3lgiij9",
+     "id": "h83yc48y",
      "kind": "text",
      "name": "Thought · …or not.",
      "visible": true,
@@ -41600,7 +41600,7 @@
      }
     },
     {
-     "id": "i5e1cqhv",
+     "id": "bxshw06f",
      "kind": "text",
      "name": "Point · I know nothing!",
      "visible": true,
@@ -41672,7 +41672,7 @@
      }
     },
     {
-     "id": "3iqn21e7",
+     "id": "ri4k2xgc",
      "kind": "shape",
      "name": "Line · 5",
      "visible": true,
@@ -41728,7 +41728,7 @@
      }
     },
     {
-     "id": "oc8g23rl",
+     "id": "v0xqpuqz",
      "kind": "text",
      "name": "Thought · This actually makes sense.",
      "visible": true,
@@ -41800,7 +41800,7 @@
      }
     },
     {
-     "id": "rn2nm5qu",
+     "id": "1axvmrw1",
      "kind": "text",
      "name": "Thought · Did I do that?",
      "visible": true,
@@ -41872,7 +41872,7 @@
      }
     },
     {
-     "id": "0dwflplq",
+     "id": "qdtmo3u9",
      "kind": "text",
      "name": "Point · I did it!",
      "visible": true,
@@ -41944,7 +41944,7 @@
      }
     },
     {
-     "id": "3ozs223s",
+     "id": "sjw3f24m",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -42012,12 +42012,12 @@
    "notes": "FIFTH QUESTION · HOW DO I MAKE IT STICK? · ABOUT 7 MINUTES. Say what \"it\" is: make AI part of your routine, without borrowing your skill.\n\nLearning a new tool is not a straight line up, and this is why so many firms stall (NatWest found 29% of firms using AI still in the earliest piloting stage).\n\nWalk the curve, a click at a time. \"Looks like fun\": the first quick wins. \"This is hard!\": the first dip. \"No idea what I’m doing, but I keep going\": the climb. \"Now I get it!\" ... \"or not\": the novelty wears off right as the real work begins. \"I know nothing!\": the low point, where most people quit. Then \"This actually makes sense\", \"Did I do that?\", and \"I did it!\".\n\nThe curve is an illustration of how learning feels, not data from a study, and the slide says so. The point: the low point is normal, and it comes before fluency, not instead of it. The usual explanation is the brain’s novelty reward (the buzz of a quick win) fading once the tool feels familiar; that is popular psychology, so offer it as a way of thinking, not as a research finding.\n\nFour reasons the buzz wears off, if you want them. The novelty cliff: exploring new features gives easy rewards; once the interface feels familiar, that reward stops. The competency dip: learning the basics feels fast, mastering the complex edge cases feels slow, and the gap between knowing how a tool works and being fluent with it causes frustration. Setup feels like progress (\"tool-shifting procrastination\"): setting up a new app or workflow feels like productive work; once it is done, you have to face the actual, often harder task the tool was meant to solve. Too many settings (decision fatigue): new tools come with endless customisation; spending energy tweaking settings drains the willpower needed for real work.\n\nAsk the room: \"Hands up if you’ve spent longer setting up a tool than using it.\""
   },
   {
-   "id": "dj72h522",
+   "id": "m3b7cbgr",
    "name": "Push past the slump",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "oyeess5d",
+     "id": "rb669xed",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -42054,7 +42054,7 @@
      }
     },
     {
-     "id": "suiphd1r",
+     "id": "sgfxz381",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -42088,7 +42088,7 @@
      }
     },
     {
-     "id": "401nny4a",
+     "id": "e3wvb5ig",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -42160,7 +42160,7 @@
      }
     },
     {
-     "id": "rp6h049o",
+     "id": "lduk4v9v",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -42232,7 +42232,7 @@
      }
     },
     {
-     "id": "ofp14w6y",
+     "id": "jmfg63v2",
      "kind": "shape",
      "name": "Tile · 01",
      "visible": true,
@@ -42288,7 +42288,7 @@
      }
     },
     {
-     "id": "4tiu3p87",
+     "id": "lvdz95ec",
      "kind": "text",
      "name": "Number · 01",
      "visible": true,
@@ -42360,7 +42360,7 @@
      }
     },
     {
-     "id": "b65qsr8t",
+     "id": "g2wyhsb2",
      "kind": "text",
      "name": "Heading · 01",
      "visible": true,
@@ -42432,7 +42432,7 @@
      }
     },
     {
-     "id": "1shyr858",
+     "id": "c0xh68br",
      "kind": "text",
      "name": "Text · 01",
      "visible": true,
@@ -42504,7 +42504,7 @@
      }
     },
     {
-     "id": "7id5hrgs",
+     "id": "ewpfdo2b",
      "kind": "shape",
      "name": "Tile · 02",
      "visible": true,
@@ -42560,7 +42560,7 @@
      }
     },
     {
-     "id": "zi9i895v",
+     "id": "m9swjlp2",
      "kind": "text",
      "name": "Number · 02",
      "visible": true,
@@ -42632,7 +42632,7 @@
      }
     },
     {
-     "id": "2ttq0i95",
+     "id": "q24hcd6c",
      "kind": "text",
      "name": "Heading · 02",
      "visible": true,
@@ -42704,7 +42704,7 @@
      }
     },
     {
-     "id": "eo9ywb8v",
+     "id": "sdmm4nwl",
      "kind": "text",
      "name": "Text · 02",
      "visible": true,
@@ -42776,7 +42776,7 @@
      }
     },
     {
-     "id": "h9gp7smg",
+     "id": "f2e28z67",
      "kind": "shape",
      "name": "Tile · 03",
      "visible": true,
@@ -42832,7 +42832,7 @@
      }
     },
     {
-     "id": "8qwa4mby",
+     "id": "ot5lkcks",
      "kind": "text",
      "name": "Number · 03",
      "visible": true,
@@ -42904,7 +42904,7 @@
      }
     },
     {
-     "id": "tv8yfnas",
+     "id": "vktxsac1",
      "kind": "text",
      "name": "Heading · 03",
      "visible": true,
@@ -42976,7 +42976,7 @@
      }
     },
     {
-     "id": "nsn3tw4m",
+     "id": "jbsz1pqx",
      "kind": "text",
      "name": "Text · 03",
      "visible": true,
@@ -43048,7 +43048,7 @@
      }
     },
     {
-     "id": "ukmncki4",
+     "id": "rmbod8md",
      "kind": "shape",
      "name": "Tile · 04",
      "visible": true,
@@ -43104,7 +43104,7 @@
      }
     },
     {
-     "id": "7lei3g0i",
+     "id": "hw8yk0vm",
      "kind": "text",
      "name": "Number · 04",
      "visible": true,
@@ -43176,7 +43176,7 @@
      }
     },
     {
-     "id": "g27vpznt",
+     "id": "h5dezeh6",
      "kind": "text",
      "name": "Heading · 04",
      "visible": true,
@@ -43248,7 +43248,7 @@
      }
     },
     {
-     "id": "ow2be6z4",
+     "id": "ybghoz6q",
      "kind": "text",
      "name": "Text · 04",
      "visible": true,
@@ -43320,7 +43320,7 @@
      }
     },
     {
-     "id": "ezuod0qa",
+     "id": "w5rf34i7",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -43388,12 +43388,12 @@
    "notes": "That low point on the curve: here is how to get past it, starting this week.\n\n01 Build one real output: stop watching tutorials and use the tool to finish one small, meaningful task. A real result replaces the lost novelty with real progress.\n\n02 Cap the tinkering: set a strict time limit for themes, plug-ins and settings; lock in a basic setup and use it as it is for two weeks.\n\n03 Lower the friction: keep the tool open or pinned to your workspace, so starting takes no effort and habit does the work, not willpower. Make starting easy, but keep the thinking hard: the struggle is what makes the skill stick, so the ease is in opening the tool, not in handing it the thinking.\n\n04 Ten minutes a day: use the tool for ten minutes a day rather than aiming for big breakthroughs. Small daily reps bridge the gap. The next slide gives the ten minutes a shape that keeps the skill owned."
   },
   {
-   "id": "0xsj867x",
+   "id": "oyayqcmy",
    "name": "Ten minutes a day",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "9imo59dx",
+     "id": "z3rgzoxx",
      "kind": "mesh",
      "name": "Ground",
      "visible": true,
@@ -43434,7 +43434,7 @@
      }
     },
     {
-     "id": "5ivfpacv",
+     "id": "goytgqi4",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -43468,7 +43468,7 @@
      }
     },
     {
-     "id": "y4a2xggi",
+     "id": "hbhfyesf",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -43540,7 +43540,7 @@
      }
     },
     {
-     "id": "97h4894g",
+     "id": "39lcf1f1",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -43612,7 +43612,7 @@
      }
     },
     {
-     "id": "jgmqxg14",
+     "id": "ysnzaf28",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -43684,7 +43684,7 @@
      }
     },
     {
-     "id": "v4mf2a94",
+     "id": "i9splii9",
      "kind": "text",
      "name": "Routine · 1",
      "visible": true,
@@ -43756,7 +43756,7 @@
      }
     },
     {
-     "id": "xjjsgdgm",
+     "id": "f4w6icmt",
      "kind": "text",
      "name": "Routine · 2",
      "visible": true,
@@ -43828,7 +43828,7 @@
      }
     },
     {
-     "id": "48y67f47",
+     "id": "vi6agomo",
      "kind": "text",
      "name": "Routine · 3",
      "visible": true,
@@ -43900,7 +43900,7 @@
      }
     },
     {
-     "id": "gcwdij0c",
+     "id": "ggptl9jd",
      "kind": "shape",
      "name": "Day 1",
      "visible": true,
@@ -43956,7 +43956,7 @@
      }
     },
     {
-     "id": "rgzcr6zj",
+     "id": "z0g6x5qw",
      "kind": "text",
      "name": "Day label 1",
      "visible": true,
@@ -44028,7 +44028,7 @@
      }
     },
     {
-     "id": "wpz75p34",
+     "id": "k13iuoaa",
      "kind": "shape",
      "name": "Day 2",
      "visible": true,
@@ -44084,7 +44084,7 @@
      }
     },
     {
-     "id": "hlxxpwwl",
+     "id": "9h2llhpw",
      "kind": "text",
      "name": "Day label 2",
      "visible": true,
@@ -44156,7 +44156,7 @@
      }
     },
     {
-     "id": "o6uoe70q",
+     "id": "8uczqwyx",
      "kind": "shape",
      "name": "Day 3",
      "visible": true,
@@ -44212,7 +44212,7 @@
      }
     },
     {
-     "id": "5q6n6i9d",
+     "id": "eqzdda5o",
      "kind": "text",
      "name": "Day label 3",
      "visible": true,
@@ -44284,7 +44284,7 @@
      }
     },
     {
-     "id": "bxh3xsyg",
+     "id": "53jedfpr",
      "kind": "shape",
      "name": "Day 4",
      "visible": true,
@@ -44340,7 +44340,7 @@
      }
     },
     {
-     "id": "1dzxdie6",
+     "id": "pcisgbzr",
      "kind": "text",
      "name": "Day label 4",
      "visible": true,
@@ -44412,7 +44412,7 @@
      }
     },
     {
-     "id": "0zwykhqx",
+     "id": "mm3cmcxq",
      "kind": "shape",
      "name": "Day 5",
      "visible": true,
@@ -44468,7 +44468,7 @@
      }
     },
     {
-     "id": "zgg3lx4e",
+     "id": "pi2laqmx",
      "kind": "text",
      "name": "Day label 5",
      "visible": true,
@@ -44540,7 +44540,7 @@
      }
     },
     {
-     "id": "4pe9s5n1",
+     "id": "4440i7dq",
      "kind": "shape",
      "name": "Day 6",
      "visible": true,
@@ -44596,7 +44596,7 @@
      }
     },
     {
-     "id": "9faeo75s",
+     "id": "jj345cxt",
      "kind": "text",
      "name": "Day label 6",
      "visible": true,
@@ -44668,7 +44668,7 @@
      }
     },
     {
-     "id": "x378bhvo",
+     "id": "8u8basaq",
      "kind": "shape",
      "name": "Day 7",
      "visible": true,
@@ -44724,7 +44724,7 @@
      }
     },
     {
-     "id": "dqk89tu1",
+     "id": "cmts7wzd",
      "kind": "text",
      "name": "Day label 7",
      "visible": true,
@@ -44796,7 +44796,7 @@
      }
     },
     {
-     "id": "cagdpzzh",
+     "id": "7kqzy8oo",
      "kind": "shape",
      "name": "Day 8",
      "visible": true,
@@ -44852,7 +44852,7 @@
      }
     },
     {
-     "id": "yg8lueav",
+     "id": "79av86bv",
      "kind": "text",
      "name": "Day label 8",
      "visible": true,
@@ -44924,7 +44924,7 @@
      }
     },
     {
-     "id": "fwhj6nta",
+     "id": "fujfv83t",
      "kind": "shape",
      "name": "Day 9",
      "visible": true,
@@ -44980,7 +44980,7 @@
      }
     },
     {
-     "id": "xxlcxfnw",
+     "id": "ow4ga135",
      "kind": "text",
      "name": "Day label 9",
      "visible": true,
@@ -45052,7 +45052,7 @@
      }
     },
     {
-     "id": "03v95khi",
+     "id": "1imtma7g",
      "kind": "shape",
      "name": "Day 10",
      "visible": true,
@@ -45108,7 +45108,7 @@
      }
     },
     {
-     "id": "1d1naa09",
+     "id": "de014spc",
      "kind": "text",
      "name": "Day label 10",
      "visible": true,
@@ -45180,7 +45180,7 @@
      }
     },
     {
-     "id": "1uijfhkh",
+     "id": "n4vb7ul3",
      "kind": "shape",
      "name": "Day 11",
      "visible": true,
@@ -45236,7 +45236,7 @@
      }
     },
     {
-     "id": "qcvj5cv8",
+     "id": "bzlz17sv",
      "kind": "text",
      "name": "Day label 11",
      "visible": true,
@@ -45308,7 +45308,7 @@
      }
     },
     {
-     "id": "qt3e41xz",
+     "id": "8evivoas",
      "kind": "shape",
      "name": "Day 12",
      "visible": true,
@@ -45364,7 +45364,7 @@
      }
     },
     {
-     "id": "te4nnwjq",
+     "id": "dhsdq93z",
      "kind": "text",
      "name": "Day label 12",
      "visible": true,
@@ -45436,7 +45436,7 @@
      }
     },
     {
-     "id": "y56ig9an",
+     "id": "1mkrb69l",
      "kind": "shape",
      "name": "Day 13",
      "visible": true,
@@ -45492,7 +45492,7 @@
      }
     },
     {
-     "id": "pvl3uitt",
+     "id": "dkl00mng",
      "kind": "text",
      "name": "Day label 13",
      "visible": true,
@@ -45564,7 +45564,7 @@
      }
     },
     {
-     "id": "abvxef3g",
+     "id": "vtvf28b1",
      "kind": "shape",
      "name": "Day 14",
      "visible": true,
@@ -45620,7 +45620,7 @@
      }
     },
     {
-     "id": "b56vzbyu",
+     "id": "8o692983",
      "kind": "text",
      "name": "Day label 14",
      "visible": true,
@@ -45692,7 +45692,7 @@
      }
     },
     {
-     "id": "6okxhwjh",
+     "id": "o5hs1yty",
      "kind": "shape",
      "name": "Done 1",
      "visible": true,
@@ -45748,7 +45748,7 @@
      }
     },
     {
-     "id": "prv2upb2",
+     "id": "hxlrhbp0",
      "kind": "icon",
      "name": "Tick 1",
      "visible": true,
@@ -45790,7 +45790,7 @@
      }
     },
     {
-     "id": "c6cxq1p2",
+     "id": "h4fgzl1z",
      "kind": "shape",
      "name": "Done 2",
      "visible": true,
@@ -45846,7 +45846,7 @@
      }
     },
     {
-     "id": "bx5i8vjz",
+     "id": "663dvkbt",
      "kind": "icon",
      "name": "Tick 2",
      "visible": true,
@@ -45888,7 +45888,7 @@
      }
     },
     {
-     "id": "pz0pw32d",
+     "id": "9cfx779x",
      "kind": "shape",
      "name": "Done 3",
      "visible": true,
@@ -45944,7 +45944,7 @@
      }
     },
     {
-     "id": "wdxwwcl1",
+     "id": "vuzmp2bo",
      "kind": "icon",
      "name": "Tick 3",
      "visible": true,
@@ -45986,7 +45986,7 @@
      }
     },
     {
-     "id": "pe2pyh4r",
+     "id": "40ffmn3t",
      "kind": "shape",
      "name": "Done 4",
      "visible": true,
@@ -46042,7 +46042,7 @@
      }
     },
     {
-     "id": "53nx4ezs",
+     "id": "eaglr1zo",
      "kind": "icon",
      "name": "Tick 4",
      "visible": true,
@@ -46084,7 +46084,7 @@
      }
     },
     {
-     "id": "w63niqjl",
+     "id": "k7uopr57",
      "kind": "shape",
      "name": "Done 5",
      "visible": true,
@@ -46140,7 +46140,7 @@
      }
     },
     {
-     "id": "qkuc54av",
+     "id": "xyjl1qvu",
      "kind": "icon",
      "name": "Tick 5",
      "visible": true,
@@ -46182,7 +46182,7 @@
      }
     },
     {
-     "id": "osrmyshq",
+     "id": "umttd6hv",
      "kind": "shape",
      "name": "Done 6",
      "visible": true,
@@ -46238,7 +46238,7 @@
      }
     },
     {
-     "id": "3rarsf0r",
+     "id": "oidwiilq",
      "kind": "icon",
      "name": "Tick 6",
      "visible": true,
@@ -46280,7 +46280,7 @@
      }
     },
     {
-     "id": "6bv1kudo",
+     "id": "af8d4w2g",
      "kind": "shape",
      "name": "Done 7",
      "visible": true,
@@ -46336,7 +46336,7 @@
      }
     },
     {
-     "id": "r4hwyu05",
+     "id": "dzzvt91e",
      "kind": "icon",
      "name": "Tick 7",
      "visible": true,
@@ -46378,7 +46378,7 @@
      }
     },
     {
-     "id": "hmnmeot7",
+     "id": "9tjko3nq",
      "kind": "shape",
      "name": "Done 8",
      "visible": true,
@@ -46434,7 +46434,7 @@
      }
     },
     {
-     "id": "ys7m1utw",
+     "id": "uaf02xpu",
      "kind": "icon",
      "name": "Tick 8",
      "visible": true,
@@ -46476,7 +46476,7 @@
      }
     },
     {
-     "id": "62lp2ahe",
+     "id": "4wob6t1a",
      "kind": "shape",
      "name": "Done 9",
      "visible": true,
@@ -46532,7 +46532,7 @@
      }
     },
     {
-     "id": "4plaal3x",
+     "id": "7720mhpb",
      "kind": "icon",
      "name": "Tick 9",
      "visible": true,
@@ -46574,7 +46574,7 @@
      }
     },
     {
-     "id": "se0tvfee",
+     "id": "62d2flpw",
      "kind": "shape",
      "name": "Done 10",
      "visible": true,
@@ -46630,7 +46630,7 @@
      }
     },
     {
-     "id": "2jrnjaok",
+     "id": "eyw67eht",
      "kind": "icon",
      "name": "Tick 10",
      "visible": true,
@@ -46672,7 +46672,7 @@
      }
     },
     {
-     "id": "hr3jx28r",
+     "id": "2qjhwl6d",
      "kind": "shape",
      "name": "Done 11",
      "visible": true,
@@ -46728,7 +46728,7 @@
      }
     },
     {
-     "id": "b5wuwxu7",
+     "id": "ojnefaff",
      "kind": "icon",
      "name": "Tick 11",
      "visible": true,
@@ -46770,7 +46770,7 @@
      }
     },
     {
-     "id": "xfb2oj9a",
+     "id": "6x8otzse",
      "kind": "shape",
      "name": "Done 12",
      "visible": true,
@@ -46826,7 +46826,7 @@
      }
     },
     {
-     "id": "weftgysx",
+     "id": "1mrxmos4",
      "kind": "icon",
      "name": "Tick 12",
      "visible": true,
@@ -46868,7 +46868,7 @@
      }
     },
     {
-     "id": "jq5gye0a",
+     "id": "0cclwami",
      "kind": "shape",
      "name": "Done 13",
      "visible": true,
@@ -46924,7 +46924,7 @@
      }
     },
     {
-     "id": "rnap6v4t",
+     "id": "y75otbs9",
      "kind": "icon",
      "name": "Tick 13",
      "visible": true,
@@ -46966,7 +46966,7 @@
      }
     },
     {
-     "id": "lo1hkmxl",
+     "id": "vsgv47so",
      "kind": "shape",
      "name": "Done 14",
      "visible": true,
@@ -47022,7 +47022,7 @@
      }
     },
     {
-     "id": "cav5yghc",
+     "id": "jjvbzk3m",
      "kind": "icon",
      "name": "Tick 14",
      "visible": true,
@@ -47064,7 +47064,7 @@
      }
     },
     {
-     "id": "h54lewl0",
+     "id": "hxhgqp4l",
      "kind": "text",
      "name": "Second nature",
      "visible": true,
@@ -47136,7 +47136,7 @@
      }
     },
     {
-     "id": "ry6caqxo",
+     "id": "5pka3003",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -47207,12 +47207,12 @@
    }
   },
   {
-   "id": "2honjuug",
+   "id": "9dul9z09",
    "name": "Eight strands, three pillars",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "iwkh0y5s",
+     "id": "tc60xqmm",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -47249,7 +47249,7 @@
      }
     },
     {
-     "id": "irxgl0cj",
+     "id": "j1ef3rec",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -47283,7 +47283,7 @@
      }
     },
     {
-     "id": "vxvue7bb",
+     "id": "84i8g8jl",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -47355,7 +47355,7 @@
      }
     },
     {
-     "id": "ry3btrn5",
+     "id": "563c3rdh",
      "kind": "image",
      "name": "Institute logo",
      "visible": true,
@@ -47416,7 +47416,7 @@
      }
     },
     {
-     "id": "s62ovgs8",
+     "id": "v3euzrxg",
      "kind": "text",
      "name": "Kicker",
      "visible": true,
@@ -47488,7 +47488,7 @@
      }
     },
     {
-     "id": "4aqgskiw",
+     "id": "enwmkhxf",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -47560,7 +47560,7 @@
      }
     },
     {
-     "id": "m0ujdxeb",
+     "id": "vqyhcylt",
      "kind": "shape",
      "name": "Orbit",
      "visible": true,
@@ -47616,7 +47616,7 @@
      }
     },
     {
-     "id": "irat409z",
+     "id": "zg9znv73",
      "kind": "shape",
      "name": "Centre",
      "visible": true,
@@ -47672,7 +47672,7 @@
      }
     },
     {
-     "id": "efxxwxea",
+     "id": "3hfhqyu5",
      "kind": "text",
      "name": "Centre · owned",
      "visible": true,
@@ -47744,7 +47744,7 @@
      }
     },
     {
-     "id": "epf2kpas",
+     "id": "100077ow",
      "kind": "text",
      "name": "Centre · what",
      "visible": true,
@@ -47816,7 +47816,7 @@
      }
     },
     {
-     "id": "dijdh0qb",
+     "id": "znan08jd",
      "kind": "shape",
      "name": "Strand disc · 01",
      "visible": true,
@@ -47872,7 +47872,7 @@
      }
     },
     {
-     "id": "fhk5oj3h",
+     "id": "hz9s8n2v",
      "kind": "text",
      "name": "Strand number · 01",
      "visible": true,
@@ -47944,7 +47944,7 @@
      }
     },
     {
-     "id": "ual0pgjs",
+     "id": "7kwr29v9",
      "kind": "shape",
      "name": "List disc · 01",
      "visible": true,
@@ -48000,7 +48000,7 @@
      }
     },
     {
-     "id": "j7vk6ahu",
+     "id": "7bnaog1v",
      "kind": "text",
      "name": "List number · 01",
      "visible": true,
@@ -48072,7 +48072,7 @@
      }
     },
     {
-     "id": "smln6aq8",
+     "id": "g336k64f",
      "kind": "text",
      "name": "Strand · 01",
      "visible": true,
@@ -48145,7 +48145,7 @@
      }
     },
     {
-     "id": "p8y5tokn",
+     "id": "uisoo0k4",
      "kind": "text",
      "name": "Strand term · 01",
      "visible": true,
@@ -48217,7 +48217,7 @@
      }
     },
     {
-     "id": "0t726ayx",
+     "id": "o5bbpafn",
      "kind": "shape",
      "name": "Strand disc · 02",
      "visible": true,
@@ -48273,7 +48273,7 @@
      }
     },
     {
-     "id": "i2tws3sq",
+     "id": "nh9c3sn0",
      "kind": "text",
      "name": "Strand number · 02",
      "visible": true,
@@ -48345,7 +48345,7 @@
      }
     },
     {
-     "id": "pzhxw4sj",
+     "id": "kc9qaxil",
      "kind": "shape",
      "name": "List disc · 02",
      "visible": true,
@@ -48401,7 +48401,7 @@
      }
     },
     {
-     "id": "eqb1ml5g",
+     "id": "51b7ufak",
      "kind": "text",
      "name": "List number · 02",
      "visible": true,
@@ -48473,7 +48473,7 @@
      }
     },
     {
-     "id": "hel0fggc",
+     "id": "nouk960u",
      "kind": "text",
      "name": "Strand · 02",
      "visible": true,
@@ -48546,7 +48546,7 @@
      }
     },
     {
-     "id": "p9lgwp95",
+     "id": "wvsnv5kp",
      "kind": "text",
      "name": "Strand term · 02",
      "visible": true,
@@ -48618,7 +48618,7 @@
      }
     },
     {
-     "id": "bq14teen",
+     "id": "wcz60e06",
      "kind": "shape",
      "name": "Strand disc · 03",
      "visible": true,
@@ -48674,7 +48674,7 @@
      }
     },
     {
-     "id": "gzh6byr8",
+     "id": "6mtipri8",
      "kind": "text",
      "name": "Strand number · 03",
      "visible": true,
@@ -48746,7 +48746,7 @@
      }
     },
     {
-     "id": "d9rfnexy",
+     "id": "5dulqrb9",
      "kind": "shape",
      "name": "List disc · 03",
      "visible": true,
@@ -48802,7 +48802,7 @@
      }
     },
     {
-     "id": "aiqrwkzt",
+     "id": "h8klsrb3",
      "kind": "text",
      "name": "List number · 03",
      "visible": true,
@@ -48874,7 +48874,7 @@
      }
     },
     {
-     "id": "8ur0yker",
+     "id": "lvi19nny",
      "kind": "text",
      "name": "Strand · 03",
      "visible": true,
@@ -48947,7 +48947,7 @@
      }
     },
     {
-     "id": "yzijz9hu",
+     "id": "m5yahjd4",
      "kind": "text",
      "name": "Strand term · 03",
      "visible": true,
@@ -49019,7 +49019,7 @@
      }
     },
     {
-     "id": "991jxalo",
+     "id": "afgkvpnr",
      "kind": "shape",
      "name": "Strand disc · 04",
      "visible": true,
@@ -49075,7 +49075,7 @@
      }
     },
     {
-     "id": "u57jroex",
+     "id": "s2xdposp",
      "kind": "text",
      "name": "Strand number · 04",
      "visible": true,
@@ -49147,7 +49147,7 @@
      }
     },
     {
-     "id": "nruwblmc",
+     "id": "43aezoxa",
      "kind": "shape",
      "name": "List disc · 04",
      "visible": true,
@@ -49203,7 +49203,7 @@
      }
     },
     {
-     "id": "8unf0gbw",
+     "id": "2jrebce1",
      "kind": "text",
      "name": "List number · 04",
      "visible": true,
@@ -49275,7 +49275,7 @@
      }
     },
     {
-     "id": "4a527w0y",
+     "id": "xl72ajm6",
      "kind": "text",
      "name": "Strand · 04",
      "visible": true,
@@ -49348,7 +49348,7 @@
      }
     },
     {
-     "id": "smdgpkva",
+     "id": "yeb3h60a",
      "kind": "text",
      "name": "Strand term · 04",
      "visible": true,
@@ -49420,7 +49420,7 @@
      }
     },
     {
-     "id": "mp7z1ou3",
+     "id": "9pswlaef",
      "kind": "shape",
      "name": "Strand disc · 05",
      "visible": true,
@@ -49476,7 +49476,7 @@
      }
     },
     {
-     "id": "t77tbmlc",
+     "id": "mepdtj76",
      "kind": "text",
      "name": "Strand number · 05",
      "visible": true,
@@ -49548,7 +49548,7 @@
      }
     },
     {
-     "id": "0b3sinhl",
+     "id": "msjwip6u",
      "kind": "shape",
      "name": "List disc · 05",
      "visible": true,
@@ -49604,7 +49604,7 @@
      }
     },
     {
-     "id": "xtit4vol",
+     "id": "wg5pi337",
      "kind": "text",
      "name": "List number · 05",
      "visible": true,
@@ -49676,7 +49676,7 @@
      }
     },
     {
-     "id": "fowx2ovl",
+     "id": "uupzhy1e",
      "kind": "text",
      "name": "Strand · 05",
      "visible": true,
@@ -49749,7 +49749,7 @@
      }
     },
     {
-     "id": "fnuldso2",
+     "id": "f15lw2mx",
      "kind": "text",
      "name": "Strand term · 05",
      "visible": true,
@@ -49821,7 +49821,7 @@
      }
     },
     {
-     "id": "sbyt2lbx",
+     "id": "yydp2fij",
      "kind": "shape",
      "name": "Strand disc · 06",
      "visible": true,
@@ -49877,7 +49877,7 @@
      }
     },
     {
-     "id": "yvby7v0p",
+     "id": "337fnqup",
      "kind": "text",
      "name": "Strand number · 06",
      "visible": true,
@@ -49949,7 +49949,7 @@
      }
     },
     {
-     "id": "7k8cjd4l",
+     "id": "d9dxjsxq",
      "kind": "shape",
      "name": "List disc · 06",
      "visible": true,
@@ -50005,7 +50005,7 @@
      }
     },
     {
-     "id": "xsd98ma5",
+     "id": "lwwabd8d",
      "kind": "text",
      "name": "List number · 06",
      "visible": true,
@@ -50077,7 +50077,7 @@
      }
     },
     {
-     "id": "p8nwwvpa",
+     "id": "sy6e6qfw",
      "kind": "text",
      "name": "Strand · 06",
      "visible": true,
@@ -50150,7 +50150,7 @@
      }
     },
     {
-     "id": "um1pm4xd",
+     "id": "65jwy5r0",
      "kind": "text",
      "name": "Strand term · 06",
      "visible": true,
@@ -50222,7 +50222,7 @@
      }
     },
     {
-     "id": "nwm1xmyb",
+     "id": "ceb4bwyv",
      "kind": "shape",
      "name": "Strand disc · 07",
      "visible": true,
@@ -50278,7 +50278,7 @@
      }
     },
     {
-     "id": "icwmgdqf",
+     "id": "rql077wx",
      "kind": "text",
      "name": "Strand number · 07",
      "visible": true,
@@ -50350,7 +50350,7 @@
      }
     },
     {
-     "id": "kuim798u",
+     "id": "t7sppgax",
      "kind": "shape",
      "name": "List disc · 07",
      "visible": true,
@@ -50406,7 +50406,7 @@
      }
     },
     {
-     "id": "7rk026wt",
+     "id": "nqmmk7tn",
      "kind": "text",
      "name": "List number · 07",
      "visible": true,
@@ -50478,7 +50478,7 @@
      }
     },
     {
-     "id": "afahk0y8",
+     "id": "oxczgqph",
      "kind": "text",
      "name": "Strand · 07",
      "visible": true,
@@ -50551,7 +50551,7 @@
      }
     },
     {
-     "id": "foe6ls6w",
+     "id": "thdplumv",
      "kind": "text",
      "name": "Strand term · 07",
      "visible": true,
@@ -50623,7 +50623,7 @@
      }
     },
     {
-     "id": "bg32g3xi",
+     "id": "ss4797jp",
      "kind": "shape",
      "name": "Strand disc · 08",
      "visible": true,
@@ -50679,7 +50679,7 @@
      }
     },
     {
-     "id": "mjc82y0d",
+     "id": "6gtmynk7",
      "kind": "text",
      "name": "Strand number · 08",
      "visible": true,
@@ -50751,7 +50751,7 @@
      }
     },
     {
-     "id": "yo9j12tw",
+     "id": "nef9nfiq",
      "kind": "shape",
      "name": "List disc · 08",
      "visible": true,
@@ -50807,7 +50807,7 @@
      }
     },
     {
-     "id": "ggn8bbgt",
+     "id": "1o5e0tp1",
      "kind": "text",
      "name": "List number · 08",
      "visible": true,
@@ -50879,7 +50879,7 @@
      }
     },
     {
-     "id": "7a0cbohe",
+     "id": "8w0twg8b",
      "kind": "text",
      "name": "Strand · 08",
      "visible": true,
@@ -50952,7 +50952,7 @@
      }
     },
     {
-     "id": "8s34izjc",
+     "id": "a5y5m54z",
      "kind": "text",
      "name": "Strand term · 08",
      "visible": true,
@@ -51024,7 +51024,7 @@
      }
     },
     {
-     "id": "4kvc8bs5",
+     "id": "830v24e1",
      "kind": "text",
      "name": "Pillar · evidence-based",
      "visible": true,
@@ -51096,7 +51096,7 @@
      }
     },
     {
-     "id": "6lr4roei",
+     "id": "l3qvx9oq",
      "kind": "text",
      "name": "Pillar · pedagogy-driven",
      "visible": true,
@@ -51168,7 +51168,7 @@
      }
     },
     {
-     "id": "v3ftojms",
+     "id": "xe2hy80s",
      "kind": "text",
      "name": "Pillar · impact-measured",
      "visible": true,
@@ -51240,7 +51240,7 @@
      }
     },
     {
-     "id": "ilgd95v1",
+     "id": "ivv6rzxj",
      "kind": "text",
      "name": "Honest note",
      "visible": true,
@@ -51312,7 +51312,7 @@
      }
     },
     {
-     "id": "92gye9pi",
+     "id": "b0t4j1dv",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -51380,12 +51380,12 @@
    "notes": "THE UKBT INSTITUTE’S METHOD. Bridge in, from the streak: \"That habit is free. Making it stick across a whole team, without borrowing anyone’s skill, is what our method is for.\"\n\nAt the centre, the goal: owned, fast and still good without AI. Round it, eight strands, each pairing evidence, a teaching practice and a measure. The slide gives each in plain words, with the technical name under it.\n\n01 Know where you start (Baseline before tools; prior knowledge). Evidence: Nobody was immune: without AI, people scored higher at every level of experience (Anthropic). We measure: An audit score before training.\n02 Try it yourself first (Effortful practice; active learning). Evidence: Bjork’s desirable difficulties: struggle makes skills stick. We measure: The task done with and without AI.\n03 Ask why, not just what (Engaged use, not delegation; engagement). Evidence: Conceptual questioners scored 65%+; delegators under 40% (Anthropic). We measure: How people use AI in real work.\n04 Test without the AI (AI-off checks; formative assessment). Evidence: Wharton: the dependency only showed once AI was removed. We measure: Performance unplugged, over time.\n05 Know when to doubt it (Calibrated trust; metacognition). Evidence: Trust in AI went with less critical thinking; self-confidence with more (CHI 2025). We measure: Errors caught in AI output.\n06 Pick tools that teach (Guardrailed tools; instructional design). Evidence: Wharton: a tutor built to protect learning largely removed the harm. We measure: Tool stress-test ratings.\n07 Learn together (Peer learning and safety; collaboration, belonging). Evidence: Self-determination theory: autonomy, competence and connection sustain motivation. We measure: Shared practices and adoption.\n08 Measure speed and skill (Dual-metric impact; data-informed). Evidence: Productivity and learning can move in opposite directions. We measure: Speed and skill without AI, before and after.\n\nStrand 01’s evidence, said carefully: Anthropic’s trial found the group without AI scored higher at every level of prior coding experience, so experience did not make anyone immune. (Some summaries say experienced developers were more resilient; the paper does not test that.) Strand 05 is Lee et al., Microsoft Research and Carnegie Mellon, CHI 2025: higher confidence in AI went with less critical thinking, higher self-confidence with more. Strand 07 is Deci and Ryan’s self-determination theory, a theory of motivation rather than an AI study.\n\nClick: the three pillars, the outer ring of the original wheel (they replace \"digitally-enabled\" there). Backed by research (evidence-based): we only teach what research supports. Built on how people learn (pedagogy-driven): training designed around how adults actually build skill, not around tool features. We prove it worked (impact-measured): every engagement reports speed and skill without AI, before and after. The last is the commercial edge: measuring dependence, not just speed, which the Institute’s audit already does.\n\nLast click, the honest note. Say it plainly, because it is what makes the rest credible: the studies behind the strands are small and short-term (52 developers; one school system), and their authors say so. The Institute presents this as a research-informed model it is testing and refining, the way it stress-tests everything.\n\nThen: \"So who is the Institute for? More of you than you’d think.\""
   },
   {
-   "id": "vzpclyhf",
+   "id": "2s6hfbo3",
    "name": "Who the Institute is for",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "5iieibs7",
+     "id": "48gh0tae",
      "kind": "radial",
      "name": "Ground",
      "visible": true,
@@ -51422,7 +51422,7 @@
      }
     },
     {
-     "id": "4xjqy093",
+     "id": "lcb40mn7",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -51456,7 +51456,7 @@
      }
     },
     {
-     "id": "q2owuzfz",
+     "id": "zvjpdtym",
      "kind": "text",
      "name": "Section",
      "visible": true,
@@ -51528,7 +51528,7 @@
      }
     },
     {
-     "id": "djyplw0h",
+     "id": "0scthsyt",
      "kind": "image",
      "name": "Institute logo",
      "visible": true,
@@ -51589,7 +51589,7 @@
      }
     },
     {
-     "id": "pfwabi64",
+     "id": "om3tbuur",
      "kind": "text",
      "name": "Title",
      "visible": true,
@@ -51661,7 +51661,7 @@
      }
     },
     {
-     "id": "d5o3olj4",
+     "id": "syex7h7x",
      "kind": "text",
      "name": "Aside",
      "visible": true,
@@ -51733,7 +51733,7 @@
      }
     },
     {
-     "id": "e4p3oqwv",
+     "id": "oq22kz68",
      "kind": "shape",
      "name": "Card · Academics",
      "visible": true,
@@ -51789,7 +51789,7 @@
      }
     },
     {
-     "id": "iw4z4kq8",
+     "id": "oahsu1tv",
      "kind": "text",
      "name": "Name · Academics",
      "visible": true,
@@ -51861,7 +51861,7 @@
      }
     },
     {
-     "id": "c7rydial",
+     "id": "key0lqx8",
      "kind": "text",
      "name": "Ask · Academics",
      "visible": true,
@@ -51933,7 +51933,7 @@
      }
     },
     {
-     "id": "1yd8fiyl",
+     "id": "vkrievkw",
      "kind": "text",
      "name": "Tag · Academics",
      "visible": true,
@@ -52006,7 +52006,7 @@
      }
     },
     {
-     "id": "vz9hz8wa",
+     "id": "8ibeeu0y",
      "kind": "text",
      "name": "Line · Academics",
      "visible": true,
@@ -52079,7 +52079,7 @@
      }
     },
     {
-     "id": "lsmflhl8",
+     "id": "6fcfjwjl",
      "kind": "shape",
      "name": "Card · Technologists",
      "visible": true,
@@ -52135,7 +52135,7 @@
      }
     },
     {
-     "id": "0pfcgovm",
+     "id": "u22fuc7r",
      "kind": "text",
      "name": "Name · Technologists",
      "visible": true,
@@ -52207,7 +52207,7 @@
      }
     },
     {
-     "id": "jxt091mo",
+     "id": "shmxubzb",
      "kind": "text",
      "name": "Ask · Technologists",
      "visible": true,
@@ -52279,7 +52279,7 @@
      }
     },
     {
-     "id": "0p714z6n",
+     "id": "q4io42nu",
      "kind": "text",
      "name": "Tag · Technologists",
      "visible": true,
@@ -52352,7 +52352,7 @@
      }
     },
     {
-     "id": "tp1bwu25",
+     "id": "pxaulax6",
      "kind": "text",
      "name": "Line · Technologists",
      "visible": true,
@@ -52425,7 +52425,7 @@
      }
     },
     {
-     "id": "yqdry1qb",
+     "id": "xtra0p5k",
      "kind": "shape",
      "name": "Card · Industry",
      "visible": true,
@@ -52481,7 +52481,7 @@
      }
     },
     {
-     "id": "13kk9oiv",
+     "id": "2emw3wce",
      "kind": "text",
      "name": "Name · Industry",
      "visible": true,
@@ -52553,7 +52553,7 @@
      }
     },
     {
-     "id": "5cjutqpp",
+     "id": "mobv3p5u",
      "kind": "text",
      "name": "Ask · Industry",
      "visible": true,
@@ -52625,7 +52625,7 @@
      }
     },
     {
-     "id": "7plqlkvt",
+     "id": "rj9vnwwe",
      "kind": "text",
      "name": "Tag · Industry",
      "visible": true,
@@ -52698,7 +52698,7 @@
      }
     },
     {
-     "id": "0ihlua8b",
+     "id": "isnogxq2",
      "kind": "text",
      "name": "Line · Industry",
      "visible": true,
@@ -52771,7 +52771,7 @@
      }
     },
     {
-     "id": "fhl1iaxf",
+     "id": "qd4grc28",
      "kind": "text",
      "name": "That’s you",
      "visible": true,
@@ -52843,7 +52843,7 @@
      }
     },
     {
-     "id": "jjaqt8io",
+     "id": "4w51w34h",
      "kind": "shape",
      "name": "Card · Practitioners",
      "visible": true,
@@ -52899,7 +52899,7 @@
      }
     },
     {
-     "id": "5287iugg",
+     "id": "rv3ij44p",
      "kind": "text",
      "name": "Name · Practitioners",
      "visible": true,
@@ -52971,7 +52971,7 @@
      }
     },
     {
-     "id": "as74max0",
+     "id": "fzc6az1e",
      "kind": "text",
      "name": "Ask · Practitioners",
      "visible": true,
@@ -53043,7 +53043,7 @@
      }
     },
     {
-     "id": "8tdyzyy8",
+     "id": "t6a3pwja",
      "kind": "text",
      "name": "Tag · Practitioners",
      "visible": true,
@@ -53116,7 +53116,7 @@
      }
     },
     {
-     "id": "3ivmquje",
+     "id": "pcrrtyn0",
      "kind": "text",
      "name": "Line · Practitioners",
      "visible": true,
@@ -53189,7 +53189,7 @@
      }
     },
     {
-     "id": "d5ng1mab",
+     "id": "bz1fara3",
      "kind": "text",
      "name": "Find us",
      "visible": true,
@@ -53261,7 +53261,7 @@
      }
     },
     {
-     "id": "koj7q123",
+     "id": "z5wd4fmb",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -53329,12 +53329,12 @@
    "notes": "WHO THE INSTITUTE IS FOR. From its own page: \"The UKBT Institute is a townhouse for technologists, academics, industry and communities.\" And: \"A townhouse needs more than one kind of resident.\" The Institute brings academics, technologists, industry and practitioners into the same building.\n\nOne card per click.\n- Academics, \"From research to real-world use\": your research meets clinicians, lawyers, engineers and the people who will use it. (Bring your research.)\n- Technologists, \"A real-world test bed for what you build\": test it with real users, real workflows and real regulation. (Test your technology.)\n- Industry, \"Evidence before investment\": R&D is expensive when technology fails at adoption, so the Institute puts practitioner pull before technology push. This is the room. (De-risk your R&D.)\n- Practitioners, \"Step outside your day job. Come back sharper.\" (Join as a practitioner.)\n\nWhere to go: the contact page (ukblacktech.com/contact) to bring research, test technology, de-risk R&D or partner; the register page (ukblacktech.com/register) to join as a practitioner or become a member. Its active campaigns, if asked: Living in a Digital World, Cyber & Digital Trust, and Smart Cities & Infrastructure.\n\nThen: \"Thank you. Questions?\""
   },
   {
-   "id": "5bgspxt7",
+   "id": "ag144xwc",
    "name": "Questions",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "82dcf072",
+     "id": "m2v4ppoc",
      "kind": "mesh",
      "name": "Ground",
      "visible": true,
@@ -53375,7 +53375,7 @@
      }
     },
     {
-     "id": "tajopewb",
+     "id": "zbxbmk9c",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -53409,7 +53409,7 @@
      }
     },
     {
-     "id": "gmdlznrz",
+     "id": "al7yodut",
      "kind": "text",
      "name": "Thanks",
      "visible": true,
@@ -53481,7 +53481,7 @@
      }
     },
     {
-     "id": "31oj2c34",
+     "id": "76fm294g",
      "kind": "text",
      "name": "Questions",
      "visible": true,
@@ -53553,7 +53553,7 @@
      }
     },
     {
-     "id": "mvrsvrcy",
+     "id": "r65049gx",
      "kind": "text",
      "name": "Sticker · generative",
      "visible": true,
@@ -53625,7 +53625,7 @@
      }
     },
     {
-     "id": "xjt8ka0a",
+     "id": "623mz2jm",
      "kind": "text",
      "name": "Sticker · predictive",
      "visible": true,
@@ -53697,7 +53697,7 @@
      }
     },
     {
-     "id": "sgzlyl44",
+     "id": "jcsmsx3r",
      "kind": "text",
      "name": "Sticker · automation",
      "visible": true,
@@ -53769,7 +53769,7 @@
      }
     },
     {
-     "id": "f9opjr91",
+     "id": "evjgrv6i",
      "kind": "text",
      "name": "Sticker · agents",
      "visible": true,
@@ -53841,7 +53841,7 @@
      }
     },
     {
-     "id": "v9boa1yy",
+     "id": "dtgc1g1v",
      "kind": "shape",
      "name": "Audit card",
      "visible": true,
@@ -53897,7 +53897,7 @@
      }
     },
     {
-     "id": "huxwkr5w",
+     "id": "gps2ctge",
      "kind": "image",
      "name": "QR code",
      "visible": true,
@@ -53958,7 +53958,7 @@
      }
     },
     {
-     "id": "4982bk7k",
+     "id": "652zeuly",
      "kind": "text",
      "name": "Scan",
      "visible": true,
@@ -54030,7 +54030,7 @@
      }
     },
     {
-     "id": "0wlqev1p",
+     "id": "19a5n2s4",
      "kind": "text",
      "name": "Audit link",
      "visible": true,
@@ -54102,7 +54102,7 @@
      }
     },
     {
-     "id": "fjsr0sho",
+     "id": "9w36w6sv",
      "kind": "image",
      "name": "Logo",
      "visible": true,
@@ -54170,12 +54170,12 @@
    "notes": "Thank the partners and the room, then take questions. The QR code (ukblacktech.com/contact, where to ask about the audit) stays up while you do.\n\nAfter the last question, close on the Institute’s line: \"Before you go…\""
   },
   {
-   "id": "x74r90qg",
+   "id": "q6zerhhm",
    "name": "One townhouse, many disciplines",
    "background": "#0e0e11",
    "layers": [
     {
-     "id": "nl9wtv3l",
+     "id": "4a2la3kc",
      "kind": "mesh",
      "name": "Ground",
      "visible": true,
@@ -54216,7 +54216,7 @@
      }
     },
     {
-     "id": "5ce6en7c",
+     "id": "2oduajd1",
      "kind": "grain",
      "name": "Grain",
      "visible": true,
@@ -54250,7 +54250,7 @@
      }
     },
     {
-     "id": "8xni1mca",
+     "id": "npgekj2v",
      "kind": "image",
      "name": "Institute logo",
      "visible": true,
@@ -54311,7 +54311,7 @@
      }
     },
     {
-     "id": "r1fr2kkw",
+     "id": "qkzpo15w",
      "kind": "text",
      "name": "Pitch 1",
      "visible": true,
@@ -54383,7 +54383,7 @@
      }
     },
     {
-     "id": "fnbh4r0d",
+     "id": "k0u8slgv",
      "kind": "text",
      "name": "Pitch 2",
      "visible": true,
@@ -54455,7 +54455,7 @@
      }
     },
     {
-     "id": "q7vx4f2k",
+     "id": "0tiarxkv",
      "kind": "text",
      "name": "Pitch 3",
      "visible": true,
@@ -54527,7 +54527,7 @@
      }
     },
     {
-     "id": "qnfl46xw",
+     "id": "p7tb6j7f",
      "kind": "shape",
      "name": "Audit card",
      "visible": true,
@@ -54583,7 +54583,7 @@
      }
     },
     {
-     "id": "evxjj8d7",
+     "id": "p2gzewe8",
      "kind": "image",
      "name": "QR code",
      "visible": true,
@@ -54644,7 +54644,7 @@
      }
     },
     {
-     "id": "pj8ey2n5",
+     "id": "hfv0nshv",
      "kind": "text",
      "name": "Scan",
      "visible": true,
@@ -54716,7 +54716,7 @@
      }
     },
     {
-     "id": "67yp7am1",
+     "id": "57jewxbd",
      "kind": "text",
      "name": "Audit link",
      "visible": true,
@@ -54788,7 +54788,7 @@
      }
     },
     {
-     "id": "engoq42d",
+     "id": "rzg1ianp",
      "kind": "image",
      "name": "Logo",
      "visible": true,
