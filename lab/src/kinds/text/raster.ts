@@ -278,11 +278,12 @@ export function rasterText(layer: Layer, textT: number): Raster {
       ctx.restore();
       return;
     }
-    for (const w of line.words) {
+    // Each word in its own emphasis (bold or the accent) as it arrives, as it is once settled.
+    for (const w of line.words) emphasised(w, () => {
       if (units && type === 'words') {
         drawUnit(w.text, ox + w.x, w.w, top, base, unitLook(layer.anim, unit, units, textT, easeFn, delays), false, w.marker);
         unit++;
-        continue;
+        return;
       }
       if (units) {
         for (let k = 0; k < w.text.length; k++) {
@@ -290,34 +291,34 @@ export function rasterText(layer: Layer, textT: number): Raster {
           drawUnit(w.text[k], x, ctx.measureText(w.text[k]).width, top, base, unitLook(layer.anim, unit, units, textT, easeFn, delays), true, w.marker);
           unit++;
         }
-        continue;
+        return;
       }
       if (type === 'words') {
         const e = unitProgress(layer, unit++, textT);
-        if (e <= 0) continue;
+        if (e <= 0) return;
         ctx.globalAlpha = Math.min(1, e * 1.5);
         put(w.text, ox + w.x, base + (1 - e) * size * 0.4, w.w, w.marker);
-        continue;
+        return;
       }
       // letters, typewriter and scramble: kerning-aware x from prefix widths
       for (let k = 0; k < w.text.length; k++) {
         const e = unitProgress(layer, unit, textT);
         const u = unit++;
-        if (e <= 0) continue;
+        if (e <= 0) return;
         const x = ox + w.x + (k ? ctx.measureText(w.text.slice(0, k)).width : 0);
         const cw = ctx.measureText(w.text[k]).width;
         if (type === 'scramble') {
           // A stand-in letter until this one's time is up, then the real one.
           ctx.globalAlpha = e >= 1 ? 1 : 0.55 + e * 0.45;
           put(e >= 1 || w.marker ? w.text[k] : scrambleGlyph(w.text[k], u, textT), x, base, cw, w.marker);
-          continue;
+          return;
         }
         ctx.globalAlpha = type === 'typewriter' ? 1 : Math.min(1, e * 1.6);
         const y = base + (type === 'typewriter' ? 0 : (1 - e) * size * 0.45);
         put(w.text[k], x, y, cw, w.marker);
         caret = [x + cw, base];
       }
-    }
+    });
     ctx.globalAlpha = 1;
   });
   if (type === 'typewriter' && layer.anim.caret && animating && caret) {
