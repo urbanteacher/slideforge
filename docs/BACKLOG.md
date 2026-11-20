@@ -871,12 +871,12 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 - **Presenter:** the Teacher Presenter shows how many click reveals are left.
 - **PowerPoint:** exports carry each Flip to facts back as its own slide.
 
-Left, listed in section 3 of [first-run-review.md](first-run-review.md):
-- bold or colour on selected words;
-- an Advanced fold for expert controls;
-- native PowerPoint tables and charts;
-- default transitions by slide type;
-- committed studio baselines.
+Also:
+- **Bold or accent on selected words:** `**…**` and `==…==`, with B or ⌘B and the highlighter or ⌘E.
+- **Advanced fold:** expert design controls are folded away.
+- **Native PowerPoint:** tables and simple charts export as PowerPoint's own.
+
+Left: default transitions by slide type, committed studio baselines, and emphasis inside word animations ([first-run-review.md](first-run-review.md) section 3).
 
 ### 20 November 2026 — Wave 3 of the first-run review (FR-08, FR-10, FR-11)
 

@@ -118,10 +118,15 @@ Measured evidence:
 - the presenter's build position;
 - flip backs in PowerPoint.
 
+Then:
+- **Bold or accent on selected words:** written `**bold**` and `==accent==`, with B, the highlighter, ⌘B and ⌘E.
+- **An Advanced fold** for see-through, blend, reset and randomise.
+- **Native PowerPoint tables and simple charts.**
+
 Not done in Wave 4:
-- **Bold or colour on selected words.** The text kind has no runs, so it needs a renderer change.
-- **Opacity, Blend, X/Y and easing moved behind "More".**
-- **Native tables and charts in PowerPoint, and kept shadow and glow.**
+- **Emphasis in word and letter animations.** Words animated one at a time arrive plain, then show their emphasis once the animation has finished.
+- **Easing behind the fold.** It stays in Animate, renamed "Movement".
+- **Shadow and glow in PowerPoint.**
 - **Default transitions by slide type, and word entrances on statements.** These are taste calls to make with you.
 - **Committed visual baselines for studio layouts.** These need Docker.
 

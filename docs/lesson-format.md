@@ -50,6 +50,9 @@ Any slide may also carry these:
 
 ## The layouts
 
+Any words may mark **bold** words as `**bold**`, and words in the theme's accent as `==accent==`.
+
+
 | `layout` | Needs | May have | Notes |
 |---|---|---|---|
 | `title` | `title` | `subtitle` | The lesson's opening. |
