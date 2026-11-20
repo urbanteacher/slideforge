@@ -7,7 +7,7 @@ import { slideOf, useStore } from '../../store';
 import type { Box, Deck, Layer, Slide } from '../../core';
 import { scrubFrame } from './Timeline';
 import { newGesture } from '../controls/controls';
-import { toggleFormat } from './format';
+import { markSelection, toggleFormat } from './format';
 import { addMediaFile, choosePicture } from './insert';
 import { moveInOrder, moveLine, moveUnit, siblingsOf, type Unit } from './order';
 import { useSlideContextMenu } from '../controls/SlideMenu';
@@ -610,6 +610,7 @@ function TextEditor({ layer, zoom }: { layer: Layer; zoom: number }) {
         if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur();
         const k = e.key.toLowerCase();
         if ((e.metaKey || e.ctrlKey) && (k === 'b' || k === 'i' || k === 'u')) { e.preventDefault(); toggleFormat(layer, k === 'b' ? 'bold' : k === 'i' ? 'italic' : 'underline'); }
+        if ((e.metaKey || e.ctrlKey) && k === 'e') { e.preventDefault(); markSelection(layer, '=='); }
       }}
       style={{
         left: b.x * zoom, top: b.y * zoom, width: b.w * zoom, minHeight: b.h * zoom, boxSizing: 'border-box', paddingTop: dropY * zoom,

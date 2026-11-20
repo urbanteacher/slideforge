@@ -52,6 +52,8 @@ function restyle(l: Layer, st: LayoutStyle, ground: string, scale: number, from?
     p.font = l.name === 'Hero' ? st.hero ?? st.display : display ? st.display : st.body;
     if (display) p.weight = st.displayWeight;
     p.color = pick(role(String(p.color), ground, true, from), st.ink);
+    // Words marked ==like this== take the theme's accent, readable as words (layouts/grounds.ts).
+    p.emphasis = st.accent;
     return;
   }
   if (l.kind === 'shape') {

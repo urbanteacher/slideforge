@@ -81,7 +81,8 @@ export function fontString(p: Params, px: number) {
   return `${p.italic ? 'italic ' : ''}${p.weight ?? 400} ${px}px "${fam}", ${generic}`;
 }
 
-export interface Word { text: string; x: number; w: number; marker?: boolean }
+/** `strong`: set in bold; `accent`: in the text's emphasis colour. Written in the words as **bold** and ==accent==. */
+export interface Word { text: string; x: number; w: number; marker?: boolean; strong?: boolean; accent?: boolean }
 export interface Line { words: Word[]; width: number; text: string; plain: boolean; para: number }
 export interface TextLayout { lines: Line[]; lineH: number; height: number; size: number }
 
@@ -114,6 +115,41 @@ export function layoutText(p: Params, width: number): TextLayout {
   return layoutAt(p, hi);
 }
 
+/** Emphasis written in a text's words: **bold** and ==accent==, which may run across several words. Each word comes
+ *  back without its marks, with whether it is strong or accented. A mark left open runs to the end of the text. */
+export function emphasisWords(para: string, state = { strong: false, accent: false }): { text: string; strong: boolean; accent: boolean }[] {
+  return para.split(/ +/).map((raw) => {
+    let t = raw;
+    for (let k = 0; k < 2; k++) {
+      if (t.startsWith('**')) { t = t.slice(2); state.strong = true; }
+      else if (t.startsWith('==')) { t = t.slice(2); state.accent = true; }
+    }
+    const strong = state.strong, accent = state.accent;
+    // A closing mark at the word's end, before any punctuation after it.
+    for (let k = 0; k < 2; k++) {
+      const m = /(\*\*|==)([.,;:!?)\]'"’”…-]*)$/.exec(t);
+      if (!m) break;
+      t = t.slice(0, m.index) + m[2];
+      if (m[1] === '**') state.strong = false; else state.accent = false;
+    }
+    return { text: t, strong, accent };
+  });
+}
+/** The text with its emphasis marks taken out, as a reader sees it. */
+export const plainText = (text: string) => text.split('\n').map((para) => emphasisWords(para).map((w) => w.text).join(' ')).join('\n');
+/** One line's words as runs of the same emphasis, for PowerPoint's text (export/pptx.ts). */
+export function emphasisRuns(para: string, state = { strong: false, accent: false }): { text: string; strong: boolean; accent: boolean }[] {
+  const out: { text: string; strong: boolean; accent: boolean }[] = [];
+  for (const w of emphasisWords(para, state)) {
+    const last = out[out.length - 1];
+    if (last && last.strong === w.strong && last.accent === w.accent) last.text += ' ' + w.text;
+    else out.push({ ...w, text: (out.length ? ' ' : '') + w.text });
+  }
+  return out;
+}
+/** The font a strong word is set in: the text's own face, bold (or bolder, when the text is bold already). */
+export const strongFont = (p: Params, size: number) => fontString({ ...p, weight: Number(p.weight ?? 400) >= 700 ? '900' : '700' }, size);
+
 function layoutAt(p: Params, width: number): TextLayout {
   const size = Number(p.size ?? 64);
   const ctx = mctx();
@@ -132,26 +168,32 @@ function layoutAt(p: Params, width: number): TextLayout {
   const widest = list === 'numbers' ? Math.max(...Array.from({ length: items }, (_, i) => ctx.measureText(`${i + 1}.`).width)) : ctx.measureText('•').width;
   const listIndent = Math.max(widest + space * 1.2, size * (list === 'numbers' ? 1.1 : 0.8));
   let num = 0, pi = -1;
+  const marks = { strong: false, accent: false };
+  const plainFont = ctx.font, boldFont = strongFont(p, size);
   for (const para of paras) {
     pi++;
     // A list item hangs its wrapped lines at the indent, clear of its bullet or number.
     const marker = list !== 'none' && para.trim() ? (list === 'numbers' ? `${++num}.` : '•') : '';
     const indent = marker ? listIndent : 0;
-    const words = para.split(/ +/);
+    const words = emphasisWords(para, marks);
+    const styled = words.some((w) => w.strong || w.accent);
     let cur: Word[] = marker ? [{ text: marker, x: 0, w: ctx.measureText(marker).width, marker: true }] : [];
     let x = indent;
     const push = () => {
       const last = cur[cur.length - 1];
-      lines.push({ words: cur, width: last ? last.x + last.w : 0, text: cur.map((c) => c.text).join(' '), plain: !indent && !wordGap, para: pi });
+      lines.push({ words: cur, width: last ? last.x + last.w : 0, text: cur.map((c) => c.text).join(' '), plain: !indent && !wordGap && !styled, para: pi });
     };
-    for (const w of words) {
+    for (const word of words) {
+      const w = word.text;
+      if (word.strong) ctx.font = boldFont;
       const ww = ctx.measureText(w).width;
+      if (word.strong) ctx.font = plainFont;
       if (cur.some((c) => !c.marker) && x + ww > width + 0.5) {
         push();
         cur = [];
         x = indent;
       }
-      cur.push({ text: w, x, w: ww });
+      cur.push({ text: w, x, w: ww, ...(word.strong ? { strong: true } : {}), ...(word.accent ? { accent: true } : {}) });
       x += ww + space;
     }
     push();

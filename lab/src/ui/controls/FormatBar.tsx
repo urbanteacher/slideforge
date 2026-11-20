@@ -1,11 +1,11 @@
-import { Bold, Italic, List, ListOrdered, Minus, Plus, Redo2, TextAlignCenter, TextAlignEnd, TextAlignStart, Underline, Undo2, type LucideIcon } from 'lucide-react';
+import { Bold, Highlighter, Italic, List, ListOrdered, Minus, Plus, Redo2, TextAlignCenter, TextAlignEnd, TextAlignStart, Underline, Undo2, type LucideIcon } from 'lucide-react';
 import { useRef } from 'react';
 import { FONTS, kind } from '../../engine';
 import { layerOf, useStore } from '../../store';
 import { fontChoices } from '../../theme';
 import type { Layer, ParamValue } from '../../core';
 import { newGesture } from './controls';
-import { has, toggleFormat } from '../stage/format';
+import { has, markSelection, toggleFormat } from '../stage/format';
 import { PalettePopover, usePalette } from './palette';
 
 // The word-processor strip in the top bar. Each control drives one param, and is live only when
@@ -64,6 +64,8 @@ export function FormatBar() {
       <Btn icon={Bold} title="Bold (⌘B)" on={Number(p.weight) >= 600} disabled={!has(layer, 'weight')} onClick={() => layer && toggleFormat(layer, 'bold')} />
       <Btn icon={Italic} title="Italic (⌘I)" on={!!p.italic} disabled={!has(layer, 'italic')} onClick={() => layer && toggleFormat(layer, 'italic')} />
       <Btn icon={Underline} title="Underline (⌘U)" on={!!p.underline} disabled={!has(layer, 'underline')} onClick={() => layer && toggleFormat(layer, 'underline')} />
+      <Btn icon={Highlighter} title="Emphasise the selected words in the theme's accent (⌘E). Select words while typing in the box; press again to take it off. Bold (⌘B) with words selected bolds just those." disabled={layer?.kind !== 'text'}
+        onClick={() => { if (layer && !markSelection(layer, '==')) useStore.getState().showToast('Double-click the text, select the words to emphasise, then press the highlighter.'); }} />
       {/* Text colour: the theme's palette first, the full picker one step further. */}
       <span className="fmt-colour-wrap">
         <button className={`fmt-colour${ck ? '' : ' disabled'}${pal.open ? ' active' : ''}`} title="Text colour" disabled={!ck} onPointerDown={(e) => e.preventDefault()} onClick={() => { g.current = newGesture(); pal.toggle(); }}>

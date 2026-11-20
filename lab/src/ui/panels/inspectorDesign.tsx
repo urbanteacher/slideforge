@@ -96,20 +96,22 @@ export function LayerDesign({ layer, picture = false }: { layer: Layer; picture?
           </Row>
         </Section>
       )}
-      <Section title="Layer">
-        <Row label="Opacity"><Scrub value={layer.opacity * 100} min={0} max={100} step={1} decimals={0} unit=" %" onChange={(v, m) => up((l) => { l.opacity = v / 100; }, m)} /></Row>
-        <Row label="Blend" info="How this layer combines with everything below it."><Select value={layer.blend} options={BLENDS} onChange={(v) => up((l) => { l.blend = v; })} /></Row>
-      </Section>
       <div className="desc">{k.description}</div>
       {k.content && layer.kind !== 'text' && (layer.kind === 'chart' || k.params.some((d) => d.type === 'text')) && (
         <div className="desc on-canvas">{layer.kind === 'chart' ? 'Double-click the chart to change its labels and values, or add a bar.' : 'Double-click it on the slide to change the words.'}</div>
       )}
-      <div className="btn-row">
-        <button className="btn-soft" onClick={() => up((l) => { l.params = { ...defaultParams(k), ...(k.content ? keptOnReset(k, l) : {}) }; })}><RotateCcw size={13} />Reset</button>
-        {!k.content && <button className="btn-soft" onClick={randomise}><Shuffle size={13} />Randomise</button>}
-      </div>
-      {layer.box && <BoxSection layer={layer} />}
+      {/* What a teacher changes most comes first: the item's own settings (its font, size, colour), then where it sits. */}
       {paramSections}
+      {layer.box && <BoxSection layer={layer} />}
+      {/* The expert's controls, folded away until wanted: see-through, blending with what is behind, reset and randomise. */}
+      <Section title="Advanced" defaultOpen={false}>
+        <Row label="See-through" info="100% is solid; lower lets what is behind show through."><Scrub value={layer.opacity * 100} min={0} max={100} step={1} decimals={0} unit=" %" onChange={(v, m) => up((l) => { l.opacity = v / 100; }, m)} /></Row>
+        <Row label="Mix with what's behind" info="How this item's colours combine with everything below it, as a photo editor's blend modes do. Normal is usual."><Select value={layer.blend} options={BLENDS} onChange={(v) => up((l) => { l.blend = v; })} /></Row>
+        <div className="btn-row">
+          <button className="btn-soft" onClick={() => up((l) => { l.params = { ...defaultParams(k), ...(k.content ? keptOnReset(k, l) : {}) }; })}><RotateCcw size={13} />Reset its style</button>
+          {!k.content && <button className="btn-soft" onClick={randomise}><Shuffle size={13} />Randomise</button>}
+        </div>
+      </Section>
     </>
   );
 }

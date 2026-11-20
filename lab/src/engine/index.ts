@@ -6,7 +6,7 @@ export { reducesMotion } from './motion';
 export { BLURRED, DEFAULT_EDGE, setEdgeResolver, transitionEdge, transitionSpread } from './transitions';
 export type { TransitionLook } from './transitions';
 export { DeckPlayer, hitLayer } from './player';
-export { FLOOR_PX, autoHeight, canFilter, contentHeight, overflowAt, fitted, fontString, getAssetVersion, getImage, groupSizes, imageSettled, layoutText, makeCanvas, MAX_TEX, mctx, measureTextHeight, MODEL_PLOT, readsSlide, refreshAssets, sameReads, slideReads, setupFont, shrinks, textSize } from './raster';
+export { FLOOR_PX, autoHeight, canFilter, contentHeight, emphasisRuns, emphasisWords, overflowAt, plainText, strongFont, fitted, fontString, getAssetVersion, getImage, groupSizes, imageSettled, layoutText, makeCanvas, MAX_TEX, mctx, measureTextHeight, MODEL_PLOT, readsSlide, refreshAssets, sameReads, slideReads, setupFont, shrinks, textSize } from './raster';
 export { ALL_KINDS, CATEGORIES, CATEGORY_LABEL, FIT, FONTS, defaultParams, kind, kindsIn, opt, registerKinds, style } from './registry';
 export type { Category, KindDef, LayerKind, ParamDef } from './registry';
 export { Renderer } from './renderer';

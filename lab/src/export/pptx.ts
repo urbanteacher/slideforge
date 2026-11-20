@@ -1,5 +1,5 @@
 import type { Deck, Layer, Slide } from '../core';
-import { groupSizes, layoutText, textSize } from '../engine';
+import { emphasisRuns, groupSizes, layoutText, textSize } from '../engine';
 import { download, exportPng, renderStill, slug } from './exporters';
 
 /** A text box PowerPoint can edit, in the slide's own pixels and the layer's own type. */
@@ -8,11 +8,41 @@ export interface PptxText {
   font: string; size: number; bold: boolean; italic: boolean; underline: boolean; color: string; opacity: number;
   align: 'left' | 'center' | 'right'; valign: 'top' | 'middle' | 'bottom';
   lineHeight: number; tracking: number; list: 'none' | 'bullets' | 'numbers'; name: string;
+  /** The colour of words marked ==like this== (bold ones are marked **like this**); the text colour when not set. */
+  emphasis?: string;
 }
 
 /** One slide as the PowerPoint carries it: a picture, what goes in PowerPoint's notes, and, in the
  *  editable file, the words set as text boxes over the picture (which is then drawn without them). */
-export interface PptxSlide { image: string; notes: string; hidden: boolean; name?: string; texts?: PptxText[] }
+export interface PptxSlide { image: string; notes: string; hidden: boolean; name?: string; texts?: PptxText[]; tables?: PptxTable[]; charts?: PptxChart[] }
+
+/** A table PowerPoint can edit: its rows, the first a header when the layer has one, in the layer's type. */
+export interface PptxTable { rows: string[][]; header: boolean; labels: boolean; x: number; y: number; w: number; h: number; font: string; size: number; color: string; accent: string; name: string }
+/** A chart PowerPoint can edit, from one of the simple kinds: a label and a value per line. */
+export interface PptxChart { type: 'column' | 'bar' | 'line' | 'pie' | 'donut'; labels: string[]; values: number[]; x: number; y: number; w: number; h: number; font: string; size: number; color: string; textColor: string; name: string }
+
+const SIMPLE_CHARTS = ['column', 'bar', 'line', 'pie', 'donut'];
+/** A table's rows from "a\tb" lines (or "a | b"), as the table layer reads them (kinds/table/raster.ts). */
+const tableRows = (text: unknown) => String(text ?? '').split('\n').filter((r) => r.trim()).map((r) => (r.includes('\t') ? r.split('\t') : r.split(/\s+\|\s+/)).map((c) => c.trim()));
+/** A simple chart's "label, value" lines, or null when any line is not one. */
+function chartPoints(text: unknown): { labels: string[]; values: number[] } | null {
+  const lines = String(text ?? '').split('\n').filter((r) => r.trim());
+  const labels: string[] = [], values: number[] = [];
+  for (const line of lines) {
+    const at = line.lastIndexOf(',');
+    const v = Number(line.slice(at + 1).trim());
+    if (at < 0 || !Number.isFinite(v)) return null;
+    labels.push(line.slice(0, at).trim()); values.push(v);
+  }
+  return lines.length ? { labels, values } : null;
+}
+/** A table, or a chart of one of the simple kinds, on the front of the slide: PowerPoint makes its own, editable. */
+function editableObject(l: Layer): boolean {
+  if (!l.visible || l.face === 'back' || !l.box || l.opacity <= 0 || l.blend !== 'normal' && l.blend) return false;
+  if (l.kind === 'table') return tableRows(l.params.data).length > 0;
+  if (l.kind === 'chart') return SIMPLE_CHARTS.includes(String(l.params.chart ?? 'column')) && !!chartPoints(l.params.data);
+  return false;
+}
 
 /** PowerPoint's widescreen width, in inches; the height follows the deck's own shape. */
 const WIDTH_IN = 13.333;
@@ -56,7 +86,7 @@ export function editableIds(slide: Slide): Set<string> {
     if (!l.visible || l.face === 'back' || !l.box) continue;
     const b = bounds(l);
     const covered = above.some((o) => o.x0 < b.x1 && b.x0 < o.x1 && o.y0 < b.y1 && b.y0 < o.y1);
-    if (editable(l) && !covered) out.add(l.id);
+    if ((editable(l) || editableObject(l)) && !covered) out.add(l.id);
     else above.push(b);
   }
   return out;
@@ -67,7 +97,7 @@ export function editableIds(slide: Slide): Set<string> {
 export function slideTexts(slide: Slide): PptxText[] {
   const groups = groupSizes(slide.layers);
   const ids = editableIds(slide);
-  return slide.layers.filter((l) => ids.has(l.id)).map((l) => {
+  return slide.layers.filter((l) => ids.has(l.id) && l.kind === 'text').map((l) => {
     const p = l.params as Record<string, unknown>;
     const g = p.fitGroup ? groups.get(String(p.fitGroup)) : undefined;
     const size = g ?? textSize(l);
@@ -83,15 +113,33 @@ export function slideTexts(slide: Slide): PptxText[] {
       font: String(p.font ?? 'Inter'), size, bold: Number(p.weight ?? 400) >= 600, italic: !!p.italic, underline: !!p.underline,
       color: String(p.color ?? '#111111'), opacity: l.opacity, align, valign,
       lineHeight: Number(p.lineHeight ?? 1.1), tracking: Number(p.tracking ?? 0), list, name: l.name,
+      ...(HEX.test(String(p.emphasis ?? '')) ? { emphasis: String(p.emphasis) } : {}),
     };
   });
+}
+
+/** The slide's tables, and its charts of the simple kinds, as PowerPoint's own (editableIds decides which). */
+export function slideObjects(slide: Slide): { tables: PptxTable[]; charts: PptxChart[] } {
+  const ids = editableIds(slide);
+  const tables: PptxTable[] = [], charts: PptxChart[] = [];
+  for (const l of slide.layers) {
+    if (!ids.has(l.id) || !l.box) continue;
+    const p = l.params as Record<string, unknown>, b = l.box;
+    const hex = (v: unknown, d: string) => (HEX.test(String(v)) ? String(v) : d);
+    if (l.kind === 'table') tables.push({ rows: tableRows(p.data), header: p.header !== false, labels: p.labels !== false, x: b.x, y: b.y, w: b.w, h: b.h, font: String(p.font ?? 'Inter'), size: Number(p.size ?? 28), color: hex(p.textColor, '#141414'), accent: hex(p.accent, '#d94f2b'), name: l.name });
+    if (l.kind === 'chart') {
+      const pts = chartPoints(p.data)!;
+      charts.push({ type: String(p.chart ?? 'column') as PptxChart['type'], ...pts, x: b.x, y: b.y, w: b.w, h: b.h, font: String(p.font ?? 'Inter'), size: Number(p.size ?? 28), color: hex(p.color, '#ff5a36'), textColor: hex(p.textColor, '#1a1a1a'), name: l.name });
+    }
+  }
+  return { tables, charts };
 }
 
 /** Every slide of the deck as the editable file has it: the picture drawn without its editable words,
  *  and those words as text. Drawn here rather than taken from the show's stills, which have the words in. */
 /** One slide as the editable file has it. Drawn against the whole deck, so its page number is its own. */
 function editableSlide(deck: Deck, s: Slide, width = 1920, quality = 0.92): PptxSlide {
-  return { image: renderStill(s, deck, width, 'image/jpeg', 2, quality, editableIds(s)), notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, texts: slideTexts(s) };
+  return { image: renderStill(s, deck, width, 'image/jpeg', 2, quality, editableIds(s)), notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, texts: slideTexts(s), ...slideObjects(s) };
 }
 
 export async function editableSlides(deck: Deck, onProgress?: (done: number, total: number) => void, width = 1920, quality = 0.92): Promise<PptxSlide[]> {
@@ -136,15 +184,37 @@ export async function buildPptx(deck: Deck, slides0: PptxSlide[]): Promise<Blob>
     // PptxGenJS takes the picture without its data: prefix.
     slide.addImage({ data: s.image.replace(/^data:/, ''), x: 0, y: 0, w: WIDTH_IN, h, altText: s.name || undefined });
     for (const t of s.texts ?? []) {
-      const runs = t.list === 'none'
-        ? t.text
-        : t.text.split('\n').filter((line) => line.trim()).map((line) => ({ text: line, options: { bullet: t.list === 'numbers' ? { type: 'number' as const } : true, breakLine: true } }));
+      // Each line as runs of its emphasis: **bold** words bold, ==accent== words in the emphasis colour.
+      const marks = { strong: false, accent: false };
+      const lines = t.list === 'none' ? t.text.split('\n') : t.text.split('\n').filter((line) => line.trim());
+      const runs = lines.flatMap((line, li) => {
+        const parts = emphasisRuns(line, marks);
+        if (!parts.length) parts.push({ text: '', strong: false, accent: false });
+        return parts.map((r, ri) => ({ text: r.text, options: {
+          ...(r.strong ? { bold: true } : {}), ...(r.accent ? { color: (t.emphasis ?? t.color).slice(1) } : {}),
+          ...(ri === 0 && t.list !== 'none' ? { bullet: t.list === 'numbers' ? { type: 'number' as const } : true } : {}),
+          ...(ri === parts.length - 1 && (t.list !== 'none' || li < lines.length - 1) ? { breakLine: true } : {}),
+        } }));
+      });
       slide.addText(runs, {
         x: t.x * k, y: t.y * k, w: t.w * k, h: t.h * k, rotate: t.rot || undefined,
         fontFace: t.font, fontSize: pt(t.size), bold: t.bold, italic: t.italic, underline: t.underline ? { style: 'sng' } : undefined,
         color: t.color.slice(1), transparency: t.opacity < 1 ? Math.round((1 - t.opacity) * 100) : undefined,
         align: t.align, valign: t.valign, lineSpacing: pt(t.size * t.lineHeight), charSpacing: t.tracking ? pt(t.tracking * t.size) : undefined,
         margin: 0, fit: 'none', wrap: true, objectName: t.name || undefined,
+      });
+    }
+    for (const t of s.tables ?? []) {
+      // The header row in the accent and bold, the labels down the left bold, hairlines under the rows: the layer's look.
+      const rows = t.rows.map((r, i) => r.map((c, j) => ({ text: c, options: { bold: (t.header && i === 0) || (t.labels && j === 0 && i > 0), color: (t.header && i === 0 ? t.accent : t.color).slice(1) } })));
+      slide.addTable(rows, { x: t.x * k, y: t.y * k, w: t.w * k, h: t.h * k, fontFace: t.font, fontSize: pt(t.size), border: { type: 'solid', pt: 0.5, color: 'CCCCCC' }, valign: 'middle', margin: pt(t.size * 0.3) / 72, autoPage: false });
+    }
+    for (const c of s.charts ?? []) {
+      const type = c.type === 'line' ? pptx.ChartType.line : c.type === 'pie' ? pptx.ChartType.pie : c.type === 'donut' ? pptx.ChartType.doughnut : pptx.ChartType.bar;
+      slide.addChart(type, [{ name: c.name, labels: c.labels, values: c.values }], {
+        x: c.x * k, y: c.y * k, w: c.w * k, h: c.h * k, barDir: c.type === 'bar' ? 'bar' : 'col', chartColors: [c.color.slice(1)],
+        catAxisLabelFontFace: c.font, valAxisLabelFontFace: c.font, catAxisLabelFontSize: pt(c.size), valAxisLabelFontSize: pt(c.size), catAxisLabelColor: c.textColor.slice(1), valAxisLabelColor: c.textColor.slice(1),
+        showLegend: c.type === 'pie' || c.type === 'donut', legendFontFace: c.font, legendFontSize: pt(c.size), showValue: c.type === 'pie' || c.type === 'donut', dataLabelFontFace: c.font, dataLabelFontSize: pt(c.size),
       });
     }
     if (s.notes.trim()) slide.addNotes(s.notes);

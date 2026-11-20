@@ -24,7 +24,7 @@ function ground(st: LayoutStyle): Layer {
 const wordsIn: Partial<Anim> = { type: 'rise', duration: 0.8 };
 /** A statement: display type as big as the line allows, its breaks balanced. */
 export const statement = (st: LayoutStyle, value: string, box: Box, size: number, align: 'left' | 'center') =>
-  text('Statement', value, box, { font: st.display, weight: st.displayWeight === '400' ? '400' : '800', size, color: st.ink, align, lineHeight: 1.04, tracking: -0.035, balance: true, fit: 'grow' }, wordsIn);
+  text('Statement', value, box, { emphasis: st.accent, font: st.display, weight: st.displayWeight === '400' ? '400' : '800', size, color: st.ink, align, lineHeight: 1.04, tracking: -0.035, balance: true, fit: 'grow' }, wordsIn);
 export const credit = (st: LayoutStyle, value: string, box: Box, align: 'left' | 'center') =>
   text('Credit', value, box, { font: st.body, weight: '500', size: 40, color: st.muted, align, lineHeight: 1.35 }, {});
 
@@ -36,21 +36,21 @@ export function text(name: string, value: string, box: Box, params: Params, anim
 // 1920-wide slide a point is two pixels — and the type fills its region: bigger when there are few
 // words, smaller when there are many, so a slide uses its page instead of floating small in it.
 export const heading = (st: LayoutStyle, value: string, box: Box, size = 88, extra: Params = {}) =>
-  text('Heading', value, box, { font: st.display, weight: st.displayWeight, size, color: st.ink, lineHeight: 1.05, tracking: -0.01, fit: 'fill', ...extra }, rise);
+  text('Heading', value, box, { font: st.display, weight: st.displayWeight, size, color: st.ink, emphasis: st.accent, lineHeight: 1.05, tracking: -0.01, fit: 'fill', ...extra }, rise);
 export const body = (st: LayoutStyle, value: string, box: Box, size = 48, extra: Params = {}, delay = 0.15) =>
-  text('Text', value, box, { font: st.body, weight: '400', size, color: st.muted, lineHeight: 1.3, fit: 'fill', ...extra }, after(delay));
+  text('Text', value, box, { font: st.body, weight: '400', size, color: st.muted, emphasis: st.accent, lineHeight: 1.3, fit: 'fill', ...extra }, after(delay));
 /** A list builds a point per click, the points before it dimmed, so the room reads the one being talked about. */
 const pointByPoint: Partial<Anim> = { type: 'fade', duration: 0.6, delay: 0.2, build: 'dim' };
 export const bullets = (st: LayoutStyle, lines: string[], box: Box, size = 48) =>
-  text('Bullet points', lines.join('\n'), box, { font: st.body, weight: '400', size, color: st.ink, list: 'bullets', lineHeight: 1.45, fit: 'fill' }, pointByPoint);
+  text('Bullet points', lines.join('\n'), box, { font: st.body, weight: '400', size, color: st.ink, emphasis: st.accent, list: 'bullets', lineHeight: 1.45, fit: 'fill' }, pointByPoint);
 /** The type and colours the layouts set each kind of thing in, for what Add puts on a slide (ui/insert.ts):
  *  so a heading, a paragraph or a table added by hand reads as one the layouts drew — the same face,
  *  size, colour, spacing and entrance. */
 export function itemStyle(st: LayoutStyle) {
   return {
-    heading: { params: { font: st.display, weight: st.displayWeight, size: 88, color: st.ink, lineHeight: 1.05, tracking: -0.01 }, anim: rise },
-    text: { params: { font: st.body, weight: '400', size: 48, color: st.muted, lineHeight: 1.3, tracking: 0 }, anim: after(0.15) },
-    bullets: { params: { font: st.body, weight: '400', size: 48, color: st.ink, lineHeight: 1.45, tracking: 0 }, anim: pointByPoint },
+    heading: { params: { font: st.display, weight: st.displayWeight, size: 88, color: st.ink, emphasis: st.accent, lineHeight: 1.05, tracking: -0.01 }, anim: rise },
+    text: { params: { font: st.body, weight: '400', size: 48, color: st.muted, emphasis: st.accent, lineHeight: 1.3, tracking: 0 }, anim: after(0.15) },
+    bullets: { params: { font: st.body, weight: '400', size: 48, color: st.ink, emphasis: st.accent, lineHeight: 1.45, tracking: 0 }, anim: pointByPoint },
     quote: { params: { ...colours(st), font: st.display, size: 92 }, anim: after(0) },
     note: { params: { ...colours(st), font: st.body, fill: st.panel, size: 40 }, anim: after(0.2) },
     table: { params: { font: st.body, size: 36, textColor: st.ink, accent: st.accent }, anim: after(0.2) },

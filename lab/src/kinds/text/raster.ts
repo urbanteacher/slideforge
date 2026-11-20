@@ -1,6 +1,6 @@
 // The text layer drawn into a canvas for the renderer (from engine/raster.ts, lab-engine-plan M1.5).
 import type { Layer, Params } from '../../core';
-import { DIM_TO, EASE, FRAME_K, MAX_TEX, canFilter, isWordMotion, layoutText, makeCanvas, reach, setupFont, textSize, textUnitCount, unitDelays, unitLook, unitProgress, withAlpha, type Ctx, type Raster, type UnitLook } from '../../engine';
+import { DIM_TO, EASE, FRAME_K, MAX_TEX, canFilter, isWordMotion, layoutText, makeCanvas, reach, setupFont, strongFont, textSize, textUnitCount, unitDelays, unitLook, unitProgress, withAlpha, type Ctx, type Raster, type UnitLook } from '../../engine';
 
 const GLYPHS = { upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', lower: 'abcdefghijklmnopqrstuvwxyz', digit: '0123456789', other: '#%&*+=?/<>$@' };
 /** A stand-in letter for a scramble, of the same kind as the real one, changing eighteen times a second. */
@@ -130,6 +130,17 @@ export function rasterText(layer: Layer, textT: number): Raster {
     ctx.fillText(str, x - D, y);
     ctx.restore();
   };
+  /** A word written **bold** or ==accent== drawn in the bold face or the emphasis colour (engine Word). */
+  const emphasis = /^#[0-9a-f]{6}$/i.test(String(p.emphasis ?? '')) ? String(p.emphasis) : ink;
+  const boldFace = strongFont(p, size);
+  const emphasised = (w: { strong?: boolean; accent?: boolean }, draw: () => void) => {
+    if (!w.strong && !w.accent) { draw(); return; }
+    const was = { font: ctx.font, fill: ctx.fillStyle };
+    if (w.strong) ctx.font = boldFace;
+    if (w.accent) ctx.fillStyle = emphasis;
+    draw();
+    ctx.font = was.font; ctx.fillStyle = was.fill;
+  };
   const underline = (x: number, w: number, y: number) => {
     if (p.underline && w > 0) ctx.fillRect(x, y + size * 0.09, w, Math.max(1, size * 0.055));
   };
@@ -226,7 +237,7 @@ export function rasterText(layer: Layer, textT: number): Raster {
     const whole = (y: number) => {
       if (first) mark(ox + first.x, line.width - first.x, y);
       if (line.plain) paint(line.text, ox, y);
-      else for (const w of line.words) paint(w.text, ox + w.x, y);
+      else for (const w of line.words) emphasised(w, () => paint(w.text, ox + w.x, y));
       if (first) underline(ox + first.x, line.width - first.x, y);
     };
     if (!animating || type === 'none') {
