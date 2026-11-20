@@ -5,6 +5,7 @@ export { saveSlide, slideClipboard } from './controls/SlideMenu';
 export { BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS } from './panels/Browse';
 export { Filmstrip } from './panels/Filmstrip';
 export { Gallery } from './panels/Gallery';
+export { StarterScreen } from './panels/StarterScreen';
 export { Inspector } from './panels/Inspector';
 export { LeftPanel } from './panels/LeftPanel';
 export { CanvasBar, stepZoom, toggleSide } from './stage/CanvasBar';

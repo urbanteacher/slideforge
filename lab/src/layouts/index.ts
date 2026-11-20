@@ -5,6 +5,8 @@ export { applyTheme, setSlideGround, themeSlide, varyGrounds } from './applyThem
 export { backdropOf, isBackdrop, setBackdrop } from './backdrop';
 export type { BackdropMode } from './backdrop';
 export { reflowCards } from './cards';
+export { relayout, relayoutBlocked, type Relayout } from './relayout';
+export type { LayoutDef } from './style';
 export { HF_KINDS, HF_SLOTS, carryCanvasEdits, editHeaderFooter, headerFooterStale, hfConfig, hfDefaults, syncHeaderFooter } from './headerFooter';
 export { LAYOUTS, LAYOUT_GROUPS } from './catalogue';
 export { LAYOUT_STYLES, cell, gridFor, guideStyle, layoutFor, newerTheme, pinTheme, slideStyle, themeCopyOf, themeOf } from './style';

@@ -126,6 +126,8 @@
     Object.keys(all).forEach(function (k) {
       var e = all[k];
       if (e && typeof e === 'object' && e.id && e.libraryGroup && !have['id:' + e.id] && !have[k]) {
+        // An earlier version, or a student copy, is kept for decks that point at it, not offered to start from.
+        if (/earlier version|\(student copy\)/i.test(String(e.title || ''))) return;
         out.push({ key: k, title: e.title || k, group: e.libraryGroup, shipped: true });
       }
     });

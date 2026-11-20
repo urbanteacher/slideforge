@@ -326,6 +326,8 @@ body.col-dragging iframe, body.col-dragging canvas { pointer-events: none; }
 .g-card { text-align: left; }
 .g-thumb { aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: var(--field); border: 1px solid var(--line-2); transition: transform .25s var(--ease), border-color .2s, box-shadow .25s; }
 .g-thumb img { width: 100%; height: 100%; display: block; }
+.g-thumb.g-blank { background: repeating-linear-gradient(135deg, var(--field) 0 12px, var(--line-2) 12px 13px); }
+.lp-change { display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin: 4px 0 2px; }
 .g-card:hover .g-thumb { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 16px 40px rgba(0,0,0,.45); }
 .g-name { margin-top: 8px; font-weight: 600; display: flex; justify-content: space-between; }
 .g-name span { color: var(--dim); font-weight: 400; font-size: 12px; }
@@ -870,3 +872,18 @@ kbd { font: 500 11.5px/1 Inter, ui-sans-serif, system-ui, sans-serif; padding: 4
 .figure-hint { padding-bottom: 4px; }
 .figure-unpack { padding: 4px 14px 10px; }
 .figure-unpack .btn { width: 100%; justify-content: center; }
+
+/* The first screen of a new deck (ui/panels/StarterScreen.tsx): over the canvas, below the top bar, so File stays in reach. */
+.starter-screen { position: absolute; inset: 0; z-index: 30; overflow: auto; background: var(--bg); animation: fadein .2s ease; }
+.starter-inner { max-width: 1180px; margin: 0 auto; padding: 24px 22px 40px; }
+.starter-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.starter-head h2 { margin: 0; font-size: 22px; }
+.starter-head p { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 60ch; }
+.starter-screen .g-group { display: flex; align-items: center; gap: 6px; }
+.starter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; padding: 10px 0 18px; }
+.starter-blank { padding: 6px 0; }
+.starter-blank .g-styles { padding: 0 0 12px; }
+.starter-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.starter-note { color: var(--muted); font-size: 12.5px; margin: 14px 0 0; }
+
+.menu .menu-label { padding: 8px 12px 4px; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }

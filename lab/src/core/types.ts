@@ -154,6 +154,9 @@ export interface Slide {
   notes: string;
   /** Kept in the deck and the editor, skipped by Preview and the exported deck. */
   hidden?: boolean;
+  /** Who the slide is for. 'teacher': shown in the presentation and the teacher's copy, left out of the
+   *  student copy (the handout, the PDF and PowerPoint saved for students). Absent: everyone. */
+  audience?: 'teacher';
   /** The SlideForge slide this one was converted from, so a show built for SlideForge's player can
    *  put the lesson's games back after the slide they followed. */
   sourceSlideId?: string;

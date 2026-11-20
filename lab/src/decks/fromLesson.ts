@@ -96,6 +96,7 @@ export function deckFromLesson(lesson: Lesson, choiceStarter?: ShowcaseGame): De
       m.id = s.id ? (k ? `${s.id}-${k + 1}` : s.id) : uid();
       if (k === 0 && s.notes) m.notes = s.notes;
       if (s.hidden) m.hidden = true;
+      if (s.audience === 'teacher') m.audience = 'teacher';
       if (k === 0 && typeof s.factCheck === 'string') m.factCheck = { note: s.factCheck };
     });
     return made;

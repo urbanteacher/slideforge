@@ -1,7 +1,8 @@
-import { ChevronDown, ChevronRight, Copy, Eye, EyeOff, LayoutGrid, ListOrdered, Lock, Rows2, SquareSplitHorizontal, Trash2, Unlock } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Eye, EyeOff, LayoutGrid, LayoutTemplate, ListOrdered, Lock, Rows2, SquareSplitHorizontal, Trash2, Unlock } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { DEFAULT_THEME, LAYOUTS, LAYOUT_STYLES, guideStyle, layoutFor, newerTheme, themeOf, applyTheme } from '../../layouts';
 import { useThumbs } from './Gallery';
+import { openChangeLayout } from './changeLayout';
 import { addTextImage } from '../stage/insert';
 import { DeckSettings } from './DeckSettings';
 import { insertBlock } from './SlideBlocks';
@@ -132,6 +133,7 @@ function LayoutsPanel() {
           );
         })()}
       </div>
+      <button className="btn-outline lp-change" onClick={() => openChangeLayout()} title="Keep this slide's words and pictures, in another layout"><LayoutTemplate size={14} />Change this slide’s layout…</button>
       <div className="lp-label">New slide</div>
       <div className="lp-grid">
         {entries.map(({ id, layout }) => (

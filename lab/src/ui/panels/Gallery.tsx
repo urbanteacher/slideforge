@@ -2,7 +2,8 @@ import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { renderStill } from '../../export';
 import { TEMPLATES, cloneSlide, rosetteSvg, type Slide } from '../../core';
-import { DEFAULT_THEME, LAYOUTS, LAYOUT_GROUPS, LAYOUT_STYLES, layoutFor } from '../../layouts';
+import { DEFAULT_THEME, LAYOUTS, LAYOUT_GROUPS, LAYOUT_STYLES, layoutFor, themeOf } from '../../layouts';
+import { changeLayout } from './changeLayout';
 import { getImage } from '../../engine';
 import { useStore } from '../../store';
 
@@ -33,26 +34,46 @@ export function useThumbs(entries: { id: string; slide: Slide }[], ready: () => 
 
 function Layouts() {
   const { set, addSlide, showToast } = useStore.getState();
-  const [styleId, setStyleId] = useState(DEFAULT_THEME.id);
-  const st = LAYOUT_STYLES.find((s) => s.id === styleId)!;
+  const mode = useStore((s) => s.galleryMode);
+  const themeId = useStore((s) => s.deck.theme);
+  const guide = useStore((s) => s.deck.styleGuide);
+  // The deck's own theme first, so a slide added or changed here matches the slides around it.
+  const deckStyle = useMemo(() => themeOf({ theme: themeId, styleGuide: guide }) ?? DEFAULT_THEME, [themeId, guide]);
+  const [styleId, setStyleId] = useState<string | null>(null);
+  const st = (mode === 'insert' && styleId && LAYOUT_STYLES.find((s) => s.id === styleId)) || deckStyle;
   const entries = useMemo(() => LAYOUTS.map((l) => ({ id: l.id, layout: l, slide: l.make(st) })), [st]);
   const thumbs = useThumbs(entries);
+  const pick = (layout: (typeof LAYOUTS)[number]) => {
+    if (mode === 'change') { changeLayout(layout); return; }
+    addSlide(layoutFor(layout, st, useStore.getState().deck));
+    set({ galleryOpen: false });
+    showToast(`Inserted “${layout.name}”`);
+  };
   return (
     <>
-      <div className="g-styles">
-        <span>Style</span>
-        {LAYOUT_STYLES.map((s) => (
-          <button key={s.id} className={`g-style${s.id === styleId ? ' on' : ''}`} onClick={() => setStyleId(s.id)} title={`${s.display} and ${s.body}`}>
-            <i style={{ background: s.ground, borderColor: s.accent }}><b style={{ background: s.accent }} /></i>{s.name}
-          </button>
-        ))}
-      </div>
-      {LAYOUT_GROUPS.map((g) => (
+      {mode === 'insert' && (
+        <div className="g-styles">
+          <span>Style</span>
+          {LAYOUT_STYLES.map((s) => (
+            <button key={s.id} className={`g-style${s.id === st.id ? ' on' : ''}`} onClick={() => setStyleId(s.id)} title={`${s.display} and ${s.body}`}>
+              <i style={{ background: s.ground, borderColor: s.accent }}><b style={{ background: s.accent }} /></i>{s.name}
+            </button>
+          ))}
+        </div>
+      )}
+      {LAYOUT_GROUPS.map((g, gi) => (
         <section key={g}>
           <h3 className="g-group">{g}</h3>
           <div className="gallery">
+            {mode === 'insert' && gi === 0 && (
+              <button className="g-card" title="An empty slide in the deck's theme" onClick={() => { addSlide(); set({ galleryOpen: false }); showToast('Inserted a blank slide'); }}>
+                <div className="g-thumb g-blank" />
+                <div className="g-name">Blank slide</div>
+                <div className="g-blurb">An empty slide in the deck’s theme. Add text, pictures and more from Add.</div>
+              </button>
+            )}
             {entries.filter((e) => e.layout.group === g).map(({ id, layout }) => (
-              <button key={id} className="g-card" title={layout.blurb} onClick={() => { addSlide(layoutFor(layout, st, useStore.getState().deck)); set({ galleryOpen: false }); showToast(`Inserted “${layout.name}”`); }}>
+              <button key={id} className="g-card" title={layout.blurb} onClick={() => pick(layout)}>
                 <div className="g-thumb">{thumbs[id] && <img src={thumbs[id]} alt="" />}</div>
                 <div className="g-name">{layout.name}</div>
                 <div className="g-blurb">{layout.blurb}</div>
@@ -83,7 +104,10 @@ function Designs() {
 
 export function Gallery() {
   const tab = useStore((s) => s.galleryTab);
-  const { set } = useStore.getState();
+  const mode = useStore((s) => s.galleryMode);
+  const { set: setStore } = useStore.getState();
+  // Closing always returns the Gallery to adding slides, so Change layout never sticks.
+  const set = (p: Parameters<typeof setStore>[0]) => setStore(p.galleryOpen === false ? { ...p, galleryMode: 'insert' } : p);
   useEffect(() => {
     const close = (ev: KeyboardEvent) => { if (ev.key === 'Escape') set({ galleryOpen: false }); };
     addEventListener('keydown', close);
@@ -95,18 +119,20 @@ export function Gallery() {
       <div className="modal">
         <div className="modal-head">
           <div>
-            <h2>Gallery</h2>
-            <p>{tab === 'layouts'
+            <h2>{mode === 'change' ? 'Change this slide’s layout' : 'Gallery'}</h2>
+            <p>{mode === 'change'
+              ? 'Pick a layout. The slide keeps its title, words and pictures; anything with no place on the new layout goes to the speaker notes. Undo puts the old layout back.'
+              : tab === 'layouts'
               ? 'SlideForge’s layouts, on its twelve-column grid. Text shrinks to fit its place, so the slide stays on the page. Click to insert after the current slide.'
               : 'Art-directed starting points. Click to insert after the current slide — every layer stays editable.'}</p>
           </div>
-          <div className="g-tabs">
+          {mode === 'insert' && <div className="g-tabs">
             <button className={tab === 'layouts' ? 'on' : ''} onClick={() => set({ galleryTab: 'layouts' })}>Layouts</button>
             <button className={tab === 'designs' ? 'on' : ''} onClick={() => set({ galleryTab: 'designs' })}>Designed slides</button>
-          </div>
+          </div>}
           <button className="tb-btn icon" onClick={() => set({ galleryOpen: false })}><X size={16} /></button>
         </div>
-        {tab === 'layouts' ? <Layouts /> : <Designs />}
+        {tab === 'layouts' || mode === 'change' ? <Layouts /> : <Designs />}
       </div>
     </div>
   );

@@ -9,3 +9,4 @@ export { ukbtDeck, ukbtInstituteDeck } from './ukbtDeck';
 export { LESSON_THEMES, deckFromLesson, loadChoiceStarter } from './fromLesson';
 export { LESSON_FORMAT, LESSON_ICONS, LESSON_LAYOUTS, answerIndex, readLesson } from './lessonFormat';
 export type { Lesson, LessonQuestion, LessonSlide } from './lessonFormat';
+export { STARTERS, starterDeck, type Starter } from './starters';

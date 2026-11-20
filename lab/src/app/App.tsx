@@ -4,7 +4,7 @@ import { inView, layerOf, refitAllText, slideOf, useStore, type LabView } from '
 import { isLabDeck, readStored, saveCurrent, sweepPicturesSoon } from './embed';
 import { ShowLayer } from '../show';
 import { registerGuideFonts } from '../theme';
-import { CanvasBar, Filmstrip, Gallery, LeftPanel, Stage, Timeline, VideoExport, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, focusBrowse, quickAdd, QUICK_PICKS, stepZoom, toggleSide } from '../ui';
+import { CanvasBar, Filmstrip, Gallery, LeftPanel, Stage, Timeline, VideoExport, toggleFormat, addMediaFile, groupOf, moveInOrder, slideClipboard, BrowsePanel, StarterScreen, focusBrowse, quickAdd, QUICK_PICKS, stepZoom, toggleSide } from '../ui';
 import { is } from '../keys';
 import { Overlays, RightColumn, bindCommands, openOverlay, readPlace, reason, report, restorePlace, settle, showStatus, startStatus, startSyncWatch, startUrlSync, useOverlay } from '../shell';
 import { present } from './showInSlideForge';
@@ -238,6 +238,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
         <Stage />
         <Timeline />
         {view !== 'lesson' && !anyInView && <EmptyView view={view} />}
+        {view === 'lesson' && <StarterScreen />}
         <CanvasBar />
         <Filmstrip />
       </main>

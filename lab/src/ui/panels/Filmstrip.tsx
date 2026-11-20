@@ -1,4 +1,4 @@
-import { ChevronRight, Copy, Plus, Trash2, Eye, EyeOff, LayoutGrid, LayoutTemplate, X } from 'lucide-react';
+import { ChevronRight, Copy, Eye, EyeOff, GraduationCap, LayoutGrid, LayoutTemplate, Plus, Trash2, X } from 'lucide-react';
 import { is, keyProps } from '../../keys';
 import { toggleHidden, useSlideContextMenu } from '../controls/SlideMenu';
 import { FEEDBACK } from './Engagement';
@@ -43,7 +43,7 @@ export function Filmstrip() {
   // The Quiz studio and Activities show the lesson's games or activities, each at its place in the lesson.
   const slides = view === 'lesson' ? all : all.filter((s) => inView(s, view));
   const slideId = useStore((s) => s.slideId);
-  const { selectSlide, addSlide, duplicateSlide, deleteSlide, moveSlide } = useStore.getState();
+  const { selectSlide, duplicateSlide, deleteSlide, moveSlide } = useStore.getState();
   const thumb = useSlideThumbs(slides);
   const [drag, setDrag] = useState<{ id: string; over: string | null } | null>(null);
   const [menu, openMenu] = useSlideContextMenu();
@@ -99,7 +99,7 @@ export function Filmstrip() {
           onPointerDown={(e) => { if (e.button === 0 && !(e.target as HTMLElement).closest('.thumb-acts')) selectSlide(s.id); }}
         >
           {i > 0 && s.transition.type !== 'none' && <div className="thumb-trans" title={`Transition: ${s.transition.type}`}><ChevronRight size={12} /></div>}
-          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation and the PDF"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}<WarnBadge slide={s} /><FactsBadge slide={s} n={i + 1} /></div>
+          <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation and the PDF"><EyeOff size={12} />Hidden</span>}{!s.hidden && s.audience === 'teacher' && <span className="thumb-hidden thumb-teacher" title="Teacher only: in the presentation, left out of the student copy"><GraduationCap size={12} />Teacher</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}<WarnBadge slide={s} /><FactsBadge slide={s} n={i + 1} /></div>
           <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           <div className="thumb-acts" onClick={(e) => e.stopPropagation()}>
             <button title={s.hidden ? 'Show in the presentation and the PDF' : 'Hide from the presentation and the PDF'} aria-pressed={!!s.hidden} onClick={() => toggleHidden(s.id)}>{s.hidden ? <Eye size={12} /> : <EyeOff size={12} />}</button>
@@ -109,7 +109,7 @@ export function Filmstrip() {
         </div>
       ); })}
       {view === 'lesson'
-        ? <button className="add-slide" title="New slide" onClick={() => addSlide()}><Plus size={18} /></button>
+        ? <button className="add-slide" title="New slide: pick a layout, or a blank slide" onClick={() => useStore.setState({ galleryOpen: true, galleryMode: 'insert', galleryTab: 'layouts' })}><Plus size={18} /></button>
         : <button className="add-slide" title={view === 'quiz' ? 'A game, after the slide on screen' : view === 'nodes' ? 'A Nodes format, after the slide on screen' : 'An activity, after the slide on screen'} onClick={focusBrowse}><Plus size={18} /></button>}
       {menu}
     </div>

@@ -415,10 +415,10 @@
       var spare = SF.BuiltIns ? SF.BuiltIns.templates().filter(function (t) {
         return !q || String(t.title).toLowerCase().indexOf(q) >= 0;
       }) : [];
-      if (spare.length) pane.appendChild(templatesBox(spare, !all.length || !!q));
+      if (spare.length) pane.appendChild(templatesBox(spare, !!q));
 
       if (!all.length) {
-        pane.appendChild(el('p', 'library-note', 'Nothing in the Library yet. Start from New, or use one of the built-in lessons above.'));
+        pane.appendChild(el('p', 'library-note', 'Nothing in the Library yet. Start from New: it offers starters for a lesson, a lecture, a workshop and more.'));
       } else if (!shown && !spare.length) {
         pane.appendChild(el('p', 'library-note', 'Nothing matches “' + searchQuery + '”.'));
       }
@@ -441,10 +441,10 @@
       box.open = startOpen;
       var sum = document.createElement('summary');
       sum.className = 'library-folder-head';
-      sum.appendChild(el('h3', null, 'Built-in lessons'));
+      sum.appendChild(el('h3', null, 'Example lessons'));
       sum.appendChild(el('span', 'library-folder-count', String(list.length)));
       box.appendChild(sum);
-      box.appendChild(el('p', 'library-empty', 'Ready-made lessons to start from. Use one and its copy is filed in your Library.'));
+      box.appendChild(el('p', 'library-empty', 'Lessons made in SlideForge, to look at or adapt. Use one and its copy is filed in your Library. To start your own, use New.'));
       list.forEach(function (t) {
         var row = el('article', 'library-row');
         row.setAttribute('role', 'group');

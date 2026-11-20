@@ -1754,8 +1754,8 @@
           title: 'Start something new',
           items: function () {
             var items = [
-              { id: 'deck', title: 'Blank presentation',
-                blurb: 'An empty lesson. Add slides and activities as you go.' },
+              { id: 'deck', title: 'Presentation',
+                blurb: 'Pick a starter (lesson, lecture, workshop, talk and more) or a blank slide in a theme next.' },
               { id: 'game', title: 'Blank game',
                 blurb: 'A quiz or classroom game on its own. Pick the format next.' }
             ];

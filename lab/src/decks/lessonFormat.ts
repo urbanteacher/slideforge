@@ -21,6 +21,8 @@ interface Common {
   notes?: string;
   /** Kept in the deck, left out of the show and the student copy. */
   hidden?: boolean;
+  /** "teacher": in the show and the teacher's copy, left out of the student copy. */
+  audience?: 'teacher';
   /** A fact on this slide still needs a source: what to check (core/facts.ts). */
   factCheck?: string;
 }
@@ -68,7 +70,7 @@ export const LESSON_LAYOUTS: Record<LessonSlide['layout'], { needs: string[]; ma
   widget: { needs: ['html'], may: ['title'] },
   icons: { needs: ['title', 'items'], may: [] },
 };
-const COMMON = ['layout', 'id', 'notes', 'hidden', 'factCheck'];
+const COMMON = ['layout', 'id', 'notes', 'hidden', 'audience', 'factCheck'];
 
 const isText = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
 const isTexts = (v: unknown): v is string[] => Array.isArray(v) && v.length > 0 && v.every(isText);
@@ -92,6 +94,7 @@ function slideProblems(s: Record<string, unknown>, warn: (w: string) => void = (
   }
   if (s.id !== undefined && !/^[A-Za-z0-9_-]{1,64}$/.test(String(s.id))) out.push('"id" may hold only letters, digits, - and _');
   want('hidden', typeof s.hidden === 'boolean', 'true or false');
+  want('audience', s.audience === 'teacher', '"teacher"');
   want('side', s.side === 'left' || s.side === 'right', '"left" or "right"');
   want('points', isTexts(s.points), 'a list of one or more lines');
   want('details', Array.isArray(s.details) && (s.details as unknown[]).every((x) => typeof x === 'string'), 'a list of lines');

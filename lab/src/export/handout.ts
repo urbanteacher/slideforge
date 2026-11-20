@@ -8,11 +8,12 @@ import type { Deck } from '../core';
 /** `back`: the slide turned over (Flip to facts), its picture under `${id}:back`. */
 export interface HandoutPage { id: string; name: string; notes: string; back?: boolean }
 
-/** The pages of a handout: the shown slides, the answers only in the teacher copy, the notes only there too. A slide
+/** The pages of a handout: the shown slides, the answers and the teacher-only slides (`audience: 'teacher'`) only in
+ *  the teacher copy, the notes only there too. A slide
  *  with facts on its back (Flip to facts) gets a second page, turned over, so the facts are on paper too. */
 export function handoutPages(deck: Deck, teacher: boolean): HandoutPage[] {
   return deck.slides
-    .filter((s) => !s.hidden && (teacher || s.game?.role !== 'answer'))
+    .filter((s) => !s.hidden && (teacher || (s.game?.role !== 'answer' && s.audience !== 'teacher')))
     .flatMap((s) => {
       const front: HandoutPage = { id: s.id, name: s.name, notes: teacher ? String(s.notes ?? '').trim() : '' };
       return s.layers.some((l) => l.face === 'back') ? [front, { id: `${s.id}:back`, name: `${s.name} (the facts)`, notes: '', back: true }] : [front];
@@ -45,7 +46,8 @@ export function handoutHtml(title: string, pages: HandoutPage[], images: Record<
     .page:last-child { break-after: auto; page-break-after: auto; }
     .page img { max-height: 188mm; }
     .page.with-notes img { max-height: 150mm; }
-    .notes { max-height: 36mm; overflow: hidden; border: 0; }
+    .notes { border: 0; }
+    .page.with-notes { break-inside: auto; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style></head>

@@ -52,6 +52,7 @@ export function TopBar({ embedded = false }: { embedded?: boolean }) {
         {(close) => (
           <>
             <button onClick={() => { loadDeck(blankDeck()); close(); }}><FilePlus size={15} />New blank deck</button>
+            <div className="menu-label">Examples to look at or adapt</div>
             <button onClick={() => { loadDeck(demoDeck()); close(); }}><Sparkles size={15} />New from demo deck</button>
             <button onClick={async () => {
               close();
