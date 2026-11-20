@@ -7,6 +7,7 @@
 import { createLayer, type Anim, type Layer, type Slide } from '../core';
 import { after, slide, text, titleBar, titleRow, shape } from './blocks';
 import { GRID, type LayoutStyle } from './style';
+import { SCALE } from './scale';
 
 export interface RevealRow { icon?: string; ring?: string; name?: string; say?: string; tag?: { text: string; fill: string }; text?: string }
 export interface RevealSpec {
@@ -56,16 +57,17 @@ export function revealSlide(st: LayoutStyle, spec: RevealSpec): Slide {
   const rows = spec.rows.slice(0, 8), n = Math.max(1, rows.length), dark = isDark(st.ground);
   const steps = spec.steps?.length ? spec.steps : [{}];
   const layers: Layer[] = [];
-  if (spec.eyebrow) layers.push(text('Eyebrow', spec.eyebrow, { x: GRID.left, y: GRID.top - 66, w: 1200, h: 40, rot: 0 }, { font: st.body, weight: '700', size: 24, color: st.accent, uppercase: true, tracking: 0.12 }, after(0)));
+  if (spec.eyebrow) layers.push(text('Eyebrow', spec.eyebrow, { x: GRID.left, y: GRID.top - 70, w: 1400, h: 48, rot: 0 }, { font: st.body, weight: '700', size: SCALE.min, color: st.accent, uppercase: true, tracking: 0.12 }, after(0)));
   layers.push(titleRow(st, spec.title), titleBar(st));
   const subY = GRID.top + 2 * GRID.stepY + 40;
-  if (spec.sub) layers.push(text('Sub-line', spec.sub, { x: GRID.left, y: subY, w: 1764, h: 48, rot: 0 }, { font: st.body, weight: '400', size: 30, color: st.muted }, after(0.1)));
+  if (spec.sub) layers.push(text('Sub-line', spec.sub, { x: GRID.left, y: subY, w: 1764, h: 50, rot: 0 }, { font: st.body, weight: '400', size: SCALE.min, color: st.muted }, after(0.1)));
   const top = spec.sub ? subY + 72 : subY + 20, foot = 1014 - 50 - 76;
   const rh = Math.min((spec.max ?? 120) * K, (foot - top) / n);
   const iconX = 104 * K, nameX = (spec.nameX ?? 160) * K, sayX = (spec.sayX ?? spec.nameX ?? 160) * K, tagX = (spec.tagX ?? 470) * K;
   const textX = (spec.textX ?? (rows.some((r) => r.tag) ? 712 : 470)) * K;
-  const size = (spec.size ?? 21) * K, saySize = (spec.saySize ?? 19) * K;
-  const tagW = Math.max(60, ...rows.filter((r) => r.tag).map((r) => r.tag!.text.length * 10.5 + 34)) * K;
+  // Never under the floor: a row of words is read from the back of the room like any other.
+  const size = Math.max(SCALE.min, (spec.size ?? 21) * K), saySize = Math.max(SCALE.min, (spec.saySize ?? 19) * K);
+  const tagW = Math.max(60, ...rows.filter((r) => r.tag).map((r) => r.tag!.text.length * 13 + 40)) * K;
   const rr = Math.min(32 * K, rh * 0.36);
   const build = spec.mode === 'build', clicks = clicksOf(spec, rows.length), mode = spec.dim === false ? 'on' : 'dim';
   const set = 'reveal-' + Math.random().toString(36).slice(2, 9);
@@ -85,17 +87,17 @@ export function revealSlide(st: LayoutStyle, spec: RevealSpec): Slide {
     if (i) layers.push(onClick(shape('Row rule', { x: 64 * K, y: y0, w: RIGHT - 64 * K, h: 2, rot: 0 }, { shape: 'rect', fill: dark ? 'rgba(255,255,255,.16)' : '#d9d4ca' }, after(0)), rowC));
     layers.push(onClick(createLayer('image', { name: 'Icon', box: { x: iconX - rr, y: cy - rr, w: rr * 2, h: rr * 2, rot: 0 }, params: { src: iconSvg(r, dark), fit: 'contain' }, anim: after(0) }), rowC));
     const nameEnd = r.say && sayX > nameX ? sayX : r.tag ? tagX : textX;
-    if (r.name) layers.push(onClick(text('Name', r.name, box(nameX, nameEnd - nameX - 36), { font: st.display, weight: st.displayWeight, size: 26 * K, color: st.ink, valign: 'middle', lineHeight: 1.15, fitGroup: set + '-names' }, after(0)), rowC));
-    if (r.say) layers.push(onClick(text('Words', r.say, box(sayX, (r.tag ? tagX : textX) - sayX - 36), { font: st.body, weight: '400', italic: true, size: saySize, color: st.ink, valign: 'middle', lineHeight: 1.3, fitGroup: set + '-say' }, after(0)), rowC));
+    if (r.name) layers.push(onClick(text('Name', r.name, box(nameX, nameEnd - nameX - 36), { font: st.display, weight: st.displayWeight, size: Math.max(SCALE.min, 26 * K), color: st.ink, valign: 'middle', lineHeight: 1.15, fit: 'shrink', fitGroup: set + '-names' }, after(0)), rowC));
+    if (r.say) layers.push(onClick(text('Words', r.say, box(sayX, (r.tag ? tagX : textX) - sayX - 36), { font: st.body, weight: '400', italic: true, size: saySize, color: st.ink, valign: 'middle', lineHeight: 1.3, fit: 'shrink', fitGroup: set + '-say' }, after(0)), rowC));
     // The answer: its tag and words, on the row's click (answers) or with the row (build).
-    if (r.tag) layers.push(onClick(text('Tag', r.tag.text, { x: tagX, y: cy - 28, w: tagW, h: 57, rot: 0 }, { font: st.body, weight: '700', size: 22, color: '#ffffff', align: 'center', valign: 'middle', uppercase: true, tracking: 0.08, block: 'fill', blockColor: r.tag.fill, blockRadius: 28, blockPad: 0, fit: 'shrink' }, after(0)), c));
-    if (r.text) layers.push(onClick(text('Answer', r.text, box(textX, RIGHT - textX), { font: st.body, weight: '400', size, color: st.ink, valign: 'middle', lineHeight: 1.3, fitGroup: set + '-text' }, after(0)), c));
+    if (r.tag) layers.push(onClick(text('Tag', r.tag.text, { x: tagX, y: cy - 28, w: tagW, h: 57, rot: 0 }, { font: st.body, weight: '700', size: SCALE.min, color: '#ffffff', align: 'center', valign: 'middle', uppercase: true, tracking: 0.08, block: 'fill', blockColor: r.tag.fill, blockRadius: 28, blockPad: 0, fit: 'shrink' }, after(0)), c));
+    if (r.text) layers.push(onClick(text('Answer', r.text, box(textX, RIGHT - textX), { font: st.body, weight: '400', size, color: st.ink, valign: 'middle', lineHeight: 1.3, fit: 'shrink', fitGroup: set + '-text' }, after(0)), c));
   });
   // The opening caption, when the list opens on a question before any row (answers): along the foot, gone at the
   // first click. A caption that goes with a row is said by the row itself; the converter puts it in the notes.
   const first = steps[0];
   if (first?.caption && clicks.every((c) => c >= 0) && steps.length > 1) {
-    const cap = text('Caption', first.caption, { x: GRID.left, y: foot + 18, w: 1764, h: 52, rot: 0 }, { font: st.body, weight: '500', size: 30, color: st.muted }, after(0));
+    const cap = text('Caption', first.caption, { x: GRID.left, y: foot + 18, w: 1764, h: 52, rot: 0 }, { font: st.body, weight: '500', size: SCALE.min, color: st.muted }, after(0));
     cap.anim = { ...cap.anim, exit: { type: 'fade', when: 'next', delay: 0, duration: 0.25 } };
     layers.push(cap);
   }

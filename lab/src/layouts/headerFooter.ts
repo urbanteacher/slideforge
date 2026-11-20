@@ -2,6 +2,7 @@ import { current, isDraft } from 'immer';
 import { kind } from '../engine';
 import { createLayer, type Deck, type HFItem, type HFKind, type HFSlot, type HeaderFooter, type Layer, type Slide } from '../core';
 import { gridFor } from './style';
+import { SCALE } from './scale';
 
 // Header and footer, the way SlideForge's Header & footer pane has them: six slots, a deck-wide
 // default, and an override for one slide. The difference is where the words live. Every filled slot
@@ -111,7 +112,7 @@ function makeLayer(deck: Deck, slide: Slide, slot: HFSlot, item: HFItem, text: s
   const align = slot.endsWith('left') ? 'left' : slot.endsWith('center') ? 'center' : 'right';
   return createLayer('text', {
     name: `${slot} · ${item.kind}`, opacity: 0.72,
-    params: { ...tag, text, font, size: 22 * deck.width / 1920, weight: '600', color: dark ? '#f5f4f2' : '#161616', align, tracking: 0.02, lineHeight: 1.2, fit: 'shrink' } as never,
+    params: { ...tag, text, font, size: SCALE.chrome * deck.width / 1920, weight: '600', color: dark ? '#f5f4f2' : '#161616', align, tracking: 0.02, lineHeight: 1.2, fit: 'shrink' } as never,
     box: slotBox(deck, slot, false),
   });
 }

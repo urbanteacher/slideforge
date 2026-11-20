@@ -4,6 +4,7 @@ import { createLayer, createSlide, type Box, type Layer, type Slide } from '../c
 import { CONTENT_FOOT, CONTENT_TOP, after, body, heading, inset, rise, shape, slide, text, titleBar, titleRow } from './blocks';
 import { cell, type LayoutStyle } from './style';
 import { bulletsSlide } from './system';
+import { SCALE } from './scale';
 
 /** One picture explored point by point: numbered spots on it, and what each is, in a key beside it. */
 /**
@@ -135,7 +136,7 @@ function topPictureSlide(st: LayoutStyle, caption: string, credit: string, src: 
     text('Caption', caption, { x: 78, y: 50, w: 1440, h: 80, rot: 0 }, { font: st.display, weight: st.displayWeight, size: 60, color: st.accent, lineHeight: 1.05, fit: 'shrink' }, after(0.1)),
     createLayer('image', { name: 'Picture', box: pic, params: { src, fit: 'contain', radius: 0 }, anim: { type: 'fade', duration: 0.9 } }),
   ];
-  if (credit) layers.push(text('Caption credit', credit, { x: 78, y: 118, w: 1440, h: 30, rot: 0 }, { font: st.body, weight: '500', size: 24, color: st.muted }, after(0.3)));
+  if (credit) layers.push(text('Caption credit', credit, { x: 78, y: 112, w: 1440, h: 46, rot: 0 }, { font: st.body, weight: '500', size: SCALE.min, color: st.muted }, after(0.3)));
   if (facts.trim()) layers.push(...factsLayers(st, caption, facts, 84, { x: 1920 - 72 - 30, y: 30, w: 72, h: 72, rot: 0 }));
   const s = slide(st, facts.trim() ? 'Flip to facts' : 'Framed picture', layers);
   s.recipe = { kind: 'flip', args: { caption, credit, src, frame: '16:9', cap: 'top', facts } };
@@ -153,7 +154,7 @@ function scrimPictureSlide(st: LayoutStyle, caption: string, credit: string, src
     createLayer('shape', { name: 'Caption band', box: { x: 0, y: 850, w: 1920, h: 230, rot: 0 }, params: { shape: 'rect', radius: 0, gradient: true, fill: '#000000', fillOpacity: 0, fill2: '#000000', fill2Opacity: 0.82, angle: 90, strokeWidth: 0 }, anim: after(0.3) }),
     text('Caption', caption, { x: 138, y: 952, w: 1440, h: 66, rot: 0 }, { font: st.body, weight: '650', size: 52, color: '#ffffff', lineHeight: 1.12, fit: 'shrink' }, after(0.4)),
   ];
-  if (credit) layers.push(text('Caption credit', credit, { x: 138, y: 1010, w: 1440, h: 40, rot: 0 }, { font: st.body, weight: '500', size: 26, color: 'rgba(255,255,255,0.85)', tracking: 0.06, uppercase: true }, after(0.5)));
+  if (credit) layers.push(text('Caption credit', credit, { x: 138, y: 1012, w: 1440, h: 48, rot: 0 }, { font: st.body, weight: '500', size: SCALE.min, color: 'rgba(255,255,255,0.85)', tracking: 0.06, uppercase: true }, after(0.5)));
   if (facts.trim()) layers.push(...factsLayers(st, caption, facts, 84, { x: 1920 - 138 - 72, y: 948, w: 72, h: 72, rot: 0 }));
   const s = slide(st, facts.trim() ? 'Flip to facts' : 'Framed picture', layers);
   s.recipe = { kind: 'flip', args: { caption, credit, src, frame: '16:9', cap: 'scrim', facts } };
@@ -228,7 +229,7 @@ export function sceneSlide(o: { mode: string; look: string; title: string; subti
   const lk = looks[o.look] ?? looks.editorial;
   const face = lk.serif ? 'Georgia' : lk.mono ? 'JetBrains Mono' : 'Avenir Next';
   const layers: Layer[] = [
-    text('Kicker', (names[o.mode] ?? o.mode).toUpperCase(), { x: 84, y: 60, w: 1752, h: 40, rot: 0 }, { font: 'Avenir Next', weight: '600', size: 28, tracking: 0.2, color: lk.accent }, after(0.1)),
+    text('Kicker', (names[o.mode] ?? o.mode).toUpperCase(), { x: 84, y: 54, w: 1752, h: 48, rot: 0 }, { font: face, weight: '600', size: SCALE.min, tracking: 0.2, color: lk.accent }, after(0.1)),
     text('Heading', o.title, { x: 84, y: 106, w: 1752, h: 84, rot: 0 }, { font: face, weight: lk.serif ? '400' : '700', size: 64, color: lk.ink, lineHeight: 1.1, fit: 'shrink' }, rise),
     createLayer('scene', { name: 'Motion experiment', box: { x: 84, y: 214, w: 1752, h: 806, rot: 0 }, params: {
       mode: o.mode, look: o.look, items: o.items.join('\n'), image: o.image ?? '', factor: o.factor ?? 2, subtitle: o.subtitle ?? '', font: 'Avenir Next', size: 36,

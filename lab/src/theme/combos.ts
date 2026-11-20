@@ -26,6 +26,18 @@ export function contrast(a: string, b: string) {
   const x = luminance(a), y = luminance(b);
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
+/** `colour` brought toward `toward` (the ground's ink) only as far as it takes to read as text on `ground` at `need`:1.
+ *  A bright accent stays bright as a fill (a bar, a loud ground) and is used deepened as words. Hex colours only. */
+export function readableOn(colour: string, ground: string, toward: string, need = 4.5): string {
+  if (!/^#[0-9a-f]{6}$/i.test(colour) || !/^#[0-9a-f]{6}$/i.test(ground) || !/^#[0-9a-f]{6}$/i.test(toward)) return colour;
+  if (contrast(colour, ground) >= need) return colour;
+  const a = hexRgb(colour), b = hexRgb(toward);
+  for (let t = 0.05; t <= 1.0001; t += 0.05) {
+    const c = '#' + a.map((v, i) => Math.round((v + (b[i] - v) * t) * 255).toString(16).padStart(2, '0')).join('');
+    if (contrast(c, ground) >= need) return c;
+  }
+  return toward;
+}
 export type Grade = 'AAA' | 'AA' | 'Large';
 export const gradeOf = (ratio: number): Grade | null => (ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : ratio >= 3 ? 'Large' : null);
 

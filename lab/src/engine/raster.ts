@@ -206,8 +206,9 @@ export const fills = (l: Pick<Layer, 'params'>) => l.params.fit === 'fill';
 export const FLOOR_PX = 36;
 // The kinds that measure their content (text and the card-like items) are as tall as it.
 export const autoHeight = (l: Pick<Layer, 'kind' | 'params'>) => !!MEASURES[l.kind] && !shrinks(l);
-/** The largest size, no bigger than `size`, whose content is no taller than `h`. Never below `floor`. */
-function shrinkToFit(size: number, h: number, measure: (px: number) => number, floor = size * 0.25) {
+/** The largest size, no bigger than `size`, whose content is no taller than `h`. Never below `floor`: the 18pt the
+ *  room can read, or the set size when that is smaller (a footer set at 22px stays at 22px). */
+function shrinkToFit(size: number, h: number, measure: (px: number) => number, floor = Math.min(size, FLOOR_PX)) {
   if (!(h > 0) || measure(size) <= h + 0.5) return size;
   let lo = Math.min(size, floor), hi = size;
   if (measure(lo) > h) return lo;
@@ -249,6 +250,14 @@ export function groupSizes(layers: Layer[]): Map<string, number> {
     out.set(String(g), Math.min(out.get(String(g)) ?? Infinity, px));
   }
   return out;
+}
+
+/** How far a fitted layer's words run past the foot of its box at `px`, in slide pixels; 0 when they fit. The design
+ *  check says so: at the floor, words that still do not fit run over rather than shrink to dust. */
+export function overflowAt(l: Pick<Layer, 'kind' | 'params' | 'box'>, px: number): number {
+  const m = MEASURES[l.kind];
+  if (!m || !l.box) return 0;
+  return Math.max(0, Math.ceil(m(mctx(), { ...l.params, size: px }, l.box.w).height - l.box.h));
 }
 
 export function contentHeight(l: Pick<Layer, 'kind' | 'params'>, width: number): number | null {

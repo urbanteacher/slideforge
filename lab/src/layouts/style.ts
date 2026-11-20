@@ -2,6 +2,7 @@
 import { DECK_VERSION, aspectOf, setAspect, type Box, type Deck, type Slide, type StyleGuide } from '../core';
 import { resolveGround } from '../theme';
 import { DEFAULT_THEME } from './defaultTheme';
+import { withGrounds } from './grounds';
 
 // SlideForge's layouts, built out of the lab's own items.
 //
@@ -60,7 +61,7 @@ export interface LayoutStyle {
   grounds?: { id: string; name: string; ground: string; ink: string; muted: string; accent: string }[];
 }
 
-export const LAYOUT_STYLES: LayoutStyle[] = [
+export const LAYOUT_STYLES: LayoutStyle[] = ([
   // The default leads the list; it is set in defaultTheme.ts.
   DEFAULT_THEME,
   { id: 'navy', name: 'Navy', ground: '#0c3354', ink: '#ffffff', muted: '#bccada', accent: '#ef4760', panel: '#154673', display: 'Instrument Serif', displayWeight: '400', body: 'Inter' },
@@ -68,7 +69,7 @@ export const LAYOUT_STYLES: LayoutStyle[] = [
   // SlideForge's Cinematic · Dark pitch: near-black, heavy Avenir Next, a hot pink-red accent.
   { id: 'cinematic', name: 'Cinematic', ground: '#0a0b0f', ink: '#f2f4f8', muted: '#9aa3b5', accent: '#ff3b5c', panel: '#16171d', display: 'Avenir Next', displayWeight: '800', body: 'Avenir Next', glow: '#1a1020', accent2: '#5eead4' },
   { id: 'mono', name: 'Mono', ground: '#ffffff', ink: '#111111', muted: '#5c5c5c', accent: '#111111', panel: '#f1f1f1', display: 'Inter', displayWeight: '700', body: 'Inter' },
-];
+] as LayoutStyle[]).map(withGrounds);
 
 /** The deck's own style guide as a theme, with the same roles as the built-in ones. */
 export function guideStyle(g: StyleGuide): LayoutStyle {

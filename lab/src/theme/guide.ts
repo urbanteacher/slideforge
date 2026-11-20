@@ -1,6 +1,7 @@
 import { refreshAssets } from '../engine';
 import type { PalettePreset } from './palettes';
 import type { GuideGround, GuideSwatch, GuideTheme, StyleGuide } from '../core';
+import { contrast, readableOn } from './combos';
 
 // The deck's own style: a palette of three grounds, picked from the gallery (model/palettes.ts) or
 // built by hand from the deck's current colours, and then everyone's to change. It is kept inside
@@ -24,7 +25,7 @@ const GROUNDS = (quiet: { ground: string; ink: string }, loudInk: string): Guide
 export function fromPreset(p: PalettePreset): StyleGuide {
   const work = p.working ?? { ground: p.light, ink: p.dark };
   const quiet = p.quiet ?? { ground: p.dark, ink: p.light };
-  const muted = mix(work.ink, work.ground, 0.32);
+  const muted = readableOn(mix(work.ink, work.ground, 0.32), work.ground, work.ink);
   const panel = mix(work.ground, work.ink, 0.07);
   const swatches: GuideSwatch[] = p.named
     ? p.named.map((n) => ({ ...n }))
@@ -38,7 +39,8 @@ export function fromPreset(p: PalettePreset): StyleGuide {
   ));
   else swatches.push({ name: 'colour', value: p.loud }, { name: 'second colour', value: p.accent2 });
   const theme: GuideTheme = {
-    ground: work.ground, ink: work.ink, muted, accent: p.loud, accent2: p.sets ? p.sets[0].deep : p.accent2,
+    // The loud colour as words on the working ground, deepened only as far as it takes to read (4.5:1).
+    ground: work.ground, ink: work.ink, muted, accent: readableOn(p.loud, work.ground, work.ink), accent2: p.sets ? p.sets[0].deep : p.accent2,
     panel, display: p.display, displayWeight: p.displayWeight, body: p.body, hero: p.hero,
   };
   return { name: p.name, source: p.source, swatches, sets, set: sets[0], fonts: [], marks: p.marks?.map((m) => ({ ...m })) ?? [], theme, grounds: GROUNDS(quiet, p.sets?.some((x) => x.ink) ? 'colour-ink' : p.loudInk) };
@@ -58,7 +60,8 @@ export function blankGuide(st: { ground: string; ink: string; muted: string; acc
 export function chooseSet(g: StyleGuide, set: string) {
   g.set = set;
   const pal = new Map(paletteOf(g, set).map((x) => [x.name, x.value]));
-  g.theme.accent = pal.get('colour') ?? g.theme.accent;
+  const colour = pal.get('colour');
+  if (colour) g.theme.accent = readableOn(colour, g.theme.ground, g.theme.ink);
   g.theme.accent2 = pal.get('colour-deep') ?? g.theme.accent2;
 }
 
@@ -67,8 +70,14 @@ export function resolveGround(g: StyleGuide, gr: GuideGround, set = g.set) {
   const pal = new Map(paletteOf(g, set).map((p) => [p.name, p.value]));
   const v = (x?: string) => (x === undefined ? undefined : x.startsWith('#') ? x : pal.get(x));
   const ground = v(gr.ground) ?? g.theme.ground;
-  const ink = v(gr.ink) ?? g.theme.ink;
-  return { id: gr.id, name: gr.name, ground, ink, muted: v(gr.muted) ?? mix(ink, ground, 0.28), accent: v(gr.accent) ?? g.theme.accent };
+  // The ground's ink as the palette names it, unless it does not read there (white on a mid green): then whichever of
+  // the theme's ink, its ground, white or black reads best.
+  const named = v(gr.ink) ?? g.theme.ink;
+  const ink = !/^#[0-9a-f]{6}$/i.test(named) || !/^#[0-9a-f]{6}$/i.test(ground) || contrast(named, ground) >= 4.5 ? named
+    : [named, g.theme.ink, g.theme.ground, '#ffffff', '#000000'].filter((c) => /^#[0-9a-f]{6}$/i.test(c)).sort((a, b) => contrast(b, ground) - contrast(a, ground))[0];
+  // Every ground's words read on it: its quiet text and its accent are deepened toward its ink where they would not.
+  const muted = readableOn(v(gr.muted) ?? mix(ink, ground, 0.28), ground, ink);
+  return { id: gr.id, name: gr.name, ground, ink, muted, accent: readableOn(v(gr.accent) ?? g.theme.accent, ground, ink) };
 }
 
 /** The guide's colours as one palette: its shared tokens, with the chosen set laid over them. */

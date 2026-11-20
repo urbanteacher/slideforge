@@ -1,6 +1,7 @@
 import { createLayer, type Layer, type Slide } from '../core';
 import { CONTENT_FOOT, CONTENT_TOP, after, body, bullets, heading, panel, shape, slide, text, titleBar, titleRow } from './blocks';
 import { GRID, cell, type LayoutStyle } from './style';
+import { SCALE } from './scale';
 
 // ─── SlideForge's last slide types (lab-engine-plan M13) ─────────────────────────────────────────
 // The ones a lesson could still hold that the lab had no form for, which kept the lesson on SlideForge's
@@ -27,7 +28,7 @@ const uniq = (name: string) => name + '-' + Math.random().toString(36).slice(2, 
  *  paragraph a click when the lesson builds it, and its source under it. */
 export function explainSlide(st: LayoutStyle, o: { number?: number; question: string; answer: string; key: string; body: string; source: string; clicks: boolean }): Slide {
   const layers: Layer[] = [];
-  if (o.number) layers.push(text('Number', `Q${o.number}`, { x: GRID.left, y: GRID.top - 64, w: 400, h: 48, rot: 0 }, { font: st.body, weight: '700', size: 34, color: st.accent, tracking: 0.08 }, after(0)));
+  if (o.number) layers.push(text('Number', `Q${o.number}`, { x: GRID.left, y: GRID.top - 68, w: 400, h: 52, rot: 0 }, { font: st.body, weight: '700', size: SCALE.min, color: st.accent, tracking: 0.08 }, after(0)));
   layers.push(titleRow(st, o.question), titleBar(st));
   const row = { x: GRID.left, y: CONTENT_TOP, w: W, h: 124, rot: 0 };
   layers.push(
@@ -43,7 +44,7 @@ export function explainSlide(st: LayoutStyle, o: { number?: number; question: st
   layers.push(...byClick(paras.map((p, i) => [
     text('Reason', p, { x: GRID.left, y: top + i * each, w: W, h: each - 16, rot: 0 }, { font: st.body, weight: '400', size: 44, color: st.ink, lineHeight: 1.35, fitGroup: 'explain-reasons' }),
   ]), uniq('explain'), o.clicks, 0.4));
-  if (o.source) layers.push(text('Source', o.source, { x: GRID.left, y: CONTENT_FOOT - 48, w: W, h: 48, rot: 0 }, { font: st.body, weight: '400', size: 34, color: st.muted }, after(0.5)));
+  if (o.source) layers.push(text('Source', o.source, { x: GRID.left, y: CONTENT_FOOT - 50, w: W, h: 50, rot: 0 }, { font: st.body, weight: '400', size: SCALE.min, color: st.muted }, after(0.5)));
   return slide(st, 'Explanation', layers);
 }
 

@@ -8,11 +8,13 @@
 // the high-contrast serif of 2026's editorial work, for the headings, over Inter. (The paid faces of
 // the year — GT America, Söhne, Graphik, Aeonik — cannot be served to a class.) The fonts are loaded
 // in index.html and view.html. Every colour is AA on the ground: text 14:1, muted 6:1, teal 5:1.
+import { withGrounds } from './grounds';
 import type { LayoutStyle } from './style';
 
-export const DEFAULT_THEME: LayoutStyle = {
+// With its quiet and loud grounds (layouts/grounds.ts), so a default deck is not one colour from cover to close.
+export const DEFAULT_THEME: LayoutStyle = withGrounds({
   id: 'paper', name: 'Paper',
   ground: '#f0eee9', ink: '#241c18', muted: '#66574e', panel: '#f7f3ea',
   accent: '#14706e', accent2: '#7b4a39',
   display: 'Instrument Serif', displayWeight: '400', body: 'Inter',
-};
+});

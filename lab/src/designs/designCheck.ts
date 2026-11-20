@@ -1,16 +1,18 @@
 // Design rules the editor checks (BACKLOG CS-02, from Claude Slides' written rules): what makes a slide hard to read
 // from the back of the room, said in the Slide panel with what to do. Nothing is refused or changed. The rules:
-//   - no text under 24px on a 1080-high slide (the footer band, the header and footer, is left out);
+//   - no text under 36px (18pt) on a 1080-high slide, the floor the fitting holds to (engine FLOOR_PX); the header
+//     and footer are left out;
 //   - text holds 4.5:1 contrast on what is behind it, compared unrounded as WCAG says; 3:1 at 44px and up. That
 //     size is a projection rule, stricter than WCAG's large text (24px, or 18.7px bold): words read from the back
 //     of a room need more than words read at a desk;
 //   - text that has had to shrink to fit is a slide with too much on it: split it, rather than shrinking the words;
+//   - text that runs past its box even at the floor is said too: it is drawn over whatever is under it;
 //   - a lesson with more than six text sizes no longer reads as one design (four or five is the aim).
 import type { Deck, Layer, Slide } from '../core';
-import { getAssetVersion, groupSizes, textSize } from '../engine';
+import { FLOOR_PX, getAssetVersion, groupSizes, overflowAt, shrinks, textSize } from '../engine';
 import { contrast } from '../theme';
 
-export const DESIGN_RULES = { minPx: 24, contrast: 4.5, largeContrast: 3, largePx: 44, shrunk: 0.8, sizes: 6 };
+export const DESIGN_RULES = { minPx: FLOOR_PX, contrast: 4.5, largeContrast: 3, largePx: 44, shrunk: 0.8, sizes: 6 };
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -102,7 +104,10 @@ export function designCheck(slide: Slide, deck: Pick<Deck, 'height'>): string[] 
     const px = drawnPx(l, groups, deck.height);
     const set = Number(l.params.size ?? 0);
     if (px < r.minPx) out.push(`“${name}” is drawn at ${Math.round(px)}px, under the ${r.minPx}px the back of the room can read. Make it larger, or move it to the notes.`);
-    if (l.params.fit === 'shrink' && set > 0 && px < set * r.shrunk * (1080 / deck.height)) {
+    const over = shrinks(l) ? overflowAt(l, (px * deck.height) / 1080) : 0;
+    if (over > Math.max(6, px * 0.3)) {
+      out.push(`“${name}” runs ${Math.round((over * 1080) / deck.height)}px past its box, even at the smallest size the room can read. Cut some words, or split the slide.`);
+    } else if (shrinks(l) && set > 0 && px < set * r.shrunk * (1080 / deck.height)) {
       out.push(`“${name}” has shrunk to ${Math.round((px / ((set * 1080) / deck.height)) * 100)}% of its size to fit. There is too much on the slide: split it rather than shrinking the words.`);
     }
     const ground = behind(slide, l);

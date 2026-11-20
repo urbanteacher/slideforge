@@ -3,6 +3,7 @@
 import { createLayer, type Layer, type Slide } from '../core';
 import { CONTENT_FOOT, CONTENT_TOP, after, bar, body, heading, picture, rise, rule, shape, slide, text, titleBar, titleRow, type Pair, type Triple } from './blocks';
 import { GRID, cell, type LayoutStyle } from './style';
+import { SCALE } from './scale';
 
 // ─── Builders: the richer layouts (timeline, funnel, mind map, people…) ─────
 /** Who is at the front: a portrait on the left, the name large, the role and a short paragraph. */
@@ -151,7 +152,7 @@ export function orgchartSlide(st: LayoutStyle, title: string, people: Triple[]):
     cards.push(
       shape('Person', { x, y, w: cardW, h: cardH, rot: 0 }, { shape: 'rect', radius: 20, fill: st.panel, stroke: st.ink, strokeWidth: 3 }, a),
       shape('Photo', { x: x + 18, y: y + (cardH - disc) / 2, w: disc, h: disc, rot: 0 }, { shape: 'ellipse', fill: st.ink }, a),
-      text('Initials', initials, { x: x + 18 + disc * 0.14, y: y + (cardH - disc) / 2 + disc * 0.28, w: disc * 0.72, h: disc * 0.44, rot: 0 }, { font: st.body, weight: '800', size: Math.round(disc * 0.34), color: st.ground, align: 'center', lineHeight: 1, tracking: 0.02, fit: 'shrink' }, a),
+      text('Initials', initials, { x: x + 18 + disc * 0.14, y: y + (cardH - disc) / 2 + disc * 0.28, w: disc * 0.72, h: disc * 0.44, rot: 0 }, { font: st.body, weight: '800', size: Math.max(SCALE.min, Math.round(disc * 0.34)), color: st.ground, align: 'center', lineHeight: 1, tracking: 0.02, fit: 'shrink' }, a),
       text('Name', p[0], { x: x + disc + 38, y: y + cardH * 0.16, w: cardW - disc - 56, h: cardH * 0.36, rot: 0 }, { font: st.body, weight: '700', size: 40, color: st.ink, fit: 'fill', fitGroup: 'names' }, a),
       text('Role', p[1], { x: x + disc + 38, y: y + cardH * 0.54, w: cardW - disc - 56, h: cardH * 0.3, rot: 0 }, { font: st.body, weight: '400', size: 36, color: st.muted, fit: 'fill', fitGroup: 'roles' }, a),
     );
@@ -265,7 +266,7 @@ export function codeSlide(st: LayoutStyle, title: string, code: string, language
     titleRow(st, title),
     titleBar(st),
     shape('Code panel', box, { shape: 'rect', radius: 18, fill: '#11151c' }, { type: 'fade', duration: 0.5 }),
-    text('Language', language.toUpperCase(), { x: box.x + box.w - 300, y: box.y + 22, w: 260, h: 36, rot: 0 }, { font: 'JetBrains Mono', weight: '600', size: 26, color: '#8b98a9', align: 'right', tracking: 0.08, fit: 'shrink' }, after(0.2)),
+    text('Language', language.toUpperCase(), { x: box.x + box.w - 300, y: box.y + 18, w: 260, h: 46, rot: 0 }, { font: 'JetBrains Mono', weight: '600', size: SCALE.min, color: '#8b98a9', align: 'right', tracking: 0.08, fit: 'shrink' }, after(0.2)),
     text('Code', code.replace(/\s+$/, ''), { x: box.x + 48, y: box.y + 60, w: box.w - 96, h: box.h - 100, rot: 0 }, { font: 'JetBrains Mono', weight: '400', size: 40, color: '#e6edf3', lineHeight: 1.45, fit: 'shrink' },
       typewrite ? { type: 'typewriter', duration: 0.05, stagger: 0.035, delay: 0.3 } : after(0.3)),
   ]);

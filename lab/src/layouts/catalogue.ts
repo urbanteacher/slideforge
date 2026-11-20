@@ -5,6 +5,7 @@ import { columnsSlide, funnelSlide, introductionSlide, mindmapSlide, orgchartSli
 import { timedSlide } from './show';
 import { cell, type LayoutDef } from './style';
 import { bulletsSlide, cardsSlide, chartSlide, compareSlide, journeySlide, keyfactSlide, keywordsSlide, sectionSlide, splitSlide, statsSlide, tableSlide, titleSlide } from './system';
+import { SCALE } from './scale';
 
 export const LAYOUTS: LayoutDef[] = [
   {
@@ -90,7 +91,7 @@ export const LAYOUTS: LayoutDef[] = [
       // SlideForge's scrim: clear at the top, 82% black at the foot, so the caption reads over any picture.
       createLayer('shape', { name: 'Caption band', box: { x: 0, y: 714, w: 1920, h: 366, rot: 0 }, params: { shape: 'rect', radius: 0, gradient: true, fill: '#000000', fillOpacity: 0, fill2: '#000000', fill2Opacity: 0.82, angle: 90, strokeWidth: 0 } }),
       text('Caption', 'What the picture shows, in one line', { ...cell(1, 13, 10, 1), x: 138 }, { font: st.body, weight: '600', size: 66, color: '#ffffff', lineHeight: 1.14 }, after(0.4)),
-      text('Caption credit', 'WHERE IT CAME FROM', { ...cell(1, 14, 10, 1), x: 138, y: 957 }, { font: st.body, weight: '500', size: 28, color: '#ffffff', tracking: 0.06, uppercase: true }, after(0.5)),
+      text('Caption credit', 'WHERE IT CAME FROM', { ...cell(1, 14, 10, 1), x: 138, y: 950, h: 48 }, { font: st.body, weight: '500', size: SCALE.min, color: '#ffffff', tracking: 0.06, uppercase: true }, after(0.5)),
     ]),
   },
   {

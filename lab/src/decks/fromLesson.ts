@@ -5,7 +5,7 @@ import { blankDeck, createLayer, uid, type Deck, type Slide } from '../core';
 import { iconName } from '../kinds/icon';
 import {
   CONTENT_FOOT, CONTENT_TOP, DEFAULT_THEME, cell, themeCopyOf, LAYOUT_STYLES, blockSlide, titleBar, titleRow, bulletsSlide, cardsSlide, compareSlide, credit, keyfactSlide, keywordsSlide, quoteSlide,
-  sectionSlide, splitSlide, statement, statsSlide, tableSlide, themeOf, timelineSlide, titleSlide, type LayoutStyle,
+  sectionSlide, splitSlide, statement, statsSlide, tableSlide, themeOf, timelineSlide, titleSlide, varyGrounds, type LayoutStyle,
 } from '../layouts';
 import { gameSlides, type ShowcaseGame } from '../designs';
 import { answerIndex, type Lesson, type LessonSlide } from './lessonFormat';
@@ -101,6 +101,8 @@ export function deckFromLesson(lesson: Lesson, choiceStarter?: ShowcaseGame): De
     });
     return made;
   });
+  // The theme's grounds spread over the deck: a loud cover, working slides, quiet statements, a quiet close.
+  varyGrounds(deck);
   return deck;
 }
 

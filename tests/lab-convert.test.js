@@ -139,7 +139,9 @@ test('an AI Awareness Day strand keeps its own colour, with its rule on every sl
   const { deckFromSlideForge } = await converter();
   const src = lesson('aiad26-smart');
   const deck = deckFromSlideForge(asData(src), 'aiad26', { frame: false, games: '', set: '2' });
-  assert.equal(deck.styleGuide.theme.accent, '#ff6734', 'Smart is orange, not Safe’s cyan');
+  // Smart is orange, not Safe’s cyan: the strand's own orange on every edge, and as words the same orange deepened
+  // only as far as it takes to read on white (4.5:1, theme/combos.ts readableOn).
+  assert.equal(deck.styleGuide.theme.accent, '#ba5032', 'Smart is orange, not Safe’s cyan');
   deck.slides.forEach((s) => assert.equal(art(s, 'Edge').params.fill, '#ff6734'));
   const cover = from(deck, src, 'title')[0];
   assert.ok(art(cover, 'Fold') && art(cover, 'Seam'));
