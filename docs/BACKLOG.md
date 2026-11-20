@@ -864,6 +864,20 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 
 ## Change log
 
+### 20 November 2026 — Wave 4 of the first-run review (polish)
+
+- **Plain labels:** the editor's animation, layer and spacing labels are in plain words.
+- **Warnings where you edit:** the design check shows on each thumbnail, at the top of the slide panel, and above the selected item.
+- **Presenter:** the Teacher Presenter shows how many click reveals are left.
+- **PowerPoint:** exports carry each Flip to facts back as its own slide.
+
+Left, listed in section 3 of [first-run-review.md](first-run-review.md):
+- bold or colour on selected words;
+- an Advanced fold for expert controls;
+- native PowerPoint tables and charts;
+- default transitions by slide type;
+- committed studio baselines.
+
 ### 20 November 2026 — Wave 3 of the first-run review (FR-08, FR-10, FR-11)
 
 - **FR-08 Builds:** the lesson file's `build` reveals items a click at a time, and the `pictures` layout swaps a figure's steps in one frame.

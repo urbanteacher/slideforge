@@ -112,6 +112,19 @@ Measured evidence:
 - **Overflow (item 10):** a slide past its layout's cap carries on onto more slides instead of being refused.
 - **AI route:** the starter screen's "Or have an AI write it" copies a prompt and builds the pasted reply. This was owed from Wave 1.
 
+**Wave 4 is partly built** (same branch):
+- the plain-language renames in section 4, most of them;
+- design-check warnings on thumbnails, at the top of the slide panel and on the selected item, plus the overflow check from Wave 2;
+- the presenter's build position;
+- flip backs in PowerPoint.
+
+Not done in Wave 4:
+- **Bold or colour on selected words.** The text kind has no runs, so it needs a renderer change.
+- **Opacity, Blend, X/Y and easing moved behind "More".**
+- **Native tables and charts in PowerPoint, and kept shadow and glow.**
+- **Default transitions by slide type, and word entrances on statements.** These are taste calls to make with you.
+- **Committed visual baselines for studio layouts.** These need Docker.
+
 Not done in Wave 3:
 - **Quiz answers on the question's own slide (item 9).** That is the games' design, which belongs to the games session.
 - **Rebuilding the Week 4, 5 and 7 picture runs with `pictures`.** Their builder scripts would each need rewriting.
