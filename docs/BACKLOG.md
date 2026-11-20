@@ -876,7 +876,7 @@ Also:
 - **Advanced fold:** expert design controls are folded away.
 - **Native PowerPoint:** tables and simple charts export as PowerPoint's own.
 
-Left: default transitions by slide type, committed studio baselines, and emphasis inside word animations ([first-run-review.md](first-run-review.md) section 3).
+Left: default transitions by slide type and committed studio baselines ([first-run-review.md](first-run-review.md) section 3).
 
 ### 20 November 2026 — Wave 3 of the first-run review (FR-08, FR-10, FR-11)
 

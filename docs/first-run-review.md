@@ -124,7 +124,6 @@ Then:
 - **Native PowerPoint tables and simple charts.**
 
 Not done in Wave 4:
-- **Emphasis in word and letter animations.** Words animated one at a time arrive plain, then show their emphasis once the animation has finished.
 - **Easing behind the fold.** It stays in Animate, renamed "Movement".
 - **Shadow and glow in PowerPoint.**
 - **Default transitions by slide type, and word entrances on statements.** These are taste calls to make with you.
