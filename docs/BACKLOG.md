@@ -58,7 +58,7 @@ order.
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
 | ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: what M5 still owes, then the lesson features the feature map still marks Missing (feedback settings and the phone preview first). Games and activities, from M0, come after | L · months | In progress · M14 deletion done 13 Oct: the classic room, player, desk and bridge are gone ([m14-deletions.md](games/m14-deletions.md) section 6); M15 (the classic Lesson studio) has its own plan |
-| FR-05 – FR-11 | [First visit to a great deck](first-run-review.md), Waves 2–4. Wave 1 (FR-01–04) is done. **Next:** one type scale and one floor; one theme type with three grounds and contrast checks; a unified catalogue of about 24 layouts with variants; builds, charts and diagrams in the lesson file; quiz answers revealed on the question's slide; overflow offered as a choice | M–L | To do |
+| FR-07 – FR-11 | [First visit to a great deck](first-run-review.md), Waves 2–4. Wave 1 (FR-01–04) and Wave 2's floor, scale and themes (FR-05, FR-06) are done. **Next:** a unified catalogue of about 24 layouts with variants; builds, charts and diagrams in the lesson file; quiz answers revealed on the question's slide; overflow offered as a choice | M–L | To do |
 | SD-01 | [Story designs, quick wins](story-designs-plan.md): Frontiers palette, Fade for text on pictures, Angle help done; one gradient convention (needs a migration) and header-and-footer in the worked example open | S | In progress · 10 Oct 2026 |
 | SD-02 | [The Story design set](story-designs-plan.md): twelve editorial designs from the Air Pollution deck, theme-aware and rebuilt from `slide.recipe`. All twelve done | M–L | Done · 10 Oct 2026 |
 | SD-03 | [Media library, featured decks and Publish](story-designs-plan.md) | L | To do · needs a hosting decision |
@@ -863,6 +863,19 @@ The analysis is [claude-slides-lessons.md](claude-slides-lessons.md): what the s
 | CS-08 | A request box in the Lesson studio: the teacher asks for a change to a slide or the lesson in words, the AI edits it through CS-01's format, and the change is one undo step | To do |
 
 ## Change log
+
+### 20 November 2026 — Wave 2 of the first-run review (FR-05, FR-06)
+
+- **FR-05 One floor and one scale:**
+  - text no longer shrinks under 36px (18pt), where it used to go down to a quarter of its size;
+  - the design check warns under 36px, and when words run past their box even at the floor;
+  - `layouts/scale.ts` names the steps, and no gallery layout sets words under the floor.
+- **FR-06 Readable themes:**
+  - the built-in themes have quiet and loud grounds, and lesson files and starters vary them;
+  - accents used as words, and every palette ground's ink and quiet text, are deepened to read at 4.5:1;
+  - one test covers every theme and palette.
+
+Still to do: FR-07, the unified catalogue. It waits for the layout work in progress in `catalogue.ts` and `system.ts`. Details are in section 3 of [first-run-review.md](first-run-review.md).
 
 ### 20 November 2026 — Wave 1 of the first-run review (FR-01 to FR-04)
 

@@ -98,7 +98,21 @@ Measured evidence:
 - Change layout (`lab/src/layouts/relayout.ts`);
 - the teacher-only flag (`Slide.audience`).
 
-Not done in Wave 1, and carried into Wave 2:
+**Wave 2 is mostly built** (same branch):
+- **One floor (item 5):** shrinking text stops at 36px. The design check warns under 36px and when text runs past its box.
+- **One scale (item 5):** `lab/src/layouts/scale.ts`. Every layout's small labels are raised to the floor, and a test holds every gallery layout to it.
+- **Readable themes (item 6):**
+  - the five built-in themes have quiet and loud grounds (`lab/src/layouts/grounds.ts`), spread over lesson and starter decks;
+  - accents used as words are deepened to read at 4.5:1;
+  - every theme and palette is contrast-tested.
+
+Not done in Wave 2:
+- **The unified catalogue (item 7).** It waits for the other session's layout work in `catalogue.ts` and `system.ts`, so that the two don't rewrite the same files.
+- **Brand theme art behind "Brand kits".** Also waiting on that work.
+- **Web-served font stacks** for Avenir Next, Iowan Old Style and Impact.
+- **Shipped lesson copies.** They keep their converted sizes until `CARRIED` is next raised; a fresh conversion takes the new sizes.
+
+Not done in Wave 1, and carried forward:
 - multi-select hide in the filmstrip, and a student-copy preview (the toast gives the count);
 - the share link still carries teacher-only slides, because a follower's position goes by the slide's place;
 - the `studentCopy` builders and `-student` decks are not yet retired.
