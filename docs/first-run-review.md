@@ -106,6 +106,19 @@ Measured evidence:
   - accents used as words are deepened to read at 4.5:1;
   - every theme and palette is contrast-tested.
 
+**Wave 3 is mostly built** (same branch):
+- **Builds (item 8):** the lesson file's `build` field reveals items a click at a time. The `pictures` layout swaps a figure's steps in one frame.
+- **More of the catalogue (item 11):** 13 more layouts in the lesson file. Palette ids work as `theme`.
+- **Overflow (item 10):** a slide past its layout's cap carries on onto more slides instead of being refused.
+- **AI route:** the starter screen's "Or have an AI write it" copies a prompt and builds the pasted reply. This was owed from Wave 1.
+
+Not done in Wave 3:
+- **Quiz answers on the question's own slide (item 9).** That is the games' design, which belongs to the games session.
+- **Rebuilding the Week 4, 5 and 7 picture runs with `pictures`.** Their builder scripts would each need rewriting.
+- **Deck → lesson-file export (the round trip).**
+- **Raising the layouts' own caps** (six cards in a 3 × 2 grid, eight keywords). These are in `system.ts`, which the other session is editing.
+- **Logo and slide numbers in the lesson file.**
+
 Not done in Wave 2:
 - **The unified catalogue (item 7).** It waits for the other session's layout work in `catalogue.ts` and `system.ts`, so that the two don't rewrite the same files.
 - **Brand theme art behind "Brand kits".** Also waiting on that work.

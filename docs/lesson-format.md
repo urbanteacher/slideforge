@@ -28,7 +28,7 @@ One JSON object:
 |---|---|---|
 | `format` | yes | Always `"slideforge-lesson/1"`. |
 | `title` | yes | The lesson's name. |
-| `theme` | no | One of the studio's themes by id, such as `paper`, `navy`, `midnight`, `cinematic` or `mono`. An unknown id gets the default theme. |
+| `theme` | no | One of the studio's themes by id: `paper`, `navy`, `midnight`, `cinematic` or `mono`. Or a palette from the Style guide by its id, such as `nul` or `ukbt`, which the deck then wears with its grounds. An unknown id gets the default theme, and the import says so. |
 | `slides` | yes | The slides, in order. |
 
 Any other field is reported as a problem, so a misspelt field never fails silently.
@@ -44,6 +44,7 @@ Any slide may also carry these:
 | `hidden` | `true` keeps the slide in the deck but out of the show and the student copy. |
 | `audience` | `"teacher"` keeps the slide in the show and the teacher's copy, and leaves it out of the student copy. Use it instead of a second deck for students. |
 | `factCheck` | A fact on this slide still needs a source: what to check. The studio marks the slide and says so when a show opens. |
+| `build` | Reveal the slide's items a click at a time. `"click"` shows each in turn, `"dim"` fades the earlier ones and `"spot"` lights only the newest. Use it on `bullets`, `cards`, `keywords`, `stats`, `timeline`, `icons`, `journey`, `funnel`, `mindmap`, `columns` and `rail`, rather than repeating a slide with one more item. |
 
 **Never invent a fact.** Where a figure, name, date or source wasn't given, write a placeholder: square brackets round a blank of two or more underscores that doesn't touch a letter or digit, as `[__%]`, `[year __]` or `[source __]`. Underscores inside code (`[__init__]`, `"__x"`) are not placeholders. The studio marks these too (CS-03).
 
@@ -55,18 +56,33 @@ Any slide may also carry these:
 | `section` | `title` | `subtitle` | A pause between parts. |
 | `statement` | `text` | `credit` | One line, as big as it fits. |
 | `bullets` | `title`, `points` | | `points` is a list of lines. They shrink to fit. |
-| `cards` | `title`, `cards` | | Two to four `[heading, words]` pairs. |
+| `cards` | `title`, `cards` | | Two or more `[heading, words]` pairs. Four fit a slide. |
 | `keyfact` | `title`, `fact` | `caption`, `details` | One number or rule, set large. `details` is a list of lines. |
-| `keywords` | `title`, `terms` | | One to six `[term, meaning]` pairs. |
-| `stats` | `title`, `stats` | `takeaway` | One to four `[number, what it counts]` pairs. |
+| `keywords` | `title`, `terms` | | `[term, meaning]` pairs. Six fit a slide. |
+| `stats` | `title`, `stats` | `takeaway` | `[number, what it counts]` pairs. Four fit a slide. |
 | `compare` | `title`, `heads`, `rows` | | `heads` is `["A", "B"]`; each row is `[label, A, B]`. |
 | `table` | `title`, `rows` | | The first row is the header. Every row is as long as the first. |
 | `quote` | `quote` | `who` | Someone else's words. |
 | `split` | `title`, `points` | `picture`, `side` | Text beside a picture. `picture` is a picture's address; `side` is `"left"` or `"right"` (where the picture goes). |
-| `timeline` | `title`, `events` | `subtitle` | One to six `[when, who or what, detail]`. |
+| `timeline` | `title`, `events` | `subtitle` | `[when, who or what, detail]`. Six fit a slide. |
 | `quiz` | `questions` | `title` | A multiple-choice game the room plays, made from the studio's own. |
 | `widget` | `html` | `title` | A small live web page, up to 16 KB, that runs in the show. It is walled off from the lesson and the teacher's sign-in, and it can't fetch anything, but it can open a web page in its own frame. So a widget from a lesson file asks the teacher before it first runs. Its page is laid out at the slide's size, with text from 36px. |
-| `icons` | `title`, `items` | | Two to six `[icon, label, what it means]` rows, each with its icon in the theme's accent. The icon is a name from the list below. |
+| `icons` | `title`, `items` | | Two or more `[icon, label, what it means]` rows, each with its icon in the theme's accent. Six fit a slide. The icon is a name from the list below. |
+| `picture` | `picture` | `title`, `credit` | One picture across the slide, with its title above it when it has one. |
+| `pictures` | `title`, `pictures` | | `[picture address, caption]` pairs shown in turn in one frame, each click swapping in the next. For a figure built up step by step. Eight fit a slide. |
+| `video` | `title`, `url` | `subtitle` | A YouTube or Vimeo video that plays in the show. |
+| `chart` | `title`, `data` | `chart`, `source` | `data` is `[label, number]` pairs. `chart` is `column` (the default), `bar`, `line`, `pie` or `donut`. |
+| `diagram` | `title`, `steps` | `diagram` | `steps` is a list of short names. `diagram` is `loop` (the default: a cycle) or `flowchart` (one after another). |
+| `journey` | `title`, `steps` | `subtitle` | `[step, what happens]` pairs along a path. Six fit a slide. |
+| `funnel` | `title`, `stages` | `subtitle` | `[stage, number, what it counts]` stages that narrow. Six fit a slide. |
+| `mindmap` | `title`, `ideas` | | `[idea, a line on it]` pairs round the title. Eight fit a slide. |
+| `orgchart` | `title`, `people` | | `[name, role, who they report to]` rows. Leave the third `""` for the person at the top. |
+| `columns` | `title`, `points` | | Points side by side in columns. Four fit a slide. |
+| `rail` | `title`, `points` | | The title on a side panel, the points numbered beside it. Six fit a slide. |
+| `introduction` | `name` | `role`, `bio` | Who is speaking. |
+| `code` | `title`, `code` | `language` | Code on a dark panel in a monospaced face. |
+
+**More items than fit:** a slide with more items than its layout fits carries on to a second slide, and a third if needed, in the same layout with the same title. The import says so. A slide with `"id": "ideas"` makes `ideas`, then `ideas-2`, and so on, so those ids are taken.
 
 A `quiz` question is:
 
@@ -94,20 +110,24 @@ Lucide's older names for these icons work too: `home` gives `house`, `alert-tria
 
 ## Writing one with an AI
 
-Give the AI this page and the example, and ask for one JSON file. Then import it, and paste any problems the dialog lists back to the AI. Things that help:
+A new deck's starter screen has **Or have an AI write it**: type the topic and who it's for, copy the prompt into ChatGPT, Claude or another AI, and paste its reply back. The prompt is built from this page's list of layouts. The reply is cleaned of what chat tools wrap round JSON (a code fence, curly quotes, trailing commas) before it is read.
 
-- One idea per slide. Use `statement`, `keyfact` or `cards` before reaching for `bullets`.
+You can also give the AI this page and the example, and import its file. Paste any problems the import lists back to the AI. Things that help:
+
+- One idea per slide. Use `statement`, `keyfact` or `cards` before reaching for `bullets`, and `build` to reveal a list a click at a time.
 - Put the teacher's script in `notes`, not on the slide.
 - Every figure the AI wasn't given is a placeholder, or the slide carries `factCheck`.
 
 ## Not in this version
 
-- Only the layouts above. The studio has more (charts, diagrams, the Story designs, activities and the other games); each can be added as a layout here when it's needed.
+- Only the layouts above. The studio has more (the Story designs, activities and the other games); each can be added as a layout here when it's needed.
+- A quiz's answer is still its own slide, as the game builds it. Revealing it on the question's slide belongs to the games work.
 - Import only. A deck can't yet be written back out as a lesson file; that comes with CS-08, asking for a change in words.
 - One file. Agents that keep one file per slide put the slides into the list before importing.
 
 ## Change log
 
+- **20 November 2026:** thirteen more layouts (picture, pictures, video, chart, diagram, journey, funnel, mind map, org chart, columns, rail, introduction, code). The `build` field. A palette's id as `theme`. A slide past its layout's cap carries on instead of being refused. The starter screen's prompt for an AI. The `audience` field (Wave 1).
 - **10 November 2026:** the widget's wording corrected; a widget from a lesson file asks before it first runs. The placeholder's blank must stand on its own (CR-25, CR-37).
 - **10 November 2026:** a `keywords` slide holds one to six terms (a seventh was dropped). Lucide's older icon names are read, and an unknown icon is a warning, not a problem (CR-16, CR-21).
 - **10 November 2026:** the `icons` layout and the icon list (CS-17).
