@@ -34,6 +34,8 @@ export interface DeskInput {
   notesLink?: { url: string; svg: string; watchers: number } | null;
   /** The live figure on the wall: its step, of how many, and the step's caption (figure.ts). */
   figure?: { step: number; of: number; caption: string } | null;
+  /** The slide's click reveals on the wall: done, of how many (the player's state). */
+  build?: { step: number; of: number } | null;
   /** The room, when the show has one: its wall, and what the bar's prompt buttons would offer. */
   room?: {
     wall: Wall | null; connected: boolean; pin: string | null; canClose: boolean; canShow: boolean; quick?: boolean; canPoll?: boolean; qa?: QaBox; floor?: FloorMode;
@@ -72,7 +74,7 @@ export function presenterState(i: DeskInput): PresenterState {
       ...(w?.activity?.stage ? { stage: { name: w.activity.stage.name, wall: w.activity.stage.wall, written: w.activity.written, help: w.activity.help } } : {}),
     };
   }
-  return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room, ...(i.figure ? { figure: i.figure } : {}),
+  return { index: f.index, total: f.total, title: f.title, notes: f.notes, nextTitle: f.next, deck: f.deck, startedAt: i.startedAt, screen: i.screen, room, ...(i.figure ? { figure: i.figure } : {}), ...(i.build && i.build.of > 0 ? { build: i.build } : {}),
     frozenAt: i.frozenAt ?? null, ink: i.ink ?? { on: false, spot: false }, notesLink: i.notesLink ?? null };
 }
 

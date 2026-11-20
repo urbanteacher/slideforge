@@ -59,7 +59,7 @@ function Sections() {
   }, [leftTab]);
   return (
     <>
-      <Fold title={`Layers · slide ${n}`} className="fold-layers" open={open.layers} onToggle={() => toggle('layers')}>
+      <Fold title={`On slide ${n}`} className="fold-layers" open={open.layers} onToggle={() => toggle('layers')}>
         <LayersPanel />
       </Fold>
       <Fold title="Layouts" className="fold-layouts" open={open.layouts} onToggle={() => toggle('layouts')}>
@@ -105,7 +105,7 @@ function LayoutsPanel() {
   );
   return (
     <div className="panel-scroll layouts-panel">
-      <div className="lp-label">On this slide</div>
+      <div className="lp-label">Add to this slide</div>
       <div className="pieces">
         {piece(<SquareSplitHorizontal size={14} />, 'Text + image', addTextImage, 'Text on the left, a picture on the right')}
         {piece(<LayoutGrid size={14} />, 'Cards', () => insertBlock('cards'), 'Three cards across the slide. Press + on one to add another.')}

@@ -76,6 +76,8 @@ export interface PresenterState {
   notesLink?: { url: string; svg: string; watchers: number } | null;
   /** A live figure on the wall: the step Next and Back walk (from 1), of how many, and that step's caption. */
   figure?: { step: number; of: number; caption: string };
+  /** The slide's own builds (its click reveals): how many clicks are done, of how many. Absent on a slide with none. */
+  build?: { step: number; of: number };
   /** The wall is frozen on this slide (0-based) while `index` is where the teacher has moved on to. */
   frozenAt?: number | null;
   /** Draw is on on the wall, and its tool is the spotlight. */

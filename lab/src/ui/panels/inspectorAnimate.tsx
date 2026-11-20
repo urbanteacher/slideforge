@@ -21,18 +21,19 @@ const TEXT_ENTRANCES: { value: EntranceType; label: string }[] = [
   { value: 'scramble', label: 'Scramble — letters decode into place' }, { value: 'count', label: 'Count up — the numbers run up' },
 ];
 const EASINGS: { value: Easing; label: string }[] = [
-  { value: 'easyEase', label: 'Easy Ease — SlideForge’s words' },
-  { value: 'expoOut', label: 'Expo out — crisp' }, { value: 'quintOut', label: 'Quint out' }, { value: 'cubicOut', label: 'Cubic out' },
-  { value: 'cubicInOut', label: 'Cubic in-out' }, { value: 'quartInOut', label: 'Quart in-out — moves across the slide' },
-  { value: 'backOut', label: 'Back out — overshoot' },
-  { value: 'springPremium', label: 'Spring, premium — a hint of settle (ζ 0.8)' }, { value: 'springPlayful', label: 'Spring, playful — one bounce (ζ 0.5)' },
-  { value: 'springBouncy', label: 'Spring, bouncy — a few bounces (ζ 0.35)' }, { value: 'spring', label: 'Spring (classic)' },
-  { value: 'cubicIn', label: 'Cubic in — for exits' }, { value: 'expoIn', label: 'Expo in — fast exits' },
-  { value: 'linear', label: 'Linear — spin and progress only' },
+  // Plain words first; the motion designer's name for each in brackets.
+  { value: 'easyEase', label: 'Smooth — the usual (Easy Ease)' },
+  { value: 'expoOut', label: 'Crisp (Expo out)' }, { value: 'quintOut', label: 'Gentle stop (Quint out)' }, { value: 'cubicOut', label: 'Soft stop (Cubic out)' },
+  { value: 'cubicInOut', label: 'Even (Cubic in-out)' }, { value: 'quartInOut', label: 'Glide across the slide (Quart in-out)' },
+  { value: 'backOut', label: 'Overshoot, then settle (Back out)' },
+  { value: 'springPremium', label: 'Settle — a hint of spring (ζ 0.8)' }, { value: 'springPlayful', label: 'One bounce (ζ 0.5)' },
+  { value: 'springBouncy', label: 'Bouncy — a few bounces (ζ 0.35)' }, { value: 'spring', label: 'Spring (classic)' },
+  { value: 'cubicIn', label: 'Speed up — for leaving (Cubic in)' }, { value: 'expoIn', label: 'Fast leave (Expo in)' },
+  { value: 'linear', label: 'Steady — spinning and progress bars (Linear)' },
 ];
 const TRIGGERS: { value: Trigger; label: string }[] = [
-  { value: 'withSlide', label: 'With previous' }, { value: 'overlapPrev', label: 'Overlapping previous — as it settles' },
-  { value: 'afterPrev', label: 'After previous' }, { value: 'onClick', label: 'On click' },
+  { value: 'withSlide', label: 'With the item before' }, { value: 'overlapPrev', label: 'As the item before settles' },
+  { value: 'afterPrev', label: 'After the item before' }, { value: 'onClick', label: 'When I click' },
 ];
 const LOOPS: { value: LoopType; label: string }[] = [
   { value: 'none', label: 'None' }, { value: 'float', label: 'Float' }, { value: 'pulse', label: 'Pulse' },
@@ -42,7 +43,7 @@ const EXITS: { value: ExitType | 'none'; label: string }[] = [
   { value: 'none', label: 'Stays' }, { value: 'fade', label: 'Fade out' }, { value: 'sink', label: 'Sink' }, { value: 'lift', label: 'Lift away' },
   { value: 'slideLeft', label: 'Slide out left' }, { value: 'slideRight', label: 'Slide out right' }, { value: 'shrink', label: 'Shrink' }, { value: 'blur', label: 'Blur out' },
 ];
-const TRANSITIONS: { value: TransitionType; label: string }[] = [
+export const TRANSITIONS: { value: TransitionType; label: string }[] = [
   { value: 'none', label: 'Cut' }, { value: 'fade', label: 'Crossfade' }, { value: 'push', label: 'Push' }, { value: 'zoom', label: 'Zoom' },
   { value: 'ripple', label: 'Ripple' }, { value: 'dissolve', label: 'Burn dissolve' }, { value: 'wipe', label: 'Soft wipe' },
   { value: 'pixelate', label: 'Pixelate' }, { value: 'blur', label: 'Blur' },
@@ -113,10 +114,10 @@ export function LayerAnimate({ layer }: { layer: Layer }) {
         <BuildRows layer={layer} />
         {a.type !== 'none' && (
           <>
-            <Row label="Start" info="'On click' creates a build step: the presenter clicks to reveal it."><Select value={a.trigger} options={TRIGGERS} onChange={(v) => up((x) => { x.trigger = v; })} /></Row>
+            <Row label="Appears" info="'When I click' makes a build step: the presenter clicks to reveal it."><Select value={a.trigger} options={TRIGGERS} onChange={(v) => up((x) => { x.trigger = v; })} /></Row>
             <Row label="Duration"><Scrub value={a.duration} min={0.1} max={4} step={0.05} unit=" s" onChange={(v, m) => up((x) => { x.duration = v; }, m)} /></Row>
             <Row label="Delay"><Scrub value={a.delay} min={0} max={5} step={0.05} unit=" s" onChange={(v, m) => up((x) => { x.delay = v; }, m)} /></Row>
-            <Row label="Easing"><Select value={a.easing} options={EASINGS} onChange={(v) => up((x) => { x.easing = v; })} /></Row>
+            <Row label="Movement" info="How it speeds up and slows down as it arrives."><Select value={a.easing} options={EASINGS} onChange={(v) => up((x) => { x.easing = v; })} /></Row>
             {isTextUnit(a.type) && a.type !== 'count' && !(a.build && a.build !== 'none') && (
               <>
                 <Row label="Speed" info="Moves the whole thing together: each word, and the wave between them.">
@@ -169,7 +170,7 @@ export function LayerAnimate({ layer }: { layer: Layer }) {
       </Section>
       {(a.type === 'words' || a.type === 'letters') && !(a.build && a.build !== 'none') && <Choreography layer={layer} />}
       {k.content && (
-        <Section title="Ambient loop">
+        <Section title="Keep moving">
           <Row label="Motion" info="Continuous, subtle motion. It grows in once the entrance has settled, and holds still under reduced motion."><Select value={a.loop} options={LOOPS} onChange={(v) => up((x) => { x.loop = v; })} /></Row>
           {a.loop !== 'none' && (
             <>
@@ -194,14 +195,14 @@ function BuildRows({ layer }: { layer: Layer }) {
   const a = layer.anim;
   const sib = layer.box && !layer.params.hfSlot ? siblingsOf(slide, layer) : null;
   const lines = layer.kind === 'text' ? String(layer.params.text ?? '').split('\n').filter((x) => x.trim()).length : 0;
-  const INFO = 'As SlideForge\'s Build on Next. Dimming keeps earlier points readable instead of hiding them, useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide.';
+  const INFO = 'Each item waits for a click. Dimming keeps earlier points readable instead of hiding them, useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide.';
   const lineBuild = layer.kind === 'text' && !(sib && lines < 2);
   const noun = sib ? itemNoun(slide, layer) : '';
   return (
     <>
       {lineBuild && (
         <>
-          <Row label="Build" info={INFO}>
+          <Row label="Reveal one at a time" info={INFO}>
             <Select value={lines > 1 ? a.build ?? 'none' : 'none'} disabled={lines < 2}
               options={[{ value: 'none', label: 'All at once' }, { value: 'lines', label: 'One line per click' }, { value: 'dim', label: 'One per click, dimming the ones before' }, { value: 'spot', label: 'One per click, with a spotlight on the live one' }]}
               onChange={(v) => update(layer.id, (l) => { const x = l.anim; if (v === 'none') delete x.build; else { x.build = v; if (x.type === 'none') { x.type = 'fade'; x.duration = 0.6; } } })} />
@@ -211,7 +212,7 @@ function BuildRows({ layer }: { layer: Layer }) {
       )}
       {sib && (
         <>
-          <Row label={lineBuild ? 'Build the set' : 'Build'} info={INFO}>
+          <Row label={lineBuild ? 'Reveal the set' : 'Reveal one at a time'} info={INFO}>
             <Select value={setBuildOf(layer)}
               options={[{ value: 'off', label: 'All at once' }, { value: 'on', label: `One ${noun} per click` }, { value: 'dim', label: `One ${noun} per click, dimming the ones before` }, { value: 'spot', label: `One ${noun} per click, with a spotlight` }, { value: 'swap', label: `One ${noun} at a time — each replaces the last` }, { value: 'pile', label: `One ${noun} per click, piled — the ones before step back` }] as { value: SetBuild; label: string }[]}
               onChange={(v) => buildSet(layer.id, v)} />
@@ -221,7 +222,7 @@ function BuildRows({ layer }: { layer: Layer }) {
       )}
       {!lineBuild && !sib && layer.kind !== 'image' && (
         <>
-          <Row label="Build" info={INFO}><Select value="none" disabled options={[{ value: 'none', label: 'All at once' }]} onChange={() => {}} /></Row>
+          <Row label="Reveal one at a time" info={INFO}><Select value="none" disabled options={[{ value: 'none', label: 'All at once' }]} onChange={() => {}} /></Row>
           <div className="desc">Text with several lines, or one of a set of cards, rows or choices, builds a point per click. To hold just this back for a press, set Start to On click.</div>
         </>
       )}
@@ -261,14 +262,14 @@ function Sequence() {
     return { l, step };
   });
   return (
-    <Section title={`Sequence · ${sch.steps} click${sch.steps === 1 ? '' : 's'}`}>
+    <Section title={`Click order · ${sch.steps} click${sch.steps === 1 ? '' : 's'}`}>
       {rows.length ? (
         <div className="seq">
           {rows.map(({ l, step: s }) => (
             <div key={l.id} className={`seq-row${l.id === selectedId ? ' sel' : ''}`} onClick={() => selectLayer(l.id)}>
-              <span className={`seq-step${s ? ' click' : ''}`}>{s ? `C${s}` : 'In'}</span>
+              <span className={`seq-step${s ? ' click' : ''}`} title={s ? `Arrives on click ${s}` : 'Arrives with the slide'}>{s ? `Click ${s}` : 'Opens'}</span>
               <span>{l.name}</span>
-              <small>{l.anim.trigger === 'afterPrev' ? 'after' : l.anim.trigger === 'overlapPrev' ? 'overlaps' : ''} {l.anim.type}{l.anim.exit ? ` · leaves ${l.anim.exit.when === 'next' ? 'next click' : 'after ' + l.anim.exit.delay + ' s'}` : ''}</small>
+              <small>{l.anim.trigger === 'afterPrev' ? 'after' : l.anim.trigger === 'overlapPrev' ? 'overlaps' : ''} {(ENTRANCES.find((e) => e.value === l.anim.type)?.label ?? l.anim.type).split(' — ')[0]}{l.anim.exit ? ` · leaves ${l.anim.exit.when === 'next' ? 'next click' : 'after ' + l.anim.exit.delay + ' s'}` : ''}</small>
             </div>
           ))}
         </div>

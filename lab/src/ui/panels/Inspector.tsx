@@ -10,6 +10,7 @@ import { LayerDesign } from './inspectorDesign';
 import { LayerInteract } from './inspectorInteract';
 import { PicturePanel, VideoPanel } from './inspectorMedia';
 import { SlideDesign } from './inspectorSlide';
+import { LayerDesignNote } from './layerNote';
 import { FigurePanel, PictureWordsPanel, isSvgPicture } from './figure';
 
 /** The inspector's body. Its column (shell/RightColumn) puts it beside the Status tab and hands it `banner`: what is
@@ -37,7 +38,7 @@ export function Inspector({ banner }: { banner?: ReactNode }) {
         {layer && k ? (
           <>
             <div className="insp-ico"><KindIcon kind={layer.kind} size={18} /></div>
-            <div><div className="insp-title">{layer.name}</div><div className="insp-sub">{CATEGORY_LABEL[k.category]}</div></div>
+            <div><div className="insp-title">{layer.name}</div><div className="insp-sub">{k.category === 'source' ? k.name : CATEGORY_LABEL[k.category]}</div></div>
           </>
         ) : (
           <>
@@ -47,6 +48,7 @@ export function Inspector({ banner }: { banner?: ReactNode }) {
         )}
       </div>
       {banner}
+      {layer && <LayerDesignNote layerId={layer.id} name={layer.name} />}
       <div className="tabs">
         {[...(words ? (['figure'] as const) : []), ...(layer?.kind === 'image' ? (['design', 'picture', 'animate', 'interact', 'engage'] as const) : layer?.kind === 'video' ? (['design', 'video', 'animate', 'interact', 'engage'] as const) : layer && SPECIAL_TABS[layer.kind] ? (['design', 'special', 'animate', 'interact', 'engage'] as const) : layer ? (['design', 'animate', 'interact', 'engage'] as const) : (['design', 'animate', 'engage'] as const))].map((t) => (
           <button key={t} className={`tab${tab === t ? ' sel' : ''}${t === 'picture' || t === 'video' || t === 'special' ? ' tab-picture' : ''}`} onClick={() => set({ inspectorTab: t })} title={t === 'engage' ? 'Games, activities and audience feedback for this slide' : t === 'figure' ? "Every word of this slide's live figure" : undefined}>{(t === 'picture' || t === 'video' || t === 'special') && <ImageIcon size={13} />}{t === 'engage' ? 'Engage' : t === 'figure' ? (hasFigure ? 'Figure' : 'Words') : t === 'special' && layer ? SPECIAL_TABS[layer.kind] : t[0].toUpperCase() + t.slice(1)}</button>

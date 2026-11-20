@@ -42,7 +42,7 @@ export function Choreography({ layer }: { layer: Layer }) {
     </Row>
   );
   return (
-    <Section title="Choreography">
+    <Section title="Word timing">
       <Row label="Plan" info="Each word, or letter, starts from its own place at its own time. A preset writes the numbers; change any of them below.">
         <Select value={on ? 'custom' : 'none'} options={[{ value: 'none', label: on ? 'Remove the plan' : 'None — every word the same' }, ...(on ? [{ value: 'custom', label: 'Written — change it below' }] : []), ...PLAN_PRESETS.map((p) => ({ value: p.value, label: p.label }))]}
           onChange={(v) => v !== 'custom' && choose(v as PlanPreset | 'none')} />

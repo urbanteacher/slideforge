@@ -100,6 +100,9 @@ export function SlideDesign() {
   const nm = useRef(newGesture());
   return (
     <>
+      {/* What breaks the design rules first, above the forms, so it is seen while the slide is edited. */}
+      <LimitsNote />
+      <DesignNote />
       <RecipePanel />
       <GamePanel />
       <ActivityPanel />
@@ -111,8 +114,6 @@ export function SlideDesign() {
         <FaceRow />
         <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
-      <LimitsNote />
-      <DesignNote />
       <FactsSection />
       <Section title="Speaker notes">
         <textarea className="textarea" placeholder="What you want to say on this slide… (press N while presenting)" value={slide.notes} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.notes = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} />

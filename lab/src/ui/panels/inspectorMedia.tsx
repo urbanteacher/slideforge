@@ -91,7 +91,7 @@ function ImageEffects({ layer }: { layer: Layer }) {
   const caps = captionsOf(slide, layer);
   return (
     <Section title="Image effects">
-      <Row label="Build on Next" info="Hold the picture back until the next press, the way a build step works.">
+      <Row label="Reveal on click" info="Hold the picture back until the next press, the way a build step works.">
         <Select value={layer.anim.trigger === 'onClick' ? 'click' : 'slide'} options={[{ value: 'slide', label: 'Show everything at once' }, { value: 'click', label: 'Hold the image back until the next press' }]} onChange={(v) => setArrival(layer.id, v as 'slide' | 'click')} />
       </Row>
       <Row label="Image motion" info="Plays in Preview and when you press Play. Zoom closes in on the image focus; Travel moves from it to a second point. Drag both on the picture.">
@@ -104,7 +104,7 @@ function ImageEffects({ layer }: { layer: Layer }) {
       <Row label="Caption clears itself" info="The text on the picture fades away after this long, leaving the picture.">
         <Select value={String(layer.params.capClear ?? 0)} options={CLEARS} disabled={!caps.length} onChange={(v) => setCaptionClear(layer.id, Number(v))} />
       </Row>
-      {!caps.length && <div className="desc">No caption on this picture — add one under Design → Caption.</div>}
+      {!caps.length && <div className="desc">No caption on this picture — add one in Caption, above.</div>}
     </Section>
   );
 }

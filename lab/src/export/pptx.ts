@@ -109,7 +109,19 @@ export async function editableSlides(deck: Deck, onProgress?: (done: number, tot
  *  built, its speaker notes in PowerPoint's notes and hidden slides kept hidden. With `texts`, a slide's
  *  plain words are text boxes over a picture drawn without them, so they can be edited in PowerPoint;
  *  everything else stays the picture. PptxGenJS is loaded only when a file is made. */
-export async function buildPptx(deck: Deck, slides: PptxSlide[]): Promise<Blob> {
+/** A slide with facts on its back (Flip to facts) is followed by its back as a slide of its own, as the handout prints
+ *  it, so the facts are in the file too. Only for a whole deck's slides, one for each of the deck's, in order. */
+export function withBackFaces(deck: Deck, slides: PptxSlide[]): PptxSlide[] {
+  if (slides.length !== deck.slides.length) return slides;
+  return slides.flatMap((p, i) => {
+    const s = deck.slides[i];
+    if (!s.layers.some((l) => l.face === 'back')) return [p];
+    return [p, { image: renderStill(s, deck, 1920, 'image/jpeg', 2, 0.92, undefined, 1), notes: '', hidden: p.hidden, name: `${p.name ?? s.name} (the facts)` }];
+  });
+}
+
+export async function buildPptx(deck: Deck, slides0: PptxSlide[]): Promise<Blob> {
+  const slides = withBackFaces(deck, slides0);
   const { default: PptxGenJS } = await import('pptxgenjs');
   const pptx = new PptxGenJS();
   const k = WIDTH_IN / deck.width; // inches per slide pixel

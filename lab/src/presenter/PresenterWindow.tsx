@@ -121,6 +121,7 @@ export function PresenterWindow() {
       </header>
       <main className="pw-main">
         <section className="pw-now"><SlidePane deck={deck} index={st.index} label={`Slide ${st.index + 1}: ${st.title}`} /><h2>{st.title}</h2>
+          {st.build && !st.figure && <p className="pw-figure" role="status">{st.build.step < st.build.of ? `Click ${st.build.step} of ${st.build.of} · Next reveals the next item` : `All ${st.build.of} reveals shown · Next goes to the next slide`}</p>}
           {st.figure && <p className="pw-figure" role="status">Figure · step {st.figure.step} of {st.figure.of}{st.figure.caption ? ` · ${st.figure.caption}` : ''}{st.figure.step < st.figure.of ? ' · Next steps the figure' : ''}</p>}
         </section>
         <aside className="pw-side">

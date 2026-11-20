@@ -16,7 +16,7 @@ export const textDef: KindDef = {
     { key: 'valign', label: 'Up and down', type: 'select', options: opt('top', 'middle', 'bottom'), default: 'top', group: 'Text', info: 'Where the words sit in the box when it is taller than they are.' },
     { key: 'list', label: 'List', type: 'select', options: [{ value: 'none', label: 'None' }, { value: 'bullets', label: 'Bullets' }, { value: 'numbers', label: 'Numbers' }], default: 'none', group: 'Text', info: 'Each line becomes a list item.' },
     { key: 'lineHeight', label: 'Line height', type: 'number', min: 0.6, max: 2.4, step: 0.01, default: 1.0, group: 'Spacing', decimals: 2 },
-    { key: 'tracking', label: 'Tracking', type: 'number', min: -0.15, max: 0.6, step: 0.005, default: -0.01, group: 'Spacing', decimals: 3, info: 'Letter spacing, in em.' },
+    { key: 'tracking', label: 'Letter spacing', type: 'number', min: -0.15, max: 0.6, step: 0.005, default: -0.01, group: 'Spacing', decimals: 3, info: 'Letter spacing, in em.' },
     { key: 'uppercase', label: 'Uppercase', type: 'bool', default: false, group: 'Spacing' },
     { key: 'balance', label: 'Balance lines', type: 'bool', default: false, group: 'Spacing', info: 'Evens the lines out instead of filling each to the margin, so a heading breaks where the sense is.' },
     { key: 'wordSpacing', label: 'Word spacing', type: 'number', min: -0.2, max: 1, step: 0.01, default: 0, group: 'Spacing', decimals: 2, info: 'Space added between words, in em.' },

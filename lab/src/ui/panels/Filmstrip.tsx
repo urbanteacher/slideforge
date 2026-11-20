@@ -2,12 +2,14 @@ import { ChevronRight, Copy, Eye, EyeOff, GraduationCap, LayoutGrid, LayoutTempl
 import { is, keyProps } from '../../keys';
 import { toggleHidden, useSlideContextMenu } from '../controls/SlideMenu';
 import { FEEDBACK } from './Engagement';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useMemo, useEffect, useRef, useState } from 'react';
 import { renderStill } from '../../export';
 import { getAssetVersion } from '../../engine';
 import { inView, useStore } from '../../store';
 import { describeFacts, factsOf, limitsOf, type Slide } from '../../core';
 import { focusBrowse } from './Browse';
+import { TRANSITIONS } from './inspectorAnimate';
+import { designCheck } from '../../designs';
 
 /** Slide thumbnails are rendered by the real engine, lazily, only when a slide (or its assets) change. */
 const thumbCache = new Map<string, { ref: Slide; url: string; asset: number }>();
@@ -98,7 +100,7 @@ export function Filmstrip() {
           onDrop={(e) => { e.preventDefault(); if (drag && drag.id !== s.id) moveSlide(drag.id, i); setDrag(null); }}
           onPointerDown={(e) => { if (e.button === 0 && !(e.target as HTMLElement).closest('.thumb-acts')) selectSlide(s.id); }}
         >
-          {i > 0 && s.transition.type !== 'none' && <div className="thumb-trans" title={`Transition: ${s.transition.type}`}><ChevronRight size={12} /></div>}
+          {i > 0 && s.transition.type !== 'none' && <div className="thumb-trans" title={`Transition: ${(TRANSITIONS.find((t) => t.value === s.transition.type)?.label ?? s.transition.type).split(' — ')[0]}`}><ChevronRight size={12} /></div>}
           <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation and the PDF"><EyeOff size={12} />Hidden</span>}{!s.hidden && s.audience === 'teacher' && <span className="thumb-hidden thumb-teacher" title="Teacher only: in the presentation, left out of the student copy"><GraduationCap size={12} />Teacher</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}<WarnBadge slide={s} /><FactsBadge slide={s} n={i + 1} /></div>
           <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           <div className="thumb-acts" onClick={(e) => e.stopPropagation()}>
@@ -172,7 +174,10 @@ const FactsBadge = memo(function FactsBadge({ slide, n }: { slide: Slide; n: num
 /** What does not fit the slide's standard (`slide.warn`, a game's own check) and what makes it too heavy
  *  (core/limits.ts), as one mark on its thumbnail. */
 const WarnBadge = memo(function WarnBadge({ slide }: { slide: Slide }) {
-  const all = [slide.warn, ...limitsOf(slide)].filter(Boolean);
+  const height = useStore((s) => s.deck.height);
+  // The design rules too (designs/designCheck.ts): small text, low contrast, words that shrank or run over their box.
+  const design = useMemo(() => designCheck(slide, { height }), [slide, height]);
+  const all = [slide.warn, ...limitsOf(slide), ...design].filter(Boolean);
   if (!all.length) return null;
   return <span className="thumb-warn" role="img" title={all.join('\n')} aria-label={`Check this slide: ${all.join(' ')}`}>⚠</span>;
 });

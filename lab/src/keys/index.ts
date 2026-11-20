@@ -39,7 +39,7 @@ export const SHORTCUTS: Shortcut[] = [
   { id: 'edit.delete', label: 'Delete', group: 'Editing', chords: [c('Backspace'), c('Delete')], when: 'a layer selected' },
   { id: 'edit.deselect', label: 'Deselect, or step out of a group', group: 'Editing', chords: [c('Escape')] },
   { id: 'edit.nudge', label: 'Nudge (Shift: 10px)', group: 'Editing', chords: [c('ArrowUp'), c('ArrowDown'), c('ArrowLeft'), c('ArrowRight')], when: 'a layer selected' },
-  { id: 'edit.order', label: 'Move earlier or later among its kind', group: 'Editing', chords: [c('ArrowUp', { alt: true }), c('ArrowDown', { alt: true })], when: 'a layer selected' },
+  { id: 'edit.order', label: 'Move forward or back', group: 'Editing', chords: [c('ArrowUp', { alt: true }), c('ArrowDown', { alt: true })], when: 'a layer selected' },
   { id: 'edit.addText', label: 'New text', group: 'Editing', chords: [c('t')] },
   { id: 'edit.effects', label: 'Backgrounds & effects', group: 'Editing', chords: [c('a')] },
 

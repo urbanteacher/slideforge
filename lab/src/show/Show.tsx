@@ -481,7 +481,8 @@ function Show() {
   // The Teacher Presenter window follows the show over a BroadcastChannel; with none open this does nothing.
   const entryHash = roomOn ? room.manualHash() : null;
   const desk = presenterState({
-    deck, index: frozen ?? index, startedAt, screen, figure: figures.says(slide), notesLink: notesLinkFor(link.current), frozenAt: frozen == null ? null : index, ink: { on: inkOn, spot: ink.tool === 'spot' },
+    deck, index: frozen ?? index, startedAt, screen, figure: figures.says(slide),
+    build: player.current && frozen == null ? (({ step, steps }) => ({ step, of: steps }))(player.current.state()) : null, notesLink: notesLinkFor(link.current), frozenAt: frozen == null ? null : index, ink: { on: inkOn, spot: ink.tool === 'spot' },
     room: roomOn ? {
       wall, connected: room.state.connected, pin: room.state.pin, canClose: !!fbOpen, canShow: !!fbOpen && fbOpen.prompt.hold === true && !fbOpen.shown, quick: !!room.state.quick, canPoll: room.at >= 0 && !room.state.feedback && !finished, qa: room.state.qa, floor: room.state.floor,
       roomView, phonesBlank: room.state.phonesBlank, blankSoonAt: room.state.blankSoonAt, reactions: room.state.reactions, joinCard,
