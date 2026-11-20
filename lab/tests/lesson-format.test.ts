@@ -99,10 +99,12 @@ test('a layout name that is only a property of every object ("constructor", "__p
   }
 });
 
-test('a keywords slide holds one to six terms, as the layout shows: a seventh is refused, not dropped', () => {
+test('a keywords slide holds six terms: a seventh carries on to a second slide, said, never dropped or refused', () => {
   const terms = (n: number) => Array.from({ length: n }, (_, i) => [`T${i}`, `meaning ${i}`]);
-  assert.deepEqual(readLesson(lesson([{ layout: 'keywords', title: 'K', terms: terms(6) }])).problems, []);
-  assert.deepEqual(readLesson(lesson([{ layout: 'keywords', title: 'K', terms: terms(7) }])).problems, ['Slide 1: "terms" must be one to six [term, meaning] pairs.']);
+  assert.deepEqual(readLesson(lesson([{ layout: 'keywords', title: 'K', terms: terms(6) }])).warnings, []);
+  const seven = readLesson(lesson([{ layout: 'keywords', title: 'K', terms: terms(7) }]));
+  assert.deepEqual(seven.problems, []);
+  assert.deepEqual(seven.warnings, ['Slide 1: a keywords slide holds 6 terms; this one has 7, so it carries on over 2 slides.']);
 });
 
 test('a quiz\'s own slide ids are taken: another slide cannot use them', () => {

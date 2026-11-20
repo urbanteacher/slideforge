@@ -57,7 +57,7 @@ test('the lesson file\'s icons layout names icons from the set', () => {
   assert.deepEqual(unknown.problems, []);
   assert.ok(unknown.lesson);
   assert.deepEqual(unknown.warnings, ['Slide 1: row 1\'s icon "unicorn" is not in the studio\'s set, so it is shown as an empty square to fill in (docs/lesson-format.md lists them).']);
-  assert.deepEqual(readLesson(lesson([['clock', 'Time', 'When']])).problems, ['Slide 1: "items" must be two to six [icon, label, what it means].']);
+  assert.deepEqual(readLesson(lesson([['clock', 'Time', 'When']])).problems, ['Slide 1: "items" must be two or more [icon, label, what it means].']);
 });
 
 test('a slide copied with its connectors (Duplicate, the gallery) keeps them joined to the copies', () => {

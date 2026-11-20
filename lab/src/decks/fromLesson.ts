@@ -6,12 +6,17 @@ import { iconName } from '../kinds/icon';
 import {
   CONTENT_FOOT, CONTENT_TOP, DEFAULT_THEME, cell, themeCopyOf, LAYOUT_STYLES, blockSlide, titleBar, titleRow, bulletsSlide, cardsSlide, compareSlide, credit, keyfactSlide, keywordsSlide, quoteSlide,
   sectionSlide, splitSlide, statement, statsSlide, tableSlide, themeOf, timelineSlide, titleSlide, varyGrounds, type LayoutStyle,
+  chartSlide, codeSlide, columnsSlide, diagramSlide, framedPictureSlide, funnelSlide, introductionSlide, journeySlide, mindmapSlide, orgchartSlide, railSlide, youtubeSlide,
 } from '../layouts';
+import { applyBuild } from './lessonBuild';
+import { fromPreset, paletteGroups } from '../theme';
 import { gameSlides, type ShowcaseGame } from '../designs';
-import { answerIndex, type Lesson, type LessonSlide } from './lessonFormat';
+import { LESSON_CAPS, answerIndex, type Lesson, type LessonSlide } from './lessonFormat';
 
-/** The themes a lesson file may name: the studio's built-in ones, by id. */
+/** The themes a lesson file may name: the studio's built-in ones, by id. A palette's id is read too (lessonPalette). */
 export const LESSON_THEMES = LAYOUT_STYLES.map((s) => s.id);
+/** A palette from the Style guide (theme/palettes.ts) by its id. */
+export const lessonPalette = (id: string) => paletteGroups().flatMap((g) => g.presets).find((p) => p.id === id);
 
 /** A multiple-choice game holding these questions, made from the starter's own game (assets/games.json 'choice'),
  *  so it plays in the room exactly as one inserted from Browse. */
@@ -27,6 +32,22 @@ function quizSlides(s: Extract<LessonSlide, { layout: 'quiz' }>, st: LayoutStyle
     ? { ...structuredClone(q), title, subtitle: `${asked.length} question${asked.length === 1 ? '' : 's'}` }
     : structuredClone(q)));
   return gameSlides({ ...starter, title, label: title, slides: [...kept, ...asked] }, st);
+}
+
+/** Pictures in turn in one frame: each click swaps in the next, its caption with it (anim.step 'swap'). For a figure
+ *  built up step by step, rather than a slide copied once per step. */
+function picturesSlide(st: LayoutStyle, title: string, pictures: [string, string][]): Slide {
+  const set = 'pictures-' + Math.random().toString(36).slice(2, 9);
+  const frame = { x: cell(1, 1, 12, 1).x, y: CONTENT_TOP, w: cell(1, 1, 12, 1).w, h: CONTENT_FOOT - CONTENT_TOP - 72, rot: 0 };
+  const layers = pictures.flatMap(([src, caption], i) => {
+    // Every picture is a step of one swap set, the first there as the slide opens, so each replaces the one before.
+    const step = (first: boolean) => ({ type: 'fade' as const, duration: 0.4, delay: 0, trigger: first && i > 0 ? 'onClick' as const : 'withSlide' as const, step: { set, i, mode: 'swap' as const } });
+    return [
+      createLayer('image', { name: `Picture ${i + 1}`, box: frame, params: { src, fit: 'contain' }, anim: step(true) }),
+      ...(caption ? [createLayer('text', { name: `Caption ${i + 1}`, box: { x: frame.x, y: frame.y + frame.h + 16, w: frame.w, h: 56, rot: 0 }, params: { text: caption, font: st.body, size: 40, color: st.muted, fit: 'shrink', lineHeight: 1.2 }, anim: step(false) })] : []),
+    ];
+  });
+  return blockSlide(st, 'Pictures in turn', [titleRow(st, title), titleBar(st), ...layers]);
 }
 
 /** One slide of the file, as its layout builds it. */
@@ -75,6 +96,30 @@ function build(s: LessonSlide, st: LayoutStyle): Slide {
       });
       return made;
     }
+    case 'picture': return framedPictureSlide(st, s.title ?? '', s.credit ?? '', s.picture, '16:9', s.title?.trim() ? 'top' : 'none');
+    case 'pictures': return picturesSlide(st, s.title, s.pictures);
+    case 'video': return youtubeSlide(st, s.title, s.subtitle ?? '', s.url);
+    case 'chart': {
+      const made = chartSlide(st, s.title, s.source ?? '');
+      const chart = made.layers.find((l) => l.kind === 'chart');
+      if (chart) Object.assign(chart.params, { chart: s.chart ?? 'column', data: s.data.map(([label, v]) => `${label.replace(/,/g, ' ')}, ${v}`).join('\n') });
+      if (!s.source) made.layers = made.layers.filter((l) => l.name !== 'Source');
+      return made;
+    }
+    case 'diagram': {
+      const kind = s.diagram ?? 'loop';
+      const data = kind === 'loop' ? s.steps.join('\n') : s.steps.map((x, i) => (i < s.steps.length - 1 ? `${x} -> ${s.steps[i + 1]}` : x)).join('\n');
+      return diagramSlide(st, s.title, kind, data);
+    }
+    case 'journey': return journeySlide(st, s.title, s.subtitle ?? '', s.steps);
+    case 'funnel': return funnelSlide(st, s.title, s.subtitle ?? '', s.stages);
+    case 'mindmap': return mindmapSlide(st, s.title, s.ideas);
+    case 'orgchart': return orgchartSlide(st, s.title, s.people);
+    case 'columns': return columnsSlide(st, s.title, s.points);
+    // The rail builds its own points, number, words and rule together.
+    case 'rail': return railSlide(st, s.title, s.points, s.build ? ({ click: 'on', dim: 'dim', spot: 'spot' } as const)[s.build] : undefined);
+    case 'introduction': return introductionSlide(st, s.name, s.role ?? '', s.bio ?? '');
+    case 'code': return codeSlide(st, s.title, s.code, s.language ?? '', false);
     case 'quiz': throw new Error('A quiz is built as a game.');
   }
 }
@@ -86,12 +131,22 @@ function build(s: LessonSlide, st: LayoutStyle): Slide {
 export function deckFromLesson(lesson: Lesson, choiceStarter?: ShowcaseGame): Deck {
   const deck = blankDeck();
   deck.title = lesson.title.trim();
-  deck.theme = lesson.theme && LESSON_THEMES.includes(lesson.theme) ? lesson.theme : DEFAULT_THEME.id;
+  // A built-in theme by id, or any palette in the Style guide by its id (a brand's own, "nul" or "ukbt"): the deck
+  // then wears it as its style guide, with its grounds. Anything else is Paper, and the reader has said so.
+  const preset = lesson.theme && !LESSON_THEMES.includes(lesson.theme) ? lessonPalette(lesson.theme) : undefined;
+  if (preset) { deck.styleGuide = fromPreset(preset); deck.theme = 'guide'; }
+  else deck.theme = lesson.theme && LESSON_THEMES.includes(lesson.theme) ? lesson.theme : DEFAULT_THEME.id;
   const st = themeOf(deck) ?? DEFAULT_THEME;
-  deck.themeCopy = themeCopyOf(st);
+  if (!preset) deck.themeCopy = themeCopyOf(st);
   deck.slides = lesson.slides.flatMap((s, i) => {
     if (s.layout === 'quiz' && !choiceStarter) throw new Error(`Slide ${i + 1} is a quiz, and the multiple-choice game could not be loaded.`);
-    const made = s.layout === 'quiz' ? quizSlides(s, st, choiceStarter!) : [build(s, st)];
+    // Past its layout's cap, a slide carries on over more slides in the same layout, each with its title.
+    const cap = LESSON_CAPS[s.layout];
+    const list = cap ? (s as unknown as Record<string, unknown[]>)[cap.field] : undefined;
+    const parts: LessonSlide[] = cap && Array.isArray(list) && list.length > cap.cap
+      ? Array.from({ length: Math.ceil(list.length / cap.cap) }, (_, k) => ({ ...s, [cap.field]: list.slice(k * cap.cap, (k + 1) * cap.cap) }) as LessonSlide)
+      : [s];
+    const made = s.layout === 'quiz' ? quizSlides(s, st, choiceStarter!) : parts.map((p) => (s.build && s.layout !== 'rail' ? applyBuild(build(p, st), s.build) : build(p, st)));
     made.forEach((m, k) => {
       m.id = s.id ? (k ? `${s.id}-${k + 1}` : s.id) : uid();
       if (k === 0 && s.notes) m.notes = s.notes;

@@ -10,3 +10,4 @@ export { LESSON_THEMES, deckFromLesson, loadChoiceStarter } from './fromLesson';
 export { LESSON_FORMAT, LESSON_ICONS, LESSON_LAYOUTS, answerIndex, readLesson } from './lessonFormat';
 export type { Lesson, LessonQuestion, LessonSlide } from './lessonFormat';
 export { STARTERS, starterDeck, type Starter } from './starters';
+export { cleanPasted, lessonPrompt } from './lessonPrompt';
