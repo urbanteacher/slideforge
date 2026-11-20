@@ -42,6 +42,7 @@ Any slide may also carry these:
 | `id` | The slide's own id: letters, digits, `-` and `_`. Made up when not given. Each id is used once. |
 | `notes` | Speaker notes. The teacher's only: never shown to the class or put in a share. |
 | `hidden` | `true` keeps the slide in the deck but out of the show and the student copy. |
+| `audience` | `"teacher"` keeps the slide in the show and the teacher's copy, and leaves it out of the student copy. Use it instead of a second deck for students. |
 | `factCheck` | A fact on this slide still needs a source: what to check. The studio marks the slide and says so when a show opens. |
 
 **Never invent a fact.** Where a figure, name, date or source wasn't given, write a placeholder: square brackets round a blank of two or more underscores that doesn't touch a letter or digit, as `[__%]`, `[year __]` or `[source __]`. Underscores inside code (`[__init__]`, `"__x"`) are not placeholders. The studio marks these too (CS-03).
